@@ -10,21 +10,21 @@ namespace flopoco{
 	// plain logic vector, or wire
 	Signal::Signal(const string name, const Signal::SignalType type, const int width, const bool isBus) : 
 		name_(name), type_(type), width_(width), numberOfPossibleValues_(1), lifeSpan_(0),  cycle_(0),	
-		isFP_(false), isFix_(false), isIEEE_(false), wE_(0), wF_(0), isBus_(isBus), delay_(0.0) {
+		isFP_(false), isFix_(false), isIEEE_(false), wE_(0), wF_(0), isBus_(isBus) {
 	}
 
 	// fixed point constructor
 	Signal::Signal(const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) : 
 		name_(name), type_(type), width_(MSB-LSB+1), numberOfPossibleValues_(1), 
 		lifeSpan_(0), cycle_(0),
-		isFP_(false), isFix_(true), isSigned_(isSigned),  MSB_(MSB), LSB_(LSB), isBus_(true), delay_(0.0)
+		isFP_(false), isFix_(true),  MSB_(MSB), LSB_(LSB), isSigned_(isSigned), isBus_(true)
 	{
 	}
 
 	Signal::Signal(const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) : 
 		name_(name), type_(type), width_(wE+wF+3), numberOfPossibleValues_(1), 
 		lifeSpan_(0), cycle_(0),
-		isFP_(true), isFix_(false), isIEEE_(false), wE_(wE), wF_(wF), isBus_(false), delay_(0.0)
+		isFP_(true), isFix_(false), isIEEE_(false), wE_(wE), wF_(wF), isBus_(false)
 	{
 		if(ieeeFormat) { // correct some of the initializations above
 			width_=wE+wF+1;
@@ -176,11 +176,11 @@ namespace flopoco{
 	}
 
 	double Signal::getDelay(){
-		return delay_;
+		throw "getDelay is obsolete";
 	}
 	
 	void Signal::setDelay(double delay){
-		delay_ = delay;	
+		throw "getDelay is obsolete";
 	}
 
 	void  Signal::setNumberOfPossibleValues(int n){

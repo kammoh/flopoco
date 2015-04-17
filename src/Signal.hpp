@@ -216,8 +216,8 @@ namespace flopoco{
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
 		int           lifeSpan_;    /**< The max delay that will be applied to this signal; */
-		int           cycle_;       /**<  the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
-	
+		int           cycle_;       /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
+	  double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
 		bool          isFP_;        /**< If the signal is of the FloPoCo floating-point type */  
 		bool          isFix_;       /**< If the signal is of the FloPoCo fixed-point type */  
 		bool          isIEEE_;      /**< If the signal is of the IEEE floating-point type */  
@@ -227,7 +227,6 @@ namespace flopoco{
 		int           LSB_;         /**< LSB. Used for fixed-point signals */
 		bool          isSigned_;    /**< true if this a signed fixed-point signals, false otherwise */
 		bool          isBus_;       /**< True is the signal is a bus (std_logic_vector)*/
-		double        delay_;       /**<  the delay of the signal, starting from a previous register level */
 
 		
 	};
