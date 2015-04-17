@@ -1418,6 +1418,7 @@ private:
 	string                 commentedName_;              	/**< Usually is the default name of the architecture.  */
 	string                 headerComment_;              	/**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;            	/**< Authors and years.  */
+	// TODO move the two following to outputVHDL
 	int                    currentCycle_;               	/**< The current cycle, when building a pipeline */
 	double                 criticalPath_;               	/**< The current delay of the current pipeline stage */
 	bool                   needRecirculationSignal_;    	/**< True if the operator has registers having a recirculation signal  */

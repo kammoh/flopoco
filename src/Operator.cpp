@@ -786,20 +786,13 @@ namespace flopoco{
 		return advanceCycle;
 	}
 
+	// TODO get rid of these two methods
 	void Operator::setSignalDelay(string name, double delay){
-		Signal* s;
-		try {
-			s=getSignalByName(name);
-		}
-		catch (string e2) {
-			cout << "WARNING: signal " << name << " was not found in file " << srcFileName << " when called using setSignalDelay" << endl;
-			return;
-		}
-
-		s->setDelay(delay);		
+		cout << "WARNING: setSignalDelay obsolete (used in " << srcFileName << ")" << endl;
 	}	
 
 	double Operator::getSignalDelay(string name){
+		cout << "WARNING: getSignalDelay is obsolete (used in " << srcFileName << ")" << endl;
 		Signal* s;
 		try {
 			s=getSignalByName(name);
@@ -809,7 +802,7 @@ namespace flopoco{
 			return 0.0;
 		}
 
-		return s->getDelay();		
+		return s->getCriticalPath();		
 	}
 
 	double Operator::getCriticalPath() {return criticalPath_;}

@@ -175,12 +175,12 @@ namespace flopoco{
 		return lifeSpan_;
 	}
 
-	double Signal::getDelay(){
-		throw "getDelay is obsolete";
+	double Signal::getCriticalPath(){
+		return criticalPath_;
 	}
 	
-	void Signal::setDelay(double delay){
-		throw "getDelay is obsolete";
+	void Signal::setCriticalPath(double cp){
+		criticalPath_=cp;
 	}
 
 	void  Signal::setNumberOfPossibleValues(int n){
