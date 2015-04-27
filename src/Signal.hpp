@@ -216,11 +216,11 @@ namespace flopoco{
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
 		int           lifeSpan_;    /**< The max delay that will be applied to this signal; */
-	  double        criticalPathContribution_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+	  double        criticalPathContribution_; /**< the deltaCP to add to the CP of the ancestors of this signal */
 		std::vector<std::pair<std::string, Signal*>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */  
 		std::vector<std::pair<std::string, Signal*>> successors_; /**< the list of Signals for which this signal appears on the RHS. The string holds the instance name in case of an InPortMap, otherwise "" */  
-		int           cycle_;       /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
-	  double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+		int           cycle_;       /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs VALID AFTER PIPELINING */
+	  double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined VALID AFTER PIPELINING */
 		bool          isFP_;        /**< If the signal is of the FloPoCo floating-point type */  
 		bool          isFix_;       /**< If the signal is of the FloPoCo fixed-point type */  
 		bool          isIEEE_;      /**< If the signal is of the IEEE floating-point type */  
