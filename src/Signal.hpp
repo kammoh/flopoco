@@ -179,6 +179,66 @@ namespace flopoco{
 		 */	
 		void setCriticalPath(double delay);
 
+		/** obtain the contribution of this signal to the critical path
+		 * @return the criticalPathContribution_
+		 */
+		double getCriticalPathContribution();
+
+		/** sets the contribution of this signal to the critical path
+		 * @param[in] contribution the contribution
+		 */
+		void setCriticalPathContribution(double contribution);
+
+		/**
+		 * Reset the list of predecessors of the signal
+		 */
+		void resetPredecessors();
+
+		/**
+		 * Add a new predecessor for the signal;
+		 * a predecessor is a signal that appears in the right-hand side of an assignment
+		 * that has this signal on the left-hand side.
+		 * @param instanceName the name of the instance of which this signal is part of;
+		 * 	defaults to the empty string "" when the signal is part of main datapath
+		 * @param predecessor a direct predecessor of the current signal
+		 * @return true if the signal could be added as a predecessor, false if it already existed
+		 */
+		bool addPredecessor(std::string instanceName, Signal* predecessor);
+
+		/**
+		 * Remove an existing predecessor of the signal;
+		 * @param instanceName the name of the instance of which this signal is part of;
+		 * 	defaults to the empty string "" when the signal is part of main datapath
+		 * @param predecessor a direct predecessor of the current signal
+		 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
+		 */
+		bool removePredecessor(std::string instanceName, Signal* predecessor);
+
+		/**
+		 * Reset the list of successors of the signal
+		 */
+		void resetSuccessors();
+
+		/**
+		 * Add a new successor of the signal;
+		 * a successor is a signal that appears in the left-hand side of an assignment
+		 * that has this signal on the right-hand side.
+		 * @param instanceName the name of the instance of which this signal is part of;
+		 * 	defaults to the empty string "" when the signal is part of main datapath
+		 * @param successor a direct successor of the current signal
+		 * @return true if the signal could be added as a successor, false if it already existed
+		 */
+		bool addSuccessors(std::string instanceName, Signal* successor);
+
+		/**
+		 * Remove an existing successor of the signal;
+		 * @param instanceName the name of the instance of which this signal is part of;
+		 * 	defaults to the empty string "" when the signal is part of main datapath
+		 * @param successor a direct successor of the current signal
+		 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
+		 */
+		bool removeSuccessor(std::string instanceName, Signal* successor);
+
 
 		/** Set the number of possible output values. */
 		void  setNumberOfPossibleValues(int n);
@@ -216,11 +276,11 @@ namespace flopoco{
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
 		int           lifeSpan_;    /**< The max delay that will be applied to this signal; */
-	  double        criticalPathContribution_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+	    double        criticalPathContribution_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
 		std::vector<std::pair<std::string, Signal*>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */  
 		std::vector<std::pair<std::string, Signal*>> successors_; /**< the list of Signals for which this signal appears on the RHS. The string holds the instance name in case of an InPortMap, otherwise "" */  
 		int           cycle_;       /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
-	  double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+	    double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
 		bool          isFP_;        /**< If the signal is of the FloPoCo floating-point type */  
 		bool          isFix_;       /**< If the signal is of the FloPoCo fixed-point type */  
 		bool          isIEEE_;      /**< If the signal is of the IEEE floating-point type */  

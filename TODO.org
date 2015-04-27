@@ -155,14 +155,15 @@ declare(name, size, rhsDelayContribution)
 
 declares a signal, and associates its computation delay to it. 
 This rhsDelayContribution is what we currently pass to manageCriticalPath.
-Each signal now will have a (cycle, criticalPath) associated to it (with a default of 0 for signals that do not add to the critical path).
-The semantics is: 
+Each signal will now have a (cycle, criticalPath) associated to it (with a default of 0 for signals that do not add to the critical path).
+  ->problem: we need as many couples of (cycle, criticalPath) as there are instances to which this signal belongs to
+The semantic is: 
 
 this signal will not be assigned its value before the instant delta + max(instants of the RHS signals) 
-This is all what the first pass, the one that populates the vhdl stream, needs to do. No explicit synchronization management needed. No need to setCycle to "come back in time", etc.
+This is all that the first pass, the one that populates the vhdl stream, needs to do. No explicit synchronization management needed. No need to setCycle to "come back in time", etc.
 
 Instance: 
-TODO add instanceName to inPortMap et outPortMap
+TODO add instanceName to inPortMap and outPortMap
 Entities in globalOpList are assumed to have synchronous inputs
 Entities that are subcomponents will be generated once their inputDelayMap is known, and will compute their outputDelayMap
 
