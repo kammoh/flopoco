@@ -167,21 +167,33 @@ TODO add instanceName to inPortMap and outPortMap
 Entities in globalOpList are assumed to have synchronous inputs
 Entities that are subcomponents will be generated once their inputDelayMap is known, and will compute their outputDelayMap
 
-3 steps in code generation for a tail Operator:
+Operator constructor builds the signal graph.
+outputVHDL does all the synchronisation, cycle management, etc, and calls outputVHDL of instances.
 
-1/ Operator constructor builds the signal graph (labelled with CPContribution), leavs LHS signals untouched, and annotates the RHS signals with __RHS_of_LHSsignalName).
+Then we have a retiming procedure that must associate a cycle to each signal. 
+It will do both synchronization and cycle computation. According to Alain Darte there is an old retiming paper that shows that the retiming problem can be solved optimally in linear time for DAGs, which is not surprising.
+Example of simple procedure: 
+first build the DAG of signals (all it takes is the same RHS parsing, looking for signal names, as we do)
 
-2/ Pipelining walks the signal graph and does all the synchronisation, cycle management, etc (computes Signal.cycle_ and Signal.criticalPath_, lifeSpan)
+(stop reading here)
 
-3/ outputVHDL rescans the VHDL stream and adds _d1 d_2 etc on RHS signals.
+Then sit on the existing scheduling literature...
+For instance  
+1/ build the operator's critical path
+2/ build the ASAP and ALAP instants for each signal
+3/ progress from output to input, allocating a cycle to each signal, with ALAP scheduling (should minimize register count for compressing operators)
+4/ possibly do a bit of Leiserson and Saxe retiming 
 
+We keep all the current advantages: 
+- still VHDL printing based
+- When developing an operator, we initially leave all the deltas to zero to debug the combinatorial version. Then we incrementally add deltas, just like we currently  add manageCriticalPath(). 
+- etc
 
-For an operator with instances that are not in globalOpList, the recursive call is in 2/ 
-
+The difference is that the semantic is now much clearer. No more notion of a block following a manageCriticalPath(), etc
 
 The question is: don't we loose some control on the circuit with this approach, compared to what we currently do?
-In other words do we want to keep nextCycle()
-I suggest to get rid of it completely. If we find out that we really want it back, we can later add a method that forces a pipeline level on a given Signal of the signal graph.
+
+Note that all this is so much closer to textbook literature, with simple DAGs labelled by delay...
 
 * Options for signed/unsigned
 Option 0: Do nothing radical. It seems when the options
