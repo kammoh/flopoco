@@ -853,7 +853,7 @@ namespace flopoco{
 	double Operator::getOutputDelay(string s) {return outDelayMap[s];}  // TODO add checks
 	
 
-	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType) {
+	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType, double criticalPathContribution) {
 		Signal* s;
 		ostringstream e;
 		// check the signals doesn't already exist
@@ -873,10 +873,20 @@ namespace flopoco{
 		s = new Signal(name, regType, width, isbus);
 
 
-		// define its cycle 
+		// define its cycle and critical path
+		/*
+		//old version
 		if(isSequential())
 			s->setCycle(this->currentCycle_);
+		*/
+		s->setCycle(0);
+		s->setCriticalPath(0.0);
+		s->setCriticalPathContribution(criticalPathContribution);
 		
+		//initialize the signals predecessors and successors
+		s->resetPredecessors();
+		s->resetSuccessors();
+
 		// add this signal to the declare table
 		declareTable[name] = s->getCycle();
 		
@@ -887,13 +897,13 @@ namespace flopoco{
 	}
 
 
-	string Operator::declare(string name, Signal::SignalType regType ) {
-		return declare(name, 1, false, regType);
+	string Operator::declare(string name, Signal::SignalType regType, double criticalPathContribution ) {
+		return declare(name, 1, false, regType, criticalPathContribution);
 	}
 
 
 	// TODO: factor code between next and previous methods
-	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
+	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, double criticalPathContribution){
 		Signal* s;
 		ostringstream e;
 		// check the signals doesn't already exist
@@ -906,9 +916,19 @@ namespace flopoco{
 		s = new Signal(name, regType, isSigned, MSB, LSB);
 
 		// define its cycle 
+		/*
+		//old version
 		if(isSequential())
 			s->setCycle(this->currentCycle_);
+		*/
+		s->setCycle(0);
+		s->setCriticalPath(0.0);
+		s->setCriticalPathContribution(criticalPathContribution);
 		
+		//initialize the signals predecessors and successors
+		s->resetPredecessors();
+		s->resetSuccessors();
+
 		// add this signal to the declare table
 		declareTable[name] = s->getCycle();
 		
@@ -931,7 +951,11 @@ namespace flopoco{
 
 		for (int i=0; i<indentLevel; i++)
 			vhdl << tab;
+		/*
+		//old version
 		vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB) << " <= ";
+		*/
+		vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB, rhsSignal->type(), rhsSignal->getCriticalPathContribution()) << " <= ";
 
 		// Cases (old is input, new is output)
     //            1            2W             3W        4         5E         6 E 

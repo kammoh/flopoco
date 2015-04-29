@@ -183,6 +183,96 @@ namespace flopoco{
 		criticalPath_=cp;
 	}
 
+	double Signal::getCriticalPathContribution(){
+		return criticalPathContribution_;
+	}
+
+	void Signal::setCriticalPathContribution(double contribution){
+		criticalPathContribution_ = contribution;
+	}
+
+	void Signal::resetPredecessors()
+	{
+		predecessors_.clear();
+	}
+
+	bool Signal::addPredecessor(string instanceName, Signal* predecessor)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<predecessors_.size(); i++)
+		{
+			pair<string, Signal*> predecessorPair = predecessors_[i];
+			if((predecessorPair.first == instanceName)
+					&& (predecessorPair.second->name_ == predecessor->name_) && (predecessorPair.second->type_ == predecessor->type_))
+				return false;
+		}
+
+		//safe to insert a new signal in the predecessor list
+		pair<string, Signal*> newPredecessorPair = make_pair(instanceName, predecessor);
+		predecessors_.push_back(newPredecessorPair);
+
+		return true;
+	}
+
+	bool Signal::removePredecessor(string instanceName, Signal* predecessor)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<predecessors_.size(); i++)
+		{
+			pair<string, Signal*> predecessorPair = predecessors_[i];
+			if((predecessorPair.first == instanceName)
+					&& (predecessorPair.second->name_ == predecessor->name_) && (predecessorPair.second->type_ == predecessor->type_))
+			{
+				//delete the element from the list
+				predecessors_.erase(predecessors_.begin()+i);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void Signal::resetSuccessors()
+	{
+		successors_.clear();
+	}
+
+	bool Signal::addSuccessors(string instanceName, Signal* successor)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<successors_.size(); i++)
+		{
+			pair<string, Signal*> successorPair = successors_[i];
+			if((successorPair.first == instanceName)
+					&& (successorPair.second->name_ == successor->name_) && (successorPair.second->type_ == successor->type_))
+				return false;
+		}
+
+		//safe to insert a new signal in the predecessor list
+		pair<string, Signal*> newSucccessorPair = make_pair(instanceName, successor);
+		successors_.push_back(newSucccessorPair);
+
+		return true;
+	}
+
+	bool Signal::removeSuccessor(string instanceName, Signal* successor)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<successors_.size(); i++)
+		{
+			pair<string, Signal*> successorPair = successors_[i];
+			if((successorPair.first == instanceName)
+					&& (successorPair.second->name_ == successor->name_) && (successorPair.second->type_ == successor->type_))
+			{
+				//delete the element from the list
+				successors_.erase(successors_.begin()+i);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	void  Signal::setNumberOfPossibleValues(int n){
 		numberOfPossibleValues_ = n;
 	}

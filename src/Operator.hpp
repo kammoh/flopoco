@@ -388,24 +388,31 @@ public:
 	 * @param width is the width of the signal (optional, default 1)
 	 * @param isbus: a signal of width 1 is declared as std_logic when false, as std_logic_vector when true (optional, default false)
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
 	 * @return name
 	 */
-	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire );
+	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
 	/** Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
 	 * @param name is the name of the signal
 	 * @param isbus: if true, declares the signal as std_logic_vector; else declares the signal as std_logic
 	 * @param regType: the registring type of this signal. See also the Signal Class for mor info
+	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
 	 * @return name
 	 */
-	string declare(string name, Signal::SignalType regType = Signal::wire );
+	string declare(string name, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
 
 	/** Declares a fixed-point signal on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
+	 * @param isSigned whether the signal is signed, or not
+	 * @param MSB the weight of the MSB of the signal
+	 * @param LSB the weight of the LSB of the signal
+	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
 	 * @return name
 	 */
-	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire );
+	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
 	/** Resizes a fixed-point signal and assigns it to a new declared signal.
 			May zero-extend, sign-extend, or truncate.
