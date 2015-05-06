@@ -29,131 +29,330 @@
 
 %}
 
+a		[aA]
+b		[bB]
+c		[cC]
+d		[dD]
+e		[eE]
+f		[fF]
+g		[gG]
+h		[hH]
+i		[iI]
+j		[jJ]
+k		[kK]
+l		[lL]
+m		[mM]
+n		[nN]
+o		[oO]
+p		[pP]
+q		[qQ]
+r		[rR]
+s		[sS]
+t		[tT]
+u		[uU]
+v		[vV]
+w		[wW]
+x		[xX]
+y		[yY]
+z		[zZ]
 
-upper_case_letter	  [A-Z]
-digit 			  [0-9]
-special_character   	  [\#\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\_\|]
-space_character 	  [ \t]
-format_effector		  [\t\v\r\l\f]
-end_of_line		  \n
-lower_case_letter 	  [a-z]
+
+upper_case_letter         [A-Z]
+lower_case_letter         [a-z]
+digit                     [0-9]
+special_character         [\#\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\_\|]
+space_character           [ \t]
+format_effector           [\t\v\r\l\f]
+end_of_line               \n
 other_special_character   [\!\$\@\?\[\\\]\^\`\{\}\~]
 
-graphic_character	  ({basic_graphic_character}|{lower_case_letter}|{other_special_character})
-basic_graphic_character	  ({upper_case_letter}|{digit}|{special_character}|{space_character})
-letter		   	  ({upper_case_letter}|{lower_case_letter})
-letter_or_digit	   	  ({letter}|{digit})
-decimal_literal	   	  {integer}(\.{integer})?({exponent})?
-integer		   	  {digit}(_?{digit})*
-exponent	   	  ([eE][-+]?{integer})
-base		   	  {integer}
-based_integer	   	  {extended_digit}(_?{extended_digit})*
-extended_digit	   	  ({digit}|[a-fA-F])
-base_specifier	  	  (B|b|O|o|X|x)
+graphic_character         ({basic_graphic_character}|{lower_case_letter}|{other_special_character})
+basic_graphic_character   ({upper_case_letter}|{digit}|{special_character}|{space_character})
+letter                    ({upper_case_letter}|{lower_case_letter})
+letter_or_digit           ({letter}|{digit})
+decimal_literal           {integer}(\.{integer})?({exponent})?
+integer                   {digit}(_?{digit})*
+exponent                  ([eE][-+]?{integer})
+base                      {integer}
+based_integer             {extended_digit}(_?{extended_digit})*
+extended_digit            ({digit}|[a-fA-F])
+base_specifier            (B|b|O|o|X|x)
+
+identifier                ({letter}(_?{letter_or_digit})*)
+label					  ({identifier}{space_character}*":")
 
 
 %%
 
-"abs"|"ABS" |
-"access"|"ACCESS" |
-"after"|"AFTER" |
-"alias"|"ALIAS" |
-"all"|"ALL" |
-"and"|"AND" |
-"architecture"|"ARCHITECTURE" |
-"array"|"ARRAY" |
-"assert"|"ASSERT" |
-"attribute"|"ATTRIBUTE" |
-"begin"|"BEGIN" |
-"block"|"BLOCK" |
-"body"|"BODY" |
-"buffer"|"BUFFER" |
-"bus"|"BUS" |
-"case"|"CASE" |
-"component"|"COMPONENT" |
-"configuration"|"CONFIGURATION" |
-"constant"|"CONSTANT" |
-"disconnect"|"DISCONNECT" |
-"downto"|"DOWNTO" |
-"else"|"ELSE" |
-"elsif"|"ELSIF" |
-"end"|"END" |
-"entity"|"ENTITY" | 
-"exit"|"EXIT" |
-"file"|"FILE" |
-"for"|"FOR" |
-"function"|"FUNCTION" |
-"generate"|"GENERATE" |
-"generic"|"GENERIC" |
-"guarded"|"GUARDED" |
-"if"|"IF" |
-"in"|"IN" |
-"inout"|"INOUT" |
-"is"|"IS" |
-"label"|"LABEL" |
-"library"|"LIBRARY" |
-"linkage"|"LINKAGE" |
-"loop"|"LOOP" |
-"map"|"MAP" |
-"mod"|"MOD" |
-"nand"|"NAND" |
-"new"|"NEW" |
-"next"|"NEXT" |
-"nor"|"NOR" |
-"not"|"NOT" |
-"null"|"NULL" |
-"of"|"OF" |
-"on"|"ON" |
-"open"|"OPEN" |
-"or"|"OR" |
-"others"|"OTHERS" |
-"out"|"OUT" |
-"package"|"PACKAGE" |
-"port"|"PORT" |
-"procedure"|"PROCEDURE" |
-"process"|"PROCESS" |
-"range"|"RANGE" |
-"record"|"RECORD" |
-"register"|"REGISTER" |
-"rem"|"REM" |
-"report"|"REPORT" |
-"return"|"RETURN" |
-"select"|"SELECT" |
-"severity"|"SEVERITY" |
-"signal"|"SIGNAL" |
-"subtype"|"SUBTYPE" |
-"then"|"THEN" |
-"to"|"TO" |
-"transport"|"TRANSPORT" |
-"type"|"TYPE" |
-"units"|"UNITS" |
-"until"|"UNTIL" |
-"use"|"USE" |
-"variable"|"VARIABLE" |
-"wait"|"WAIT" |
-"when"|"WHEN" |
-"while"|"WHILE" |
-"with"|"WITH" |
-"xor"|"XOR"  { (*yyextra->os) << yytext; }
+({a}{b}{s}) |
+({a}{c}{c}{e}{s}{s}) |
+({a}{f}{t}{e}{r}) |
+({a}{l}{i}{a}{s}) |
+({a}{l}{l}) |
+({a}{n}{d}) |
+({a}{r}{c}{h}{i}{t}{e}{c}{t}{u}{r}{e}) |
+({a}{r}{r}{a}{y}) |
+({a}{s}{s}{e}{r}{t}) |
+({a}{t}{t}{r}{i}{b}{u}{t}{e}) |
+({b}{e}{g}{i}{n}) |
+({b}{l}{o}{c}{k}) |
+({b}{o}{d}{y}) |
+({b}{u}{f}{f}{e}{r}) |
+({b}{u}{s}) |
+({c}{a}{s}{e}) |
+({c}{o}{m}{p}{o}{n}{e}{n}{t}) |
+({c}{o}{n}{f}{i}{g}{u}{r}{a}{t}{i}{o}{n}) |
+({c}{o}{n}{s}{t}{a}{n}{t}) |
+({d}{i}{s}{c}{o}{n}{n}{e}{c}{t}) |
+({d}{o}{w}{n}{t}{o}) |
+({e}{l}{s}{e}) |
+({e}{l}{s}{i}{f}) |
+({e}{n}{d}) |
+({e}{n}{t}{i}{t}{y}) | 
+({e}{x}{i}{t}) |
+({f}{i}{l}{e}) |
+({f}{o}{r}) |
+({f}{u}{n}{c}{t}{i}{o}{n}) |
+({g}{e}{n}{e}{r}{a}{t}{e}) |
+({g}{e}{n}{e}{r}{i}{c}) |
+({g}{r}{o}{u}{p}) |
+({g}{u}{a}{r}{d}{e}{d)} |
+({i}{f}) |
+({i}{m}{p}{u}{r}{e})
+({i}{n}) |
+({i}{n}{e}{r}{t}{i}{a}{l}) |
+({i}{n}{o}{u}{t}) |
+({i}{s}) |
+({l}{a}{b}{e}{l}) |
+({l}{i}{b}{r}{a}{r}{y}) |
+({l}{i}{n}{k}{a}{g}{e}) |
+({l}{i}{t}{e}{r}{a}{l}) |
+({l}{o}{o}{p}) |
+({m}{a}{p}) |
+({m}{o}{d}) |
+({n}{a}{n}{d}) |
+({n}{e}{w}) |
+({n}{e}{x}{t}) |
+({n}{o}{r}) |
+({n}{o}{t}) |
+({n}{u}{l}{l}) |
+({o}{f}) |
+({o}{n}) |
+({o}{p}{e}{n}) |
+({o}{r}) |
+({o}{t}{h}{e}{r}{s}) |
+({o}{u}{t}) |
+({p}{a}{c}{k}{a}{g}{e}) |
+({p}{o}{r}{t}) |
+({p}{o}{s}{t}{p}{o}{n}{e}{d}) |
+({p}{r}{o}{c}{e}{d}{u}{r}{e}) |
+({p}{r}{o}{c}{e}{s}{s}) |
+({p}{u}{r}{e}) |
+({r}{a}{n}{g}{e}) |
+({r}{e}{c}{o}{r}{d}) |
+({r}{e}{g}{i}{s}{t}{e}{r}) |
+({r}{e}{m}) |
+({r}{e}{p}{o}{r}{t}) |
+({r}{e}{t}{u}{r}{n}) |
+({r}{o}{l}) |
+({r}{o}{r}) |
+({s}{e}{l}{e}{c}{t}) |
+({s}{e}{v}{e}{r}{i}{t}{y}) |
+({s}{i}{g}{n}{a}{l}) |
+({s}{h}{a}{r}{e}{d}) |
+({s}{l}{a}) |
+({s}{l}{l}) |
+({s}{r}{a}) |
+({s}{r}{l}) |
+({s}{u}{b}{t}{y}{p}{e}) |
+({t}{h}{e}{n}) |
+({t}{o}) |
+({t}{r}{a}{n}{s}{p}{o}{r}{t}) |
+({t}{y}{p}{e}) |
+({u}{n}{a}{f}{f}{e}{c}{t}{e}{d}) |
+({u}{n}{i}{t}{s}) |
+({u}{n}{t}{i}{l}) |
+({u}{s}{e}) |
+({v}{a}{r}{i}{a}{b}{l}{e}) |
+({w}{a}{i}{t}) |
+({w}{h}{e}{n}) |
+({w}{h}{i}{l}{e}) |
+({w}{i}{t}{h}) |
+({x}{n}{o}{r}) |
+({x}{o}{r})  { (*yyextra->os) << yytext; }
 
 
+"=>" { 
+	(*yyextra->os) << yytext;
+}
+
+"<=" { 
+	(*yyextra->os) << yytext;
+	
+	if(lexingMode == LexMode::unset)
+	{
+		lexingMode = LexMode::signalAssignment;
+	}
+	
+	if(lexingMode == LexMode::selectedSignalAssignment2)
+	{
+		lexingMode = LexMode::selectedSignalAssignment3;
+	}
+}
 
 
+";" {
+	if((lexingMode == LexMode::signalAssignment) || (lexingMode == LexMode::conditionalSignalAssignment) || (lexingMode == LexMode::selectedSignalAssignment))
+	{
+		(*yyextra->os) << yytext << "@" << lhsName << "@";
+	}
+	
+	for(int i=0; i<extraRhsNames.size(); i++)
+	{
+		pair<string, string> tempPair;
 
-{letter}(_?{letter_or_digit})*({space_character})*"=>" { (*yyextra->os) << yytext; } 
+		tempPair.first = lhsName;
+		tempPair.second = extraRhsNames[i];
+
+		dependenceTable.push_back(tempPair);
+	}
+	extraRhsNames.clear();
+	lexingMode = LexMode::unset;
+	lhsName = "";
+}
+
+
+{identifier} |
+"("({space_character})*{identifier}(({space_character})*","({space_character})*{identifier})*({space_character})*")" {
+	//identified either "signal_name" or "(signal_name, signal_name...)"
+	//this can be either the left or the right hand side
+	//if the mode is unset, then this is the new left hand side
+	//	the mode itself is going to be set when encountering the "<=" symbol
+	//if the mode is already set, then act accordingly
+	//	if in signalAssignment mode, then this is a signal on the right hand side; store a new pair in the dependenceTable, mark the symbol for the second pass
+	//	if in conditionalSignalAssignment mode, c.f. signalAssignment mode
+	//	if in selectedSignalAssignment mode, then if the mode is unset this signal is stored and added later to the dependence table, else c.f. signalAssignment mode
+	//	for all other cases, just copy the code to the output stream and don't perform any other action
+ 
+	if(lexingMode == LexMode::unset)
+	{
+		// this is the left hand side of the assignment
+		(*yyextra->os) << yytext;
+		
+		if(lshName == "")
+		{
+			lshName = yytext;
+		}
+	}else if(lexingMode == LexMode::signalAssignment)
+	{
+		// this is the right hand side of the assignment
+		(*yyextra->os) << "$$" << yytext << "$$";
+		
+		pair<string, string> tempPair;
+
+		tempPair.first = lhsName;
+		tempPair.second = extraRhsNames[i];
+
+		dependenceTable.push_back(tempPair);
+	}else if(lexingMode == LexMode::conditionalSignalAssignment)
+	{
+		// this is the right hand side of the assignment
+		(*yyextra->os) << "$$" << yytext << "$$";
+		
+		pair<string, string> tempPair;
+
+		tempPair.first = lhsName;
+		tempPair.second = extraRhsNames[i];
+
+		dependenceTable.push_back(tempPair);
+	}else if(lexingMode == LexMode::selectedSignalAssignment)
+	{
+		// this signal is on the left side of the assignment, but belongs to the right side
+		(*yyextra->os) << "$$" << yytext << "$$";
+		
+		extraRhsNames.push_back(yytext);
+	}else if(lexingMode == LexMode::selectedSignalAssignment2)
+	{
+		// this signal is on the left side of the assignment
+		(*yyextra->os) << yytext;
+		
+		lhsName = yytext;
+	}else if(lexingMode == LexMode::selectedSignalAssignment3)
+	{
+		// this signal is on the right side of the assignment
+		(*yyextra->os) << "$$" << yytext << "$$";
+		
+		pair<string, string> tempPair;
+
+		tempPair.first = lhsName;
+		tempPair.second = extraRhsNames[i];
+
+		dependenceTable.push_back(tempPair);
+	}else if(lexingMode == LexMode::instance)
+	{
+		(*yyextra->os) << yytext;
+	}else if(lexingMode == LexMode::caseStatement)
+	{
+		(*yyextra->os) << yytext;
+	}else if(lexingMode == LexMode::process)
+	{
+		(*yyextra->os) << yytext;
+	}else
+	{
+		(*yyextra->os) << yytext;
+	}
+}
+
+({w}{h}{e}{n}) {
+	(*yyextra->os) << yytext;
+	
+	if(lexingMode != LexMode::selectedSignalAssignment)
+	{
+		lexingMode = LexMode::conditionalSignalAssignment;
+	}
+}
+
+
+({w}{i}{t}{h}) {
+	(*yyextra->os) << yytext;
+	
+	lexingMode = LexMode::selectedSignalAssignment;
+}
+
+
+({s}{e}{l}{e}{c}{t}) {
+	(*yyextra->os) << yytext;
+	
+	lexingMode = LexMode::selectedSignalAssignment2;
+}
+
+
+({p}{o}{r}{t}({space_character})+{m}{a}{p}) {
+	(*yyextra->os) << yytext;
+	
+	lexingMode = LexMode::instance;
+	lhsName = "";
+	extraRhsNames.clear();
+}
+
+
+({c}{a}{s}{e}) {
+	(*yyextra->os) << yytext;
+	
+	lexingMode = LexMode::caseStatement;
+	lhsName = "";
+	extraRhsNames.clear();
+}
+									
+
+{label} {
+	(*yyextra->os) << yytext;
+}
+ 
 
 [ \t\n] (*yyextra->os) << yytext;
 
-
-
-{letter}(_?{letter_or_digit})* { (*yyextra->os) << "__" << yytext << "__" << (yyextra->yyTheCycle) <<"__";
-								  std::pair< std::string, int> tmp;
-								  tmp.first = yytext;
-								  tmp.second = (yyextra->yyTheCycle);
-								  yyextra->theUseTable.push_back ( tmp );		
-								} 
-
-\&|\'|\(|\)|"**"|\*|\+|\,|\-|":="|\:|\;|"<="|">="|\<|\>|=|\/=|"=>"|"<>"|\||!|\.|\/ { (*yyextra->os) << yytext; }	
+\&|\'|\(|\)|"**"|\*|\+|\,|\-|":="|\:|\;|">="|\<|\>|=|\/=|"=>"|"<>"|\||!|\.|\/ { (*yyextra->os) << yytext; }	
 
 
 ({decimal_literal})|({base}#{based_integer}(\.{based_integer})?#({exponent})?)|({base}:{based_integer}(\.{based_integer})?:({exponent})?)		{

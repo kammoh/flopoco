@@ -8,6 +8,18 @@ using namespace std;
 
 class LexerContext {
 public:
+	typedef enum {
+		unset,
+		signalAssignment,
+		conditionalSignalAssignment,
+		selectedSignalAssignment,
+		selectedSignalAssignment2,
+		selectedSignalAssignment3,
+		instance,
+		process,
+		caseStatement
+	} LexMode;
+
 	void* scanner;
 	int result;
 	istream* is;
@@ -15,12 +27,24 @@ public:
 	int yyTheCycle;
 	vector<pair<string, int> > theUseTable;
 
+	string lhsName;
+	vector<string> extraRhsNames;
+	vector<pair<string, string> > dependenceTable;
+
+	LexMode lexingMode;
+
 public:
 	LexerContext(istream* is = &cin, ostream* os = &cout) {
 		init_scanner();
 		this->is = is;
 		this->os = os;
 		yyTheCycle=0;
+
+		lhsName = "";
+		extraRhsNames.clear();
+		dependenceTable.clear();
+		lexingMode = LexMode::unset;
+
 	}
 
 	//these methods are generated in VHDLLexer.cpp 
