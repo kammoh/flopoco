@@ -115,7 +115,7 @@ label					  ({identifier}{space_character}*":")
 ({g}{e}{n}{e}{r}{a}{t}{e}) |
 ({g}{e}{n}{e}{r}{i}{c}) |
 ({g}{r}{o}{u}{p}) |
-({g}{u}{a}{r}{d}{e}{d)} |
+({g}{u}{a}{r}{d}{e}{d}) |
 ({i}{f}) |
 ({i}{m}{p}{u}{r}{e})
 ({i}{n}) |
@@ -185,44 +185,87 @@ label					  ({identifier}{space_character}*":")
 "<=" { 
 	(*yyextra->os) << yytext;
 	
-	if(*yyextra->lexingMode == LexMode::unset)
+	if(yyextra->lexingMode == LexerContext::unset)
 	{
-		*yyextra->lexingMode = LexMode::signalAssignment;
+		yyextra->lexingMode = LexerContext::signalAssignment;
 	}
 	
-	if(*yyextra->lexingMode == LexMode::selectedSignalAssignment2)
+	if(yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
 	{
-		*yyextra->lexingMode = LexMode::selectedSignalAssignment3;
+		yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
 	}
 }
 
 ":=" {
 	(*yyextra->os) << yytext;
 	
-	*yyextra->extraRhsNames.clear();
-	*yyextra->lexingMode = LexMode::variableAssignment;
-	*yyextra->lhsName = "";
+	yyextra->extraRhsNames.clear();
+	yyextra->lexingMode = LexerContext::variableAssignment;
+	yyextra->lhsName = "";
 }
 
 
 ";" {
-	if((*yyextra->lexingMode == LexMode::signalAssignment) || (*yyextra->lexingMode == LexMode::conditionalSignalAssignment) || (*yyextra->lexingMode == LexMode::selectedSignalAssignment))
+	if((yyextra->lexingMode == LexerContext::signalAssignment) || (yyextra->lexingMode == LexerContext::conditionalSignalAssignment) 
+		|| (yyextra->lexingMode == LexerContext::selectedSignalAssignment))
 	{
-		(*yyextra->os) << yytext << "@" << lhsName << "@";
+		(*yyextra->os) << yytext << "@" << yyextra->lhsName << "@";
 	}
 	
-	for(int i=0; i<extraRhsNames.size(); i++)
+	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)
 	{
 		pair<string, string> tempPair;
 
-		tempPair.first = lhsName;
-		tempPair.second = extraRhsNames[i];
+		tempPair.first = yyextra->lhsName;
+		tempPair.second = yyextra->extraRhsNames[i];
 
-		*yyextra->dependenceTable.push_back(tempPair);
+		yyextra->dependenceTable.push_back(tempPair);
 	}
-	*yyextra->extraRhsNames.clear();
-	*yyextra->lexingMode = LexMode::unset;
-	*yyextra->lhsName = "";
+	yyextra->extraRhsNames.clear();
+	yyextra->lexingMode = LexerContext::unset;
+	yyextra->lhsName = "";
+}
+
+
+({w}{h}{e}{n})	{
+	(*yyextra->os) << yytext;
+	
+	if(yyextra->lexingMode != LexerContext::selectedSignalAssignment)
+	{
+		yyextra->lexingMode = LexerContext::conditionalSignalAssignment;
+	}
+}
+
+
+({w}{i}{t}{h}) {
+	(*yyextra->os) << yytext;
+	
+	yyextra->lexingMode = LexerContext::selectedSignalAssignment;
+}
+
+
+({s}{e}{l}{e}{c}{t}) {
+	(*yyextra->os) << yytext;
+	
+	yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
+}
+
+
+({p}{o}{r}{t}({space_character})+{m}{a}{p}) {
+	(*yyextra->os) << yytext;
+	
+	yyextra->lexingMode = LexerContext::instance;
+	yyextra->lhsName = "";
+	yyextra->extraRhsNames.clear();
+}
+
+
+({c}{a}{s}{e}) {
+	(*yyextra->os) << yytext;
+	
+	yyextra->lexingMode = LexerContext::caseStatement;
+	yyextra->lhsName = "";
+	yyextra->extraRhsNames.clear();
 }
 
 
@@ -238,117 +281,76 @@ label					  ({identifier}{space_character}*":")
 	//	if in selectedSignalAssignment mode, then if the mode is unset this signal is stored and added later to the dependence table, else c.f. signalAssignment mode
 	//	for all other cases, just copy the code to the output stream and don't perform any other action
  
-	if(*yyextra->lexingMode == LexMode::unset)
+	if(yyextra->lexingMode == LexerContext::unset)
 	{
 		// this is the left hand side of the assignment
 		(*yyextra->os) << yytext;
 		
-		if(*yyextra->lshName == "")
+		if(yyextra->lhsName == "")
 		{
-			*yyextra->lshName = yytext;
+			yyextra->lhsName = yytext;
 		}
-	}else if(*yyextra->lexingMode == LexMode::signalAssignment)
+	}else if(yyextra->lexingMode == LexerContext::signalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		pair<string, string> tempPair;
 
-		tempPair.first = lhsName;
-		tempPair.second = extraRhsNames[i];
+		tempPair.first = yyextra->lhsName;
+		tempPair.second = yytext;
 
-		*yyextra->dependenceTable.push_back(tempPair);
-	}else if(*yyextra->lexingMode == LexMode::conditionalSignalAssignment)
+		yyextra->dependenceTable.push_back(tempPair);
+	}else if(yyextra->lexingMode == LexerContext::conditionalSignalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		pair<string, string> tempPair;
 
-		tempPair.first = lhsName;
-		tempPair.second = extraRhsNames[i];
+		tempPair.first = yyextra->lhsName;
+		tempPair.second = yytext;
 
-		*yyextra->dependenceTable.push_back(tempPair);
-	}else if(*yyextra->lexingMode == LexMode::selectedSignalAssignment)
+		yyextra->dependenceTable.push_back(tempPair);
+	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment)
 	{
 		// this signal is on the left side of the assignment, but belongs to the right side
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
-		*yyextra->extraRhsNames.push_back(yytext);
-	}else if(*yyextra->lexingMode == LexMode::selectedSignalAssignment2)
+		yyextra->extraRhsNames.push_back(yytext);
+	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
 	{
 		// this signal is on the left side of the assignment
 		(*yyextra->os) << yytext;
 		
-		*yyextra->lhsName = yytext;
-	}else if(*yyextra->lexingMode == LexMode::selectedSignalAssignment3)
+		yyextra->lhsName = yytext;
+	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment3)
 	{
 		// this signal is on the right side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		pair<string, string> tempPair;
 
-		tempPair.first = lhsName;
-		tempPair.second = extraRhsNames[i];
+		tempPair.first = yyextra->lhsName;
+		tempPair.second = yytext;
 
-		*yyextra->dependenceTable.push_back(tempPair);
-	}else if(*yyextra->lexingMode == LexMode::variableAssignment)
+		yyextra->dependenceTable.push_back(tempPair);
+	}else if(yyextra->lexingMode == LexerContext::variableAssignment)
 	{
 		(*yyextra->os) << yytext;
-	}else if(*yyextra->lexingMode == LexMode::instance)
+	}else if(yyextra->lexingMode == LexerContext::instance)
 	{
 		(*yyextra->os) << yytext;
-	}else if(*yyextra->lexingMode == LexMode::caseStatement)
+	}else if(yyextra->lexingMode == LexerContext::caseStatement)
 	{
 		(*yyextra->os) << yytext;
-	}else if(*yyextra->lexingMode == LexMode::process)
+	}else if(yyextra->lexingMode == LexerContext::process)
 	{
 		(*yyextra->os) << yytext;
 	}else
 	{
 		(*yyextra->os) << yytext;
 	}
-}
-
-({w}{h}{e}{n}) {
-	(*yyextra->os) << yytext;
-	
-	if(*yyextra->lexingMode != LexMode::selectedSignalAssignment)
-	{
-		*yyextra->lexingMode = LexMode::conditionalSignalAssignment;
-	}
-}
-
-
-({w}{i}{t}{h}) {
-	(*yyextra->os) << yytext;
-	
-	*yyextra->lexingMode = LexMode::selectedSignalAssignment;
-}
-
-
-({s}{e}{l}{e}{c}{t}) {
-	(*yyextra->os) << yytext;
-	
-	*yyextra->lexingMode = LexMode::selectedSignalAssignment2;
-}
-
-
-({p}{o}{r}{t}({space_character})+{m}{a}{p}) {
-	(*yyextra->os) << yytext;
-	
-	*yyextra->lexingMode = LexMode::instance;
-	*yyextra->lhsName = "";
-	*yyextra->extraRhsNames.clear();
-}
-
-
-({c}{a}{s}{e}) {
-	(*yyextra->os) << yytext;
-	
-	*yyextra->lexingMode = LexMode::caseStatement;
-	*yyextra->lhsName = "";
-	*yyextra->extraRhsNames.clear();
 }
 									
 
