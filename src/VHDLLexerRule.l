@@ -99,7 +99,6 @@ label					  ({identifier}{space_character}*":")
 ({b}{o}{d}{y}) |
 ({b}{u}{f}{f}{e}{r}) |
 ({b}{u}{s}) |
-({c}{a}{s}{e}) |
 ({c}{o}{m}{p}{o}{n}{e}{n}{t}) |
 ({c}{o}{n}{f}{i}{g}{u}{r}{a}{t}{i}{o}{n}) |
 ({c}{o}{n}{s}{t}{a}{n}{t}) |
@@ -156,7 +155,6 @@ label					  ({identifier}{space_character}*":")
 ({r}{e}{t}{u}{r}{n}) |
 ({r}{o}{l}) |
 ({r}{o}{r}) |
-({s}{e}{l}{e}{c}{t}) |
 ({s}{e}{v}{e}{r}{i}{t}{y}) |
 ({s}{i}{g}{n}{a}{l}) |
 ({s}{h}{a}{r}{e}{d}) |
@@ -175,9 +173,7 @@ label					  ({identifier}{space_character}*":")
 ({u}{s}{e}) |
 ({v}{a}{r}{i}{a}{b}{l}{e}) |
 ({w}{a}{i}{t}) |
-({w}{h}{e}{n}) |
 ({w}{h}{i}{l}{e}) |
-({w}{i}{t}{h}) |
 ({x}{n}{o}{r}) |
 ({x}{o}{r})  { (*yyextra->os) << yytext; }
 
@@ -189,20 +185,28 @@ label					  ({identifier}{space_character}*":")
 "<=" { 
 	(*yyextra->os) << yytext;
 	
-	if(lexingMode == LexMode::unset)
+	if(*yyextra->lexingMode == LexMode::unset)
 	{
-		lexingMode = LexMode::signalAssignment;
+		*yyextra->lexingMode = LexMode::signalAssignment;
 	}
 	
-	if(lexingMode == LexMode::selectedSignalAssignment2)
+	if(*yyextra->lexingMode == LexMode::selectedSignalAssignment2)
 	{
-		lexingMode = LexMode::selectedSignalAssignment3;
+		*yyextra->lexingMode = LexMode::selectedSignalAssignment3;
 	}
+}
+
+":=" {
+	(*yyextra->os) << yytext;
+	
+	*yyextra->extraRhsNames.clear();
+	*yyextra->lexingMode = LexMode::variableAssignment;
+	*yyextra->lhsName = "";
 }
 
 
 ";" {
-	if((lexingMode == LexMode::signalAssignment) || (lexingMode == LexMode::conditionalSignalAssignment) || (lexingMode == LexMode::selectedSignalAssignment))
+	if((*yyextra->lexingMode == LexMode::signalAssignment) || (*yyextra->lexingMode == LexMode::conditionalSignalAssignment) || (*yyextra->lexingMode == LexMode::selectedSignalAssignment))
 	{
 		(*yyextra->os) << yytext << "@" << lhsName << "@";
 	}
@@ -214,11 +218,11 @@ label					  ({identifier}{space_character}*":")
 		tempPair.first = lhsName;
 		tempPair.second = extraRhsNames[i];
 
-		dependenceTable.push_back(tempPair);
+		*yyextra->dependenceTable.push_back(tempPair);
 	}
-	extraRhsNames.clear();
-	lexingMode = LexMode::unset;
-	lhsName = "";
+	*yyextra->extraRhsNames.clear();
+	*yyextra->lexingMode = LexMode::unset;
+	*yyextra->lhsName = "";
 }
 
 
@@ -234,16 +238,16 @@ label					  ({identifier}{space_character}*":")
 	//	if in selectedSignalAssignment mode, then if the mode is unset this signal is stored and added later to the dependence table, else c.f. signalAssignment mode
 	//	for all other cases, just copy the code to the output stream and don't perform any other action
  
-	if(lexingMode == LexMode::unset)
+	if(*yyextra->lexingMode == LexMode::unset)
 	{
 		// this is the left hand side of the assignment
 		(*yyextra->os) << yytext;
 		
-		if(lshName == "")
+		if(*yyextra->lshName == "")
 		{
-			lshName = yytext;
+			*yyextra->lshName = yytext;
 		}
-	}else if(lexingMode == LexMode::signalAssignment)
+	}else if(*yyextra->lexingMode == LexMode::signalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
@@ -253,8 +257,8 @@ label					  ({identifier}{space_character}*":")
 		tempPair.first = lhsName;
 		tempPair.second = extraRhsNames[i];
 
-		dependenceTable.push_back(tempPair);
-	}else if(lexingMode == LexMode::conditionalSignalAssignment)
+		*yyextra->dependenceTable.push_back(tempPair);
+	}else if(*yyextra->lexingMode == LexMode::conditionalSignalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
@@ -264,20 +268,20 @@ label					  ({identifier}{space_character}*":")
 		tempPair.first = lhsName;
 		tempPair.second = extraRhsNames[i];
 
-		dependenceTable.push_back(tempPair);
-	}else if(lexingMode == LexMode::selectedSignalAssignment)
+		*yyextra->dependenceTable.push_back(tempPair);
+	}else if(*yyextra->lexingMode == LexMode::selectedSignalAssignment)
 	{
 		// this signal is on the left side of the assignment, but belongs to the right side
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
-		extraRhsNames.push_back(yytext);
-	}else if(lexingMode == LexMode::selectedSignalAssignment2)
+		*yyextra->extraRhsNames.push_back(yytext);
+	}else if(*yyextra->lexingMode == LexMode::selectedSignalAssignment2)
 	{
 		// this signal is on the left side of the assignment
 		(*yyextra->os) << yytext;
 		
-		lhsName = yytext;
-	}else if(lexingMode == LexMode::selectedSignalAssignment3)
+		*yyextra->lhsName = yytext;
+	}else if(*yyextra->lexingMode == LexMode::selectedSignalAssignment3)
 	{
 		// this signal is on the right side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
@@ -287,14 +291,17 @@ label					  ({identifier}{space_character}*":")
 		tempPair.first = lhsName;
 		tempPair.second = extraRhsNames[i];
 
-		dependenceTable.push_back(tempPair);
-	}else if(lexingMode == LexMode::instance)
+		*yyextra->dependenceTable.push_back(tempPair);
+	}else if(*yyextra->lexingMode == LexMode::variableAssignment)
 	{
 		(*yyextra->os) << yytext;
-	}else if(lexingMode == LexMode::caseStatement)
+	}else if(*yyextra->lexingMode == LexMode::instance)
 	{
 		(*yyextra->os) << yytext;
-	}else if(lexingMode == LexMode::process)
+	}else if(*yyextra->lexingMode == LexMode::caseStatement)
+	{
+		(*yyextra->os) << yytext;
+	}else if(*yyextra->lexingMode == LexMode::process)
 	{
 		(*yyextra->os) << yytext;
 	}else
@@ -306,9 +313,9 @@ label					  ({identifier}{space_character}*":")
 ({w}{h}{e}{n}) {
 	(*yyextra->os) << yytext;
 	
-	if(lexingMode != LexMode::selectedSignalAssignment)
+	if(*yyextra->lexingMode != LexMode::selectedSignalAssignment)
 	{
-		lexingMode = LexMode::conditionalSignalAssignment;
+		*yyextra->lexingMode = LexMode::conditionalSignalAssignment;
 	}
 }
 
@@ -316,32 +323,32 @@ label					  ({identifier}{space_character}*":")
 ({w}{i}{t}{h}) {
 	(*yyextra->os) << yytext;
 	
-	lexingMode = LexMode::selectedSignalAssignment;
+	*yyextra->lexingMode = LexMode::selectedSignalAssignment;
 }
 
 
 ({s}{e}{l}{e}{c}{t}) {
 	(*yyextra->os) << yytext;
 	
-	lexingMode = LexMode::selectedSignalAssignment2;
+	*yyextra->lexingMode = LexMode::selectedSignalAssignment2;
 }
 
 
 ({p}{o}{r}{t}({space_character})+{m}{a}{p}) {
 	(*yyextra->os) << yytext;
 	
-	lexingMode = LexMode::instance;
-	lhsName = "";
-	extraRhsNames.clear();
+	*yyextra->lexingMode = LexMode::instance;
+	*yyextra->lhsName = "";
+	*yyextra->extraRhsNames.clear();
 }
 
 
 ({c}{a}{s}{e}) {
 	(*yyextra->os) << yytext;
 	
-	lexingMode = LexMode::caseStatement;
-	lhsName = "";
-	extraRhsNames.clear();
+	*yyextra->lexingMode = LexMode::caseStatement;
+	*yyextra->lhsName = "";
+	*yyextra->extraRhsNames.clear();
 }
 									
 
@@ -350,27 +357,41 @@ label					  ({identifier}{space_character}*":")
 }
  
 
-[ \t\n] (*yyextra->os) << yytext;
+[ \t\n] {
+	(*yyextra->os) << yytext;
+}
 
-\&|\'|\(|\)|"**"|\*|\+|\,|\-|":="|\:|\;|">="|\<|\>|=|\/=|"=>"|"<>"|\||!|\.|\/ { (*yyextra->os) << yytext; }	
+\&|\'|\(|\)|"**"|\*|\+|\,|\-|\:|">="|\<|\>|=|\/=|"<>"|\||!|\.|\/ { 
+	(*yyextra->os) << yytext;
+}	
 
 
-({decimal_literal})|({base}#{based_integer}(\.{based_integer})?#({exponent})?)|({base}:{based_integer}(\.{based_integer})?:({exponent})?)		{
-			(*yyextra->os) << yytext; 
-			}
+({decimal_literal})|({base}#{based_integer}(\.{based_integer})?#({exponent})?)|({base}:{based_integer}(\.{based_integer})?:({exponent})?) {
+	(*yyextra->os) << yytext; 
+}
 
-'({graphic_character}|\"|\%)' 	{ (*yyextra->os) << yytext; }
+'({graphic_character}|\"|\%)' { 
+	(*yyextra->os) << yytext;
+}
 
-(\"({graphic_character}|(\"\")|\%)*\")|(\%({graphic_character}|(\%\%)|\")*\%) { (*yyextra->os) << yytext; }
+(\"({graphic_character}|(\"\")|\%)*\")|(\%({graphic_character}|(\%\%)|\")*\%) {
+	(*yyextra->os) << yytext;
+}
 
-{base_specifier}(\"{extended_digit}(_?{extended_digit})*\"|\%{extended_digit}(_?{extended_digit})*\%) 	{ (*yyextra->os) << yytext; }
+{base_specifier}(\"{extended_digit}(_?{extended_digit})*\"|\%{extended_digit}(_?{extended_digit})*\%) { 
+	(*yyextra->os) << yytext;
+}
 
-\-\-.*$ 	{
-			/* comment */
-			(*yyextra->os) << yytext;
-			}
+\-\-.*$ {
+	// this is  comment
+	(*yyextra->os) << yytext;
+}
 
-(.) (*yyextra->os) << yytext;
+(.) {
+	(*yyextra->os) << yytext;
+}
+
+
 
 %%
 

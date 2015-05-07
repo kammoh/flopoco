@@ -15,6 +15,7 @@ public:
 		selectedSignalAssignment,
 		selectedSignalAssignment2,
 		selectedSignalAssignment3,
+		variableAssignment,
 		instance,
 		process,
 		caseStatement
