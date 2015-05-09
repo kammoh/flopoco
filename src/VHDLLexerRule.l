@@ -209,7 +209,7 @@ label					  ({identifier}{space_character}*":")
 	if((yyextra->lexingMode == LexerContext::signalAssignment) || (yyextra->lexingMode == LexerContext::conditionalSignalAssignment) 
 		|| (yyextra->lexingMode == LexerContext::selectedSignalAssignment))
 	{
-		(*yyextra->os) << yytext << "@" << yyextra->lhsName << "@";
+		(*yyextra->os) << yytext << "@@" << yyextra->lhsName << "@@";
 	}
 	
 	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)

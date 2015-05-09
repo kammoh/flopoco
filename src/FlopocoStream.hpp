@@ -8,6 +8,8 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
+#include <string>
+
 //#include "VHDLLexer.hpp"
 #include "LexerContext.hpp"
 
@@ -41,19 +43,19 @@ namespace flopoco{
 
 
 		template <class paramType> friend FlopocoStream& operator <<(FlopocoStream& output, paramType c) {
-			output.vhdlCodeBuffer << c;
+			output.vhdlCode << c;
 			return output;
 		}
 		
 
 		
 		friend FlopocoStream & operator<<(FlopocoStream& output, FlopocoStream fs) {
-			output.vhdlCodeBuffer << fs.str();
+			output.vhdlCode << fs.str();
 			return output; 
 		}
 		
 		friend FlopocoStream& operator<<( FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
-			output.vhdlCodeBuffer << std::endl;
+			output.vhdlCode << std::endl;
 			return output;
 		}
 		
@@ -86,57 +88,44 @@ namespace flopoco{
 			 */ 
 			string str(string UNUSED(s) );
 			
-			/**
-			 * the information from the buffer is flushed when cycle information
-			 * changes. In order to annotate signal IDs with with cycle information
-			 * the cycle information needs to be passed to the flush method 
-			 * @param[in] currentCycle the current pipeline level for the vhdl code
-			 *            from the buffer
-			 */
-			void flush(int currentCycle);
-			
 			/** 
-			 * Function used to flush the buffer (annotate the last IDs from the
-			 * buffer) when constructor has finished writing into the vhdl stream
+			 * Function used to flush the buffer
+			 * 	- save the code in the temporary buffer
+			 * 	- parse the code and build the dependenceTree and annotate the code
 			 */ 
 			void flush();
 			
 			/**
-			 * Function that annotates the signal IDs from the buffer with 
-			 * __IDName__CycleInfo__
-			 * @param[in] currentCycle Cycle Information
-			 * @return the string containing the annotated information
+			 * Parse the VHDL code in the buffer.
+			 * Extract the dependencies between the signals.
+			 * Annotate the signal names, for the second phase. All signals on the right-hand side of signal assignments
+			 * will be transformed from signal_name to @signal_name@.
+			 * At the end of lines with annotated signal names, the name of the left-hand side signal is written, after the semi-colon:
+			 * @@lhs_name@@.
+			 * @return the string containing the parsed and annotated VHDL code
 			 */
-			string annotateIDs( int currentCycle );
-			
+			string parseCode();
+
 			/**
-			 * The extern useTable rewritten by flex for each buffer is used 
-			 * to update a useTable contained locally as a member variable of 
+			 * The dependenceTable created by the lexer is used
+			 * to update a dependenceTable contained locally as a member variable of
 			 * the FlopocoStream class
-			 * @param[in] tmpUseTable a vector of pairs which will be copied 
-			 *            into the member variable useTable 
+			 * @param[in] tmpDependenceTable a vector of pairs which will be copied
+			 *            into the member variable dependenceTable
 			 */
-			void updateUseTable(vector<pair<string,int> > tmpUseTable);
+			void updateDependenceTable(vector<pair<string, string> > tmpDependenceTable);
 
 			/**
-			 * A wrapper for updateUseTable
-			 * The external table is erased of information
-			 */			
-			void updateUseMap(LexerContext* lexer);
-			
-			void setCycle(int cycle);
-
-			/**
-			 * member function used to set the code resulted after a second parsing
-			 * was perfromed
+			 * Member function used to set the code resulted after a second parsing
+			 * was performed
 			 * @param[in] code the 2nd parse level code 
 			 */
 			void setSecondLevelCode(string code);
 			
 			/**
-			 * Returns the useTable
+			 * Returns the dependenceTable
 			 */  
-			vector<pair<string, int> > getUseTable();
+			vector<pair<string, string> > getDependenceTable();
 
 
 			void disableParsing(bool s);
@@ -145,13 +134,19 @@ namespace flopoco{
 			
 			bool isEmpty();
 
+			/**
+			 * The dependence table should contain pairs of the form (lhsName, RhsName),
+			 * where lhsName and rhsName are the names of the left-hand side and right-hand side
+			 * of an assignment.
+			 * Because of the parsing stage, lhsName might be of the form (lhsName1, lhsName2, ...),
+			 * which must be fixed.
+			 */
+			bool cleanupDependenceTable();
 
-			ostringstream vhdlCode;              /**< the vhdl code afte */
-			ostringstream vhdlCodeBuffer;        /**< the vhdl code buffer */
-			
-			int currentCycle_;                   /**< the current cycle is used in the picewise code scanning */
-	
-			vector<pair<string, int> > useTable; /**< table contating <id, cycle> info */
+
+			ostringstream vhdlCode;              /**< the vhdl code */
+
+			vector<pair<string, string>> dependenceTable;	/**< table containing the left hand side- right hand side dependences */
 
 		protected:
 		

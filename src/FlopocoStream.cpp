@@ -9,7 +9,8 @@
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
   2008-2010.
-  All rights reserved. */
+  All rights reserved.
+*/
 
 
 #include <iostream>
@@ -35,8 +36,8 @@ namespace flopoco{
 	/** The FlopocoStream class.  */
 	FlopocoStream::FlopocoStream(){
 		vhdlCode.str("");
-		vhdlCodeBuffer.str("");
-		currentCycle_ = 0;
+		dependenceTable.clear();
+		disabledParsing = false;
 	}
 
 
@@ -45,82 +46,70 @@ namespace flopoco{
 
 
 	string FlopocoStream::str(){
-		flush(currentCycle_);
+		flush();
 		return vhdlCode.str();
 	}
 
 	string FlopocoStream::str(string UNUSED(s) ){
 		vhdlCode.str("");
-		vhdlCodeBuffer.str("");
+		dependenceTable.clear();
 		return "";
 	}
 
 
-	void FlopocoStream::flush(int currentCycle){
-		if (! disabledParsing ){
-			ostringstream bufferCode;
-			if ( vhdlCodeBuffer.str() != string("") ){
-				/* do processing if buffer is not empty */
-
-				/* scan buffer sequence and annotate ids */
-				bufferCode << annotateIDs( currentCycle );
-
-				/* the newly processed code is appended to the existing one */
-				vhdlCode << bufferCode.str();
-
-			}
-		}else{
-			vhdlCode << vhdlCodeBuffer.str();
-		}
-		/* reset buffer */
-		vhdlCodeBuffer.str("");
-	}
-
 	void FlopocoStream::flush(){
-		flush ( currentCycle_ );
+		ostringstream bufferCode;
+
+		/* parse the buffer if it is not empty */
+		if(vhdlCode.str() != string(""))
+		{
+			/* scan the code buffer and build the dependence table and annotate the code */
+			bufferCode << parseCode();
+
+			/* fix the dependence table, to the correct content type */
+			cleanupDependenceTable();
+
+			/* the newly processed code is appended to the existing one */
+			vhdlCode << bufferCode.str();
+		}
 	}
 
 
-	string FlopocoStream::annotateIDs( int currentCycle ){
-		//vhdlCode << "-- CurrentCycle is = " << currentCycle << endl;
+	string FlopocoStream::parseCode()
+	{
 		ostringstream vhdlO;
-		istringstream in( vhdlCodeBuffer.str() );
+		istringstream in(vhdlCode.str());
+
 		/* instantiate the flex++ object  for lexing the buffer info */
 		LexerContext* lexer = new LexerContext(&in, &vhdlO);
-		/* This variable is visible from within the flex++ scanner class */
-		lexer->yyTheCycle = currentCycle;
-		/* call the FlexLexer ++ on the buffer. The lexing output is
-					 in the variable vhdlO. Additionally, a temporary table contating
-					 the tuples <name, cycle> is created */
-		lexer->lex();
-		/* the temporary table is used to update the member of the FlopocoStream
-					 class useTable */
 
-		updateUseMap(lexer);
+		/*
+		 * call the FlexLexer ++ on the buffer. The lexing output is
+		 * in the variable vhdlO. Additionally, a temporary table containing
+		 * the tuples <lhsName, rhsName> is created
+		 */
+		lexer->lex();
+
+		/*
+		 * the temporary table is used to update the member of the FlopocoStream
+		 * class dependenceTable
+		 */
+		updateDependenceTable(lexer->dependenceTable);
+
 		/* the annotated string is returned */
 		return vhdlO.str();
 	}
 
 
-	void FlopocoStream::updateUseTable(vector<pair<string,int> > tmpUseTable){
-		vector<pair<string, int> >::iterator iter;
-		for (iter = tmpUseTable.begin(); iter!=tmpUseTable.end();++iter){
-			pair < string, int> tmp;
+	void FlopocoStream::updateDependenceTable(vector<pair<string, string> > tmpDependenceTable){
+		vector<pair<string, string> >::iterator iter;
+
+		for (iter = tmpDependenceTable.begin(); iter!=tmpDependenceTable.end();++iter){
+			pair < string, string> tmp;
 			tmp.first  =  (*iter).first;
 			tmp.second = (*iter).second;
-			useTable.push_back(tmp);
+			dependenceTable.push_back(tmp);
 		}
-	}
-
-
-	void FlopocoStream::updateUseMap(LexerContext* lexer){
-		updateUseTable(lexer->theUseTable);
-		lexer->theUseTable.erase(lexer->theUseTable.begin(), lexer->theUseTable.end());
-	}
-
-
-	void FlopocoStream::setCycle(int cycle){
-		currentCycle_=cycle;
 	}
 
 
@@ -130,8 +119,8 @@ namespace flopoco{
 	}
 
 
-	vector<pair<string, int> > FlopocoStream::getUseTable(){
-		return useTable;
+	vector<pair<string, string> > FlopocoStream::getDependenceTable(){
+		return dependenceTable;
 	}
 
 
@@ -144,8 +133,65 @@ namespace flopoco{
 		return !disabledParsing;
 	}
 
+
 	bool FlopocoStream::isEmpty(){
-		return ((vhdlCode.str()).length() == 0 && (vhdlCodeBuffer.str()).length() == 0 );
+		return ((vhdlCode.str()).length() == 0);
+	}
+
+
+	bool FlopocoStream::cleanupDependenceTable()
+	{
+		vector<pair<string, string>> newDependenceTable;
+
+		for(int i=0; (unsigned)i<dependenceTable.size(); i++)
+		{
+			string lhsName = newDependenceTable[i].first;
+			string rhsName = newDependenceTable[i].second;
+
+			if(lhsName.find("("))
+			{
+				//split the lhsName into several names, without any separating characters (,\n\t\ )
+				string delimiters = " \t\n,()";
+				ostringstream newLhsName;
+				int count = 0;
+
+				while(count<lhsName.size())
+				{
+					newLhsName.str("");
+					while(delimiters.find(lhsName[count]) != string::npos)
+						count++;
+					while(delimiters.find(lhsName[count]) == string::npos)
+					{
+						newLhsName << lhsName[count];
+						count++;
+					}
+
+					pair<string, string> tmpPair;
+					tmpPair.first = newLhsName.str();
+					tmpPair.second = rhsName;
+					newDependenceTable.push_back(tmpPair);
+				}
+			}else
+			{
+				pair<string, string> tmpPair;
+				tmpPair.first = lhsName;
+				tmpPair.second = rhsName;
+				newDependenceTable.push_back(tmpPair);
+			}
+		}
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
