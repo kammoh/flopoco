@@ -72,37 +72,46 @@ class Operator
 
 public:
 
-	/** add a sub-operator to this operator */
+	/**
+	 * Add a sub-operator to this operator
+	 */
 	void addSubComponent(Operator* op);
 
 
-	/** add this operator to the global (first-level) list, which is stored in its Target (not really its place, sorry).
-	This method should be called by 
-	1/ the main / top-level, or  
-	2/ for sub-components that are really basic operators, 
-	expected to be used several times, *in a way that is independent of the context/timing*.
-	Typical example is a table designed to fit in a LUT or parallel row of LUTs
- */
+	/**
+	 * Add this operator to the global (first-level) list, which is stored in its Target (not really its place, sorry).
+	 * This method should be called by
+	 * 	1/ the main / top-level, or
+	 * 	2/ for sub-components that are really basic operators,
+	 * 	expected to be used several times, *in a way that is independent of the context/timing*.
+	 * Typical example is a table designed to fit in a LUT or parallel row of LUTs
+	 */
 	void addToGlobalOpList();
 
 
-	/** generates the code for a list of operators and all their subcomponents */
+	/**
+	 * Generates the code for a list of operators and all their subcomponents
+	 */
 	static void outputVHDLToFile(vector<Operator*> &oplist, ofstream& file);
 
 
 #if 1
-	/** generates the code for this operator and all its subcomponents */
+	/**
+	 * Generates the code for this operator and all its subcomponents
+	 */
 	void outputVHDLToFile(ofstream& file);
 #endif
 
-	/** Operator Constructor.
+	/**
+	 * Operator Constructor.
 	 * Creates an operator instance with an instantiated target for deployment.
 	 * @param target_ The deployment target of the operator.
 	 */
 	Operator(Target* target, map<string, double> inputDelays = emptyDelayMap);
 		
 
-	/** Operator Destructor.
+	/**
+	 * Operator Destructor.
 	 */	
 	virtual ~Operator() {}
 
@@ -111,16 +120,18 @@ public:
  /*         Paperwork-related methods (for defining an operator entity)       */
  /*****************************************************************************/
 
-	/** Adds an input signal to the operator.
-	 * Adds a signal of type Signal::in to the the I/O signal list.
+	/**
+	 * Adds an input signal to the operator.
+	 * 	Adds a signal of type Signal::in to the the I/O signal list.
 	 * @param name  the name of the signal
 	 * @param width the number of bits of the signal.
 	 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 	 */
 	void addInput  (const std::string name, const int width=1, const bool isBus=true);
 	
-	/** Adds an input wire (of type std_logic) to the operator.
-	 * Adds a signal of type Signal::in to the the I/O signal list.
+	/**
+	 * Adds an input wire (of type std_logic) to the operator.
+	 * 	Adds a signal of type Signal::in to the the I/O signal list.
 	 * @param name  the name of the signal
 	 */
 	void addInput  (const std::string name) {
@@ -131,8 +142,9 @@ public:
 		addInput (name, 1, false);
 	}
 
-	/** Adds  signal to the operator.
-	 * Adds a signal of type Signal::out to the the I/O signal list.
+	/**
+	 * Adds  signal to the operator.
+	 * 	Adds a signal of type Signal::out to the the I/O signal list.
 	 * @param name  the name of the signal
 	 * @param width the number of bits of the signal.
 	 * @param numberOfPossibleOutputValues (optional, defaults to 1) set to 2 for a faithfully rounded operator for instance
@@ -140,9 +152,9 @@ public:
 	 */	
 	void addOutput(const std::string name, const int width=1, const int numberOfPossibleOutputValues=1, const bool isBus=true);
 	
-	/** Adds an output wire (of type std_logic) with one possible value
-	 ** to the operator.
-	 * Adds a signal of type Signal::out to the the I/O signal list.
+	/**
+	 * Adds an output wire (of type std_logic) with one possible value to the operator.
+	 * 	Adds a signal of type Signal::out to the the I/O signal list.
 	 * @param name  the name of the signal
 	 */	
 	void addOutput(const std::string name);
@@ -157,18 +169,31 @@ public:
 	// This is not the case for fixed-point
 	// (comment by F de Dinechin)
 
-	/** Adds a fixed-point input signal to the operator.
+	/**
+	 * Adds a fixed-point input signal to the operator.
+	 * @param name  the name of the signal
+	 * @param isSigned  is the signal signed/unsigned
+	 * @param msb the most significant bit of the signal's format
+	 * @param lsb the least significant bit of the signal's format
 	 */
 	void addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb);
 
 
-	/** Adds a fixed-point output signal to the operator.
+	/**
+	 * Adds a fixed-point output signal to the operator.
+	 * @param name  the name of the signal
+	 * @param isSigned  is the signal signed/unsigned
+	 * @param msb the most significant bit of the signal's format
+	 * @param lsb the least significant bit of the signal's format
+	 * @param numberOfPossibleOutputValues the number of possible values that the signal can take;
+	 * 	useful for testing; related to rounding
 	 */
 	void addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues=1);
 #endif
 
-	/** Adds a floating point (FloPoCo format) input signal to the operator.
-	 * Adds a signal of type Signal::in to the the I/O signal list, 
+	/**
+	 * Adds a floating point (FloPoCo format) input signal to the operator.
+	 * 	Adds a signal of type Signal::in to the the I/O signal list,
 	 * having the FP flag set on true. The total width of this signal will
 	 * be wE + wF + 3. (2 bits for exception, 1 for sign)
 	 * @param name the name of the signal
@@ -178,8 +203,9 @@ public:
 	void addFPInput(const std::string name, const int wE, const int wF);
 
 
-	/** Adds a floating point (FloPoCo format) output signal to the operator.
-	 * Adds a signal of type Signal::out to the the I/O signal list, 
+	/**
+	 * Adds a floating point (FloPoCo format) output signal to the operator.
+	 * 	Adds a signal of type Signal::out to the the I/O signal list,
 	 * having the FP flag set on true. The total width of this signal will
 	 * be wE + wF + 3. (2 bits for exception, 1 for sign)
 	 * @param name the name of the signal
@@ -189,8 +215,9 @@ public:
 	 */	
 	void addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues=1);
 
-	/** Adds a IEEE floating point input signal to the operator.
-	 * Adds a signal of type Signal::in to the the I/O signal list, 
+	/**
+	 * Adds a IEEE floating point input signal to the operator.
+	 * 	Adds a signal of type Signal::in to the the I/O signal list,
 	 * having the FP flag set on true. The total width of this signal will
 	 * be wE + wF + 1.  (1 bit for sign)
 	 * @param name the name of the signal
@@ -200,8 +227,9 @@ public:
 	void addIEEEInput(const std::string name, const int wE, const int wF);
 
 
-	/** Adds a floating point output signal to the operator.
-	 * Adds a signal of type Signal::out to the the I/O signal list, 
+	/**
+	 * Adds a floating point output signal to the operator.
+	 * 	Adds a signal of type Signal::out to the the I/O signal list,
 	 * having the FP flag set on true. The total width of this signal will
 	 * be wE + wF + 1. (1 bit for sign)
 	 * @param name the name of the signal
@@ -213,54 +241,66 @@ public:
 
 	
 
-	/** sets the copyright string, should be authors + year
+	/**
+	 * Sets the copyright string: should be authors + year
 	 * @param authorsYears the names of the authors and the years of their contributions
 	 */
 	void setCopyrightString(std::string authorsYears);
 
 
-	/** use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
+	/**
+	 * Use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
 	 */
 	void useStdLogicUnsigned();
 
-	/** use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
+	/**
+	 * Use the Synopsys de-facto standard ieee.std_logic_signed for this entity
 	 */
 	void useStdLogicSigned();
 
-	/** use the real IEEE standard ieee.numeric_std for this entity
+	/**
+	 * Use the real IEEE standard ieee.numeric_std for this entity
 	 */
 	void useNumericStd();
+
 	/** 
-	 * use the real IEEE standard ieee.numeric_std for this entity, also 
+	 * Use the real IEEE standard ieee.numeric_std for this entity, also
 	 * with support for signed operations on bit vectors
 	 */
 	void useNumericStd_Signed();
 	
 	/** 
-	 * use the real IEEE standard ieee.numeric_std for this entity, also 
+	 * Use the real IEEE standard ieee.numeric_std for this entity, also
 	 * with support for unsigned operations on bit vectors
 	 */
 	void useNumericStd_Unsigned();
 
+	/**
+	 * Return the type of library used for this operator (ieee.xxx)
+	 */
 	int getStdLibType();
 
-	/** Sets Operator name to given name, with either the frequency appended, or "comb" for combinatorial.
+	/**
+	 * Sets Operator name to given name, with either the frequency appended, or "comb" for combinatorial.
 	 * @param operatorName new name of the operator
 	*/
 	void setNameWithFreq(std::string operatorName = "UnknownOperator");
 
-	/** Sets Operator name to givenName.
+	/**
 	 * Sets the name of the operator to operatorName.
 	 * @param operatorName new name of the operator
 	*/
 	void setName(std::string operatorName = "UnknownOperator");
 	
-	/** This method should be used by an operator to change the default name of a sub-component. The default name becomes the commented name.
+	/**
+	 * This method should be used by an operator to change the default name of a sub-component.
+	 * The default name becomes the commented name.
 	 * @param operatorName new name of the operator
 	*/
 	void changeName(std::string operatorName);
 	
-	/** Sets Operator name to prefix_(uniqueName_)_postfix
+	/**
+	 * Sets Operator name to prefix_(uniqueName_)_postfix
 	 * @param prefix the prefix string which will be placed in front of the operator name
 	 *               formed with the operator internal parameters
 	 * @param postfix the postfix string which will be placed at the end of the operator name
@@ -269,18 +309,21 @@ public:
 	void setName(std::string prefix, std::string postfix);
 
 
-	/** Adds a comment before the entity declaration, along with the copyright string etc.
-			The "comment" string should include -- at the beginning of each line.
+	/**
+	 * Adds a comment before the entity declaration, along with the copyright string etc.
+	 * The "comment" string should include -- at the beginning of each line.
 	*/
 	void addHeaderComment(std::string comment);
 		
-	/** Return the operator name. 
+	/**
 	 * Returns a string value representing the name of the operator. 
 	 * @return operator name
 	 */
 	string getName() const;
 
-	/** produces a new unique identifier */
+	/**
+	 * Produces a new unique identifier
+	 */
 	static int getNewUId();
 
 
@@ -291,49 +334,74 @@ public:
  /*****************************************************************************/
 
 
-	/* Functions related to pipeline management */
-	// TODO We should introduce a notion of pipetime, which is (cycle, critical path) in lexicographic order.
+	/**
+	 * Functions related to pipeline management
+	 */
 
-	/** Define the current cycle, and resets the critical path 
-	 * @param the new value of the current cycle */
+	/**
+	 * Define the current cycle, and resets the critical path
+	 * @param the new value of the current cycle
+	 */
 	void setCycle(int cycle, bool report=true) ;
 
-	/** Return the current cycle 
-	 * @return the current cycle */
+	/**
+	 * Return the current cycle
+	 * @return the current cycle
+	 */
 	int getCurrentCycle(); 
 
-	/** advance the current cycle by 1, and resets the critical path 
-	 * @param the new value of the current cycle */
+	/**
+	 * Advance the current cycle by 1, and resets the critical path
+	 * @param the new value of the current cycle
+	 */
 	void nextCycle(bool report=true) ;
 
-	/** Define the current cycle, and reset the critical path
-	 * @param the new value of the current cycle */
+	/**
+	 * Define the current cycle, and reset the critical path
+	 * @param the new value of the current cycle
+	 */
 	void previousCycle(bool report=true) ;
 
-	/** get the critical path of the current cycle so far */
+	/**
+	 * Return the critical path of the current cycle so far
+	 */
 	double getCriticalPath() ;
 
-	/** Set or reset the critical path of the current cycle  */
+	/**
+	 * Set or reset the critical path of the current cycle
+	 */
 	void setCriticalPath(double delay) ;
 
-	/** Adds to the critical path of the current stage, and insert a pipeline stage if needed
-	 * @param the delay to add to the critical path of current pipeline stage */
+	/**
+	 * Adds to the critical path of the current stage, and insert a pipeline stage if needed
+	 * @param the delay to add to the critical path of current pipeline stage
+	 */
 	void addToCriticalPath(double delay) ;
 
+	/**
+	 * Add @delay to the critical path, advancing the pipeline stages, if needed.
+	 * This is the delay corresponding to the signals which follow in the operator constructor
+	 * @param delay the delay to be added to the critical path
+	 * @param report whether comments about pipelining operations are to be added as comments in the generated code
+	 */
 	bool manageCriticalPath(double delay=0.0, bool report=true);
 
 
-	/** get the critical path delay associated to a given output of the operator
-	 * @param the name of the output */
+	/**
+	 * Return the critical path delay associated to a given output of the operator
+	 * @param the name of the output
+	 */
 	double getOutputDelay(string s); 
 
-	/** Set the current cycle to that of a signal and reset the critical path. It may increase or decrease current cycle. 
+	/**
+	 * Set the current cycle to that of a signal and reset the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before 
 	 * @param report is a boolean, if true it will report the cycle 
 	 */
 	void setCycleFromSignal(string name, bool report=true) ;
 
-	/** Set the current cycle and the critical path. It may increase or decrease current cycle. 
+	/**
+	 * Set the current cycle and the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before. 
 	 * @param criticalPath is the critical path delay associated to this signal: typically getDelay(name)
 	 * @param report is a boolean, if true it will report the cycle 
@@ -341,49 +409,57 @@ public:
 	void setCycleFromSignal(string name, double criticalPath, bool report=true) ;
 	// TODO: FIXME  
 	// param criticalPath is the critical path delay associated to this signal: typically getDelay(name)
-	// Shouldn't this be the default behaviour?
+	// Shouldn't this be the default behavior?
 	// Check current use and fix.
 
 
-
+	/**
+	 * Return the cycle of the given cycle
+	 * @param name the name of the signal
+	 */
 	int getCycleFromSignal(string name, bool report = false);
 		
 	
-	/** advance the current cycle to that of a signal. It may only increase current cycle. To synchronize
-		 two or more signals, first call setCycleFromSignal() on the
-		 first, then syncCycleFromSignal() on the remaining ones. It
-		 will synchronize to the latest of these signals.  
-		 * @param name is the signal name. It must have been defined before 
-		 * @param report is a boolean, if true it will report the cycle 
-		 */
+	/**
+	 * Advance the current cycle to that of a signal. It may only increase current cycle. To synchronize
+	 * two or more signals, first call setCycleFromSignal() on the
+	 * first, then syncCycleFromSignal() on the remaining ones. It
+	 * will synchronize to the latest of these signals.
+	 * @param name is the signal name. It must have been defined before
+	 * @param report is a boolean, if true it will report the cycle
+	 */
 	bool syncCycleFromSignal(string name, bool report=true) ;
 
-	/** advance the current cycle to that of a signal, updating critical paths.
-		 * @param name is the signal name. It must have been defined before 
-		 * @param criticalPath is a double, the critical path already consumed up to the signal passed as first arg. 
-
-		 We have three cases:
-		 1/ currentCycle > name.cycle, then do nothing
-		 2/ currentCycle < name.cycle, then advance currentCycle to name.cycle, and set the current critical path to criticalPath
-		 3/ currentCycle = name.cycle: set critical path to the max of the two critical paths.
-		 */
+	/**
+	 * advance the current cycle to that of a signal, updating critical paths.
+	 * @param name is the signal name. It must have been defined before
+	 * @param criticalPath is a double, the critical path already consumed up to the signal passed as first argument.
+	 *
+	 * We have three cases:
+	 * 	1/ currentCycle > name.cycle, then do nothing
+	 * 	2/ currentCycle < name.cycle, then advance currentCycle to name.cycle, and set the current critical path to criticalPath
+	 * 	3/ currentCycle = name.cycle: set critical path to the max of the two critical paths.
+	 */
 	bool syncCycleFromSignal(string name, double criticalPath, bool report=true) ;
 
 
-	/** sets the delay of the signal with name given by first argument 
-		@param name the name of the signal
-		@param delay the delay to be associated with the name	
-	**/
+	/**
+	 * Sets the delay of the signal with the name given by first argument
+	 * @param name the name of the signal
+	 * @param delay the delay to be associated with the name
+	 */
 	void setSignalDelay(string name, double delay);
 
-	/** returns the delay on the signal with the name denoted by the argument 
-		@param name signal Name
-		@return delay of this signal
-	*/
+	/**
+	 * Returns the delay on the signal with the name denoted by the argument
+	 * @param name signal Name
+	 * @return delay of this signal
+	 */
 	double getSignalDelay(string name);
 
 
-	/** Declares a signal appearing on the Left Hand Side of a VHDL assignment
+	/**
+	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal (optional, default 1)
 	 * @param isbus: a signal of width 1 is declared as std_logic when false, as std_logic_vector when true (optional, default false)
@@ -393,7 +469,8 @@ public:
 	 */
 	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
-	/** Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
+	/**
+	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
 	 * @param name is the name of the signal
 	 * @param isbus: if true, declares the signal as std_logic_vector; else declares the signal as std_logic
 	 * @param regType: the registring type of this signal. See also the Signal Class for mor info
@@ -403,7 +480,8 @@ public:
 	string declare(string name, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
 
-	/** Declares a fixed-point signal on the Left Hand Side of a VHDL assignment
+	/**
+	 * Declares a fixed-point signal on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
 	 * @param isSigned whether the signal is signed, or not
 	 * @param MSB the weight of the MSB of the signal
@@ -414,9 +492,10 @@ public:
 	 */
 	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
-	/** Resizes a fixed-point signal and assigns it to a new declared signal.
-			May zero-extend, sign-extend, or truncate.
-			Warns at debug level when truncating LSBs, and warns a bit louder when truncating MSBs.  
+	/**
+	 * Resizes a fixed-point signal and assigns it to a new declared signal.
+	 * 	May zero-extend, sign-extend, or truncate.
+	 * 	Warns at debug level when truncating LSBs, and warns a bit louder when truncating MSBs.
 	 * @param lhsName is the name of the new (resized) signal
 	 * @param rhsName is the name of the old (to be resized) signal
 	 * @return name
@@ -428,7 +507,8 @@ public:
 
 
 #if 1
-	/** use a signal on the Right 
+	/**
+	 * Use a signal on the Right
 	 * @param name is the name of the signal
 	 * @return name
 	 */
@@ -437,30 +517,34 @@ public:
 	string use(string name, int delay);
 #endif
 
-	/** Declare an output mapping for an instance of a sub-component
-	 * Also declares the local signal implicitely, with width taken from the component 	
+	/**
+	 * Declare an output mapping for an instance of a sub-component
+	 * Also declares the local signal implicitly, with width taken from the component
 	 * @param op is a pointer to the subcomponent
 	 * @param componentPortName is the name of the port on the component
 	 * @param actualSignalName is the name of the signal in This mapped to this port
-	 * @param newSignal_ (by default true), defined wheter or not actualSignalName has to be declared as a new signal by outPortMap
+	 * @param newSignal_ (by default true), defined whether or not actualSignalName has to be declared as a new signal by outPortMap
 	 * @return name
 	 */
 	void outPortMap(Operator* op, string componentPortName, string actualSignalName, bool newSignal = true);
 
 
-	/** use a signal as input of a subcomponent
+	/**
+	 * Use a signal as input of a subcomponent
 	 * @param componentPortName is the name of the port on the component
 	 * @param actualSignalName is the name of the signal (of this) mapped to this port
 	 */
 	void inPortMap(Operator* op, string componentPortName, string actualSignalName);
 
-	/** use a constant signal as input of a subcomponent. 
+	/**
+	 * Use a constant signal as input of a subcomponent.
 	 * @param componentPortName is the name of the port on the component
 	 * @param actualSignal is the constant signal to be mapped to this port
 	 */
 	void inPortMapCst(Operator* op, string componentPortName, string actualSignal);
 
-	/** returns the VHDL for an instance of a sub-component. 
+	/**
+	 * Returns the VHDL for an instance of a sub-component.
 	 * @param op represents the operator to be port mapped 
 	 * @param instanceName is the name of the instance as a label
 	 * @return name
@@ -470,15 +554,24 @@ public:
 
 
 
-	/** adds attributes to the generated VHDL so that the tools use embedded RAM blocks for an instance
-	 * @ param t a pointer to this instance
+	/**
+	 * Adds attributes to the generated VHDL so that the tools use embedded RAM blocks for an instance
+	 * @param t a pointer to this instance
 	 */
-	void useHardRAM(Operator* t); 
+	void useHardRAM(Operator* t);
+
+	/**
+	 * Adds attributes to the generated VHDL so that the tools use LUT-based RAM blocks for an instance
+	 * @param t a pointer to this instance
+	 */
 	void useSoftRAM(Operator* t); 
 
-	/** define architecture name for this operator (by default : arch)
+
+
+	/**
+	 * Define the architecture name for this operator (by default : arch)
 	 *	@param[in] 	architectureName		- new name for the operator architecture
-	 **/
+	 */
 	void setArchitectureName(string architectureName);
 
 	/**
@@ -568,89 +661,107 @@ public:
 
 	
 
-	/** build all the signal declarations from signals implicitely declared by declare().
+	/**
+	 * Build all the signal declarations from signals implicitly declared by declare().
 	 */
 	string buildVHDLSignalDeclarations();
 
-	/** build all the component declarations from the list built by instance().
+	/**
+	 * Build all the component declarations from the list of components built by instance().
 	 */
 	string buildVHDLComponentDeclarations();
 
-	/** build all the registers from signals implicitely delayed by declare() 
-	 *	 This is the 2.0 equivalent of outputVHDLSignalRegisters
+	/**
+	 * Build all the registers from signals implicitly delayed by declare()
+	 *	This is the 2.0 equivalent of outputVHDLSignalRegisters
 	 */
 	string buildVHDLRegisters();
 
-	/** build all the type declarations.
+	/**
+	 * Build all the type declarations.
 	 */
 	string buildVHDLTypeDeclarations();
 
-	/** output the VHDL constants. */
+	/**
+	 * Output the VHDL constants.
+	 */
 	string buildVHDLConstantDeclarations();
 
-	/** output the VHDL constants. */
+	/**
+	 * Output the VHDL constants.
+	 */
 	string buildVHDLAttributes();
 
 
 
 
 
-	/** the main function outputs the VHDL for the operator.
-		 If you use the modern (post-0.10) framework you no longer need to overload this method,
-		 the default will do.
-	 * @param o the stream where the entity will outputted
+	/**
+	 * The main function that outputs the VHDL for the operator.
+	 * If you use the modern (post-0.10) framework you no longer need to overload this method,
+	 * the default will do.
+	 * @param o the stream where the entity will be output
 	 * @param name the name of the architecture
 	 */
 	virtual void outputVHDL(std::ostream& o, std::string name);
 	
-	/** the main function outputs the VHDL for the operator 
-	 * @param o the stream where the entity will outputted
+	/**
+	 * The main function outputs the VHDL for the operator.
+	 * Calls the two parameter version, with name = uniqueName
+	 * @param o the stream where the entity will be output
 	 */	
-	void outputVHDL(std::ostream& o);   // calls the previous with name = uniqueName
+	void outputVHDL(std::ostream& o);
 
 
 
 
 
-	/** True if the operator needs a clock signal; 
+	/**
+	 * Returns true if the operator needs a clock signal;
 	 * It will also get a rst but doesn't need to use it.
 	 */	
 	bool isSequential();  
 
 
-        /** True if the operator need a recirculation signal 
-         *  TODO : change name
-         */
-        bool isRecirculatory();
+	/**
+	 * Returns true if the operator needs a recirculation signal
+	 *  TODO : change name
+	 */
+	bool isRecirculatory();
 	
-	/** Set the operator to sequential.
-		 You shouldn't need to use this method for standard operators 
-		 (Operator::Operator()  calls it according to Target)
+	/**
+	 * Set the operator to sequential.
+	 * You shouldn't need to use this method for standard operators
+	 * (Operator::Operator()  calls it according to Target)
 	 */	
 	void setSequential(); 
 	
-	/** Set the operator to combinatorial
-		 You shouldn't need to use this method for standard operators 
-		 (Operator::Operator()  calls it according to Target)
+	/**
+	 * Set the operator to combinatorial
+	 * You shouldn't need to use this method for standard operators
+	 * (Operator::Operator()  calls it according to Target)
 	 */	
 	void setCombinatorial();
 
 
 
-	/** Set the operator to need a recirculation signal in order to 
-			trigger the pipeline work
-	*/
+	/**
+	 * Set the operator to need a recirculation signal in order to
+	 * trigger the pipeline work
+	 */
 	void setRecirculationSignal();
 	
-	/** Indicates that it is not a warning if there is feedback of one cycle, but it
-		is an error if a feedback of more than one cycle happens.
-		*/
+	/**
+	 * Indicates that it is not a warning if there is feedback of one cycle, but it
+	 * is an error if a feedback of more than one cycle happens.
+	 */
 	void setHasDelay1Feedbacks();
 
 
-	/** Indicates that it is not a warning if there is feedback of one cycle, but it
-		is an error if a feedback of more than one cycle happens.
-		*/
+	/**
+	 * Indicates that it is not a warning if there is feedback of one cycle, but it
+	 * is an error if a feedback of more than one cycle happens.
+	 */
 	bool hasDelay1Feedbacks();
 	
 
@@ -659,17 +770,23 @@ public:
 	
 	
 
-	/** Returns a pointer to the signal having the name s. Throws an exception if the signal is not yet declared.
-	  * @param s then name of the signal we want to return
-	  * @return the pointer to the signal having name s 
-	  */
+	/**
+	 * Returns a pointer to the signal having the name @param s.
+	 * Throws an exception if the signal is not yet declared.
+	 * @param s then name of the signal we want to return
+	 * @return the pointer to the signal having name s
+	 */
 	Signal* getSignalByName(string s);
 
-	/** Same as getSignalByName() but will strip the _d1 inserted by automatic pipelining.
-			Mostly for internal use. 
+	/**
+	 * Same as getSignalByName() but will strip the _dxx inserted by automatic pipelining.
+	 * Mostly for internal use.
 	*/
 	Signal* getDelayedSignalByName(string s);
 
+	/**
+	 * Return the list of signals declared in this operator
+	 */
 	vector<Signal*> getSignalList(){
 		return signalList_;
 	};
@@ -680,31 +797,36 @@ public:
 
 
 
-	/** DEPRECATED Outputs component declaration 
+	/** DEPRECATED
+	 * Outputs component declaration
 	 * @param o the stream where the component is outputed
 	 * @param name the name of the VHDL component we want to output to o
 	 */
 	virtual void outputVHDLComponent(std::ostream& o, std::string name);
 	
-	/**  DEPRECATED Outputs the VHDL component code of the current operator
+	/** DEPRECATED
+	 * Outputs the VHDL component code of the current operator
 	 * @param o the stream where the component is outputed
 	 */
 	void outputVHDLComponent(std::ostream& o);  
 		
 		
 
-	/** Return the number of input+output signals 
+	/**
+	 * Return the number of input+output signals
 	 * @return the size of the IO list. The total number of input and output signals
 	 *         of the architecture.
 	 */
 	int getIOListSize() const;
 	
-	/** Returns a pointer to the list containing the IO signals.
+	/**
+	 * Returns a pointer to the list containing the IO signals.
 	 * @return pointer to ioList 
 	 */
 	vector<Signal*> * getIOList();
 
-	/** passes the IOList by value.
+	/**
+	 * Passes the IOList by value.
 	 * @return the ioList 
 	 */
 	vector<Signal*> getIOListV(){
@@ -712,7 +834,8 @@ public:
 	}
 
 	
-	/** Returns a pointer a signal from the ioList.
+	/**
+	 * Returns a pointer a signal from the ioList.
 	 * @param the index of the signal in the list
 	 * @return pointer to the i'th signal of ioList 
 	 */
@@ -723,14 +846,15 @@ public:
 
 
 	/** DEPRECATED, better use setCopyrightString
-		 Output the licence
+	 * Output the licence
 	 * @param o the stream where the licence is going to be outputted
 	 * @param authorsYears the names of the authors and the years of their contributions
 	 */
 	void licence(std::ostream& o, std::string authorsYears);
 
 
-	/**  Output the licence, using copyrightString_
+	/**
+	 * Output the licence, using copyrightString_
 	 * @param o the stream where the licence is going to be outputted
 	 */
 	void licence(std::ostream& o);
@@ -741,27 +865,34 @@ public:
 
 	void pipelineInfo(std::ostream& o);
 
-	/** Output the standard library paperwork 
+	/**
+	 * Output the standard library paperwork
 	 * @param o the stream where the libraries will be written to
 	 */
 	void stdLibs(std::ostream& o);
 
 		
-	/** DEPRECATED  Output the VHDL entity of the current operator.
+	/** DEPRECATED
+	 * Output the VHDL entity of the current operator.
 	 * @param o the stream where the entity will be outputted
 	 */
 	void outputVHDLEntity(std::ostream& o);
 	
-	/** DEPRECATED  output all the signal declarations 
+	/** DEPRECATED
+	 * Output all the signal declarations
 	 * @param o the stream where the signal deca
 	 */
 	void outputVHDLSignalDeclarations(std::ostream& o);
 
 
-	/** Add a VHDL type declaration. */
+	/**
+	 * Add a VHDL type declaration.
+	 */
  	void addType(std::string name, std::string def);
 
-	/** Add a VHDL constant. This may make the code easier to read, but more difficult to debug. */
+	/**
+	 * Add a VHDL constant. This may make the code easier to read, but more difficult to debug.
+	 */
 	void addConstant(std::string name, std::string ctype, int cvalue);
 
 	void addConstant(std::string name, std::string ctype, mpz_class cvalue);
@@ -769,7 +900,8 @@ public:
 	void addConstant(std::string name, std::string ctype, string cvalue);
 	
 
-	/** Add attribute, declaring the attribute name if it is not done already.
+	/**
+	 * Add an attribute, declaring the attribute's name if it is not done already.
 	 */ 
 	void addAttribute(std::string attributeName,  std::string attributeType,  std::string object, std::string value );
 
@@ -781,35 +913,48 @@ public:
 
 
 
-	/** Final report function, prints to the terminal.  By default
-	 * reports the pipeline depth, but feel free to overload if you have any
-	 * thing useful to tell to the end user
+	/**
+	 * Final report function, prints to the terminal.
+	 * By default, reports the pipeline depth, but feel free to overload
+	 * it if you have anything useful to tell to the end user
 	*/
 	virtual void outputFinalReport(int level);	
 	
 	
-	/** Gets the pipeline depth of this operator 
+	/**
+	 * Returns the pipeline depth of this operator
 	 * @return the pipeline depth of the operator
 	*/
 	int getPipelineDepth();
 
-	/** Should not be used for operators without memory */
+	/**
+	 * Set the pipeline depth
+	 * Should not be used for operators without memory
+	 */
 	void setPipelineDepth(int d);
 
 	/**
-	* @return the output map containing the signal -> delay associations 
-	*/	
+	 * Return the output delay map
+	 * @return the output map containing the signal -> delay associations
+	 */
 	map<string, double> getOutDelayMap();
 	
 	/**
-	* @return the output map containing the signal -> declaration cycle 
-	*/	
+	 * Return the declare table
+	 * @return the map containing the signal -> declaration cycle
+	 */
 	map<string, int> getDeclareTable();
 
+	/**
+	 * Return the target member
+	 */
 	Target* getTarget(){
 		return target_;
 	}
 
+	/**
+	 * Return the operator's unique name
+	 */
 	string getUniqueName(){
 		return uniqueName_;
 	}
