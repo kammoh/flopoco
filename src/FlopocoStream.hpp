@@ -44,18 +44,21 @@ namespace flopoco{
 
 		template <class paramType> friend FlopocoStream& operator <<(FlopocoStream& output, paramType c) {
 			output.vhdlCode << c;
+			output.codeParsed = false;
 			return output;
 		}
-		
 
 		
 		friend FlopocoStream & operator<<(FlopocoStream& output, FlopocoStream fs) {
 			output.vhdlCode << fs.str();
+			output.codeParsed = false;
 			return output; 
 		}
 		
+
 		friend FlopocoStream& operator<<( FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
 			output.vhdlCode << std::endl;
+			output.codeParsed = false;
 			return output;
 		}
 		
@@ -73,17 +76,16 @@ namespace flopoco{
 
 			/**
 			 * method that does the similar thing as str() does on ostringstream objects.
-			 * Processing is done using a buffer (vhdlCodeBuffer). 
-			 * The output code is = previously transformed code (vhdlCode) + 
-			 *  newly transformed code ( transform(vhdlCodeBuffer) );
-			 * The transformation on vhdlCodeBuffer is done when the buffer is 
+			 * Processing is done using the vhdl code buffer (vhdlCode).
+			 * The output code is = newly transformed code;
+			 * The transformation on vhdlCode is done when the buffer is
 			 * flushed 
 			 * @return the augmented string encapsulated by FlopocoStream  
 			 */
 			string str();
 
 			/** 
-			 * Resets both the buffer and the code stream. 
+			 * Resets both the code stream.
 			 * @return returns empty string for compatibility issues.
 			 */ 
 			string str(string UNUSED(s) );
@@ -141,16 +143,17 @@ namespace flopoco{
 			 * Because of the parsing stage, lhsName might be of the form (lhsName1, lhsName2, ...),
 			 * which must be fixed.
 			 */
-			bool cleanupDependenceTable();
+			void cleanupDependenceTable();
 
 
-			ostringstream vhdlCode;              /**< the vhdl code */
+			ostringstream vhdlCode;              			/**< the vhdl code */
 
 			vector<pair<string, string>> dependenceTable;	/**< table containing the left hand side- right hand side dependences */
 
 		protected:
 		
 			bool disabledParsing;
+			bool codeParsed;
 	};
 }
 #endif

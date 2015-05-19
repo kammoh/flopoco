@@ -33,11 +33,14 @@ using namespace std;
 
 namespace flopoco{
 
-	/** The FlopocoStream class.  */
+	/**
+	 * The FlopocoStream class constructor
+	 */
 	FlopocoStream::FlopocoStream(){
 		vhdlCode.str("");
 		dependenceTable.clear();
 		disabledParsing = false;
+		codeParsed = false;
 	}
 
 
@@ -46,13 +49,18 @@ namespace flopoco{
 
 
 	string FlopocoStream::str(){
-		flush();
+
+		if(!codeParsed)
+		{
+			flush();
+		}
 		return vhdlCode.str();
 	}
 
 	string FlopocoStream::str(string UNUSED(s) ){
 		vhdlCode.str("");
 		dependenceTable.clear();
+		codeParsed = false;
 		return "";
 	}
 
@@ -70,7 +78,7 @@ namespace flopoco{
 			cleanupDependenceTable();
 
 			/* the newly processed code is appended to the existing one */
-			vhdlCode << bufferCode.str();
+			vhdlCode.str(bufferCode.str());
 		}
 	}
 
@@ -80,7 +88,9 @@ namespace flopoco{
 		ostringstream vhdlO;
 		istringstream in(vhdlCode.str());
 
-		/* instantiate the flex++ object  for lexing the buffer info */
+		/*
+		 * instantiate the flex++ object  for lexing the buffer info
+		 */
 		LexerContext* lexer = new LexerContext(&in, &vhdlO);
 
 		/*
@@ -95,6 +105,11 @@ namespace flopoco{
 		 * class dependenceTable
 		 */
 		updateDependenceTable(lexer->dependenceTable);
+
+		/*
+		 * set the flag for code parsing
+		 */
+		codeParsed = true;
 
 		/* the annotated string is returned */
 		return vhdlO.str();
@@ -139,7 +154,7 @@ namespace flopoco{
 	}
 
 
-	bool FlopocoStream::cleanupDependenceTable()
+	void FlopocoStream::cleanupDependenceTable()
 	{
 		vector<pair<string, string>> newDependenceTable;
 
@@ -148,7 +163,7 @@ namespace flopoco{
 			string lhsName = newDependenceTable[i].first;
 			string rhsName = newDependenceTable[i].second;
 
-			if(lhsName.find("("))
+			if(lhsName.find("(") || lhsName.find(")") || lhsName.find(",") || lhsName.find("\t") || lhsName.find("\n") || lhsName.find(" "))
 			{
 				//split the lhsName into several names, without any separating characters (,\n\t\ )
 				string delimiters = " \t\n,()";
@@ -160,7 +175,8 @@ namespace flopoco{
 					newLhsName.str("");
 					while(delimiters.find(lhsName[count]) != string::npos)
 						count++;
-					while(delimiters.find(lhsName[count]) == string::npos)
+					while((delimiters.find(lhsName[count]) == string::npos)
+							&& (count<lhsName.size()))
 					{
 						newLhsName << lhsName[count];
 						count++;
@@ -178,6 +194,13 @@ namespace flopoco{
 				tmpPair.second = rhsName;
 				newDependenceTable.push_back(tmpPair);
 			}
+		}
+
+		dependenceTable.clear();
+
+		for(int i=0; (unsigned)i<newDependenceTable.size(); i++)
+		{
+			dependenceTable.push_back(newDependenceTable[i]);
 		}
 	}
 
