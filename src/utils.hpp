@@ -20,33 +20,131 @@ using namespace std;
 
 namespace flopoco{
 
-        /** This class contains all information about a random state
-         * it has to be used has a singleton to initialize and share a random state
-         * between calls to getLargeRandom function
-         */
-        class FloPoCoRandomState {
-			private:
-				/** the function init could be called from several places, to avoid
-				 *	multiple initialization this variable will be set to true on 
-				 * 	the first call to init, and then will trigger a quick return of init
-				 * 	without a new complete initialization of the random state
-				**/
-				static bool isInit_;
-          public:
-            /**
-             * public value to store currend gmp random state
-             */
-            static gmp_randstate_t m_state;
+	/**
+	 * This is the definition of a triplet type of data,
+	 * as there is no such equivalent in the std libraries.
+	 * Remark: std::tuple can be used as well, but it is defined from C++11 onwards
+	 */
+	//------------------------------------------------------------------------------
+	template<class _type1, class _type2, class _type3>
+		struct triplet
+	{
+		typedef _type1 first_type;
+		typedef _type2 second_type;
+		typedef _type3 third_type;
+
+		_type1 first;
+		_type2 second;
+		_type3 third;
+
+		//constructors
+		triplet(): first(_type1()), second(_type2()), third (_type3()) {};
+		triplet(const _type1& first_, const _type2& second_, const _type3& third_): first(first_), second(second_), third(third_) {};
+		template<class _type1_t, class _type2_t, class _type3_t>
+			triplet(const triplet<_type1_t, _type2_t, _type3_t>& tmp) : first(tmp.first), second(tmp.second), third(tmp.third) {};
+	};
+
+	//relational operators
+	template<class _type1, class _type2, class _type3>
+		inline bool operator==(const triplet<_type1, _type2, _type3>& tmp1, const triplet<_type1, _type2, _type3>& tmp2)
+	{
+		return ((tmp1.first == tmp2.first) && (tmp1.second == tmp2.second) && (tmp1.third == tmp2.third));
+	}
+
+	template<class _type1, class _type2, class _type3>
+		inline bool operator!=(const triplet<_type1, _type2, _type3>& tmp1, const triplet<_type1, _type2, _type3>& tmp2)
+	{
+		return ((tmp1.first != tmp2.first) || (tmp1.second != tmp2.second) || (tmp1.third != tmp2.third));
+	}
+
+	template<class _type1, class _type2, class _type3>
+		inline bool operator<(const triplet<_type1, _type2, _type3>& tmp1, const triplet<_type1, _type2, _type3>& tmp2)
+	{
+		return ((tmp1.first < tmp2.first)
+				|| (!(tmp1.first < tmp2.first) && (tmp1.second < tmp2.second))
+				|| (!(tmp1.first < tmp2.first) && !(tmp1.second < tmp2.second) && (tmp1.third < tmp2.third)));
+	}
+
+	template<class _type1, class _type2, class _type3>
+		inline bool operator<=(const triplet<_type1, _type2, _type3>& tmp1, const triplet<_type1, _type2, _type3>& tmp2)
+	{
+		return ((tmp1.first <= tmp2.first)
+				|| ((tmp1.first > tmp2.first) && (tmp1.second <= tmp2.second))
+				|| ((tmp1.first > tmp2.first) && (tmp1.second > tmp2.second) && (tmp1.third <= tmp2.third)));
+	}
+
+	template<class _type1, class _type2, class _type3>
+		inline bool operator>(const triplet<_type1, _type2, _type3>& tmp1, const triplet<_type1, _type2, _type3>& tmp2)
+	{
+		return ((tmp1.first > tmp2.first)
+				|| (!(tmp1.first > tmp2.first) && (tmp1.second > tmp2.second))
+				|| (!(tmp1.first > tmp2.first) && !(tmp1.second > tmp2.second) && (tmp1.third > tmp2.third)));
+	}
+
+	template<class _type1, class _type2, class _type3>
+		inline bool operator>=(const triplet<_type1, _type2, _type3>& tmp1, const triplet<_type1, _type2, _type3>& tmp2)
+	{
+		return ((tmp1.first >= tmp2.first)
+				|| ((tmp1.first < tmp2.first) && (tmp1.second >= tmp2.second))
+				|| ((tmp1.first < tmp2.first) && (tmp1.second < tmp2.second) && (tmp1.third >= tmp2.third)));
+	}
+
+	//create a new triplet
+	template<class _type1, class _type2, class _type3>
+		inline triplet<_type1, _type2, _type3> make_triplet(const _type1& tmp1, const _type2& tmp2, const _type3& tmp3)
+	{
+		return triplet<_type1, _type2, _type3>(tmp1, tmp2, tmp3);
+	}
+
+	//swap the content of two triplets
+	template<class _type1, class _type2, class _type3>
+		inline void swap(triplet<_type1, _type2, _type3>& tmp1, triplet<_type1, _type2, _type3>& tmp2)
+	{
+		_type1 aux1 = tmp1.first;
+		tmp1.first = tmp2.first;
+		tmp2.first = aux1;
+		delete(aux1);
+
+		_type2 aux2 = tmp1.second;
+		tmp1.second = tmp2.second;
+		tmp2.second = aux2;
+		delete(aux2);
+
+		_type2 aux3 = tmp1.third;
+		tmp1.third = tmp2.third;
+		tmp2.third = aux3;
+		delete(aux3);
+	}
+	//------------------------------------------------------------------------------
+
+	/** This class contains all information about a random state
+	 * it has to be used has a singleton to initialize and share a random state
+	 * between calls to getLargeRandom function
+	 */
+	class FloPoCoRandomState {
+		private:
+			/** the function init could be called from several places, to avoid
+			 *	multiple initialization this variable will be set to true on
+			 * 	the first call to init, and then will trigger a quick return of init
+			 * 	without a new complete initialization of the random state
+			 **/
+			static bool isInit_;
+
+		public:
+			/**
+			 * public value to store currend gmp random state
+			 */
+			static gmp_randstate_t m_state;
 
 
-            /**
-             * static public function to initialize random generator
-             * with a seed base on the integer n
-             * @param n the integer used to generate the seed
+			/**
+			 * static public function to initialize random generator
+			 * with a seed base on the integer n
+			 * @param n the integer used to generate the seed
 			 * @param force  if set will not consider the isInit_ flag
-             */
-            static void init(int n, bool force = true);
-        };
+			 */
+			static void init(int n, bool force = true);
+	};
 
 	/** Returns under the form of a string of given size, the unsigned binary representation of an integer.
 	 * @param x the number to be represented in unsigned binary
