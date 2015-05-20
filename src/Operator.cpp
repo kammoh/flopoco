@@ -1590,6 +1590,118 @@ namespace flopoco{
 		return declareTable;
 	}
 	
+	Target* Operator::getTarget(){
+		return target_;
+	}
+
+	string Operator::getUniqueName(){
+		return uniqueName_;
+	}
+
+	string Operator::getArchitectureName(){
+		return architectureName_;
+	}
+
+	vector<Signal*> Operator::getTestCaseSignals(){
+		return testCaseSignals_;
+	}
+
+	map<string, string> Operator::getPortMap(){
+		return portMap_;
+	}
+
+	map<string, double> Operator::getInputDelayMap(){
+		return inputDelayMap;
+	}
+
+	map<string, Operator*> Operator::getSubComponents(){
+		return subComponents_;
+	}
+
+	string Operator::getSrcFileName(){
+		return srcFileName;
+	}
+
+	int Operator::getOperatorCost(){
+		return cost;
+	}
+
+	int Operator::getNumberOfInputs(){
+		return numberOfInputs_;
+	}
+
+	int Operator::getNumberOfOutputs(){
+		return numberOfOutputs_;
+	}
+
+	map<string, Signal*> Operator::getSignalMap(){
+		return signalMap_;
+	}
+
+	map<string, pair<string, string> > Operator::getConstants(){
+		return constants_;
+	}
+
+	map<string, string> Operator::getAttributes(){
+		return attributes_;
+	}
+
+	map<string, string> Operator::getTypes(){
+		return types_;
+	}
+
+	map<pair<string,string>, string> Operator::getAttributesValues(){
+		return attributesValues_;
+	}
+
+	bool Operator::getHasRegistersWithoutReset(){
+		return hasRegistersWithoutReset_;
+	}
+
+	bool Operator::getHasRegistersWithAsyncReset(){
+		return hasRegistersWithAsyncReset_;
+	}
+
+	bool Operator::getHasRegistersWithSyncReset(){
+		return hasRegistersWithSyncReset_;
+	}
+
+	bool Operator::hasReset() {
+		return hasRegistersWithSyncReset_ || hasRegistersWithAsyncReset_;
+	}
+
+	bool Operator::hasClockEnable(){
+		return hasClockEnable_;
+	}
+
+	void Operator::setClockEnable(bool val){
+		hasClockEnable_=val;
+	}
+
+	string Operator::getCopyrightString(){
+		return copyrightString_;
+	}
+
+	bool Operator::getNeedRecirculationSignal(){
+		return needRecirculationSignal_;
+	}
+
+	Operator* Operator::getIndirectOperator(){
+		return indirectOperator_;
+	}
+
+	vector<Operator*> Operator::getOpList(){
+		return oplist;
+	}
+
+	vector<Operator*>& Operator::getOpListR(){
+		return oplist;
+	}
+
+	FlopocoStream* Operator::getFlopocoVHDLStream(){
+		return &vhdl;
+	}
+
 	void Operator::outputVHDL(std::ostream& o, std::string name) {
 		if (! vhdl.isEmpty() ){
 			licence(o);
@@ -1707,6 +1819,15 @@ namespace flopoco{
 	}
 	
 
+	void Operator::setuid(int mm){
+		myuid = mm;
+	}
+
+	int Operator::getuid(){
+		return myuid;
+	}
+
+
 
 	void  Operator::setIndirectOperator(Operator* op){
 		indirectOperator_=op;
@@ -1823,6 +1944,53 @@ namespace flopoco{
 	}
 
 
+	/**
+	 * Completely replace "this" with a copy of another operator.
+	 */
+	void  Operator::cloneOperator(Operator *op){
+		stdLibType_ = op->stdLibType_;
+		subComponents_ = op->getSubComponents();
+		signalList_ = op->getSignalList();
+		ioList_     = op->getIOListV();
+		target_           = op->getTarget();
+		uniqueName_       = op->getUniqueName();
+		architectureName_ = op->getArchitectureName();
+		testCaseSignals_ = op->getTestCaseSignals();
+		portMap_ = op->getPortMap();
+		outDelayMap = map<string,double>(op->getOutDelayMap());
+		inputDelayMap = op->getInputDelayMap();
+		vhdl.vhdlCodeBuffer << op->vhdl.vhdlCodeBuffer.str();
+		vhdl.vhdlCode       << op->vhdl.vhdlCode.str();
+		vhdl.currentCycle_   = op->vhdl.currentCycle_;
+		vhdl.useTable        = op->vhdl.useTable;
+		srcFileName = op->getSrcFileName();
+		declareTable = op->getDeclareTable();
+		cost = op->getOperatorCost();
+		numberOfInputs_  = op->getNumberOfInputs();
+		numberOfOutputs_ = op->getNumberOfOutputs();
+		isSequential_    = op->isSequential();
+		pipelineDepth_   = op->getPipelineDepth();
+		signalMap_ = op->getSignalMap();
+		constants_ = op->getConstants();
+		attributes_ = op->getAttributes();
+		types_ = op->getTypes();
+		attributesValues_ = op->getAttributesValues();
+
+		hasRegistersWithoutReset_   = op->getHasRegistersWithoutReset();
+		hasRegistersWithAsyncReset_ = op->getHasRegistersWithAsyncReset();
+		hasRegistersWithSyncReset_  = op->getHasRegistersWithSyncReset();
+		hasClockEnable_             = op->hasClockEnable();
+		copyrightString_            = op->getCopyrightString();
+		currentCycle_               = op->getCurrentCycle();
+		criticalPath_               = op->getCriticalPath();
+		needRecirculationSignal_    = op->getNeedRecirculationSignal();
+		indirectOperator_           = op->getIndirectOperator();
+		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
+
+		oplist                      = op->getOpList();
+	}
+
+
 
 
 	void Operator::outputVHDLToFile(vector<Operator*> &oplist, ofstream& file){
@@ -1874,6 +2042,88 @@ namespace flopoco{
 	
 #endif
 	
+
+
+	float Operator::pickRandomNum ( float limit, int fp, int sp )
+	{
+		static boost::mt19937 rng;
+		float element;
+		const float  limitMax = 112.0;
+		string distribution = "gauss";
+
+		// the rng need to be "re-seed" in order to provide different number otherwise it will always give the same
+		static unsigned int seed = 0;
+		rng.seed ( ( ++seed + time ( NULL ) ) );
+
+		if ( distribution == "gauss" ){
+			if ( limit == 0 ){
+				// fp represent the mean and sp the standard deviation
+				boost::normal_distribution<> nd ( fp, sp );
+				boost::variate_generator < boost::mt19937&, boost::normal_distribution<> > var_nor ( rng, nd );
+				do{
+					element = fabs ( var_nor () );
+				}while( element > limitMax );
+			}
+			else{
+				boost::normal_distribution<> nd ( fp, 3 * sp);
+				boost::variate_generator < boost::mt19937&, boost::normal_distribution<> > var_nor ( rng, nd );
+				do{
+					element = fabs ( var_nor () );
+				}while ( element >= limit || element > limitMax );
+			}
+		}
+		if ( distribution == "uniform" ){
+			if ( fp > sp){
+				int temp = fp;
+				fp = sp;
+				sp = temp;
+			}
+			boost::uniform_int<> ud ( fp, sp );
+			boost::variate_generator < boost::mt19937&, boost::uniform_int<> > var_uni ( rng, ud );
+			element = var_uni ();
+		}
+		return element;
+	}
+
+
+	bool Operator::checkExistence ( TestState parameters, string opName ){
+		if ( !testMemory.empty () ){
+			multimap < string, TestState >::key_compare memoryComp = testMemory.key_comp ();
+			multimap < string, TestState >::iterator it = testMemory.begin ();
+			while ( it != testMemory.end () && memoryComp ( ( *it ).first, opName ) ){
+				it++;
+			}
+
+			// boolean indicating that we are still analysing TestState on the same operator
+			bool firstEqual = true;
+			for (it; it != testMemory.end () && firstEqual ; it++ ){
+				bool exist = false;
+				TestState  memoryVect = ( *it ).second;
+				if ( opName.compare ( ( * ( it ) ).first ) != 0 ){
+					firstEqual = false;
+				}
+				else{
+					exist = parameters.equality ( &memoryVect );
+					if ( exist ){
+						return exist;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	void Operator::setHasDelay1Feedbacks()
+	{
+		hasDelay1Feedbacks_=true;
+	}
+
+
+	bool Operator::hasDelay1Feedbacks(){
+		return hasDelay1Feedbacks_;
+	}
+
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////Functions used for resource estimations
 
@@ -2120,137 +2370,9 @@ namespace flopoco{
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/** Completely replace "this" with a copy of another operator. */
-	void  Operator::cloneOperator(Operator *op){
-		stdLibType_ = op->stdLibType_;
-		subComponents_ = op->getSubComponents();
-		signalList_ = op->getSignalList();	
-		ioList_     = op->getIOListV();
-		target_           = op->getTarget();
-		uniqueName_       = op->getUniqueName();
-		architectureName_ = op->getArchitectureName();
-		testCaseSignals_ = op->getTestCaseSignals();	
-		portMap_ = op->getPortMap();
-		outDelayMap = map<string,double>(op->getOutDelayMap());
-		inputDelayMap = op->getInputDelayMap();
-		vhdl.vhdlCodeBuffer << op->vhdl.vhdlCodeBuffer.str();
-		vhdl.vhdlCode       << op->vhdl.vhdlCode.str();
-		vhdl.currentCycle_   = op->vhdl.currentCycle_;	
-		vhdl.useTable        = op->vhdl.useTable;
-		srcFileName = op->getSrcFileName();
-		declareTable = op->getDeclareTable();
-		cost = op->getOperatorCost();
-		numberOfInputs_  = op->getNumberOfInputs();
-		numberOfOutputs_ = op->getNumberOfOutputs();
-		isSequential_    = op->isSequential();
-		pipelineDepth_   = op->getPipelineDepth();
-		signalMap_ = op->getSignalMap();
-		constants_ = op->getConstants();
-		attributes_ = op->getAttributes();
-		types_ = op->getTypes();
-		attributesValues_ = op->getAttributesValues();
-
-		hasRegistersWithoutReset_   = op->getHasRegistersWithoutReset();
-		hasRegistersWithAsyncReset_ = op->getHasRegistersWithAsyncReset();
-		hasRegistersWithSyncReset_  = op->getHasRegistersWithSyncReset();
-		hasClockEnable_             = op->hasClockEnable();
-		copyrightString_            = op->getCopyrightString();
-		currentCycle_               = op->getCurrentCycle();
-		criticalPath_               = op->getCriticalPath();
-		needRecirculationSignal_    = op->getNeedRecirculationSignal();
-		indirectOperator_           = op->getIndirectOperator();
-		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
-
-		oplist                      = op->getOpList();
-	}
 	
-	/**
-	* Method returning a random num depending on a fixed limit, the mean and
-	* the standard deviation
-	**/
 
-	float Operator::pickRandomNum ( float limit, int fp, int sp )
-	{
-		static boost::mt19937 rng;
-		float element;
-		const float  limitMax = 112.0;
-		string distribution = "gauss";
-
-		// the rng need to be "re-seed" in order to provide different number otherwise it will always give the same
-		static unsigned int seed = 0;
-		rng.seed ( ( ++seed + time ( NULL ) ) );
-
-		if ( distribution == "gauss" ){
-			if ( limit == 0 ){
-				// fp represent the mean and sp the standard deviation
-				boost::normal_distribution<> nd ( fp, sp );
-				boost::variate_generator < boost::mt19937&, boost::normal_distribution<> > var_nor ( rng, nd );
-				do{
-					element = fabs ( var_nor () );
-				}while( element > limitMax );
-			}
-			else{
-				boost::normal_distribution<> nd ( fp, 3 * sp);
-				boost::variate_generator < boost::mt19937&, boost::normal_distribution<> > var_nor ( rng, nd );
-				do{
-					element = fabs ( var_nor () );
-				}while ( element >= limit || element > limitMax );
-			}
-		}
-		if ( distribution == "uniform" ){
-			if ( fp > sp){
-				int temp = fp;
-				fp = sp;
-				sp = temp;
-			}
-			boost::uniform_int<> ud ( fp, sp );
-			boost::variate_generator < boost::mt19937&, boost::uniform_int<> > var_uni ( rng, ud );
-			element = var_uni ();
-		}
-		return element;
-	}
 	
-	/**
-	* Once the valid TestState parameters is created with pickRandomNum, this method check
-	* if parameters already exist or no for the operator selected opName
-	* Tests are realized with the multimap testMemory 
-	**/
-	bool Operator::checkExistence ( TestState parameters, string opName ){
-		if ( !testMemory.empty () ){
-			multimap < string, TestState >::key_compare memoryComp = testMemory.key_comp ();
-			multimap < string, TestState >::iterator it = testMemory.begin ();
-			while ( it != testMemory.end () && memoryComp ( ( *it ).first, opName ) ){
-				it++;	
-			}
-			
-			// boolean indicating that we are still analysing TestState on the same operator
-			bool firstEqual = true;
-			for (it; it != testMemory.end () && firstEqual ; it++ ){
-				bool exist = false;
-				TestState  memoryVect = ( *it ).second;
-				if ( opName.compare ( ( * ( it ) ).first ) != 0 ){
-					firstEqual = false;
-				}
-				else{
-					exist = parameters.equality ( &memoryVect );
-					if ( exist ){
-						return exist;
-					}
-				}
-			}
-		}
-		return false;
-	}
-	
-	void Operator::setHasDelay1Feedbacks()
-	{
-		hasDelay1Feedbacks_=true;
-	}
-
-
-	bool Operator::hasDelay1Feedbacks(){
-		return hasDelay1Feedbacks_;
-	}
 
 
 }

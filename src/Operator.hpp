@@ -948,140 +948,82 @@ public:
 	/**
 	 * Return the target member
 	 */
-	Target* getTarget(){
-		return target_;
-	}
+	Target* getTarget();
 
 	/**
 	 * Return the operator's unique name
 	 */
-	string getUniqueName(){
-		return uniqueName_;
-	}
+	string getUniqueName();
 
-	string getArchitectureName(){
-		return architectureName_;
-	}
+	/**
+	 * Return the architecture name
+	 */
+	string getArchitectureName();
 	
-	vector<Signal*> getTestCaseSignals(){
-		return testCaseSignals_;
-	}
+	vector<Signal*> getTestCaseSignals();
 	
-	map<string, string> getPortMap(){
-		return portMap_;
-	}
+	map<string, string> getPortMap();
 	
 	
-	map<string, double> getInputDelayMap(){
-		return inputDelayMap;
-	}
+	map<string, double> getInputDelayMap();
 	
-	map<string, Operator*> getSubComponents(){
-		return subComponents_;
-	}
+	map<string, Operator*> getSubComponents();
 	
-	string getSrcFileName(){
-		return srcFileName;
-	}
+	string getSrcFileName();
 	
-	int getOperatorCost(){
-		return cost;
-	}
+	int getOperatorCost();
 
-	int getNumberOfInputs(){
-		return numberOfInputs_;
-	}
+	int getNumberOfInputs();
 	
-	int getNumberOfOutputs(){
-		return numberOfOutputs_;
-	}
+	int getNumberOfOutputs();
 	
-	map<string, Signal*> getSignalMap(){
-		return signalMap_;
-	}
+	map<string, Signal*> getSignalMap();
 
-	map<string, pair<string, string> > getConstants(){
-		return constants_;
-	}
+	map<string, pair<string, string> > getConstants();
 	
-	map<string, string> getAttributes(){
-		return attributes_;
-	}
+	map<string, string> getAttributes();
 	
-	map<string, string> getTypes(){
-		return types_;
-	}
+	map<string, string> getTypes();
 	
-	map<pair<string,string>, string> getAttributesValues(){
-		return attributesValues_;
-	}
+	map<pair<string,string>, string> getAttributesValues();
 
-	bool getHasRegistersWithoutReset(){
-		return hasRegistersWithoutReset_;
-	}
+	bool getHasRegistersWithoutReset();
 
-	bool getHasRegistersWithAsyncReset(){
-		return hasRegistersWithAsyncReset_;
-	}
+	bool getHasRegistersWithAsyncReset();
 
-	bool getHasRegistersWithSyncReset(){
-		return hasRegistersWithSyncReset_;
-	}
+	bool getHasRegistersWithSyncReset();
 
-	bool hasReset() {
-		return hasRegistersWithSyncReset_ || hasRegistersWithAsyncReset_;
-	}
+	bool hasReset();
 
-	bool hasClockEnable(){
-		return hasClockEnable_;
-	}
+	bool hasClockEnable();
 
-	void setClockEnable(bool val){
-		hasClockEnable_=val;
-	}
+	void setClockEnable(bool val);
 
-	string getCopyrightString(){
-		return copyrightString_;
-	}
+	string getCopyrightString();
 
-	bool getNeedRecirculationSignal(){
-		return needRecirculationSignal_;
-	}
+	bool getNeedRecirculationSignal();
 	
-	Operator* getIndirectOperator(){
-		return indirectOperator_;
-	}
+	Operator* getIndirectOperator();
 
 	void setIndirectOperator(Operator* op);
 	
-	vector<Operator*> getOpList(){
-		return oplist;
-	}
+	vector<Operator*> getOpList();
 
-
-	vector<Operator*>& getOpListR(){
-		return oplist;
-	}
+	vector<Operator*>& getOpListR();
 
 	
 	bool hasComponent(string s);
 	
 	void cleanup(vector<Operator*> *ol, Operator* op);
 	
-	FlopocoStream* getFlopocoVHDLStream(){
-		return &vhdl;
-	}
+	FlopocoStream* getFlopocoVHDLStream();
 
 	void parse2();
 
 	
-	void setuid(int mm){
-		myuid = mm;
-	}
+	void setuid(int mm);
 	
-	int getuid(){
-		return myuid;
-	}
+	int getuid();
 
 
 
@@ -1094,17 +1036,36 @@ public:
 
 
 
-	/** add a comment line in to vhdl stream */
+	/**
+	 * Add a comment line in to vhdl stream
+	 */
 	void addComment(string comment, string align = tab);
 
-	/** add a full line of '-' with comment centered within */
+	/**
+	 * Add a full line of '-' with comment centered within
+	 */
 	void addFullComment(string comment, int lineLength = 80);
 
 
-	/** Completely replace "this" with a copy of another operator. */
+	/**
+	 * Completely replace "this" with a copy of another operator.
+	 */
 	void cloneOperator(Operator *op);	
 	
+	/**
+	 * Method returning a random number depending on a fixed limit, the mean and
+	 * the standard deviation
+	 **/
+	static float pickRandomNum ( float limit = 0, int fp = 8, int sp = 4 );
 	
+	/**
+	 * Once the valid TestState parameters is created with pickRandomNum, this method checks
+	 * if parameters already exist or no for the operator selected opName
+	 * Tests are realized with the multimap testMemory
+	 **/
+	static bool checkExistence ( TestState parameters, string opName );
+
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////Functions used for resource estimations
 	
@@ -1501,8 +1462,6 @@ public:
 	 */
 	std::string createFloorplan();
 
-	static float pickRandomNum ( float limit = 0, int fp = 8, int sp = 4 );
-	static bool checkExistence ( TestState parameters, string opName );
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
