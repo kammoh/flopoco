@@ -42,6 +42,35 @@ namespace flopoco{
 		triplet(const _type1& first_, const _type2& second_, const _type3& third_): first(first_), second(second_), third(third_) {};
 		template<class _type1_t, class _type2_t, class _type3_t>
 			triplet(const triplet<_type1_t, _type2_t, _type3_t>& tmp) : first(tmp.first), second(tmp.second), third(tmp.third) {};
+
+		//assignment operator
+		triplet& operator=(triplet&& tmp)
+		{
+			first  = tmp.first;
+			second = tmp.second;
+			third  = tmp.third;
+
+			return *this;
+		}
+
+		template<class _type1_t, class _type2_t, class _type3_t>
+			triplet& operator=(triplet<_type1_t, _type2_t, _type3_t>&& tmp)
+		{
+			first  = tmp.first;
+			second = tmp.second;
+			third  = tmp.third;
+
+			return *this;
+		}
+
+		//swap function
+		void swap(triplet&& tmp)
+		{
+			using std::swap;
+			swap(first, tmp.first);
+			swap(second, tmp.second);
+			swap(third, tmp.third);
+		}
 	};
 
 	//relational operators
@@ -96,25 +125,27 @@ namespace flopoco{
 		return triplet<_type1, _type2, _type3>(tmp1, tmp2, tmp3);
 	}
 
+
 	//swap the content of two triplets
+	/*
 	template<class _type1, class _type2, class _type3>
 		inline void swap(triplet<_type1, _type2, _type3>& tmp1, triplet<_type1, _type2, _type3>& tmp2)
 	{
-		_type1 aux1 = tmp1.first;
-		tmp1.first = tmp2.first;
-		tmp2.first = aux1;
-		delete(aux1);
-
-		_type2 aux2 = tmp1.second;
-		tmp1.second = tmp2.second;
-		tmp2.second = aux2;
-		delete(aux2);
-
-		_type2 aux3 = tmp1.third;
-		tmp1.third = tmp2.third;
-		tmp2.third = aux3;
-		delete(aux3);
+		tmp1.swap(tmp2);
 	}
+
+	template<class _type1, class _type2, class _type3>
+		inline void swap(triplet<_type1, _type2, _type3>&& tmp1, triplet<_type1, _type2, _type3>& tmp2)
+	{
+		tmp1.swap(tmp2);
+	}
+
+	template<class _type1, class _type2, class _type3>
+		inline void swap(triplet<_type1, _type2, _type3>& tmp1, triplet<_type1, _type2, _type3>&& tmp2)
+	{
+		tmp1.swap(tmp2);
+	}
+	*/
 	//------------------------------------------------------------------------------
 
 	/** This class contains all information about a random state
