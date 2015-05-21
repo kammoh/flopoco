@@ -4,7 +4,10 @@
 #include <iostream>
 #include <vector>
 
+#include "utils.hpp"
+
 using namespace std;
+using namespace flopoco;
 
 class LexerContext {
 public:
@@ -30,7 +33,7 @@ public:
 
 	string lhsName;
 	vector<string> extraRhsNames;
-	vector<pair<string, string> > dependenceTable;
+	vector<triplet<string, string, int>> dependenceTable;
 
 	LexMode lexingMode;
 

@@ -29,32 +29,27 @@ namespace flopoco{
 	 * The FlopocoStream class.
 	 * Segments of code having the same pipeline informations are scanned 
 	 * on-the-fly using flex++ to find the VHDL signal IDs. The found IDs
-	 * are augmented with pipeline depth information __IDName__PipelineDepth__
-	 * for example __X__2__.
+	 * are marked (ID_Name becomes @@ID_Name@@, if it is a signal on the
+	 * right-hand side of an assignment) for the second pass.
+	 * The signals with delays are marked as well (ID_Name becomes ID_Name^nb_cycles).
+	 * The assignment statements are appended with the name of the left-hand signal (??ID_Name??).
 	 */
 	class FlopocoStream{
 	
-		/* Methods for overloading the output operator available on streams */
-		/*friend FlopocoStream& operator <= (FlopocoStream& output, string s) {
-
-			output.vhdlCodeBuffer << " <= " << s;
-			return output;
-		}*/
-
-
+		/**
+		 * Methods for overloading the output operator available on streams
+		 */
 		template <class paramType> friend FlopocoStream& operator <<(FlopocoStream& output, paramType c) {
 			output.vhdlCode << c;
 			output.codeParsed = false;
 			return output;
 		}
-
 		
 		friend FlopocoStream & operator<<(FlopocoStream& output, FlopocoStream fs) {
 			output.vhdlCode << fs.str();
 			output.codeParsed = false;
 			return output; 
 		}
-		
 
 		friend FlopocoStream& operator<<( FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
 			output.vhdlCode << std::endl;
@@ -62,6 +57,7 @@ namespace flopoco{
 			return output;
 		}
 		
+
 		public:
 			/**
 			 * FlopocoStream constructor. 
@@ -115,7 +111,7 @@ namespace flopoco{
 			 * @param[in] tmpDependenceTable a vector of pairs which will be copied
 			 *            into the member variable dependenceTable
 			 */
-			void updateDependenceTable(vector<pair<string, string> > tmpDependenceTable);
+			void updateDependenceTable(vector<triplet<string, string, int>> tmpDependenceTable);
 
 			/**
 			 * Member function used to set the code resulted after a second parsing
@@ -127,7 +123,7 @@ namespace flopoco{
 			/**
 			 * Returns the dependenceTable
 			 */  
-			vector<pair<string, string> > getDependenceTable();
+			vector<triplet<string, string, int>> getDependenceTable();
 
 
 			void disableParsing(bool s);
@@ -146,9 +142,9 @@ namespace flopoco{
 			void cleanupDependenceTable();
 
 
-			ostringstream vhdlCode;              			/**< the vhdl code */
+			ostringstream vhdlCode;                                 /**< the vhdl code */
 
-			vector<pair<string, string>> dependenceTable;	/**< table containing the left hand side- right hand side dependences */
+			vector<triplet<string, string, int>> dependenceTable;   /**< table containing the left hand side- right hand side dependences, with the possible delay on the edge */
 
 		protected:
 		

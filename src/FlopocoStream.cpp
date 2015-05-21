@@ -1,5 +1,6 @@
 /**
-  FloPoCo Stream for VHDL code including cycle information
+  FloPoCo Stream for VHDL code.
+  Once parsed, it will include timing information (c.f. header for more details).
 
   This file is part of the FloPoCo project developed by the Arenaire
   team at Ecole Normale Superieure de Lyon
@@ -116,13 +117,15 @@ namespace flopoco{
 	}
 
 
-	void FlopocoStream::updateDependenceTable(vector<pair<string, string> > tmpDependenceTable){
-		vector<pair<string, string> >::iterator iter;
+	void FlopocoStream::updateDependenceTable(vector<triplet<string, string, int>> tmpDependenceTable){
+		vector<triplet<string, string, int>>::iterator iter;
 
 		for (iter = tmpDependenceTable.begin(); iter!=tmpDependenceTable.end();++iter){
-			pair < string, string> tmp;
-			tmp.first  =  (*iter).first;
+			triplet<string, string, int> tmp;
+
+			tmp.first  = (*iter).first;
 			tmp.second = (*iter).second;
+			tmp.third  = (*iter).third;
 			dependenceTable.push_back(tmp);
 		}
 	}
@@ -134,7 +137,7 @@ namespace flopoco{
 	}
 
 
-	vector<pair<string, string> > FlopocoStream::getDependenceTable(){
+	vector<triplet<string, string, int>> FlopocoStream::getDependenceTable(){
 		return dependenceTable;
 	}
 
@@ -156,16 +159,40 @@ namespace flopoco{
 
 	void FlopocoStream::cleanupDependenceTable()
 	{
-		vector<pair<string, string>> newDependenceTable;
+		vector<triplet<string, string, int>> newDependenceTable;
 
 		for(int i=0; (unsigned)i<dependenceTable.size(); i++)
 		{
-			string lhsName = newDependenceTable[i].first;
-			string rhsName = newDependenceTable[i].second;
+			string lhsName = dependenceTable[i].first;
+			string rhsName = dependenceTable[i].second;
+			string newRhsName;
+			int rhsDelay = -1;
 
+			//search for dependence edges where the right-hand side can be
+			//	a delayed signal. Delayed signals are of the form
+			//	ID_Name^cycle_delays
+			//the signal name must be extracted and when a new edge is added,
+			//	it should be added with the corresponding delay
+			if(rhsName.find("^") != string::npos)
+			{
+				//this is a delayed signal
+				newRhsName = rhsName.substr(0, rhsName.find("^"));
+				rhsDelay = (int)strtol((rhsName.substr(rhsName.find("^")+1, string::npos)).c_str(), NULL, 10);
+			}
+			else
+			{
+				//this is a regular signal name
+				//	nothing to be done
+				newRhsName = rhsName;
+			}
+
+			//search for dependence edges where the left-hand side can be
+			//	of the form (ID_Name_1, ID_Name_2, ..., ID_Name_n)
+			//	and split it into several triplets
 			if(lhsName.find("(") || lhsName.find(")") || lhsName.find(",") || lhsName.find("\t") || lhsName.find("\n") || lhsName.find(" "))
 			{
-				//split the lhsName into several names, without any separating characters (,\n\t\ )
+				//split the lhsName into several names,
+				//	without any separating characters (,\n\t\ ())
 				string delimiters = " \t\n,()";
 				ostringstream newLhsName;
 				int count = 0;
@@ -182,17 +209,19 @@ namespace flopoco{
 						count++;
 					}
 
-					pair<string, string> tmpPair;
-					tmpPair.first = newLhsName.str();
-					tmpPair.second = rhsName;
-					newDependenceTable.push_back(tmpPair);
+					triplet<string, string, int> tmpTriplet;
+					tmpTriplet.first  = newLhsName.str();
+					tmpTriplet.second = newRhsName;
+					tmpTriplet.third  = (rhsDelay == -1) ? 0 : rhsDelay;
+					newDependenceTable.push_back(tmpTriplet);
 				}
 			}else
 			{
-				pair<string, string> tmpPair;
-				tmpPair.first = lhsName;
-				tmpPair.second = rhsName;
-				newDependenceTable.push_back(tmpPair);
+				triplet<string, string, int> tmpTriplet;
+				tmpTriplet.first  = lhsName;
+				tmpTriplet.second = newRhsName;
+				tmpTriplet.third  = (rhsDelay == -1) ? 0 : rhsDelay;
+				newDependenceTable.push_back(tmpTriplet);
 			}
 		}
 

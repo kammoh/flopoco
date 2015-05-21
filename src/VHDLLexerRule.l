@@ -13,6 +13,10 @@
 	#include <vector>
 	#include <ctype.h>
 	#include <map>
+	
+	#include "utils.hpp"
+	
+	using namespace flopoco;
 
 	#define YY_EXTRA_TYPE LexerContext*
 	#define YY_INPUT(buf, result, max_size) {\
@@ -79,6 +83,7 @@ extended_digit            ({digit}|[a-fA-F])
 base_specifier            (B|b|O|o|X|x)
 
 identifier                ({letter}(_?{letter_or_digit})*)
+delayed_identifier        ({identifier}\^({digit})+)
 label					  ({identifier}{space_character}*":")
 
 
@@ -209,17 +214,18 @@ label					  ({identifier}{space_character}*":")
 	if((yyextra->lexingMode == LexerContext::signalAssignment) || (yyextra->lexingMode == LexerContext::conditionalSignalAssignment) 
 		|| (yyextra->lexingMode == LexerContext::selectedSignalAssignment))
 	{
-		(*yyextra->os) << yytext << "@@" << yyextra->lhsName << "@@";
+		(*yyextra->os) << yytext << "??" << yyextra->lhsName << "??";
 	}
 	
 	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)
 	{
-		pair<string, string> tempPair;
+		triplet<string, string, int> tempTriplet;
 
-		tempPair.first = yyextra->lhsName;
-		tempPair.second = yyextra->extraRhsNames[i];
+		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.second = yyextra->extraRhsNames[i];
+		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempPair);
+		yyextra->dependenceTable.push_back(tempTriplet);
 	}
 	yyextra->extraRhsNames.clear();
 	yyextra->lexingMode = LexerContext::unset;
@@ -270,6 +276,7 @@ label					  ({identifier}{space_character}*":")
 
 
 {identifier} |
+{delayed_identifier} |
 "("({space_character})*{identifier}(({space_character})*","({space_character})*{identifier})*({space_character})*")" {
 	//identified either "signal_name" or "(signal_name, signal_name...)"
 	//this can be either the left or the right hand side
@@ -295,23 +302,25 @@ label					  ({identifier}{space_character}*":")
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
-		pair<string, string> tempPair;
+		triplet<string, string, int> tempTriplet;
 
-		tempPair.first = yyextra->lhsName;
-		tempPair.second = yytext;
+		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.second = yytext;
+		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempPair);
+		yyextra->dependenceTable.push_back(tempTriplet);
 	}else if(yyextra->lexingMode == LexerContext::conditionalSignalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
-		pair<string, string> tempPair;
+		triplet<string, string, int> tempTriplet;
 
-		tempPair.first = yyextra->lhsName;
-		tempPair.second = yytext;
+		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.second = yytext;
+		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempPair);
+		yyextra->dependenceTable.push_back(tempTriplet);
 	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment)
 	{
 		// this signal is on the left side of the assignment, but belongs to the right side
@@ -329,12 +338,13 @@ label					  ({identifier}{space_character}*":")
 		// this signal is on the right side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
-		pair<string, string> tempPair;
+		triplet<string, string, int> tempTriplet;
 
-		tempPair.first = yyextra->lhsName;
-		tempPair.second = yytext;
+		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.second = yytext;
+		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempPair);
+		yyextra->dependenceTable.push_back(tempTriplet);
 	}else if(yyextra->lexingMode == LexerContext::variableAssignment)
 	{
 		(*yyextra->os) << yytext;
