@@ -201,18 +201,22 @@ namespace flopoco{
 		 * @param instanceName the name of the instance of which this signal is part of;
 		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param predecessor a direct predecessor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to zero
 		 * @return true if the signal could be added as a predecessor, false if it already existed
 		 */
-		bool addPredecessor(std::string instanceName, Signal* predecessor);
+		bool addPredecessor(std::string instanceName, Signal* predecessor, int delayCycles = 0);
 
 		/**
 		 * Remove an existing predecessor of the signal;
 		 * @param instanceName the name of the instance of which this signal is part of;
 		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param predecessor a direct predecessor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to -1, meaning it is not taken into account
 		 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
 		 */
-		bool removePredecessor(std::string instanceName, Signal* predecessor);
+		bool removePredecessor(std::string instanceName, Signal* predecessor, int delayCycles = 0);
 
 		/**
 		 * Reset the list of successors of the signal
@@ -226,18 +230,22 @@ namespace flopoco{
 		 * @param instanceName the name of the instance of which this signal is part of;
 		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param successor a direct successor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to zero
 		 * @return true if the signal could be added as a successor, false if it already existed
 		 */
-		bool addSuccessors(std::string instanceName, Signal* successor);
+		bool addSuccessors(std::string instanceName, Signal* successor, int delayCycles = 0);
 
 		/**
 		 * Remove an existing successor of the signal;
 		 * @param instanceName the name of the instance of which this signal is part of;
 		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param successor a direct successor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to -1, meaning it is not taken into account
 		 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
 		 */
-		bool removeSuccessor(std::string instanceName, Signal* successor);
+		bool removeSuccessor(std::string instanceName, Signal* successor, int delayCycles = 0);
 
 
 		/** Set the number of possible output values. */
@@ -269,27 +277,27 @@ namespace flopoco{
 		void setType(SignalType t);
 
 	private:
-		std::string   name_;        /**< The name of the signal */
-		SignalType    type_;        /**< The type of the signal, see SignalType */
-		int           width_;       /**< The width of the signal */
+		std::string   name_;         /**< The name of the signal */
+		SignalType    type_;         /**< The type of the signal, see SignalType */
+		int           width_;        /**< The width of the signal */
 		
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
-		int           lifeSpan_;    /**< The max delay that will be applied to this signal; */
+		int           lifeSpan_;     /**< The max delay that will be applied to this signal; */
 	    double        criticalPathContribution_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
-		std::vector<std::pair<std::string, Signal*>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */  
-		std::vector<std::pair<std::string, Signal*>> successors_; /**< the list of Signals for which this signal appears on the RHS. The string holds the instance name in case of an InPortMap, otherwise "" */  
-		int           cycle_;       /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
+		std::vector<triplet<std::string, Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
+		std::vector<triplet<std::string, Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The string holds the instance name in case of an InPortMap, otherwise "" */
+		int           cycle_;        /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
 	    double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
-		bool          isFP_;        /**< If the signal is of the FloPoCo floating-point type */  
-		bool          isFix_;       /**< If the signal is of the FloPoCo fixed-point type */  
-		bool          isIEEE_;      /**< If the signal is of the IEEE floating-point type */  
-		int           wE_;          /**< The width of the exponent. Used for FP signals */
-		int           wF_;          /**< The width of the fraction. Used for FP signals */
-		int           MSB_;         /**< MSB. Used for fixed-point signals */
-		int           LSB_;         /**< LSB. Used for fixed-point signals */
-		bool          isSigned_;    /**< true if this a signed fixed-point signals, false otherwise */
-		bool          isBus_;       /**< True is the signal is a bus (std_logic_vector)*/
+		bool          isFP_;         /**< If the signal is of the FloPoCo floating-point type */
+		bool          isFix_;        /**< If the signal is of the FloPoCo fixed-point type */
+		bool          isIEEE_;       /**< If the signal is of the IEEE floating-point type */
+		int           wE_;           /**< The width of the exponent. Used for FP signals */
+		int           wF_;           /**< The width of the fraction. Used for FP signals */
+		int           MSB_;          /**< MSB. Used for fixed-point signals */
+		int           LSB_;          /**< LSB. Used for fixed-point signals */
+		bool          isSigned_;     /**< true if this a signed fixed-point signals, false otherwise */
+		bool          isBus_;        /**< True is the signal is a bus (std_logic_vector)*/
 
 		
 	};

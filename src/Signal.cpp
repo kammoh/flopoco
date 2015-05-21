@@ -196,32 +196,37 @@ namespace flopoco{
 		predecessors_.clear();
 	}
 
-	bool Signal::addPredecessor(string instanceName, Signal* predecessor)
+	bool Signal::addPredecessor(string instanceName, Signal* predecessor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
 		for(int i=0; (unsigned)i<predecessors_.size(); i++)
 		{
-			pair<string, Signal*> predecessorPair = predecessors_[i];
-			if((predecessorPair.first == instanceName)
-					&& (predecessorPair.second->name_ == predecessor->name_) && (predecessorPair.second->type_ == predecessor->type_))
+			triplet<string, Signal*, int> predecessorTriplet = predecessors_[i];
+			if((predecessorTriplet.first == instanceName)
+					&& (predecessorTriplet.second->getName() == predecessor->getName())
+					&& (predecessorTriplet.second->type() == predecessor->type())
+					&& (predecessorTriplet.third == delayCycles))
 				return false;
 		}
 
 		//safe to insert a new signal in the predecessor list
-		pair<string, Signal*> newPredecessorPair = make_pair(instanceName, predecessor);
-		predecessors_.push_back(newPredecessorPair);
+		triplet<string, Signal*, int> newPredecessorTriplet = make_triplet(instanceName, predecessor, delayCycles);
+		predecessors_.push_back(newPredecessorTriplet);
 
 		return true;
 	}
 
-	bool Signal::removePredecessor(string instanceName, Signal* predecessor)
+	bool Signal::removePredecessor(string instanceName, Signal* predecessor, int delayCycles)
 	{
-		//check if the signal already exists, within the same instance
+		//only try to remove the predecessor if the signal
+		//	already exists, within the same instance and with the same delay
 		for(int i=0; (unsigned)i<predecessors_.size(); i++)
 		{
-			pair<string, Signal*> predecessorPair = predecessors_[i];
-			if((predecessorPair.first == instanceName)
-					&& (predecessorPair.second->name_ == predecessor->name_) && (predecessorPair.second->type_ == predecessor->type_))
+			triplet<string, Signal*, int> predecessorTriplet = predecessors_[i];
+			if((predecessorTriplet.first == instanceName)
+					&& (predecessorTriplet.second->getName() == predecessor->getName())
+					&& (predecessorTriplet.second->type() == predecessor->type())
+					&& (predecessorTriplet.third == delayCycles))
 			{
 				//delete the element from the list
 				predecessors_.erase(predecessors_.begin()+i);
@@ -237,32 +242,37 @@ namespace flopoco{
 		successors_.clear();
 	}
 
-	bool Signal::addSuccessors(string instanceName, Signal* successor)
+	bool Signal::addSuccessors(string instanceName, Signal* successor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
 		for(int i=0; (unsigned)i<successors_.size(); i++)
 		{
-			pair<string, Signal*> successorPair = successors_[i];
-			if((successorPair.first == instanceName)
-					&& (successorPair.second->name_ == successor->name_) && (successorPair.second->type_ == successor->type_))
+			triplet<string, Signal*, int> successorTriplet = successors_[i];
+			if((successorTriplet.first == instanceName)
+					&& (successorTriplet.second->getName() == successor->getName())
+					&& (successorTriplet.second->type() == successor->type())
+					&& (successorTriplet.third == delayCycles))
 				return false;
 		}
 
 		//safe to insert a new signal in the predecessor list
-		pair<string, Signal*> newSucccessorPair = make_pair(instanceName, successor);
-		successors_.push_back(newSucccessorPair);
+		triplet<string, Signal*, int> newSuccessorTriplet = make_triplet(instanceName, successor, delayCycles);
+		successors_.push_back(newSuccessorTriplet);
 
 		return true;
 	}
 
-	bool Signal::removeSuccessor(string instanceName, Signal* successor)
+	bool Signal::removeSuccessor(string instanceName, Signal* successor, int delayCycles)
 	{
-		//check if the signal already exists, within the same instance
+		//only try to remove the successor if the signal
+		//	already exists, within the same instance and with the same delay
 		for(int i=0; (unsigned)i<successors_.size(); i++)
 		{
-			pair<string, Signal*> successorPair = successors_[i];
-			if((successorPair.first == instanceName)
-					&& (successorPair.second->name_ == successor->name_) && (successorPair.second->type_ == successor->type_))
+			triplet<string, Signal*, int> successorTriplet = successors_[i];
+			if((successorTriplet.first == instanceName)
+					&& (successorTriplet.second->getName() == successor->getName())
+					&& (successorTriplet.second->type() == successor->type())
+					&& (successorTriplet.third == delayCycles))
 			{
 				//delete the element from the list
 				successors_.erase(successors_.begin()+i);
