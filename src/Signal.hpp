@@ -7,6 +7,8 @@
 
 #include <inttypes.h>
 
+#include "utils.hpp"
+
 namespace flopoco{
 
 	/**
