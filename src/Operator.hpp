@@ -771,7 +771,7 @@ public:
 	
 
 	/**
-	 * Returns a pointer to the signal having the name @param s.
+	 * Returns a pointer to the signal having the name as @param s.
 	 * Throws an exception if the signal is not yet declared.
 	 * @param s then name of the signal we want to return
 	 * @return the pointer to the signal having name s
@@ -779,7 +779,8 @@ public:
 	Signal* getSignalByName(string s);
 
 	/**
-	 * Same as getSignalByName() but will strip the _dxx inserted by automatic pipelining.
+	 * Same as getSignalByName() but will strip the ^xx added to the signal
+	 * name to signify that the signal is delayed by xx cycles.
 	 * Mostly for internal use.
 	*/
 	Signal* getDelayedSignalByName(string s);

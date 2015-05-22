@@ -362,55 +362,51 @@ namespace flopoco{
 	
 	
 	
-	Signal * Operator::getDelayedSignalByName(string name) {
-		// strip the _dnnn. 
-		string n=name;
-		bool success=false;
-		char c = n.back();
-		if(c>='0' & c <='9') {
-			while (c>='0' & c <='9') {
-				n.pop_back();
-				c = n.back();
-			}
-			// not sure yet there is a _d in front
-			if (c=='d') {
-				n.pop_back();
-				c = n.back();
-				if (c=='_') {
-					n.pop_back();
-					c = n.back();
-					success=true;
-				}
-			}
-
-			if(success) {
-				// cout << "**** Stripped " << name << " into " << n << endl;
-				name=n;
-			}
-		}
-
-		ostringstream e;
-		if(signalMap_.find(name) ==  signalMap_.end()) {
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in getDelayedSignalByName, signal " << name<< " not declared";
-			throw e.str();
-		}
-		return signalMap_[name];
-	}
-	
-
-
 	Signal * Operator::getSignalByName(string name) {
-		ostringstream e;
+		//search for the signal in the list of signals
 		if(signalMap_.find(name) ==  signalMap_.end()) {
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in getSignalByName, signal " << name<< " not declared";
+			//signal not found, throw an error
+			ostringstream e;
+
+			e << srcFileName << " (" << uniqueName_ << "): ERROR in getSignalByName, signal " << name << " not declared";
 			throw e.str();
 		}
+		//signal found, return the reference to it
 		return signalMap_[name];
 	}
+
+
+
+	Signal* Operator::getDelayedSignalByName(string name) {
+		//remove the '^xx' from the signal name, if it exists,
+		//and then check if the signal is in the
+		string n;
+
+		//check if this is the name of a delayed signal
+		if(name.find('^') != string::npos)
+		{
+			n = name.substr(0, name.find('^'));
+		}else
+		{
+			n = name;
+		}
+
+		//search for the stripped signal name
+		if(signalMap_.find(n) == signalMap_.end()){
+			//signal not found, throw an error
+			ostringstream e;
+
+			e << srcFileName << " (" << uniqueName_ << "): ERROR in getDelayedSignalByName, signal " << name << " not declared";
+			throw e.str();
+		}
+
+		return signalMap_[n];
+	}
+
 	
 	bool Operator::isSignalDeclared(string name){
-		ostringstream e;
-		if(signalMap_.find(name) ==  signalMap_.end()) {
+
+		if(signalMap_.find(name) ==  signalMap_.end()){
 			return false;
 		}
 		return true;
