@@ -53,12 +53,12 @@ namespace flopoco {
 
 #define ABOVE_WITH_EXTRA				4
 #define UNDER_WITH_EXTRA				5
-#define TO_LEFT_OF_WITH_EXTRA				6
-#define TO_RIGHT_OF_WITH_EXTRA				7
+#define TO_LEFT_OF_WITH_EXTRA			6
+#define TO_RIGHT_OF_WITH_EXTRA			7
 
 //Floorplanning - constraint type
 #define PLACEMENT 					0
-#define CONNECTIVITY					1
+#define CONNECTIVITY				1
 
 
 /**
@@ -1495,31 +1495,32 @@ public:
 	FloorplanningHelper*		flpHelper;					/**< Tools for floorplanning */
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	static multimap < string, TestState > testMemory;			/**< multimap which will be used to test if the selected operator already had been tested */
+	static multimap < string, TestState > testMemory;		/**< multimap which will be used to test if the selected operator already had been tested */
 protected:    
 	string              uniqueName_;      					/**< By default, a name derived from the operator class and the parameters */
 	string 				architectureName_;					/**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_; 					/**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
 
-	map<string, string> portMap_;         					/**< Port map for an instance of this operator */
-	map<string, double> outDelayMap;      					/**< Slack delays on the outputs */
-	map<string, double> inputDelayMap;      				/**< Slack delays on the inputs */
-	string              srcFileName;      					/**< Used to debug and report.  */
-	map<string, int>    declareTable;     					/**< Table containing the name and declaration cycle of the signal */
-	int                 myuid;              				/**<unique id>*/
-	int                 cost;             					/**< the cost of the operator depending on different metrics */
-	vector<Operator*>   oplist;                     /**< A list of all the sub-operators */
+	map<string, string>  portMap_;         					/**< Port map for an instance of this operator */
+	map<string, double>  outDelayMap;      					/**< Slack delays on the outputs */
+	map<string, double>  inputDelayMap;      				/**< Slack delays on the inputs */
+	string               srcFileName;      					/**< Used to debug and report.  */
+	//disabled during the overhaul
+	//map<string, int>     declareTable;     					/**< Table containing the name and declaration cycle of the signal */
+	int                  myuid;              				/**< Unique id>*/
+	int                  cost;             					/**< The cost of the operator depending on different metrics */
+	vector<Operator*>    oplist;                     		/**< A list of all the sub-operators */
 	
 
 private:    
-	Target*             target_;          					/**< The target on which the operator will be deployed */
+	Target*                target_;          				/**< The target on which the operator will be deployed */
 	int                    stdLibType_;                 	/**< 0 will use the Synopsys ieee.std_logic_unsigned, -1 uses std_logic_signed, 1 uses ieee numeric_std  (preferred) */
 	int                    numberOfInputs_;             	/**< The number of inputs of the operator */
 	int                    numberOfOutputs_;            	/**< The number of outputs of the operator */
 	bool                   isSequential_;               	/**< True if the operator needs a clock signal*/
 	int                    pipelineDepth_;              	/**< The pipeline depth of the operator. 0 for combinatorial circuits */
 	map<string, Signal*>   signalMap_;                  	/**< A container of tuples for recovering the signal based on it's name */ 
-	map<string, pair<string, string> > constants_;      	/**< The list of constants of the operator: name, <type, value> */
+	map<string, pair<string, string>> constants_;      		/**< The list of constants of the operator: name, <type, value> */
 	map<string, string>    attributes_;                  	/**< The list of attribute declarations (name, type) */
 	map<string, string>    types_;                      	/**< The list of type declarations (name, type) */
 	map<pair<string,string>, string >  attributesValues_;	/**< attribute values <attribute name, object (component, signal, etc)> ,  value> */

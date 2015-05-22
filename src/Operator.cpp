@@ -1,5 +1,5 @@
 /*
-the base Operator class, every operator should inherit it
+The base Operator class, every operator should inherit it
 
 Author : Florent de Dinechin, Bogdan Pasca
 
@@ -29,12 +29,12 @@ namespace flopoco{
 
 	// global variables used through most of FloPoCo,
 	// to be encapsulated in something, someday?
-	int Operator::uid = 0; //init of the uid static member of Operator
-	multimap < string, TestState > Operator::testMemory;		/*init the multimap */
+	int Operator::uid = 0; 										//init of the uid static member of Operator
+	multimap < string, TestState > Operator::testMemory;		//init the multimap
 	int verbose=0;
 	
 	Operator::Operator(Target* target, map<string, double> inputDelays){
-		stdLibType_                 = 0; // unfortunately this is the historical default.
+		stdLibType_                 = 0;						// unfortunately this is the historical default.
 		target_                     = target;
 		numberOfInputs_             = 0;
 		numberOfOutputs_            = 0;
@@ -53,21 +53,19 @@ namespace flopoco{
 		hasDelay1Feedbacks_         = false;
 		
 
-		// Currently we set the pipeline and clockenable from the global target. 
+		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
 		// so each sub-component of an operator will share the same target.
-		// Il also makes the subcomponent calls easier: pass clock and ce without thinking about it.
+		// It also makes the subcomponent calls easier: pass clock and ce without thinking about it.
 		// It is not very elegant because if the operator is eventually combinatorial, it will nevertheless have a clock and rst signal.
-		if (target_->isPipelined())
+		if(target_->isPipelined())
 			setSequential();
 		else
 			setCombinatorial();	
 		
 		setClockEnable(target_->useClockEnable());
 
-		vhdl.disableParsing(!target_->isPipelined());	
-
-		//------- Resource estimation and floorplanning ----------------
+		//------- Resource estimation ----------------------------------
 		resourceEstimate << "Starting Resource estimation report for entity: " << uniqueName_ << " --------------- " << endl;
 		resourceEstimateReport << "";
 		
@@ -75,8 +73,9 @@ namespace flopoco{
 		reHelper->initResourceEstimation();
 		
 		reActive = false;
-		
 		//--------------------------------------------------------------
+		
+		//------- Floorplanning ----------------------------------------
 		floorplan << "";
 		
 		flpHelper = new FloorplanningHelper(target_, this);
@@ -98,10 +97,10 @@ namespace flopoco{
 
 	void Operator::addToGlobalOpList() {
 		bool alreadyPresent=false;
-		// We assume all the operators added to GlobalOpList are unpipelined.
+		// We assume all the operators added to GlobalOpList are un-pipelined.
 
-		vector<Operator*> * globalOpListRef=target_->getGlobalOpListRef();
-			for (unsigned i=0; i<globalOpListRef->size(); i++){
+		vector<Operator*> *globalOpListRef=target_->getGlobalOpListRef();
+			for(unsigned i=0; i<globalOpListRef->size(); i++){
 					if( getName() == (*globalOpListRef)[i]->getName() ){
 					alreadyPresent=true;
 					REPORT(DEBUG,"Operator::addToGlobalOpListRef(): " << uniqueName_ <<" already present in globalOpList");
@@ -109,40 +108,70 @@ namespace flopoco{
 			}
 			if(!alreadyPresent)
 				globalOpListRef->push_back(this);
-
 	}
 	
 
 
 	
 	void Operator::addInput(const std::string name, const int width, const bool isBus) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addInput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::in, width, isBus) ; // default TTL and cycle OK
 		s->setCycle(0);
+		s->setCriticalPath(0);
+		s->setCriticalPathContribution(0);
+
+		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
-		signalMap_[name] = s ;
 		numberOfInputs_ ++;
-		declareTable[name] = s->getCycle();
+		//add the signal to the global signal list
+		signalMap_[name] = s;
+
+		//disabled during the overhaul
+		//declareTable[name] = s->getCycle();
+
+		//search the input delays and try to set the critical path
+		// of the input to the one specified in the inputDelays
+		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
+		if(foundSignal != inputDelayMap.end())
+		{
+			s->setCriticalPath(foundSignal->second);
+		}
 	}
 	
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o  << srcFileName << " (" << uniqueName_ << "): ERROR in addOutput, signal " << name << " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::out, width, isBus) ;
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
+		//add the signal to the output signal list and increase the number of inputs
 		ioList_.push_back(s);
+		numberOfOutputs_ ++;
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
 		for(int i=0; i<numberOfPossibleOutputValues; i++) 
 			testCaseSignals_.push_back(s);
-		signalMap_[name] = s ;
-		numberOfOutputs_ ++;
-		//		declareTable[name] = s->getCycle();
+
+		//disabled in the old version
+		//	it intervenes with the pipelining mechanism
+		//declareTable[name] = s->getCycle();
 	}
 	
 	void Operator::addOutput(const std::string name) {
@@ -156,94 +185,179 @@ namespace flopoco{
 
 #if 1
 	void Operator::addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFixInput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::in, isSigned, msb, lsb);
 		s->setCycle(0);
+		s->setCriticalPath(0);
+		s->setCriticalPathContribution(0);
+		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
-		signalMap_[name] = s ;
 		numberOfInputs_ ++;
-		declareTable[name] = s->getCycle();
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
+		//disabled during the overhaul
+		//declareTable[name] = s->getCycle();
+
+		//search the input delays and try to set the critical path
+		// of the input to the one specified in the inputDelays
+		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
+		if(foundSignal != inputDelayMap.end())
+		{
+			s->setCriticalPath(foundSignal->second);
+		}
 	}
 	
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFixOutput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::out, isSigned, msb, lsb) ;
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
+		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
+		numberOfOutputs_ ++;
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
 		for(int i=0; i<numberOfPossibleOutputValues; i++) 
 			testCaseSignals_.push_back(s);
-		signalMap_[name] = s ;
-		numberOfOutputs_ ++;
 	}
 #endif
 	
 	void Operator::addFPInput(const std::string name, const int wE, const int wF) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFPInput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::in, wE, wF);
 		s->setCycle(0);
+		s->setCriticalPath(0);
+		s->setCriticalPathContribution(0);
+		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
-		signalMap_[name] = s ;
 		numberOfInputs_ ++;
-		declareTable[name] = s->getCycle();
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
+		//disabled during the overhaul
+		//declareTable[name] = s->getCycle();
+
+		//search the input delays and try to set the critical path
+		// of the input to the one specified in the inputDelays
+		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
+		if(foundSignal != inputDelayMap.end())
+		{
+			s->setCriticalPath(foundSignal->second);
+		}
 	}
 	
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFPOutput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::out, wE, wF) ;
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
+		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
+		numberOfOutputs_ ++;
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
 		for(int i=0; i<numberOfPossibleOutputValues; i++) 
 			testCaseSignals_.push_back(s);
-		signalMap_[name] = s ;
-		numberOfOutputs_ ++;
-		//		declareTable[name] = s->getCycle();
+
+		//disabled during the overhaul
+		//declareTable[name] = s->getCycle();
 	}
 	
 	
 	void Operator::addIEEEInput(const std::string name, const int wE, const int wF) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addIEEEInput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::in, wE, wF, true);
 		s->setCycle(0);
+		s->setCriticalPath(0);
+		s->setCriticalPathContribution(0);
+		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
-		signalMap_[name] = s ;
 		numberOfInputs_ ++;
-		declareTable[name] = s->getCycle();
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
+		//disabled during the overhaul
+		//declareTable[name] = s->getCycle();
+
+		//search the input delays and try to set the critical path
+		// of the input to the one specified in the inputDelays
+		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
+		if(foundSignal != inputDelayMap.end())
+		{
+			s->setCriticalPath(foundSignal->second);
+		}
 	}
 	
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
+		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
+			//if yes, signal the error
 			std::ostringstream o;
 			o << srcFileName << " (" << uniqueName_ << "): ERROR in addIEEEOutput, signal " << name<< " seems to already exist";
 			throw o.str();
 		}
+
+		//create a new signal for the input
+		// initialize its members
 		Signal *s = new Signal(name, Signal::out, wE, wF, true) ;
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
+		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
+		numberOfOutputs_ ++;
+		//add the signal to the global signal list
+		signalMap_[name] = s ;
+
 		for(int i=0; i<numberOfPossibleOutputValues; i++) 
 			testCaseSignals_.push_back(s);
-		signalMap_[name] = s ;
-		numberOfOutputs_ ++;
-		//		declareTable[name] = s->getCycle();
+
+		//disabled during the overhaul
+		//declareTable[name] = s->getCycle();
 	}
 	
 	
