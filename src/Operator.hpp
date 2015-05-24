@@ -931,8 +931,14 @@ public:
 	/**
 	 * Set the pipeline depth
 	 * Should not be used for operators without memory
+	 * @param d the pipeline depth
 	 */
 	void setPipelineDepth(int d);
+
+	/**
+	 * Set the pipeline depth, automatically, as the maximum cycle of the outputs
+	 */
+	void setPipelineDepth();
 
 	/**
 	 * Return the output delay map

@@ -419,14 +419,16 @@ namespace flopoco{
 	
 	void Operator::setName(std::string prefix, std::string postfix){
 		ostringstream pr, po;
-		if (prefix.length()>0)
+
+		if (prefix.length() > 0)
 			pr << prefix << "_"; 
 		else 
 			pr << "";
-		if (postfix.length()>0)
+		if (postfix.length() > 0)
 			po << "_"<<postfix;
 		else
 			po << "";
+
 		uniqueName_ = pr.str() + uniqueName_ + po.str();
 	}
 	
@@ -436,6 +438,7 @@ namespace flopoco{
 	
 	void Operator::setNameWithFreq(std::string operatorName){
 		std::ostringstream o;
+
 		o <<  operatorName <<  "_" ;
 		if(target_->isPipelined()) 
 			o << target_->frequencyMHz() ;
@@ -475,15 +478,15 @@ namespace flopoco{
 	void  Operator::outputVHDLSignalDeclarations(std::ostream& o) {
 		for (unsigned int i=0; i < this->signalList_.size(); i++){
 			Signal* s = this->signalList_[i];
-			o<<tab<<  s->toVHDL() << ";" << endl;
+			o << tab << s->toVHDL() << ";" << endl;
 		}
-		
 	}
 	
 	
 	
 	void Operator::outputVHDLComponent(std::ostream& o, std::string name) {
 		unsigned int i;
+
 		o << tab << "component " << name << " is" << endl;
 		if (ioList_.size() > 0)
 		{
@@ -493,17 +496,19 @@ namespace flopoco{
 				if(hasClockEnable()) 
 					o << "clk, rst, ce : in std_logic;" <<endl;
 				else if(isRecirculatory())
-					o << "clk, rst stall_s: in std_logic;" <<endl;
+					o << "clk, rst, stall_s: in std_logic;" <<endl;
 				else 
 					o << "clk, rst : in std_logic;" <<endl;
 			}
 
 			for (i=0; i<this->ioList_.size(); i++){
 				Signal* s = this->ioList_[i];
+
 				if (i>0 || isSequential()) // align signal names 
-					o<<tab<<"          ";
-				o<<  s->toVHDL();
-				if(i < this->ioList_.size()-1)  o<<";" << endl;
+					o << tab << "          ";
+				o <<  s->toVHDL();
+				if(i < this->ioList_.size()-1)
+					o << ";" << endl;
 			}
 			o << tab << ");"<<endl;
 		}
@@ -527,7 +532,7 @@ namespace flopoco{
 				if(hasClockEnable()) 
 					o << "clk, rst, ce : in std_logic;" <<endl;
 				else if(isRecirculatory()) 
-					o << "clk, rst stall_s: in std_logic;" <<endl;
+					o << "clk, rst, stall_s: in std_logic;" <<endl;
 				else 
 					o << "clk, rst : in std_logic;" <<endl;
 			}
@@ -535,9 +540,10 @@ namespace flopoco{
 			for (i=0; i<this->ioList_.size(); i++){
 				Signal* s = this->ioList_[i];
 				if (i>0 || isSequential()) // align signal names 
-					o<<"          ";
-				o<<  s->toVHDL();
-				if(i < this->ioList_.size()-1)  o<<";" << endl;
+					o << "          ";
+				o << s->toVHDL();
+				if(i < this->ioList_.size()-1)
+					o<<";" << endl;
 			}
 			
 			o << tab << ");"<<endl;
@@ -554,7 +560,8 @@ namespace flopoco{
 		stdLibType_ = 0;
 	};
 	
-	/** use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
+	/**
+	 * Use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
 	 */
 	void Operator::useStdLogicSigned() {
 		stdLibType_ = -1;
@@ -585,7 +592,11 @@ namespace flopoco{
 		o<<"--------------------------------------------------------------------------------"<<endl;
 		// centering the unique name
 		int s, i;
-		if(uniqueName_.size()<76) s = (76-uniqueName_.size())/2; else s=0;
+
+		if(uniqueName_.size()<76)
+			s = (76-uniqueName_.size())/2;
+		else
+			s=0;
 		o<<"--"; for(i=0; i<s; i++) o<<" "; o  << uniqueName_ << endl; 
 		
 		// if this operator was renamed from the command line, show the original name
@@ -604,7 +615,7 @@ namespace flopoco{
 	
 	void Operator::pipelineInfo(std::ostream& o){
 		if(isSequential())
-			o<<"-- Pipeline depth: " <<getPipelineDepth() << " cycles"  <<endl <<endl;
+			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl <<endl;
 		else 
 			o<<"-- combinatorial"  <<endl <<endl;
 	}
@@ -676,6 +687,18 @@ namespace flopoco{
 		pipelineDepth_ = d; 
 	}
 	
+	void Operator::setPipelineDepth() {
+		int maxCycle = 0;
+
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		{
+			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() > maxCycle))
+				maxCycle = ioList_[i]->getCycle();
+		}
+
+		pipelineDepth_ = maxCycle;
+	}
+
 	void Operator::outputFinalReport(int level) {
 
 		if (getIndirectOperator()!=NULL){ // interface operator
