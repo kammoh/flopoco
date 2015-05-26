@@ -339,46 +339,54 @@ public:
 	 */
 
 	/**
+	 * DEPRECATED
 	 * Define the current cycle, and resets the critical path
 	 * @param the new value of the current cycle
 	 */
 	void setCycle(int cycle, bool report=true) ;
 
 	/**
+	 * DEPRECATED
 	 * Return the current cycle
 	 * @return the current cycle
 	 */
 	int getCurrentCycle(); 
 
 	/**
+	 * DEPRECATED
 	 * Advance the current cycle by 1, and resets the critical path
 	 * @param the new value of the current cycle
 	 */
 	void nextCycle(bool report=true) ;
 
 	/**
+	 * DEPRECATED
 	 * Define the current cycle, and reset the critical path
 	 * @param the new value of the current cycle
 	 */
 	void previousCycle(bool report=true) ;
 
 	/**
+	 * DEPRECATED
 	 * Return the critical path of the current cycle so far
 	 */
 	double getCriticalPath() ;
 
 	/**
+	 * DEPRECATED
 	 * Set or reset the critical path of the current cycle
 	 */
 	void setCriticalPath(double delay) ;
 
 	/**
+	 * DEPRECATED
 	 * Adds to the critical path of the current stage, and insert a pipeline stage if needed
 	 * @param the delay to add to the critical path of current pipeline stage
 	 */
 	void addToCriticalPath(double delay) ;
 
 	/**
+	 * DEPRECATED
 	 * Add @delay to the critical path, advancing the pipeline stages, if needed.
 	 * This is the delay corresponding to the signals which follow in the operator constructor
 	 * @param delay the delay to be added to the critical path
@@ -394,6 +402,7 @@ public:
 	double getOutputDelay(string s); 
 
 	/**
+	 * DEPRECATED
 	 * Set the current cycle to that of a signal and reset the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before 
 	 * @param report is a boolean, if true it will report the cycle 
@@ -401,6 +410,7 @@ public:
 	void setCycleFromSignal(string name, bool report=true) ;
 
 	/**
+	 * DEPRECATED
 	 * Set the current cycle and the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before. 
 	 * @param criticalPath is the critical path delay associated to this signal: typically getDelay(name)
@@ -414,13 +424,26 @@ public:
 
 
 	/**
-	 * Return the cycle of the given cycle
+	 * Return the cycle of the signal specified by @param name
 	 * @param name the name of the signal
 	 */
 	int getCycleFromSignal(string name, bool report = false);
+
+	/**
+	 * Return the critical path of the signal specified by @param name
+	 * @param name the name of the signal
+	 */
+	double getCPFromSignal(string name, bool report = false);
+
+	/**
+	 * Return the contribution to the critical path of the signal specified by @param name
+	 * @param name the name of the signal
+	 */
+	double getCPContributionFromSignal(string name, bool report = false);
 		
 	
 	/**
+	 * DEPRECATED
 	 * Advance the current cycle to that of a signal. It may only increase current cycle. To synchronize
 	 * two or more signals, first call setCycleFromSignal() on the
 	 * first, then syncCycleFromSignal() on the remaining ones. It
@@ -431,6 +454,7 @@ public:
 	bool syncCycleFromSignal(string name, bool report=true) ;
 
 	/**
+	 * DEPRECATED
 	 * advance the current cycle to that of a signal, updating critical paths.
 	 * @param name is the signal name. It must have been defined before
 	 * @param criticalPath is a double, the critical path already consumed up to the signal passed as first argument.
@@ -444,6 +468,7 @@ public:
 
 
 	/**
+	 * DEPRECATED
 	 * Sets the delay of the signal with the name given by first argument
 	 * @param name the name of the signal
 	 * @param delay the delay to be associated with the name
@@ -451,6 +476,7 @@ public:
 	void setSignalDelay(string name, double delay);
 
 	/**
+	 * DEPRECATED
 	 * Returns the delay on the signal with the name denoted by the argument
 	 * @param name signal Name
 	 * @return delay of this signal

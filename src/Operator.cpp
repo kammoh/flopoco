@@ -684,6 +684,9 @@ namespace flopoco{
 	}
 	
 	void Operator::setPipelineDepth(int d) {
+
+		cerr << "WARNING: function setPipelineDepth() is deprecated" << endl;
+
 		pipelineDepth_ = d; 
 	}
 	
@@ -696,23 +699,30 @@ namespace flopoco{
 				maxCycle = ioList_[i]->getCycle();
 		}
 
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		{
+			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() != maxCycle))
+				cerr << "WARNING: setPipelineDepth: this operator's outputs are NOT SYNCHRONIZED!" << endl;
+		}
+
 		pipelineDepth_ = maxCycle;
 	}
 
 	void Operator::outputFinalReport(int level) {
 
-		if (getIndirectOperator()!=NULL){ // interface operator
-			if(getOpList().size()!=1){
+		if (getIndirectOperator() != NULL){
+			// interface operator
+			if(getOpList().size() != 1){
 				ostringstream o;
-				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getOpList().size() << "children";
+				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getOpList().size() << " children";
 				throw o.str();
 			}
 			getOpListR()[0]->outputFinalReport(level);
 		}
-
-		else{ // Hard operator
+		else{
+			// Hard operator
 			for (unsigned i=0; i< getOpList().size(); i++)
-				if (! getOpListR().empty())
+				if (!getOpListR().empty())
 					getOpListR()[i]->outputFinalReport(level+1);	
 			
 			ostringstream tabs, ctabs;
@@ -727,7 +737,7 @@ namespace flopoco{
 			}
 			
 			cerr << tabs.str() << "Entity " << uniqueName_ << endl;
-			if(this->getPipelineDepth()!=0)
+			if(this->getPipelineDepth() != 0)
 				cerr << ctabs.str() << tab << "Pipeline depth = " << getPipelineDepth() << endl;
 			else
 				cerr << ctabs.str() << tab << "Not pipelined"<< endl;
@@ -736,6 +746,8 @@ namespace flopoco{
 
 
 	void Operator::setCycle(int cycle, bool report) {
+		//disabled during the overhaul
+		/*
 		criticalPath_ = 0;
 		// lexing part
 		vhdl.flush(currentCycle_);
@@ -749,13 +761,28 @@ namespace flopoco{
 			if (currentCycle_ > pipelineDepth_) 
 				pipelineDepth_ = currentCycle_;
 		}
+		*/
+
+		cerr << "WARNING: function setCycle() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 	}
 	
 	int Operator::getCurrentCycle(){
+		//disabled during the overhaul
+		/*
 		return currentCycle_;
+		*/
+
+		cerr << "WARNING: function getCurrentCycle() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+
+		return -1;
 	} 
 	
 	void Operator::nextCycle(bool report) {
+		/*
 		// lexing part
 		vhdl.flush(currentCycle_);
 		
@@ -771,9 +798,16 @@ namespace flopoco{
 			if (currentCycle_ > pipelineDepth_) 
 				pipelineDepth_ = currentCycle_;
 		}
+		*/
+
+		cerr << "WARNING: function nextCycle() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 	}
 
 	void Operator::previousCycle(bool report) {
+		//disabled during the overhaul
+		/*
 		// lexing part
 		vhdl.flush(currentCycle_);
 		
@@ -785,27 +819,42 @@ namespace flopoco{
 				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
 			
 		}
+		*/
+
+		cerr << "WARNING: function previousCycle() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 	}
 	
 	
 	void Operator::setCycleFromSignal(string name, bool report) {
+		//disabled during the overhaul
+		/*
 		setCycleFromSignal(name, 0.0, report);
+		*/
+
+		cerr << "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 	}
 	
 	
 	void Operator::setCycleFromSignal(string name, double criticalPath, bool report) {
+		//disabled during the overhaul
+		/*
 		// lexing part
 		vhdl.flush(currentCycle_);
 		
-		ostringstream e;
-		e << srcFileName << " (" << uniqueName_ << "): ERROR in setCycleFromSignal, "; // just in case
-		
+
 		if(isSequential()) {
 			Signal* s;
 			try {
 				s=getSignalByName(name);
 			}
 			catch (string e2) {
+				ostringstream e;
+				e << srcFileName << " (" << uniqueName_ << "): ERROR in setCycleFromSignal, "; // just in case
+
 				e << endl << tab << e2;
 				throw e.str();
 			}
@@ -826,47 +875,100 @@ namespace flopoco{
 			if (currentCycle_ > pipelineDepth_) 
 				pipelineDepth_ = currentCycle_;
 		}
+		*/
+
+		cerr << "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 	}
 	
 	
 	int Operator::getCycleFromSignal(string name, bool report) {
+		//disabled during the overhaul
+		/*
 		// lexing part
 		vhdl.flush(currentCycle_);
-		
+		*/
 		ostringstream e;
-		e << srcFileName << " (" << uniqueName_ << "): ERROR in getCycleFromSignal, "; // just in case
 		
 		if(isSequential()) {
 			Signal* s;
+
 			try {
-				s=getSignalByName(name);
+				s = getSignalByName(name);
 			}
-			catch (string e2) {
-				e << endl << tab << e2;
+			catch(string e2) {
+				e << srcFileName << " (" << uniqueName_ << "): ERROR in getCycleFromSignal, " << endl
+				  << tab << e2;
 				throw e.str();
 			}
 			
-			if( s->getCycle() < 0 ) {
-				ostringstream o;
-				o << "signal " << name<< " doesn't have (yet?) a valid cycle";
-				throw o.str();
+			if(s->getCycle() < 0)
+			{
+				e << "Signal " << name << " doesn't have (yet?) a valid cycle" << endl;
+				throw e.str();
 			} 
 			
 			return s->getCycle();
 		}else{
-			return 0; //if combinatorial everything happens at cycle 0
+			//if combinatorial, everything happens at cycle 0
+			return 0;
 		}
 	}
 	
+	double Operator::getCPFromSignal(string name, bool report)
+	{
+		ostringstream e;
+		Signal* s;
+
+		try {
+			s = getSignalByName(name);
+		}
+		catch(string e2) {
+			e << srcFileName << " (" << uniqueName_ << "): ERROR in getCPFromSignal, " << endl
+					<< tab << e2;
+			throw e.str();
+		}
+
+		return s->getCriticalPath();
+	}
 	
+	double Operator::getCPContributionFromSignal(string name, bool report)
+	{
+		ostringstream e;
+		Signal* s;
+
+		try {
+			s = getSignalByName(name);
+		}
+		catch(string e2) {
+			e << srcFileName << " (" << uniqueName_ << "): ERROR in getCPContributionFromSignal, " << endl
+					<< tab << e2;
+			throw e.str();
+		}
+
+		return s->getCriticalPathContribution();
+	}
+
+
 	bool Operator::syncCycleFromSignal(string name, bool report) {
+		//disabled during the overhaul
+		/*
 		return(syncCycleFromSignal(name, 0.0, report));
+		*/
+
+		cerr << "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+
+		return false;
 	}
 
 
 
 	bool Operator::syncCycleFromSignal(string name, double criticalPath, bool report) {
-
+		//disabled during the overhaul
+		/*
 		bool advanceCycle = false;
 
 		// lexing part
@@ -903,11 +1005,6 @@ namespace flopoco{
 				vhdl.setCycle(currentCycle_);
 			}
 			
-			// if (s->getCycle() < currentCycle_) do nothing: 
-			//   the argument signal will be delayed, so its critical path will be 0
-
-			// cout << tab << "----------------Synchro barrier on " << s->getName() << ",  entering cycle " << currentCycle_ << "----------------"  ;
-
 			if(report && advanceCycle)
 				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl ;
 
@@ -917,16 +1014,26 @@ namespace flopoco{
 		}
 		
 		return advanceCycle;
+		*/
+
+		cerr << "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+
+		return false;
 	}
 
-	// TODO get rid of these two methods
+	// TODO get rid of this method
 	void Operator::setSignalDelay(string name, double delay){
 		cout << "WARNING: setSignalDelay obsolete (used in " << srcFileName << ")" << endl;
 	}	
 
+	// TODO get rid of this method
 	double Operator::getSignalDelay(string name){
 		cout << "WARNING: getSignalDelay is obsolete (used in " << srcFileName << ")" << endl;
+
 		Signal* s;
+
 		try {
 			s=getSignalByName(name);
 		}
@@ -938,12 +1045,42 @@ namespace flopoco{
 		return s->getCriticalPath();		
 	}
 
-	double Operator::getCriticalPath() {return criticalPath_;}
+	double Operator::getCriticalPath()
+	{
+		//disabled during the overhaul
+		/*
+		return criticalPath_;
+		*/
+
+		cerr << "WARNING: function getCriticalPath() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+
+		return -1;
+	}
 	
-	void Operator::setCriticalPath(double delay) {criticalPath_=delay;}
+	void Operator::setCriticalPath(double delay)
+	{
+		//disabled during the overhaul
+		/*
+		criticalPath_=delay;
+		*/
+
+		cerr << "WARNING: function setCriticalPath() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+	}
 	
-	void Operator::addToCriticalPath(double delay){
+	void Operator::addToCriticalPath(double delay)
+	{
+		//disabled during the overhaul
+		/*
 		criticalPath_ += delay;
+		*/
+
+		cerr << "WARNING: function addToCriticalPath() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 	}
 
 
@@ -951,39 +1088,51 @@ namespace flopoco{
 
 
 	bool Operator::manageCriticalPath(double delay, bool report){
-				if(isSequential()) {
+		//disabled during the overhaul
+		/*
+		if(isSequential()) {
 #if 0 // code up to version 3.0
-					if ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
-						nextCycle(report); //TODO Warning
-						criticalPath_ = min(delay, 1.0/target_->frequency());
-						return true;
-					}
-					else{
-						criticalPath_ += delay;
-						return false;
-					}
+			if ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
+				nextCycle(report); //TODO Warning
+				criticalPath_ = min(delay, 1.0/target_->frequency());
+				return true;
+			}
+			else{
+				criticalPath_ += delay;
+				return false;
+			}
 #else // May insert several register levels, experimental in 3.0
-					double totalDelay = criticalPath_ + delay;
-					criticalPath_ = totalDelay;  // will possibly be reset in the loop below
-					// cout << "total delay =" << totalDelay << endl;
-					while ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
-						// This code behaves as the previous as long as delay < 1/frequency
-						// if delay > 1/frequency, it may insert several pipeline levels.
-						// This is what we want to pipeline blockrams and DSPs up to the nominal frequency by just passing their overall delay.
-							nextCycle(); // this resets criticalPath. Therefore, if we entered the loop, CP=0 when we exit
-							totalDelay -= (1.0/target_->frequency()) + target_->ffDelay();
-							// cout << " after one nextCycle total delay =" << totalDelay << endl;
-					} 
+			double totalDelay = criticalPath_ + delay;
+			criticalPath_ = totalDelay;  // will possibly be reset in the loop below
+			// cout << "total delay =" << totalDelay << endl;
+			while ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
+				// This code behaves as the previous as long as delay < 1/frequency
+				// if delay > 1/frequency, it may insert several pipeline levels.
+				// This is what we want to pipeline blockrams and DSPs up to the nominal frequency by just passing their overall delay.
+				nextCycle(); // this resets criticalPath. Therefore, if we entered the loop, CP=0 when we exit
+				totalDelay -= (1.0/target_->frequency()) + target_->ffDelay();
+				// cout << " after one nextCycle total delay =" << totalDelay << endl;
+			}
 #endif
-				}
-				else {
-					criticalPath_ += delay;
-					return false;
-				}
+		}
+		else {
+			criticalPath_ += delay;
+			return false;
+		}
+		*/
+
+		cerr << "WARNING: function manageCriticalPath() is deprecated and no longer has any effect!" << endl
+			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+
+		return false;
 	}
 
-	
-	double Operator::getOutputDelay(string s) {return outDelayMap[s];}  // TODO add checks
+	// TODO add checks
+	double Operator::getOutputDelay(string s)
+	{
+		return outDelayMap[s];
+	}
 	
 
 	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType, double criticalPathContribution) {
