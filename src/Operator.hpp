@@ -518,6 +518,13 @@ public:
 	 */
 	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, double criticalPathContribution = 0.0 );
 
+
+	/**
+	 * Initialize a newly declared signal.
+	 * Method used to share code between the declare functions
+	 */
+	void initNewSignal(Signal *s, double criticalPathContribution);
+
 	/**
 	 * Resizes a fixed-point signal and assigns it to a new declared signal.
 	 * 	May zero-extend, sign-extend, or truncate.

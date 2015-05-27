@@ -1128,20 +1128,27 @@ namespace flopoco{
 		return false;
 	}
 
-	// TODO add checks
 	double Operator::getOutputDelay(string s)
 	{
-		return outDelayMap[s];
+		Signal *signal = NULL;
+
+		for(unsigned i=0; i<ioList_.size(); i++)
+			if((ioList_[i]->getName() == s) && (ioList_[i]->type() == Signal::out))
+			{
+				signal = ioList_[i];
+			}
+		if(signal == NULL)
+			THROWERROR("Error: getOutputDelay(): signal " << s << " not found" << endl);
 	}
 	
 
 	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType, double criticalPathContribution) {
 		Signal* s;
-		ostringstream e;
-		// check the signals doesn't already exist
+
+		// check the signal doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in declare(), signal " << name<< " already exists";
-			throw e.str();
+			THROWERROR(srcFileName << " (" << uniqueName_ << "): ERROR in declare(), signal "
+					<< name << " already exists" << endl);
 		}
 
 		if((regType==Signal::registeredWithoutReset) || (regType==Signal::registeredWithZeroInitialiser))
@@ -1154,27 +1161,8 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(name, regType, width, isbus);
 
-
-		// define its cycle and critical path
-		/*
-		//old version
-		if(isSequential())
-			s->setCycle(this->currentCycle_);
-		*/
-		s->setCycle(0);
-		s->setCriticalPath(0.0);
-		s->setCriticalPathContribution(criticalPathContribution);
+		initNewSignal(s, criticalPathContribution);
 		
-		//initialize the signals predecessors and successors
-		s->resetPredecessors();
-		s->resetSuccessors();
-
-		// add this signal to the declare table
-		declareTable[name] = s->getCycle();
-		
-		// add the signal to signalMap and signalList
-		signalList_.push_back(s);    
-		signalMap_[name] = s ;
 		return name;
 	}
 
@@ -1184,63 +1172,61 @@ namespace flopoco{
 	}
 
 
-	// TODO: factor code between next and previous methods
 	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, double criticalPathContribution){
 		Signal* s;
-		ostringstream e;
+
 		// check the signals doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in declareFixPoint(), signal " << name<< " already exists";
-			throw e.str();
+			THROWERROR(srcFileName << " (" << uniqueName_ << "): ERROR in declareFixPoint(), signal "
+					<< name << " already exists" << endl);
 		}
+
+		if((regType==Signal::registeredWithoutReset) || (regType==Signal::registeredWithZeroInitialiser))
+			hasRegistersWithoutReset_ = true;
+		if(regType==Signal::registeredWithSyncReset)
+			hasRegistersWithSyncReset_ = true;
+		if(regType==Signal::registeredWithAsyncReset)
+			hasRegistersWithAsyncReset_ = true;
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(name, regType, isSigned, MSB, LSB);
 
-		// define its cycle 
-		/*
-		//old version
-		if(isSequential())
-			s->setCycle(this->currentCycle_);
-		*/
+		initNewSignal(s, criticalPathContribution);
+
+		return name;
+	}
+
+	void Operator::initNewSignal(Signal* s, double criticalPathContribution)
+	{
+		// define its cycle, critical path and contribution to the critical path
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
 		s->setCriticalPathContribution(criticalPathContribution);
-		
+
 		//initialize the signals predecessors and successors
 		s->resetPredecessors();
 		s->resetSuccessors();
 
-		// add this signal to the declare table
-		declareTable[name] = s->getCycle();
-		
 		// add the signal to signalMap and signalList
-		signalList_.push_back(s);    
-		signalMap_[name] = s ;
-		return name;
+		signalList_.push_back(s);
+		signalMap_[s->getName()] = s;
 	}
 
-	/** Resizes a fixed-point signal and assigns it to a new declared signal.
-			May zero-extend, sign-extend, or truncate.
-			Warns at high debug levels when truncating. Warns at all levels when truncating MSBs.  
-	 */
 	void  Operator::resizeFixPoint(string lhsName, string rhsName, const int MSB, const int LSB, const int indentLevel){
-		Signal* rhsSignal=getSignalByName(rhsName); 
+		Signal* rhsSignal = getSignalByName(rhsName);
 		bool isSigned = rhsSignal->isFixSigned();
 		int oldMSB = rhsSignal->MSB();
 		int oldLSB = rhsSignal->LSB();
+
 		REPORT(DEBUG, "Resizing signal " << rhsName << " from (" << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")"); 
 
 		for (int i=0; i<indentLevel; i++)
 			vhdl << tab;
-		/*
-		//old version
-		vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB) << " <= ";
-		*/
+
 		vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB, rhsSignal->type(), rhsSignal->getCriticalPathContribution()) << " <= ";
 
 		// Cases (old is input, new is output)
-    //            1            2W             3W        4         5E         6 E 
+		//            1            2W             3W        4         5E         6 E
 		// Old:      ooooooo   oooooooo      oooooooooo    oooo     ooo               ooo
 		// New:  nnnnnnnn        nnnnnnnn     nnnnnn      nnnnnnn       nnnn      nnn
 
@@ -1248,9 +1234,9 @@ namespace flopoco{
 		int m,l, paddLeftSize, paddRightSize, oldSize; 	// eventually we take the slice m downto l of the input bit vector
 		
 		paddLeft      = MSB>oldMSB;
-		paddLeftSize  = MSB-oldMSB; // in case paddLeft is true
+		paddLeftSize  = MSB-oldMSB;			// in case paddLeft is true
 		paddRight     = LSB<oldLSB;
-		paddRightSize = oldLSB-LSB; // in case paddRight is true
+		paddRightSize = oldLSB-LSB;			// in case paddRight is true
 		oldSize       = oldMSB-oldLSB+1;
 
 		// Take input vector downto what ?
@@ -1267,7 +1253,8 @@ namespace flopoco{
 		}
 		else { // oldMSB>=MSB, cases 2 or 3
 			if(MSB<oldMSB)
-				REPORT(DETAILED, "Warning: cutting off some MSBs when resizing signal " << rhsName << " from (" << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")"); 
+				REPORT(DETAILED, "Warning: cutting off some MSBs when resizing signal " << rhsName << " from ("
+						<< oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")");
 			m = oldSize-(oldMSB-MSB)-1;
 		}
 
