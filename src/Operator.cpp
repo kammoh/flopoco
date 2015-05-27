@@ -1142,7 +1142,19 @@ namespace flopoco{
 	}
 	
 
-	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType, double criticalPathContribution) {
+	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType) {
+		return declare(0.0, name, width, isbus, regType);
+	}
+
+	string Operator::declare(string name, Signal::SignalType regType) {
+		return declare(0.0, name, 1, false, regType);
+	}
+
+	string Operator::declare(double criticalPathContribution, string name, Signal::SignalType regType) {
+		return declare(criticalPathContribution, name, 1, false, regType);
+	}
+
+	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType) {
 		Signal* s;
 
 		// check the signal doesn't already exist
@@ -1151,28 +1163,21 @@ namespace flopoco{
 					<< name << " already exists" << endl);
 		}
 
-		if((regType==Signal::registeredWithoutReset) || (regType==Signal::registeredWithZeroInitialiser))
-			hasRegistersWithoutReset_ = true;
-		if(regType==Signal::registeredWithSyncReset)
-			hasRegistersWithSyncReset_ = true;
-		if(regType==Signal::registeredWithAsyncReset)
-			hasRegistersWithAsyncReset_ = true;
-
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(name, regType, width, isbus);
 
-		initNewSignal(s, criticalPathContribution);
-		
+		initNewSignal(s, criticalPathContribution, regType);
+
 		return name;
 	}
 
 
-	string Operator::declare(string name, Signal::SignalType regType, double criticalPathContribution ) {
-		return declare(name, 1, false, regType, criticalPathContribution);
+	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
+		return declareFixPoint(0.0, name, isSigned, MSB, LSB, regType);
 	}
 
 
-	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, double criticalPathContribution){
+	string Operator::declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
 		Signal* s;
 
 		// check the signals doesn't already exist
@@ -1181,6 +1186,41 @@ namespace flopoco{
 					<< name << " already exists" << endl);
 		}
 
+		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
+		s = new Signal(name, regType, isSigned, MSB, LSB);
+
+		initNewSignal(s, criticalPathContribution, regType);
+
+		return name;
+	}
+
+
+	string Operator::declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat){
+		return declareFloatingPoint(0.0, name, wE, wF, regType, ieeeFormat);
+	}
+
+
+	string Operator::declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat){
+		Signal* s;
+
+		// check the signals doesn't already exist
+		if(signalMap_.find(name) !=  signalMap_.end()) {
+			THROWERROR(srcFileName << " (" << uniqueName_ << "): ERROR in declareFixPoint(), signal "
+					<< name << " already exists" << endl);
+		}
+
+		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
+		s = new Signal(name, regType, wE, wF, ieeeFormat);
+
+		initNewSignal(s, criticalPathContribution, regType);
+
+		return name;
+	}
+
+
+	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType)
+	{
+		//set, if needed, the global parameters used for generating the registers
 		if((regType==Signal::registeredWithoutReset) || (regType==Signal::registeredWithZeroInitialiser))
 			hasRegistersWithoutReset_ = true;
 		if(regType==Signal::registeredWithSyncReset)
@@ -1188,16 +1228,6 @@ namespace flopoco{
 		if(regType==Signal::registeredWithAsyncReset)
 			hasRegistersWithAsyncReset_ = true;
 
-		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(name, regType, isSigned, MSB, LSB);
-
-		initNewSignal(s, criticalPathContribution);
-
-		return name;
-	}
-
-	void Operator::initNewSignal(Signal* s, double criticalPathContribution)
-	{
 		// define its cycle, critical path and contribution to the critical path
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
@@ -1223,7 +1253,7 @@ namespace flopoco{
 		for (int i=0; i<indentLevel; i++)
 			vhdl << tab;
 
-		vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB, rhsSignal->type(), rhsSignal->getCriticalPathContribution()) << " <= ";
+		vhdl << declareFixPoint(rhsSignal->getCriticalPathContribution(), lhsName, isSigned, MSB, LSB, rhsSignal->type()) << " <= ";
 
 		// Cases (old is input, new is output)
 		//            1            2W             3W        4         5E         6 E
@@ -1284,27 +1314,24 @@ namespace flopoco{
 	
 	#if 1
 	string Operator::use(string name) {
-		ostringstream e;
-		e << "ERROR in use(), "; // just in case
 		
 		if(isSequential()) {
 			Signal *s;
+
 			try {
 				s=getSignalByName(name);
 			}
 			catch (string e2) {
-				e << endl << tab << e2;
-				throw e.str();
+				THROWERROR("ERROR in use(), " << endl << tab << e2 << endl);
 			}
+
 			if(s->getCycle() < 0) {
-				e << "signal " << name<< " doesn't have (yet?) a valid cycle";
-				throw e.str();
+				THROWERROR("signal " << name<< " doesn't have (yet?) a valid cycle" << endl);
 			} 
 			if(s->getCycle() > currentCycle_) {
-				ostringstream e;
-				e << "active cycle of signal " << name<< " is later than current cycle, cannot delay it";
-				throw e.str();
-			} 
+				THROWERROR("active cycle of signal " << name<< " is later than current cycle, cannot delay it" << endl);
+			}
+
 			// update the lifeSpan of s
 			s->updateLifeSpan( currentCycle_ - s->getCycle() );
 			//return s->delayedName( currentCycle_ - s->getCycle() );
@@ -1316,21 +1343,18 @@ namespace flopoco{
 	
 	string Operator::use(string name, int delay) {
 		
-		ostringstream e;
-		e << "ERROR in use(), "; // just in case
-		
 		if(isSequential()) {
 			Signal *s;
 			try {
-				s=getSignalByName(name);
+				s = getSignalByName(name);
 			}
 			catch (string e2) {
-				e << endl << tab << e2;
-				throw e.str();
+				THROWERROR("ERROR in use(), " << endl << tab << e2 << endl);
 			}
+
 			// update the lifeSpan of s
-			
 			s->updateLifeSpan( delay );
+
 			//return s->delayedName( currentCycle_ - s->getCycle() );
 			return s->delayedName( delay );
 		}else

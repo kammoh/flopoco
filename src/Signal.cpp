@@ -293,7 +293,6 @@ namespace flopoco{
 	}
 
 
-
 	std::string Signal::valueToVHDL(mpz_class v, bool quot){
 		std::string r;
 

@@ -250,12 +250,17 @@ namespace flopoco{
 		bool removeSuccessor(std::string instanceName, Signal* successor, int delayCycles = 0);
 
 
-		/** Set the number of possible output values. */
+		/**
+		 * Set the number of possible output values.
+		 */
 		void  setNumberOfPossibleValues(int n);
 
 
-		/** Get the number of possible output values. */
-		int getNumberOfPossibleValues(); 
+		/**
+		 * Get the number of possible output values.
+		 */
+		int getNumberOfPossibleValues();
+
 
 		/**
 		 * Converts the value of the signal into a nicely formated VHDL expression,
