@@ -33,6 +33,16 @@ namespace flopoco{
 		}
 	}
 
+	Signal::Signal(Signal* originalSignal)
+	{
+		if(originalSignal->isFix())
+			this->Signal(originalSignal->getName(), originalSignal->type(), originalSignal->isSigned(), originalSignal->MSB(), originalSignal->LSB());
+		else if(originalSignal->isFP())
+			this->Signal(originalSignal->getName(), originalSignal->type(), originalSignal->wE(), originalSignal->wF(), originalSignal->isIEEE());
+		else
+			this->Signal(originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
+	}
+
 	Signal::~Signal(){}
 
 	void	Signal::promoteToFix(const bool isSigned, const int MSB, const int LSB){
@@ -63,15 +73,27 @@ namespace flopoco{
 	
 	int Signal::LSB() const {return(LSB_);}
 	
+	bool Signal::isSigned() const {return isSigned_;};
+
 	bool Signal::isFP() const {return isFP_;}
+
+	void Signal::setIsFP(bool newIsFP) {isFP_ = newIsFP;}
 
 	bool Signal::isFix() const {return isFix_;}
 
+	void Signal::setIsFix(bool newIsFix) {isFix_ = newIsFix;}
+
 	bool Signal::isFixSigned() const {return isFix_ && isSigned_;}
+
+	void Signal::setFixSigned(bool newIsFix) {isFix_ = newIsFix; isSigned_ = true;}
 
 	bool Signal::isFixUnsigned() const {return isFix_ && !isSigned_;}
 
+	void Signal::setFixUnsigned(bool newIsFix) {isFix_ = newIsFix; isSigned_ = false;}
+
 	bool Signal::isIEEE() const {return isIEEE_;}
+
+	void Signal::setIsIEEE(bool newIsIEEE) {isIEEE_ = newIsIEEE;}
 
 	bool Signal::isBus() const {return isBus_;}
 

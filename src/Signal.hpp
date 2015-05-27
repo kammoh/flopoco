@@ -40,7 +40,7 @@ namespace flopoco{
 #endif
 
 		/** Signal constructor.
-		 * The standard constructor for signals which are not floating-point.
+		 * The standard constructor
 		 * @param name      the name of the signal
 		 * @param type      the type of the signal, @see SignalType
 		 * @param width     the width of the signal
@@ -66,6 +66,12 @@ namespace flopoco{
 		 * @param wF        the significand width
 		 */
 		Signal(const std::string name, const SignalType type, const int wE, const int wF, const bool ieeeFormat=false);
+
+		/**
+		 * Signal constructor
+		 * The copy constructor
+		 */
+		Signal(Signal* originalSignal);
 
 		/** Signal destructor.
 		 */		
@@ -101,26 +107,55 @@ namespace flopoco{
 		/** Returns the LSB weight of the (fixed-point) signal
 		 */	
 		int LSB() const;
+
+		/** Returns the signess of the signal
+		 */
+		bool isSigned() const;
 	
 		/** Reports if the signal is a FloPoCo floating-point signal
 		 */	
 		bool isFP() const;
+
+		/**
+		 * Set the value of isFP
+		 */
+		void setIsFP(bool newIsFP = true);
 	
 		/** Reports if the signal is a fixed-point signal
 		 */	
 		bool isFix() const;
 
+		/**
+		 * Set the value of isFix
+		 */
+		void setIsFix(bool newIsFix = true);
+
 		/** Reports if the signal is a signed fixed-point signal
 		 */	
 		bool isFixSigned() const;
+
+		/**
+		 * Set the value of isFix and the signess
+		 */
+		void setFixSigned(bool newIsFix = true);
 
 		/** Reports if the signal is an unsigned fixed-point signal
 		 */	
 		bool isFixUnsigned() const;
 
+		/**
+		 * Set the value of isFix and the un-signess
+		 */
+		void setFixUnsigned(bool newIsFix = true);
+
 		/** Reports if the signal is an IEEE floating-point signal
 		 */	
 		bool isIEEE() const;
+
+		/**
+		 * Set the value of isIEEE
+		 */
+		void setIsIEEE(bool newIsIEEE = true);
 
 		/** Reports if the signal has the bus flag active
 		 */		

@@ -1191,6 +1191,11 @@ namespace flopoco{
 
 		initNewSignal(s, criticalPathContribution, regType);
 
+		//set the flag for a fixed-point signal
+		s->setIsFix(true);
+		s->setIsFP(false);
+		s->setIsIEEE(false);
+
 		return name;
 	}
 
@@ -1213,6 +1218,20 @@ namespace flopoco{
 		s = new Signal(name, regType, wE, wF, ieeeFormat);
 
 		initNewSignal(s, criticalPathContribution, regType);
+
+		//set the flag for a fixed-point signal
+		if(ieeeFormat)
+		{
+			s->setIsFix(false);
+			s->setIsFP(false);
+			s->setIsIEEE(true);
+		}
+		else
+		{
+			s->setIsFix(false);
+			s->setIsFP(true);
+			s->setIsIEEE(false);
+		}
 
 		return name;
 	}
@@ -1366,49 +1385,44 @@ namespace flopoco{
 	void Operator::outPortMap(Operator* op, string componentPortName, string actualSignalName, bool newSignal){
 		Signal* formal;
 		Signal* s;
-		ostringstream e;
-		e << srcFileName << " (" << uniqueName_ << "): ERROR in outPortMap() for entity " << op->getName()  << ", "; // just in case
-		// check the signals doesn't already exist
+
+		// check if the signal already exists
 		if(signalMap_.find(actualSignalName) !=  signalMap_.end() && newSignal) {
-			e << "signal " << actualSignalName << " already exists";
-			throw e.str();
+			THROWERROR(": ERROR in outPortMap() for entity " << op->getName()  << ", "
+					<< "signal " << actualSignalName << " already exists");
 		}
+
 		try {
-			formal=op->getSignalByName(componentPortName);
+			formal = op->getSignalByName(componentPortName);
 		}
-		catch (string e2) {
-			e << endl << tab << e2;
-			throw e.str();
+		catch(string e2) {
+			THROWERROR(e2);
 		}
-		if (formal->type()!=Signal::out){
-			e << "signal " << componentPortName << " of component " << op->getName() 
-			<< " doesn't seem to be an output port";
-			throw e.str();
+
+		if (formal->type() != Signal::out){
+			THROWERROR("signal " << componentPortName << " of component " << op->getName()
+					<< " doesn't seem to be an output port");
 		}
+
 		if (newSignal) {
-#if 0 // commented out in r2782  because we keep adding fields to Signal
-			int width = formal -> width();
-			bool isbus = formal -> isBus();
-			// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-			s = new Signal(actualSignalName, Signal::wire, width, isbus);
-#else
-			s = new Signal(*formal); // a copy using the default copy constructor
-			s->setName(actualSignalName); // except for the name
-			s->setType(Signal::wire); // ... and the fact that we declare a wire
-#endif
-			// define its cycle 
-			if(isSequential())
-				s->setCycle( this->currentCycle_ + op->getPipelineDepth() );
-			// REPORT(0, "outPortMap: signal " << actualSignalName << " declared at cycle " << s->getCycle());
-			// add this signal to the declare table
-			declareTable[actualSignalName] = s->getCycle();
-			
+			s = new Signal(formal); 		// a copy using the default copy constructor
+			s->setName(actualSignalName); 	// except for the name
+			s->setType(Signal::wire); 		// ... and the fact that we declare a wire
+			s->resetPredecessors();
+			s->resetSuccessors();
+
 			// add the signal to signalMap and signalList
 			signalList_.push_back(s);    
 			signalMap_[actualSignalName] = s ;
 		};
+
 		// add the mapping to the mapping list of Op
 		op->portMap_[componentPortName] = actualSignalName;
+
+		//add componentPortName as a predecessor of actualSignalName,
+		// and actualSignalName as a successor of componentPortName
+		formal->addSuccessors(op->getName(), s, 0);
+		s->addPredecessor("", formal, 0);
 	}
 	
 	
