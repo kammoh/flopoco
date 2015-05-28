@@ -176,6 +176,7 @@ Note that all this is so much closer to textbook literature, with simple DAGs la
 Questions and remarks:
 - what to do with setPipeline depth? Currently, it is set by hand, but the new framework allows for it to be computed automatically from the cycles of the circuit's outputs. What to do when the outputs are not synchronized?
 - should it be allowed to have delayed signals in a port map?
+- should the constant signals be actual signals?
 
 * Options for signed/unsigned
 Option 0: Do nothing radical. It seems when the options
