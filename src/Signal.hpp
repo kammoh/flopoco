@@ -309,7 +309,7 @@ namespace flopoco{
 		 * 		by default equal to zero
 		 * @return true if the signal could be added as a successor, false if it already existed
 		 */
-		void addSuccessors(Signal* successor, int delayCycles = 0);
+		void addSuccessor(Signal* successor, int delayCycles = 0);
 
 		/**
 		 * Remove an existing successor of the signal;

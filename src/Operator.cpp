@@ -43,8 +43,13 @@ namespace flopoco{
 		hasRegistersWithSyncReset_  = false;
 		hasClockEnable_             = false;
 		pipelineDepth_              = 0;
+
+		//disabled during the overhaul
+		/*
 		currentCycle_               = 0;
 		criticalPath_               = 0;
+		*/
+
 		needRecirculationSignal_    = false;
 		inputDelayMap               = inputDelays;
 		myuid                       = getNewUId();
@@ -124,7 +129,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::in, width, isBus) ; // default TTL and cycle OK
+		Signal *s = new Signal(this, name, Signal::in, width, isBus) ; // default TTL and cycle OK
 		s->setCycle(0);
 		s->setCriticalPath(0);
 		s->setCriticalPathContribution(0);
@@ -158,7 +163,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::out, width, isBus) ;
+		Signal *s = new Signal(this, name, Signal::out, width, isBus);
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of inputs
 		ioList_.push_back(s);
@@ -195,7 +200,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::in, isSigned, msb, lsb);
+		Signal *s = new Signal(this, name, Signal::in, isSigned, msb, lsb);
 		s->setCycle(0);
 		s->setCriticalPath(0);
 		s->setCriticalPathContribution(0);
@@ -228,8 +233,8 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::out, isSigned, msb, lsb) ;
-		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
+		Signal *s = new Signal(this, name, Signal::out, isSigned, msb, lsb) ;
+		s->setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
 		numberOfOutputs_ ++;
@@ -252,7 +257,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::in, wE, wF);
+		Signal *s = new Signal(this, name, Signal::in, wE, wF);
 		s->setCycle(0);
 		s->setCriticalPath(0);
 		s->setCriticalPathContribution(0);
@@ -285,7 +290,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::out, wE, wF) ;
+		Signal *s = new Signal(this, name, Signal::out, wE, wF);
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
@@ -312,7 +317,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::in, wE, wF, true);
+		Signal *s = new Signal(this, name, Signal::in, wE, wF, true);
 		s->setCycle(0);
 		s->setCriticalPath(0);
 		s->setCriticalPathContribution(0);
@@ -345,7 +350,7 @@ namespace flopoco{
 
 		//create a new signal for the input
 		// initialize its members
-		Signal *s = new Signal(name, Signal::out, wE, wF, true) ;
+		Signal *s = new Signal(this, name, Signal::out, wE, wF, true) ;
 		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
@@ -364,7 +369,7 @@ namespace flopoco{
 	
 	Signal * Operator::getSignalByName(string name) {
 		//search for the signal in the list of signals
-		if(signalMap_.find(name) ==  signalMap_.end()) {
+		if(signalMap_.find(name) == signalMap_.end()) {
 			//signal not found, throw an error
 			ostringstream e;
 
@@ -379,7 +384,7 @@ namespace flopoco{
 
 	Signal* Operator::getDelayedSignalByName(string name) {
 		//remove the '^xx' from the signal name, if it exists,
-		//and then check if the signal is in the
+		//and then check if the signal is in the signal map
 		string n;
 
 		//check if this is the name of a delayed signal
@@ -414,7 +419,7 @@ namespace flopoco{
 	
 
 	void Operator::addHeaderComment(std::string comment){
-		headerComment_ +=  comment;
+		headerComment_ += comment;
 	}
 	
 	void Operator::setName(std::string prefix, std::string postfix){
@@ -425,7 +430,7 @@ namespace flopoco{
 		else 
 			pr << "";
 		if (postfix.length() > 0)
-			po << "_"<<postfix;
+			po << "_" << postfix;
 		else
 			po << "";
 
@@ -465,11 +470,11 @@ namespace flopoco{
 		return ioList_.size();
 	}
 	
-	vector<Signal*> * Operator::getIOList(){
+	vector<Signal*>* Operator::getIOList(){
 		return &ioList_; 
 	}
 	
-	Signal * Operator::getIOListSignal(int i){
+	Signal* Operator::getIOListSignal(int i){
 		return ioList_[i];
 	}
 	
@@ -702,7 +707,7 @@ namespace flopoco{
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() != maxCycle))
-				cerr << "WARNING: setPipelineDepth: this operator's outputs are NOT SYNCHRONIZED!" << endl;
+				cerr << "WARNING: setPipelineDepth(): this operator's outputs are NOT SYNCHRONIZED!" << endl;
 		}
 
 		pipelineDepth_ = maxCycle;
@@ -897,7 +902,7 @@ namespace flopoco{
 			try {
 				s = getSignalByName(name);
 			}
-			catch(string e2) {
+			catch(string &e2) {
 				e << srcFileName << " (" << uniqueName_ << "): ERROR in getCycleFromSignal, " << endl
 				  << tab << e2;
 				throw e.str();
@@ -924,7 +929,7 @@ namespace flopoco{
 		try {
 			s = getSignalByName(name);
 		}
-		catch(string e2) {
+		catch(string &e2) {
 			e << srcFileName << " (" << uniqueName_ << "): ERROR in getCPFromSignal, " << endl
 					<< tab << e2;
 			throw e.str();
@@ -941,7 +946,7 @@ namespace flopoco{
 		try {
 			s = getSignalByName(name);
 		}
-		catch(string e2) {
+		catch(string &e2) {
 			e << srcFileName << " (" << uniqueName_ << "): ERROR in getCPContributionFromSignal, " << endl
 					<< tab << e2;
 			throw e.str();
@@ -1037,7 +1042,7 @@ namespace flopoco{
 		try {
 			s=getSignalByName(name);
 		}
-		catch (string e2) {
+		catch (string &e2) {
 			cout << "WARNING: signal " << name << " was not found in file " << srcFileName << " when called using getSignalDelay" << endl;
 			return 0.0;
 		}
@@ -1139,6 +1144,8 @@ namespace flopoco{
 			}
 		if(signal == NULL)
 			THROWERROR("Error: getOutputDelay(): signal " << s << " not found" << endl);
+
+		return signal->getCriticalPath();
 	}
 	
 
@@ -1164,7 +1171,7 @@ namespace flopoco{
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(name, regType, width, isbus);
+		s = new Signal(this, name, regType, width, isbus);
 
 		initNewSignal(s, criticalPathContribution, regType);
 
@@ -1187,7 +1194,7 @@ namespace flopoco{
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(name, regType, isSigned, MSB, LSB);
+		s = new Signal(this, name, regType, isSigned, MSB, LSB);
 
 		initNewSignal(s, criticalPathContribution, regType);
 
@@ -1215,7 +1222,7 @@ namespace flopoco{
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(name, regType, wE, wF, ieeeFormat);
+		s = new Signal(this, name, regType, wE, wF, ieeeFormat);
 
 		initNewSignal(s, criticalPathContribution, regType);
 
@@ -1340,19 +1347,19 @@ namespace flopoco{
 			try {
 				s=getSignalByName(name);
 			}
-			catch (string e2) {
+			catch (string &e2) {
 				THROWERROR("ERROR in use(), " << endl << tab << e2 << endl);
 			}
 
 			if(s->getCycle() < 0) {
 				THROWERROR("signal " << name<< " doesn't have (yet?) a valid cycle" << endl);
 			} 
-			if(s->getCycle() > currentCycle_) {
+			if(s->getCycle() > this->getCurrentCycle()) {
 				THROWERROR("active cycle of signal " << name<< " is later than current cycle, cannot delay it" << endl);
 			}
 
 			// update the lifeSpan of s
-			s->updateLifeSpan( currentCycle_ - s->getCycle() );
+			s->updateLifeSpan( this->getCurrentCycle() - s->getCycle() );
 			//return s->delayedName( currentCycle_ - s->getCycle() );
 			return s->delayedName( 0 );
 		}
@@ -1367,7 +1374,7 @@ namespace flopoco{
 			try {
 				s = getSignalByName(name);
 			}
-			catch (string e2) {
+			catch (string &e2) {
 				THROWERROR("ERROR in use(), " << endl << tab << e2 << endl);
 			}
 
@@ -1395,7 +1402,7 @@ namespace flopoco{
 		try {
 			formal = op->getSignalByName(componentPortName);
 		}
-		catch(string e2) {
+		catch(string &e2) {
 			THROWERROR(e2);
 		}
 
@@ -1421,8 +1428,8 @@ namespace flopoco{
 
 		//add componentPortName as a predecessor of actualSignalName,
 		// and actualSignalName as a successor of componentPortName
-		formal->addSuccessors(op->getName(), s, 0);
-		s->addPredecessor("", formal, 0);
+		formal->addSuccessor(s, 0);
+		s->addPredecessor(formal, 0);
 	}
 	
 	

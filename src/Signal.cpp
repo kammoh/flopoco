@@ -290,7 +290,7 @@ namespace flopoco{
 		successors_.clear();
 	}
 
-	void Signal::addSuccessors(Signal* successor, int delayCycles)
+	void Signal::addSuccessor(Signal* successor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
 		for(int i=0; (unsigned)i<successors_.size(); i++)

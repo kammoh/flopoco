@@ -1622,14 +1622,17 @@ private:
 	map<string, string>    types_;                      	/**< The list of type declarations (name, type) */
 	map<pair<string,string>, string >  attributesValues_;	/**< attribute values <attribute name, object (component, signal, etc)> ,  value> */
 	bool                   hasRegistersWithoutReset_;   	/**< True if the operator has registers without a reset */
-	bool                   hasRegistersWithAsyncReset_; 	/**< True if the operator has registers having an asynch reset */
+	bool                   hasRegistersWithAsyncReset_; 	/**< True if the operator has registers having an async reset */
 	bool                   hasRegistersWithSyncReset_;  	/**< True if the operator has registers having a synch reset */
 	string                 commentedName_;              	/**< Usually is the default name of the architecture.  */
 	string                 headerComment_;              	/**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;            	/**< Authors and years.  */
 	// TODO move the two following to outputVHDL
-	int                    currentCycle_;               	/**< The current cycle, when building a pipeline */
-	double                 criticalPath_;               	/**< The current delay of the current pipeline stage */
+
+	//disabled during the overhaul
+	//int                    currentCycle_;               	/**< The current cycle, when building a pipeline */
+	//double                 criticalPath_;               	/**< The current delay of the current pipeline stage */
+
 	bool                   needRecirculationSignal_;    	/**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
 	int					   hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cyle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
