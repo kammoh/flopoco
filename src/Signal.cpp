@@ -8,39 +8,46 @@ namespace flopoco{
 
 
 	// plain logic vector, or wire
-	Signal::Signal(const string name, const Signal::SignalType type, const int width, const bool isBus) : 
-		name_(name), type_(type), width_(width), numberOfPossibleValues_(1), lifeSpan_(0),  cycle_(0),	
-		isFP_(false), isFix_(false), isIEEE_(false), wE_(0), wF_(0), isBus_(isBus) {
+	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
+		parentOp_(parentOp), name_(name), type_(type), width_(width), numberOfPossibleValues_(1),
+		lifeSpan_(0),  cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		isFP_(false), isFix_(false), isIEEE_(false),
+		wE_(0), wF_(0), MSB_(0), LSB_(0),
+		isSigned_(false), isBus_(isBus) {
 	}
 
 	// fixed point constructor
-	Signal::Signal(const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) : 
-		name_(name), type_(type), width_(MSB-LSB+1), numberOfPossibleValues_(1), 
-		lifeSpan_(0), cycle_(0),
-		isFP_(false), isFix_(true),  MSB_(MSB), LSB_(LSB), isSigned_(isSigned), isBus_(true)
+	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) :
+		parentOp_(parentOp), name_(name), type_(type), width_(MSB-LSB+1), numberOfPossibleValues_(1),
+		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		isFP_(false), isFix_(true),  isIEEE_(false),
+		wE_(0), wF_(0), MSB_(MSB), LSB_(LSB),
+		isSigned_(isSigned), isBus_(true)
 	{
 	}
 
-	Signal::Signal(const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) : 
-		name_(name), type_(type), width_(wE+wF+3), numberOfPossibleValues_(1), 
-		lifeSpan_(0), cycle_(0),
-		isFP_(true), isFix_(false), isIEEE_(false), wE_(wE), wF_(wF), isBus_(false)
+	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) :
+		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), numberOfPossibleValues_(1),
+		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		isFP_(true), isFix_(false), isIEEE_(false),
+		wE_(wE), wF_(wF), MSB_(0), LSB_(0),
+		isSigned_(false), isBus_(false)
 	{
 		if(ieeeFormat) { // correct some of the initializations above
-			width_=wE+wF+1;
-			isFP_=false;
-			isIEEE_=true;
+			width_  = wE+wF+1;
+			isFP_   = false;
+			isIEEE_ = true;
 		}
 	}
 
 	Signal::Signal(Signal* originalSignal)
 	{
 		if(originalSignal->isFix())
-			this->Signal(originalSignal->getName(), originalSignal->type(), originalSignal->isSigned(), originalSignal->MSB(), originalSignal->LSB());
+			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->isSigned(), originalSignal->MSB(), originalSignal->LSB());
 		else if(originalSignal->isFP())
-			this->Signal(originalSignal->getName(), originalSignal->type(), originalSignal->wE(), originalSignal->wF(), originalSignal->isIEEE());
+			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->wE(), originalSignal->wF(), originalSignal->isIEEE());
 		else
-			this->Signal(originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
+			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
 	}
 
 	Signal::~Signal(){}
@@ -62,8 +69,25 @@ namespace flopoco{
 		return name_; 
 	}
 
+	Operator* Signal::parentOp() const {return parentOp_;}
 
-	int Signal::width() const{return width_;}
+	void Signal::setParentOp(Operator* newParentOp)
+	{
+		//erase the signal from the operator's signal list and map
+		for(unsigned int i=0; i<parentOp_->getSignalList(); i++)
+			if(parentOp_->getSignalList()[i]->getName() == name_)
+				parentOp_->getSignalList().erase(parentOp_->getSignalList().begin()+i);
+		parentOp_->getSignalMap().erase(name_);
+
+		//change the signal's parent operator
+		parentOp_ = newParentOp;
+
+		//add the signal to the new parent's signal list
+		parentOp_->signalList_.push_back(this);
+		parentOp_->getSignalMap()[this->getName()] = this;
+	}
+
+	int Signal::width() const {return width_;}
 	
 	int Signal::wE() const {return(wE_);}
 
@@ -123,7 +147,9 @@ namespace flopoco{
 	
 	string Signal::toVHDL() {
 		ostringstream o; 
-		if(type()==Signal::wire || type()==Signal::registeredWithoutReset || type()==Signal::registeredWithAsyncReset || type()==Signal::registeredWithSyncReset || type()==Signal::registeredWithZeroInitialiser) 
+		if(type()==Signal::wire || type()==Signal::registeredWithoutReset
+				|| type()==Signal::registeredWithAsyncReset || type()==Signal::registeredWithSyncReset
+				|| type()==Signal::registeredWithZeroInitialiser)
 			o << "signal ";
 		o << getName();
 		o << " : ";
@@ -218,45 +244,45 @@ namespace flopoco{
 		predecessors_.clear();
 	}
 
-	bool Signal::addPredecessor(string instanceName, Signal* predecessor, int delayCycles)
+	void Signal::addPredecessor(Signal* predecessor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
 		for(int i=0; (unsigned)i<predecessors_.size(); i++)
 		{
-			triplet<string, Signal*, int> predecessorTriplet = predecessors_[i];
-			if((predecessorTriplet.first == instanceName)
-					&& (predecessorTriplet.second->getName() == predecessor->getName())
-					&& (predecessorTriplet.second->type() == predecessor->type())
-					&& (predecessorTriplet.third == delayCycles))
-				return false;
+			pair<Signal*, int> predecessorPair = predecessors_[i];
+			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
+					&& (predecessorPair.first->getName() == predecessor->getName())
+					&& (predecessorPair.first->type() == predecessor->type())
+					&& (predecessorPair.second == delayCycles))
+				throw("ERROR in addPredecessor(): trying to add an already existing signal "
+						<< predecessor->getName() << " to the predecessor list");
 		}
 
 		//safe to insert a new signal in the predecessor list
-		triplet<string, Signal*, int> newPredecessorTriplet = make_triplet(instanceName, predecessor, delayCycles);
-		predecessors_.push_back(newPredecessorTriplet);
-
-		return true;
+		pair<Signal*, int> newPredecessorPair = make_pair(predecessor, delayCycles);
+		predecessors_.push_back(newPredecessorPair);
 	}
 
-	bool Signal::removePredecessor(string instanceName, Signal* predecessor, int delayCycles)
+	void Signal::removePredecessor(Signal* predecessor, int delayCycles)
 	{
 		//only try to remove the predecessor if the signal
 		//	already exists, within the same instance and with the same delay
 		for(int i=0; (unsigned)i<predecessors_.size(); i++)
 		{
-			triplet<string, Signal*, int> predecessorTriplet = predecessors_[i];
-			if((predecessorTriplet.first == instanceName)
-					&& (predecessorTriplet.second->getName() == predecessor->getName())
-					&& (predecessorTriplet.second->type() == predecessor->type())
-					&& (predecessorTriplet.third == delayCycles))
+			pair<Signal*, int> predecessorPair = predecessors_[i];
+			if((predecessorPair.first->parentOp_->getName() == predecessor->parentOp_->getName())
+					&& (predecessorPair.first->getName() == predecessor->getName())
+					&& (predecessorPair.first->type() == predecessor->type())
+					&& (predecessorPair.second == delayCycles))
 			{
 				//delete the element from the list
 				predecessors_.erase(predecessors_.begin()+i);
-				return true;
+				return;
 			}
 		}
 
-		return false;
+		throw("ERROR in removePredecessor(): trying to remove a non-existing signal "
+				<< predecessor->getName() << " from the predecessor list");
 	}
 
 	void Signal::resetSuccessors()
@@ -264,45 +290,45 @@ namespace flopoco{
 		successors_.clear();
 	}
 
-	bool Signal::addSuccessors(string instanceName, Signal* successor, int delayCycles)
+	void Signal::addSuccessors(Signal* successor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
 		for(int i=0; (unsigned)i<successors_.size(); i++)
 		{
-			triplet<string, Signal*, int> successorTriplet = successors_[i];
-			if((successorTriplet.first == instanceName)
-					&& (successorTriplet.second->getName() == successor->getName())
-					&& (successorTriplet.second->type() == successor->type())
-					&& (successorTriplet.third == delayCycles))
-				return false;
+			pair<Signal*, int> successorPair = successors_[i];
+			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
+					&& (successorPair.first->getName() == successor->getName())
+					&& (successorPair.first->type() == successor->type())
+					&& (successorPair.second == delayCycles))
+				throw("ERROR in addSuccessor(): trying to add an already existing signal "
+						<< successor->getName() << " to the predecessor list");
 		}
 
 		//safe to insert a new signal in the predecessor list
-		triplet<string, Signal*, int> newSuccessorTriplet = make_triplet(instanceName, successor, delayCycles);
-		successors_.push_back(newSuccessorTriplet);
-
-		return true;
+		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
+		successors_.push_back(newSuccessorPair);
 	}
 
-	bool Signal::removeSuccessor(string instanceName, Signal* successor, int delayCycles)
+	void Signal::removeSuccessor(Signal* successor, int delayCycles)
 	{
 		//only try to remove the successor if the signal
 		//	already exists, within the same instance and with the same delay
 		for(int i=0; (unsigned)i<successors_.size(); i++)
 		{
-			triplet<string, Signal*, int> successorTriplet = successors_[i];
-			if((successorTriplet.first == instanceName)
-					&& (successorTriplet.second->getName() == successor->getName())
-					&& (successorTriplet.second->type() == successor->type())
-					&& (successorTriplet.third == delayCycles))
+			pair<Signal*, int> successorPair = successors_[i];
+			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
+					&& (successorPair.first->getName() == successor->getName())
+					&& (successorPair.first->type() == successor->type())
+					&& (successorPair.second == delayCycles))
 			{
 				//delete the element from the list
 				successors_.erase(successors_.begin()+i);
-				return true;
+				return;
 			}
 		}
 
-		return false;
+		throw("ERROR in removeSuccessor(): trying to remove a non-existing signal "
+				<< successor->getName() << " to the predecessor list");
 	}
 
 	void  Signal::setNumberOfPossibleValues(int n){

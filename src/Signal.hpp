@@ -8,6 +8,7 @@
 #include <inttypes.h>
 
 #include "utils.hpp"
+#include "Operator.hpp"
 
 namespace flopoco{
 
@@ -39,33 +40,39 @@ namespace flopoco{
 		} ArithType;
 #endif
 
-		/** Signal constructor.
+		/**
+		 * Signal constructor.
 		 * The standard constructor
+		 * @param parentOp  the operator containing the signal
 		 * @param name      the name of the signal
 		 * @param type      the type of the signal, @see SignalType
 		 * @param width     the width of the signal
 		 * @param isBus     the flag which signals if the signal is a bus (std_logic_vector)
 		 */
-		Signal(const std::string name, const Signal::SignalType type, const int width = 1, const bool isBus=false);
+		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const int width = 1, const bool isBus=false);
 
-		/** Signal constructor.
+		/**
+		 * Signal constructor.
 		 * The standard constructor for signals which are fixed-point.
+		 * @param parentOp  the operator containing the signal
 		 * @param name      the name of the signal
 		 * @param type      the type of the signal, @see SignalType
 		 * @param isSigned  true for signed fixed-point, false otherwise
 		 * @param MSB       the weight of the MSB
 		 * @param LSB       the weight of the LSB
 		 */
-		Signal(const std::string name, const SignalType type, const bool isSigned, const int MSB, const int LSB);
+		Signal(Operator* parentOp, const std::string name, const SignalType type, const bool isSigned, const int MSB, const int LSB);
 
-		/** Signal constructor.
+		/**
+		 * Signal constructor.
 		 * The standard constructor for signals which are floating-point.
+		 * @param parentOp  the operator containing the signal
 		 * @param name      the name of the signal
 		 * @param type      the type of the signal, @see SignalType
 		 * @param wE        the exponent width
 		 * @param wF        the significand width
 		 */
-		Signal(const std::string name, const SignalType type, const int wE, const int wF, const bool ieeeFormat=false);
+		Signal(Operator* parentOp, const std::string name, const SignalType type, const int wE, const int wF, const bool ieeeFormat=false);
 
 		/**
 		 * Signal constructor
@@ -78,33 +85,51 @@ namespace flopoco{
 		~Signal();
 
 
-		/** When a signal was automatically created as a std_logic_vector, this enables to declare it as Fix */
+		/**
+		 * When a signal was automatically created as a std_logic_vector, this enables to declare it as Fix
+		 */
 		void promoteToFix(const bool isSigned, const int MSB, const int LSB);
 	
-		/** Returns the name of the signal
+		/**
+		 * Returns the name of the signal
 		 * @return the name of the signal
 		 */	
 		const std::string& getName() const;
 
+		/**
+		 * Return a reference to the parent operator
+		 */
+		Operator* parentOp() const;
 
-		/** Returns the width of the signal
+		/**
+		 * Set the parent operator
+		 */
+		void setParentOp(Operator* newParentOp);
+
+
+		/**
+		 * Returns the width of the signal
 		 */	
 		int width() const;
 
 	
-		/** Returns the exponent width of the signal
+		/**
+		 * Returns the exponent width of the signal
 		 */	
 		int wE() const;
 
-		/** Returns the fraction width of the signal
+		/**
+		 * Returns the fraction width of the signal
 		 */	
 		int wF() const;
 	
-		/** Returns the MSB weight of the (fixed-point) signal
+		/**
+		 * Returns the MSB weight of the (fixed-point) signal
 		 */	
 		int MSB() const;
 
-		/** Returns the LSB weight of the (fixed-point) signal
+		/**
+		 * Returns the LSB weight of the (fixed-point) signal
 		 */	
 		int LSB() const;
 
@@ -112,7 +137,8 @@ namespace flopoco{
 		 */
 		bool isSigned() const;
 	
-		/** Reports if the signal is a FloPoCo floating-point signal
+		/**
+		 * Reports if the signal is a FloPoCo floating-point signal
 		 */	
 		bool isFP() const;
 
@@ -121,7 +147,8 @@ namespace flopoco{
 		 */
 		void setIsFP(bool newIsFP = true);
 	
-		/** Reports if the signal is a fixed-point signal
+		/**
+		 * Reports if the signal is a fixed-point signal
 		 */	
 		bool isFix() const;
 
@@ -130,7 +157,8 @@ namespace flopoco{
 		 */
 		void setIsFix(bool newIsFix = true);
 
-		/** Reports if the signal is a signed fixed-point signal
+		/**
+		 * Reports if the signal is a signed fixed-point signal
 		 */	
 		bool isFixSigned() const;
 
@@ -139,7 +167,8 @@ namespace flopoco{
 		 */
 		void setFixSigned(bool newIsFix = true);
 
-		/** Reports if the signal is an unsigned fixed-point signal
+		/**
+		 * Reports if the signal is an unsigned fixed-point signal
 		 */	
 		bool isFixUnsigned() const;
 
@@ -148,7 +177,8 @@ namespace flopoco{
 		 */
 		void setFixUnsigned(bool newIsFix = true);
 
-		/** Reports if the signal is an IEEE floating-point signal
+		/**
+		 * Reports if the signal is an IEEE floating-point signal
 		 */	
 		bool isIEEE() const;
 
@@ -157,71 +187,85 @@ namespace flopoco{
 		 */
 		void setIsIEEE(bool newIsIEEE = true);
 
-		/** Reports if the signal has the bus flag active
+		/**
+		 * Reports if the signal has the bus flag active
 		 */		
 		bool isBus() const;
 
-		/** Returns the type of the signal
+		/**
+		 * Returns the type of the signal
 		 */	
 		SignalType type() const;
 	
-		/** outputs the VHDL code for declaring this signal. TODO should be obsoleted?
+		/**
+		 * Outputs the VHDL code for declaring this signal. TODO should be obsoleted?
 		 */	
 		std::string toVHDL();
 
-		/** outputs the VHDL code for the type of this signal 
+		/**
+		 * Outputs the VHDL code for the type of this signal
 		 */	
 		std::string toVHDLType();
 
-		/** obtain the name of a signal delayed by n cycles
+		/**
+		 * Obtain the name of a signal delayed by n cycles
 		 * @param delay in cycles */
 		std::string delayedName(int n);
 
 
-		/** outputs the VHDL code for declaring a signal with all its delayed versions
+		/**
+		 * Outputs the VHDL code for declaring a signal with all its delayed versions
 		 * This is the 2.0 equivalent of toVHDL()
 		 * @return the VHDL for the declarations. 
 		 */	
 		std::string toVHDLDeclaration();
 
 
-		/** sets the cycle at which the signal is active
+		/**
+		 * Sets the cycle at which the signal is active
 		 */	
 		void setCycle(int cycle) ;
 
 
-		/** obtain the declared cycle of this signal
+		/**
+		 * Obtain the declared cycle of this signal
 		 * @return the cycle
 		 */	
 		int getCycle();
 
 
-		/** Updates the max delay associated to a signal
+		/**
+		 * Updates the max delay associated to a signal
 		 */	
 		void updateLifeSpan(int delay) ;
 
 
-		/** obtain max delay that has been applied to this signal
+		/**
+		 * Obtain max delay that has been applied to this signal
 		 * @return the max delay 
 		 */	
 		int getLifeSpan() ;
 
-		/** obtain the delay of this signal
+		/**
+		 * Obtain the delay of this signal
 		 * @return the delay
 		 */	
 		double getCriticalPath();
 
-		/** sets the delay of this signal
+		/**
+		 * Sets the delay of this signal
 		 * @param[in] delay the delay
 		 */	
 		void setCriticalPath(double delay);
 
-		/** obtain the contribution of this signal to the critical path
+		/**
+		 * Obtain the contribution of this signal to the critical path
 		 * @return the criticalPathContribution_
 		 */
 		double getCriticalPathContribution();
 
-		/** sets the contribution of this signal to the critical path
+		/**
+		 * Sets the contribution of this signal to the critical path
 		 * @param[in] contribution the contribution
 		 */
 		void setCriticalPathContribution(double contribution);
@@ -235,25 +279,21 @@ namespace flopoco{
 		 * Add a new predecessor for the signal;
 		 * a predecessor is a signal that appears in the right-hand side of an assignment
 		 * that has this signal on the left-hand side.
-		 * @param instanceName the name of the instance of which this signal is part of;
-		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param predecessor a direct predecessor of the current signal
 		 * @param delayCycles the extra delay (in clock cycles) between the two signals
 		 * 		by default equal to zero
 		 * @return true if the signal could be added as a predecessor, false if it already existed
 		 */
-		bool addPredecessor(std::string instanceName, Signal* predecessor, int delayCycles = 0);
+		void addPredecessor(Signal* predecessor, int delayCycles = 0);
 
 		/**
 		 * Remove an existing predecessor of the signal;
-		 * @param instanceName the name of the instance of which this signal is part of;
-		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param predecessor a direct predecessor of the current signal
 		 * @param delayCycles the extra delay (in clock cycles) between the two signals
 		 * 		by default equal to -1, meaning it is not taken into account
 		 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
 		 */
-		bool removePredecessor(std::string instanceName, Signal* predecessor, int delayCycles = 0);
+		void removePredecessor(Signal* predecessor, int delayCycles = 0);
 
 		/**
 		 * Reset the list of successors of the signal
@@ -264,25 +304,21 @@ namespace flopoco{
 		 * Add a new successor of the signal;
 		 * a successor is a signal that appears in the left-hand side of an assignment
 		 * that has this signal on the right-hand side.
-		 * @param instanceName the name of the instance of which this signal is part of;
-		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param successor a direct successor of the current signal
 		 * @param delayCycles the extra delay (in clock cycles) between the two signals
 		 * 		by default equal to zero
 		 * @return true if the signal could be added as a successor, false if it already existed
 		 */
-		bool addSuccessors(std::string instanceName, Signal* successor, int delayCycles = 0);
+		void addSuccessors(Signal* successor, int delayCycles = 0);
 
 		/**
 		 * Remove an existing successor of the signal;
-		 * @param instanceName the name of the instance of which this signal is part of;
-		 * 	defaults to the empty string "" when the signal is part of main datapath
 		 * @param successor a direct successor of the current signal
 		 * @param delayCycles the extra delay (in clock cycles) between the two signals
 		 * 		by default equal to -1, meaning it is not taken into account
 		 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
 		 */
-		bool removeSuccessor(std::string instanceName, Signal* successor, int delayCycles = 0);
+		void removeSuccessor(Signal* successor, int delayCycles = 0);
 
 
 		/**
@@ -319,6 +355,7 @@ namespace flopoco{
 		void setType(SignalType t);
 
 	private:
+		Operator*     parentOp_;     /**< The operator which contains this signal */
 		std::string   name_;         /**< The name of the signal */
 		SignalType    type_;         /**< The type of the signal, see SignalType */
 		int           width_;        /**< The width of the signal */
@@ -326,8 +363,8 @@ namespace flopoco{
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
 		int           lifeSpan_;     /**< The max delay that will be applied to this signal; */
-		std::vector<triplet<std::string, Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
-		std::vector<triplet<std::string, Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The string holds the instance name in case of an InPortMap, otherwise "" */
+		std::vector<pair<Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
+		std::vector<pair<Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The second value in the pair contains the (possible) delay on the edge */
 		int           cycle_;        /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
 	    double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
 	    double        criticalPathContribution_; /**< the delay that the signal adds to the critical path */

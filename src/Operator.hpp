@@ -1631,9 +1631,9 @@ private:
 	int                    currentCycle_;               	/**< The current cycle, when building a pipeline */
 	double                 criticalPath_;               	/**< The current delay of the current pipeline stage */
 	bool                   needRecirculationSignal_;    	/**< True if the operator has registers having a recirculation signal  */
-	bool                   hasClockEnable_;    	          /**< True if the operator has a clock enable signal  */
-	int					    hasDelay1Feedbacks_;		/**< True if this operator has feedbacks of one cyle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
-	Operator*              indirectOperator_;              /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
+	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
+	int					   hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cyle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
+	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 
 };
 
