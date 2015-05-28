@@ -1412,15 +1412,11 @@ namespace flopoco{
 		}
 
 		if (newSignal) {
-			s = new Signal(formal); 		// a copy using the default copy constructor
+			s = new Signal(this, formal); 	// a copy using the default copy constructor
 			s->setName(actualSignalName); 	// except for the name
 			s->setType(Signal::wire); 		// ... and the fact that we declare a wire
 			s->resetPredecessors();
 			s->resetSuccessors();
-
-			// add the signal to signalMap and signalList
-			signalList_.push_back(s);    
-			signalMap_[actualSignalName] = s ;
 		};
 
 		// add the mapping to the mapping list of Op
@@ -1434,73 +1430,53 @@ namespace flopoco{
 	
 	
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
-		Signal* formal;
-		ostringstream e;
+		Signal *formal, *s;
 		string name;
-		e  << srcFileName << " (" << uniqueName_ << "): ERROR in inPortMap() for entity " << op->getName() << ","; // just in case
-		
-		if(isSequential()) {
-			Signal *s;
-			try {
-				s=getSignalByName(actualSignalName);
-			}
-			catch (string e2) {
-				e << endl << tab << e2;
-				throw e.str();
-			}
-			if(s->getCycle() < 0) {
-				ostringstream e;
-				e << "signal " << actualSignalName<< " doesn't have (yet?) a valid cycle";
-				throw e.str();
-			} 
-			if(s->getCycle() > currentCycle_) {
-				ostringstream e;
-				e << "active cycle of signal " << actualSignalName<< " is later than current cycle, cannot delay it";
-				throw e.str();
-			} 
-			// update the lifeSpan of s
-			s->updateLifeSpan( currentCycle_ - s->getCycle() );
-			name = s->delayedName( currentCycle_ - s->getCycle() );
-		}
-		else
-			name = actualSignalName;
 		
 		try {
-			formal=op->getSignalByName(componentPortName);
+			s = getSignalByName(actualSignalName);
 		}
-		catch (string e2) {
-			e << endl << tab << e2;
-			throw e.str();
+		catch(string &e2) {
+			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
 		}
-		if (formal->type()!=Signal::in){
-			e << "signal " << componentPortName << " of component " << op->getName() 
-			<< " doesn't seem to be an input port";
-			throw e.str();
+		
+		try {
+			formal = op->getSignalByName(componentPortName);
+		}
+		catch(string &e2) {
+			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
+		}
+
+		if(formal->type() != Signal::in){
+			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": signal " << componentPortName
+					<< " of component " << op->getName() << " doesn't seem to be an input port");
 		}
 		
 		// add the mapping to the mapping list of Op
-		op->portMap_[componentPortName] = name;
+		op->portMap_[componentPortName] = actualSignalName;
+
+		//add componentPortName as a successor of actualSignalName,
+		// and actualSignalName as a predecessor of componentPortName
+		formal->addPredecessor(s, 0);
+		s->addSuccessor(formal, 0);
 	}
 	
 	
 	
 	void Operator::inPortMapCst(Operator* op, string componentPortName, string actualSignal){
 		Signal* formal;
-		ostringstream e;
 		string name;
-		e << srcFileName << " (" << uniqueName_ << "): ERROR in inPortMapCst() for entity " << op->getName()  << ", "; // just in case
 		
 		try {
-			formal=op->getSignalByName(componentPortName);
+			formal = op->getSignalByName(componentPortName);
 		}
-		catch (string e2) {
-			e << endl << tab << e2;
-			throw e.str();
+		catch (string &e2) {
+			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": " << e2);
 		}
-		if (formal->type()!=Signal::in){
-			e << "signal " << componentPortName << " of component " << op->getName() 
-			<< " doesn't seem to be an input port";
-			throw e.str();
+
+		if(formal->type() != Signal::in){
+			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": signal " << componentPortName
+					<< " of component " << op->getName() << " doesn't seem to be an input port");
 		}
 		
 		// add the mapping to the mapping list of Op

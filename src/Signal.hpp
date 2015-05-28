@@ -80,6 +80,12 @@ namespace flopoco{
 		 */
 		Signal(Signal* originalSignal);
 
+		/**
+		 * Signal constructor
+		 * Copy the signal to a different operator
+		 */
+		Signal(Operator* newParentOp, Signal* originalSignal);
+
 		/** Signal destructor.
 		 */		
 		~Signal();

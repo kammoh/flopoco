@@ -621,6 +621,7 @@ public:
 
 	/**
 	 * Use a signal as input of a subcomponent
+	 * @param op is a pointer to the subcomponent
 	 * @param componentPortName is the name of the port on the component
 	 * @param actualSignalName is the name of the signal (of this) mapped to this port
 	 */

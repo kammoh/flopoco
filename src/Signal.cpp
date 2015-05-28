@@ -50,6 +50,16 @@ namespace flopoco{
 			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
 	}
 
+	Signal::Signal(Operator* newParentOp, Signal* originalSignal)
+	{
+		if(originalSignal->isFix())
+			this->Signal(newParentOp, originalSignal->getName(), originalSignal->type(), originalSignal->isSigned(), originalSignal->MSB(), originalSignal->LSB());
+		else if(originalSignal->isFP())
+			this->Signal(newParentOp, originalSignal->getName(), originalSignal->type(), originalSignal->wE(), originalSignal->wF(), originalSignal->isIEEE());
+		else
+			this->Signal(newParentOp, originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
+	}
+
 	Signal::~Signal(){}
 
 	void	Signal::promoteToFix(const bool isSigned, const int MSB, const int LSB){
