@@ -101,20 +101,27 @@ namespace flopoco{
 
 
 	void Operator::addToGlobalOpList() {
-		bool alreadyPresent=false;
 		// We assume all the operators added to GlobalOpList are un-pipelined.
-
-		vector<Operator*> *globalOpListRef=target_->getGlobalOpListRef();
-			for(unsigned i=0; i<globalOpListRef->size(); i++){
-					if( getName() == (*globalOpListRef)[i]->getName() ){
-					alreadyPresent=true;
-					REPORT(DEBUG,"Operator::addToGlobalOpListRef(): " << uniqueName_ <<" already present in globalOpList");
-				}
-			}
-			if(!alreadyPresent)
-				globalOpListRef->push_back(this);
+		addToGlobalOpList(this);
 	}
 	
+	void Operator::addToGlobalOpList(Operator *op) {
+		bool alreadyPresent = false;
+		// We assume all the operators added to GlobalOpList are un-pipelined.
+
+		vector<Operator*> *globalOpListRef = target_->getGlobalOpListRef();
+
+		for(unsigned i=0; i<globalOpListRef->size(); i++){
+			if( op->getName() == (*globalOpListRef)[i]->getName() ){
+				alreadyPresent = true;
+				REPORT(DEBUG, "Operator::addToGlobalOpListRef(): " << op->uniqueName_ << " already present in globalOpList");
+			}
+		}
+
+		if(!alreadyPresent)
+			globalOpListRef->push_back(op);
+	}
+
 
 
 	
@@ -1098,7 +1105,7 @@ namespace flopoco{
 		if(isSequential()) {
 #if 0 // code up to version 3.0
 			if ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
-				nextCycle(report); //TODO Warning
+				nextCycle(report);
 				criticalPath_ = min(delay, 1.0/target_->frequency());
 				return true;
 			}
@@ -1420,7 +1427,7 @@ namespace flopoco{
 		};
 
 		// add the mapping to the mapping list of Op
-		op->portMap_[componentPortName] = actualSignalName;
+		op->tmpPortMap_[componentPortName] = actualSignalName;
 
 		//add componentPortName as a predecessor of actualSignalName,
 		// and actualSignalName as a successor of componentPortName
@@ -1453,7 +1460,7 @@ namespace flopoco{
 		}
 		
 		// add the mapping to the mapping list of Op
-		op->portMap_[componentPortName] = actualSignalName;
+		op->tmpPortMap_[componentPortName] = actualSignalName;
 
 		//add componentPortName as a successor of actualSignalName,
 		// and actualSignalName as a predecessor of componentPortName
@@ -1480,24 +1487,46 @@ namespace flopoco{
 		}
 		
 		// add the mapping to the mapping list of Op
-		op->portMap_[componentPortName] = actualSignal;
+		op->tmpPortMap_[componentPortName] = actualSignal;
 	}
 	
 	
-	string Operator::instance(Operator* op, string instanceName){
+	string Operator::instance(Operator* op, string instanceName, bool isGlobalOperator){
 		ostringstream o;
-		// TODO add checks here? Check that all the signals are covered for instance
+
+		// TODO add more checks here
+		//checking that all the signals are covered
+		for(unsigned int i=0; i<op->getIOList()->size(); i++)
+		{
+			Signal *signal;
+			bool isSignalMapped = false;
+
+			for(map<string, string>::iterator it=op->getPortMap().begin(); it!=op->getPortMap().end(); it++)
+			{
+				if(it->first == signal->getName())
+				{
+					isSignalMapped = true;
+					break;
+				}
+			}
+
+			if(!isSignalMapped)
+				THROWERROR("ERROR in instance() while trying to create a new instance of "
+						<< op->getName() << " called " << instanceName << ": input/output "
+						<< signal->getName() << " is not mapped to anything" << endl);
+		}
 		
 		o << tab << instanceName << ": " << op->getName();
-		if (op->isSequential()) 
-			o << "  -- pipelineDepth="<< op->getPipelineDepth() << " maxInDelay=" << getMaxInputDelays(op->inputDelayMap);
+
+		if(op->isSequential())
+			o << "  -- maxInputDelay=" << getMaxInputDelays(op->inputDelayMap);
 		o << endl;
 		o << tab << tab << "port map ( ";
+
 		// build vhdl and erase portMap_
-		map<string,string>::iterator it;
 		if(op->isSequential()) {
-			o << "clk  => clk";
-			o << "," << endl << tab << tab << "           rst  => rst";
+			o << "clk  => clk" << "," << endl
+			  << tab << tab << "           rst  => rst";
 			if (op->isRecirculatory()) {
 				o << "," << endl << tab << tab << "           stall_s => stall_s";
 			};
@@ -1507,22 +1536,18 @@ namespace flopoco{
 		}
 		
 
-		for (it=op->portMap_.begin()  ; it != op->portMap_.end(); it++ ) {
+		for(map<string,string>::iterator it=op->tmpPortMap_.begin(); it!=op->tmpPortMap_.end(); it++) {
 			bool outputSignal = false;
-			for ( int k = 0; k < int(op->ioList_.size()); k++){
-				if ((op->ioList_[k]->type() == Signal::out) && ( op->ioList_[k]->getName() == (*it).first )){ 
+
+			for(unsigned int k=0; k<op->ioList_.size(); k++)
+			{
+				if((op->ioList_[k]->type() == Signal::out) && (op->ioList_[k]->getName() == (*it).first)){
 					outputSignal = true;
+					break;
 				}
 			}
 			
-			bool parsing = vhdl.isParsing();
-			
-			if ( outputSignal && parsing){
-				vhdl.flush(currentCycle_);
-				vhdl.disableParsing(true);
-			}
-			
-			if (it!=op->portMap_.begin() || op->isSequential())				
+			if((it != op->tmpPortMap_.begin()) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 
 			// The following code assumes that the IO is declared as standard_logic_vector
@@ -1532,31 +1557,21 @@ namespace flopoco{
 			// The following try was intended to distinguish between variable and constant
 			// but getSignalByName doesn't catch delayed variables
 			try{
-				//				cout << "its = " << (*it).second << "  " << endl;
 				rhs = getDelayedSignalByName((*it).second);
-				if (rhs->isFix() && !outputSignal){
-						rhsString = std_logic_vector((*it).second);
-					}
+				if(rhs->isFix() && !outputSignal){
+					rhsString = std_logic_vector((*it).second);
+				}
 				else {
-						rhsString = (*it).second;
+					rhsString = (*it).second;
 				}
 
 			}
-			catch(string e) {
+			catch(string &e) {
 				//constant here
-				rhsString=(*it).second;
+				rhsString = (*it).second;
 			}
-
 
 			o << (*it).first << " => " << rhsString;
-			
-			if ( outputSignal && parsing ){
-				vhdl << o.str();
-				vhdl.flush(currentCycle_);
-				o.str("");
-				vhdl.disableParsing(!parsing);
-			}
-			//op->portMap_.erase(it);
 		}
 		o << ");" << endl;
 		
@@ -1569,7 +1584,11 @@ namespace flopoco{
 		
 		
 		// add the operator to the subcomponent list 
-		subComponents_[op->getName()]  = op;
+		subComponents_[op->getName()] = op;
+
+		if(isGlobalOperator)
+			addTo
+
 		return o.str();
 	}
 
@@ -1897,7 +1916,15 @@ namespace flopoco{
 	}
 
 	map<string, string> Operator::getPortMap(){
-		return portMap_;
+		return tmpPortMap_;
+	}
+
+	map<string, map<string, string>> Operator::getPortMaps(){
+		return portMaps_;
+	}
+
+	map<string, map<string, string>>* Operator::getPortMapsRef(){
+		return &portMaps_;
 	}
 
 	map<string, double> Operator::getInputDelayMap(){

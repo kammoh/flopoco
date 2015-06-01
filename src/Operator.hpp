@@ -83,10 +83,17 @@ public:
 	 * This method should be called by
 	 * 	1/ the main / top-level, or
 	 * 	2/ for sub-components that are really basic operators,
-	 * 	expected to be used several times, *in a way that is independent of the context/timing*.
+	 * 	   expected to be used several times, *in a way that is independent of the context/timing*.
 	 * Typical example is a table designed to fit in a LUT or parallel row of LUTs
 	 */
 	void addToGlobalOpList();
+
+	/**
+	 * Add operator @param op to the global (first-level) list, which is stored in its Target.
+	 * C.f. version of the method with no parameters for usage and more explanations
+	 * @param op the operator to add to the global operator list
+	 */
+	void addToGlobalOpList(Operator *op);
 
 
 	/**
@@ -638,9 +645,10 @@ public:
 	 * Returns the VHDL for an instance of a sub-component.
 	 * @param op represents the operator to be port mapped 
 	 * @param instanceName is the name of the instance as a label
+	 * @param isGlobalOperator if true, the call to instance will add the operator to the globalOpLits as well
 	 * @return name
 	 */
-	string instance(Operator* op, string instanceName);
+	string instance(Operator* op, string instanceName, bool isGlobalOperator = false);
 
 
 
@@ -1062,6 +1070,10 @@ public:
 	
 	map<string, string> getPortMap();
 	
+	map<string, map<string, string>> getPortMaps();
+
+	map<string, map<string, string>>* getPortMapsRef();
+
 	
 	map<string, double> getInputDelayMap();
 	
@@ -1568,11 +1580,11 @@ public:
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
 	map<string, Operator*> subComponents_;					/**< The list of sub-components */
-	vector<Signal*>     signalList_;      					/**< The list of internal signals of the operator */
-	vector<Signal*>     ioList_;          					/**< The list of I/O signals of the operator */
+	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
+	vector<Signal*>        ioList_;          				/**< The list of I/O signals of the operator */
 
-	FlopocoStream       vhdl;             					/**< The internal stream to which the constructor will build the VHDL code */
-	int                 numberOfTests;    					/**< The number of tests, set by TestBench before this operator is tested */
+	FlopocoStream          vhdl;             				/**< The internal stream to which the constructor will build the VHDL code */
+	int                    numberOfTests;    				/**< The number of tests, set by TestBench before this operator is tested */
 	
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1599,12 +1611,13 @@ protected:
 	string 				architectureName_;					/**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_; 					/**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
 
-	map<string, string>  portMap_;         					/**< Port map for an instance of this operator */
+	map<string, map<string, string>>  portMaps_;			/**< Port maps for the instances of this operator */
+	map<string, string>  tmpPortMap_;						/**< Port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 	map<string, double>  outDelayMap;      					/**< Slack delays on the outputs */
 	map<string, double>  inputDelayMap;      				/**< Slack delays on the inputs */
 	string               srcFileName;      					/**< Used to debug and report.  */
 	//disabled during the overhaul
-	//map<string, int>     declareTable;     					/**< Table containing the name and declaration cycle of the signal */
+	//map<string, int>     declareTable;     				/**< Table containing the name and declaration cycle of the signal */
 	int                  myuid;              				/**< Unique id>*/
 	int                  cost;             					/**< The cost of the operator depending on different metrics */
 	vector<Operator*>    oplist;                     		/**< A list of all the sub-operators */
