@@ -14,8 +14,6 @@
 	#include <ctype.h>
 	#include <map>
 	
-	#include "utils.hpp"
-	
 	using namespace flopoco;
 
 	#define YY_EXTRA_TYPE LexerContext*

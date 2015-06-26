@@ -179,14 +179,17 @@ Questions and remarks:
 - should the constant signals be actual signals?
 - how to handle instances:
   - we should create a new class Instance, which contains a reference to the instanced Operator and a portMap for its inputs and outputs
-  - Operator should have a flag isGlobal and isImplemented, signaling if the operator is on the global operator list and whether it has already been implemented, or not
+  - Operator should have a flag isGlobal
+  - Instance should have a flag isImplemented, signaling if the operator is on the global operator list and whether it has already been implemented, or not
   - Operator has a list of the instances it creates
+  - Operator has a list of sub-operators
   - Target has the global operator list
   - when creating a new instance of a global operator
-    - if it is the first, then just add it to the  global operator list, with the isImplemented flag to false
+    - if it is the first, then just add it to the  global operator list, with the isImplemented flag to true
     - if it is not the first, then clone the existing operator, connecting the clone's inputs/outputs to the right signals, and set the isImplemented flag to true
+  - the global operators exist in Target as well, and will be implemented there
   - there should be no cycles in the graph
-  - all architectures are unrolled in the signal graph 
+  - all architectures are unrolled in the signal graph
 
 * Options for signed/unsigned
 Option 0: Do nothing radical. It seems when the options

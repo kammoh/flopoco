@@ -22,7 +22,7 @@ namespace flopoco{
 
 	/**
 	 * This is the definition of a triplet type of data,
-	 * as there is no such equivalent in the std libraries.
+	 * as there is no such equivalent in the standard libraries.
 	 * Remark: std::tuple can be used as well, but it is defined from C++11 onwards
 	 */
 	//------------------------------------------------------------------------------
