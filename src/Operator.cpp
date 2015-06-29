@@ -51,7 +51,8 @@ namespace flopoco{
 		*/
 
 		needRecirculationSignal_    = false;
-		inputDelayMap               = inputDelays;
+		//disabled during the overhaul
+		//inputDelayMap               = inputDelays;
 		myuid                       = getNewUId();
 		architectureName_			= "arch";
 		indirectOperator_           = NULL;
@@ -95,6 +96,9 @@ namespace flopoco{
 
 	void Operator::addSubComponent(Operator* op) {
 		oplist.push_back(op);
+
+		cerr << "WARNING: function addSubComponent() should only be used inside Operator!" << endl
+				<< tab << tab << "Subcomponents should add the instance, with its port mappings, not just the sub-operator" << endl;
 	}
 
 
@@ -106,20 +110,23 @@ namespace flopoco{
 	}
 	
 	void Operator::addToGlobalOpList(Operator *op) {
-		bool alreadyPresent = false;
 		// We assume all the operators added to GlobalOpList are un-pipelined.
-
+		bool alreadyPresent = false;
 		vector<Operator*> *globalOpListRef = target_->getGlobalOpListRef();
 
 		for(unsigned i=0; i<globalOpListRef->size(); i++){
 			if( op->getName() == (*globalOpListRef)[i]->getName() ){
 				alreadyPresent = true;
-				REPORT(DEBUG, "Operator::addToGlobalOpListRef(): " << op->uniqueName_ << " already present in globalOpList");
+				REPORT(DEBUG, "Operator::addToGlobalOpListRef(): " << op->getName() << " already present in globalOpList");
+				break;
 			}
 		}
 
 		if(!alreadyPresent)
 			globalOpListRef->push_back(op);
+
+		cerr << "WARNING: function addToGlobalOpList() should only be used inside Operator!" << endl
+				<< tab << tab << "Subcomponents should add the instance, with its port mappings, not just the sub-operator" << endl;
 	}
 
 
@@ -129,9 +136,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addInput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -152,20 +157,21 @@ namespace flopoco{
 
 		//search the input delays and try to set the critical path
 		// of the input to the one specified in the inputDelays
+		//disabled during the overhaul
+		/*
 		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
 		if(foundSignal != inputDelayMap.end())
 		{
 			s->setCriticalPath(foundSignal->second);
 		}
+		*/
 	}
 	
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o  << srcFileName << " (" << uniqueName_ << "): ERROR in addOutput, signal " << name << " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -200,9 +206,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFixInput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addFixInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -222,20 +226,21 @@ namespace flopoco{
 
 		//search the input delays and try to set the critical path
 		// of the input to the one specified in the inputDelays
+		//disabled during the overhaul
+		/*
 		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
 		if(foundSignal != inputDelayMap.end())
 		{
 			s->setCriticalPath(foundSignal->second);
 		}
+		*/
 	}
 	
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFixOutput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addFixOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -257,9 +262,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFPInput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addFPInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -279,20 +282,21 @@ namespace flopoco{
 
 		//search the input delays and try to set the critical path
 		// of the input to the one specified in the inputDelays
+		//disabled during the overhaul
+		/*
 		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
 		if(foundSignal != inputDelayMap.end())
 		{
 			s->setCriticalPath(foundSignal->second);
 		}
+		*/
 	}
 	
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addFPOutput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addFPOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -317,9 +321,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addIEEEInput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addIEEEInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -339,20 +341,21 @@ namespace flopoco{
 
 		//search the input delays and try to set the critical path
 		// of the input to the one specified in the inputDelays
+		//disabled during the overhaul
+		/*
 		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
 		if(foundSignal != inputDelayMap.end())
 		{
 			s->setCriticalPath(foundSignal->second);
 		}
+		*/
 	}
 	
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			std::ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in addIEEEOutput, signal " << name<< " seems to already exist";
-			throw o.str();
+			THROWERROR("ERROR in addIEEEOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -378,10 +381,7 @@ namespace flopoco{
 		//search for the signal in the list of signals
 		if(signalMap_.find(name) == signalMap_.end()) {
 			//signal not found, throw an error
-			ostringstream e;
-
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in getSignalByName, signal " << name << " not declared";
-			throw e.str();
+			THROWERROR("ERROR in getSignalByName, signal " << name << " not declared");
 		}
 		//signal found, return the reference to it
 		return signalMap_[name];
@@ -406,10 +406,7 @@ namespace flopoco{
 		//search for the stripped signal name
 		if(signalMap_.find(n) == signalMap_.end()){
 			//signal not found, throw an error
-			ostringstream e;
-
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in getDelayedSignalByName, signal " << name << " not declared";
-			throw e.str();
+			THROWERROR("ERROR in getDelayedSignalByName, signal " << name << " not declared");
 		}
 
 		return signalMap_[n];
@@ -417,7 +414,6 @@ namespace flopoco{
 
 	
 	bool Operator::isSignalDeclared(string name){
-
 		if(signalMap_.find(name) ==  signalMap_.end()){
 			return false;
 		}
@@ -696,7 +692,6 @@ namespace flopoco{
 	}
 	
 	void Operator::setPipelineDepth(int d) {
-
 		cerr << "WARNING: function setPipelineDepth() is deprecated" << endl;
 
 		pipelineDepth_ = d; 
@@ -901,7 +896,6 @@ namespace flopoco{
 		// lexing part
 		vhdl.flush(currentCycle_);
 		*/
-		ostringstream e;
 		
 		if(isSequential()) {
 			Signal* s;
@@ -909,16 +903,13 @@ namespace flopoco{
 			try {
 				s = getSignalByName(name);
 			}
-			catch(string &e2) {
-				e << srcFileName << " (" << uniqueName_ << "): ERROR in getCycleFromSignal, " << endl
-				  << tab << e2;
-				throw e.str();
+			catch(string &e) {
+				THROWERROR("): ERROR in getCycleFromSignal, " << endl << tab << e);
 			}
 			
 			if(s->getCycle() < 0)
 			{
-				e << "Signal " << name << " doesn't have (yet?) a valid cycle" << endl;
-				throw e.str();
+				THROWERROR("Signal " << name << " doesn't have (yet?) a valid cycle" << endl);
 			} 
 			
 			return s->getCycle();
@@ -930,16 +921,13 @@ namespace flopoco{
 	
 	double Operator::getCPFromSignal(string name, bool report)
 	{
-		ostringstream e;
 		Signal* s;
 
 		try {
 			s = getSignalByName(name);
 		}
-		catch(string &e2) {
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in getCPFromSignal, " << endl
-					<< tab << e2;
-			throw e.str();
+		catch(string &e) {
+			THROWERROR("): ERROR in getCPFromSignal, " << endl << tab << e);
 		}
 
 		return s->getCriticalPath();
@@ -947,16 +935,13 @@ namespace flopoco{
 	
 	double Operator::getCPContributionFromSignal(string name, bool report)
 	{
-		ostringstream e;
 		Signal* s;
 
 		try {
 			s = getSignalByName(name);
 		}
-		catch(string &e2) {
-			e << srcFileName << " (" << uniqueName_ << "): ERROR in getCPContributionFromSignal, " << endl
-					<< tab << e2;
-			throw e.str();
+		catch(string &e) {
+			THROWERROR("): ERROR in getCPContributionFromSignal, " << endl << tab << e);
 		}
 
 		return s->getCriticalPathContribution();
@@ -1173,8 +1158,7 @@ namespace flopoco{
 
 		// check the signal doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR(srcFileName << " (" << uniqueName_ << "): ERROR in declare(), signal "
-					<< name << " already exists" << endl);
+			THROWERROR("ERROR in declare(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -1196,8 +1180,7 @@ namespace flopoco{
 
 		// check the signals doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR(srcFileName << " (" << uniqueName_ << "): ERROR in declareFixPoint(), signal "
-					<< name << " already exists" << endl);
+			THROWERROR("ERROR in declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -1224,8 +1207,7 @@ namespace flopoco{
 
 		// check the signals doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR(srcFileName << " (" << uniqueName_ << "): ERROR in declareFixPoint(), signal "
-					<< name << " already exists" << endl);
+			THROWERROR("ERROR in declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -1233,16 +1215,15 @@ namespace flopoco{
 
 		initNewSignal(s, criticalPathContribution, regType);
 
-		//set the flag for a fixed-point signal
+		s->setIsFix(false);
+		//set the flag for a floating-point signal
 		if(ieeeFormat)
 		{
-			s->setIsFix(false);
 			s->setIsFP(false);
 			s->setIsIEEE(true);
 		}
 		else
 		{
-			s->setIsFix(false);
 			s->setIsFP(true);
 			s->setIsIEEE(false);
 		}
@@ -1325,7 +1306,10 @@ namespace flopoco{
 		// Possible left padding/sign extension
 		if(paddLeft) {
 			if(isSigned) 	{
-				vhdl << "(" << paddLeftSize -1 << " downto 0 => " << rhsName << of(oldSize-1) << ") & "; // sign extension
+				if(paddLeftSize == 1)
+					vhdl << "(" << rhsName << of(oldSize-1) << ") & "; // sign extension
+				else
+					vhdl << "(" << paddLeftSize -1 << " downto 0 => " << rhsName << of(oldSize-1) << ") & "; // sign extension
 			}
 			else {
 				vhdl << zg(paddLeftSize) << " & ";
@@ -1347,6 +1331,7 @@ namespace flopoco{
 	
 	#if 1
 	string Operator::use(string name) {
+		cerr << "WARNING: function use() is deprecated" << endl;
 		
 		if(isSequential()) {
 			Signal *s;
@@ -1375,6 +1360,7 @@ namespace flopoco{
 	}
 	
 	string Operator::use(string name, int delay) {
+		cerr << "WARNING: function use() is deprecated" << endl;
 		
 		if(isSequential()) {
 			Signal *s;
@@ -1402,7 +1388,7 @@ namespace flopoco{
 
 		// check if the signal already exists
 		if(signalMap_.find(actualSignalName) !=  signalMap_.end() && newSignal) {
-			THROWERROR(": ERROR in outPortMap() for entity " << op->getName()  << ", "
+			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", "
 					<< "signal " << actualSignalName << " already exists");
 		}
 
@@ -1410,16 +1396,16 @@ namespace flopoco{
 			formal = op->getSignalByName(componentPortName);
 		}
 		catch(string &e2) {
-			THROWERROR(e2);
+			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", " << e2);
 		}
 
-		if (formal->type() != Signal::out){
+		if(formal->type() != Signal::out){
 			THROWERROR("signal " << componentPortName << " of component " << op->getName()
 					<< " doesn't seem to be an output port");
 		}
 
-		if (newSignal) {
-			s = new Signal(this, formal); 	// a copy using the default copy constructor
+		if(newSignal){
+			s = new Signal(this, formal); 	// create a copy using the default copy constructor
 			s->setName(actualSignalName); 	// except for the name
 			s->setType(Signal::wire); 		// ... and the fact that we declare a wire
 			s->resetPredecessors();

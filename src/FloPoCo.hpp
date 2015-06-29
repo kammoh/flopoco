@@ -12,6 +12,8 @@
 #include "Operator.hpp"
 #include "FlopocoStream.hpp"
 
+#include "Instance.hpp"
+
 /* operator pipeline work* ------------------------------------ */
 #include "OperatorPipeline/OperatorPipeline.hpp"
 

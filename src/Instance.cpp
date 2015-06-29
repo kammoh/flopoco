@@ -9,6 +9,8 @@ namespace flopoco {
 	{
 		clearInputPorts();
 		clearOutputPorts();
+
+		hasBeenImplemented = false;
 	}
 
 	Instance::Instance(std::string name_, Operator* op_, map<std::string, Signal*> inPortMap_, map<std::string, Signal*> outPortMap_) :
@@ -16,6 +18,8 @@ namespace flopoco {
 	{
 		clearInputPorts();
 		clearOutputPorts();
+
+		hasBeenImplemented = false;
 
 		addInputPorts(inPortMap_);
 		addOutputPorts(outPortMap_);
@@ -42,6 +46,16 @@ namespace flopoco {
 	void Instance::setOperator(Operator* op_)
 	{
 		op = op_;
+	}
+
+	bool Instance::getHasBeenImplemented()
+	{
+		return hasBeenImplemented;
+	}
+
+	void Instance::setHasBeenImplemented(bool hasBeenImplemented_)
+	{
+		hasBeenImplemented_ = hasBeenImplemented;
 	}
 
 	void Instance::addInputPort(std::string portName, Signal* connectedSignal)

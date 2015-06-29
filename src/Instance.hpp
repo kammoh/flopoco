@@ -58,6 +58,16 @@ namespace flopoco {
 		void setOperator(Operator* op);
 
 		/**
+		 * Return the name of the operator
+		 */
+		bool getHasBeenImplemented();
+
+		/**
+		 * Set the name of the operator
+		 */
+		void setHasBeenImplemented(bool hasBeenImplemented);
+
+		/**
 		 * Add a new input port connection
 		 */
 		void addInputPort(std::string portName, Signal* connectedSignal);
@@ -107,6 +117,8 @@ namespace flopoco {
 
 
 	private:
+
+		bool hasBeenImplemented;                    /*< has the operators already been implemented, or not */
 
 	};
 

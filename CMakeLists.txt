@@ -183,6 +183,8 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/TestState
  VHDLLexer
  
+ src/Instance
+ 
  # Resource Estimation related ---------------------------------------
  src/Tools/ResourceEstimationHelper
  

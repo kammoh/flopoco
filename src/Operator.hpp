@@ -10,6 +10,7 @@
 #include <gmpxx.h>
 #include "Target.hpp"
 #include "Signal.hpp"
+#include "Instance.hpp"
 #include "TestBenches/TestCase.hpp"
 #include <float.h>
 #include <utility>
@@ -85,6 +86,7 @@ public:
 	 * 	2/ for sub-components that are really basic operators,
 	 * 	   expected to be used several times, *in a way that is independent of the context/timing*.
 	 * Typical example is a table designed to fit in a LUT or parallel row of LUTs
+	 * We assume all the operators added to GlobalOpList are un-pipelined.
 	 */
 	void addToGlobalOpList();
 
@@ -1579,7 +1581,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
-	map<string, Operator*> subComponents_;					/**< The list of sub-components */
+	//disabled during the overhaul
+	//map<string, Operator*> subComponents_;					/**< The list of instantiated sub-components */
+	vector<Instance*>      instances_;                       /**< The list of instances (with the corresponding port maps) */
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;          				/**< The list of I/O signals of the operator */
 
@@ -1611,10 +1615,12 @@ protected:
 	string 				architectureName_;					/**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_; 					/**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
 
-	map<string, map<string, string>>  portMaps_;			/**< Port maps for the instances of this operator */
+	//disabled during the overhaul
+	//map<string, map<string, string>>  portMaps_;			/**< Port maps for the instances of this operator */
 	map<string, string>  tmpPortMap_;						/**< Port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-	map<string, double>  outDelayMap;      					/**< Slack delays on the outputs */
-	map<string, double>  inputDelayMap;      				/**< Slack delays on the inputs */
+	//disabled during the overhaul
+	//map<string, double>  outDelayMap;      					/**< Slack delays on the outputs */
+	//map<string, double>  inputDelayMap;      				/**< Slack delays on the inputs */
 	string               srcFileName;      					/**< Used to debug and report.  */
 	//disabled during the overhaul
 	//map<string, int>     declareTable;     				/**< Table containing the name and declaration cycle of the signal */
