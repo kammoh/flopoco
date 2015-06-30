@@ -20,12 +20,13 @@ namespace flopoco{
 	public:
 		/** The possible types of a signal*/
 		typedef enum {
-			in,                        /**< if the signal is an input signal */
-			out,                       /**< if the signal is an output signal */
-			wire,                      /**< if the signal is a wire (not registered) */
-			registeredWithoutReset,    /**< if the signal is registered, but does not have a reset */
-			registeredWithAsyncReset,  /**< if the signal is registered, and has an asynchronous reset */
-			registeredWithSyncReset,    /**< if the signal is registered, and has an synchronous reset */
+			in,                              /**< if the signal is an input signal */
+			out,                             /**< if the signal is an output signal */
+			wire,                            /**< if the signal is a wire (not registered) */
+			constant,                        /**< if the signal is a constant */
+			registeredWithoutReset,          /**< if the signal is registered, but does not have a reset */
+			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */
+			registeredWithSyncReset,         /**< if the signal is registered, and has an synchronous reset */
 			registeredWithZeroInitialiser    /**< if the signal is registered, the it has a zero initialiser (but no reset) */
 		} SignalType;
 
@@ -50,6 +51,16 @@ namespace flopoco{
 		 * @param isBus     the flag which signals if the signal is a bus (std_logic_vector)
 		 */
 		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const int width = 1, const bool isBus=false);
+
+		/**
+		 * Signal constructor.
+		 * The standard constructor for signals that are constants
+		 * @param parentOp       the operator containing the signal
+		 * @param name           the name of the signal
+		 * @param type           the type of the signal, @see SignalType
+		 * @param constValue     the value of the constant
+		 */
+		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue);
 
 		/**
 		 * Signal constructor.
@@ -366,6 +377,8 @@ namespace flopoco{
 		SignalType    type_;         /**< The type of the signal, see SignalType */
 		int           width_;        /**< The width of the signal */
 		
+		double       constValue_;   /**< The value of the constant, for a constant signal */
+
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
 		int           lifeSpan_;     /**< The max delay that will be applied to this signal; */

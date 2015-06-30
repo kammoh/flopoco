@@ -10,11 +10,23 @@ namespace flopoco{
 	// plain logic vector, or wire
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
 		parentOp_(parentOp), name_(name), type_(type), width_(width), numberOfPossibleValues_(1),
-		lifeSpan_(0),  cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
 		isSigned_(false), isBus_(isBus) {
 	}
+
+	// constant signal
+	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue) :
+		parentOp_(parentOp), name_(name), type_(type), constValue_(constValue), numberOfPossibleValues_(1),
+		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		isFP_(false), isFix_(false), isIEEE_(false),
+		wE_(0), wF_(0), MSB_(0), LSB_(0)
+	{
+		width_ = intlog2(fabs(constValue_));
+		isSigned_ = constValue_ < 0;
+	}
+
 
 	// fixed point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) :

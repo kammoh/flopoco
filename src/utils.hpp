@@ -486,6 +486,12 @@ namespace flopoco{
 	 */ 
 	double getMaxInputDelays( map<string, double> inputDelays );
 	
+	/**
+	 *@param[in] inputList the list of input signals
+	 *@return the maximum delay of the input map
+	 */
+	double getMaxInputDelays( vector<Signal*> inputList );
+
 	map<string, double> inDelayMap(string s, double d);
 
 	/**

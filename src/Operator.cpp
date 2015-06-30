@@ -1386,12 +1386,13 @@ namespace flopoco{
 		Signal* formal;
 		Signal* s;
 
-		// check if the signal already exists
+		// check if the signal already exists, when we're supposed to create a new signal
 		if(signalMap_.find(actualSignalName) !=  signalMap_.end() && newSignal) {
 			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", "
 					<< "signal " << actualSignalName << " already exists");
 		}
 
+		//check if the port in the target operator exists, and return it if so
 		try {
 			formal = op->getSignalByName(componentPortName);
 		}
@@ -1399,21 +1400,37 @@ namespace flopoco{
 			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", " << e2);
 		}
 
+		//check if the output port of the instantiated operator is indeed of output port type
 		if(formal->type() != Signal::out){
 			THROWERROR("signal " << componentPortName << " of component " << op->getName()
 					<< " doesn't seem to be an output port");
 		}
 
+		//check if the signal connected to the port exists, and return it if so, or create it if necessary
 		if(newSignal){
 			s = new Signal(this, formal); 	// create a copy using the default copy constructor
 			s->setName(actualSignalName); 	// except for the name
 			s->setType(Signal::wire); 		// ... and the fact that we declare a wire
+
+			//initialize the signals predecessors and successors
 			s->resetPredecessors();
 			s->resetSuccessors();
-		};
 
-		// add the mapping to the mapping list of Op
-		op->tmpPortMap_[componentPortName] = actualSignalName;
+			// add the newly created signal to signalMap and signalList
+			signalList_.push_back(s);
+			signalMap_[s->getName()] = s;
+		}else
+		{
+			try {
+				s = getSignalByName(actualSignalName);
+			}
+			catch(string &e2) {
+				THROWERROR("ERROR in outPortMap() for entity " << getName()  << ", " << e2);
+			}
+		}
+
+		// add the mapping to the output mapping list of Op
+		op->tmpOutPortMap_[componentPortName] = s;
 
 		//add componentPortName as a predecessor of actualSignalName,
 		// and actualSignalName as a successor of componentPortName
@@ -1424,29 +1441,32 @@ namespace flopoco{
 	
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
 		Signal *formal, *s;
-		string name;
+		std::string name;
 		
-		try {
+		//check if the signal already exists
+		try{
 			s = getSignalByName(actualSignalName);
 		}
 		catch(string &e2) {
 			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
 		}
 		
-		try {
+		//check if the signal already exists
+		try{
 			formal = op->getSignalByName(componentPortName);
 		}
 		catch(string &e2) {
 			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
 		}
 
+		//check if the input port of the instantiated operator is indeed of input port type
 		if(formal->type() != Signal::in){
 			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": signal " << componentPortName
 					<< " of component " << op->getName() << " doesn't seem to be an input port");
 		}
 		
-		// add the mapping to the mapping list of Op
-		op->tmpPortMap_[componentPortName] = actualSignalName;
+		// add the mapping to the input mapping list of Op
+		op->tmpInPortMap_[componentPortName] = s;
 
 		//add componentPortName as a successor of actualSignalName,
 		// and actualSignalName as a predecessor of componentPortName
@@ -1458,8 +1478,12 @@ namespace flopoco{
 	
 	void Operator::inPortMapCst(Operator* op, string componentPortName, string actualSignal){
 		Signal* formal;
+		Signal *s;
 		string name;
+		double constValue;
+		sollya_obj_t node;
 		
+		//check if the signal already exists
 		try {
 			formal = op->getSignalByName(componentPortName);
 		}
@@ -1467,13 +1491,35 @@ namespace flopoco{
 			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": " << e2);
 		}
 
+		//check if the input port of the instantiated operator is indeed of input port type
 		if(formal->type() != Signal::in){
 			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": signal " << componentPortName
 					<< " of component " << op->getName() << " doesn't seem to be an input port");
 		}
 		
-		// add the mapping to the mapping list of Op
-		op->tmpPortMap_[componentPortName] = actualSignal;
+		// TODO: do we need to add the input port mapping to the mapping list of Op?
+		// 		as this is a constant signal
+
+		//try to parse the constant
+		node = sollya_lib_parse_string(actualSignal.c_str());
+		// If conversion did not succeed (i.e. parse error)
+		if(node == 0)
+			THROWERROR("Unable to parse string " << actualSignal << " as a numeric constant" << endl);
+		sollya_lib_get_constant_as_double(&constValue, node);
+		sollya_lib_clear_obj(node);
+
+		//create a new signal for constant input
+		s = new Signal(this, join(actualSignal, "_cst"), Signal::constant, constValue);
+
+		//initialize the signals predecessors and successors
+		s->resetPredecessors();
+		s->resetSuccessors();
+
+		// add the newly created signal to signalMap and signalList
+		signalList_.push_back(s);
+		signalMap_[s->getName()] = s;
+
+		op->tmpInPortMap_[componentPortName] = s;
 	}
 	
 	
@@ -1481,18 +1527,32 @@ namespace flopoco{
 		ostringstream o;
 
 		// TODO add more checks here
+
 		//checking that all the signals are covered
 		for(unsigned int i=0; i<op->getIOList()->size(); i++)
 		{
-			Signal *signal;
+			Signal *signal = op->getIOListSignal(i);
 			bool isSignalMapped = false;
 
-			for(map<string, string>::iterator it=op->getPortMap().begin(); it!=op->getPortMap().end(); it++)
+			if(signal->type() == Signal::in)
 			{
-				if(it->first == signal->getName())
+				for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++)
 				{
-					isSignalMapped = true;
-					break;
+					if(it->first == signal->getName())
+					{
+						isSignalMapped = true;
+						break;
+					}
+				}
+			}else
+			{
+				for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++)
+				{
+					if(it->first == signal->getName())
+					{
+						isSignalMapped = true;
+						break;
+					}
 				}
 			}
 
@@ -1504,8 +1564,10 @@ namespace flopoco{
 		
 		o << tab << instanceName << ": " << op->getName();
 
+		continue here: set up a new instance
+
 		if(op->isSequential())
-			o << "  -- maxInputDelay=" << getMaxInputDelays(op->inputDelayMap);
+			o << "  -- maxInputDelay=" << getMaxInputDelays(op->ioList_);
 		o << endl;
 		o << tab << tab << "port map ( ";
 

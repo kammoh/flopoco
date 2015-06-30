@@ -642,6 +642,18 @@ namespace flopoco{
 		return maxInputDelay;
 	}
 
+	double getMaxInputDelays( vector<Signal*> inputList )
+	{
+		double maxInputDelay = 0;
+
+		for (unsigned int i=0; i<inputList.size(); i++)
+			if ((inputList[i]->type() == Signal::in)
+					&& (inputList[i]->getCriticalPath() > maxInputDelay))
+				maxInputDelay = inputList[i]->getCriticalPath();
+
+		return maxInputDelay;
+	}
+
 	string printInputDelays( map <string, double> inputDelays){
 		ostringstream o;
 		map<string, double>::iterator iter;
