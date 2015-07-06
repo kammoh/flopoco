@@ -1536,6 +1536,7 @@ namespace flopoco{
 
 			if(signal->type() == Signal::in)
 			{
+				//this is an input signal, so look for it in the input port mappings
 				for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++)
 				{
 					if(it->first == signal->getName())
@@ -1546,6 +1547,7 @@ namespace flopoco{
 				}
 			}else
 			{
+				//this is an output signal, so look for it in the output port mappings
 				for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++)
 				{
 					if(it->first == signal->getName())
@@ -1563,8 +1565,6 @@ namespace flopoco{
 		}
 		
 		o << tab << instanceName << ": " << op->getName();
-
-		continue here: set up a new instance
 
 		if(op->isSequential())
 			o << "  -- maxInputDelay=" << getMaxInputDelays(op->ioList_);
@@ -1584,58 +1584,57 @@ namespace flopoco{
 		}
 		
 
-		for(map<string,string>::iterator it=op->tmpPortMap_.begin(); it!=op->tmpPortMap_.end(); it++) {
-			bool outputSignal = false;
+		for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++) {
+			string rhsString;
 
-			for(unsigned int k=0; k<op->ioList_.size(); k++)
-			{
-				if((op->ioList_[k]->type() == Signal::out) && (op->ioList_[k]->getName() == (*it).first)){
-					outputSignal = true;
-					break;
-				}
-			}
-			
-			if((it != op->tmpPortMap_.begin()) || op->isSequential())
+			if((it != op->tmpInPortMap_.begin()) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 
 			// The following code assumes that the IO is declared as standard_logic_vector
-			// If the actual parameter is a signed or unsigned, we want to automatically convert it 
-			Signal* rhs;
-			string rhsString;
-			// The following try was intended to distinguish between variable and constant
-			// but getSignalByName doesn't catch delayed variables
-			try{
-				rhs = getDelayedSignalByName((*it).second);
-				if(rhs->isFix() && !outputSignal){
-					rhsString = std_logic_vector((*it).second);
-				}
-				else {
-					rhsString = (*it).second;
-				}
-
+			// If the actual parameter is a signed or unsigned, we want to automatically convert it
+			if(it->second->isFix()){
+				rhsString = std_logic_vector(it->second->getName());
 			}
-			catch(string &e) {
-				//constant here
-				rhsString = (*it).second;
+			else {
+				rhsString = it->second->getName();
 			}
 
-			o << (*it).first << " => " << rhsString;
+			o << it->first << " => " << rhsString;
 		}
+
+		for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++) {
+			string rhsString;
+
+			if(!((it == op->tmpOutPortMap_.begin()) && (op->tmpInPortMap_.size() != 0)) || op->isSequential())
+				o << "," << endl <<  tab << tab << "           ";
+
+			o << it->first << " => " << it->second->getName();
+		}
+
 		o << ");" << endl;
 		
-		
-		//Floorplanning related-----------------------------------------
+		//create a new instance
+		Instance* newInstance = new Instance(instanceName, op, tmpInPortMap_, tmpOutPortMap_);
+		if(isGlobalOperator)
+			newInstance->setHasBeenImplemented(true);
+		instances_.push_back(newInstance);
+
+		//clear the port mappings
+		tmpInPortMap_.clear();
+		tmpOutPortMap_.clear();
+
+		// add the operator to the subcomponent list
+		oplist.push_back(op);
+		if(isGlobalOperator)
+			addToGlobalOpList(op);
+
+
+		//Floorplanning ------------------------------------------------
 		floorplan << manageFloorplan();
 		flpHelper->addToFlpComponentList(op->getName());
 		flpHelper->addToInstanceNames(op->getName(), instanceName);
 		//--------------------------------------------------------------
-		
-		
-		// add the operator to the subcomponent list 
-		subComponents_[op->getName()] = op;
 
-		if(isGlobalOperator)
-			addTo
 
 		return o.str();
 	}
@@ -1644,15 +1643,14 @@ namespace flopoco{
 	
 	string Operator::buildVHDLSignalDeclarations() {
 		ostringstream o;
+
 		for(unsigned int i=0; i<signalList_.size(); i++) {
-			Signal *s = signalList_[i];
-			o << s->toVHDLDeclaration() << endl;
+			o << signalList_[i]->toVHDLDeclaration() << endl;
 		}
 		//now the signals from the I/O List which have the cycle>0
-		for (unsigned int i=0; i<ioList_.size(); i++) {
-			Signal *s = ioList_[i];
-			if (s->getLifeSpan()>0){
-				o << s->toVHDLDeclaration() << endl;	
+		for(unsigned int i=0; i<ioList_.size(); i++) {
+			if(ioList_[i]->getLifeSpan()>0){
+				o << ioList_[i]->toVHDLDeclaration() << endl;
 			}
 			
 		}
@@ -1704,11 +1702,12 @@ namespace flopoco{
 	
 	string Operator::buildVHDLComponentDeclarations() {
 		ostringstream o;
-		for(map<string, Operator*>::iterator it = subComponents_.begin(); it !=subComponents_.end(); it++) {
-			Operator *op = it->second;
-			op->outputVHDLComponent(o);
-			o<< endl;
+
+		for(unsigned int i=0; i<oplist.size(); i++) {
+			oplist[i]->outputVHDLComponent(o, oplist[i]->uniqueName_);
+			o << endl;
 		}
+
 		return o.str();	
 	}
 	
@@ -1717,10 +1716,6 @@ namespace flopoco{
 		ostringstream tmp; 
 		tmp << v;
 		constants_[name] =  make_pair(t, tmp.str());
-	}
-	
-	void Operator::addType(std::string name, std::string value) {
-		types_ [name] =  value;
 	}
 	
 	void Operator::addConstant(std::string name, std::string t, int v) {
@@ -1733,6 +1728,10 @@ namespace flopoco{
 		constants_[name] =  make_pair(t, v);
 	}
 	
+	void Operator::addType(std::string name, std::string value) {
+		types_ [name] =  value;
+	}
+
 	
 	void Operator::addAttribute(std::string attributeName,  std::string attributeType,  std::string object, std::string value ) {
 		// TODO add some checks ?
@@ -1744,9 +1743,10 @@ namespace flopoco{
 	
 	string Operator::buildVHDLTypeDeclarations() {
 		ostringstream o;
+		string name, value;
 		for(map<string, string >::iterator it = types_.begin(); it !=types_.end(); it++) {
-			string name  = it->first;
-			string value = it->second;
+			name  = it->first;
+			value = it->second;
 			o <<  "type " << name << " is "  << value << ";" << endl;
 		}
 		return o.str();	
@@ -1755,10 +1755,11 @@ namespace flopoco{
 	
 	string Operator::buildVHDLConstantDeclarations() {
 		ostringstream o;
+		string name, type, value;
 		for(map<string, pair<string, string> >::iterator it = constants_.begin(); it !=constants_.end(); it++) {
-			string name  = it->first;
-			string type = it->second.first;
-			string value = it->second.second;
+			name  = it->first;
+			type = it->second.first;
+			value = it->second.second;
 			o <<  "constant " << name << ": " << type << " := " << value << ";" << endl;
 		}
 		return o.str();	
@@ -1801,12 +1802,14 @@ namespace flopoco{
 			o << tab << "process(clk)" << endl;
 			o << tab << tab << "begin" << endl;
 			o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-			if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
-			else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+			if (isRecirculatory())
+				o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
+			else if (hasClockEnable())
+				o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 			for(unsigned int i=0; i<signalList_.size(); i++) {
 				Signal *s = signalList_[i];
 				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser) || (s->type() == Signal::wire)) 
-					if(s->getLifeSpan() >0) {
+					if(s->getLifeSpan() > 0) {
 						for(int j=1; j <= s->getLifeSpan(); j++)
 							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 					}
@@ -1906,9 +1909,8 @@ namespace flopoco{
 	
 	
 	void Operator::buildRandomTestCaseList(TestCaseList* tcl, int n){
-		
 		TestCase *tc;
-		/* Generate test cases using random input numbers */
+		// Generate test cases using random input numbers
 		for (int i = 0; i < n; i++) {
 			// TODO free all this memory when exiting TestBench
 			tc = buildRandomTestCase(i); 
@@ -1918,22 +1920,21 @@ namespace flopoco{
 	
 	TestCase* Operator::buildRandomTestCase(int i){
 		TestCase *tc = new TestCase(this);
-		/* Generate test cases using random input numbers */
+		// Generate test cases using random input numbers */
 		// TODO free all this memory when exiting TestBench
-		/* Fill inputs */
+		// Fill inputs
 		for (unsigned int j = 0; j < ioList_.size(); j++) {
 			Signal* s = ioList_[j]; 
-			if (s->type() == Signal::in) {
+			if(s->type() == Signal::in){
 				mpz_class a = getLargeRandom(s->width());
 				tc->addInput(s->getName(), a);
 			}
 		}
-		/* Get correct outputs */
+		// Get correct outputs
 		emulate(tc);
 		
 		//		cout << tc->getInputVHDL();
 		//    cout << tc->getExpectedOutputVHDL();
-		
 		
 		// add to the test case list
 		return tc;
