@@ -1049,6 +1049,12 @@ public:
 	 * Return the output delay map
 	 * @return the output map containing the signal -> delay associations
 	 */
+	map<string, double> getInputDelayMap();
+
+	/**
+	 * Return the output delay map
+	 * @return the output map containing the signal -> delay associations
+	 */
 	map<string, double> getOutDelayMap();
 	
 	/**
@@ -1079,9 +1085,6 @@ public:
 	map<string, map<string, string>> getPortMaps();
 
 	map<string, map<string, string>>* getPortMapsRef();
-
-	
-	map<string, double> getInputDelayMap();
 	
 	map<string, Operator*> getSubComponents();
 	

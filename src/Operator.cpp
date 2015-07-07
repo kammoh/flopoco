@@ -1940,8 +1940,26 @@ namespace flopoco{
 		return tc;
 	}
 	
+	map<string, double> Operator::getInputDelayMap(){
+		map<string, double> inputDelayMap;
+
+		cerr << "WARNING: this function no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
+				<< tab << "the delay map for the instance being built will be returned" << endl;
+		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it++; it!=tmpInPortMap_.end())
+			inputDelayMap[it->first] = it->second->getCriticalPath();
+
+		return inputDelayMap;
+	}
+
 	map<string, double> Operator::getOutDelayMap(){
-		return outDelayMap;
+		map<string, double> outputDelayMap;
+
+		cerr << "WARNING: this function no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
+				<< tab << "the delay map for the instance being built will be returned" << endl;
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it++; it!=tmpOutPortMap_.end())
+			outputDelayMap[it->first] = it->second->getCriticalPath();
+
+		return outputDelayMap;
 	}
 	
 	map<string, int> Operator::getDeclareTable(){
@@ -1974,10 +1992,6 @@ namespace flopoco{
 
 	map<string, map<string, string>>* Operator::getPortMapsRef(){
 		return &portMaps_;
-	}
-
-	map<string, double> Operator::getInputDelayMap(){
-		return inputDelayMap;
 	}
 
 	map<string, Operator*> Operator::getSubComponents(){
