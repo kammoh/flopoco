@@ -2126,8 +2126,11 @@ namespace flopoco{
 		}
 	}
 
-	void Operator::parse2(){
-		REPORT(DEBUG, "Starting second-level parsing for operator "<<srcFileName);
+	//TODO: this function should not be called before the operator's signals are scheduled
+	void Operator::parse2()
+	{
+		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
+
 		vector<pair<string,int> >:: iterator iterUse;
 		map<string, int>::iterator iterDeclare;
 
@@ -2136,7 +2139,7 @@ namespace flopoco{
 
 		string str (vhdl.str());
 
-		/* parse the useTable and check that the declarations are ok */
+		//parse the useTable and check that the declarations are OK
 		for (iterUse = (vhdl.useTable).begin(); iterUse!=(vhdl.useTable).end();++iterUse){
 			name     = (*iterUse).first;
 			useCycle = (*iterUse).second;
@@ -2156,11 +2159,13 @@ namespace flopoco{
 				replaceString = tReplace.str();
 				if (useCycle<declareCycle){
 					if(!hasDelay1Feedbacks_){
-						cerr << srcFileName << " (" << uniqueName_ << "): WARNING: Signal " << name <<" defined @ cycle "<<declareCycle<<" and used @ cycle " << useCycle <<endl;
+						cerr << srcFileName << " (" << uniqueName_ << "): WARNING: Signal " << name
+								<< " defined @ cycle "<< declareCycle<< " and used @ cycle " << useCycle << endl;
 						cerr << srcFileName << " (" << uniqueName_ << "): If this is a feedback signal you may ignore this warning"<<endl;
 					}else{
 						if(declareCycle - useCycle != 1){
-							cerr << srcFileName << " (" << uniqueName_ << "): ERROR: Signal " << name <<" defined @ cycle "<<declareCycle<<" and used @ cycle " << useCycle <<endl;
+							cerr << srcFileName << " (" << uniqueName_ << "): ERROR: Signal " << name
+									<<" defined @ cycle "<<declareCycle<<" and used @ cycle " << useCycle <<endl;
 							exit(1);
 						}
 					}
@@ -2194,6 +2199,7 @@ namespace flopoco{
 				}
 			}
 		}
+
 		for (iterDeclare = declareTable.begin(); iterDeclare!=declareTable.end();++iterDeclare){
 			name = iterDeclare->first;
 			useCycle = iterDeclare->second;
@@ -2216,6 +2222,7 @@ namespace flopoco{
 				}
 			}
 		}
+
 		vhdl.setSecondLevelCode(str);
 		REPORT(DEBUG, "   ... done second-level parsing for operator "<<srcFileName);
 	}

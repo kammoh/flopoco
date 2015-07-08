@@ -1137,6 +1137,10 @@ public:
 
 	FlopocoStream* getFlopocoVHDLStream();
 
+	/**
+	 * Second level parsing of the VHDL code
+	 * This function should not be called before the signals are scheduled
+	 */
 	void parse2();
 
 

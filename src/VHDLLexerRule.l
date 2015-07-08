@@ -209,11 +209,14 @@ label					  ({identifier}{space_character}*":")
 
 
 ";" {
+    //the left-hand side signal itself is marked, instead of putting it at the end of the statement
+    /*
 	if((yyextra->lexingMode == LexerContext::signalAssignment) || (yyextra->lexingMode == LexerContext::conditionalSignalAssignment) 
 		|| (yyextra->lexingMode == LexerContext::selectedSignalAssignment))
 	{
 		(*yyextra->os) << yytext << "??" << yyextra->lhsName << "??";
 	}
+	*/
 	
 	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)
 	{
@@ -289,7 +292,7 @@ label					  ({identifier}{space_character}*":")
 	if(yyextra->lexingMode == LexerContext::unset)
 	{
 		// this is the left hand side of the assignment
-		(*yyextra->os) << yytext;
+		(*yyextra->os) << "??" << yytext << "??";
 		
 		if(yyextra->lhsName == "")
 		{
