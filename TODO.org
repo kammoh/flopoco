@@ -190,6 +190,8 @@ Questions and remarks:
   - the global operators exist in Target as well, and will be implemented there
   - there should be no cycles in the graph
   - all architectures are unrolled in the signal graph
+  
+  !- resource estimation during timing: we already have some information about the circuit's interal, so why not use this information for resource estimation, as well?
 
 * Options for signed/unsigned
 Option 0: Do nothing radical. It seems when the options
