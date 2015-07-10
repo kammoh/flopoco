@@ -2129,102 +2129,15 @@ namespace flopoco{
 	//TODO: this function should not be called before the operator's signals are scheduled
 	void Operator::parse2()
 	{
+		string str(vhdl.str());
+
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
-		vector<pair<string,int> >:: iterator iterUse;
-		map<string, int>::iterator iterDeclare;
 
-		string name;
-		int declareCycle, useCycle;
-
-		string str (vhdl.str());
-
-		//parse the useTable and check that the declarations are OK
-		for (iterUse = (vhdl.useTable).begin(); iterUse!=(vhdl.useTable).end();++iterUse){
-			name     = (*iterUse).first;
-			useCycle = (*iterUse).second;
-
-			ostringstream tSearch;
-			ostringstream tReplace;
-			string replaceString;
-
-			tSearch << "__"<<name<<"__"<<useCycle<<"__";
-			string searchString (tSearch.str());
-
-			iterDeclare = declareTable.find(name);
-			declareCycle = iterDeclare->second;
-
-			if (iterDeclare != declareTable.end()){
-				tReplace << use(name, useCycle - declareCycle);
-				replaceString = tReplace.str();
-				if (useCycle<declareCycle){
-					if(!hasDelay1Feedbacks_){
-						cerr << srcFileName << " (" << uniqueName_ << "): WARNING: Signal " << name
-								<< " defined @ cycle "<< declareCycle<< " and used @ cycle " << useCycle << endl;
-						cerr << srcFileName << " (" << uniqueName_ << "): If this is a feedback signal you may ignore this warning"<<endl;
-					}else{
-						if(declareCycle - useCycle != 1){
-							cerr << srcFileName << " (" << uniqueName_ << "): ERROR: Signal " << name
-									<<" defined @ cycle "<<declareCycle<<" and used @ cycle " << useCycle <<endl;
-							exit(1);
-						}
-					}
-				}
-			}else{
-				/* parse the declare by hand and check lower/upper case */
-				bool found = false;
-				string tmp;
-				for (iterDeclare = declareTable.begin(); iterDeclare!=declareTable.end();++iterDeclare){
-					tmp = iterDeclare->first;
-					if ( (to_lowercase(tmp)).compare(to_lowercase(name))==0){
-						found = true;
-						break;
-					}
-				}
-
-				if (found == true){
-					cerr  << srcFileName << " (" << uniqueName_ << "): ERROR: Clash on signal:"<<name<<". Definition used signal name "<<tmp<<". Check signal case!"<<endl;
-					exit(-1);
-				}
-
-				tReplace << name;
-				replaceString = tReplace.str();
-			}
-
-			if ( searchString != replaceString ){
-				string::size_type pos = 0;
-				while ( (pos = str.find(searchString, pos)) != string::npos ) {
-					str.replace( pos, searchString.size(), replaceString );
-					pos++;
-				}
-			}
-		}
-
-		for (iterDeclare = declareTable.begin(); iterDeclare!=declareTable.end();++iterDeclare){
-			name = iterDeclare->first;
-			useCycle = iterDeclare->second;
-
-			ostringstream tSearch;
-			tSearch << "__"<<name<<"__"<<useCycle<<"__";
-			//			cout << "searching for: " << tSearch.str() << endl;
-			string searchString (tSearch.str());
-
-			ostringstream tReplace;
-			tReplace << name;
-			string replaceString(tReplace.str());
-
-			if ( searchString != replaceString ){
-
-				string::size_type pos = 0;
-				while ( (pos = str.find(searchString, pos)) != string::npos ) {
-					str.replace( pos, searchString.size(), replaceString );
-					pos++;
-				}
-			}
-		}
 
 		vhdl.setSecondLevelCode(str);
-		REPORT(DEBUG, "   ... done second-level parsing for operator "<<srcFileName);
+
+		REPORT(DEBUG, "   ... done second-level parsing for operator " << srcFileName);
 	}
 
 
