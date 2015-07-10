@@ -2129,15 +2129,35 @@ namespace flopoco{
 	//TODO: this function should not be called before the operator's signals are scheduled
 	void Operator::parse2()
 	{
-		string str(vhdl.str());
+		ostringstream newStr;
+		string oldStr(vhdl.str()), tmpStr, workStr;
+		int currentPos, nextPos;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
+		newStr.str("");
 
+		//iterate through the old code, one statement at the time
+		// code that doesn't need to be modified, goes directly to the new vhdl code buffer
+		// code that needs to be modified, ?? should be removed from lhs_name, $$ should be removed from rhs_name,
+		//		delays of the type rhs_name^d_xxx should be added for the right-hand side signals
+		currentPos = 0;
+		nextPos = oldStr.find('?');
+		while(nextPos != string::npos)
+		{
+			//copy the code from the beginning to this position directly to the new vhdl buffer
+			tmpStr = oldStr.substr(currentPos, nextPos);
+			newStr << tmpStr;
 
-		vhdl.setSecondLevelCode(str);
+			//now get a new line to parse
+			workStr = oldStr.substr(currentPos+2, oldStr.find(';')-currentPos-2);
 
-		REPORT(DEBUG, "   ... done second-level parsing for operator " << srcFileName);
+			//extract the rhs_names and annotate them
+		}
+
+		vhdl.setSecondLevelCode(newStr.str());
+
+		REPORT(DEBUG, "Finished second-level parsing for operator " << srcFileName);
 	}
 
 
