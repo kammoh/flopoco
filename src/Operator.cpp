@@ -2130,7 +2130,7 @@ namespace flopoco{
 	void Operator::parse2()
 	{
 		ostringstream newStr;
-		string oldStr(vhdl.str()), tmpStr, workStr;
+		string oldStr(vhdl.str()), workStr;
 		int currentPos, nextPos, count;
 		int tmpCurrentPos, tmpNextPos, lhsNameLength;
 
@@ -2150,8 +2150,7 @@ namespace flopoco{
 			Signal *lhsSignal, *rhsSignal;
 
 			//copy the code from the beginning to this position directly to the new vhdl buffer
-			tmpStr = oldStr.substr(currentPos, nextPos-currentPos);
-			newStr << tmpStr;
+			newStr << oldStr.substr(currentPos, nextPos-currentPos);
 
 			//now get a new line to parse
 			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)-nextPos-2);
@@ -2200,10 +2199,9 @@ namespace flopoco{
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the
 				cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle();
+				newStr << rhsName;
 				if(getTarget()->isPipelined() && (cycleDelay>0))
-					newStr << rhsName << "_d" << vhdlize(cycleDelay);
-				else
-					newStr << rhsName;
+					newStr << "_d" << vhdlize(cycleDelay);
 
 				//find the next rhsName, if there is one
 				tmpCurrentPos = tmpNextPos + rhsName.size() + 2;
