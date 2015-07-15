@@ -5,15 +5,20 @@
 #include <sstream>
 #include <gmpxx.h>
 
+#include <vector>
+
 #include <inttypes.h>
 
 #include "utils.hpp"
-#include "Operator.hpp"
+//#include "Operator.hpp"
+
 
 namespace flopoco{
 
+class Operator;
+
 	/**
-	 * A class representing a signal. 
+	 * A class representing a signal.
 	 */
 	class Signal
 	{
@@ -98,7 +103,7 @@ namespace flopoco{
 		Signal(Operator* newParentOp, Signal* originalSignal);
 
 		/** Signal destructor.
-		 */		
+		 */
 		~Signal();
 
 
@@ -106,11 +111,11 @@ namespace flopoco{
 		 * When a signal was automatically created as a std_logic_vector, this enables to declare it as Fix
 		 */
 		void promoteToFix(const bool isSigned, const int MSB, const int LSB);
-	
+
 		/**
 		 * Returns the name of the signal
 		 * @return the name of the signal
-		 */	
+		 */
 		const std::string& getName() const;
 
 		/**
@@ -126,47 +131,47 @@ namespace flopoco{
 
 		/**
 		 * Returns the width of the signal
-		 */	
+		 */
 		int width() const;
 
-	
+
 		/**
 		 * Returns the exponent width of the signal
-		 */	
+		 */
 		int wE() const;
 
 		/**
 		 * Returns the fraction width of the signal
-		 */	
+		 */
 		int wF() const;
-	
+
 		/**
 		 * Returns the MSB weight of the (fixed-point) signal
-		 */	
+		 */
 		int MSB() const;
 
 		/**
 		 * Returns the LSB weight of the (fixed-point) signal
-		 */	
+		 */
 		int LSB() const;
 
 		/** Returns the signess of the signal
 		 */
 		bool isSigned() const;
-	
+
 		/**
 		 * Reports if the signal is a FloPoCo floating-point signal
-		 */	
+		 */
 		bool isFP() const;
 
 		/**
 		 * Set the value of isFP
 		 */
 		void setIsFP(bool newIsFP = true);
-	
+
 		/**
 		 * Reports if the signal is a fixed-point signal
-		 */	
+		 */
 		bool isFix() const;
 
 		/**
@@ -176,7 +181,7 @@ namespace flopoco{
 
 		/**
 		 * Reports if the signal is a signed fixed-point signal
-		 */	
+		 */
 		bool isFixSigned() const;
 
 		/**
@@ -186,7 +191,7 @@ namespace flopoco{
 
 		/**
 		 * Reports if the signal is an unsigned fixed-point signal
-		 */	
+		 */
 		bool isFixUnsigned() const;
 
 		/**
@@ -196,7 +201,7 @@ namespace flopoco{
 
 		/**
 		 * Reports if the signal is an IEEE floating-point signal
-		 */	
+		 */
 		bool isIEEE() const;
 
 		/**
@@ -206,22 +211,32 @@ namespace flopoco{
 
 		/**
 		 * Reports if the signal has the bus flag active
-		 */		
+		 */
 		bool isBus() const;
 
 		/**
 		 * Returns the type of the signal
-		 */	
+		 */
 		SignalType type() const;
-	
+
+		/**
+		 * Returns the list of predecessors
+		 */
+		vector<pair<Signal*, int>> predecessors() const;
+
+		/**
+		 * Returns the list of successors
+		 */
+		vector<pair<Signal*, int>> successors() const;
+
 		/**
 		 * Outputs the VHDL code for declaring this signal. TODO should be obsoleted?
-		 */	
+		 */
 		std::string toVHDL();
 
 		/**
 		 * Outputs the VHDL code for the type of this signal
-		 */	
+		 */
 		std::string toVHDLType();
 
 		/**
@@ -233,46 +248,46 @@ namespace flopoco{
 		/**
 		 * Outputs the VHDL code for declaring a signal with all its delayed versions
 		 * This is the 2.0 equivalent of toVHDL()
-		 * @return the VHDL for the declarations. 
-		 */	
+		 * @return the VHDL for the declarations.
+		 */
 		std::string toVHDLDeclaration();
 
 
 		/**
 		 * Sets the cycle at which the signal is active
-		 */	
+		 */
 		void setCycle(int cycle) ;
 
 
 		/**
 		 * Obtain the declared cycle of this signal
 		 * @return the cycle
-		 */	
+		 */
 		int getCycle();
 
 
 		/**
 		 * Updates the max delay associated to a signal
-		 */	
+		 */
 		void updateLifeSpan(int delay) ;
 
 
 		/**
 		 * Obtain max delay that has been applied to this signal
-		 * @return the max delay 
-		 */	
+		 * @return the max delay
+		 */
 		int getLifeSpan() ;
 
 		/**
 		 * Obtain the delay of this signal
 		 * @return the delay
-		 */	
+		 */
 		double getCriticalPath();
 
 		/**
 		 * Sets the delay of this signal
 		 * @param[in] delay the delay
-		 */	
+		 */
 		void setCriticalPath(double delay);
 
 		/**
@@ -286,56 +301,6 @@ namespace flopoco{
 		 * @param[in] contribution the contribution
 		 */
 		void setCriticalPathContribution(double contribution);
-
-		/**
-		 * Reset the list of predecessors of the signal
-		 */
-		void resetPredecessors();
-
-		/**
-		 * Add a new predecessor for the signal;
-		 * a predecessor is a signal that appears in the right-hand side of an assignment
-		 * that has this signal on the left-hand side.
-		 * @param predecessor a direct predecessor of the current signal
-		 * @param delayCycles the extra delay (in clock cycles) between the two signals
-		 * 		by default equal to zero
-		 * @return true if the signal could be added as a predecessor, false if it already existed
-		 */
-		void addPredecessor(Signal* predecessor, int delayCycles = 0);
-
-		/**
-		 * Remove an existing predecessor of the signal;
-		 * @param predecessor a direct predecessor of the current signal
-		 * @param delayCycles the extra delay (in clock cycles) between the two signals
-		 * 		by default equal to -1, meaning it is not taken into account
-		 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
-		 */
-		void removePredecessor(Signal* predecessor, int delayCycles = 0);
-
-		/**
-		 * Reset the list of successors of the signal
-		 */
-		void resetSuccessors();
-
-		/**
-		 * Add a new successor of the signal;
-		 * a successor is a signal that appears in the left-hand side of an assignment
-		 * that has this signal on the right-hand side.
-		 * @param successor a direct successor of the current signal
-		 * @param delayCycles the extra delay (in clock cycles) between the two signals
-		 * 		by default equal to zero
-		 * @return true if the signal could be added as a successor, false if it already existed
-		 */
-		void addSuccessor(Signal* successor, int delayCycles = 0);
-
-		/**
-		 * Remove an existing successor of the signal;
-		 * @param successor a direct successor of the current signal
-		 * @param delayCycles the extra delay (in clock cycles) between the two signals
-		 * 		by default equal to -1, meaning it is not taken into account
-		 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
-		 */
-		void removeSuccessor(Signal* successor, int delayCycles = 0);
 
 
 		/**
@@ -358,7 +323,7 @@ namespace flopoco{
 		 * @return a string holding the value in binary
 		 */
 		std::string valueToVHDL(mpz_class v, bool quot = true);
-	
+
 		/**
 		 * Converts the value of the signal into a nicely formated VHDL expression,
 		 * including padding and putting quote or apostrophe. (Hex version.)
@@ -376,7 +341,7 @@ namespace flopoco{
 		std::string   name_;         /**< The name of the signal */
 		SignalType    type_;         /**< The type of the signal, see SignalType */
 		int           width_;        /**< The width of the signal */
-		
+
 		double       constValue_;   /**< The value of the constant, for a constant signal */
 
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
@@ -397,7 +362,7 @@ namespace flopoco{
 		bool          isSigned_;     /**< true if this a signed fixed-point signals, false otherwise */
 		bool          isBus_;        /**< True is the signal is a bus (std_logic_vector)*/
 
-		
+
 	};
 
 }

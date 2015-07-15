@@ -12,6 +12,7 @@
 #include "utils.hpp"
 
 #include "Operator.hpp"
+#include "Signal.hpp"
 
 using namespace std;
 

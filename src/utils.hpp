@@ -44,6 +44,7 @@ namespace flopoco{
 			triplet(const triplet<_type1_t, _type2_t, _type3_t>& tmp) : first(tmp.first), second(tmp.second), third(tmp.third) {};
 
 		//assignment operator
+		/*
 		triplet& operator=(triplet&& tmp)
 		{
 			first  = tmp.first;
@@ -62,6 +63,7 @@ namespace flopoco{
 
 			return *this;
 		}
+		*/
 
 		//swap function
 		void swap(triplet&& tmp)
@@ -192,9 +194,9 @@ namespace flopoco{
 	 */
 	string fp2bin(mpfr_t x, int wE, int wF);
 
-	/** return the  bits ranging from msb to lsb of an MPFR, (total size msb-lsb+1) 
+	/** return the  bits ranging from msb to lsb of an MPFR, (total size msb-lsb+1)
 	 * @param x the number to be represented
-	 * @param msb the weight of the MSB. 
+	 * @param msb the weight of the MSB.
 	 * @param lsb the weight of the LSB
 	 * @param[in] margins	integer argument determining the position of the quotes in the output string. The options are: -2= no quotes; -1=left quote; 0=both quotes 1=right quote
 */
@@ -203,7 +205,7 @@ namespace flopoco{
 	/** return the binary representation of an MPFR, with bits ranging from msb to lsb
 	 * (total size msb-lsb+1), sign bit at weight msb
 	 * @param x the number to be represented
-	 * @param msb the weight of the MSB. 
+	 * @param msb the weight of the MSB.
 	 * @param lsb the weight of the LSB
 	 * @param[in] margins	integer argument determining the position of the quotes in the output string. The options are: -2= no quotes; -1=left quote; 0=both quotes 1=right quote
 */
@@ -234,24 +236,24 @@ namespace flopoco{
 	 */
 	void printBinPosNumGMP(ostream& o, mpz_class number, int size);
 
-	/** Function which rounds a FP on a given number of bits 
+	/** Function which rounds a FP on a given number of bits
 	 * @param number the numer to be rounded
 	 * @param bits the number of bits of the result
-	 * @return the rounded number on "bits" bits 
+	 * @return the rounded number on "bits" bits
 	 */
 	double iround(double number, int bits);
 
-	/** Function which truncates a FP on a given number of bits 
+	/** Function which truncates a FP on a given number of bits
 	 * @param number the numer to be truncated
 	 * @param bits the number of bits of the result
-	 * @return the truncated number on "bits" bits 
+	 * @return the truncated number on "bits" bits
 	 */
 	double itrunc(double number, int bits);
 
-	/** Function which returns floor a FP on a given number of bits 
+	/** Function which returns floor a FP on a given number of bits
 	 * @param number the numer to be floored
 	 * @param bits the number of bits of the result
-	 * @return the floored number on "bits" bits 
+	 * @return the floored number on "bits" bits
 	 */
 	double ifloor(double number, int bits);
 
@@ -293,7 +295,7 @@ namespace flopoco{
 	 */
 	//	double invintpow2(int minusPower);
 
-	/** How many bits does it take to write number. 
+	/** How many bits does it take to write number.
 	 * @param number the number to be represented (floating point)
 	 * @return the number of bits
 	 */
@@ -307,7 +309,7 @@ namespace flopoco{
 	int intlog(mpz_class base, mpz_class number);
 
 
-	/** How many bits does it take to write number. 
+	/** How many bits does it take to write number.
 	 * @param number the number to be represented (mpz_class)
 	 * @return the number of bits
 	 */
@@ -322,7 +324,7 @@ namespace flopoco{
 
 
 	/** Maximum.
-	 * @param[double] x first number 
+	 * @param[double] x first number
 	 * @param[double] y second number
 	 * @return maximum between x and y
 	 */
@@ -341,7 +343,7 @@ namespace flopoco{
 	int maxInt(int count, ...);
 
 	/** Minimum.
-	 * @param[double] x first number 
+	 * @param[double] x first number
 	 * @param[double] y second number
 	 * @return minimum between x and y
 	 */
@@ -360,28 +362,28 @@ namespace flopoco{
 	int minInt(int count, ...);
 
 	/** Maximum.
-	 * @param[int] x first number 
+	 * @param[int] x first number
 	 * @param[int] y second number
 	 * @return maximum between x and y
 	 */
 	inline int max(int x, int y) {return (x > y ? x : y);}
 
 	/** Minimum.
-	 * @param[int] x first number 
+	 * @param[int] x first number
 	 * @param[int] y second number
 	 * @return minimum between x and y
 	 */
 	inline int min(int x, int y) {return (x < y ? x : y);}
 
 	/** Maximum.
-	 * @param[int] x first number 
+	 * @param[int] x first number
 	 * @param[int] y second number
 	 * @return maximum between x and y
 	 */
 	inline mpz_class max(mpz_class x, mpz_class y) {return (x > y ? x : y);}
 
 	/** Minimum.
-	 * @param[mpz_class] x first number 
+	 * @param[mpz_class] x first number
 	 * @param[mpz_class] y second number
 	 * @return minimum between x and y
 	 */
@@ -410,14 +412,14 @@ namespace flopoco{
 	* @return returns a string of zeros with the corresonding quotes given by margins
 	**/
 	string og(int n, int margins=0);
-	
+
 	/**
-	 * Generate an integer that is of the form : 111....11 (with the number of 
+	 * Generate an integer that is of the form : 111....11 (with the number of
 	 * ones given by n)
 	 */
 	int oneGenerator(int n);
-	
-	
+
+
 	/**
 	 * Turns an arbitrary string (e.g. Sollya expression or FP number) to
 	 * part of a valid VHDL identifier. May (and usually will) loose information.
@@ -439,11 +441,11 @@ namespace flopoco{
 
 	string mpz2string(mpz_class x);
 
-	/** Helper function for VHDL output: concatenates an id and a number. 
-		 vhdl << join("z", i) << ...       
-		 is a (rather useless) shorthand for 
+	/** Helper function for VHDL output: concatenates an id and a number.
+		 vhdl << join("z", i) << ...
+		 is a (rather useless) shorthand for
 		 vhdl << "z" << i << ...
-		 Its main advantage is that join("z", i) can also be used inside 
+		 Its main advantage is that join("z", i) can also be used inside
 		 declare(),  use(), etc. */
 	string join( std::string id, int n);
 
@@ -455,7 +457,7 @@ namespace flopoco{
 	string join( std::string id, int n, std::string id2 , int n2, std::string id3);
 	string join( std::string id, int n, std::string id2 , int n2, std::string id3, int n3);
 	string join( std::string id, std::string id2 , int n2, std::string id3);
-	
+
 	/** Same for concatenating two ids. Maybe + would do? */
 	string join( std::string id, std::string n);
 
@@ -474,36 +476,30 @@ namespace flopoco{
 	 */
 	string of( int x);
 
-	
-	/** Helper function for VHDL output: returns s, padded left and right with zeroes. 
+
+	/** Helper function for VHDL output: returns s, padded left and right with zeroes.
 			TODO this function should be removed
 	 */
 	string align( int left, string s, int right );
 
 	/**
 	 *@param[in] inputDelays	map between signal names and their respective delays
-	 *@return the maximum delay of the input map 
-	 */ 
-	double getMaxInputDelays( map<string, double> inputDelays );
-	
-	/**
-	 *@param[in] inputList the list of input signals
 	 *@return the maximum delay of the input map
 	 */
-	double getMaxInputDelays( vector<Signal*> inputList );
+	double getMaxInputDelays( map<string, double> inputDelays );
 
 	map<string, double> inDelayMap(string s, double d);
 
 	/**
 	 *@param[in] inputDelays	map between signal names and their respective delays
 	 *@return prints the delays
-	 */ 
+	 */
 	string printInputDelays( map <string, double> inputDelays);
 
 	string printMapContent( map <string, int> inputDelays);
-	
+
 	string printVectorContent( vector< pair<string, int> > table);
-	
+
 	string to_lowercase(const std::string& s);
 
 	/** a function that converts a bit vector (an mpz input to emulate()) to its signed value */

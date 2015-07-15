@@ -38,6 +38,7 @@ namespace flopoco{
 	{
 	}
 
+	// floating point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) :
 		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
@@ -54,22 +55,48 @@ namespace flopoco{
 
 	Signal::Signal(Signal* originalSignal)
 	{
+		parentOp_ = originalSignal->parentOp_;
+		name_ = originalSignal->getName();
+		type_ = originalSignal->type();
+
 		if(originalSignal->isFix())
-			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->isSigned(), originalSignal->MSB(), originalSignal->LSB());
-		else if(originalSignal->isFP())
-			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->wE(), originalSignal->wF(), originalSignal->isIEEE());
-		else
-			this->Signal(originalSignal->parentOp(), originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
+		{
+			isSigned_ = originalSignal->isSigned();
+			MSB_ = originalSignal->MSB();
+			LSB_ = originalSignal->LSB();
+		}else if(originalSignal->isFP())
+		{
+			wE_ = originalSignal->wE();
+			wF_ = originalSignal->wF();
+			isIEEE_ = originalSignal->isIEEE_;
+		} else
+		{
+			width_ = originalSignal->width();
+			isBus_ = originalSignal->isBus();
+		}
 	}
 
 	Signal::Signal(Operator* newParentOp, Signal* originalSignal)
 	{
+		parentOp_ = newParentOp;
+		name_ = originalSignal->getName();
+		type_ = originalSignal->type();
+
 		if(originalSignal->isFix())
-			this->Signal(newParentOp, originalSignal->getName(), originalSignal->type(), originalSignal->isSigned(), originalSignal->MSB(), originalSignal->LSB());
-		else if(originalSignal->isFP())
-			this->Signal(newParentOp, originalSignal->getName(), originalSignal->type(), originalSignal->wE(), originalSignal->wF(), originalSignal->isIEEE());
-		else
-			this->Signal(newParentOp, originalSignal->getName(), originalSignal->type(), originalSignal->width(), originalSignal->isBus());
+		{
+			isSigned_ = originalSignal->isSigned();
+			MSB_ = originalSignal->MSB();
+			LSB_ = originalSignal->LSB();
+		}else if(originalSignal->isFP())
+		{
+			wE_ = originalSignal->wE();
+			wF_ = originalSignal->wF();
+			isIEEE_ = originalSignal->isIEEE_;
+		} else
+		{
+			width_ = originalSignal->width();
+			isBus_ = originalSignal->isBus();
+		}
 	}
 
 	Signal::~Signal(){}
@@ -79,7 +106,7 @@ namespace flopoco{
 			std::ostringstream o;
 			o << "Error in Signal::promoteToFix(" <<  getName() << "): width doesn't match";
 			throw o.str();
-		}	
+		}
 		isFix_ = true;
 		MSB_   = MSB;
 		LSB_   = LSB;
@@ -87,8 +114,8 @@ namespace flopoco{
 	}
 
 
-	const string& Signal::getName() const { 
-		return name_; 
+	const string& Signal::getName() const {
+		return name_;
 	}
 
 	Operator* Signal::parentOp() const {return parentOp_;}
@@ -96,7 +123,7 @@ namespace flopoco{
 	void Signal::setParentOp(Operator* newParentOp)
 	{
 		//erase the signal from the operator's signal list and map
-		for(unsigned int i=0; i<parentOp_->getSignalList(); i++)
+		for(unsigned int i=0; i<(parentOp_->getSignalList()).size(); i++)
 			if(parentOp_->getSignalList()[i]->getName() == name_)
 				parentOp_->getSignalList().erase(parentOp_->getSignalList().begin()+i);
 		parentOp_->getSignalMap().erase(name_);
@@ -110,15 +137,15 @@ namespace flopoco{
 	}
 
 	int Signal::width() const {return width_;}
-	
+
 	int Signal::wE() const {return(wE_);}
 
 	int Signal::wF() const {return(wF_);}
-	
+
 	int Signal::MSB() const {return(MSB_);}
-	
+
 	int Signal::LSB() const {return(LSB_);}
-	
+
 	bool Signal::isSigned() const {return isSigned_;};
 
 	bool Signal::isFP() const {return isFP_;}
@@ -144,13 +171,17 @@ namespace flopoco{
 	bool Signal::isBus() const {return isBus_;}
 
 	Signal::SignalType Signal::type() const {return type_;}
-	
+
+	vector<pair<Signal*, int>> Signal::predecessors() const {return predecessors_;}
+
+	vector<pair<Signal*, int>> Signal::successors() const {return successors_;}
+
 	string Signal::toVHDLType() {
-		ostringstream o; 
-		if ((1==width())&&(!isBus_)) 
+		ostringstream o;
+		if ((1==width())&&(!isBus_))
 			o << " std_logic" ;
-		else 
-			if(isFP_) 
+		else
+			if(isFP_)
 				o << " std_logic_vector(" << wE() <<"+"<<wF() << "+2 downto 0)";
 			else if(isFix_){
 				o << (isSigned_?" signed":" unsigned") << "(" << MSB_;
@@ -159,16 +190,16 @@ namespace flopoco{
 				else
 					o << "-" << LSB_;
 				o << " downto 0)";
-			} 
+			}
 			else
 				o << " std_logic_vector(" << width()-1 << " downto 0)";
 		return o.str();
 	}
 
 
-	
+
 	string Signal::toVHDL() {
-		ostringstream o; 
+		ostringstream o;
 		if(type()==Signal::wire || type()==Signal::registeredWithoutReset
 				|| type()==Signal::registeredWithAsyncReset || type()==Signal::registeredWithSyncReset
 				|| type()==Signal::registeredWithZeroInitialiser)
@@ -179,7 +210,7 @@ namespace flopoco{
 			o << "in ";
 		if(type()==Signal::out)
 			o << "out ";
-	
+
 		o << toVHDLType();
 		return o.str();
 	}
@@ -197,7 +228,7 @@ namespace flopoco{
 		}
 #else // someday we need to civilize pipe signal names
 		o << getName();
-		if(delay>0) 
+		if(delay>0)
 			o << "_d" << delay;
 #endif
 		return o.str();
@@ -205,7 +236,7 @@ namespace flopoco{
 
 
 	string Signal::toVHDLDeclaration() {
-		ostringstream o; 
+		ostringstream o;
 		o << "signal ";
 		if (type_!=Signal::in)
 			o << getName() << (lifeSpan_ > 0 ? ", ": "");
@@ -215,7 +246,7 @@ namespace flopoco{
 			o << ", " << getName() << "_d" << i;
 		}
 		o << " : ";
-		
+
 		o << toVHDLType();
 
 		if (type()==Signal::registeredWithZeroInitialiser) {
@@ -248,7 +279,7 @@ namespace flopoco{
 	double Signal::getCriticalPath(){
 		return criticalPath_;
 	}
-	
+
 	void Signal::setCriticalPath(double cp){
 		criticalPath_=cp;
 	}
@@ -261,97 +292,6 @@ namespace flopoco{
 		criticalPathContribution_ = contribution;
 	}
 
-	void Signal::resetPredecessors()
-	{
-		predecessors_.clear();
-	}
-
-	void Signal::addPredecessor(Signal* predecessor, int delayCycles)
-	{
-		//check if the signal already exists, within the same instance
-		for(int i=0; (unsigned)i<predecessors_.size(); i++)
-		{
-			pair<Signal*, int> predecessorPair = predecessors_[i];
-			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
-					&& (predecessorPair.first->getName() == predecessor->getName())
-					&& (predecessorPair.first->type() == predecessor->type())
-					&& (predecessorPair.second == delayCycles))
-				throw("ERROR in addPredecessor(): trying to add an already existing signal "
-						<< predecessor->getName() << " to the predecessor list");
-		}
-
-		//safe to insert a new signal in the predecessor list
-		pair<Signal*, int> newPredecessorPair = make_pair(predecessor, delayCycles);
-		predecessors_.push_back(newPredecessorPair);
-	}
-
-	void Signal::removePredecessor(Signal* predecessor, int delayCycles)
-	{
-		//only try to remove the predecessor if the signal
-		//	already exists, within the same instance and with the same delay
-		for(int i=0; (unsigned)i<predecessors_.size(); i++)
-		{
-			pair<Signal*, int> predecessorPair = predecessors_[i];
-			if((predecessorPair.first->parentOp_->getName() == predecessor->parentOp_->getName())
-					&& (predecessorPair.first->getName() == predecessor->getName())
-					&& (predecessorPair.first->type() == predecessor->type())
-					&& (predecessorPair.second == delayCycles))
-			{
-				//delete the element from the list
-				predecessors_.erase(predecessors_.begin()+i);
-				return;
-			}
-		}
-
-		throw("ERROR in removePredecessor(): trying to remove a non-existing signal "
-				<< predecessor->getName() << " from the predecessor list");
-	}
-
-	void Signal::resetSuccessors()
-	{
-		successors_.clear();
-	}
-
-	void Signal::addSuccessor(Signal* successor, int delayCycles)
-	{
-		//check if the signal already exists, within the same instance
-		for(int i=0; (unsigned)i<successors_.size(); i++)
-		{
-			pair<Signal*, int> successorPair = successors_[i];
-			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
-					&& (successorPair.first->getName() == successor->getName())
-					&& (successorPair.first->type() == successor->type())
-					&& (successorPair.second == delayCycles))
-				throw("ERROR in addSuccessor(): trying to add an already existing signal "
-						<< successor->getName() << " to the predecessor list");
-		}
-
-		//safe to insert a new signal in the predecessor list
-		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
-		successors_.push_back(newSuccessorPair);
-	}
-
-	void Signal::removeSuccessor(Signal* successor, int delayCycles)
-	{
-		//only try to remove the successor if the signal
-		//	already exists, within the same instance and with the same delay
-		for(int i=0; (unsigned)i<successors_.size(); i++)
-		{
-			pair<Signal*, int> successorPair = successors_[i];
-			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
-					&& (successorPair.first->getName() == successor->getName())
-					&& (successorPair.first->type() == successor->type())
-					&& (successorPair.second == delayCycles))
-			{
-				//delete the element from the list
-				successors_.erase(successors_.begin()+i);
-				return;
-			}
-		}
-
-		throw("ERROR in removeSuccessor(): trying to remove a non-existing signal "
-				<< successor->getName() << " to the predecessor list");
-	}
 
 	void  Signal::setNumberOfPossibleValues(int n){
 		numberOfPossibleValues_ = n;

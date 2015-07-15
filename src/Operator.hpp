@@ -415,6 +415,12 @@ public:
 	double getOutputDelay(string s);
 
 	/**
+	 *@param[in] inputList the list of input signals
+	 *@return the maximum delay of the inputs list
+	 */
+	//double getMaxInputDelays(vector<Signal*> inputList);
+
+	/**
 	 * DEPRECATED
 	 * Set the current cycle to that of a signal and reset the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before
@@ -495,6 +501,64 @@ public:
 	 * @return delay of this signal
 	 */
 	double getSignalDelay(string name);
+
+
+	/**
+	 * Functions modifying Signals
+	 * These methods belong to the Signal class. Unfortunately, having them in the Signal class
+	 * creates a circular dependency, so they are now in Operators, seeing as this is the only place
+	 * where they are used.
+	 */
+
+	/**
+	 * Reset the list of predecessors of the signal targetSignal
+	 */
+	void resetPredecessors(Signal* targetSignal);
+
+	/**
+	 * Add a new predecessor for the signal targetSignal;
+	 * a predecessor is a signal that appears in the right-hand side of an assignment
+	 * that has this signal on the left-hand side.
+	 * @param predecessor a direct predecessor of the current signal
+	 * @param delayCycles the extra delay (in clock cycles) between the two signals
+	 * 		by default equal to zero
+	 * @return true if the signal could be added as a predecessor, false if it already existed
+	 */
+	void addPredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles = 0);
+
+	/**
+	 * Remove an existing predecessor of the signal targetSignal;
+	 * @param predecessor a direct predecessor of the current signal
+	 * @param delayCycles the extra delay (in clock cycles) between the two signals
+	 * 		by default equal to -1, meaning it is not taken into account
+	 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
+	 */
+	void removePredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles = 0);
+
+	/**
+	 * Reset the list of successors of the signal targetSignal
+	 */
+	void resetSuccessors(Signal* targetSignal);
+
+	/**
+	 * Add a new successor of the signal targetSignal;
+	 * a successor is a signal that appears in the left-hand side of an assignment
+	 * that has this signal on the right-hand side.
+	 * @param successor a direct successor of the current signal
+	 * @param delayCycles the extra delay (in clock cycles) between the two signals
+	 * 		by default equal to zero
+	 * @return true if the signal could be added as a successor, false if it already existed
+	 */
+	void addSuccessor(Signal* targetSignal, Signal* successor, int delayCycles = 0);
+
+	/**
+	 * Remove an existing successor of the signal targetSignal;
+	 * @param successor a direct successor of the current signal
+	 * @param delayCycles the extra delay (in clock cycles) between the two signals
+	 * 		by default equal to -1, meaning it is not taken into account
+	 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
+	 */
+	void removeSuccessor(Signal* targetSignal, Signal* successor, int delayCycles = 0);
 
 
 	/**

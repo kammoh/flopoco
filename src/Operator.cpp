@@ -1050,6 +1050,98 @@ namespace flopoco{
 		return s->getCriticalPath();
 	}
 
+	void Operator::resetPredecessors(Signal* targetSignal)
+	{
+		targetSignal->predecessors().clear();
+	}
+
+	void Operator::addPredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<targetSignal->predecessors().size(); i++)
+		{
+			pair<Signal*, int> predecessorPair = targetSignal->predecessors()[i];
+			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
+					&& (predecessorPair.first->getName() == predecessor->getName())
+					&& (predecessorPair.first->type() == predecessor->type())
+					&& (predecessorPair.second == delayCycles))
+				throw("ERROR in addPredecessor(): trying to add an already existing signal "
+						+ predecessor->getName() + " to the predecessor list");
+		}
+
+		//safe to insert a new signal in the predecessor list
+		pair<Signal*, int> newPredecessorPair = make_pair(predecessor, delayCycles);
+		targetSignal->predecessors().push_back(newPredecessorPair);
+	}
+
+	void Operator::removePredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles)
+	{
+		//only try to remove the predecessor if the signal
+		//	already exists, within the same instance and with the same delay
+		for(int i=0; (unsigned)i<targetSignal->predecessors().size(); i++)
+		{
+			pair<Signal*, int> predecessorPair = targetSignal->predecessors()[i];
+			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
+					&& (predecessorPair.first->getName() == predecessor->getName())
+					&& (predecessorPair.first->type() == predecessor->type())
+					&& (predecessorPair.second == delayCycles))
+			{
+				//delete the element from the list
+				targetSignal->predecessors().erase(targetSignal->predecessors().begin()+i);
+				return;
+			}
+		}
+
+		throw("ERROR in removePredecessor(): trying to remove a non-existing signal "
+				+ predecessor->getName() + " from the predecessor list");
+	}
+
+	void Operator::resetSuccessors(Signal* targetSignal)
+	{
+		targetSignal->successors().clear();
+	}
+
+	void Operator::addSuccessor(Signal* targetSignal, Signal* successor, int delayCycles)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<targetSignal->successors().size(); i++)
+		{
+			pair<Signal*, int> successorPair = targetSignal->successors()[i];
+			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
+					&& (successorPair.first->getName() == successor->getName())
+					&& (successorPair.first->type() == successor->type())
+					&& (successorPair.second == delayCycles))
+				throw("ERROR in addSuccessor(): trying to add an already existing signal "
+						+ successor->getName() + " to the predecessor list");
+		}
+
+		//safe to insert a new signal in the predecessor list
+		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
+		targetSignal->successors().push_back(newSuccessorPair);
+	}
+
+	void Operator::removeSuccessor(Signal* targetSignal, Signal* successor, int delayCycles)
+	{
+		//only try to remove the successor if the signal
+		//	already exists, within the same instance and with the same delay
+		for(int i=0; (unsigned)i<targetSignal->successors().size(); i++)
+		{
+			pair<Signal*, int> successorPair = targetSignal->successors()[i];
+			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
+					&& (successorPair.first->getName() == successor->getName())
+					&& (successorPair.first->type() == successor->type())
+					&& (successorPair.second == delayCycles))
+			{
+				//delete the element from the list
+				targetSignal->successors().erase(targetSignal->successors().begin()+i);
+				return;
+			}
+		}
+
+		throw("ERROR in removeSuccessor(): trying to remove a non-existing signal "
+				+ successor->getName() + " to the predecessor list");
+	}
+
 	double Operator::getCriticalPath()
 	{
 		//disabled during the overhaul
@@ -1148,6 +1240,18 @@ namespace flopoco{
 		return signal->getCriticalPath();
 	}
 
+	/*
+	double Operator::getMaxInputDelays(map<string, double> inputDelays)
+	{
+		double maxInputDelay = 0;
+		map<string, double>::iterator iter;
+		for (iter = inputDelays.begin(); iter!=inputDelays.end();++iter)
+			if (iter->second > maxInputDelay)
+				maxInputDelay = iter->second;
+
+		return maxInputDelay;
+	}
+	*/
 
 	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType) {
 		return declare(0.0, name, width, isbus, regType);
@@ -1256,8 +1360,8 @@ namespace flopoco{
 		s->setCriticalPathContribution(criticalPathContribution);
 
 		//initialize the signals predecessors and successors
-		s->resetPredecessors();
-		s->resetSuccessors();
+		resetPredecessors(s);
+		resetSuccessors(s);
 
 		// add the signal to signalMap and signalList
 		signalList_.push_back(s);
@@ -1421,8 +1525,8 @@ namespace flopoco{
 			s->setType(Signal::wire); 		// ... and the fact that we declare a wire
 
 			//initialize the signals predecessors and successors
-			s->resetPredecessors();
-			s->resetSuccessors();
+			resetPredecessors(s);
+			resetSuccessors(s);
 
 			// add the newly created signal to signalMap and signalList
 			signalList_.push_back(s);
@@ -1442,8 +1546,8 @@ namespace flopoco{
 
 		//add componentPortName as a predecessor of actualSignalName,
 		// and actualSignalName as a successor of componentPortName
-		formal->addSuccessor(s, 0);
-		s->addPredecessor(formal, 0);
+		addSuccessor(formal, s, 0);
+		addPredecessor(s, formal, 0);
 	}
 
 
@@ -1478,8 +1582,8 @@ namespace flopoco{
 
 		//add componentPortName as a successor of actualSignalName,
 		// and actualSignalName as a predecessor of componentPortName
-		formal->addPredecessor(s, 0);
-		s->addSuccessor(formal, 0);
+		addPredecessor(formal, s, 0);
+		addSuccessor(s, formal, 0);
 	}
 
 
@@ -1520,8 +1624,8 @@ namespace flopoco{
 		s = new Signal(this, join(actualSignal, "_cst"), Signal::constant, constValue);
 
 		//initialize the signals predecessors and successors
-		s->resetPredecessors();
-		s->resetSuccessors();
+		resetPredecessors(s);
+		resetSuccessors(s);
 
 		// add the newly created signal to signalMap and signalList
 		signalList_.push_back(s);
@@ -1574,8 +1678,11 @@ namespace flopoco{
 
 		o << tab << instanceName << ": " << op->getName();
 
+		//disabled during the overhaul
+		/*
 		if(op->isSequential())
 			o << "  -- maxInputDelay=" << getMaxInputDelays(op->ioList_);
+		*/
 		o << endl;
 		o << tab << tab << "port map ( ";
 
@@ -1953,7 +2060,7 @@ namespace flopoco{
 
 		cerr << "WARNING: this function no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
 				<< tab << "the delay map for the instance being built will be returned" << endl;
-		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it++; it!=tmpInPortMap_.end())
+		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
 			inputDelayMap[it->first] = it->second->getCriticalPath();
 
 		return inputDelayMap;
@@ -1964,7 +2071,7 @@ namespace flopoco{
 
 		cerr << "WARNING: this function no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
 				<< tab << "the delay map for the instance being built will be returned" << endl;
-		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it++; it!=tmpOutPortMap_.end())
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 			outputDelayMap[it->first] = it->second->getCriticalPath();
 
 		return outputDelayMap;
@@ -1975,7 +2082,9 @@ namespace flopoco{
 				<< tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
 				<< tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 
-		return NULL;
+		map<string, int> emptyMap;
+
+		return emptyMap;
 	}
 
 	Target* Operator::getTarget(){
@@ -2000,9 +2109,9 @@ namespace flopoco{
 				<< tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
 		map<string, string> tmpMap;
 
-		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it++; it!=tmpInPortMap_.end())
+		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
 			tmpMap[it->first] = it->second->getName();
-		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it++; it!=tmpOutPortMap_.end())
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 			tmpMap[it->first] = it->second->getName();
 
 		return tmpMap;
@@ -2170,7 +2279,8 @@ namespace flopoco{
 			if(lhsName[0] == '(')
 			{
 				count = 1;
-				while((lhsName != ' ') && (lhsName != '\t') && (lhsName != ',') && (lhsName != ')'))
+				while((lhsName[count] != ' ') && (lhsName[count] != '\t')
+						&& (lhsName[count] != ',') && (lhsName[count] != ')'))
 					count++;
 				lhsName = lhsName.substr(1, count-1);
 			}
@@ -2364,10 +2474,13 @@ namespace flopoco{
 		//inputDelayMap = op->getInputDelayMap();
 		//disabled during the overhaul
 		//vhdl.vhdlCodeBuffer << op->vhdl.vhdlCodeBuffer.str();
-		vhdl.vhdlCode       << op->vhdl.vhdlCode.str();
+		vhdl.vhdlCode.str(op->vhdl.vhdlCode.str());
 		//vhdl.currentCycle_   = op->vhdl.currentCycle_;
 		//vhdl.useTable        = op->vhdl.useTable;
-		vhdl.dependenceTable        = op->vhdl.dependenceTable;
+		vhdl.dependenceTable.clear();
+		//for(unsigned int i=0; i<op->vhdl.dependenceTable.size(); i++)
+		//	vhdl.dependenceTable.push_back(make_triplet(op->vhdl.dependenceTable[i].first, op->vhdl.dependenceTable[i].second, op->vhdl.dependenceTable[i].third));
+		vhdl.dependenceTable.insert(vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.end());
 		srcFileName                 = op->getSrcFileName();
 		//disabled during the overhaul
 		//declareTable = op->getDeclareTable();
@@ -2399,12 +2512,12 @@ namespace flopoco{
 		indirectOperator_           = op->getIndirectOperator();
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
 
-		resourceEstimate            = op->resourceEstimate;
-		resourceEstimateReport      = op->resourceEstimateReport;
+		resourceEstimate.str(op->resourceEstimate.str());
+		resourceEstimateReport.str(op->resourceEstimateReport.str());
 		reHelper                    = op->reHelper;
 		reActive                    = op->reActive;
 
-		floorplan                   = op->floorplan;
+		floorplan.str(op->floorplan.str());
 		flpHelper                   = op->flpHelper;
 	}
 
