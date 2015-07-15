@@ -2131,7 +2131,8 @@ namespace flopoco{
 	{
 		ostringstream newStr;
 		string oldStr(vhdl.str()), tmpStr, workStr;
-		int currentPos, nextPos;
+		int currentPos, nextPos, count;
+		int tmpCurrentPos, tmpNextPos, lhsNameLength;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
@@ -2145,14 +2146,77 @@ namespace flopoco{
 		nextPos = oldStr.find('?');
 		while(nextPos != string::npos)
 		{
+			string lhsName, rhsName;
+			Signal *lhsSignal, *rhsSignal;
+
 			//copy the code from the beginning to this position directly to the new vhdl buffer
-			tmpStr = oldStr.substr(currentPos, nextPos);
+			tmpStr = oldStr.substr(currentPos, nextPos-currentPos);
 			newStr << tmpStr;
 
 			//now get a new line to parse
-			workStr = oldStr.substr(currentPos+2, oldStr.find(';')-currentPos-2);
+			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)-nextPos-2);
 
-			//extract the rhs_names and annotate them
+			//extract the lhs_name
+			count = 0;
+			while(workStr[count] != '?')
+				count++;
+			lhsName = workStr.substr(0, count);
+			lhsNameLength = lhsName.size();
+
+			//copy lhsName to the new vhdl buffer
+			newStr << lhsName;
+
+			//the lhsName could be of the form (lhsName1, lhsName2, ...)
+			//	extract the first name in the list
+			if(lhsName[0] == '(')
+			{
+				count = 1;
+				while((lhsName != ' ') && (lhsName != '\t') && (lhsName != ',') && (lhsName != ')'))
+					count++;
+				lhsName = lhsName.substr(1, count-1);
+			}
+			lhsSignal = getSignalByName(lhsName);
+
+			//extract the rhsNames and annotate them find the position of the rhsName, and copy
+			// the vhdl code up to the rhsName in the new vhdl code buffer
+			tmpCurrentPos = lhsNameLength+2;
+			tmpNextPos = workStr.find('$');
+			while(tmpNextPos != string::npos)
+			{
+				int cycleDelay;
+				//copy into the new vhdl stream the code that doesn't need to be modified
+				newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+
+				//skip the '$$'
+				tmpNextPos += 2;
+
+				//extract a new rhsName
+				count = 0;
+				while(workStr[tmpNextPos+count] != '$')
+					count++;
+				rhsName = workStr.substr(tmpNextPos, tmpNextPos+count);
+				rhsSignal = getSignalByName(rhsName);
+
+				//copy the rhsName with the delay information into the new vhdl buffer
+				//	rhsName becomes rhsName_dxxx, if the
+				cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle();
+				if(getTarget()->isPipelined() && (cycleDelay>0))
+					newStr << rhsName << "_d" << vhdlize(cycleDelay);
+				else
+					newStr << rhsName;
+
+				//find the next rhsName, if there is one
+				tmpCurrentPos = tmpNextPos + rhsName.size() + 2;
+				tmpNextPos = workStr.find('$', tmpCurrentPos);
+			}
+
+			//copy the code that is left up until the end of the line in
+			//	the new vhdl code buffer, without changing it
+			newStr << workStr.substr(tmpCurrentPos, workStr.size()-tmpCurrentPos);
+
+			//get a new line to parse
+			currentPos = nextPos + workStr.size() + 2;
+			nextPos = oldStr.find('?', currentPos);
 		}
 
 		vhdl.setSecondLevelCode(newStr.str());
