@@ -39,9 +39,14 @@ namespace flopoco{
 
 		//constructors
 		triplet(): first(_type1()), second(_type2()), third (_type3()) {};
+
 		triplet(const _type1& first_, const _type2& second_, const _type3& third_): first(first_), second(second_), third(third_) {};
+		triplet(_type1&& first_, _type2&& second_, _type3&& third_): first(move(first_)), second(move(second_)), third(move(third_)) {};
+
 		template<class _type1_t, class _type2_t, class _type3_t>
 			triplet(const triplet<_type1_t, _type2_t, _type3_t>& tmp) : first(tmp.first), second(tmp.second), third(tmp.third) {};
+		template<class _type1_t, class _type2_t, class _type3_t>
+			triplet(triplet<_type1_t, _type2_t, _type3_t>&& tmp) : first(move(tmp.first)), second(move(tmp.second)), third(move(tmp.third)) {};
 
 		//assignment operator
 		/*
@@ -53,9 +58,31 @@ namespace flopoco{
 
 			return *this;
 		}
+		*/
+
+		triplet& operator=(const triplet& tmp)
+		{
+			first  = tmp.first;
+			second = tmp.second;
+			third  = tmp.third;
+
+			return *this;
+		}
+
 
 		template<class _type1_t, class _type2_t, class _type3_t>
 			triplet& operator=(triplet<_type1_t, _type2_t, _type3_t>&& tmp)
+		{
+			first  = move(tmp.first);
+			second = move(tmp.second);
+			third  = move(tmp.third);
+
+			return *this;
+		}
+
+		/*
+		template<class _type1_t, class _type2_t, class _type3_t>
+			triplet& operator=(const triplet<_type1_t, _type2_t, _type3_t>& tmp)
 		{
 			first  = tmp.first;
 			second = tmp.second;

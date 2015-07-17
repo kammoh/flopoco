@@ -2349,6 +2349,16 @@ namespace flopoco{
 	}
 
 
+	void Operator::extractSignalDependences()
+	{
+		vector<triplet<string, string, int>> dependenceTable;
+
+		//copy the dependence table from the vhdl stream
+		dependenceTable.clear();
+		dependenceTable.insert(dependenceTable.begin(), vhdl.dependenceTable.begin(), vhdl.dependenceTable.end());
+	}
+
+
 	void Operator::setuid(int mm){
 		myuid = mm;
 	}

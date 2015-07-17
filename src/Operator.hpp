@@ -1208,6 +1208,15 @@ public:
 	 */
 	void parse2();
 
+	/**
+	 * Extract the timing dependences between signals.
+	 * The raw data is stored in the vhdl FlopocoStream object, in the form of
+	 * triplets, storing ("lhs_signal_name", "rhs_signal_name", delay).
+	 * Warning: This function should only be called after the vhdl code
+	 * 			has been parsed (the first parse)
+	 */
+	void extractSignalDependences();
+
 
 	void setuid(int mm);
 
