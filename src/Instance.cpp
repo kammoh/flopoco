@@ -5,7 +5,7 @@ using namespace std;
 namespace flopoco {
 
 	Instance::Instance(std::string name_, Operator* op_) :
-			op(op_), name(name_)
+		name(name_), op(op_)
 	{
 		clearInputPorts();
 		clearOutputPorts();
@@ -14,7 +14,7 @@ namespace flopoco {
 	}
 
 	Instance::Instance(std::string name_, Operator* op_, map<std::string, Signal*> inPortMap_, map<std::string, Signal*> outPortMap_) :
-		op(op_), name(name_)
+		name(name_), op(op_)
 	{
 		clearInputPorts();
 		clearOutputPorts();
@@ -62,7 +62,7 @@ namespace flopoco {
 	{
 		//check if the port mapping already exists
 		if(inPortMap.find(portName) != inPortMap.end())
-			throw("Error in Instance::addInputPort: trying to add a port mapping that already exists: port name = " << portName);
+			throw("Error in Instance::addInputPort: trying to add a port mapping that already exists: port name = " + portName);
 
 		inPortMap[portName] = connectedSignal;
 	}
@@ -73,7 +73,7 @@ namespace flopoco {
 		if(signals.size() == 0)
 			throw("Error in Instance::addInputPorts: trying to add an empty list of port mappings");
 
-		for(map<std::string, Signal*>::iterator it = signals.begin(); it++; it != signals.end())
+		for(map<std::string, Signal*>::iterator it = signals.begin(); it != signals.end(); it++)
 			if(it->first == "")
 				throw("Error in Instance::addInputPorts: trying to add a port mappings with an empty port name");
 			else if(it->second == NULL)
@@ -86,7 +86,7 @@ namespace flopoco {
 	{
 		//check if the port mapping exists
 		if(inPortMap.find(portName) == inPortMap.end())
-			throw("Error in Instance::removeInputPort: trying to remove a port mapping that does not exists: port name = " << portName);
+			throw("Error in Instance::removeInputPort: trying to remove a port mapping that does not exists: port name = " + portName);
 
 		inPortMap.erase(portName);
 	}
@@ -100,7 +100,7 @@ namespace flopoco {
 	{
 		//check if the port mapping already exists
 		if(outPortMap.find(portName) != outPortMap.end())
-			throw("Error in Instance::addOutputPort: trying to add a port mapping that already exists: port name = " << portName);
+			throw("Error in Instance::addOutputPort: trying to add a port mapping that already exists: port name = " + portName);
 
 		outPortMap[portName] = connectedSignal;
 	}
@@ -111,7 +111,7 @@ namespace flopoco {
 		if(signals.size() == 0)
 			throw("Error in Instance::addOutputPorts: trying to add an empty list of port mappings");
 
-		for(map<std::string, Signal*>::iterator it = signals.begin(); it++; it != signals.end())
+		for(map<std::string, Signal*>::iterator it = signals.begin(); it != signals.end(); it++)
 			if(it->first == "")
 				throw("Error in Instance::addOutputPort: trying to add a port mappings with an empty port name");
 			else if(it->second == NULL)
@@ -124,7 +124,7 @@ namespace flopoco {
 	{
 		//check if the port mapping exists
 		if(outPortMap.find(portName) == outPortMap.end())
-			throw("Error in Instance::removeInputPort: trying to remove a port mapping that does not exists: port name = " << portName);
+			throw("Error in Instance::removeInputPort: trying to remove a port mapping that does not exists: port name = " + portName);
 
 		outPortMap.erase(portName);
 	}

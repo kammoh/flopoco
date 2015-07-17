@@ -1142,6 +1142,22 @@ namespace flopoco{
 				+ successor->getName() + " to the predecessor list");
 	}
 
+	void Operator::setSignalParentOp(Signal* signal, Operator* newParentOp)
+	{
+		//erase the signal from the operator's signal list and map
+		for(unsigned int i=0; i<(signal->parentOp()->getSignalList()).size(); i++)
+			if(signal->parentOp()->getSignalList()[i]->getName() == signal->getName())
+				signal->parentOp()->getSignalList().erase(signal->parentOp()->getSignalList().begin()+i);
+		signal->parentOp()->getSignalMap().erase(signal->getName());
+
+		//change the signal's parent operator
+		signal->setParentOp(newParentOp);
+
+		//add the signal to the new parent's signal list
+		signal->parentOp()->signalList_.push_back(signal);
+		signal->parentOp()->getSignalMap()[signal->getName()] = signal;
+	}
+
 	double Operator::getCriticalPath()
 	{
 		//disabled during the overhaul
@@ -2627,7 +2643,7 @@ namespace flopoco{
 
 			// boolean indicating that we are still analysing TestState on the same operator
 			bool firstEqual = true;
-			for(it; it != testMemory.end () && firstEqual ; it++ ){
+			for(; it != testMemory.end () && firstEqual ; it++ ){
 				bool exist = false;
 				TestState  memoryVect = ( *it ).second;
 				if ( opName.compare ( ( * ( it ) ).first ) != 0 ){

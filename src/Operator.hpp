@@ -560,6 +560,10 @@ public:
 	 */
 	void removeSuccessor(Signal* targetSignal, Signal* successor, int delayCycles = 0);
 
+	/**
+	 * Set the parent operator of signal
+	 */
+	void setSignalParentOp(Signal* signal, Operator* newParentOp);
 
 	/**
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
@@ -966,9 +970,6 @@ public:
 	 * Return the list of component instances declared in this operator
 	 */
 	vector<Instance*> getInstances();
-
-
-
 
 
 	/** DEPRECATED

@@ -15,6 +15,7 @@
 
 namespace flopoco{
 
+//forward reference to Operator, in order to avoid cycles in references
 class Operator;
 
 	/**
@@ -32,7 +33,7 @@ class Operator;
 			registeredWithoutReset,          /**< if the signal is registered, but does not have a reset */
 			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */
 			registeredWithSyncReset,         /**< if the signal is registered, and has an synchronous reset */
-			registeredWithZeroInitialiser    /**< if the signal is registered, the it has a zero initialiser (but no reset) */
+			registeredWithZeroInitialiser    /**< if the signal is registered, the it has a zero initializer (but no reset) */
 		} SignalType;
 
 #if 0 // all these flags could be replaced with something like that
@@ -125,6 +126,9 @@ class Operator;
 
 		/**
 		 * Set the parent operator
+		 * Warning: this method only changes the reference to the parent operator
+		 * 			thus, this is a helper method, and should be used with caution
+		 * 			Use Operator::setSignalParentOp() instead
 		 */
 		void setParentOp(Operator* newParentOp);
 

@@ -6,17 +6,15 @@
 #ifndef INSTANCE_HPP
 #define INSTANCE_HPP
 
-#include <vector>
 #include <map>
-
-#include "utils.hpp"
-
-#include "Operator.hpp"
-#include "Signal.hpp"
 
 using namespace std;
 
 namespace flopoco {
+
+//forward references to Operator and Signal
+class Operator;
+class Signal;
 
 	class Instance {
 

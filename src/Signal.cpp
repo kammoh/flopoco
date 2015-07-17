@@ -122,18 +122,7 @@ namespace flopoco{
 
 	void Signal::setParentOp(Operator* newParentOp)
 	{
-		//erase the signal from the operator's signal list and map
-		for(unsigned int i=0; i<(parentOp_->getSignalList()).size(); i++)
-			if(parentOp_->getSignalList()[i]->getName() == name_)
-				parentOp_->getSignalList().erase(parentOp_->getSignalList().begin()+i);
-		parentOp_->getSignalMap().erase(name_);
-
-		//change the signal's parent operator
 		parentOp_ = newParentOp;
-
-		//add the signal to the new parent's signal list
-		parentOp_->signalList_.push_back(this);
-		parentOp_->getSignalMap()[this->getName()] = this;
 	}
 
 	int Signal::width() const {return width_;}
