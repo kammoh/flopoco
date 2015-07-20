@@ -1243,6 +1243,9 @@ public:
 	 * Find the scheduling for the signal given as parameter, taking
 	 * into account the schedules of its parents.
 	 * A signal cannot be scheduled as long as its parents have not been scheduled.
+	 * This function can be called several times for a signal, calls initiated
+	 * by the signal's predecessors, but will only be executed once, when
+	 * all the signal's predecessors have already been scheduled.
 	 * @param targetSignal the signal that is to be scheduled
 	 */
 	void scheduleSignal(Signal *targetSignal);

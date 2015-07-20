@@ -306,6 +306,16 @@ class Operator;
 		 */
 		void setCriticalPathContribution(double contribution);
 
+		/**
+		 * Return the value of hasBeenImplemented
+		 */
+		bool getHasBeenImplemented();
+
+		/**
+		 * Set the new value of hasBeen Implemented
+		 */
+		void setHasBeenImplemented(bool newVal);
+
 
 		/**
 		 * Set the number of possible output values.
@@ -341,30 +351,33 @@ class Operator;
 		void setType(SignalType t);
 
 	private:
-		Operator*     parentOp_;     /**< The operator which contains this signal */
-		std::string   name_;         /**< The name of the signal */
-		SignalType    type_;         /**< The type of the signal, see SignalType */
-		int           width_;        /**< The width of the signal */
+		Operator*     parentOp_;           /**< The operator which contains this signal */
+		std::string   name_;               /**< The name of the signal */
+		SignalType    type_;               /**< The type of the signal, see SignalType */
+		int           width_;              /**< The width of the signal */
 
-		double       constValue_;   /**< The value of the constant, for a constant signal */
+		double       constValue_;          /**< The value of the constant, for a constant signal */
 
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
-		int           lifeSpan_;     /**< The max delay that will be applied to this signal; */
+		int           lifeSpan_;           /**< The max delay that will be applied to this signal; */
 		std::vector<pair<Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
 		std::vector<pair<Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The second value in the pair contains the (possible) delay on the edge */
-		int           cycle_;        /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
-	    double        criticalPath_; /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+		int           cycle_;              /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
+	    double        criticalPath_;       /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
 	    double        criticalPathContribution_; /**< the delay that the signal adds to the critical path */
-		bool          isFP_;         /**< If the signal is of the FloPoCo floating-point type */
-		bool          isFix_;        /**< If the signal is of the FloPoCo fixed-point type */
-		bool          isIEEE_;       /**< If the signal is of the IEEE floating-point type */
-		int           wE_;           /**< The width of the exponent. Used for FP signals */
-		int           wF_;           /**< The width of the fraction. Used for FP signals */
-		int           MSB_;          /**< MSB. Used for fixed-point signals */
-		int           LSB_;          /**< LSB. Used for fixed-point signals */
-		bool          isSigned_;     /**< true if this a signed fixed-point signals, false otherwise */
-		bool          isBus_;        /**< True is the signal is a bus (std_logic_vector)*/
+
+	    bool          hasBeenScheduled_;    /**< Has the signal already been scheduled? */
+
+		bool          isFP_;               /**< If the signal is of the FloPoCo floating-point type */
+		bool          isFix_;              /**< If the signal is of the FloPoCo fixed-point type */
+		bool          isIEEE_;             /**< If the signal is of the IEEE floating-point type */
+		int           wE_;                 /**< The width of the exponent. Used for FP signals */
+		int           wF_;                 /**< The width of the fraction. Used for FP signals */
+		int           MSB_;                /**< MSB. Used for fixed-point signals */
+		int           LSB_;                /**< LSB. Used for fixed-point signals */
+		bool          isSigned_;           /**< true if this a signed fixed-point signals, false otherwise */
+		bool          isBus_;              /**< True is the signal is a bus (std_logic_vector)*/
 
 
 	};

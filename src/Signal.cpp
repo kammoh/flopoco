@@ -9,8 +9,9 @@ namespace flopoco{
 
 	// plain logic vector, or wire
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
-		parentOp_(parentOp), name_(name), type_(type), width_(width), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), width_(width), constValue_(0.0), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		hasBeenScheduled_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
 		isSigned_(false), isBus_(isBus) {
@@ -20,8 +21,10 @@ namespace flopoco{
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue) :
 		parentOp_(parentOp), name_(name), type_(type), constValue_(constValue), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		hasBeenScheduled_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
-		wE_(0), wF_(0), MSB_(0), LSB_(0)
+		wE_(0), wF_(0), MSB_(0), LSB_(0),
+		isBus_(false)
 	{
 		width_ = intlog2(fabs(constValue_));
 		isSigned_ = constValue_ < 0;
@@ -30,8 +33,9 @@ namespace flopoco{
 
 	// fixed point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) :
-		parentOp_(parentOp), name_(name), type_(type), width_(MSB-LSB+1), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), width_(MSB-LSB+1), constValue_(0.0), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		hasBeenScheduled_(false),
 		isFP_(false), isFix_(true),  isIEEE_(false),
 		wE_(0), wF_(0), MSB_(MSB), LSB_(LSB),
 		isSigned_(isSigned), isBus_(true)
@@ -40,8 +44,9 @@ namespace flopoco{
 
 	// floating point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) :
-		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), constValue_(0.0), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		hasBeenScheduled_(false),
 		isFP_(true), isFix_(false), isIEEE_(false),
 		wE_(wE), wF_(wF), MSB_(0), LSB_(0),
 		isSigned_(false), isBus_(false)
@@ -58,6 +63,15 @@ namespace flopoco{
 		parentOp_ = originalSignal->parentOp_;
 		name_ = originalSignal->getName();
 		type_ = originalSignal->type();
+		lifeSpan_ = 0;
+		constValue_ = originalSignal->constValue_;
+		isFix_ = originalSignal->isFix();
+		isFP_ = originalSignal->isFP();
+		cycle_ = originalSignal->getCycle();
+		criticalPath_ = originalSignal->getCriticalPath();
+		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
+		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
+		hasBeenScheduled_ = false;
 
 		if(originalSignal->isFix())
 		{
@@ -81,6 +95,15 @@ namespace flopoco{
 		parentOp_ = newParentOp;
 		name_ = originalSignal->getName();
 		type_ = originalSignal->type();
+		lifeSpan_ = 0;
+		constValue_ = originalSignal->constValue_;
+		isFix_ = originalSignal->isFix();
+		isFP_ = originalSignal->isFP();
+		cycle_ = originalSignal->getCycle();
+		criticalPath_ = originalSignal->getCriticalPath();
+		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
+		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
+		hasBeenScheduled_ = false;
 
 		if(originalSignal->isFix())
 		{
@@ -279,6 +302,15 @@ namespace flopoco{
 
 	void Signal::setCriticalPathContribution(double contribution){
 		criticalPathContribution_ = contribution;
+	}
+
+
+	bool Signal::getHasBeenImplemented(){
+		return hasBeenScheduled_;
+	}
+
+	void Signal::setHasBeenImplemented(bool newVal){
+		hasBeenScheduled_ = newVal;
 	}
 
 
