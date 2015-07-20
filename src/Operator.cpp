@@ -2356,6 +2356,23 @@ namespace flopoco{
 		//copy the dependence table from the vhdl stream
 		dependenceTable.clear();
 		dependenceTable.insert(dependenceTable.begin(), vhdl.dependenceTable.begin(), vhdl.dependenceTable.end());
+
+		//start parsing the dependence table, modifying each pair of signals
+		for(unsigned int i=0; i<dependenceTable.size(); i++)
+		{
+			Signal *lhs, *rhs;
+			int delay;
+
+			lhs = getSignalByName(dependenceTable[i].first);
+			rhs = getSignalByName(dependenceTable[i].second);
+			delay = dependenceTable[i].third;
+
+			addPredecessor(lhs, rhs, delay);
+			addSuccessor(rhs, lhs, delay);
+		}
+
+		//clear the local copy of the dependence table
+		dependenceTable.clear();
 	}
 
 
