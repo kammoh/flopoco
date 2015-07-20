@@ -1456,6 +1456,19 @@ namespace flopoco{
 	}
 
 
+	string Operator::delay(string signalName, int nbDelayCycles)
+	{
+		ostringstream result;
+
+		//check that the number of delay cycles is a positive integer
+		if(nbDelayCycles < 0)
+			THROWERROR("Error in delay(): trying to add a negative number of delay cycles:" << nbDelayCycles);
+
+		result << signalName << "^" << nbDelayCycles;
+		return result.str();
+	}
+
+
 
 	#if 1
 	string Operator::use(string name) {
@@ -1661,28 +1674,26 @@ namespace flopoco{
 		{
 			Signal *signal = op->getIOListSignal(i);
 			bool isSignalMapped = false;
+			map<string, Signal*>::iterator iterStart, iterStop;
 
 			if(signal->type() == Signal::in)
 			{
 				//this is an input signal, so look for it in the input port mappings
-				for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++)
-				{
-					if(it->first == signal->getName())
-					{
-						isSignalMapped = true;
-						break;
-					}
-				}
+				iterStart = op->tmpInPortMap_.begin();
+				iterStop = op->tmpInPortMap_.end();
 			}else
 			{
 				//this is an output signal, so look for it in the output port mappings
-				for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++)
+				iterStart = op->tmpOutPortMap_.begin();
+				iterStop = op->tmpOutPortMap_.end();
+			}
+
+			for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)
+			{
+				if(it->first == signal->getName())
 				{
-					if(it->first == signal->getName())
-					{
-						isSignalMapped = true;
-						break;
-					}
+					isSignalMapped = true;
+					break;
 				}
 			}
 
@@ -1734,8 +1745,6 @@ namespace flopoco{
 		}
 
 		for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++) {
-			string rhsString;
-
 			if(!((it == op->tmpOutPortMap_.begin()) && (op->tmpInPortMap_.size() != 0)) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 

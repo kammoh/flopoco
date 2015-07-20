@@ -674,6 +674,18 @@ public:
 	void resizeFixPoint(string lhsName, string rhsName, const int MSB, const int LSB, const int indentLevel=1);
 
 
+	/**
+	 * Delay a signal for a given amount of of cycles.
+	 * The name of the signal will be temporarily modified to signal_name^nbDelayCycles,
+	 * until the second parsing stage.
+	 * The use of the '^' symbol should be kept coherent with the notation in
+	 * FlopocoStream
+	 * @param signalName the signal to delay
+	 * @param nbDelayCycles the number of cycles the signal will be delayed
+	 */
+	string delay(string signalName, int nbDelayCycles = 1);
+
+
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
 
 
@@ -1208,6 +1220,7 @@ public:
 	 */
 	void parse2();
 
+
 	/**
 	 * Extract the timing dependences between signals.
 	 * The raw data is stored in the vhdl FlopocoStream object, in the form of
@@ -1216,6 +1229,23 @@ public:
 	 * 			has been parsed (the first parse)
 	 */
 	void extractSignalDependences();
+
+
+	/**
+	 * Create the scheduling for the signals of this operator.
+	 * A schedule for the signals means setting the cycle and critical path of
+	 * the signals, in a ASAP fashion, such that they respect the predecessor-successor
+	 * dependences, and eventually the possible extra delays.
+	 */
+	void scheduleSignals();
+
+	/**
+	 * Find the scheduling for the signal given as parameter, taking
+	 * into account the schedules of its parents.
+	 * A signal cannot be scheduled as long as its parents have not been scheduled.
+	 * @param targetSignal the signal that is to be scheduled
+	 */
+	void scheduleSignal(Signal *targetSignal);
 
 
 	void setuid(int mm);

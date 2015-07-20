@@ -4,11 +4,11 @@
 
   This file is part of the FloPoCo project developed by the Arenaire
   team at Ecole Normale Superieure de Lyon
-  
+
   Authors :   Bogdan Pasca, Nicolas Brunie
 
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2010.
   All rights reserved.
 */
@@ -195,8 +195,9 @@ namespace flopoco{
 				//	without any separating characters (,\n\t\ ())
 				string delimiters = " \t\n,()";
 				ostringstream newLhsName;
-				int count = 0;
+				int count;
 
+				count = 0;
 				while(count<lhsName.size())
 				{
 					newLhsName.str("");
@@ -227,7 +228,7 @@ namespace flopoco{
 
 		dependenceTable.clear();
 
-		for(int i=0; (unsigned)i<newDependenceTable.size(); i++)
+		for(unsigned int i=0; i<newDependenceTable.size(); i++)
 		{
 			dependenceTable.push_back(newDependenceTable[i]);
 		}
