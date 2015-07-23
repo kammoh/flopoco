@@ -522,9 +522,14 @@ public:
 	 * @param predecessor a direct predecessor of the current signal
 	 * @param delayCycles the extra delay (in clock cycles) between the two signals
 	 * 		by default equal to zero
-	 * @return true if the signal could be added as a predecessor, false if it already existed
 	 */
 	void addPredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles = 0);
+
+	/**
+	 * Add new predecessors for the signal targetSignal;
+	 * @param predecessors a list of direct predecessors of the current signal
+	 */
+	void addPredecessors(Signal* targetSignal, vector<pair<Signal*, int>> predecessorList);
 
 	/**
 	 * Remove an existing predecessor of the signal targetSignal;
@@ -550,6 +555,12 @@ public:
 	 * @return true if the signal could be added as a successor, false if it already existed
 	 */
 	void addSuccessor(Signal* targetSignal, Signal* successor, int delayCycles = 0);
+
+	/**
+	 * Add new successors for the signal targetSignal;
+	 * @param successors a list of direct successors of the current signal
+	 */
+	void addSuccessors(Signal* targetSignal, vector<pair<Signal*, int>> successorList);
 
 	/**
 	 * Remove an existing successor of the signal targetSignal;
@@ -1232,6 +1243,32 @@ public:
 
 
 	/**
+	 * SCHEDULING
+	 *
+	 * Flow: start with the inputs of the circuit. The inputs are at cycle 0,
+	 * 		all synchronized at the same cycle, and their critical path might vary.
+	 * 		Each input decides its timing and then starts the timing of its
+	 * 		children.
+	 * 		When the timing is called on an internal node (i.e. not an input),
+	 * 		the node first checks if all of its predecessors have been scheduled.
+	 * 		If yes, then the node schedules itself, according to the timing of
+	 * 		its parents and to its own constraints, and then launches the timing
+	 * 		of its own children.
+	 * 		If not, then the timing procedures are stopped. This can be done
+	 * 		because it means that the node depends on another node that hasn't
+	 * 		yet been scheduled. When the predecessor will finally be scheduled,
+	 * 		the launch of the timing respective node will also be triggered.
+	 *
+	 * Backward loops: When dealing with a loop, the timing procedures will come
+	 * 		to a halt inside the loop, as they will detect that the node which has
+	 * 		data coming from the backward edge has already been scheduled, so there
+	 * 		is nothing else left to do.
+	 *
+	 * Sub-components:
+	 */
+
+
+	/**
 	 * Create the scheduling for the signals of this operator.
 	 * A schedule for the signals means setting the cycle and critical path of
 	 * the signals, in a ASAP fashion, such that they respect the predecessor-successor
@@ -1281,6 +1318,12 @@ public:
 	 * Completely replace "this" with a copy of another operator.
 	 */
 	void cloneOperator(Operator *op);
+
+	/**
+	 * Create a deep copy of the operator op, changing also the corresponding
+	 * internal references.
+	 */
+	void deepCloneOperator(Operator *op);
 
 	/**
 	 * Method returning a random number depending on a fixed limit, the mean and

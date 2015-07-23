@@ -1074,6 +1074,12 @@ namespace flopoco{
 		targetSignal->predecessors().push_back(newPredecessorPair);
 	}
 
+	void Operator::addPredecessors(Signal* targetSignal, vector<pair<Signal*, int>> predecessorList)
+	{
+		for(unsigned int i=0; i<predecessorList.size(); i++)
+			addPredecessor(targetSignal, predecessorList[i].first, predecessorList[i].second);
+	}
+
 	void Operator::removePredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles)
 	{
 		//only try to remove the predecessor if the signal
@@ -1118,6 +1124,12 @@ namespace flopoco{
 		//safe to insert a new signal in the predecessor list
 		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
 		targetSignal->successors().push_back(newSuccessorPair);
+	}
+
+	void Operator::addSuccessors(Signal* targetSignal, vector<pair<Signal*, int>> successorList)
+	{
+		for(unsigned int i=0; i<successorList.size(); i++)
+			addSuccessor(targetSignal, successorList[i].first, successorList[i].second);
 	}
 
 	void Operator::removeSuccessor(Signal* targetSignal, Signal* successor, int delayCycles)
@@ -1753,11 +1765,34 @@ namespace flopoco{
 
 		o << ");" << endl;
 
-		//create a new instance
-		Instance* newInstance = new Instance(instanceName, op, tmpInPortMap_, tmpOutPortMap_);
 		if(isGlobalOperator)
+		{
+			//create a new operator
+			Operator *newOp = new Operator(op->getTarget());
+			//copy the original operator
+			newOp->cloneOperator(op);
+			//connect the inputs/outputs of the new operator to the right signals
+
+			//continue here
+
+
+			//check if this is the first time we create this global operator
+
+			//create a new instance
+			Instance* newInstance = new Instance(instanceName, newOp, tmpInPortMap_, tmpOutPortMap_);
+			//set the instance as implemented; it will be implemented as a global operator
 			newInstance->setHasBeenImplemented(true);
-		instances_.push_back(newInstance);
+			//add the instance to the local list of sub-components
+			instances_.push_back(newInstance);
+			//add the operator to the global operator list, if it isn't there already
+			addToGlobalOpList(op);
+		}else{
+			//create a new instance
+			Instance* newInstance = new Instance(instanceName, op, tmpInPortMap_, tmpOutPortMap_);
+			if(isGlobalOperator)
+				newInstance->setHasBeenImplemented(true);
+			instances_.push_back(newInstance);
+		}
 
 		//clear the port mappings
 		tmpInPortMap_.clear();
@@ -1765,8 +1800,6 @@ namespace flopoco{
 
 		// add the operator to the subcomponent list
 		oplist.push_back(op);
-		if(isGlobalOperator)
-			addToGlobalOpList(op);
 
 
 		//Floorplanning ------------------------------------------------
@@ -2571,6 +2604,117 @@ namespace flopoco{
 
 		floorplan.str(op->floorplan.str());
 		flpHelper                   = op->flpHelper;
+	}
+
+
+	void  Operator::deepCloneOperator(Operator *op){
+		//start by coning the operator
+		cloneOperator(op);
+
+		//create deep copies of the signals, sub-components, instances etc.
+
+		//create deep copies of the signals
+		vector<Signal*> newSignalList;
+		for(unsigned int i=0; i<signalList_.size(); i++)
+		{
+			Signal* tmpSignal = new Signal(this, signalList_[i]);
+			newSignalList.push_back(tmpSignal);
+		}
+		signalList_.clear();
+		signalList_.insert(signalList_.begin(), newSignalList.begin(), newSignalList.end());
+
+		//recreate the signal dependences, for each of the signals
+		for(unsigned int i=0; i<signalList_.size(); i++)
+		{
+			vector<pair<Signal*, int>> newPredecessors, newSuccessors;
+
+			//create the new list of predecessors for the signal currently treated
+			for(unsigned int j=0; j<op->signalList_[i]->predecessors().size(); j++)
+			{
+				pair<Signal*, int> tmpPair = op->signalList_[i]->predecessors()[j];
+
+				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
+			}
+			//replace the old list of predecessors with the new one
+			resetPredecessors(signalList_[i]);
+			addPredecessors(signalList_[i], newPredecessors);
+
+			//create the new list of successors for the signal currently treated
+			for(unsigned int j=0; j<op->signalList_[i]->successors().size(); j++)
+			{
+				pair<Signal*, int> tmpPair = op->signalList_[i]->successors()[j];
+
+				newSuccessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
+			}
+			//replace the old list of predecessors with the new one
+			resetSuccessors(signalList_[i]);
+			addSuccessors(signalList_[i], newSuccessors);
+		}
+
+		//create deep copies of the inputs/outputs
+		vector<Signal*> newIOList;
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		{
+			Signal* tmpSignal = new Signal(this, ioList_[i]);
+			newIOList.push_back(tmpSignal);
+		}
+		ioList_.clear();
+		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
+
+		//recreate the signal dependences, for each of the input/output signals
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		{
+			vector<pair<Signal*, int>> newPredecessors, newSuccessors;
+
+			//create the new list of predecessors for the signal currently treated
+			for(unsigned int j=0; j<op->ioList_[i]->predecessors().size(); j++)
+			{
+				pair<Signal*, int> tmpPair = op->ioList_[i]->predecessors()[j];
+
+				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
+			}
+			//replace the old list of predecessors with the new one
+			resetPredecessors(ioList_[i]);
+			addPredecessors(ioList_[i], newPredecessors);
+
+			//create the new list of successors for the signal currently treated
+			for(unsigned int j=0; j<op->ioList_[i]->successors().size(); j++)
+			{
+				pair<Signal*, int> tmpPair = op->ioList_[i]->successors()[j];
+
+				newSuccessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
+			}
+			//replace the old list of predecessors with the new one
+			resetSuccessors(ioList_[i]);
+			addSuccessors(ioList_[i], newSuccessors);
+		}
+
+		//create deep copies of the subcomponents
+		//	only one level of subcomponents will be copied
+		vector<Operator*> newOpList;
+		for(unsigned int i=0; i<op->getOpList().size(); i++)
+		{
+			Operator* tmpOp = new Operator(op->getOpList()[i]->getTarget());
+
+			tmpOp->deepCloneOperator(op->getOpList()[i]);
+			newOpList.push_back(tmpOp);
+		}
+		oplist = newOpList;
+
+		//create deep copies of the instances
+		//	replace the references in the instances to references to
+		//	the newly created deep copies
+		//the port maps for the instances do not need to be modified
+		for(unsigned int i=0; i<instances_.size(); i++)
+		{
+			Instance *tmpInstance = instances_[i];
+
+			//look for the instance with the same name
+			for(unsigned int j=0; j<oplist.size(); j++)
+				if(oplist[j]->getName() == tmpInstance->getOperator()->getName())
+					tmpInstance->setOperator(oplist[j]);
+		}
+
 	}
 
 
