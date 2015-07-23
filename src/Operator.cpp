@@ -1765,18 +1765,21 @@ namespace flopoco{
 
 		o << ");" << endl;
 
-		if(isGlobalOperator)
+		//	check if this is the first time adding this global operator
+		//	to the operator list. If it isn't, then insert the copy, instead
+		bool newOpFirstAdd = true;
+		for(unsigned int i=0; i<oplist.size(); i++)
+			if(oplist[i]->getName() == op->getName())
+				newOpFirstAdd = false;
+
+		if(isGlobalOperator && !newOpFirstAdd)
 		{
 			//create a new operator
 			Operator *newOp = new Operator(op->getTarget());
-			//copy the original operator
-			newOp->cloneOperator(op);
-			//connect the inputs/outputs of the new operator to the right signals
 
-			//continue here
-
-
-			//check if this is the first time we create this global operator
+			//deep copy the original operator
+			//	this should also connect the inputs/outputs of the new operator to the right signals
+			newOp->deepCloneOperator(op);
 
 			//create a new instance
 			Instance* newInstance = new Instance(instanceName, newOp, tmpInPortMap_, tmpOutPortMap_);
@@ -1784,22 +1787,24 @@ namespace flopoco{
 			newInstance->setHasBeenImplemented(true);
 			//add the instance to the local list of sub-components
 			instances_.push_back(newInstance);
-			//add the operator to the global operator list, if it isn't there already
-			addToGlobalOpList(op);
+
+			//add the newly created copy of the operator to the subcomponent list
+			newOp->setName(newOp->getName()+"_cpy_id_"+getNewUId());
+			oplist.push_back(newOp);
 		}else{
 			//create a new instance
 			Instance* newInstance = new Instance(instanceName, op, tmpInPortMap_, tmpOutPortMap_);
 			if(isGlobalOperator)
 				newInstance->setHasBeenImplemented(true);
 			instances_.push_back(newInstance);
+			oplist.push_back(op);
+			if(isGlobalOperator)
+				addToGlobalOpList(op);
 		}
 
 		//clear the port mappings
 		tmpInPortMap_.clear();
 		tmpOutPortMap_.clear();
-
-		// add the operator to the subcomponent list
-		oplist.push_back(op);
 
 
 		//Floorplanning ------------------------------------------------
