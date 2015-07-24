@@ -1688,14 +1688,14 @@ namespace flopoco{
 			bool isSignalMapped = false;
 			map<string, Signal*>::iterator iterStart, iterStop;
 
+			//set the start and stop values for the iterators, for either the input,
+			//	or the output temporary port map, depending on the signal type
 			if(signal->type() == Signal::in)
 			{
-				//this is an input signal, so look for it in the input port mappings
 				iterStart = op->tmpInPortMap_.begin();
 				iterStop = op->tmpInPortMap_.end();
 			}else
 			{
-				//this is an output signal, so look for it in the output port mappings
 				iterStart = op->tmpOutPortMap_.begin();
 				iterStop = op->tmpOutPortMap_.end();
 			}
@@ -1718,6 +1718,7 @@ namespace flopoco{
 		o << tab << instanceName << ": " << op->getName();
 
 		//disabled during the overhaul
+		//TODO: is this information still relevant?
 		/*
 		if(op->isSequential())
 			o << "  -- maxInputDelay=" << getMaxInputDelays(op->ioList_);
@@ -1738,7 +1739,7 @@ namespace flopoco{
 		}
 
 
-		for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++) {
+		for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++){
 			string rhsString;
 
 			if((it != op->tmpInPortMap_.begin()) || op->isSequential())
@@ -1756,7 +1757,7 @@ namespace flopoco{
 			o << it->first << " => " << rhsString;
 		}
 
-		for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++) {
+		for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++){
 			if(!((it == op->tmpOutPortMap_.begin()) && (op->tmpInPortMap_.size() != 0)) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 

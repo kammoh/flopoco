@@ -1264,7 +1264,20 @@ public:
 	 * 		data coming from the backward edge has already been scheduled, so there
 	 * 		is nothing else left to do.
 	 *
-	 * Sub-components:
+	 * Sub-components: start by launching the scheduling procedures on the signals
+	 * 		of the operator.
+	 * 		We first schedule the signal, and then detect whether the signal and
+	 * 		its parent belong to the same operator (meaning the signal belongs to
+	 * 		a sub-component of the parent operator of the respective signal's parent).
+	 * 		If this is not an input signal, we start scheduling the signal's children.
+	 * 		If this is an input signal, we then check if all of the other inputs of the
+	 * 		respective sub-component have also been scheduled. If not, we can just
+	 * 		stop the current call. If yes, then we synchronize all of the inputs to
+	 * 		the same cycle, and then launch the scheduling procedure for the
+	 * 		sub-component.
+	 * 		When encountering an output port, the scheduling procedures should
+	 * 		treat it as a regular signal: set its timing and launch the scheduling
+	 * 		of its children.
 	 */
 
 
