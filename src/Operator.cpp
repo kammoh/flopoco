@@ -1790,7 +1790,7 @@ namespace flopoco{
 			instances_.push_back(newInstance);
 
 			//add the newly created copy of the operator to the subcomponent list
-			newOp->setName(newOp->getName()+"_cpy_id_"+getNewUId());
+			newOp->setName(newOp->getName()+"_cpy_id_"+vhdlize(getNewUId()));
 			oplist.push_back(newOp);
 		}else{
 			//create a new instance
@@ -2421,6 +2421,17 @@ namespace flopoco{
 
 		//clear the local copy of the dependence table
 		dependenceTable.clear();
+	}
+
+
+	void Operator::startScheduling()
+	{
+		THROWERROR("Error: function startScheduling() not yet implemented!");
+	}
+
+	void Operator::scheduleSignal(Signal *targetSignal)
+	{
+		THROWERROR("Error: function startScheduling() not yet implemented!");
 	}
 
 

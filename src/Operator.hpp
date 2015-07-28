@@ -1245,12 +1245,14 @@ public:
 	/**
 	 * SCHEDULING
 	 *
-	 * Flow: start with the inputs of the circuit. The inputs are at cycle 0,
-	 * 		all synchronized at the same cycle, and their critical path might vary.
-	 * 		Each input decides its timing and then starts the timing of its
-	 * 		children.
+	 * Flow: start with the inputs of the circuit. The inputs are all synchronized
+	 * 		at the same cycle, and their critical path might vary. Each input
+	 * 		computes its timing and then starts the timing of its children.
 	 * 		When the timing is called on an internal node (i.e. not an input),
-	 * 		the node first checks if all of its predecessors have been scheduled.
+	 * 		the node first checks if the node has already been scheduled. If yes,
+	 * 		then stop the timing procedures, as there is nothing else to do (this
+	 * 		might also be a backward loop).
+	 * 		Then, check if all of the predecessors have been scheduled.
 	 * 		If yes, then the node schedules itself, according to the timing of
 	 * 		its parents and to its own constraints, and then launches the timing
 	 * 		of its own children.
@@ -1282,21 +1284,17 @@ public:
 
 
 	/**
-	 * Create the scheduling for the signals of this operator.
-	 * A schedule for the signals means setting the cycle and critical path of
-	 * the signals, in a ASAP fashion, such that they respect the predecessor-successor
-	 * dependences, and eventually the possible extra delays.
+	 * Start the scheduling for this operator.
+	 * Try to schedule all the inputs, and then launch the scheduling for the
+	 * rest of the internal signals of the operator.
 	 */
-	void scheduleSignals();
+	void startScheduling();
 
 	/**
-	 * Find the scheduling for the signal given as parameter, taking
-	 * into account the schedules of its parents.
-	 * A signal cannot be scheduled as long as its parents have not been scheduled.
-	 * This function can be called several times for a signal, calls initiated
-	 * by the signal's predecessors, but will only be executed once, when
-	 * all the signal's predecessors have already been scheduled.
-	 * @param targetSignal the signal that is to be scheduled
+	 * Try to schedule the signal targetSignal. The signal can be schedules only
+	 * if all of its predecessors have been already scheduled. The function will
+	 * also trigger the scheduling of its children, if targetSignal has any.
+	 * @param targetSignal the signal to be scheduled
 	 */
 	void scheduleSignal(Signal *targetSignal);
 
