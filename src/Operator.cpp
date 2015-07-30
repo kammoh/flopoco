@@ -2448,16 +2448,80 @@ namespace flopoco{
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			Signal *currentSignal = ioList_[i];
+
 			for(unsigned j=0; j<currentSignal->successors().size(); j++)
-			{
 				scheduleSignal(currentSignal->successors()[j].first);
-			}
 		}
 	}
 
 	void Operator::scheduleSignal(Signal *targetSignal)
 	{
-		THROWERROR("Error: function startScheduling() not yet implemented!");
+		//TODO: add more checks here
+		//check if the signal has already been scheduled
+		if(targetSignal->getHasBeenImplemented() == true)
+			//there is nothing else to be done
+			return;
+
+		//check if all the signal's predecessors have been scheduled
+		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+			if(targetSignal->predecessors()[i].first->getHasBeenImplemented() == false)
+				//not all predecessors are scheduled, so there is no point to continue
+				return;
+
+		//schedule the signal
+		setSignalTiming(targetSignal);
+
+		//check if this is an input signal for a sub-component
+		if(targetSignal->type() == Signal::in)
+		{
+			//this is an input for a sub-component
+			bool allInputsScheduled = true;
+
+			//check if all the inputs of the operator have been implemented
+			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
+				if(targetSignal->parentOp()->getIOListSignal(i)->getHasBeenImplemented() == false)
+				{
+					allInputsScheduled = false;
+					break;
+				}
+
+			//check whether all the other inputs to the parent operator of
+			//	this signal have been scheduled
+			if(allInputsScheduled == false)
+				//if not, then we can just stop
+				return;
+
+			//all the other inputs of the parent operator of this signal have been scheduled
+			//	compute the maximum cycle of the inputs, and then synchronize
+			//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
+			int maxCycle = 0;
+
+			//determine the maximum cycle
+			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
+				if(targetSignal->parentOp()->getIOListSignal(i)->getCycle() > maxCycle)
+					maxCycle = targetSignal->parentOp()->getIOListSignal(i)->getCycle();
+			//set all the inputs of the parent operator of targetSignal to the maximum cycle
+			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
+				if(targetSignal->parentOp()->getIOListSignal(i)->getCycle() < maxCycle)
+				{
+					//if we have to delay the input, the we need to reset
+					//	the critical path, as well
+					//else, there is nothing else to do
+					targetSignal->parentOp()->getIOListSignal(i)->setCycle(maxCycle);
+					targetSignal->parentOp()->getIOListSignal(i)->setCriticalPath(0.0);
+				}
+
+			//start the scheduling of the parent operator of targetSignal
+			targetSignal->parentOp()->startScheduling();
+		}else
+		{
+			//this is a regular signal inside of the operator
+
+			//try to schedule the successors of the signal
+			for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+				scheduleSignal(targetSignal->predecessors()[i].first);
+		}
+
 	}
 
 	void Operator::setSignalTiming(Signal* targetSignal)
@@ -2490,22 +2554,24 @@ namespace flopoco{
 						maxCycle = currentPred->getCycle();
 						maxCriticalPath = currentPred->getCriticalPath();
 					}
-
-			//with the maximum cycle and critical path from a predecessor
-			//	computed, now compute the cycle and the critical path for the node itself
-			maxTargetCriticalPath = 1.0 / getTarget()->frequency();
-			if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
-			{
-				targetSignal->setCycle(maxCycle+1);
-				targetSignal->setCriticalPath(
-						maxCriticalPath+targetSignal->getCriticalPathContribution()-maxTargetCriticalPath);
-			}else
-			{
-				targetSignal->setCycle(maxCycle);
-				targetSignal->setCriticalPath(
-						maxCriticalPath+targetSignal->getCriticalPathContribution());
-			}
 		}
+
+		//with the maximum cycle and critical path from a predecessor
+		//	computed, now compute the cycle and the critical path for the node itself
+		maxTargetCriticalPath = 1.0 / getTarget()->frequency();
+		if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
+		{
+			targetSignal->setCycle(maxCycle+1);
+			targetSignal->setCriticalPath(
+					maxCriticalPath+targetSignal->getCriticalPathContribution()-maxTargetCriticalPath);
+		}else
+		{
+			targetSignal->setCycle(maxCycle);
+			targetSignal->setCriticalPath(
+					maxCriticalPath+targetSignal->getCriticalPathContribution());
+		}
+
+		targetSignal->setHasBeenImplemented(true);
 	}
 
 

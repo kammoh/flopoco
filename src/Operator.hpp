@@ -1259,7 +1259,7 @@ public:
 	 * 		If not, then the timing procedures are stopped. This can be done
 	 * 		because it means that the node depends on another node that hasn't
 	 * 		yet been scheduled. When the predecessor will finally be scheduled,
-	 * 		the launch of the timing respective node will also be triggered.
+	 * 		the launch of the timing for the respective node will also be triggered.
 	 *
 	 * Backward loops: When dealing with a loop, the timing procedures will come
 	 * 		to a halt inside the loop, as they will detect that the node which has
@@ -1301,6 +1301,7 @@ public:
 	/**
 	 * Set the timing of a signal.
 	 * Used also to share code between the different timing methods.
+	 * @param targetSignal the signal to be scheduled
 	 */
 	void setSignalTiming(Signal* targetSignal);
 
