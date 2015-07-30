@@ -1298,6 +1298,12 @@ public:
 	 */
 	void scheduleSignal(Signal *targetSignal);
 
+	/**
+	 * Set the timing of a signal.
+	 * Used also to share code between the different timing methods.
+	 */
+	void setSignalTiming(Signal* targetSignal);
+
 
 	void setuid(int mm);
 

@@ -2435,53 +2435,22 @@ namespace flopoco{
 							+ ioList_[i]->getName() + " is at cycle " + ioList_[i]->getCycle()
 							+ " but signal " + ioList_[j]->getName() + " is at cycle " + ioList_[j]->getCycle());
 
-		//try to schedule each of the input signals
+		//schedule each of the input signals
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			Signal *currentSignal = ioList_[i];
-			int maxCycle = 0;
-			double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
-			//first, set the cycle and the critical path of the input to
-			//	the maximum of its parents
-			for(unsigned j=0; j<currentSignal->predecessors().size(); j++)
+			//schedule the current input signal
+			setSignalTiming(currentSignal);
+		}
+
+		//start the schedule on the children of the inputs
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		{
+			Signal *currentSignal = ioList_[i];
+			for(unsigned j=0; j<currentSignal->successors().size(); j++)
 			{
-				Signal* currentPred = currentSignal->predecessors()[j].first;
-				int currentPredCycleDelay = currentSignal->predecessors()[j].second;
-
-				//see if we've found a predecessor at a later cycle
-				if(currentPred+currentPredCycleDelay >= maxCycle)
-					//there's a difference when there is a delay between
-					//	the predecessor and the signal
-					if((currentPred->getCycle()+currentPredCycleDelay > maxCycle) && (currentPredCycleDelay > 0))
-					{
-						//if the maximum cycle is at a delayed signal, then
-						//	the critical path must also be reset
-						maxCycle = currentPred->getCycle()+currentPredCycleDelay;
-						maxCriticalPath = 0;
-					}else
-						if(currentPred->getCriticalPath() > maxCriticalPath)
-						{
-							//the maximum cycle and critical path come from a
-							//	predecessor, on a link without delay
-							maxCycle = currentPred->getCycle();
-							maxCriticalPath = currentPred->getCriticalPath();
-						}
-
-				//with the maximum cycle and critical path from a predecessor
-				//	computed, now compute the cycle and the critical path for the node itself
-				maxTargetCriticalPath = 1.0 / getTarget()->frequency();
-				if(maxCriticalPath+currentSignal->getCriticalPathContribution() > maxTargetCriticalPath)
-				{
-					currentSignal->setCycle(maxCycle+1);
-					currentSignal->setCriticalPath(
-							maxCriticalPath+currentSignal->getCriticalPathContribution()-maxTargetCriticalPath);
-				}else
-				{
-					currentSignal->setCycle(maxCycle);
-					currentSignal->setCriticalPath(
-							maxCriticalPath+currentSignal->getCriticalPathContribution());
-				}
+				scheduleSignal(currentSignal->successors()[j].first);
 			}
 		}
 	}
@@ -2489,6 +2458,54 @@ namespace flopoco{
 	void Operator::scheduleSignal(Signal *targetSignal)
 	{
 		THROWERROR("Error: function startScheduling() not yet implemented!");
+	}
+
+	void Operator::setSignalTiming(Signal* targetSignal)
+	{
+		int maxCycle = 0;
+		double maxCriticalPath = 0.0, maxTargetCriticalPath;
+
+		//first, set the cycle and the critical path of the input to
+		//	the maximum of its parents
+		for(unsigned j=0; j<targetSignal->predecessors().size(); j++)
+		{
+			Signal* currentPred = targetSignal->predecessors()[j].first;
+			int currentPredCycleDelay = targetSignal->predecessors()[j].second;
+
+			//see if we've found a predecessor at a later cycle
+			if(currentPred+currentPredCycleDelay >= maxCycle)
+				//there's a difference when there is a delay between
+				//	the predecessor and the signal
+				if((currentPred->getCycle()+currentPredCycleDelay > maxCycle) && (currentPredCycleDelay > 0))
+				{
+					//if the maximum cycle is at a delayed signal, then
+					//	the critical path must also be reset
+					maxCycle = currentPred->getCycle()+currentPredCycleDelay;
+					maxCriticalPath = 0;
+				}else
+					if(currentPred->getCriticalPath() > maxCriticalPath)
+					{
+						//the maximum cycle and critical path come from a
+						//	predecessor, on a link without delay
+						maxCycle = currentPred->getCycle();
+						maxCriticalPath = currentPred->getCriticalPath();
+					}
+
+			//with the maximum cycle and critical path from a predecessor
+			//	computed, now compute the cycle and the critical path for the node itself
+			maxTargetCriticalPath = 1.0 / getTarget()->frequency();
+			if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
+			{
+				targetSignal->setCycle(maxCycle+1);
+				targetSignal->setCriticalPath(
+						maxCriticalPath+targetSignal->getCriticalPathContribution()-maxTargetCriticalPath);
+			}else
+			{
+				targetSignal->setCycle(maxCycle);
+				targetSignal->setCriticalPath(
+						maxCriticalPath+targetSignal->getCriticalPathContribution());
+			}
+		}
 	}
 
 
