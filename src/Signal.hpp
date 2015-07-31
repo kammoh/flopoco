@@ -229,9 +229,29 @@ class Operator;
 		vector<pair<Signal*, int>> predecessors() const;
 
 		/**
+		 * Returns the predecessor at index count
+		 */
+		Signal* predecessor(int count) const;
+
+		/**
+		 * Returns the predecessor-delay pair at index count
+		 */
+		pair<Signal*, int> predecessorPair(int count) const;
+
+		/**
 		 * Returns the list of successors
 		 */
 		vector<pair<Signal*, int>> successors() const;
+
+		/**
+		 * Returns the successor at index count
+		 */
+		Signal* successor(int count) const;
+
+		/**
+		 * Returns the successor-delay pair at index count
+		 */
+		pair<Signal*, int> successorPair(int count) const;
 
 		/**
 		 * Outputs the VHDL code for declaring this signal. TODO should be obsoleted?

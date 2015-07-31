@@ -2534,8 +2534,8 @@ namespace flopoco{
 		//	the maximum of its parents
 		for(unsigned j=0; j<targetSignal->predecessors().size(); j++)
 		{
-			Signal* currentPred = targetSignal->predecessors()[j].first;
-			int currentPredCycleDelay = targetSignal->predecessors()[j].second;
+			Signal* currentPred = targetSignal->predecessor(j);
+			int currentPredCycleDelay = targetSignal->predecessorPair(j).second;
 
 			//see if we've found a predecessor at a later cycle
 			if(currentPred->getCycle()+currentPredCycleDelay >= maxCycle)
