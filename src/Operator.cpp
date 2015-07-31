@@ -2432,8 +2432,9 @@ namespace flopoco{
 			for(unsigned int j=i+1; j<ioList_.size(); j++)
 				if(ioList_[i]->getCycle() != ioList_[j]->getCycle())
 					THROWERROR("Error in startScheduling(): not all signals are at the same cycle: signal "
-							+ ioList_[i]->getName() + " is at cycle " + ioList_[i]->getCycle()
-							+ " but signal " + ioList_[j]->getName() + " is at cycle " + ioList_[j]->getCycle());
+							+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
+							+ " but signal " + ioList_[j]->getName() + " is at cycle "
+							+ vhdlize(ioList_[j]->getCycle()));
 
 		//schedule each of the input signals
 		for(unsigned int i=0; i<ioList_.size(); i++)
@@ -2537,7 +2538,8 @@ namespace flopoco{
 			int currentPredCycleDelay = targetSignal->predecessors()[j].second;
 
 			//see if we've found a predecessor at a later cycle
-			if(currentPred+currentPredCycleDelay >= maxCycle)
+			if(currentPred->getCycle()+currentPredCycleDelay >= maxCycle)
+			{
 				//there's a difference when there is a delay between
 				//	the predecessor and the signal
 				if((currentPred->getCycle()+currentPredCycleDelay > maxCycle) && (currentPredCycleDelay > 0))
@@ -2554,6 +2556,7 @@ namespace flopoco{
 						maxCycle = currentPred->getCycle();
 						maxCriticalPath = currentPred->getCriticalPath();
 					}
+			}
 		}
 
 		//with the maximum cycle and critical path from a predecessor
