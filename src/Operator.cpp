@@ -2530,18 +2530,16 @@ namespace flopoco{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
-		//first, set the cycle and the critical path of the input to
-		//	the maximum of its parents
-		for(unsigned j=0; j<targetSignal->predecessors().size(); j++)
+		//determine the maximum cycle and critical path of the signal's parents
+		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
 		{
-			Signal* currentPred = targetSignal->predecessor(j);
-			int currentPredCycleDelay = targetSignal->predecessorPair(j).second;
+			Signal* currentPred = targetSignal->predecessor(i);
+			int currentPredCycleDelay = targetSignal->predecessorPair(i).second;
 
-			//see if we've found a predecessor at a later cycle
+			//check if the predecessor is at a later cycle
 			if(currentPred->getCycle()+currentPredCycleDelay >= maxCycle)
 			{
-				//there's a difference when there is a delay between
-				//	the predecessor and the signal
+				//differentiate between delayed and non-delayed signals
 				if((currentPred->getCycle()+currentPredCycleDelay > maxCycle) && (currentPredCycleDelay > 0))
 				{
 					//if the maximum cycle is at a delayed signal, then
@@ -2559,9 +2557,11 @@ namespace flopoco{
 			}
 		}
 
-		//with the maximum cycle and critical path from a predecessor
-		//	computed, now compute the cycle and the critical path for the node itself
+		//compute the cycle and the critical path for the node itself from
+		//	the maximum cycle and critical path of the predecessors
 		maxTargetCriticalPath = 1.0 / getTarget()->frequency();
+		//check if the signal needs to pass to the next cycle,
+		//	due to its critical path contribution
 		if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
 		{
 			targetSignal->setCycle(maxCycle+1);
