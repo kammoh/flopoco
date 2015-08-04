@@ -2451,7 +2451,7 @@ namespace flopoco{
 			Signal *currentSignal = ioList_[i];
 
 			for(unsigned j=0; j<currentSignal->successors().size(); j++)
-				scheduleSignal(currentSignal->successors()[j].first);
+				scheduleSignal(currentSignal->successor(j));
 		}
 	}
 
@@ -2465,14 +2465,17 @@ namespace flopoco{
 
 		//check if all the signal's predecessors have been scheduled
 		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
-			if(targetSignal->predecessors()[i].first->getHasBeenImplemented() == false)
-				//not all predecessors are scheduled, so there is no point to continue
+			if(targetSignal->predecessor(i)->getHasBeenImplemented() == false)
+				//not all predecessors are scheduled, so thee signal cannot be scheduled
 				return;
 
-		//schedule the signal
+		//if the preconditions are satisfied, schedule the signal
 		setSignalTiming(targetSignal);
 
 		//check if this is an input signal for a sub-component
+		//	it's safe to test if the signal belongs to a sub-component by checking
+		//	the signal type because the flow cannot get to this call for the main
+		//	component
 		if(targetSignal->type() == Signal::in)
 		{
 			//this is an input for a sub-component
@@ -2486,7 +2489,7 @@ namespace flopoco{
 					break;
 				}
 
-			//check whether all the other inputs to the parent operator of
+			//check whether all the other inputs of the parent operator of
 			//	this signal have been scheduled
 			if(allInputsScheduled == false)
 				//if not, then we can just stop
@@ -2520,7 +2523,7 @@ namespace flopoco{
 
 			//try to schedule the successors of the signal
 			for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
-				scheduleSignal(targetSignal->predecessors()[i].first);
+				scheduleSignal(targetSignal->predecessor(i));
 		}
 
 	}
@@ -2559,7 +2562,7 @@ namespace flopoco{
 
 		//compute the cycle and the critical path for the node itself from
 		//	the maximum cycle and critical path of the predecessors
-		maxTargetCriticalPath = 1.0 / getTarget()->frequency();
+		maxTargetCriticalPath = 1.0 / targetSignal->parentOp()->getTarget()->frequency();
 		//check if the signal needs to pass to the next cycle,
 		//	due to its critical path contribution
 		if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
