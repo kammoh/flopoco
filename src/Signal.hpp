@@ -15,7 +15,7 @@
 
 namespace flopoco{
 
-//forward reference to Operator, in order to avoid cycles in references
+//forward reference to Operator, in order to avoid cyclic references
 class Operator;
 
 	/**

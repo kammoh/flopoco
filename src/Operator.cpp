@@ -1738,7 +1738,7 @@ namespace flopoco{
 			};
 		}
 
-
+		//build the code for the inputs
 		for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++){
 			string rhsString;
 
@@ -1757,6 +1757,7 @@ namespace flopoco{
 			o << it->first << " => " << rhsString;
 		}
 
+		//build the code for the outputs
 		for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++){
 			if(!((it == op->tmpOutPortMap_.begin()) && (op->tmpInPortMap_.size() != 0)) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
@@ -1769,9 +1770,13 @@ namespace flopoco{
 		//	check if this is the first time adding this global operator
 		//	to the operator list. If it isn't, then insert the copy, instead
 		bool newOpFirstAdd = true;
+
 		for(unsigned int i=0; i<oplist.size(); i++)
 			if(oplist[i]->getName() == op->getName())
+			{
 				newOpFirstAdd = false;
+				break;
+			}
 
 		if(isGlobalOperator && !newOpFirstAdd)
 		{
@@ -1781,6 +1786,9 @@ namespace flopoco{
 			//deep copy the original operator
 			//	this should also connect the inputs/outputs of the new operator to the right signals
 			newOp->deepCloneOperator(op);
+
+			//set a new name for the copy of the operator
+			newOp->setName(newOp->getName() + "_cpy_" + vhdlize(getNewUId()));
 
 			//create a new instance
 			Instance* newInstance = new Instance(instanceName, newOp, tmpInPortMap_, tmpOutPortMap_);
