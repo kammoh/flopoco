@@ -39,6 +39,7 @@ namespace flopoco{
 	 */
 	FlopocoStream::FlopocoStream(){
 		vhdlCode.str("");
+		vhdlCodeBuffer.str("");
 		dependenceTable.clear();
 		disabledParsing = false;
 		codeParsed = false;
@@ -50,16 +51,15 @@ namespace flopoco{
 
 
 	string FlopocoStream::str(){
-
 		if(!codeParsed)
-		{
 			flush();
-		}
+
 		return vhdlCode.str();
 	}
 
 	string FlopocoStream::str(string UNUSED(s) ){
 		vhdlCode.str("");
+		vhdlCodeBuffer.str("");
 		dependenceTable.clear();
 		codeParsed = false;
 		return "";
@@ -70,16 +70,17 @@ namespace flopoco{
 		ostringstream bufferCode;
 
 		/* parse the buffer if it is not empty */
-		if(vhdlCode.str() != string(""))
+		if(vhdlCodeBuffer.str() != string(""))
 		{
 			/* scan the code buffer and build the dependence table and annotate the code */
+			bufferCode.str("");
 			bufferCode << parseCode();
 
 			/* fix the dependence table, to the correct content type */
 			cleanupDependenceTable();
 
 			/* the newly processed code is appended to the existing one */
-			vhdlCode.str(bufferCode.str());
+			vhdlCode << bufferCode.str();
 		}
 	}
 
@@ -87,32 +88,24 @@ namespace flopoco{
 	string FlopocoStream::parseCode()
 	{
 		ostringstream vhdlO;
-		istringstream in(vhdlCode.str());
+		istringstream in(vhdlCodeBuffer.str());
 
-		/*
-		 * instantiate the flex++ object  for lexing the buffer info
-		 */
+		//instantiate the flex++ object  for lexing the buffer info
 		LexerContext* lexer = new LexerContext(&in, &vhdlO);
 
-		/*
-		 * call the FlexLexer ++ on the buffer. The lexing output is
-		 * in the variable vhdlO. Additionally, a temporary table containing
-		 * the tuples <lhsName, rhsName> is created
-		 */
+		//call the FlexLexer++ on the buffer. The lexing output is
+		//	in the variable vhdlO. Additionally, a temporary table containing
+		//	the triplets <lhsName, rhsName, delay> is created
 		lexer->lex();
 
-		/*
-		 * the temporary table is used to update the member of the FlopocoStream
-		 * class dependenceTable
-		 */
+		//the temporary table is used to update the member of FlopocoStream
 		updateDependenceTable(lexer->dependenceTable);
 
-		/*
-		 * set the flag for code parsing
-		 */
+		//set the flag for code parsing and reset the vhdl code buffer
 		codeParsed = true;
+		vhdlCodeBuffer.str("");
 
-		/* the annotated string is returned */
+		//the annotated string is returned
 		return vhdlO.str();
 	}
 
@@ -120,18 +113,14 @@ namespace flopoco{
 	void FlopocoStream::updateDependenceTable(vector<triplet<string, string, int>> tmpDependenceTable){
 		vector<triplet<string, string, int>>::iterator iter;
 
-		for (iter = tmpDependenceTable.begin(); iter!=tmpDependenceTable.end();++iter){
-			triplet<string, string, int> tmp;
-
-			tmp.first  = (*iter).first;
-			tmp.second = (*iter).second;
-			tmp.third  = (*iter).third;
-			dependenceTable.push_back(tmp);
+		for(iter = tmpDependenceTable.begin(); iter!=tmpDependenceTable.end();++iter){
+			dependenceTable.push_back(make_triplet(iter->first, iter->second, iter->third));
 		}
 	}
 
 
 	void FlopocoStream::setSecondLevelCode(string code){
+		vhdlCodeBuffer.str("");
 		vhdlCode.str("");
 		vhdlCode << code;
 	}
@@ -153,7 +142,7 @@ namespace flopoco{
 
 
 	bool FlopocoStream::isEmpty(){
-		return ((vhdlCode.str()).length() == 0);
+		return (((vhdlCode.str()).length() == 0) && ((vhdlCodeBuffer.str()).length() == 0));
 	}
 
 
@@ -166,7 +155,7 @@ namespace flopoco{
 			string lhsName = dependenceTable[i].first;
 			string rhsName = dependenceTable[i].second;
 			string newRhsName;
-			int rhsDelay = -1;
+			int rhsDelay = 0;
 
 			//search for dependence edges where the right-hand side can be
 			//	a delayed signal. Delayed signals are of the form
@@ -178,8 +167,7 @@ namespace flopoco{
 				//this is a delayed signal
 				newRhsName = rhsName.substr(0, rhsName.find("^"));
 				rhsDelay = (int)strtol((rhsName.substr(rhsName.find("^")+1, string::npos)).c_str(), NULL, 10);
-			}
-			else
+			}else
 			{
 				//this is a regular signal name
 				//	nothing to be done
@@ -200,9 +188,13 @@ namespace flopoco{
 				count = 0;
 				while(count<lhsName.size())
 				{
+					//initialize the new lhs name
 					newLhsName.str("");
-					while(delimiters.find(lhsName[count]) != string::npos)
+					//skip characters as long as they are delimiters
+					while((delimiters.find(lhsName[count]) != string::npos)
+							&& (count<lhsName.size()))
 						count++;
+					//add the characters as long as they are not delimiters
 					while((delimiters.find(lhsName[count]) == string::npos)
 							&& (count<lhsName.size()))
 					{
@@ -210,24 +202,18 @@ namespace flopoco{
 						count++;
 					}
 
-					triplet<string, string, int> tmpTriplet;
-					tmpTriplet.first  = newLhsName.str();
-					tmpTriplet.second = newRhsName;
-					tmpTriplet.third  = (rhsDelay == -1) ? 0 : rhsDelay;
-					newDependenceTable.push_back(tmpTriplet);
+					newDependenceTable.push_back(make_triplet(newLhsName.str(), newRhsName, rhsDelay));
 				}
 			}else
 			{
-				triplet<string, string, int> tmpTriplet;
-				tmpTriplet.first  = lhsName;
-				tmpTriplet.second = newRhsName;
-				tmpTriplet.third  = (rhsDelay == -1) ? 0 : rhsDelay;
-				newDependenceTable.push_back(tmpTriplet);
+				newDependenceTable.push_back(make_triplet(lhsName, newRhsName, rhsDelay));
 			}
 		}
 
+		//clear the old values in the dependence table
 		dependenceTable.clear();
 
+		//add the new values to the dependence table
 		for(unsigned int i=0; i<newDependenceTable.size(); i++)
 		{
 			dependenceTable.push_back(newDependenceTable[i]);

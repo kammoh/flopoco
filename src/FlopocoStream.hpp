@@ -41,19 +41,20 @@ namespace flopoco{
 		 * Methods for overloading the output operator available on streams
 		 */
 		template <class paramType> friend FlopocoStream& operator <<(FlopocoStream& output, paramType c) {
-			output.vhdlCode << c;
+			output.vhdlCodeBuffer << c;
 			output.codeParsed = false;
 			return output;
 		}
 
 		friend FlopocoStream & operator<<(FlopocoStream& output, FlopocoStream fs) {
-			output.vhdlCode << fs.str();
+			output.vhdlCodeBuffer << fs.str();
 			output.codeParsed = false;
 			return output;
 		}
 
 		friend FlopocoStream& operator<<( FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
 			output.vhdlCode << std::endl;
+			output.vhdlCodeBuffer << std::endl;
 			output.codeParsed = false;
 			return output;
 		}
@@ -72,25 +73,27 @@ namespace flopoco{
 			~FlopocoStream();
 
 			/**
-			 * method that does the similar thing as str() does on ostringstream objects.
-			 * Processing is done using the vhdl code buffer (vhdlCode).
-			 * The output code is = newly transformed code;
-			 * The transformation on vhdlCode is done when the buffer is
-			 * flushed
+			 * NOTE: this is the safe way of triggering the vhdl code parsing and processing
+			 *
+			 * Method that does a similar thing as str() does on ostringstream objects.
+			 * Processing is done using the vhdl code buffer (vhdlCodeBuffer).
+			 * The output code is = existing code + newly transformed code (from the code buffer);
+			 * The transformation on vhdlCode is done when the buffer is flushed
 			 * @return the augmented string encapsulated by FlopocoStream
 			 */
 			string str();
 
 			/**
-			 * Resets both the code stream.
+			 * Resets both the code stream and the code buffer.
 			 * @return returns empty string for compatibility issues.
 			 */
-			string str(string UNUSED(s) );
+			string str(string UNUSED(s));
 
 			/**
 			 * Function used to flush the buffer
 			 * 	- save the code in the temporary buffer
-			 * 	- parse the code and build the dependenceTree and annotate the code
+			 * 	- parse the code from the temporary buffer and add it to the stream
+			 * 	- build the dependenceTree and annotate the code
 			 */
 			void flush();
 
@@ -105,9 +108,8 @@ namespace flopoco{
 			string parseCode();
 
 			/**
-			 * The dependenceTable created by the lexer is used
-			 * to update a dependenceTable contained locally as a member variable of
-			 * the FlopocoStream class
+			 * The dependenceTable created by the lexer is used to update a
+			 * dependenceTable contained locally as a member variable of FlopocoStream.
 			 * @param[in] tmpDependenceTable a vector of pairs which will be copied
 			 *            into the member variable dependenceTable
 			 */
@@ -143,6 +145,7 @@ namespace flopoco{
 
 
 			ostringstream vhdlCode;                                 /**< the vhdl code */
+			ostringstream vhdlCodeBuffer;                           /**< the temporary vhdl code buffer */
 
 			vector<triplet<string, string, int>> dependenceTable;   /**< table containing the left-hand side - right-hand side dependences, with the possible delay on the edge */
 

@@ -1228,6 +1228,7 @@ public:
 	/**
 	 * Second level parsing of the VHDL code
 	 * This function should not be called before the signals are scheduled
+	 * WARNING: this function has as a precondition that the signals should be scheduled
 	 */
 	void parse2();
 
