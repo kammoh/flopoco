@@ -2447,6 +2447,9 @@ namespace flopoco{
 							+ " but signal " + ioList_[j]->getName() + " is at cycle "
 							+ vhdlize(ioList_[j]->getCycle()));
 
+		//extract the dependences between the operator's internal signals
+		extractSignalDependences();
+
 		//schedule each of the input signals
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
@@ -2881,30 +2884,39 @@ namespace flopoco{
 	{
 		string srcFileName = "Operator.cpp"; // for REPORT
 
-		for(unsigned i=0; i<oplist.size(); i++)
+		for(vector<Operator*>::iterator it=oplist.begin(); it!=oplist.end(); it++)
 		{
 			try {
-				REPORT(FULL, "---------------OPERATOR: " << oplist[i]->getName() << "-------------");
-				//disabled during the overhaul
-				//REPORT(FULL, "  DECLARE LIST" << printMapContent(oplist[i]->getDeclareTable()));
-				//REPORT(FULL, "  USE LIST" << printVectorContent(  (oplist[i]->getFlopocoVHDLStream())->getUseTable()) );
+				REPORT(FULL, "---------------OPERATOR: " << (*it)->getName() << "-------------");
 
 				// check for subcomponents
-				if(! oplist[i]->getOpListR().empty() ){
-					//recursively call to print subcomponent
-					outputVHDLToFile(oplist[i]->getOpListR(), file);
+				if(! (*it)->getOpListR().empty() ){
+					//recursively call to print subcomponents
+					outputVHDLToFile((*it)->getOpListR(), file);
 				}
-				oplist[i]->getFlopocoVHDLStream()->flush();
 
-				// second parse is only for sequential operators
-				if (oplist[i]->isSequential()){
-					REPORT(FULL, "  2nd PASS");
-					oplist[i]->parse2();
+				//trigger the first code parse
+				//	call str(), which will trigger the necessary calls
+				(*it)->getFlopocoVHDLStream()->str();
+
+				//trigger the second parse
+				//	for sequential and combinatorial operators as well
+				REPORT(FULL, "  2nd PASS");
+				(*it)->parse2();
+
+				//schedule the operator
+				(*it)->startScheduling();
+
+				//output the vhdl code to file
+				//	for global operators, this is done only once
+				if(!(*it)->isOperatorImplemented())
+				{
+					(*it)->outputVHDL(file);
+					(*it)->setIsOperatorImplemented(true);
 				}
-				oplist[i]->outputVHDL(file);
 
 			} catch (std::string &s) {
-					cerr << "Exception while generating '" << oplist[i]->getName() << "': " << s << endl;
+					cerr << "Exception while generating '" << (*it)->getName() << "': " << s << endl;
 			}
 		}
 	}
