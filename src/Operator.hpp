@@ -13,7 +13,7 @@
 
 #include "Target.hpp"
 #include "Signal.hpp"
-#include "Instance.hpp"
+//#include "Instance.hpp"
 
 #include "TestBenches/TestCase.hpp"
 
@@ -992,7 +992,7 @@ public:
 	/**
 	 * Return the list of component instances declared in this operator
 	 */
-	vector<Instance*> getInstances();
+	//vector<Instance*> getInstances();
 
 
 	/** DEPRECATED
@@ -1358,6 +1358,17 @@ public:
 	 * Tests are realized with the multimap testMemory
 	 **/
 	static bool checkExistence ( TestState parameters, string opName );
+
+
+	/**
+	 * Get the value of isOperatorImplemented
+	 */
+	bool isOperatorImplemented();
+
+	/**
+	 * Set the value of isOperatorImplemented
+	 */
+	void setIsOperatorImplemented(bool newValue);
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1764,8 +1775,8 @@ public:
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
 	//disabled during the overhaul
-	//map<string, Operator*> subComponents_;					/**< The list of instantiated sub-components */
-	vector<Instance*>      instances_;                      /**< The list of instances (with the corresponding port maps) */
+	map<string, Operator*> subComponents_;					/**< The list of instantiated sub-components */
+	//vector<Instance*>      instances_;                      /**< The list of instances (with the corresponding port maps) */
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;                         /**< The list of I/O signals of the operator */
 
@@ -1841,6 +1852,7 @@ private:
 	int					   hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 
+	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not. For global operators, only the first instance has this flag set to false from the beginning. */
 };
 
 	// global variables used through most of FloPoCo,

@@ -1,14 +1,14 @@
 /*
   the FloPoCo command-line interface
-  
+
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
-  
+
   Authors : Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr
             Bogdan Pasca, Bogdan.Pasca@ens-lyon.org
 
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL, INSA-Lyon  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL, INSA-Lyon
   2008-2014.
   All rights reserved.
 
@@ -38,12 +38,12 @@ using namespace flopoco;
 	string filename="flopoco.vhdl";
 	string cl_name=""; // used for the -name option
 	Target* target;
-	
+
 	//------------ Resource Estimation --------------------------------
 	int reLevel;
 	bool resourceEstimationDebug = false;
 	//-----------------------------------------------------------------
-	
+
 	//------------------ Floorplanning --------------------------------
 	bool floorplanning = false;
 	bool floorplanningDebug = false;
@@ -52,7 +52,7 @@ using namespace flopoco;
 
 
 extern void random_usage(char *name, string opName);
-	
+
 extern bool random_parseCommandLine(
 	int argc, char *argv[], Target *target,
 	std::string opname, int &i
@@ -69,33 +69,33 @@ void usage(char *name, string opName = ""){
 	}
 
 
-    
-    
-    
+
+
+
 
 
 	if ( full )
 		cerr << center("SHIFTERS/LZOC", '_') << "\n";
 
-    
-    
-	if ( full || opName == "LeftShifter") 
+
+
+	if ( full || opName == "LeftShifter")
 		OP("LeftShifter","wIn MaxShift");
-	if ( full || opName == "RightShifter") 
+	if ( full || opName == "RightShifter")
 		OP("RightShifter","wIn MaxShift");
-	if ( full || opName == "LZOC") 	
+	if ( full || opName == "LZOC")
 		OP("LZOC","wIn");
-	if ( full || opName == "LZOCShifter") 	
+	if ( full || opName == "LZOCShifter")
 		OP("LZOCShifter","wIn wOut");
-	if ( full || opName == "LZCShifter") 	
+	if ( full || opName == "LZCShifter")
 		OP("LZCShifter","wIn wOut");
-	if ( full || opName == "LOCShifter") 	
+	if ( full || opName == "LOCShifter")
 		OP("LOCShifter","wIn wOut");
-	if ( full || opName == "LZOCShifterSticky") 		
+	if ( full || opName == "LZOCShifterSticky")
 		OP("LZOCShifterSticky","wIn wOut");
-	if ( full || opName == "LZCShifterSticky") 		
+	if ( full || opName == "LZCShifterSticky")
 		OP("LZCShifterSticky","wIn wOut");
-	if ( full || opName == "LOCShifterSticky") 			
+	if ( full || opName == "LOCShifterSticky")
 		OP("LOCShifterSticky","wIn wOut");
 
 
@@ -103,16 +103,16 @@ void usage(char *name, string opName = ""){
 	if ( full )
 		cerr << center("INTEGER/FIXPOINT ADDERS/SUBTRACTERS", '_') << "\n";
 
-	if ( full || opName == "IntAdder"){ 	
+	if ( full || opName == "IntAdder"){
 		OP("IntAdder","wIn");
 		cerr << "Integer adder, possibly pipelined\n";
 	}
-	if ( full || opName == "IntAdderExpert" || opName == "IntAdder"){ 		
+	if ( full || opName == "IntAdderExpert" || opName == "IntAdder"){
 		OP("IntAdderExpert","wIn optimizeType srl implementation bufferedInputs inputDelay");
 		cerr << "Integer adder, multiple parameters, possibly pipelined\n";
 		cerr << "optimizeType=<0,1,2,3> 0=LUT 1=REG 2=SLICE 3=LATENCY\n";
 		cerr << "srl=<0,1> Allow SRLs\n";
-		cerr << "implementation=<-1,0,1,2> -1=optimizeType dependent,\n";  
+		cerr << "implementation=<-1,0,1,2> -1=optimizeType dependent,\n";
 		cerr << "                           0=Classical, 1=Alternative, 2=Short-Latency\n";
 		cerr << "bufferedInputs=<0,1>\n";
 		cerr << "inputDelay\n";
@@ -121,7 +121,7 @@ void usage(char *name, string opName = ""){
 		OP("LongIntAdderAddAddMux","wIn generation");
 	if ( full || opName == "IntAdder" || opName == "LongIntAdderCmpAddInc")
 		OP("LongIntAdderCmpAddInc","wIn generation");
-	if ( full || opName == "IntAdder" || opName == "LongIntAdderCmpCmpAdd")	
+	if ( full || opName == "IntAdder" || opName == "LongIntAdderCmpCmpAdd")
 		OP("LongIntAdderCmpCmpAdd","wIn generation");
 	if ( full || opName == "IntAdder" || opName == "LongIntAdderAddAddMux" || opName == "LongIntAdderCmpAddInc" || opName == "LongIntAdderCmpCmpAdd")
 		cerr << "generation 1 are the 2010 ver., 2 are the 2011 ver.\n";
@@ -143,14 +143,14 @@ void usage(char *name, string opName = ""){
 	 	cerr << "signed=0: unsigned multiplier;     signed=1: signed inputs, signed outputs \n";
 	 	cerr << "enableSuperTiles: 0/1. 0 => lower latency, higher logic cost \n";
 	 }
-	if ( full || opName == "IntMultiplier" || opName == "IntSquarer"){			
+	if ( full || opName == "IntMultiplier" || opName == "IntSquarer"){
 		OP ("IntSquarer","wIn");
-		cerr << "integer squarer. For now wIn <=68 \n";		
+		cerr << "integer squarer. For now wIn <=68 \n";
 	}
 #if 0
-	if ( full || opName == "IntMultiplier" || opName == "IntMultAdd"){			
+	if ( full || opName == "IntMultiplier" || opName == "IntMultAdd"){
 		OP ("IntMultAdd","wIn");
-		cerr << "  A+B*C with B and C on wIn bits and A on2*wIn bits\n";		
+		cerr << "  A+B*C with B and C on wIn bits and A on2*wIn bits\n";
 	}
 #endif
 
@@ -163,9 +163,9 @@ void usage(char *name, string opName = ""){
 	}
 
 #if 0
-	if ( full || opName == "IntMultiplier" || opName == "IntKaratsuba"){			
+	if ( full || opName == "IntMultiplier" || opName == "IntKaratsuba"){
 		OP ("IntKaratsuba","wIn");
-		cerr << "integer multiplier of two integers X and Y of sizes wIn. 17 < wIn <= 68\n";	
+		cerr << "integer multiplier of two integers X and Y of sizes wIn. 17 < wIn <= 68\n";
 	}
 #endif
 
@@ -173,23 +173,23 @@ void usage(char *name, string opName = ""){
 	if ( full )
 		cerr << center("FLOATING-POINT ADDERS", '_') << "\n";
 
-	if ( full || opName == "FPAdd"){					
+	if ( full || opName == "FPAdd"){
 		OP( "FPAdd","wE wF");
 		cerr << "Floating-point adder (default architecture is now single-path)\n";
-	}	
-	if ( full || opName == "FPSub"){					
+	}
+	if ( full || opName == "FPSub"){
 		OP( "FPSub","wE wF");
 		cerr << "Floating-point subtracter\n";
-	}	
-	if ( full || opName == "FPAdd" || opName == "FPAddDualPath"){					
+	}
+	if ( full || opName == "FPAdd" || opName == "FPAddDualPath"){
 		OP( "FPAddDualPath","wE wF");
 		cerr << "Floating-point adder with dual-path architecture (shorter latency, larger area)\n";
 	}
-	if ( full || opName == "FPAdd" || opName == "FPAdd3Input"){					
+	if ( full || opName == "FPAdd" || opName == "FPAdd3Input"){
 		OP( "FPAdd3Input","wE wF");
 		cerr << "A 3-operand floating-point adder\n";
 	}
-	if ( full || opName == "FPAdd" || opName == "FPAddSub"){					
+	if ( full || opName == "FPAdd" || opName == "FPAddSub"){
 		OP( "FPAddSub","wE wF");
 		cerr << "A floating-point adder/subtractor, useful e.g for butterfly circuits\n";
 	}
@@ -199,26 +199,26 @@ void usage(char *name, string opName = ""){
 
 	if ( full )
 		cerr << center("FLOATING-POINT MULTIPLIERS AND SQUARERS", '_') << "\n";
-	if ( full || opName == "FPMult"){					
+	if ( full || opName == "FPMult"){
 		OP( "FPMult","wE wF_in wF_out");
 		cerr << "Standard (correctly-rounded) floating-point multiplier \n";
 	}
-	if ( full  || opName == "FPMult" || opName == "FPMultFaithful"){					
+	if ( full  || opName == "FPMult" || opName == "FPMultFaithful"){
 		OP( "FPMultFaithful","wE wF_in wF_out");
 		cerr << "Resource-saving (faithfully rounded) floating-point multiplier \n";
 	}
-	if ( full  || opName == "FPMult" || opName == "FPMultExpert"){					
+	if ( full  || opName == "FPMult" || opName == "FPMultExpert"){
 		OP( "FPMultExpert","wE wFX wFY wFR CorrectRounding DSPThreshold");
 		cerr << "Fully flexible floating-point multiplier \n";
-	}		
+	}
 #if 0 // Commented out for now, should be resurrected some day: see TODO
-	if ( full || opName == "FPMult" || opName == "FPMultKaratsuba"){						
+	if ( full || opName == "FPMult" || opName == "FPMultKaratsuba"){
 		OP( "FPMultKaratsuba","wE wF_in wF_out");
 		cerr << "Floating-point multiplier, supporting different in/out precision. \n";
 		cerr << "Mantissa multiplier uses Karatsuba\n";
 	}
 #endif
-	if ( full || opName == "FPMult" || opName == "FPSquare"){					
+	if ( full || opName == "FPMult" || opName == "FPSquare"){
 		OP( "FPSquare","wE wFin wFout");
 		cerr << "Floating-point squarer \n";
 	}
@@ -228,11 +228,11 @@ void usage(char *name, string opName = ""){
 	if ( full )
 		cerr << center("FLOATING-POINT DIVIDERS AND SQUARE ROOTS", '_') << "\n";
 
-	if ( full || opName == "FPDiv"){					
+	if ( full || opName == "FPDiv"){
 		OP( "FPDiv","wE wF");
 		cerr << "Floating-point divider,  using digit recurrence \n";
 	}
-	if ( full || opName == "FPSqrt"){					
+	if ( full || opName == "FPSqrt"){
 		OP("FPSqrt","wE wF");
 		cerr << "Floating-point square root operator, using digit recurrence\n";
 	}
@@ -241,63 +241,63 @@ void usage(char *name, string opName = ""){
 	if ( full )
 		cerr << center("MULTIPLICATION AND DIVISION BY CONSTANTS", '_') << "\n";
 
-	if ( full || opName == "IntMultiplier" || opName == "IntConstMult"){				
+	if ( full || opName == "IntMultiplier" || opName == "IntConstMult"){
 		OP( "IntConstMult","w c");
 		cerr << "Multiplier of an integer of w bits by the constant c, using shift-and-add\n";
 	}
-	if ( full || opName == "IntMultiplier" || opName == "IntIntKCM"){					
+	if ( full || opName == "IntMultiplier" || opName == "IntIntKCM"){
 		OP( "IntIntKCM","w c signedInput");
 		cerr << "Integer constant multiplier using KCM: w - input size, c - the constant\n";
 	}
 
-	if ( full || opName == "FixRealKCM"){					
+	if ( full || opName == "FixRealKCM"){
 		OP( "FixRealKCM"," signedInput msbIn lsbIn lsbOut constant useBitheap");
 		cerr << "Faithful multiplier of a fixed-point input by a real constant\n";
 		cerr << "The constant is provided as a Sollya expression, e.g \"log(2)\"\n";
 	}
 
-	if ( full || opName == "IntConstDiv"){					
+	if ( full || opName == "IntConstDiv"){
 		OP( "IntConstDiv","n d alpha");
 		cerr << "Euclidean division of input of size n by d (returning q and r)\n";
 		cerr << "Algorithm uses radix 2^alpha,   alpha=-1 means a sensible default.\n";
 	}
 
-	if ( full || opName == "IntConstRem"){					
+	if ( full || opName == "IntConstRem"){
 		OP( "IntConstDiv","n d alpha");
 		cerr << "Remainder of Euclidean division of input of size n by d\n";
 		cerr << "Algorithm uses radix 2^alpha,   alpha=-1 means a sensible default.\n";
 	}
 
-	if ( full || opName == "FPConstDiv"){					
+	if ( full || opName == "FPConstDiv"){
 		OP( "FPConstDiv","wE wF d");
 		cerr << "Floating-point division by the (small) integer d\n";
 		OP( "FPConstDivExpert","wE wF d e alpha");
 		cerr << "Floating-point division by  d.2^e, where d is a small integer\n";
-		cerr << "Algorithm uses radix 2^alpha,   alpha=-1 means a sensible default. \n";  // 
+		cerr << "Algorithm uses radix 2^alpha,   alpha=-1 means a sensible default. \n";  //
 	}
-	if ( full || opName == "FPConstMult"){					
+	if ( full || opName == "FPConstMult"){
 		OP( "FPConstMult","wE_in wF_in wE_out wF_out wC constant_expr");
 		cerr << "Faithful floating-point constant multiplier\n";
 		cerr << "last argument is a Sollya expression between double quotes,e.g.\"exp(pi/2)\".\n";
 		cerr << "If wC>1, it is the size in bits on which the constant must be evaluated.\n";
 		cerr << "If wC=0 the size is computed for a faithful result.\n";
 	}
-	if ( full || opName == "FPConstMult" || opName == "CRFPConstMult"){					
+	if ( full || opName == "FPConstMult" || opName == "CRFPConstMult"){
 		OP( "CRFPConstMult","wE_in wF_in wE_out wF_out constant_expr");
 		cerr << "Correctly-rounded floating-point constant multiplier\n";
 		cerr << "The constant is provided as a Sollya expression, between double quotes.\n";
-	}	
-	if ( full || opName == "FPConstMult" || opName == "FPConstMultRational"){					
+	}
+	if ( full || opName == "FPConstMult" || opName == "FPConstMultRational"){
 		OP( "FPConstMultRational","wE_in wF_in wE_out wF_out a b");
 		cerr << "Floating-point constant multiplier by a rational a/b\n";
 		cerr << "Useful for multiplications by simple rational constants such as 2/3 or 1/9\n";
 	}
-	if ( full || opName == "FPConstMult" || opName == "FPConstMultExpert"){					
+	if ( full || opName == "FPConstMult" || opName == "FPConstMultExpert"){
 		OP("FPConstMultExpert","wE_in wF_in wE_out wF_out cst_sgn cst_exp cst_int_sig");
 		cerr << "Floating-point constant multiplier\n";
 		cerr << "The constant is provided as integral significand and integral exponent.\n";
 	}
-	if ( full || opName == "FPConstMult" || opName == "FPRealKCM"){					
+	if ( full || opName == "FPConstMult" || opName == "FPRealKCM"){
 		OP("FPRealKCM","wE wF constantExpression");
 		cerr << "Floating-point constant multiplier using the KCM algorithm\n";
 		cerr << "last argument is a Sollya expression between double quotes,e.g.\"exp(pi/2)\".\n";
@@ -308,15 +308,15 @@ void usage(char *name, string opName = ""){
 	if ( full )
 		cerr << center("FLOATING-POINT COMPOSITE OPERATORS", '_') << "\n";
 
-	if ( full || opName == "FPLargeAcc"){					
+	if ( full || opName == "FPLargeAcc"){
 		OP( "FPLargeAcc","wE_in wF_in MaxMSB_in  MSB_acc LSB_acc");
 		cerr << "Accumulator of floating-point numbers into a large fixed-point accumulator\n";
-	}		
+	}
 	if ( full || opName == "LargAccToFP" || opName == "FPLargeAcc"){
 		OP( "LargAccToFP","MSB_acc LSB_acc wE_out wF_out");
 		cerr << "Post-normalisation unit for FPLargeAcc\n";
 	}
-	if ( full || opName == "DotProduct"){					
+	if ( full || opName == "DotProduct"){
 		OP( "FPDotProduct","wE wFX wFY MaxMSB_in MSB_acc LSB_acc DSPThreshold");
 		cerr << "Floating-point dot product unit based on FPLargeAcc\n";
 	}
@@ -338,13 +338,13 @@ void usage(char *name, string opName = ""){
 		cerr << "if reduced=1, fewer iterations at the cost of two multiplications \n";
 	}
 
-	if ( full || opName == "FPLog"){					
+	if ( full || opName == "FPLog"){
 		OP( "FPLog","wE wF InTableSize");
 		cerr << "Floating-point logarithm function, iterative algorithm;\n";
 		cerr << "InTableSize is the table input size: 0 defaults to something sensible\n";
 	}
 
-	if ( full || opName == "FPExp"){					
+	if ( full || opName == "FPExp"){
 		OP( "FPExp","wE wF");
 		cerr << "      Floating-point exponential function. For expert mode, use FPExpExpert.\n";
 	}
@@ -356,7 +356,7 @@ void usage(char *name, string opName = ""){
 		cerr << "      fullInput (boolean): if 1, accepts extended (typically unrounded) input\n";
 	}
 
-	if ( full || opName == "FPPowr" || opName == "FPPow"  || opName == "FPPower"|| opName == "FPPowerExpert" ){					
+	if ( full || opName == "FPPowr" || opName == "FPPow"  || opName == "FPPower"|| opName == "FPPowerExpert" ){
 		OP( "FPPow","wE wF");
 		cerr << "      Floating-point pow from C99 and IEEE-754-2008; \n";
 		OP( "FPPowr","wE wF");
@@ -390,28 +390,28 @@ void usage(char *name, string opName = ""){
 		cerr << center("FUNCTION EVALUATORS", '_') << "\n";
 
 #if 0 // the world needn't know
-	if ( full || opName == "FixFunctionEval"){					
-		OP( "FixFunctionEval", "f x");	
+	if ( full || opName == "FixFunctionEval"){
+		OP( "FixFunctionEval", "f x");
 		cerr << "** Helper/debug feature, does not generate VHDL **\n";
 		cerr << "Evaluates function f (e.g. \"exp(x/1024)\") at point x (arbitrary precision)\n";
 	}
 
-	if ( full || opName == "BasicPolyApprox"){					
-		OP( "BasicPolyApprox", "f targetAcc constantGuardBits");	
+	if ( full || opName == "BasicPolyApprox"){
+		OP( "BasicPolyApprox", "f targetAcc constantGuardBits");
 		cerr << "** Helper/debug feature, does not generate VHDL **\n";
 		cerr << "Polynomial approximation of function f, accurate to targetAcc on [0,1)\n";
 		cerr << "constantGuardBits: >=0, or use -1 for sensible default\n";
 	}
 
-	if ( full || opName == "PiecewisePolyApprox"){					
-		OP( "PiecewisePolyApprox", "f targetAcc d");	
+	if ( full || opName == "PiecewisePolyApprox"){
+		OP( "PiecewisePolyApprox", "f targetAcc d");
 		cerr << "** Helper/debug feature, does not generate VHDL **\n";
 		cerr << "Piecewise polynomial approximation of function f on [0,1),\n";
 		cerr << " accurate to targetAcc and using polynomials of degree d\n";
 	}
 #endif
 
-	if ( full || opName == "FixFunctionByTable" || opName == "FixFunction"){					
+	if ( full || opName == "FixFunctionByTable" || opName == "FixFunction"){
 		OP( "FixFunctionByTable","f signedInput lsbI  msbO lsbO");
 		cerr << "Simple tabulation of function f defined on [0,1) or [-1,1) (depending on signedInput)\n";
 		cerr << "  lsbI: weight of input LSB, for instance -8 for an 8-bit input\n";
@@ -419,12 +419,12 @@ void usage(char *name, string opName = ""){
 		cerr << " f in Sollya syntax, e.g. \"sin(x*Pi/2)\" or \"exp(x*1b-8)\"\n";
 	}
 
-	if ( full || opName == "FixFunctionBySimplePoly" || opName == "FixFunction"){					
+	if ( full || opName == "FixFunctionBySimplePoly" || opName == "FixFunction"){
 		OP( "FixFunctionBySimplePoly","f signedInput lsbI msbO lsbO");
 		cerr << "Evaluator of function f on [0,1) or [-1,1) (depending on signedInput), using a single polynomial with Horner scheme \n";
 	}
 
-	if ( full || opName == "FixFunctionByPiecewisePoly" || opName == "FixFunction"){					
+	if ( full || opName == "FixFunctionByPiecewisePoly" || opName == "FixFunction"){
 		OP( "FixFunctionByPiecewisePoly","f lsbI msbO lsbO d");
 		cerr << "Evaluator of function f on [0,1), using a piecewise polynomial of degree d with Horner scheme \n";
 	}
@@ -464,7 +464,7 @@ void usage(char *name, string opName = ""){
 		OP("FixHalfSine","lsb N");
 		cerr << "A faithful half-sine filter with 2N-1 coefficients, for input signal in [-1,1].\n";
 	}
-   
+
 
 
 	if ( full )
@@ -479,26 +479,26 @@ void usage(char *name, string opName = ""){
 	if ( full )
 		cerr << center("CONVERSIONS BETWEEN NUMBER FORMATS", '_') << "\n";
 
-	if ( full || opName == "Fix2FP"){					
+	if ( full || opName == "Fix2FP"){
 		OP("Fix2FP","Signed MSB LSB wE wF");
 		cerr << "Convert a 2's complement fixed-point number in the bit range MSB...LSB \n";
 		cerr << "   into FloPoCo floating-point format\n";
-	}	
-	if ( full || opName == "FP2Fix"){					
+	}
+	if ( full || opName == "FP2Fix"){
 		OP("FP2Fix","wE wF Signed MSB LSB  trunc");
 		cerr << "Convert a floating point number into a 2's complement fixed-point number \n";
 		cerr << "  in the bit range MSB...LSB, truncated or not\n";
-	}	
-	if ( full || opName == "OutputIEEE"){					
+	}
+	if ( full || opName == "OutputIEEE"){
 		OP( "OutputIEEE","wEIn wFIn wEOut wFOut");
 		cerr << "Conversion from FloPoCo to IEEE-754-like floating-point formats\n";
 	}
-	if ( full || opName == "InputIEEE"){					
+	if ( full || opName == "InputIEEE"){
 		OP( "InputIEEE","wEIn wFIn wEOut wFOut");
 		cerr << "Conversion from IEEE-754-like to FloPoCo floating-point formats\n";
 	}
 
-	if ( full ) 
+	if ( full )
 		cerr << center("TEST STUFF", '_') << "\n";
 	if ( full || opName=="TestBench"|| opName=="TestBenchFile" ){
 		OP( "TestBenchFile","n");
@@ -595,7 +595,7 @@ void addOperator(Operator *op) {
 
 bool parseCommandLine(int argc, char* argv[]){
 	if (argc<2) {
-		usage(argv[0]); 
+		usage(argv[0]);
 		return false;
 	}
 
@@ -607,13 +607,13 @@ bool parseCommandLine(int argc, char* argv[]){
 		if(opname[0]=='-'){
 			string::size_type p = opname.find('=');
 			if (p == string::npos) {
-				cerr << "ERROR: Option missing an = : "<<opname<<endl; 
+				cerr << "ERROR: Option missing an = : "<<opname<<endl;
 				return false;
 			} else {
 				string o = opname.substr(1, p - 1), v = opname.substr(p + 1);
 				if (o == "outputfile") {
 					if(!target->getGlobalOpListRef()->empty())
-						cerr << "WARNING: global option "<<o<<" should come before any operator specification" << endl; 
+						cerr << "WARNING: global option "<<o<<" should come before any operator specification" << endl;
 					filename=v;
 				}
 				else if (o == "verbose") {
@@ -626,7 +626,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				else if (o == "target") {
 					Target* oldTarget=target;
 					if(!target->getGlobalOpListRef()->empty()){
-								cerr<<"ERROR: target should be changed before any component is defined"<<endl; 
+								cerr<<"ERROR: target should be changed before any component is defined"<<endl;
 								usage(argv[0],"options");
 					}
 					if(v=="Virtex4") target=new Virtex4();
@@ -648,9 +648,9 @@ bool parseCommandLine(int argc, char* argv[]){
 					// if previous options had changed it
 					target->setFrequency(oldTarget->frequency());
 					target->setUseHardMultipliers(oldTarget->hasHardMultipliers());
-					if (oldTarget->isPipelined()) 
+					if (oldTarget->isPipelined())
 						target->setPipelined();
-					else 
+					else
 						target->setNotPipelined();
 					target->setClockEnable(oldTarget->useClockEnable());
 					delete(oldTarget);
@@ -660,7 +660,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					if(v=="yes") target->setPipelined();
 					else if(v=="no")  target->setNotPipelined();
 					else {
-						cerr<<"ERROR: pipeline option should be yes or no,    got "<<v<<"."<<endl; 
+						cerr<<"ERROR: pipeline option should be yes or no,    got "<<v<<"."<<endl;
 						usage(argv[0],"options");
 					}
 				}
@@ -668,7 +668,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					if(v=="yes") target->setClockEnable(true);
 					else if(v=="no")  target->setClockEnable(false);
 					else {
-						cerr<<"ERROR: clockenable option should be yes or no,    got "<<v<<"."<<endl; 
+						cerr<<"ERROR: clockenable option should be yes or no,    got "<<v<<"."<<endl;
 						usage(argv[0],"options");
 					}
 				}
@@ -676,11 +676,11 @@ bool parseCommandLine(int argc, char* argv[]){
 					int freq = atoi(v.c_str());
 					if (freq>1 && freq<10000) {
 						target->setFrequency(1e6*(double)freq);
-						if(verbose) 
-							cerr << "Frequency set to "<<target->frequency()<< " Hz" <<endl; 
+						if(verbose)
+							cerr << "Frequency set to "<<target->frequency()<< " Hz" <<endl;
 					}
 					else {
-						cerr<<"ERROR: frequency out of sensible range."<<endl; 
+						cerr<<"ERROR: frequency out of sensible range."<<endl;
 						usage(argv[0],"options");
 					}
 				}
@@ -688,7 +688,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					if(v=="yes") target->setUseHardMultipliers(true);
 					else if(v=="no")  target->setUseHardMultipliers(false);
 					else {
-						cerr<<"ERROR: useHardMult option should be yes or no,    got "<<v<<"."<<endl; 
+						cerr<<"ERROR: useHardMult option should be yes or no,    got "<<v<<"."<<endl;
 						usage(argv[0],"options");
 					}
 				}
@@ -696,7 +696,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					if(v=="yes") target->setPlainVHDL(true);
 					else if(v=="no")  target->setPlainVHDL(false);
 					else {
-						cerr<<"ERROR: plainVHDL option should be yes or no,    got "<<v<<"."<<endl; 
+						cerr<<"ERROR: plainVHDL option should be yes or no,    got "<<v<<"."<<endl;
 						usage(argv[0],"options");
 					}
 				}
@@ -706,7 +706,7 @@ bool parseCommandLine(int argc, char* argv[]){
 						target->setUnusedHardMultThreshold(t);
 					}
 					else {
-						cerr<<"ERROR: unusedHardMultThreshold out of range [0,1],    got "<<t<<endl; 
+						cerr<<"ERROR: unusedHardMultThreshold out of range [0,1],    got "<<t<<endl;
 						usage(argv[0],"options");
 					}
 				}
@@ -714,13 +714,13 @@ bool parseCommandLine(int argc, char* argv[]){
 					if(v=="yes") target->setGenerateFigures(true);
 					else if(v=="no")  target->setGenerateFigures(false);
 					else {
-						cerr<<"ERROR: generateFigures option should be yes or no,    got "<<v<<"."<<endl; 
+						cerr<<"ERROR: generateFigures option should be yes or no,    got "<<v<<"."<<endl;
 						usage(argv[0],"options");
 					}
 				}
 
 				else if (o == "name") {
-					cl_name=v; // TODO?  check it is a valid VHDL entity name 
+					cl_name=v; // TODO?  check it is a valid VHDL entity name
 				}
 			}
 		}
@@ -739,7 +739,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				inputDelays["S"]=0;
 				op = new Shifter(target, wIn, maxShift, Shifter::Left);
 				addOperator(op);
-			}    
+			}
 		}
 
 		else if(opname=="RightShifter"){
@@ -864,7 +864,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				usage(argv[0],opname);
 			else {
 				int wIn  = checkStrictlyPositive(argv[i++], argv[0]);
-				int n = checkStrictlyPositive(argv[i++], argv[0]);	
+				int n = checkStrictlyPositive(argv[i++], argv[0]);
 				op = new ShiftReg(target, wIn, n);
 				addOperator(op);
 			}
@@ -881,7 +881,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					usage(argv[0],opname);
 				else {
 					std::vector<string> coeff;
-					for (int j = 0; j < N; j++) 
+					for (int j = 0; j < N; j++)
 						{
 							coeff.push_back(argv[i++]);
 						}
@@ -927,7 +927,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					usage(argv[0],opname);
 				else {
 					std::vector<string> coeff;
-					for (int j = 0; j < taps; j++) 
+					for (int j = 0; j < taps; j++)
 						{
 							coeff.push_back(argv[i++]);
 						}
@@ -950,7 +950,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					usage(argv[0],opname);
 				else {
 					std::vector<string> coeffB;
-					for (int j = 0; j < tapsB; j++) 
+					for (int j = 0; j < tapsB; j++)
 						{
 							coeffB.push_back(argv[i++]);
 						}
@@ -959,7 +959,7 @@ bool parseCommandLine(int argc, char* argv[]){
 						usage(argv[0],opname);
 					else {
 						std::vector<string> coeffA;
-						for (int j = 0; j < tapsA; j++) 
+						for (int j = 0; j < tapsA; j++)
 							{
 								coeffA.push_back(argv[i++]);
 							}
@@ -991,7 +991,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
 				op = new IntAdder(target,wIn, inDelayMap("X",target->ffDelay() + target->localWireDelay()) );
 				addOperator(op);
-			}    
+			}
 		}
 
 		else if(opname=="IntAdderExpert"){
@@ -1020,7 +1020,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					default: op = new IntAdder(target,wIn, delayMap, 2, srl, implementation); break;
 				}
 				addOperator(op);
-			}    
+			}
 		}
 
 		else if(opname=="IntComparator"){
@@ -1030,10 +1030,10 @@ bool parseCommandLine(int argc, char* argv[]){
 			else {
 				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
 				int criteria = atoi(argv[i++]);
-				
+
 				op = new IntComparator(target,wIn,criteria,false,0);
 				addOperator(op);
-			}    
+			}
 		}
 
 		else if(opname=="IntConstComparator"){
@@ -1043,12 +1043,12 @@ bool parseCommandLine(int argc, char* argv[]){
 			else {
 				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
 				int criteria = atoi(argv[i++]);
-				int constant = atoi(argv[i++]);				
+				int constant = atoi(argv[i++]);
 				op = new IntComparator(target,wIn,criteria, true, constant);
 				addOperator(op);
-			}    
+			}
 		}
-		
+
 		//HIDDEN. Why? TODO
 		else if(opname=="IntDualSub"){
 			int nargs = 2;
@@ -1059,7 +1059,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int opType = checkBoolean(argv[i++], argv[0]);
 				op = new IntDualSub(target,wIn,opType);
 				addOperator(op);
-			}    
+			}
 		}
 
 		else if(opname=="IntMultiplier"){
@@ -1130,7 +1130,7 @@ bool parseCommandLine(int argc, char* argv[]){
 		//--------------FP ADDERS --------------------------------
 
 		// For the FPAdd the default is the single-path design
-		else if(opname=="FPAdd"){ 
+		else if(opname=="FPAdd"){
 			int nargs = 2;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
@@ -1138,11 +1138,11 @@ bool parseCommandLine(int argc, char* argv[]){
 				int wE = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF = checkStrictlyPositive(argv[i++], argv[0]);
 				op = new FPAddSinglePath(target, wE, wF);
-				
+
 				addOperator(op);
 			}
-		}		
-		else if(opname=="FPSub"){ 
+		}
+		else if(opname=="FPSub"){
 			int nargs = 2;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
@@ -1150,10 +1150,10 @@ bool parseCommandLine(int argc, char* argv[]){
 				int wE = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF = checkStrictlyPositive(argv[i++], argv[0]);
 				op = new FPAddSinglePath(target, wE, wF, true /*subtractor*/);
-				
+
 				addOperator(op);
 			}
-		}		
+		}
 
 		else if(opname=="FPAddDualPath"){
 			int nargs = 2;
@@ -1162,7 +1162,7 @@ bool parseCommandLine(int argc, char* argv[]){
 			else {
 				int wE = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF = checkStrictlyPositive(argv[i++], argv[0]);
-				
+
 				op = new FPAddDualPath(target, wE, wF, wE, wF, wE, wF);
 				addOperator(op);
 			}
@@ -1175,11 +1175,11 @@ bool parseCommandLine(int argc, char* argv[]){
 			else {
 				int wE = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF = checkStrictlyPositive(argv[i++], argv[0]);
-				
+
 				op = new FPAdd3Input(target, wE, wF);
 				addOperator(op);
 			}
-		}	
+		}
 
 		else if(opname=="FPAddSub"){
 			int nargs = 2;
@@ -1188,16 +1188,16 @@ bool parseCommandLine(int argc, char* argv[]){
 			else {
 				int wE = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF = checkStrictlyPositive(argv[i++], argv[0]);
-				
+
 				op = new FPAddSub(target, wE, wF, wE, wF, wE, wF);
 				addOperator(op);
 			}
-		}	
+		}
 
 		//-------------------FP Multipliers ----------------------
 
 		else if(opname=="FPMult"){
-			int nargs = 3; 
+			int nargs = 3;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
 			int wE = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1205,10 +1205,10 @@ bool parseCommandLine(int argc, char* argv[]){
 			int wFOut = checkStrictlyPositive(argv[i++], argv[0]);
 			op = new FPMult(target, wE, wFIn, wE, wFIn, wE, wFOut, true /*normd*/, true /*CR*/);
 			addOperator(op);
-		} 
+		}
 
 		else if(opname=="FPMultFaithful"){
-			int nargs = 3; 
+			int nargs = 3;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
 			int wE = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1220,7 +1220,7 @@ bool parseCommandLine(int argc, char* argv[]){
 
 		#if 0
 		else if(opname=="FPMultKaratsuba"){
-			int nargs = 3; 
+			int nargs = 3;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
 			else {
@@ -1230,11 +1230,11 @@ bool parseCommandLine(int argc, char* argv[]){
 				op = new FPMultKaratsuba(target, wE, wFIn, wE, wFIn, wE, wFOut, 1);
 				addOperator(op);
 			}
-		}  
+		}
 		#endif
 
 		else if(opname=="FPMultExpert"){
-			int nargs = 6; 
+			int nargs = 6;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
 			int wE = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1246,10 +1246,10 @@ bool parseCommandLine(int argc, char* argv[]){
 
 			op = new FPMult(target, wE, wFXIn, wE, wFYIn, wE, wFOut, true, correctRounding, r);
 			addOperator(op);
-		}  
+		}
 
 		else if(opname=="FPSquare"){
-			int nargs = 3; 
+			int nargs = 3;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
 			else {
@@ -1259,7 +1259,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				op = new FPSquare(target, wE, wFX, wFR);
 				addOperator(op);
 			}
-		} 
+		}
 
 		//-------------------FP Division and square root ----------------------
 		else if (opname == "FPDiv")
@@ -1284,7 +1284,7 @@ bool parseCommandLine(int argc, char* argv[]){
 		}
 
 		//-------------------CONSTANT MULTIPLICATION AND DIVISION ----------------------
-		
+
 		else if(opname=="IntIntKCM"){
 			int nargs = 3;
 			if (i+nargs > argc)
@@ -1296,9 +1296,9 @@ bool parseCommandLine(int argc, char* argv[]){
 
 				op = new IntIntKCM(target, w, mpc, signedInput);
 				addOperator(op);
-			}        
+			}
 		}
-		
+
 		else if(opname=="IntConstMult"){
 			int nargs = 2;
 			if (i+nargs > argc)
@@ -1308,7 +1308,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				mpz_class mpc(argv[i++]);
 				op = new IntConstMult(target, w, mpc);
 				addOperator(op);
-			}        
+			}
 		}
 
 		else if(opname=="IntConstDiv"){
@@ -1321,7 +1321,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int alpha = atoi(argv[i++]);
 				op = new IntConstDiv(target, n, d, alpha);
 				addOperator(op);
-			} 
+			}
 		}
 
 		else if(opname=="IntConstRem"){
@@ -1334,7 +1334,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int alpha = atoi(argv[i++]);
 				op = new IntConstDiv(target, n, d, alpha, true);
 				addOperator(op);
-			} 
+			}
 		}
 
 
@@ -1347,12 +1347,12 @@ bool parseCommandLine(int argc, char* argv[]){
 				int wF_in = checkStrictlyPositive(argv[i++], argv[0]);
 				int wE_out = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF_out = checkStrictlyPositive(argv[i++], argv[0]);
-				int a  = atoi(argv[i++]); 
-				int b  = checkStrictlyPositive(argv[i++], argv[0]); 
+				int a  = atoi(argv[i++]);
+				int b  = checkStrictlyPositive(argv[i++], argv[0]);
 				op = new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, a, b);
 				addOperator(op);
-			}        
-		} 	
+			}
+		}
 
 		else if(opname=="FPConstMultExpert"){
 			int nargs = 7;
@@ -1363,13 +1363,13 @@ bool parseCommandLine(int argc, char* argv[]){
 				int wF_in = checkStrictlyPositive(argv[i++], argv[0]);
 				int wE_out = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF_out = checkStrictlyPositive(argv[i++], argv[0]);
-				int cst_sgn  = checkSign(argv[i++], argv[0]); 
+				int cst_sgn  = checkSign(argv[i++], argv[0]);
 				int cst_exp  = atoi(argv[i++]); // TODO no check on this arg
 				mpz_class cst_sig(argv[i++]);
 				op = new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, cst_sgn, cst_exp, cst_sig);
 				addOperator(op);
-			}        
-		} 
+			}
+		}
 
 		else if(opname=="FPConstDiv"){
 			int nargs = 3;
@@ -1381,7 +1381,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int d = checkStrictlyPositive(argv[i++], argv[0]);
 				op = new FPConstDiv(target, wE, wF, wE, wF, d, 0, -1); // exponent 0, alpha = default
 				addOperator(op);
-			}        
+			}
 		}
 
 		else if(opname=="FPConstDivExpert"){
@@ -1396,8 +1396,8 @@ bool parseCommandLine(int argc, char* argv[]){
 				int alpha = atoi(argv[i++]);
 				op = new FPConstDiv(target, wE, wF, wE, wF, d, e, alpha);
 				addOperator(op);
-			}        
-		} 	
+			}
+		}
 
 		else if(opname=="FixRealKCM"){
 			int nargs = 6;
@@ -1414,7 +1414,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				addOperator(op);
 			}
 		}
-		
+
 		else if(opname=="FixRealKCMExpert"){ // hidden, for debug
 			int nargs = 6;
 			if (i+nargs > argc)
@@ -1428,7 +1428,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				float targetUlpError = atof(argv[i++]);
 				op = new FixRealKCM(target, lsbIn, msbIn, signedInput, lsbOut, constant, targetUlpError);
 				addOperator(op);
-			}        
+			}
 		}
 
 		else if(opname=="FPRealKCM"){
@@ -1441,14 +1441,14 @@ bool parseCommandLine(int argc, char* argv[]){
 				string constant = argv[i++];
 				op = new FPRealKCM(target, wE, wF, constant);
 				addOperator(op);
-			}        
+			}
 		}
 
-		else if(opname=="CRFPConstMult"){ 
+		else if(opname=="CRFPConstMult"){
 			int nargs = 5;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
-			else { 
+			else {
 				int wE_in = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF_in = checkStrictlyPositive(argv[i++], argv[0]);
 				int wE_out = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1456,14 +1456,14 @@ bool parseCommandLine(int argc, char* argv[]){
 				string constant = argv[i++];
 				op = new CRFPConstMult(target, wE_in, wF_in, wE_out, wF_out, constant);
 				addOperator(op);
-			}        
-		} 	
+			}
+		}
 
-		else if(opname=="FPConstMult"){ 
+		else if(opname=="FPConstMult"){
 			int nargs = 6;
 			if (i+nargs > argc)
 				usage(argv[0],opname);
-			else { 
+			else {
 				int wE_in = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF_in = checkStrictlyPositive(argv[i++], argv[0]);
 				int wE_out = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1472,8 +1472,8 @@ bool parseCommandLine(int argc, char* argv[]){
 				string constant = argv[i++];
 				op = new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, wF_C, constant);
 				addOperator(op);
-			}        
-		} 	
+			}
+		}
 
 		else if(opname=="FPLargeAcc"){
 			int nargs = 5;
@@ -1520,7 +1520,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int n = atoi(argv[i++]);
 				FPDotProduct * op = new FPDotProduct(target, wE, wFX, wFY, MaxMSBX, MSBA, LSBA);
 				op->test_precision(n);
-			}    
+			}
 		}
 
 		else if(opname=="FPDotProduct"){
@@ -1571,7 +1571,7 @@ bool parseCommandLine(int argc, char* argv[]){
 			FixFunction *f = new FixFunction(argv[i++], false);
 			double x = strtod(argv[i++], NULL);
 			double r = f -> eval(x);
-			cout << "\n r=" << r << endl;  
+			cout << "\n r=" << r << endl;
 		}
 
 		else if (opname == "FixFunctionByTable") {
@@ -1620,8 +1620,8 @@ bool parseCommandLine(int argc, char* argv[]){
 			int nargs = 1;
 			if (i+nargs > argc)
 				usage(argv[0],opname); // and exit
-			int lsbIn = atoi(argv[i++]); 
-			
+			int lsbIn = atoi(argv[i++]);
+
 			if(lsbIn>0)
 			{
 				cerr << "Warning: lsbIn>0; assuming you meant to use lsbIn=" << (-lsbIn) << endl;
@@ -1630,14 +1630,14 @@ bool parseCommandLine(int argc, char* argv[]){
 			Operator* tg = new FixSinCos(target, -lsbIn); // TODO: change interface to FixSinCos
 			addOperator(tg);
 		}
-		
+
 		else if (opname == "CordicSinCos") {
 			int nargs = 3;
 			if (i+nargs > argc)
 				usage(argv[0],opname); // and exit
-			int lsbIn = atoi(argv[i++]); 
-			int lsbOut = atoi(argv[i++]); 
-			int reducedIterations = checkPositiveOrNull(argv[i++], argv[0]); 
+			int lsbIn = atoi(argv[i++]);
+			int lsbOut = atoi(argv[i++]);
+			int reducedIterations = checkPositiveOrNull(argv[i++], argv[0]);
 			Operator* tg = new CordicSinCos(target, -lsbIn, -lsbOut, reducedIterations);  // TODO: change interface to CordicSinCos
 			addOperator(tg);
 		}
@@ -1648,7 +1648,7 @@ bool parseCommandLine(int argc, char* argv[]){
 			if (i+nargs > argc)
 				usage(argv[0],opname); // and exit
 			int w = checkStrictlyPositive(argv[i++], argv[0]); // must be >=2 actually
-			int degree = atoi(argv[i++]); 
+			int degree = atoi(argv[i++]);
 			Operator* tg = new FixSinOrCos(target, w, degree);
 			addOperator(tg);
 		}
@@ -1662,7 +1662,7 @@ bool parseCommandLine(int argc, char* argv[]){
 			int method = atoi(argv[i++]);
 			//select the method
 			Operator* tg;
-			if(method < 8){	
+			if(method < 8){
 				tg = new FixAtan2ByRecipMultAtan(target, w,w, method);
 			}
 			else if(method<10) {
@@ -1719,7 +1719,7 @@ bool parseCommandLine(int argc, char* argv[]){
 		{
 			int nargs = 6;
 			if (i+nargs > argc)
-				usage(argv[0],opname); // and exit 
+				usage(argv[0],opname); // and exit
 
 			//int logTableSize, int expTableSize, int expDegree, int expG, int logG int type
 			int wE = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1736,7 +1736,7 @@ bool parseCommandLine(int argc, char* argv[]){
 		{
 			int nargs = 2;
 			if (i+nargs > argc)
-				usage(argv[0],opname); // and exit 
+				usage(argv[0],opname); // and exit
 
 			//int logTableSize, int expTableSize, int expDegree, int expG, int logG
 			int wE = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1749,7 +1749,7 @@ bool parseCommandLine(int argc, char* argv[]){
 		{
 			int nargs = 2;
 			if (i+nargs > argc)
-				usage(argv[0],opname); // and exit 
+				usage(argv[0],opname); // and exit
 
 			//int logTableSize, int expTableSize, int expDegree, int expG, int logG
 			int wE = checkStrictlyPositive(argv[i++], argv[0]);
@@ -1768,7 +1768,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int LSB = atoi(argv[i++]);
 				int wE = checkStrictlyPositive(argv[i++], argv[0]);
 				int wF = checkStrictlyPositive(argv[i++], argv[0]);
-				
+
 				op = new Fix2FP(target, sign, MSB, LSB, wE, wF);
 				addOperator(op);
 			}
@@ -1784,7 +1784,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				int MSB = atoi(argv[i++]);
 				int LSB = atoi(argv[i++]);
 				int trunc_p = checkBoolean(argv[i++], argv[0]);
-				
+
 				op = new FP2Fix(target,  sign, MSB, LSB, wE, wF, trunc_p);
 				addOperator(op);
 			}
@@ -1875,7 +1875,7 @@ bool parseCommandLine(int argc, char* argv[]){
 			cerr <<  "ghdl -r " << simlibs << op->getName() << " --vcd=" << op->getName() << ".vcd --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			cerr <<  "gtkwave " << op->getName() << ".vcd" << endl;
 		}
-		
+
 		else if (opname == "TestBenchFile") {
 			/* Using a file to store IO */
 			int nargs = 1;
@@ -1928,7 +1928,7 @@ bool parseCommandLine(int argc, char* argv[]){
 				addOperator(op);
 			}
 		}
-        
+
 		else  {
 			cerr << "ERROR: Problem parsing input line, exiting";
 			usage(argv[0]);
@@ -1961,7 +1961,7 @@ int main(int argc, char* argv[] )
 	sollya_lib_init();
 
 	uint32_t i;
-	
+
 
 	target = new Virtex5(); // this also creates a global operator list
 
@@ -1977,28 +1977,28 @@ int main(int argc, char* argv[] )
 		return 1;
 	}
 
-	 vector<Operator*>* oplist=target->getGlobalOpListRef();
+	 vector<Operator*> *oplist = target->getGlobalOpListRef();
 
 
 
 
 	ofstream file;
 	file.open(filename.c_str(), ios::out);
-	Operator::outputVHDLToFile(*oplist, file); 
+	Operator::outputVHDLToFile(*oplist, file);
 	file.close();
-	
+
 	cerr << endl<<"Final report:"<<endl;
 	for(i=0; i<oplist->size(); i++) {
 		(*oplist)[i]->outputFinalReport(0);
 	}
-	
+
 	cerr<< "Output file: " << filename <<endl;
-	
+
 
 	//------------------------ Resource Estimation ---------------------
 	for (vector<Operator*>::iterator it = oplist->begin(); it!=oplist->end(); ++it) {
 		Operator* op = *it;
-		
+
 		if(reLevel!=0){
 			if(op->reActive)
 				cerr << op->generateStatistics(reLevel);
@@ -2008,14 +2008,14 @@ int main(int argc, char* argv[] )
 		}
 	}
 	//------------------------------------------------------------------
-	
+
 	//------------------ Resource Estimation Debugging -----------------
 	if(resourceEstimationDebug){
 		ofstream file;
 		file.open("flopoco.debug");
 		for (vector<Operator*>::iterator it = oplist->begin(); it!=oplist->end(); ++it) {
 			Operator* op = *it;
-			
+
 			if(op->reActive)
 				file << op->resourceEstimate.str();
 			else{
@@ -2026,14 +2026,14 @@ int main(int argc, char* argv[] )
 		cerr << "Resource estimation log written to the \'flopoco.debug\' file" << endl;
 	}
 	//------------------------------------------------------------------
-	
+
 	//------------------------ Floorplanning ---------------------------
 	if(floorplanning){
 		for (vector<Operator*>::iterator it = oplist->begin(); it!=oplist->end(); ++it) {
 			Operator* op = *it;
-			
+
 			if(op->reActive == false){
-				cerr << "Floorplanning option can be used only when the resource estimations have been performed.\n" 
+				cerr << "Floorplanning option can be used only when the resource estimations have been performed.\n"
 						<< " Please reconsider your strategy.\n" << endl;
 				exit(1);
 			}
@@ -2042,11 +2042,11 @@ int main(int argc, char* argv[] )
 		}
 	}
 	//------------------------------------------------------------------
-	
+
 	//------------------ Floorplanning Debugging -----------------------
 	if(floorplanningDebug){
 		if(!(reLevel>0 && floorplanning)){
-			cerr << "Debugging Floorplanning option can be used only when there are resource estimations and floorplanning is enabled." 
+			cerr << "Debugging Floorplanning option can be used only when there are resource estimations and floorplanning is enabled."
 						<< " Please rerun the program with the appropriate options" << endl;
 				exit(1);
 		}else{
@@ -2054,7 +2054,7 @@ int main(int argc, char* argv[] )
 			file.open("flopoco.floorplan.debug");
 			for (vector<Operator*>::iterator it = oplist->begin(); it!=oplist->end(); ++it) {
 				Operator* op = *it;
-				
+
 				file << op->floorplan.str();
 				file << floorplanMessages.str();
 			}

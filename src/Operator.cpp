@@ -58,6 +58,8 @@ namespace flopoco{
 		indirectOperator_           = NULL;
 		hasDelay1Feedbacks_         = false;
 
+		isOperatorImplemented_       = false;
+
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
@@ -424,9 +426,9 @@ namespace flopoco{
 		return true;
 	}
 
-	vector<Instance*> Operator::getInstances(){
-		return instances_;
-	};
+//	vector<Instance*> Operator::getInstances(){
+//		return instances_;
+//	};
 
 
 	void Operator::addHeaderComment(std::string comment){
@@ -1792,30 +1794,29 @@ namespace flopoco{
 			//set a new name for the copy of the operator
 			newOp->setName(newOp->getName() + "_cpy_" + vhdlize(getNewUId()));
 
-			//create a new instance
-			Instance* newInstance = new Instance(instanceName, newOp, tmpInPortMap_, tmpOutPortMap_);
-			//set the instance as implemented; it will be implemented as a global operator
-			newInstance->setHasBeenImplemented(true);
-			//add the instance to the local list of sub-components
-			instances_.push_back(newInstance);
-
-			//add the newly created copy of the operator to the subcomponent list
+			//change the name
 			newOp->setName(newOp->getName()+"_cpy_id_"+vhdlize(getNewUId()));
-			oplist.push_back(newOp);
 
+			//mark the subcomponent as not requiring to be implemented
+			newOp->setIsOperatorImplemented(true);
+
+			//save a reference
 			opCpy = newOp;
 		}else{
-			//create a new instance
-			Instance* newInstance = new Instance(instanceName, op, tmpInPortMap_, tmpOutPortMap_);
-			if(isGlobalOperator)
-				newInstance->setHasBeenImplemented(true);
-			instances_.push_back(newInstance);
-			oplist.push_back(op);
-			if(isGlobalOperator)
+			//add the operator to the global list, if necessary
+			if(isGlobalOperator){
 				addToGlobalOpList(op);
+				//mark the subcomponent as it requires to be implemented
+				op->setIsOperatorImplemented(false);
+			}
 
+			//save a reference
 			opCpy = op;
 		}
+
+		//add the operator to the subcomponent list/map
+		oplist.push_back(opCpy);
+		subComponents_[instanceName] = opCpy;
 
 		//update the signals to take into account the input and output port maps
 		//update the inputs
@@ -2213,15 +2214,7 @@ namespace flopoco{
 	}
 
 	map<string, Operator*> Operator::getSubComponents(){
-		cerr << "WARNING: function getSubComponents() is deprecated!" << endl
-				<< tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-				<< tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
-		map<string, Operator*> subComponents;
-
-		for(unsigned int i=0; i<instances_.size(); i++)
-			subComponents[instances_[i]->getName()] = instances_[i]->getOperator();
-
-		return subComponents;
+		return subComponents_;
 	}
 
 	string Operator::getSrcFileName(){
@@ -2715,11 +2708,7 @@ namespace flopoco{
 	}
 
 	bool Operator::hasComponent(string s){
-		for(unsigned int i=0; i<instances_.size(); i++)
-			if(instances_[i]->getName() == s)
-				return true;
-
-		return false;
+		return (subComponents_.find(s) != subComponents_.end());
 	}
 
 	void Operator::addComment(string comment, string align){
@@ -2737,9 +2726,8 @@ namespace flopoco{
 
 	//Completely replace "this" with a copy of another operator.
 	void  Operator::cloneOperator(Operator *op){
-		//disabled during the overhaul
-		//subComponents_ = op->getSubComponents();
-		instances_                  = op->getInstances();
+		subComponents_              = op->getSubComponents();
+		//instances_                  = op->getInstances();
 		signalList_                 = op->getSignalList();
 		ioList_                     = op->getIOListV();
 
@@ -2875,24 +2863,38 @@ namespace flopoco{
 		//	replace the references in the instances to references to
 		//	the newly created deep copies
 		//the port maps for the instances do not need to be modified
-		for(unsigned int i=0; i<instances_.size(); i++)
+		for(map<string, Operator*>::iterator it=subComponents_.begin(); it!=subComponents_.end(); it++)
 		{
-			Instance *tmpInstance = instances_[i];
+			string opName = it->first;
+			Operator *tmpOp = it->second;
 
 			//look for the instance with the same name
 			for(unsigned int j=0; j<oplist.size(); j++)
-				if(oplist[j]->getName() == tmpInstance->getOperator()->getName())
-					tmpInstance->setOperator(oplist[j]);
+				if(oplist[j]->getName() == tmpOp->getName())
+					subComponents_[opName] = oplist[j];
 		}
 
 	}
 
 
 
+	bool Operator::isOperatorImplemented(){
+		return isOperatorImplemented_;
+	}
 
-	void Operator::outputVHDLToFile(vector<Operator*> &oplist, ofstream& file){
+	void Operator::setIsOperatorImplemented(bool newValue){
+		isOperatorImplemented_ = newValue;
+	}
+
+
+
+
+	void Operator::outputVHDLToFile(vector<Operator*> &oplist, ofstream& file)
+	{
 		string srcFileName = "Operator.cpp"; // for REPORT
-		for(unsigned i=0; i<oplist.size(); i++) {
+
+		for(unsigned i=0; i<oplist.size(); i++)
+		{
 			try {
 				REPORT(FULL, "---------------OPERATOR: " << oplist[i]->getName() << "-------------");
 				//disabled during the overhaul

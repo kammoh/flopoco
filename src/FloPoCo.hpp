@@ -1,7 +1,7 @@
 #ifndef FLOPOCO_HPP
 #define FLOPOCO_HPP
 
-// TODO: I guess we should at some point copy here only the public part of each class, 
+// TODO: I guess we should at some point copy here only the public part of each class,
 // to provide a single self-contained include file.
 
 // support the autotools-generated config.h
@@ -12,7 +12,7 @@
 #include "Operator.hpp"
 #include "FlopocoStream.hpp"
 
-#include "Instance.hpp"
+//#include "Instance.hpp"
 
 /* operator pipeline work* ------------------------------------ */
 #include "OperatorPipeline/OperatorPipeline.hpp"
@@ -93,7 +93,7 @@
 #include "FPAddSub/FPAdd3Input.hpp"
 #include "FPAddSub/FPAddSub.hpp"
 
-/* Floating-point multiplier variants-------------------------- */ 
+/* Floating-point multiplier variants-------------------------- */
 #include "FPMultSquare/FPMult.hpp"
 //#include "FPMultKaratsuba.hpp" // Resurrect some day?
 #include "FPMultSquare/FPSquare.hpp"
@@ -114,7 +114,7 @@
 #include "ConstMult/IntConstDiv.hpp"
 #include "ConstMult/FPConstDiv.hpp"
 
-/* FP composite operators */ 
+/* FP composite operators */
 #include "FPComposite/FPLargeAcc.hpp"
 #include "FPComposite/LargeAccToFP.hpp"
 #include "FPComposite/FPDotProduct.hpp"
@@ -184,18 +184,18 @@
 //#include "Apps/CoilInductance/CoordinatesTableY.hpp"
 //#include "Apps/CoilInductance/CoilInductance.hpp"
 
-/* fast evaluation of the possible intrusion of a point within a 
-spheric enclosure -------------------------------------------- */ 
+/* fast evaluation of the possible intrusion of a point within a
+spheric enclosure -------------------------------------------- */
 #include "Apps/Collision.hpp"
 
-/* a floating-point fused multiply-accumulate operator for the 
-use withing matrix-multiplication scenarios ------------------ */ 
+/* a floating-point fused multiply-accumulate operator for the
+use withing matrix-multiplication scenarios ------------------ */
 #include "Apps/FPFMAcc.hpp"
 
-/* a 1D Jacobi computation kernel ---------------------------- */ 
+/* a 1D Jacobi computation kernel ---------------------------- */
 #include "Apps/FPJacobi.hpp"
 
-/* logarithmic number system  -------------------------------- */ 
+/* logarithmic number system  -------------------------------- */
 #include "LNS/LNSAddSub.hpp"
 #include "LNS/LNSAdd.hpp"
 #include "LNS/CotranTables.hpp"
