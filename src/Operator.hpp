@@ -1228,6 +1228,7 @@ public:
 	/**
 	 * Second level parsing of the VHDL code
 	 * This function should not be called before the signals are scheduled
+	 *
 	 * WARNING: this function has as a precondition that the signals should be scheduled
 	 */
 	void parse2();
@@ -1237,7 +1238,8 @@ public:
 	 * Extract the timing dependences between signals.
 	 * The raw data is stored in the vhdl FlopocoStream object, in the form of
 	 * triplets, storing ("lhs_signal_name", "rhs_signal_name", delay).
-	 * Warning: This function should only be called after the vhdl code
+	 *
+	 * WARNING: This function should only be called after the vhdl code
 	 * 			has been parsed (the first parse)
 	 */
 	void extractSignalDependences();

@@ -123,6 +123,7 @@ namespace flopoco{
 		vhdlCodeBuffer.str("");
 		vhdlCode.str("");
 		vhdlCode << code;
+		codeParsed = true;
 	}
 
 
@@ -186,17 +187,17 @@ namespace flopoco{
 				int count;
 
 				count = 0;
-				while(count<lhsName.size())
+				while((unsigned)count<lhsName.size())
 				{
 					//initialize the new lhs name
 					newLhsName.str("");
 					//skip characters as long as they are delimiters
 					while((delimiters.find(lhsName[count]) != string::npos)
-							&& (count<lhsName.size()))
+							&& ((unsigned)count<lhsName.size()))
 						count++;
 					//add the characters as long as they are not delimiters
 					while((delimiters.find(lhsName[count]) == string::npos)
-							&& (count<lhsName.size()))
+							&& ((unsigned)count<lhsName.size()))
 					{
 						newLhsName << lhsName[count];
 						count++;

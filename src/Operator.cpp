@@ -136,7 +136,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addInput, signal " << name<< " seems to already exist");
+			THROWERROR("ERROR in addInput, signal " << name << " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -1382,7 +1382,7 @@ namespace flopoco{
 		if(regType==Signal::registeredWithAsyncReset)
 			hasRegistersWithAsyncReset_ = true;
 
-		// define its cycle, critical path and contribution to the critical path
+		//define its cycle, critical path and contribution to the critical path
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
 		s->setCriticalPathContribution(criticalPathContribution);
@@ -1391,7 +1391,7 @@ namespace flopoco{
 		resetPredecessors(s);
 		resetSuccessors(s);
 
-		// add the signal to signalMap and signalList
+		//add the signal to signalMap and signalList
 		signalList_.push_back(s);
 		signalMap_[s->getName()] = s;
 	}
@@ -2334,18 +2334,23 @@ namespace flopoco{
 	void Operator::parse2()
 	{
 		ostringstream newStr;
-		string oldStr(vhdl.str()), workStr;
+		string oldStr, workStr;
 		int currentPos, nextPos, count;
 		int tmpCurrentPos, tmpNextPos, lhsNameLength;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
+		//reset the new vhdl code buffer
 		newStr.str("");
 
+		//set the old code to the vhdl code stored in the FlopocoStream
+		//	this also triggers the code's parsing, if necessary
+		oldStr = vhdl.str();
+
 		//iterate through the old code, one statement at the time
-		// code that doesn't need to be modified, goes directly to the new vhdl code buffer
-		// code that needs to be modified, ?? should be removed from lhs_name, $$ should be removed from rhs_name,
-		//		delays of the type rhs_name^d_xxx should be added for the right-hand side signals
+		// code that doesn't need to be modified: it goes directly to the new vhdl code buffer
+		// code that needs to be modified: ?? should be removed from lhs_name, $$ should be removed from rhs_name,
+		//		delays of the type rhs_name_xxx should be added for the right-hand side signals
 		currentPos = 0;
 		nextPos = oldStr.find('?');
 		while(nextPos != string::npos)
@@ -2360,10 +2365,7 @@ namespace flopoco{
 			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)-nextPos-2);
 
 			//extract the lhs_name
-			count = 0;
-			while(workStr[count] != '?')
-				count++;
-			lhsName = workStr.substr(0, count);
+			lhsName = workStr.substr(0, workStr.find('?'));
 			lhsNameLength = lhsName.size();
 
 			//copy lhsName to the new vhdl buffer
@@ -2384,7 +2386,7 @@ namespace flopoco{
 			//extract the rhsNames and annotate them find the position of the rhsName, and copy
 			// the vhdl code up to the rhsName in the new vhdl code buffer
 			tmpCurrentPos = lhsNameLength+2;
-			tmpNextPos = workStr.find('$');
+			tmpNextPos = workStr.find('$', lhsNameLength+2);
 			while(tmpNextPos != string::npos)
 			{
 				int cycleDelay;
@@ -2395,10 +2397,7 @@ namespace flopoco{
 				tmpNextPos += 2;
 
 				//extract a new rhsName
-				count = 0;
-				while(workStr[tmpNextPos+count] != '$')
-					count++;
-				rhsName = workStr.substr(tmpNextPos, tmpNextPos+count);
+				rhsName = workStr.substr(tmpNextPos, workStr.find('$', tmpNextPos)-tmpNextPos);
 				rhsSignal = getSignalByName(rhsName);
 
 				//copy the rhsName with the delay information into the new vhdl buffer
@@ -2502,6 +2501,10 @@ namespace flopoco{
 
 		//if the preconditions are satisfied, schedule the signal
 		setSignalTiming(targetSignal);
+
+		//update the lifespan of targetSignal's predecessors
+		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 
 		//check if this is an input signal for a sub-component
 		//	it's safe to test if the signal belongs to a sub-component by checking
