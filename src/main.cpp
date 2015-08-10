@@ -1120,9 +1120,9 @@ bool parseCommandLine(int argc, char* argv[]){
 			int lsbO = atoi(argv[i++]);
 			int signedIO = atoi(argv[i++]);
 			Operator* op = new FixMultAdd(target,
-												 new Signal("Xin", Signal::in, (signedIO==1), msbX, lsbX),
-												 new Signal("Yin", Signal::in, (signedIO==1), msbY, lsbY),
-												 new Signal("Ain", Signal::in, (signedIO==1), msbA, lsbA),
+												 new Signal(op, "Xin", Signal::in, (signedIO==1), msbX, lsbX),
+												 new Signal(op, "Yin", Signal::in, (signedIO==1), msbY, lsbY),
+												 new Signal(op, "Ain", Signal::in, (signedIO==1), msbA, lsbA),
 												 msbO, lsbO);
 			addOperator(op);
 		}

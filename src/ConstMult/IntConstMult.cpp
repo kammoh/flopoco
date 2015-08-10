@@ -7,7 +7,7 @@
 Author : Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr
 
 Initial software.
-Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 2008-2011.
 All rights reserved.
 
@@ -135,7 +135,7 @@ namespace flopoco{
 
 
 	/**
-	 * Finds and returns the index of the best ShiftAddDag in an array considering the priority flag. 
+	 * Finds and returns the index of the best ShiftAddDag in an array considering the priority flag.
 	 *If the flag is not set, we consider both latency and surface.
 	 *If the flag is 1, we only consider the surface
 	 *If the flag is -1, w consider only the latency
@@ -171,7 +171,7 @@ namespace flopoco{
 	void IntConstMult::build_pipeline(ShiftAddOp* sao, double &partial_delay) {
 		string iname, jname, isignal, jsignal;
 		double idelay=0,jdelay=0, max_children_delay;
-		int size, isize, jsize, shift, adder_size; 
+		int size, isize, jsize, shift, adder_size;
 		bool use_pipelined_adder;
 		IntAdder* adder=0;
 
@@ -182,7 +182,7 @@ namespace flopoco{
 			// First check that the sub-DAG has not been already visited
 
 			bool already_visited=true;
-			try { 
+			try {
 				getSignalByName(sao->name);
 			} catch (std::string s) {
 				already_visited=false;
@@ -212,8 +212,8 @@ namespace flopoco{
 					if(sao->i != sao->j) {
 						build_pipeline(sao->j, jdelay);
 					}
-					iname = sao->i->name; 
-					jname = sao->j->name; 
+					iname = sao->i->name;
+					jname = sao->j->name;
 
 					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
@@ -229,16 +229,16 @@ namespace flopoco{
 						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
 						if(tentative_delay <= 1./getTarget()->frequency()) {
 							use_pipelined_adder=false;
-							partial_delay = tentative_delay;					
+							partial_delay = tentative_delay;
 						}
-						else { 
-							// register the children 
+						else {
+							// register the children
 							nextCycle();
 							// Is a standard adder OK ?
 							tentative_delay = getTarget()->ffDelay() + getTarget()->localWireDelay() + getTarget()->adderDelay(adder_size);
 							if(tentative_delay <= 1./getTarget()->frequency()) {
 								use_pipelined_adder=false;
-								partial_delay = tentative_delay;					
+								partial_delay = tentative_delay;
 							}
 							else { // Need to instantiate an IntAdder
 								use_pipelined_adder=true;
@@ -255,8 +255,8 @@ namespace flopoco{
 					if(shift==0) { // Add with no shift -- this shouldn't happen with current DAGs so te following code is mostly untested
 						if(op==Sub || op==RSub)
 							throw string("In IntConstMult::build_pipeline, Sub and RSub with zero shift currently unimplemented"); // TODO
-						isignal = sao->name + "_High_L";  
-						jsignal = sao->name + "_High_R"; 
+						isignal = sao->name + "_High_L";
+						jsignal = sao->name + "_High_R";
 
 						// The i part
 						vhdl << tab << declare(isignal, size) << " <= ";
@@ -291,7 +291,7 @@ namespace flopoco{
 								vhdl << tab << declare(sao->name, sao->size) << "("<< shift - 1 <<" downto 0) <= " ;
 								if(shift>jsize) {
 									vhdl << "(" <<  shift-1 <<" downto " << jsize << " => ";
-									if(sao->j->n >= 0)  vhdl << "'0'"; // pad with 0s 
+									if(sao->j->n >= 0)  vhdl << "'0'"; // pad with 0s
 									else                vhdl << jname << "(" << jsize-1 << ")";// sign extend
 									vhdl << ") & ";
 								}
@@ -300,35 +300,35 @@ namespace flopoco{
 								if(op == Add) {
 									// The higher bits (size-1 downto s) of the result are those of x, possibly plus 11...1 if y was negative
 									vhdl << tab << sao->name << "("<<sao->size-1<<" downto "<< shift<<") <= " << iname ;
-									if(sao->j->n < 0) { 
+									if(sao->j->n < 0) {
 										vhdl <<" + (" << sao->size-1 <<" downto " <<  shift <<" => " << jname << "(" << jsize-1 << ")) "
 											<< ";   -- sum of higher bits"<<endl;
 									}
-									else 
+									else
 										vhdl << ";   -- higher bits also untouched"<<endl;
 								}
 								else {// op == RSub
 									// The higher bits (size-1 downto s) of the result are those of -x, possibly plus 11...1 if y was negative
 									vhdl << tab << sao->name << "("<<sao->size-1<<" downto "<< shift<<") <= " ;
-									if(sao->j->n < 0) 
+									if(sao->j->n < 0)
 										vhdl <<"(" << sao->size-1 << " downto " <<  shift <<" => " << jname << "(" << jsize-1 << ")) ";
 									else
 										vhdl <<"(" << sao->size-1 << " downto " <<  shift <<" => '0') ";
 									vhdl << " - " << iname << ";   -- sum of higher bits"<<endl;
 								}
 							} // end if (shift >= jsize)
-							else{ 
+							else{
 								// jsize>s.        Cases:      xxxxx              xxxxxx
 								//                                yyyyyyyyyy             yyyyyyyyyyyy
 								// so we may need to sign-extend Vx, or Vy, or even both.
 								// The higher bits of the result are sum/diff
-								isignal = sao->name + "_High_L";  
-								jsignal = sao->name + "_High_R"; 
+								isignal = sao->name + "_High_L";
+								jsignal = sao->name + "_High_R";
 								// The x part
 								vhdl << tab << declare(isignal,  size - shift) << " <= ";
 								if(size >= isize +  shift +1) { // need to sign-extend vx. If the constant is positive, padding with 0s is enough
 									vhdl <<" (" << size-1 << " downto " << isize +  shift <<" => ";
-									if(sao->i->n >= 0)   vhdl << "'0'";// pad with 0s 
+									if(sao->i->n >= 0)   vhdl << "'0'";// pad with 0s
 									else                 vhdl << iname << "(" << isize-1 << ")"; // sign extend
 									vhdl << ") & ";
 								}
@@ -337,7 +337,7 @@ namespace flopoco{
 								vhdl << tab << declare(jsignal,  size - shift) << " <= ";
 								if(size >= jsize+1) {// need to sign-extend vy. If the constant is positive padding with 0s is enough
 									vhdl <<" (" << size-1 << " downto " << jsize <<" => ";
-									if(sao->j->n >= 0)  vhdl << "'0'"; // pad with 0s 
+									if(sao->j->n >= 0)  vhdl << "'0'"; // pad with 0s
 									else                vhdl << jname << "(" << jsize-1 << ")";// sign extend
 									vhdl << ") & ";
 								}
@@ -349,9 +349,9 @@ namespace flopoco{
 									if(op==Add) {
 										inPortMap  (adder, "Y", isignal);
 										inPortMapCst  (adder, "Cin", "'0'");
-									} 
+									}
 									else { // RSub
-										string isignalneg = isignal+"_neg"; 
+										string isignalneg = isignal+"_neg";
 										vhdl << declare(isignalneg, size - shift) << " <= not " << isignal;
 										inPortMap  (adder, "Y", isignal);
 										inPortMapCst  (adder, "Cin", "'1'");
@@ -366,21 +366,21 @@ namespace flopoco{
 								}
 								else
 									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " // vz (size-1 downto s)
-										<< jsignal << (op==Add ? " + " : "-") << isignal << ";   -- sum of higher bits" << endl; 
+										<< jsignal << (op==Add ? " + " : "-") << isignal << ";   -- sum of higher bits" << endl;
 
 								// In both cases the lower bits of the result (s-1 downto 0) are untouched
 								vhdl << tab << sao->name << "("<<shift-1<<" downto 0) <= " << jname <<"("<< shift-1<<" downto 0);   -- lower bits untouched"<<endl;
 
 							} // end if (shift >= jsize) else
-						} // end if(op == Add || op == RSub) 
-						else { // op=Sub 
+						} // end if(op == Add || op == RSub)
+						else { // op=Sub
 							// Do a normal subtraction of size size
-							isignal = sao->name + "_L";  
-							jsignal = sao->name + "_R"; 
+							isignal = sao->name + "_L";
+							jsignal = sao->name + "_R";
 							vhdl << tab << declare(isignal,  size) << " <= ";
 							if(size > isize+shift) {// need to sign-extend vx. If the constant is positive padding with 0s is enough
 								vhdl <<" (" << size-1 << " downto " << isize+shift <<" => ";
-								if(sao->i->n >= 0)   vhdl << "'0'";// pad with 0s 
+								if(sao->i->n >= 0)   vhdl << "'0'";// pad with 0s
 								else                 vhdl << iname << "(" << isize-1 << ")";// sign extend
 								vhdl << ") & ";
 							}
@@ -388,14 +388,14 @@ namespace flopoco{
 
 							vhdl << tab << declare(jsignal,  size) << " <= ";
 							vhdl <<" (" << size-1 << " downto " << jsize <<" => ";
-							if(sao->j->n >= 0)   vhdl << "'0'";// pad with 0s 
+							if(sao->j->n >= 0)   vhdl << "'0'";// pad with 0s
 							else                 vhdl << jname << "(" << jsize-1 << ")";// sign extend
 							vhdl << ") & ";
 							vhdl << jname << ";" << endl;
 
 							// do the subtraction
 							if(use_pipelined_adder) {
-								string jsignalneg = jsignal+"_neg"; 
+								string jsignalneg = jsignal+"_neg";
 								vhdl << declare(jsignalneg, size) << " <= not " << jsignal;
 								inPortMap  (adder, "X", isignal);
 								inPortMap  (adder, "Y", jsignalneg);
@@ -420,18 +420,18 @@ namespace flopoco{
 					isize = sao->i->size;
 
 					double local_delay;
-					if(op == Neg){   
+					if(op == Neg){
 						local_delay = getTarget()->adderDelay(sao->cost_in_full_adders);
 					}
-					else 
+					else
 						local_delay=0;
 
 					build_pipeline(sao->i, idelay);
 
-					iname = sao->i->name; 
+					iname = sao->i->name;
 					setCycleFromSignal(iname, false);
 
-					if(isSequential() 
+					if(isSequential()
 							&& idelay +  getTarget()->localWireDelay() + local_delay > 1./getTarget()->frequency()
 							&& sao->i->op != X) {
 						// This resets the partial delay to that of this ShiftAddOp
@@ -443,17 +443,17 @@ namespace flopoco{
 					}
 					vhdl << tab << declare(sao->name, size) << " <= " ;
 					// TODO use a pipelined IntAdder when necessary
-					if(op == Neg)   
-						vhdl << "("<< size -1 <<" downto 0 => '0') - " << iname <<";"<<endl; 
+					if(op == Neg)
+						vhdl << "("<< size -1 <<" downto 0 => '0') - " << iname <<";"<<endl;
 					else { // Shift
-						if (shift == 0) 
-							vhdl << iname <<";"<<endl; 
+						if (shift == 0)
+							vhdl << iname <<";"<<endl;
 						else
 							vhdl << iname <<" & ("<< shift - 1 <<" downto 0 => '0');"<<endl;
 					}
 					break;
 
-			}   
+			}
 		}
 	}
 
@@ -470,7 +470,7 @@ namespace flopoco{
 	IntConstMult::IntConstMult(Target* _target, int _xsize, mpz_class n) :
 		Operator(_target), n(n), xsize(_xsize){
 
-			ostringstream name; 
+			ostringstream name;
 
 			srcFileName="IntConstMult";
 			setCopyrightString("Florent de Dinechin, Antoine Martinet (2007-2013)");
@@ -485,7 +485,7 @@ namespace flopoco{
 				// TODO: replace with a REPORT (keep the HGG quotation), and build a multiplier by 0: this constructor will be called by automatic generators, and should perform the required operation in all cases.
 				addInput("X", xsize);
 				addOutput("R", 1); // multiplier by zero is always zero
-				vhdl << tab << "R <= \"0\";" <<endl;	
+				vhdl << tab << "R <= \"0\";" <<endl;
 			}
 
 			else{
@@ -496,7 +496,7 @@ namespace flopoco{
 
 
 
-				// Build in implementation a tree constant multiplier 
+				// Build in implementation a tree constant multiplier
 				ShiftAddDag* implem_try_right = buildMultBoothTreeFromRight(n);
 				ShiftAddDag* implem_try_left = buildMultBoothTreeFromLeft(n);
 				ShiftAddDag* implem_try_balanced = buildMultBoothTreeToMiddle(n);
@@ -572,7 +572,7 @@ namespace flopoco{
 
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
-				outDelayMap["R"] = delay;
+				getOutDelayMap()["R"] = delay;
 			}
 		}
 
@@ -588,13 +588,13 @@ namespace flopoco{
 
 	IntConstMult::IntConstMult(Target* _target, int _xsize, mpz_class n, mpz_class period, int periodMSBZeroes, int periodSize, mpz_class header, int headerSize, int i, int j) :
 		Operator(_target), xsize(_xsize){
-			ostringstream name; 
+			ostringstream name;
 
 			srcFileName="IntConstMult (periodic)";
 			setCopyrightString("Florent de Dinechin (2007-2011)");
 			name <<"IntConstMultPeriodic_"<<xsize<<"_"<<mpz2string(header)<<"_"<<headerSize
 				<<"_"<<mpz2string(period<<periodMSBZeroes)<<"_"<<periodSize<<"_"<<i<<"_";
-			if (j<0) 
+			if (j<0)
 				name << "M" << -j;
 			else
 				name << j;
@@ -608,7 +608,7 @@ namespace flopoco{
 			addInput("X", xsize);
 			addOutput("R", rsize);
 
-			// Build in implementation a tree constant multiplier 
+			// Build in implementation a tree constant multiplier
 
 			ShiftAddOp* powerOfTwo[1000]; // Should be enough for anybody
 
@@ -664,7 +664,7 @@ namespace flopoco{
 
 			// copy the top of the DAG into variable R
 			vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
-			outDelayMap["R"] = delay;
+			getOutDelayMap()["R"] = delay;
 
 		}
 
@@ -680,14 +680,14 @@ namespace flopoco{
 		cerr<<"Optimization by rigo.c"<< endl;//                    x    s    y
 		/*
 		*/
-		implementation->computeVarSizes(); 
+		implementation->computeVarSizes();
 		implementation->result = implementation->sao.size()-1;
 	}
-	else 
+	else
 		if(n==mpz_class("1768559438007110"))
 		{
 			const int PX=0;
-			cerr<<"Optimization by rigo.c"<< endl;//                   
+			cerr<<"Optimization by rigo.c"<< endl;//
 			implementation->addOp( new ShiftAddOp(implementation, Neg,   PX) );       // 1  mx = -u0
 			implementation->addOp( new ShiftAddOp(implementation, Add,   0, 19,  0) );        // 2  u3 = u0 << 19 + u0
 			implementation->addOp( new ShiftAddOp(implementation, Shift,   2, 20) );          // 3  u103 = u3 << 20
@@ -726,7 +726,7 @@ namespace flopoco{
 			   16 u202 = u102 << 2  + mu102
 			   R = u101 + u202
 			   */
-			implementation->computeVarSizes(); 
+			implementation->computeVarSizes();
 			implementation->result = implementation->saolist.size()-1;
 		}
 	//	else
@@ -744,9 +744,9 @@ namespace flopoco{
 	string IntConstMult::printBoothCode(int* BoothCode, int size) {
 		ostringstream s;
 		for (int i=size-1; i>=0; i--) {
-			if(BoothCode[i]==0)       s << "0"; 
+			if(BoothCode[i]==0)       s << "0";
 			else if(BoothCode[i]==1)  s << "+" ;
-			else if(BoothCode[i]==-1) s << "-" ;   
+			else if(BoothCode[i]==-1) s << "-" ;
 		}
 		return s.str();
 	}
@@ -842,7 +842,7 @@ namespace flopoco{
 			}
 			sizeOfCurrentOperands=recodeBooth(fquot, fBC)+recodeBooth(frem, fBC);
 			sizeOfNewOperands=recodeBooth(quot,fBC)+recodeBooth(rem,fBC);
-			
+
 			if (  ( sizeOfNewOperands ) < ( sizeOfCurrentOperands )  )
 			{	//if the result is smaller than the current result, then set the current result to the result and carry on
 				mpz_set(divider,potentialDividers[i]);
@@ -889,7 +889,7 @@ namespace flopoco{
 		int nonZero=0;
 		b = new int[nsize+1];
 		while(nn!=0) {
-			b[l] = (nn.get_ui())%2;  
+			b[l] = (nn.get_ui())%2;
 			nonZero+=b[l]; // count the ones
 			l++;
 			nn = nn>>1;
@@ -897,8 +897,8 @@ namespace flopoco{
 		b[nsize]=0;
 
 		ostringstream o;
-		for (int i=nsize-1; i>=0; i--)    o << ((int) b[i]);   
-		REPORT(DETAILED, "Constant binary is  " << o.str() << " with " << nonZero << " ones"); 
+		for (int i=nsize-1; i>=0; i--)    o << ((int) b[i]);
+		REPORT(DETAILED, "Constant binary is  " << o.str() << " with " << nonZero << " ones");
 
 		int needMinusX=0;
 		c = new int[nsize+1];
@@ -907,7 +907,7 @@ namespace flopoco{
 		for (i=0; i<nsize; i++) {
 			if (b[i] + b[i+1] + c[i] >= 2)
 				c[i+1] = 1;
-			else 
+			else
 				c[i+1] = 0;
 			BoothCode[i] = b[i] + c[i] -2*c[i+1];
 			if(BoothCode[i]==-1)
@@ -917,19 +917,19 @@ namespace flopoco{
 
 
 		for (i=0; i<=nsize; i++) {
-			if (BoothCode[i] != 0) 
+			if (BoothCode[i] != 0)
 				nonZeroInBoothCode ++;
 		}
 
-		REPORT(DETAILED, "Booth recoding is  " << printBoothCode(BoothCode, nsize+1)  << " with " << nonZeroInBoothCode << " non-zero digits"); 
+		REPORT(DETAILED, "Booth recoding is  " << printBoothCode(BoothCode, nsize+1)  << " with " << nonZeroInBoothCode << " non-zero digits");
 
-		// If there is no savings in terms of additions, discard the Booth code 
+		// If there is no savings in terms of additions, discard the Booth code
 		if (nonZeroInBoothCode+needMinusX >= nonZero) {
-			REPORT(DETAILED, "Reverting to non-Booth"); 
+			REPORT(DETAILED, "Reverting to non-Booth");
 			for (i=0; i<nsize; i++)
 				BoothCode[i] = b[i];
 			nonZeroInBoothCode=nonZero;
-			REPORT(DETAILED, "Booth recoding is   " << printBoothCode(BoothCode, nsize)  << " with " << nonZeroInBoothCode << " non-zero digits"); 
+			REPORT(DETAILED, "Booth recoding is   " << printBoothCode(BoothCode, nsize)  << " with " << nonZeroInBoothCode << " non-zero digits");
 		}
 
 		delete [] c; delete [] b;
@@ -962,7 +962,7 @@ namespace flopoco{
 			}
 		}
 		else {
-			if(i==0) 
+			if(i==0)
 				z = MX;
 			else {
 				z = new ShiftAddOp(implementation, Shift,   MX, i);
@@ -972,7 +972,7 @@ namespace flopoco{
 
 		for (k=1; k<nonZeroInBoothCode; k++) {
 			while(0==BoothCode[i]) i++;
-			if (1==BoothCode[i]) 
+			if (1==BoothCode[i])
 				z = new ShiftAddOp(implementation, Add,   implementation->PX, i,  z);
 			else
 				z = new ShiftAddOp(implementation, Add,   MX, i,  z);
@@ -1026,7 +1026,7 @@ namespace flopoco{
 		bool too_small = !findBestDivider(n, d, q, r);
 
 		if (too_small){
-			throw string("ERROR in IntConstMult::buildEuclideanDag: Tried to divide a constant lower than 3: this will make no sense. Aborting DAG construction\n"); //would have to  stay here untill we find no more errors in this method... 
+			throw string("ERROR in IntConstMult::buildEuclideanDag: Tried to divide a constant lower than 3: this will make no sense. Aborting DAG construction\n"); //would have to  stay here untill we find no more errors in this method...
 			return NULL;
 		};
 
@@ -1095,7 +1095,7 @@ namespace flopoco{
 		}
 		else {
 			int* BoothCode;
-			BoothCode = new int[nsize+1]; 
+			BoothCode = new int[nsize+1];
 			nonZeroInBoothCode = recodeBooth(n, BoothCode);
 
 			i=0;
@@ -1126,12 +1126,12 @@ namespace flopoco{
 					if (1==BoothCode[i]) // i was previously initialized as the weight of the first non-zero bit
 						level[j] = tree_try->PX; // j corresponds to the non-zero bit we are looking at. then we have to set its shift in the shift array
 					else
-						level[j] = MX; 
+						level[j] = MX;
 					shifts[j] = i - globalshift;
 					i++;
 					while(0==BoothCode[i]) i++; // set the shift to the right value
 				}
-				level[j] = tree_try->PX; 
+				level[j] = tree_try->PX;
 				shifts[j] = i-globalshift; // BoothCode's MSB is always positive, because we perform unsigned multiplication. For signed multiplication, we just need to negate or not the result. Check this: deduction propagation could increase cost.
 				delete [] BoothCode;
 				return 0;
@@ -1151,7 +1151,7 @@ namespace flopoco{
 		int*     shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);		
+		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
 			REPORT(DEBUG, "nonZeroInBoothCode=" <<nonZeroInBoothCode<<" globalshift=" << globalshift);
@@ -1171,7 +1171,7 @@ namespace flopoco{
 					shifts[j] = shifts[2*j];
 					k=nk+1;
 				}
-				else 
+				else
 					k=nk;
 			}
 			if(globalshift==0)
@@ -1197,7 +1197,7 @@ namespace flopoco{
 		int*     shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);		
+		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
 			k=nonZeroInBoothCode;
@@ -1216,7 +1216,7 @@ namespace flopoco{
 					shifts[nonZeroInBoothCode-1 - (j)] = shifts[nonZeroInBoothCode-1 - (2*j)];
 					k=nk+1;
 				}
-				else 
+				else
 					k=nk;
 			}
 			if(globalshift==0)
@@ -1245,7 +1245,7 @@ namespace flopoco{
 		int*     shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);		
+		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
 			ShiftAddOp **fillLevel;
@@ -1360,7 +1360,7 @@ namespace flopoco{
 		int*     shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);		
+		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);
 		//each iteration we search the smallest shift between two non-zero bits and compute all the operator including this shift, leaving the others for the next step
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
 			ShiftAddOp **fillLevel;
@@ -1447,31 +1447,31 @@ namespace flopoco{
 	void IntConstMult::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addInput("X", mpz_class(0));
 		emulate(tc);
 		tc->addComment("Multiplication by 0");
 		tcl->add(tc);
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addInput("X", mpz_class(1));
 		emulate(tc);
 		tc->addComment("Multiplication by 1");
 		tcl->add(tc);
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addInput("X", mpz_class(2));
 		emulate(tc);
 		tc->addComment("Multiplication by 2");
 		tcl->add(tc);
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addInput("X", (mpz_class(1) << xsize) -1);
 		emulate(tc);
 		tc->addComment("Multiplication by the max positive value");
 		tcl->add(tc);
 
-		//	tc = new TestCase(this); 
+		//	tc = new TestCase(this);
 		//	tc->addInput("X", (mpz_class(1) << (xsize) -1) + mpz_class(1));
 		//	emulate(tc);
 		//	tc->addComment("Multiplication by 10...01");

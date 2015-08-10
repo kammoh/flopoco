@@ -1,13 +1,13 @@
 /*
   A generic class for tables of values
- 
+
   Author : Florent de Dinechin
- 
+
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
-  
+
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2010.
   All rights reserved.
 
@@ -74,7 +74,7 @@ namespace flopoco{
 		// Set up the IO signals
 		addInput ("X"  , wIn, true);
 		addOutput ("Y"  , wOut, 1, true);
-		
+
 		if(maxIn==-1) maxIn=(1<<wIn)-1;
 		if(minIn<0) {
 			cerr<<"ERROR in Table::Table, minIn<0\n";
@@ -84,14 +84,14 @@ namespace flopoco{
 			cerr<<"ERROR in Table::Table, maxIn too large\n";
 			exit(EXIT_FAILURE);
 		}
-		if((minIn==0) && (maxIn==(1<<wIn)-1)) 
+		if((minIn==0) && (maxIn==(1<<wIn)-1))
 			full=true;
 		else
 			full=false;
 		if (wIn > 10)
 		  REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
 
-		
+
 		if(_logicTable==1)
 			logicTable=true;
 		else if (_logicTable==-1)
@@ -101,7 +101,7 @@ namespace flopoco{
 			if(!logicTable)
 				REPORT(DETAILED, "This table will be implemented in memory blocks");
 		}
-		
+
 
 		// Pipelining is managed as follows:
 		// Declaration of the signal TableOut at cycle 0. It will be assigned in outputVHDL() below
@@ -113,7 +113,7 @@ namespace flopoco{
 
 		if (logicTable)  {
 			// Delay is that of broadcasting the input bits to wOut LUTs, plus the LUT delay itself
-			if(wIn <= target->lutInputs()) 
+			if(wIn <= target->lutInputs())
 				addToCriticalPath(target->localWireDelay(wOut) + target->lutDelay());
 			else{
 				int lutsPerBit=1<<(wIn-target->lutInputs());
@@ -127,14 +127,14 @@ namespace flopoco{
 			manageCriticalPath(target->LogicToRAMWireDelay() + target->RAMToLogicWireDelay() + target->RAMDelay()); // will hopefully insert the extra register when needed
 		}
 
-		getSignalByName("TableOut") -> updateLifeSpan(getCurrentCycle()); 
-		outDelayMap["Y"] =   getCriticalPath();
+		getSignalByName("TableOut") -> updateLifeSpan(getCurrentCycle());
+		getOutDelayMap()["Y"] =   getCriticalPath();
 	}
 
 
 
 
-	Table::Table(Target* target) : 
+	Table::Table(Target* target) :
 		Operator(target){
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2010)");
 	}
@@ -159,7 +159,7 @@ namespace flopoco{
 		// Xilinx-specific BRAM code generation can be found in the older versions, to be resurrected if needed
 		int i,x;
 		mpz_class y;
-		beginArchitecture(o);		
+		beginArchitecture(o);
 		o<<buildVHDLRegisters();
 		o	<< "  with X select TableOut <= " << endl;
 		REPORT(FULL,"Table.cpp: Filling the table");
@@ -170,16 +170,16 @@ namespace flopoco{
 			o<< tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
 		}
 		o << tab << "\"";
-		for (i = 0; i < wOut; i++) 
+		for (i = 0; i < wOut; i++)
 			o << "-";
 		o <<  "\" when others;" << endl;
-		
+
 		// Delay the output properly
 		o << tab << " Y <= TableOut";
 		if(isSequential() && getPipelineDepth()!=0) {
 			o << "_d" << getPipelineDepth();
 		}
-		o << ";" << endl; 			
+		o << ";" << endl;
 
 		endArchitecture(o);
 	}
