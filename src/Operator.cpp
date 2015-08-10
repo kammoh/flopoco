@@ -2878,6 +2878,28 @@ namespace flopoco{
 	}
 
 
+	void Operator::parseVHDL(int parseType)
+	{
+		if(parseType == 1)
+		{
+			//trigger the first code parse
+			//	call str(), which will trigger the necessary calls
+			REPORT(FULL, "  1st PARSING PASS");
+			getFlopocoVHDLStream()->str();
+		}else
+		{
+			//trigger the second parse
+			//	for sequential and combinatorial operators as well
+			REPORT(FULL, "  2nd PARSING PASS");
+			parse2();
+		}
+
+		//trigger the first code parse for the operator's subcomponents
+		for(vector<Operator*>::iterator it=oplist.begin(); it!=oplist.end(); it++)
+		{
+			(*it)->parseVHDL(parseType);
+		}
+	}
 
 
 	void Operator::outputVHDLToFile(vector<Operator*> &oplist, ofstream& file)
@@ -2887,25 +2909,11 @@ namespace flopoco{
 		for(vector<Operator*>::iterator it=oplist.begin(); it!=oplist.end(); it++)
 		{
 			try {
-				REPORT(FULL, "---------------OPERATOR: " << (*it)->getName() << "-------------");
-
 				// check for subcomponents
 				if(! (*it)->getOpListR().empty() ){
 					//recursively call to print subcomponents
 					outputVHDLToFile((*it)->getOpListR(), file);
 				}
-
-				//trigger the first code parse
-				//	call str(), which will trigger the necessary calls
-				(*it)->getFlopocoVHDLStream()->str();
-
-				//trigger the second parse
-				//	for sequential and combinatorial operators as well
-				REPORT(FULL, "  2nd PASS");
-				(*it)->parse2();
-
-				//schedule the operator
-				(*it)->startScheduling();
 
 				//output the vhdl code to file
 				//	for global operators, this is done only once
@@ -2914,7 +2922,6 @@ namespace flopoco{
 					(*it)->outputVHDL(file);
 					(*it)->setIsOperatorImplemented(true);
 				}
-
 			} catch (std::string &s) {
 					cerr << "Exception while generating '" << (*it)->getName() << "': " << s << endl;
 			}

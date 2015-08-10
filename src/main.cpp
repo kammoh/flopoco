@@ -1984,7 +1984,25 @@ int main(int argc, char* argv[] )
 
 	ofstream file;
 	file.open(filename.c_str(), ios::out);
+
+	//start the first code parse
+	for(i=0; i<oplist->size(); i++){
+		(*oplist)[i]->parseVHDL(1);
+	}
+
+	//schedule the signals
+	for(i=0; i<oplist->size(); i++){
+		(*oplist)[i]->startScheduling();
+	}
+
+	//start the second code parse
+	for(i=0; i<oplist->size(); i++){
+		(*oplist)[i]->parseVHDL(2);
+	}
+
+	//write the vhdl code
 	Operator::outputVHDLToFile(*oplist, file);
+
 	file.close();
 
 	cerr << endl<<"Final report:"<<endl;

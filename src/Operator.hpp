@@ -101,6 +101,13 @@ public:
 	 */
 	void addToGlobalOpList(Operator *op);
 
+	/**
+	 * Parse the vhdl code for this operator and its children.
+	 * @param parseType decide whether to perform the first, or the second parse
+	 * 		  1=first parse (default), 2=second parse
+	 */
+	void parseVHDL(int parseType = 1);
+
 
 	/**
 	 * Generates the code for a list of operators and all their subcomponents
