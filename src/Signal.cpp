@@ -184,36 +184,36 @@ namespace flopoco{
 
 	Signal::SignalType Signal::type() const {return type_;}
 
-	vector<pair<Signal*, int>> Signal::predecessors() const {return predecessors_;}
+	vector<pair<Signal*, int>>* Signal::predecessors() {return &predecessors_;}
 
-	Signal* Signal::predecessor(int count) const {
+	Signal* Signal::predecessor(int count) {
 		if(((unsigned)count >= predecessors_.size()) || (count < 0))
 			throw("Error in Signal::predecessor: trying to access an element at an index outside of bounds");
 
 		return predecessors_[count].first;
 	}
 
-	pair<Signal*, int> Signal::predecessorPair(int count) const {
+	pair<Signal*, int>* Signal::predecessorPair(int count) {
 		if(((unsigned)count >= predecessors_.size()) || (count < 0))
 			throw("Error in Signal::predecessorPair: trying to access an element at an index outside of bounds");
 
-		return predecessors_[count];
+		return &(predecessors_[count]);
 	}
 
-	vector<pair<Signal*, int>> Signal::successors() const {return successors_;}
+	vector<pair<Signal*, int>>* Signal::successors() {return &successors_;}
 
-	Signal* Signal::successor(int count) const {
+	Signal* Signal::successor(int count) {
 		if(((unsigned)count >= successors_.size()) || (count < 0))
 			throw("Error in Signal::successor: trying to access an element at an index outside of bounds");
 
 		return successors_[count].first;
 	}
 
-	pair<Signal*, int> Signal::successorPair(int count) const {
+	pair<Signal*, int>* Signal::successorPair(int count) {
 		if(((unsigned)count >= successors_.size()) || (count < 0))
 			throw("Error in Signal::successorPair: trying to access an element at an index outside of bounds");
 
-		return successors_[count];
+		return &(successors_[count]);
 	}
 
 	string Signal::toVHDLType() {

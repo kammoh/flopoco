@@ -698,6 +698,7 @@ namespace flopoco{
 
 
 	int Operator::getPipelineDepth() {
+		setPipelineDepth();
 		return pipelineDepth_;
 	}
 
@@ -1054,26 +1055,30 @@ namespace flopoco{
 
 	void Operator::resetPredecessors(Signal* targetSignal)
 	{
-		targetSignal->predecessors().clear();
+		targetSignal->predecessors()->clear();
 	}
 
 	void Operator::addPredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
-		for(int i=0; (unsigned)i<targetSignal->predecessors().size(); i++)
+		for(int i=0; (unsigned)i<targetSignal->predecessors()->size(); i++)
 		{
-			pair<Signal*, int> predecessorPair = targetSignal->predecessors()[i];
+			pair<Signal*, int> predecessorPair = *(targetSignal->predecessorPair(i));
 			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
 					&& (predecessorPair.first->getName() == predecessor->getName())
 					&& (predecessorPair.first->type() == predecessor->type())
 					&& (predecessorPair.second == delayCycles))
-				throw("ERROR in addPredecessor(): trying to add an already existing signal "
-						+ predecessor->getName() + " to the predecessor list");
+			{
+				REPORT(FULL, "ERROR in addPredecessor(): trying to add an already existing signal "
+						<< predecessor->getName() << " to the predecessor list");
+				//nothing else to do
+				return;
+			}
 		}
 
 		//safe to insert a new signal in the predecessor list
 		pair<Signal*, int> newPredecessorPair = make_pair(predecessor, delayCycles);
-		targetSignal->predecessors().push_back(newPredecessorPair);
+		targetSignal->predecessors()->push_back(newPredecessorPair);
 	}
 
 	void Operator::addPredecessors(Signal* targetSignal, vector<pair<Signal*, int>> predecessorList)
@@ -1086,16 +1091,16 @@ namespace flopoco{
 	{
 		//only try to remove the predecessor if the signal
 		//	already exists, within the same instance and with the same delay
-		for(int i=0; (unsigned)i<targetSignal->predecessors().size(); i++)
+		for(int i=0; (unsigned)i<targetSignal->predecessors()->size(); i++)
 		{
-			pair<Signal*, int> predecessorPair = targetSignal->predecessors()[i];
+			pair<Signal*, int> predecessorPair = *(targetSignal->predecessorPair(i));
 			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
 					&& (predecessorPair.first->getName() == predecessor->getName())
 					&& (predecessorPair.first->type() == predecessor->type())
 					&& (predecessorPair.second == delayCycles))
 			{
 				//delete the element from the list
-				targetSignal->predecessors().erase(targetSignal->predecessors().begin()+i);
+				targetSignal->predecessors()->erase(targetSignal->predecessors()->begin()+i);
 				return;
 			}
 		}
@@ -1106,26 +1111,30 @@ namespace flopoco{
 
 	void Operator::resetSuccessors(Signal* targetSignal)
 	{
-		targetSignal->successors().clear();
+		targetSignal->successors()->clear();
 	}
 
 	void Operator::addSuccessor(Signal* targetSignal, Signal* successor, int delayCycles)
 	{
 		//check if the signal already exists, within the same instance
-		for(int i=0; (unsigned)i<targetSignal->successors().size(); i++)
+		for(int i=0; (unsigned)i<targetSignal->successors()->size(); i++)
 		{
-			pair<Signal*, int> successorPair = targetSignal->successors()[i];
+			pair<Signal*, int> successorPair = *(targetSignal->successorPair(i));
 			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
 					&& (successorPair.first->getName() == successor->getName())
 					&& (successorPair.first->type() == successor->type())
 					&& (successorPair.second == delayCycles))
-				throw("ERROR in addSuccessor(): trying to add an already existing signal "
-						+ successor->getName() + " to the predecessor list");
+			{
+				REPORT(FULL, "ERROR in addSuccessor(): trying to add an already existing signal "
+						<< successor->getName() << " to the predecessor list");
+				//nothing else to do
+				return;
+			}
 		}
 
 		//safe to insert a new signal in the predecessor list
 		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
-		targetSignal->successors().push_back(newSuccessorPair);
+		targetSignal->successors()->push_back(newSuccessorPair);
 	}
 
 	void Operator::addSuccessors(Signal* targetSignal, vector<pair<Signal*, int>> successorList)
@@ -1138,16 +1147,16 @@ namespace flopoco{
 	{
 		//only try to remove the successor if the signal
 		//	already exists, within the same instance and with the same delay
-		for(int i=0; (unsigned)i<targetSignal->successors().size(); i++)
+		for(int i=0; (unsigned)i<targetSignal->successors()->size(); i++)
 		{
-			pair<Signal*, int> successorPair = targetSignal->successors()[i];
+			pair<Signal*, int> successorPair = *(targetSignal->successorPair(i));
 			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
 					&& (successorPair.first->getName() == successor->getName())
 					&& (successorPair.first->type() == successor->type())
 					&& (successorPair.second == delayCycles))
 			{
 				//delete the element from the list
-				targetSignal->successors().erase(targetSignal->successors().begin()+i);
+				targetSignal->successors()->erase(targetSignal->successors()->begin()+i);
 				return;
 			}
 		}
@@ -2444,7 +2453,7 @@ namespace flopoco{
 		//check that all the inputs are at the same cycle
 		for(unsigned int i=0; i<ioList_.size(); i++)
 			for(unsigned int j=i+1; j<ioList_.size(); j++)
-				if(ioList_[i]->getCycle() != ioList_[j]->getCycle())
+				if((ioList_[i]->type() == Signal::in) && (ioList_[j]->type() == Signal::in) && (ioList_[i]->getCycle() != ioList_[j]->getCycle()))
 					THROWERROR("Error in startScheduling(): not all signals are at the same cycle: signal "
 							+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
 							+ " but signal " + ioList_[j]->getName() + " is at cycle "
@@ -2467,8 +2476,9 @@ namespace flopoco{
 		{
 			Signal *currentSignal = ioList_[i];
 
-			for(unsigned j=0; j<currentSignal->successors().size(); j++)
-				scheduleSignal(currentSignal->successor(j));
+			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
+				if(currentSignal->type() == Signal::in)
+					scheduleSignal(currentSignal->successor(j));
 		}
 	}
 
@@ -2481,7 +2491,7 @@ namespace flopoco{
 			return;
 
 		//check if all the signal's predecessors have been scheduled
-		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 			if(targetSignal->predecessor(i)->getHasBeenImplemented() == false)
 				//not all predecessors are scheduled, so thee signal cannot be scheduled
 				return;
@@ -2490,7 +2500,7 @@ namespace flopoco{
 		setSignalTiming(targetSignal);
 
 		//update the lifespan of targetSignal's predecessors
-		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 
 		//check if this is an input signal for a sub-component
@@ -2543,7 +2553,7 @@ namespace flopoco{
 			//this is a regular signal inside of the operator
 
 			//try to schedule the successors of the signal
-			for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+			for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 				scheduleSignal(targetSignal->predecessor(i));
 		}
 
@@ -2555,10 +2565,10 @@ namespace flopoco{
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
 		//determine the maximum cycle and critical path of the signal's parents
-		for(unsigned int i=0; i<targetSignal->predecessors().size(); i++)
+		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 		{
 			Signal* currentPred = targetSignal->predecessor(i);
-			int currentPredCycleDelay = targetSignal->predecessorPair(i).second;
+			int currentPredCycleDelay = targetSignal->predecessorPair(i)->second;
 
 			//check if the predecessor is at a later cycle
 			if(currentPred->getCycle()+currentPredCycleDelay >= maxCycle)
@@ -2806,9 +2816,9 @@ namespace flopoco{
 			vector<pair<Signal*, int>> newPredecessors, newSuccessors;
 
 			//create the new list of predecessors for the signal currently treated
-			for(unsigned int j=0; j<op->signalList_[i]->predecessors().size(); j++)
+			for(unsigned int j=0; j<op->signalList_[i]->predecessors()->size(); j++)
 			{
-				pair<Signal*, int> tmpPair = op->signalList_[i]->predecessorPair(j);
+				pair<Signal*, int> tmpPair = *(op->signalList_[i]->predecessorPair(j));
 
 				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
@@ -2817,9 +2827,9 @@ namespace flopoco{
 			addPredecessors(signalList_[i], newPredecessors);
 
 			//create the new list of successors for the signal currently treated
-			for(unsigned int j=0; j<op->signalList_[i]->successors().size(); j++)
+			for(unsigned int j=0; j<op->signalList_[i]->successors()->size(); j++)
 			{
-				pair<Signal*, int> tmpPair = op->signalList_[i]->successorPair(j);
+				pair<Signal*, int> tmpPair = *(op->signalList_[i]->successorPair(j));
 
 				newSuccessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
