@@ -2352,7 +2352,7 @@ namespace flopoco{
 			newStr << oldStr.substr(currentPos, nextPos-currentPos);
 
 			//now get a new line to parse
-			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)-nextPos-2);
+			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)+1-nextPos-2);
 
 			//extract the lhs_name
 			lhsName = workStr.substr(0, workStr.find('?'));
@@ -2410,6 +2410,9 @@ namespace flopoco{
 			currentPos = nextPos + workStr.size() + 2;
 			nextPos = oldStr.find('?', currentPos);
 		}
+
+		//copy the remaining code to the vhdl code buffer
+		newStr << oldStr.substr(currentPos, oldStr.size()-currentPos);
 
 		vhdl.setSecondLevelCode(newStr.str());
 

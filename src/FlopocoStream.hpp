@@ -53,7 +53,6 @@ namespace flopoco{
 		}
 
 		friend FlopocoStream& operator<<( FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
-			output.vhdlCode << std::endl;
 			output.vhdlCodeBuffer << std::endl;
 			output.codeParsed = false;
 			return output;

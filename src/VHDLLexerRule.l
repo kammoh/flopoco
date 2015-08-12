@@ -110,7 +110,7 @@ label					  ({identifier}{space_character}*":")
 ({e}{l}{s}{e}) |
 ({e}{l}{s}{i}{f}) |
 ({e}{n}{d}) |
-({e}{n}{t}{i}{t}{y}) | 
+({e}{n}{t}{i}{t}{y}) |
 ({e}{x}{i}{t}) |
 ({f}{i}{l}{e}) |
 ({f}{o}{r}) |
@@ -120,7 +120,7 @@ label					  ({identifier}{space_character}*":")
 ({g}{r}{o}{u}{p}) |
 ({g}{u}{a}{r}{d}{e}{d}) |
 ({i}{f}) |
-({i}{m}{p}{u}{r}{e})
+({i}{m}{p}{u}{r}{e}) |
 ({i}{n}) |
 ({i}{n}{e}{r}{t}{i}{a}{l}) |
 ({i}{n}{o}{u}{t}) |
@@ -178,7 +178,9 @@ label					  ({identifier}{space_character}*":")
 ({w}{a}{i}{t}) |
 ({w}{h}{i}{l}{e}) |
 ({x}{n}{o}{r}) |
-({x}{o}{r})  { (*yyextra->os) << yytext; }
+({x}{o}{r}) { 
+    (*yyextra->os) << yytext;
+}
 
 
 "=>" { 
@@ -210,13 +212,6 @@ label					  ({identifier}{space_character}*":")
 
 ";" {
     //the left-hand side signal itself is marked, instead of putting it at the end of the statement
-    /*
-	if((yyextra->lexingMode == LexerContext::signalAssignment) || (yyextra->lexingMode == LexerContext::conditionalSignalAssignment) 
-		|| (yyextra->lexingMode == LexerContext::selectedSignalAssignment))
-	{
-		(*yyextra->os) << yytext << "??" << yyextra->lhsName << "??";
-	}
-	*/
 	
 	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)
 	{
@@ -231,10 +226,12 @@ label					  ({identifier}{space_character}*":")
 	yyextra->extraRhsNames.clear();
 	yyextra->lexingMode = LexerContext::unset;
 	yyextra->lhsName = "";
+	
+	(*yyextra->os) << yytext;
 }
 
 
-({w}{h}{e}{n})	{
+({w}{h}{e}{n}) {
 	(*yyextra->os) << yytext;
 	
 	if(yyextra->lexingMode != LexerContext::selectedSignalAssignment)

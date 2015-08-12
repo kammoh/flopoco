@@ -38,9 +38,9 @@ namespace flopoco{
 
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2011)" );
 		setOperatorName();
-		srcFileName = (direction == Right?  "RightShifter": "LeftShifter");
+		srcFileName = (direction==Right ? "RightShifter" : "LeftShifter");
 
-		REPORT( INFO, " wIn="<<wIn<<" maxShift="<<maxShift<<" direction="<< (direction == Right?  "RightShifter": "LeftShifter") );
+		REPORT( INFO, " wIn="<<wIn<<" maxShift="<<maxShift<<" direction="<< (direction == Right ? "RightShifter" : "LeftShifter") );
 
 		// -------- Parameter set up -----------------
 		wOut_         = wIn_ + maxShift_;
@@ -51,8 +51,8 @@ namespace flopoco{
 		addInput ("S", wShiftIn_);
 		addOutput("R", wOut_);
 
-		vhdl << tab << declare("level0",wIn_  ) << "<= X;" <<endl;
-		vhdl << tab << declare("ps", wShiftIn_) << "<= S;" <<endl;
+		vhdl << tab << declare("level0", wIn_) << "<= X;" << endl;
+		vhdl << tab << declare("ps", wShiftIn_) << "<= S;" << endl;
 
 		// local variables
 		int    lastRegLevel = -1;
@@ -60,10 +60,10 @@ namespace flopoco{
 		int    dep = 0;
 		setCriticalPath( getMaxInputDelays( inputDelays) );
 
-		for (int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
+		for(int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
 			//compute current level delay
 			unregisteredLevels = currentLevel - lastRegLevel;
-			if ( intpow2(unregisteredLevels-1) > wIn_+currentLevel+1 )
+			if( intpow2(unregisteredLevels-1) > wIn_+currentLevel+1 )
 				dep = wIn + currentLevel + unregisteredLevels;
 			else
 				dep = intpow2(unregisteredLevels-1);
@@ -78,18 +78,20 @@ namespace flopoco{
 			if (currentLevel<wShiftIn_-1)
 				setCriticalPath(0.0);
 
+			double currentCriticalPath = intlog(mpz_class(target->lutInputs()/2), mpz_class(dep)) * target->lutDelay() + (intlog( mpz_class(target->lutInputs()/2), mpz_class(dep))-1)*target->localWireDelay()+ wireD;
+
 			ostringstream currentLevelName, nextLevelName;
 			currentLevelName << "level"<<currentLevel;
 			nextLevelName << "level"<<currentLevel+1;
 			if (direction==Right){
-				vhdl << tab << declare(nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
+				vhdl << tab << declare(currentCriticalPath, nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
 					  <<"<=  ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') & "<<currentLevelName.str()<<" when ps";
 				if (wShiftIn_ > 1)
 					vhdl << "(" << currentLevel << ")";
 				vhdl << " = '1' else "
 					  << tab << currentLevelName.str() <<" & ("<<intpow2(currentLevel)-1<<" downto 0 => '0');"<<endl;
 			}else{
-				vhdl << tab << declare(nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
+				vhdl << tab << declare(currentCriticalPath, nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
 					  << "<= " << currentLevelName.str() << " & ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') when ps";
 				if (wShiftIn_>1)
 					vhdl << "(" << currentLevel<< ")";
