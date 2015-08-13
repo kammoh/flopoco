@@ -2468,7 +2468,8 @@ namespace flopoco{
 			Signal *currentSignal = ioList_[i];
 
 			//schedule the current input signal
-			setSignalTiming(currentSignal);
+			if(currentSignal->type() == Signal::in)
+				setSignalTiming(currentSignal);
 		}
 
 		//start the schedule on the children of the inputs
@@ -2476,8 +2477,10 @@ namespace flopoco{
 		{
 			Signal *currentSignal = ioList_[i];
 
+			if(currentSignal->type() != Signal::in)
+				continue;
+
 			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
-				if(currentSignal->type() == Signal::in)
 					scheduleSignal(currentSignal->successor(j));
 		}
 	}
@@ -2553,8 +2556,8 @@ namespace flopoco{
 			//this is a regular signal inside of the operator
 
 			//try to schedule the successors of the signal
-			for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
-				scheduleSignal(targetSignal->predecessor(i));
+			for(unsigned int i=0; i<targetSignal->successors()->size(); i++)
+				scheduleSignal(targetSignal->successor(i));
 		}
 
 	}
@@ -2564,8 +2567,15 @@ namespace flopoco{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
+		//initialize the maximum cycle and critical path of the predecessors
+		if(targetSignal->predecessors()->size() != 0)
+		{
+			maxCycle = targetSignal->predecessor(0)->getCycle();
+			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
+		}
+
 		//determine the maximum cycle and critical path of the signal's parents
-		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
+		for(unsigned int i=1; i<targetSignal->predecessors()->size(); i++)
 		{
 			Signal* currentPred = targetSignal->predecessor(i);
 			int currentPredCycleDelay = targetSignal->predecessorPair(i)->second;
@@ -2593,19 +2603,27 @@ namespace flopoco{
 
 		//compute the cycle and the critical path for the node itself from
 		//	the maximum cycle and critical path of the predecessors
-		maxTargetCriticalPath = 1.0 / targetSignal->parentOp()->getTarget()->frequency();
+		maxTargetCriticalPath = 1.0 / getTarget()->frequency();
 		//check if the signal needs to pass to the next cycle,
 		//	due to its critical path contribution
 		if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
 		{
-			targetSignal->setCycle(maxCycle+1);
-			targetSignal->setCriticalPath(
-					maxCriticalPath+targetSignal->getCriticalPathContribution()-maxTargetCriticalPath);
+			double totalDelay = maxCriticalPath + targetSignal->getCriticalPathContribution();
+
+			while((totalDelay+getTarget()->ffDelay()) > maxTargetCriticalPath)
+			{
+				// if maxCriticalPath+criticalPathContribution > 1/frequency, it may insert several pipeline levels.
+				// This is what we want to pipeline block-RAMs and DSPs up to the nominal frequency by just passing their overall delay.
+				maxCycle++;
+				totalDelay -= maxTargetCriticalPath + getTarget()->ffDelay();
+			}
+
+			targetSignal->setCycle(maxCycle);
+			targetSignal->setCriticalPath(0.0);
 		}else
 		{
 			targetSignal->setCycle(maxCycle);
-			targetSignal->setCriticalPath(
-					maxCriticalPath+targetSignal->getCriticalPathContribution());
+			targetSignal->setCriticalPath(maxCriticalPath+targetSignal->getCriticalPathContribution());
 		}
 
 		targetSignal->setHasBeenImplemented(true);
