@@ -74,14 +74,19 @@ namespace flopoco{
 
 			double wireD = target->localWireDelay(2*wIn);//the delay is unusually high
 			REPORT(DEBUG, " wire delay is " << wireD << " and unregisteredLevels="<<unregisteredLevels);
+			/*
 			if (manageCriticalPath( intlog( mpz_class(target->lutInputs()/2), mpz_class(dep)) * target->lutDelay() + (intlog( mpz_class(target->lutInputs()/2), mpz_class(dep))-1)*target->localWireDelay()+ wireD)){
 				lastRegLevel = currentLevel;
 				REPORT(DEBUG, tab << "REG LEVEL current delay is:" << getCriticalPath());
 			}
-
+			*/
 			double currentCriticalPath = intlog(mpz_class(target->lutInputs()/2), mpz_class(dep)) * target->lutDelay() + (intlog( mpz_class(target->lutInputs()/2), mpz_class(dep))-1)*target->localWireDelay()+ wireD;
 
-//			vhdl << "--Estimated delay is:" << getCriticalPath() << endl;
+			if(currentCriticalPath > (1.0/getTarget()->frequency())){
+				lastRegLevel = currentLevel;
+				REPORT(DEBUG, tab << "REG LEVEL current delay is:" << getCriticalPath());
+			}
+
 			if (currentLevel<wShiftIn_-1)
 				setCriticalPath(0.0);
 
