@@ -117,6 +117,13 @@ void usage(char *name, string opName = ""){
 		cerr << "bufferedInputs=<0,1>\n";
 		cerr << "inputDelay\n";
 	}
+	if ( full || opName == "IntAdderClassical" || opName == "IntAdder"){
+		OP("IntAdderClassical","wIn optimizeType srl inputDelay");
+		cerr << "Integer adder, multiple parameters, possibly pipelined\n";
+		cerr << "optimizeType=<0,1,2,3> 0=LUT 1=REG 2=SLICE 3=LATENCY\n";
+		cerr << "srl=<0,1> Allow SRLs\n";
+		cerr << "inputDelay\n";
+	}
 	if ( full || opName == "IntAdder" || opName == "LongIntAdderAddAddMux")
 		OP("LongIntAdderAddAddMux","wIn generation");
 	if ( full || opName == "IntAdder" || opName == "LongIntAdderCmpAddInc")
@@ -1019,6 +1026,25 @@ bool parseCommandLine(int argc, char* argv[]){
 					case 3: op = new IntAdder(target, wIn, delayMap, 3, srl, implementation); break; //latency
 					default: op = new IntAdder(target,wIn, delayMap, 2, srl, implementation); break;
 				}
+				addOperator(op);
+			}
+		}
+
+		else if(opname=="IntAdderClassical"){
+			int nargs = 4;
+			if (i+nargs > argc)
+				usage(argv[0],opname);
+			else {
+				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
+				int type = atoi(argv[i++]);
+				int srl = atoi(argv[i++]);
+				double inputDelay = atof(argv[i++]);
+
+				map <string, double> delayMap;
+				delayMap["X"] = inputDelay;
+
+				op = new IntAdderClassical(target, wIn, delayMap, type, srl);
+
 				addOperator(op);
 			}
 		}
