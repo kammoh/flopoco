@@ -709,21 +709,43 @@ namespace flopoco{
 	}
 
 	void Operator::setPipelineDepth() {
-		int maxCycle = 0;
+		int minInputCycle, maxOutputCycle;
+		bool firstInput = true, firstOutput = true;
 
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
-			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() > maxCycle))
-				maxCycle = ioList_[i]->getCycle();
+			if(firstInput && (ioList_[i]->type() == Signal::in))
+			{
+				minInputCycle = ioList_[i]->getCycle();
+				firstInput = false;
+				continue;
+			}
+			if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() < minInputCycle))
+			{
+				minInputCycle = ioList_[i]->getCycle();
+				continue;
+			}
+
+			if(firstOutput && (ioList_[i]->type() == Signal::out))
+			{
+				maxOutputCycle = ioList_[i]->getCycle();
+				firstOutput = false;
+				continue;
+			}
+			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() > maxOutputCycle))
+			{
+				maxOutputCycle = ioList_[i]->getCycle();
+				continue;
+			}
 		}
 
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
-			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() != maxCycle))
+			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() != maxOutputCycle))
 				cerr << "WARNING: setPipelineDepth(): this operator's outputs are NOT SYNCHRONIZED!" << endl;
 		}
 
-		pipelineDepth_ = maxCycle;
+		pipelineDepth_ = maxOutputCycle-minInputCycle;
 	}
 
 	void Operator::outputFinalReport(int level) {
@@ -2591,13 +2613,19 @@ namespace flopoco{
 					maxCycle = currentPred->getCycle()+currentPredCycleDelay;
 					maxCriticalPath = 0;
 				}else
-					if(currentPred->getCriticalPath() > maxCriticalPath)
+				{
+					if(currentPred->getCycle() > maxCycle)
+					{
+						maxCycle = currentPred->getCycle();
+						maxCriticalPath = currentPred->getCriticalPath();
+					}else if((currentPred->getCycle() == maxCycle) && (currentPred->getCriticalPath() > maxCriticalPath))
 					{
 						//the maximum cycle and critical path come from a
 						//	predecessor, on a link without delay
 						maxCycle = currentPred->getCycle();
 						maxCriticalPath = currentPred->getCriticalPath();
 					}
+				}
 			}
 		}
 
