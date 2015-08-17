@@ -1950,6 +1950,7 @@ bool parseCommandLine(int argc, char* argv[]){
 					usage(argv[0],opname);
 				}
 				Operator* toWrap = target->getGlobalOpListRef()->back();
+				target->getGlobalOpListRef()->pop_back();
 				op =new Wrapper(target, toWrap);
 				addOperator(op);
 			}
@@ -2013,17 +2014,20 @@ int main(int argc, char* argv[] )
 
 	//start the first code parse
 	for(i=0; i<oplist->size(); i++){
-		(*oplist)[i]->parseVHDL(1);
+		if(!(*oplist)[i]->isOperatorImplemented())
+			(*oplist)[i]->parseVHDL(1);
 	}
 
 	//schedule the signals
 	for(i=0; i<oplist->size(); i++){
-		(*oplist)[i]->startScheduling();
+		if(!(*oplist)[i]->isOperatorImplemented())
+			(*oplist)[i]->startScheduling();
 	}
 
 	//start the second code parse
 	for(i=0; i<oplist->size(); i++){
-		(*oplist)[i]->parseVHDL(2);
+		if(!(*oplist)[i]->isOperatorImplemented())
+			(*oplist)[i]->parseVHDL(2);
 	}
 
 	//write the vhdl code

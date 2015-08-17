@@ -1529,12 +1529,15 @@ namespace flopoco{
 				THROWERROR("ERROR in use(), " << endl << tab << e2 << endl);
 			}
 
+			//disabled during the overhaul
+			/*
 			if(s->getCycle() < 0) {
 				THROWERROR("signal " << name<< " doesn't have (yet?) a valid cycle" << endl);
 			}
 			if(s->getCycle() > this->getCurrentCycle()) {
 				THROWERROR("active cycle of signal " << name<< " is later than current cycle, cannot delay it" << endl);
 			}
+			*/
 
 			// update the lifeSpan of s
 			s->updateLifeSpan( this->getCurrentCycle() - s->getCycle() );
@@ -1616,7 +1619,7 @@ namespace flopoco{
 		}
 
 		// add the mapping to the output mapping list of Op
-		op->tmpOutPortMap_[componentPortName] = s;
+		tmpOutPortMap_[componentPortName] = s;
 
 		//create the connections between the signals in instance()
 	}
@@ -1649,7 +1652,7 @@ namespace flopoco{
 		}
 
 		// add the mapping to the input mapping list of Op
-		op->tmpInPortMap_[componentPortName] = s;
+		tmpInPortMap_[componentPortName] = s;
 
 		//create the connections between the signals in instance()
 	}
@@ -1699,7 +1702,7 @@ namespace flopoco{
 		signalList_.push_back(s);
 		signalMap_[s->getName()] = s;
 
-		op->tmpInPortMap_[componentPortName] = s;
+		tmpInPortMap_[componentPortName] = s;
 	}
 
 
@@ -1719,12 +1722,12 @@ namespace flopoco{
 			//	or the output temporary port map, depending on the signal type
 			if(signal->type() == Signal::in)
 			{
-				iterStart = op->tmpInPortMap_.begin();
-				iterStop = op->tmpInPortMap_.end();
+				iterStart = tmpInPortMap_.begin();
+				iterStop = tmpInPortMap_.end();
 			}else
 			{
-				iterStart = op->tmpOutPortMap_.begin();
-				iterStop = op->tmpOutPortMap_.end();
+				iterStart = tmpOutPortMap_.begin();
+				iterStop = tmpOutPortMap_.end();
 			}
 
 			for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)
@@ -1766,10 +1769,10 @@ namespace flopoco{
 		}
 
 		//build the code for the inputs
-		for(map<string, Signal*>::iterator it=op->tmpInPortMap_.begin(); it!=op->tmpInPortMap_.end(); it++){
+		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++){
 			string rhsString;
 
-			if((it != op->tmpInPortMap_.begin()) || op->isSequential())
+			if((it != tmpInPortMap_.begin()) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 
 			// The following code assumes that the IO is declared as standard_logic_vector
@@ -1785,8 +1788,8 @@ namespace flopoco{
 		}
 
 		//build the code for the outputs
-		for(map<string, Signal*>::iterator it=op->tmpOutPortMap_.begin(); it!=op->tmpOutPortMap_.end(); it++){
-			if(!((it == op->tmpOutPortMap_.begin()) && (op->tmpInPortMap_.size() != 0)) || op->isSequential())
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++){
+			if(!((it == tmpOutPortMap_.begin()) && (tmpInPortMap_.size() != 0)) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 
 			o << it->first << " => " << it->second->getName();
@@ -2392,6 +2395,20 @@ namespace flopoco{
 			//copy lhsName to the new vhdl buffer
 			newStr << lhsName;
 
+			//check for component instances
+			//	the first parse marks the name of the component as a lhsName
+			//	must remove the markings and output the code normally
+			if(workStr.find("port map") != string::npos)
+			{
+				newStr << workStr.substr(lhsNameLength+2, workStr.size());
+
+				//get a new line to parse
+				currentPos = nextPos + workStr.size() + 2;
+				nextPos = oldStr.find('?', currentPos);
+
+				continue;
+			}
+
 			//the lhsName could be of the form (lhsName1, lhsName2, ...)
 			//	extract the first name in the list
 			if(lhsName[0] == '(')
@@ -2539,7 +2556,8 @@ namespace flopoco{
 
 			//check if all the inputs of the operator have been implemented
 			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-				if(targetSignal->parentOp()->getIOListSignal(i)->getHasBeenImplemented() == false)
+				if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in)
+						&& (targetSignal->parentOp()->getIOListSignal(i)->getHasBeenImplemented() == false))
 				{
 					allInputsScheduled = false;
 					break;
