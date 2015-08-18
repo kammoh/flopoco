@@ -2828,10 +2828,15 @@ namespace flopoco{
 		//disabled during the overhaul
 		//vhdl.vhdlCodeBuffer << op->vhdl.vhdlCodeBuffer.str();
 		vhdl.vhdlCode.str(op->vhdl.vhdlCode.str());
+		vhdl.vhdlCodeBuffer.str(op->vhdl.vhdlCodeBuffer.str());
+
 		//vhdl.currentCycle_   = op->vhdl.currentCycle_;
 		//vhdl.useTable        = op->vhdl.useTable;
-		vhdl.dependenceTable.clear();
-		vhdl.dependenceTable.insert(vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.end());
+
+//		vhdl.dependenceTable.clear();
+//		vhdl.dependenceTable.insert(vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.end());
+		vhdl.dependenceTable = op->vhdl.dependenceTable;
+
 		srcFileName                 = op->getSrcFileName();
 		//disabled during the overhaul
 		//declareTable = op->getDeclareTable();
@@ -2862,6 +2867,8 @@ namespace flopoco{
 		hasClockEnable_             = op->hasClockEnable();
 		indirectOperator_           = op->getIndirectOperator();
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
+
+		isOperatorImplemented_      = op->isOperatorImplemented();
 
 		resourceEstimate.str(op->resourceEstimate.str());
 		resourceEstimateReport.str(op->resourceEstimateReport.str());
@@ -2926,6 +2933,12 @@ namespace flopoco{
 		}
 		ioList_.clear();
 		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
+
+		//update the signal map
+		for(unsigned int i=0; i<signalList_.size(); i++)
+			signalMap_[signalList_[i]->getName()] = signalList_[i];
+		for(unsigned int i=0; i<ioList_.size(); i++)
+					signalMap_[ioList_[i]->getName()] = ioList_[i];
 
 		//no need to recreate the signal dependences for each of the input/output signals,
 		//	as this is done in instance
