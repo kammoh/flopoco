@@ -2360,7 +2360,7 @@ namespace flopoco{
 		ostringstream newStr;
 		string oldStr, workStr;
 		int currentPos, nextPos, count;
-		int tmpCurrentPos, tmpNextPos, lhsNameLength;
+		int tmpCurrentPos, tmpNextPos, lhsNameLength, rhsNameLength;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
@@ -2436,17 +2436,32 @@ namespace flopoco{
 
 				//extract a new rhsName
 				rhsName = workStr.substr(tmpNextPos, workStr.find('$', tmpNextPos)-tmpNextPos);
-				rhsSignal = getSignalByName(rhsName);
+				rhsNameLength = rhsName.size();
+
+				//this could also be a delayed signal name
+				try{
+					rhsSignal = getSignalByName(rhsName);
+				}catch(string e){
+					try{
+						rhsSignal = getDelayedSignalByName(rhsName);
+						//extract the name
+						rhsName = rhsName.substr(0, rhsName.find('^'));
+					}catch(string e2){
+						THROWERROR("Error in parse2(): signal " << rhsName << " not found:" << e2);
+					}
+				}catch(...){
+					THROWERROR("Error in parse2(): signal " << rhsName << " not found:");
+				}
 
 				//copy the rhsName with the delay information into the new vhdl buffer
-				//	rhsName becomes rhsName_dxxx, if the
+				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
 				cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle();
 				newStr << rhsName;
 				if(getTarget()->isPipelined() && (cycleDelay>0))
 					newStr << "_d" << vhdlize(cycleDelay);
 
 				//find the next rhsName, if there is one
-				tmpCurrentPos = tmpNextPos + rhsName.size() + 2;
+				tmpCurrentPos = tmpNextPos + rhsNameLength + 2;
 				tmpNextPos = workStr.find('$', tmpCurrentPos);
 			}
 
@@ -2610,7 +2625,7 @@ namespace flopoco{
 		//initialize the maximum cycle and critical path of the predecessors
 		if(targetSignal->predecessors()->size() != 0)
 		{
-			maxCycle = targetSignal->predecessor(0)->getCycle();
+			maxCycle = targetSignal->predecessor(0)->getCycle() + targetSignal->predecessorPair(0)->second;
 			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
 		}
 
