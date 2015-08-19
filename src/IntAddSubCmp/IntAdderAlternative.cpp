@@ -38,29 +38,29 @@ namespace flopoco {
 		name << "IntAdderAlternative_" << wIn_<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
 		setName ( name.str() );
 
-		// Set up the IO signals
-		addInput ( "X"  , wIn_, true );
-		addInput ( "Y"  , wIn_, true );
-		addInput( "Cin");
-		addOutput ( "R"  , wIn_, 1 , true );
+		//set up the IO signals
+		addInput ("X"  , wIn_, true);
+		addInput ("Y"  , wIn_, true);
+		addInput ("Cin");
+		addOutput( "R"  , wIn_, 1 , true);
 
 		inputsGotRegistered = false;
-		objectivePeriod	 = 1 / target->frequency();
-		maxInputDelay    = getMaxInputDelays ( inputDelays );
+		objectivePeriod	    = 1 / target->frequency();
+		maxInputDelay       = getMaxInputDelays ( inputDelays );
 
 		if (maxInputDelay < target->ffDelay() + target->localWireDelay()){
 			inputDelays["X"] = target->ffDelay() + target->localWireDelay();
 		}
 
-		if ( maxInputDelay > objectivePeriod ) {
-			/* this component should register its inputs */
+		if(maxInputDelay > objectivePeriod){
+			//this component should register its inputs
 			nextCycle();
 			maxInputDelay = target->ffDelay() + target->localWireDelay();
 			inputDelays.clear();
 			inputsGotRegistered = true;
 		}
 
-		vhdl << tab << "--Alternative"<<endl;
+		vhdl << tab << "--Alternative" << endl;
 		alternativeSlackVersion = -1;
 
 		switch (optimizeType) {
@@ -71,78 +71,106 @@ namespace flopoco {
 			default: cost = getSliceCostAlternative(target,wIn, inputDelays, srl); break;
 		}
 
-		if ( isSequential() ) {
+		if(isSequential())
+		{
 			objectivePeriod	 = 1 / target->frequency();
 			maxInputDelay = min(getMaxInputDelays(inputDelays), objectivePeriod);
 
-			if ( alternativeSlackVersion == -1 ) {
-				/* the non-slack version */
-				updateParameters ( target, alpha, beta, k );
-				REPORT ( DETAILED, "1) alpha="<<alpha<<" beta="<<beta<<" k="<<k );
-			} else {
-				if (alternativeSlackVersion==0){
-					updateParameters ( target, inputDelays, alpha, beta, k );
-					REPORT ( DETAILED, "2) alpha="<<alpha<<" beta="<<beta<<" k="<<k );
-				} else {
-					nextCycle(); ///////////////////////////////////////////////
-					updateParameters ( target, alpha, beta, k );
-					REPORT ( DETAILED, "3) alpha="<<alpha<<" beta="<<beta<<" k="<<k );
+			if(alternativeSlackVersion == -1)
+			{
+				//the non-slack version
+				updateParameters(target, alpha, beta, k);
+				REPORT(DETAILED, "1) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
+			}else
+			{
+				if(alternativeSlackVersion == 0){
+					updateParameters(target, inputDelays, alpha, beta, k);
+					REPORT(DETAILED, "2) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
+				}else{
+					nextCycle();
+					updateParameters(target, alpha, beta, k);
+					REPORT(DETAILED, "3) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
 				}
 			}
 
-			if (k>1){
+			if(k>1)
+			{
 				cSize = new int[k+1];
 				for ( int i=0; i<k-1; i++ )
 					cSize[i] = alpha;
 				cSize[k-1] = beta;
 
-				//the indexes in the inputs of the chunks
+				//compute the indexes in the inputs of the chunks
 				cIndex = new int[k];
 				cIndex[0]= cSize[0];
-				for ( int i=1; i < k; i++ )
+				for(int i=1; i < k; i++)
 					cIndex[i] = cIndex[i-1] + cSize[i];
 
-
-				for ( int i=0; i < k; i++ ) {
-					vhdl << tab << declare ( join ( "s_sum_l",0,"_idx",i ), cSize[i]+1, true ) << " <= ( \"0\" & X" << range ( cIndex[i]-1, ( i>0?cIndex[i-1]:0 ) ) << ") + "
-					<< "( \"0\" & Y" << range ( cIndex[i]-1, ( i>0?cIndex[i-1]:0 ) ) << ")" ;
-					if ( i==0 ) vhdl << " + Cin";
+				//create the sums
+				for(int i=0; i < k; i++)
+				{
+					vhdl << tab << declare(getTarget()->adderDelay(cSize[i]+1), join ("s_sum_l", 0, "_idx", i), cSize[i]+1, true)
+							<< " <= ( \"0\" & X" << range(cIndex[i]-1, (i>0 ? cIndex[i-1] : 0)) << ") + "
+							<< "( \"0\" & Y" << range(cIndex[i]-1, (i>0 ? cIndex[i-1] : 0)) << ")";
+					if(i==0)
+						vhdl << " + Cin";
 					vhdl << ";" << endl;
 				}
 
-				for ( int i=0; i < k; i++ ) {
-					vhdl << tab << declare ( join ( "sum_l",0,"_idx",i ), cSize[i], true ) << " <= " << join ( "s_sum_l",0,"_idx",i ) <<range ( cSize[i]-1,0 ) << ";" << endl;
-					vhdl << tab << declare ( join ( "c_l",0,"_idx",i ), 1, true )          << " <= " << join ( "s_sum_l",0,"_idx",i ) <<range ( cSize[i],cSize[i] ) << ";" << endl;
+				//extract the sum and the carry
+				for(int i=0; i < k; i++)
+				{
+					vhdl << tab << declare(getTarget()->adderDelay(cSize[i]), join("sum_l", 0, "_idx", i), cSize[i], true)
+							<< " <= " << join("s_sum_l", 0, "_idx",i) << range(cSize[i]-1, 0) << ";" << endl;
+					vhdl << tab << declare(getTarget()->localWireDelay(), join("c_l", 0, "_idx", i), 1, true)
+							<< " <= " << join("s_sum_l", 0, "_idx", i) << range(cSize[i], cSize[i]) << ";" << endl;
 				}
 
-				for ( int i=1; i <= k-1 ; i++ ) {
-					nextCycle(); ///////////////////////////////////////////////////////
-					vhdl << tab << declare ( join ( "s_sum_l",i,"_idx",i ), cSize[i]+1, true ) << " <=  " <<  join ( "s_sum_l",0,"_idx",i ) << " + "// "//( \"0\" & " << join ( "sum_l",0,"_idx",i ) << ") + "
-					<< join ( "c_l", i-1 ,"_idx",i-1 ) <<range (0,0) << ";" << endl ;
+				//create the addition tree
+				for(int i=1; i <= k-1 ; i++)
+				{
+					nextCycle();
+					vhdl << tab << declare(getTarget()->adderDelay(cSize[i]+1), join("s_sum_l", i, "_idx", i), cSize[i]+1, true)
+							<< " <=  " <<  join("s_sum_l", 0, "_idx", i) << " + " // "//( \"0\" & " << join ( "sum_l",0,"_idx",i ) << ") + "
+							<< join("c_l", i-1 , "_idx", i-1) << range(0,0) << ";" << endl ;
 //					if ( i>1 )
 //						vhdl << " + " << join ( "sum_l",i-1,"_idx",i-1 ) <<of ( cSize[i-1] );
 //					vhdl<<";"<<endl;
 
-					vhdl << tab << declare ( join ( "sum_l",i,"_idx",i ), cSize[i], true ) << " <= " << join ( "s_sum_l",i,"_idx",i ) <<range ( cSize[i]-1,0 ) << ";" << endl;
-					vhdl << tab << declare ( join ( "c_l",i,"_idx",i ), 1, true )          << " <= " << join ( "s_sum_l",i,"_idx",i ) <<range ( cSize[i],cSize[i] ) << ";" << endl;
+					vhdl << tab << declare(getTarget()->adderDelay(cSize[i]), join("sum_l", i, "_idx", i), cSize[i], true)
+							<< " <= " << join("s_sum_l", i, "_idx", i) << range(cSize[i]-1, 0) << ";" << endl;
+					vhdl << tab << declare(getTarget()->localWireDelay(), join ("c_l", i, "_idx", i), 1, true)
+							<< " <= " << join("s_sum_l", i, "_idx", i) << range(cSize[i], cSize[i]) << ";" << endl;
 				}
 
+				//write the output
 				vhdl << tab << "R <= ";
-				for ( int i=k-1; i >= 1; i-- ) {
-					vhdl << join ( "sum_l",i,"_idx",i ) <<range ( cSize[i]-1,0 ) << " & ";
+				for(int i=k-1; i >= 1; i--)
+				{
+					vhdl << join("sum_l", i, "_idx", i) << range(cSize[i]-1, 0) << " & ";
 				}
-				vhdl << "sum_l0_idx0" << range ( cSize[0]-1,0 ) <<";"<<endl;
+				vhdl << "sum_l0_idx0" << range(cSize[0]-1, 0) << ";" << endl;
 
-				getOutDelayMap()["R"] = target->adderDelay ( cSize[k-1] );
+				getSignalByName("R")->setCriticalPathContribution(getTarget()->localWireDelay());
+
+				getOutDelayMap()["R"] = target->adderDelay(cSize[k-1]);
 			} else {
 				vhdl << tab << " R <= X + Y + Cin;" << endl;
-				if ( alternativeSlackVersion == 1 )  {
+
+				getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn));
+
+				if(alternativeSlackVersion == 1)
+				{
 					getOutDelayMap()["R"] = target->adderDelay ( wIn );
-				} else
+				}else{
 					getOutDelayMap()["R"] = getMaxInputDelays ( inputDelays ) + target->adderDelay ( wIn );
+				}
 			}
 		} else {
 			vhdl << tab << " R <= X + Y + Cin;" << endl;
+
+			getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn));
+
 			getOutDelayMap()["R"] = target->adderDelay ( wIn_ ) + getMaxInputDelays ( inputDelays );
 		}
 	}

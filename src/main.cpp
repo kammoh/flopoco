@@ -124,6 +124,13 @@ void usage(char *name, string opName = ""){
 		cerr << "srl=<0,1> Allow SRLs\n";
 		cerr << "inputDelay\n";
 	}
+	if ( full || opName == "IntAdderAlternative" || opName == "IntAdder"){
+		OP("IntAdderAlternative","wIn optimizeType srl inputDelay");
+		cerr << "Integer adder, multiple parameters, possibly pipelined\n";
+		cerr << "optimizeType=<0,1,2,3> 0=LUT 1=REG 2=SLICE 3=LATENCY\n";
+		cerr << "srl=<0,1> Allow SRLs\n";
+		cerr << "inputDelay\n";
+	}
 	if ( full || opName == "IntAdder" || opName == "LongIntAdderAddAddMux")
 		OP("LongIntAdderAddAddMux","wIn generation");
 	if ( full || opName == "IntAdder" || opName == "LongIntAdderCmpAddInc")
@@ -1044,6 +1051,25 @@ bool parseCommandLine(int argc, char* argv[]){
 				delayMap["X"] = inputDelay;
 
 				op = new IntAdderClassical(target, wIn, delayMap, type, srl);
+
+				addOperator(op);
+			}
+		}
+
+		else if(opname=="IntAdderAlternative"){
+			int nargs = 4;
+			if (i+nargs > argc)
+				usage(argv[0],opname);
+			else {
+				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
+				int type = atoi(argv[i++]);
+				int srl = atoi(argv[i++]);
+				double inputDelay = atof(argv[i++]);
+
+				map <string, double> delayMap;
+				delayMap["X"] = inputDelay;
+
+				op = new IntAdderAlternative(target, wIn, delayMap, type, srl);
 
 				addOperator(op);
 			}
@@ -2026,8 +2052,7 @@ int main(int argc, char* argv[] )
 
 	//start the second code parse
 	for(i=0; i<oplist->size(); i++){
-		if(!(*oplist)[i]->isOperatorImplemented())
-			(*oplist)[i]->parseVHDL(2);
+		(*oplist)[i]->parseVHDL(2);
 	}
 
 	//write the vhdl code

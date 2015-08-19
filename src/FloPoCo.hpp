@@ -68,6 +68,7 @@
 #include "IntAddSubCmp/IntComparator.hpp"
 
 #include "IntAddSubCmp/IntAdderClassical.hpp"
+#include "IntAddSubCmp/IntAdderAlternative.hpp"
 
 /* fast large adders ----------------------------------------- */
 #include "IntAddSubCmp/LongIntAdderAddAddMuxGen1.hpp"
