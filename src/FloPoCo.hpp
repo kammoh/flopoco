@@ -69,6 +69,7 @@
 
 #include "IntAddSubCmp/IntAdderClassical.hpp"
 #include "IntAddSubCmp/IntAdderAlternative.hpp"
+#include "IntAddSubCmp/IntAdderShortLatency.hpp"
 
 /* fast large adders ----------------------------------------- */
 #include "IntAddSubCmp/LongIntAdderAddAddMuxGen1.hpp"

@@ -44,7 +44,7 @@ namespace flopoco {
 		addInput( "Cin");
 		addOutput ( "R"  , wIn_, 1 , true );
 
-		vhdl << tab << "--ShortLatency"<<endl;
+		vhdl << tab << "--ShortLatency" << endl;
 
 		switch (optimizeType) {
 			case 0:  cost = getLutCostShortLatency(target,wIn, inputDelays, srl); break;
@@ -53,102 +53,100 @@ namespace flopoco {
 			default: cost = getSliceCostShortLatency(target,wIn, inputDelays, srl); break;
 		}
 
-		if ( isSequential() ) {
-
+		if(isSequential())
+		{
 			objectivePeriod	 = 1 / target->frequency();
 			k = shortLatencyKValue;
 
 			ostringstream verb;
 			verb << "Implementing ShortLatency with chunks: ";
-			for ( int i=k-1; i>=0; i-- )
+			for(int i=k-1; i>=0; i--)
 				verb << " " << cSize[i];
 
-			REPORT ( DETAILED, verb.str() );
+			REPORT(DETAILED, verb.str());
 
 			//split	 the inputs
-			for ( int i=0;i<2;i++ )
-				for ( int j=0; j<k; j++ ) {
+			for(int i=0; i<2; i++)
+				for(int j=0; j<k; j++)
+				{
 					ostringstream name;
 					//the naming standard: sX j _ i _ l
-					//j = the chunk index i is the input index and l is the current level
-					name << "sX"<<j<<"_"<<i<<"_l"<<0;
+					//j = the chunk index, i = the input index, l = the current level
+					name << "sX" << j << "_" << i << "_l" << 0;
 					int low=0, high=0;
-					for ( int k=0;k<=j;k++ )
-						high+=cSize[k];
-					for ( int k=0;k<=j-1;k++ )
-						low+=cSize[k];
-					vhdl << tab << declare ( name.str(),cSize[j]+1 ) << " <=  \"0\" & "<< ( i==0?"X":"Y" ) <<range ( high-1,low ) <<";"<<endl;
-				}
-				vhdl << tab << declare( "scIn") << " <= Cin;"<<endl;
 
-				//				if (shortLatencyInputRegister ==1)
-				//					nextCycle();///////////////////
+					for(int k=0; k<=j; k++)
+						high += cSize[k];
+					for(int k=0; k<=j-1; k++)
+						low += cSize[k];
+					vhdl << tab << declare(getTarget()->localWireDelay(), name.str(), cSize[j]+1)
+							<< " <=  \"0\" & " << (i==0 ? "X" : "Y") << range(high-1, low) << ";" << endl;
+				}
+				vhdl << tab << declare("scIn") << " <= Cin;" << endl;
 
 				int l=1;
-				for ( int j=0; j<k; j++ ) {
+				for(int j=0; j<k; j++)
+				{
 					ostringstream dnameZero, dnameOne, uname1, uname2, dnameCin;
-					dnameZero << "sX"<<j<<"_0_l"<<l<<"_Zero";
-					dnameOne  << "sX"<<j<<"_0_l"<<l<<"_One";
-					dnameCin  << "sX"<<j<<"_0_l"<<l<<"_Cin";
 
-					uname1 << "sX"<<j<<"_0_l"<<l-1;
-					uname2 << "sX"<<j<<"_1_l"<<l-1;
+					dnameZero << "sX" << j << "_0_l" << l << "_Zero";
+					dnameOne  << "sX" << j << "_0_l" << l << "_One";
+					dnameCin  << "sX" << j << "_0_l" << l <<"_Cin";
 
-					#ifdef XILINX_OPTIMIZATION
-					// the xst synthetsies x+y and x+y+1 slower if this optimization is not used
+					uname1 << "sX" << j << "_0_l" << l-1;
+					uname2 << "sX" << j << "_1_l" << l-1;
+
+#ifdef XILINX_OPTIMIZATION
+					// the xst synthetsizes x+y and x+y+1 slower if this optimization is not used
 					bool pipe = target->isPipelined();
 					target->setNotPipelined();
 
+					vhdl << tab << declare(getTarget()->localWireDelay(), uname1.str()+"ext", cSize[j]+1)
+							<< " <= \"0\" & "  <<  uname1.str() << range(cSize[j]-1, 0) << ";" << endl;
+					vhdl << tab << declare(getTarget()->localWireDelay(), uname2.str()+"ext", cSize[j]+1)
+							<< " <= \"0\" & "  <<  uname2.str() << range(cSize[j]-1, 0) << ";" << endl;
 
-
-					vhdl << tab << declare ( uname1.str() +"ext", cSize[j]+1 ) << " <= \"0\" & "  <<  uname1.str() << range ( cSize[j]-1,0 ) << ";" << endl;
-					vhdl << tab << declare ( uname2.str() +"ext", cSize[j]+1 ) << " <= \"0\" & "  <<  uname2.str() << range ( cSize[j]-1,0 ) << ";" << endl;
-
-					if ( j>0 ) { //for all chunks greater than zero we perform this additions
-						IntAdder *adder = new IntAdder( target, cSize[j]+1, emptyDelayMap, optimizeType, srl );
+					if(j>0)
+					{
 						ostringstream a;
-						a.str ( "" );
 
-/*						bool found = false;
-						for ( unsigned kk=0; kk<oplist.size(); kk++ ) {
-							if ( ( oplist[kk]->getName() ).compare ( adder->getName() ) ==0 ) {
-								REPORT ( 3, "found in opList ... not adding" );
-								found = true;
-							}
-						}
-						if ( found == false )						{
-							REPORT ( 3, "Not found in list, adding " << adder->getName() );
-							oplist.push_back ( adder );
-						}*/
+						//for all chunks greater than zero we perform these additions
+						IntAdder *adder  = new IntAdder(target, cSize[j]+1, emptyDelayMap, optimizeType, srl);
+						IntAdder *adder2 = new IntAdder(target, cSize[j]+1, emptyDelayMap, optimizeType, srl);
 
-						inPortMapCst ( adder, "X", uname1.str() +"ext" );
-						inPortMapCst ( adder, "Y", uname2.str() +"ext" );
-						inPortMapCst ( adder, "Cin", "'0'" );
-						outPortMap ( adder, "R", dnameZero.str() );
+						a.str("");
 						a<< "Adder" << cSize[j]+1 << "Zero" << j;
-						vhdl << instance ( adder, a.str() );
 
-						//						if (j<k-1){
+						inPortMapCst(adder, "X", uname1.str()+"ext");
+						inPortMapCst(adder, "Y", uname2.str()+"ext");
+						inPortMapCst(adder, "Cin", "'0'" );
+						outPortMap  (adder, "R", dnameZero.str());
 
-							inPortMapCst ( adder, "X", uname1.str() +"ext" );
-							inPortMapCst ( adder, "Y", uname2.str() +"ext" );
-							inPortMapCst ( adder, "Cin", "'1'" );
-							outPortMap ( adder, "R", dnameOne.str() );
-							a.str ( "" );
-							a<< "Adder" << cSize[j]+1 << "One" << j;
-							vhdl << instance ( adder, a.str() );
-							//						}
-					} else {
+						vhdl << instance(adder, a.str());
+
+						a.str("");
+						a << "Adder" << cSize[j]+1 << "One" << j;
+
+						inPortMapCst(adder2, "X", uname1.str()+"ext");
+						inPortMapCst(adder2, "Y", uname2.str()+"ext");
+						inPortMapCst(adder2, "Cin", "'1'" );
+						outPortMap  (adder2, "R", dnameOne.str());
+
+						vhdl << instance(adder2, a.str());
+					}else
+					{
 						vhdl << tab << "-- the carry resulting from the addition of the chunk + Cin is obtained directly" << endl;
-						vhdl << tab << declare ( dnameCin.str(),cSize[j]+1 ) << "  <= (\"0\" & "<< uname1.str() <<range ( cSize[j]-1,0 ) <<") +  (\"0\" & "<< uname2.str() <<range ( cSize[j]-1,0 ) <<") + scIn;"<<endl;
+						vhdl << tab << declare(getTarget()->adderDelay(cSize[j]+1), dnameCin.str(), cSize[j]+1)
+								<< "  <= (\"0\" & " << uname1.str() << range(cSize[j]-1, 0) << ")"
+								<< " + (\"0\" & " << uname2.str() << range(cSize[j]-1, 0) << ") + scIn;" << endl;
 					}
 
-					if ( pipe )
+					if(pipe)
 						target->setPipelined();
 					else
 						target->setNotPipelined();
 
-					#else
+#else
 					if ( j>0 ) { //for all chunks greater than zero we perform this additions
 						vhdl << tab << declare ( dnameZero.str(),cSize[j]+1 ) << " <= (\"0\" & "<< uname1.str() <<range ( cSize[j]-1,0 ) <<") +  (\"0\" & "<< uname2.str() <<range ( cSize[j]-1,0 ) <<");"<<endl;
 						if ( j<k-1 )
@@ -157,76 +155,98 @@ namespace flopoco {
 						vhdl << tab << "-- the carry resulting from the addition of the chunk + Cin is obtained directly" << endl;
 						vhdl << tab << declare ( dnameCin.str(),cSize[j]+1 ) << "  <= (\"0\" & "<< uname1.str() <<range ( cSize[j]-1,0 ) <<") +  (\"0\" & "<< uname2.str() <<range ( cSize[j]-1,0 ) <<") + scIn;"<<endl;
 					}
-					#endif
+#endif
 				}
 
-				if ( k >2 ) {
-					vhdl << tab <<"--form the two carry string"<<endl;
-					vhdl << tab << declare ( "carryStringZero",2* ( k-2 ) ) << " <= ";
-					for ( int i=2* ( k-2 )-1; i>=0; i-- ) {
+				if(k >2)
+				{
+					vhdl << tab << "--form the two carry strings" << endl;
+
+					vhdl << tab << declare(getTarget()->localWireDelay(), "carryStringZero", 2*(k-2)) << " <= ";
+					for(int i=2*(k-2)-1; i>=0; i--)
+					{
 						ostringstream dnameZero;
-						if ( i%2==0 ) {
-							dnameZero << "sX"<< ( i/2 ) +1<<"_0_l"<<l<<"_Zero";
-							vhdl << " " << dnameZero.str() <<"(" << cSize[ ( i/2 ) +1] << ")";
-						} else
+						if(i%2 == 0){
+							dnameZero << "sX" << (i/2)+1 << "_0_l" << l << "_Zero";
+							vhdl << " " << dnameZero.str() <<"(" << cSize[(i/2)+1] << ")";
+						}else
 							vhdl << " \"0\" ";
-						if ( i>0 ) vhdl << " & ";
-						else     vhdl << " ; ";
+						vhdl << ((i>0) ? " & " : " ; ");
 					}
 					vhdl << endl;
-					vhdl << tab << declare ( "carryStringOne",2* ( k-2 ) ) << "  <= ";
-					for ( int i=2* ( k-2 )-1; i>=0; i-- ) {
+
+					vhdl << tab << declare(getTarget()->localWireDelay(), "carryStringOne", 2*(k-2)) << "  <= ";
+					for(int i=2*(k-2)-1; i>=0; i--)
+					{
 						ostringstream dnameOne;
-						if ( i%2==0 ) {
-							dnameOne << "sX"<< ( i/2 ) +1<<"_0_l"<<l<<"_One";
-							vhdl << " " << dnameOne.str() <<"(" << cSize[ ( i/2 ) +1] << ") ";
-						} else
+						if(i%2 == 0){
+							dnameOne << "sX"<< (i/2)+1 << "_0_l" << l << "_One";
+							vhdl << " " << dnameOne.str() << "(" << cSize[(i/2)+1] << ") ";
+						}else
 							vhdl << " \"1\" ";
-						if ( i>0 ) vhdl << " & ";
-						else     vhdl << " ; ";
+						vhdl << ((i>0) ? " & " : " ; ");
 					}
 					vhdl << endl;
 
 					if ( shortLatencyVersion > 1 )
-						nextCycle();/////////////////////
+						nextCycle();
 
-						vhdl << tab << "--perform the short carry additions" << endl; //TODO: PIPELINE ADDITION
-						ostringstream unameCin;
-					unameCin  << "sX"<<0<<"_0_l"<<l<<"_Cin";
-					vhdl << tab << declare ( "rawCarrySum",2* ( k-2 ) ) << " <= carryStringOne + carryStringZero + " << unameCin.str() << "(" << cSize[0] << ") ;" << endl;
+					vhdl << tab << "--perform the short carry additions" << endl; //TODO: PIPELINE ADDITION
+
+					ostringstream unameCin;
+					unameCin << "sX" << 0 << "_0_l" << l << "_Cin";
+					vhdl << tab << declare(getTarget()->adderDelay(2*(k-2)), "rawCarrySum", 2*(k-2))
+							<< " <= carryStringOne + carryStringZero + " << unameCin.str() << "(" << cSize[0] << ") ;" << endl;
 
 					if ( shortLatencyVersion > 2 )
-						nextCycle();/////////////////////
+						nextCycle();
 				}
 
-				vhdl << tab <<"--get the final pipe results"<<endl;
-				for ( int i=0; i<k; i++ ) {
+				vhdl << tab << "--get the final pipe results" << endl;
+
+				for(int i=0; i<k; i++)
+				{
 					ostringstream unameZero, unameOne, unameCin;
+
 					unameZero << "sX"<<i<<"_0_l"<<l<<"_Zero";
 					unameOne  << "sX"<<i<<"_0_l"<<l<<"_One";
 					unameCin  << "sX"<<0<<"_0_l"<<l<<"_Cin";
-					if ( i==0 ) vhdl << tab << declare ( join ( "res",i ),cSize[i],true ) << " <= " << unameCin.str() << range ( cSize[0]-1,0 ) <<  ";" << endl;
-					else {
-						//						if (i==1) vhdl << tab << declare(join("res",i),cSize[i],true) << " <= " << unameZero.str() << range(cSize[i]-1,0) << " + " << unameCin.str() << "(" << cSize[0] << ");"<<endl;
-						//						else      vhdl << tab << declare(join("res",i),cSize[i],true) << " <= " << unameZero.str() << range(cSize[i]-1,0) << " + not(rawCarrySum("<<2*(i-2)+1<<"));"<<endl;
-						if ( i==1 ) vhdl << tab << declare ( join ( "res",i ),cSize[i],true ) << " <= " << unameZero.str() << range ( cSize[i]-1,0 ) << " when " << unameCin.str() << "(" << cSize[0] << ")='0'"
-							<< " else " << unameOne.str() << range ( cSize[i]-1,0 ) << ";"<<endl;
-						else      vhdl << tab << declare ( join ( "res",i ),cSize[i],true ) << " <= " << unameZero.str() << range ( cSize[i]-1,0 ) << " when rawCarrySum("<<2* ( i-2 ) +1<<")='1'"
-							<< " else " << unameOne.str() << range ( cSize[i]-1,0 ) << ";"<<endl;
+
+					if(i == 0)
+						vhdl << tab << declare(getTarget()->localWireDelay(), join("res", i), cSize[i], true)
+							<< " <= " << unameCin.str() << range(cSize[0]-1, 0) <<  ";" << endl;
+					else
+					{
+						if(i == 1)
+							vhdl << tab << declare(getTarget()->lutDelay(), join("res", i), cSize[i], true)
+								<< " <= " << unameZero.str() << range(cSize[i]-1, 0) << " when " << unameCin.str() << "(" << cSize[0] << ")='0'"
+								<< " else " << unameOne.str() << range(cSize[i]-1, 0) << ";" << endl;
+						else
+							vhdl << tab << declare(getTarget()->lutDelay(), join("res", i), cSize[i], true)
+								<< " <= " << unameZero.str() << range(cSize[i]-1, 0) << " when rawCarrySum(" << 2*(i-2)+1 << ")='1'"
+								<< " else " << unameOne.str() << range(cSize[i]-1, 0) << ";" << endl;
 					}
 				}
 
 				vhdl << tab << "R <= ";
-				for ( int i=k-1; i>=0; i-- ) {
-					vhdl << join ( "res",i );
-					if ( i > 0 ) vhdl << " & ";
+				for(int i=k-1; i>=0; i--)
+				{
+					vhdl << join("res", i);
+					if(i > 0)
+						vhdl << " & ";
 				}
 				vhdl << ";" <<endl;
-				getOutDelayMap()["R"] = target->adderDelay ( cSize[k-1] );
+
+				getSignalByName("R")->setCriticalPathContribution(getTarget()->localWireDelay());
+
+				getOutDelayMap()["R"] = target->adderDelay(cSize[k-1]);
 
 				REPORT ( DEBUG, " FINISHED SHORT-LATENCY IMPLEMENTATION" );
 		} else {
 			vhdl << tab << " R <= X + Y + Cin;" << endl;
+
+			getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn_));
+
 			getOutDelayMap()["R"] = target->adderDelay ( wIn_ ) + getMaxInputDelays ( inputDelays );
 		}
 
