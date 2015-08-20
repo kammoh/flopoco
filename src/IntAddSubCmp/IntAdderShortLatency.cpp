@@ -97,10 +97,6 @@ namespace flopoco {
 					uname2 << "sX" << j << "_1_l" << l-1;
 
 #ifdef XILINX_OPTIMIZATION
-					// the xst synthetsizes x+y and x+y+1 slower if this optimization is not used
-					bool pipe = target->isPipelined();
-					target->setNotPipelined();
-
 					vhdl << tab << declare(getTarget()->localWireDelay(), uname1.str()+"ext", cSize[j]+1)
 							<< " <= \"0\" & "  <<  uname1.str() << range(cSize[j]-1, 0) << ";" << endl;
 					vhdl << tab << declare(getTarget()->localWireDelay(), uname2.str()+"ext", cSize[j]+1)
@@ -112,27 +108,26 @@ namespace flopoco {
 
 						//for all chunks greater than zero we perform these additions
 						IntAdder *adder  = new IntAdder(target, cSize[j]+1, emptyDelayMap, optimizeType, srl);
-						IntAdder *adder2 = new IntAdder(target, cSize[j]+1, emptyDelayMap, optimizeType, srl);
 
 						a.str("");
 						a<< "Adder" << cSize[j]+1 << "Zero" << j;
 
-						inPortMapCst(adder, "X", uname1.str()+"ext");
-						inPortMapCst(adder, "Y", uname2.str()+"ext");
+						inPortMap   (adder, "X", uname1.str()+"ext");
+						inPortMap   (adder, "Y", uname2.str()+"ext");
 						inPortMapCst(adder, "Cin", "'0'" );
 						outPortMap  (adder, "R", dnameZero.str());
 
-						vhdl << instance(adder, a.str());
+						vhdl << instance(adder, a.str(), true);
 
 						a.str("");
 						a << "Adder" << cSize[j]+1 << "One" << j;
 
-						inPortMapCst(adder2, "X", uname1.str()+"ext");
-						inPortMapCst(adder2, "Y", uname2.str()+"ext");
-						inPortMapCst(adder2, "Cin", "'1'" );
-						outPortMap  (adder2, "R", dnameOne.str());
+						inPortMap   (adder, "X", uname1.str()+"ext");
+						inPortMap   (adder, "Y", uname2.str()+"ext");
+						inPortMapCst(adder, "Cin", "'1'" );
+						outPortMap  (adder, "R", dnameOne.str());
 
-						vhdl << instance(adder2, a.str());
+						vhdl << instance(adder, a.str(), true);
 					}else
 					{
 						vhdl << tab << "-- the carry resulting from the addition of the chunk + Cin is obtained directly" << endl;
@@ -140,11 +135,6 @@ namespace flopoco {
 								<< "  <= (\"0\" & " << uname1.str() << range(cSize[j]-1, 0) << ")"
 								<< " + (\"0\" & " << uname2.str() << range(cSize[j]-1, 0) << ") + scIn;" << endl;
 					}
-
-					if(pipe)
-						target->setPipelined();
-					else
-						target->setNotPipelined();
 
 #else
 					if ( j>0 ) { //for all chunks greater than zero we perform this additions

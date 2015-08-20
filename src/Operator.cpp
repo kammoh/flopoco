@@ -1692,7 +1692,7 @@ namespace flopoco{
 		sollya_lib_clear_obj(node);
 
 		//create a new signal for constant input
-		s = new Signal(this, join(actualSignal, "_cst"), Signal::constant, constValue);
+		s = new Signal(this, join(actualSignal, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
 
 		//initialize the signals predecessors and successors
 		resetPredecessors(s);
@@ -1777,10 +1777,11 @@ namespace flopoco{
 
 			// The following code assumes that the IO is declared as standard_logic_vector
 			// If the actual parameter is a signed or unsigned, we want to automatically convert it
-			if(it->second->isFix()){
+			if(it->second->type() == Signal::constant){
+				rhsString = it->second->getName().substr(0, it->second->getName().find("_cst"));
+			}else if(it->second->isFix()){
 				rhsString = std_logic_vector(it->second->getName());
-			}
-			else {
+			}else{
 				rhsString = it->second->getName();
 			}
 
@@ -1887,6 +1888,10 @@ namespace flopoco{
 		ostringstream o;
 
 		for(unsigned int i=0; i<signalList_.size(); i++) {
+			//constant signals don't need a declaration
+			if(signalList_[i]->type() == Signal::constant)
+				continue;
+
 			o << signalList_[i]->toVHDLDeclaration() << endl;
 		}
 		//now the signals from the I/O List which have the cycle>0
