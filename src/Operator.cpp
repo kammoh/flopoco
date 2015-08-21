@@ -59,6 +59,7 @@ namespace flopoco{
 		hasDelay1Feedbacks_         = false;
 
 		isOperatorImplemented_       = false;
+		isOperatorScheduled_         = false;
 
 
 		// Currently we set the pipeline and clock enable from the global target.
@@ -1817,7 +1818,7 @@ namespace flopoco{
 		//	either the operator, or a copy of the operator
 		Operator *opCpy;
 
-		if(isGlobalOperator && !newOpFirstAdd)
+		if(isGlobalOperator)
 		{
 			//create a new operator
 			Operator *newOp = new Operator(op->getTarget());
@@ -1834,14 +1835,15 @@ namespace flopoco{
 
 			//save a reference
 			opCpy = newOp;
-		}else{
-			//add the operator to the global list, if necessary
-			if(isGlobalOperator){
+
+			//if this is the first instance of a global operator, then add
+			//	the original to the global operator list, as well
+			if(newOpFirstAdd == true)
+			{
 				addToGlobalOpList(op);
-				//mark the subcomponent as it requires to be implemented
 				op->setIsOperatorImplemented(false);
 			}
-
+		}else{
 			//save a reference
 			opCpy = op;
 		}
@@ -2517,6 +2519,72 @@ namespace flopoco{
 							+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
 							+ " but signal " + ioList_[j]->getName() + " is at cycle "
 							+ vhdlize(ioList_[j]->getCycle()));
+		//if the operator is already scheduled, then there is nothing else to do
+		if(isOperatorScheduled())
+			return;
+
+		//check if this is a global operator
+		//	if this is a global operator, and this is the global copy, then schedule it
+		//	if this is a global operator, but a local copy, then use the
+		//	scheduling of the global copy
+		//test if this operator is a global operator
+		bool isGlobalOperator = false;
+		vector<Operator*> *globalOperatorList = getTarget()->getGlobalOpListRef();
+		string globalOperatorName = getName();
+
+		//this might be a copy of the global operator, so try to remove the
+		if(globalOperatorName.find("_cpy_") != string::npos)
+			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
+
+		//look in the global operator list for the operator
+		for(unsigned int i=0; i<globalOperatorList->size(); i++)
+			if((*globalOperatorList)[i]->getName() == globalOperatorName)
+				isGlobalOperator = true;
+
+		//if this is a global operator, and this is a copy, then just
+		if(isGlobalOperator && getName().find("_cpy_"))
+		{
+			Operator* originalOperator;
+			int maxInputCycle = 0;
+
+			//search for the global copy of the operator, which should already be scheduled
+			for(unsigned int i=0; i<globalOperatorList->size(); i++)
+				if((*globalOperatorList)[i]->getName() == globalOperatorName)
+				{
+					originalOperator = (*globalOperatorList)[i];
+					break;
+				}
+
+			//determine the maximum cycle of the inputs
+			for(unsigned int i=0; i<ioList_.size(); i++)
+				if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() > maxInputCycle))
+					maxInputCycle = ioList_[i]->getCycle();
+
+			//set the timing for all the signals of the operator,
+			//	based on the timing of the global copy of the operator
+			for(unsigned int i=0; i<signalList_.size(); i++)
+			{
+				Signal *currentSignal = signalList_[i];
+
+				//for input ports, only update the lifespan
+				if(currentSignal->type() == Signal::in)
+				{
+					currentSignal->updateLifeSpan(originalOperator->getSignalByName(currentSignal->getName())->getLifeSpan());
+					continue;
+				}
+
+				currentSignal->setCycle(maxInputCycle + originalOperator->getSignalByName(currentSignal->getName())->getCycle());
+				currentSignal->setCriticalPath(originalOperator->getSignalByName(currentSignal->getName())->getCriticalPath());
+				currentSignal->setCriticalPathContribution(originalOperator->getSignalByName(currentSignal->getName())->getCriticalPathContribution());
+				currentSignal->updateLifeSpan(originalOperator->getSignalByName(currentSignal->getName())->getLifeSpan());
+			}
+
+			//the operator is now scheduled
+			//	mark it as scheduled, and return
+			setIsOperatorScheduled(true);
+
+			return;
+		}
 
 		//extract the dependences between the operator's internal signals
 		extractSignalDependences();
@@ -2542,6 +2610,8 @@ namespace flopoco{
 			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
 					scheduleSignal(currentSignal->successor(j));
 		}
+
+		setIsOperatorScheduled(true);
 	}
 
 	void Operator::scheduleSignal(Signal *targetSignal)
@@ -2985,6 +3055,14 @@ namespace flopoco{
 
 	void Operator::setIsOperatorImplemented(bool newValue){
 		isOperatorImplemented_ = newValue;
+	}
+
+	bool Operator::isOperatorScheduled(){
+		return isOperatorScheduled_;
+	}
+
+	void Operator::setIsOperatorScheduled(bool newValue){
+		isOperatorScheduled_ = newValue;
 	}
 
 

@@ -1377,6 +1377,16 @@ public:
 	 */
 	void setIsOperatorImplemented(bool newValue);
 
+	/**
+	 * Get the value of isOperatorScheduled
+	 */
+	bool isOperatorScheduled();
+
+	/**
+	 * Set the value of isOperatorScheduled
+	 */
+	void setIsOperatorScheduled(bool newValue);
+
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////Functions used for resource estimations
@@ -1859,7 +1869,8 @@ private:
 	int					   hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 
-	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not. For global operators, only the first instance has this flag set to false from the beginning. */
+	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not */
+	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled */
 };
 
 	// global variables used through most of FloPoCo,
