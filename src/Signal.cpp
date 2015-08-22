@@ -95,7 +95,7 @@ namespace flopoco{
 		parentOp_ = newParentOp;
 		name_ = originalSignal->getName();
 		type_ = originalSignal->type();
-		lifeSpan_ = 0;
+		lifeSpan_ = originalSignal->lifeSpan_;
 		constValue_ = originalSignal->constValue_;
 		isFix_ = originalSignal->isFix();
 		isFP_ = originalSignal->isFP();
@@ -115,7 +115,7 @@ namespace flopoco{
 			wE_ = originalSignal->wE();
 			wF_ = originalSignal->wF();
 			isIEEE_ = originalSignal->isIEEE_;
-		} else
+		}else
 		{
 			width_ = originalSignal->width();
 			isBus_ = originalSignal->isBus();

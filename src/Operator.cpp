@@ -1699,6 +1699,12 @@ namespace flopoco{
 		resetPredecessors(s);
 		resetSuccessors(s);
 
+		//set the timing for the constant signal, at cycle 0, criticalPath 0, criticalPathContribution 0
+		s->setCycle(0);
+		s->setCriticalPath(0.0);
+		s->setCriticalPathContribution(0.0);
+		s->setHasBeenImplemented(true);
+
 		// add the newly created signal to signalMap and signalList
 		signalList_.push_back(s);
 		signalMap_[s->getName()] = s;
@@ -1857,16 +1863,25 @@ namespace flopoco{
 		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++){
 			//add componentPortName as a successor of actualSignalName,
 			// and actualSignalName as a predecessor of componentPortName
-			addPredecessor(op->getSignalByName(it->first), it->second, 0);
-			addSuccessor(it->second, op->getSignalByName(it->first), 0);
+			addPredecessor(opCpy->getSignalByName(it->first), it->second, 0);
+			addSuccessor(it->second, opCpy->getSignalByName(it->first), 0);
+
+			//input ports connected to constant signals do not need scheduling
+			if(it->second->type() == Signal::constant)
+			{
+				opCpy->getSignalByName(it->first)->setCycle(0);
+				opCpy->getSignalByName(it->first)->setCriticalPath(0.0);
+				opCpy->getSignalByName(it->first)->setCriticalPathContribution(0.0);
+				opCpy->getSignalByName(it->first)->setHasBeenImplemented(true);
+			}
 		}
 
 		//update the outputs
 		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++){
 			//add componentPortName as a predecessor of actualSignalName,
 			// and actualSignalName as a successor of componentPortName
-			addSuccessor(op->getSignalByName(it->first), it->second, 0);
-			addPredecessor(it->second, op->getSignalByName(it->first), 0);
+			addSuccessor(opCpy->getSignalByName(it->first), it->second, 0);
+			addPredecessor(it->second, opCpy->getSignalByName(it->first), 0);
 		}
 
 		//clear the port mappings
@@ -1876,8 +1891,8 @@ namespace flopoco{
 
 		//Floorplanning ------------------------------------------------
 		floorplan << manageFloorplan();
-		flpHelper->addToFlpComponentList(op->getName());
-		flpHelper->addToInstanceNames(op->getName(), instanceName);
+		flpHelper->addToFlpComponentList(opCpy->getName());
+		flpHelper->addToInstanceNames(opCpy->getName(), instanceName);
 		//--------------------------------------------------------------
 
 
@@ -2561,17 +2576,21 @@ namespace flopoco{
 		vector<Operator*> *globalOperatorList = getTarget()->getGlobalOpListRef();
 		string globalOperatorName = getName();
 
-		//this might be a copy of the global operator, so try to remove the
+		//this might be a copy of the global operator, so try to remove the postfix
 		if(globalOperatorName.find("_cpy_") != string::npos)
 			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
 
 		//look in the global operator list for the operator
 		for(unsigned int i=0; i<globalOperatorList->size(); i++)
 			if((*globalOperatorList)[i]->getName() == globalOperatorName)
+			{
 				isGlobalOperator = true;
+				break;
+			}
 
-		//if this is a global operator, and this is a copy, then just
-		if(isGlobalOperator && getName().find("_cpy_"))
+		//if this is a global operator, and this is a copy, then just copy the schedule
+		//	of the global copy
+		if(isGlobalOperator && (getName().find("_cpy_") != string::npos))
 		{
 			Operator* originalOperator;
 			int maxInputCycle = 0;
@@ -2699,7 +2718,8 @@ namespace flopoco{
 					maxCycle = targetSignal->parentOp()->getIOListSignal(i)->getCycle();
 			//set all the inputs of the parent operator of targetSignal to the maximum cycle
 			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-				if(targetSignal->parentOp()->getIOListSignal(i)->getCycle() < maxCycle)
+				if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in) &&
+					(targetSignal->parentOp()->getIOListSignal(i)->getCycle() < maxCycle))
 				{
 					//if we have to delay the input, the we need to reset
 					//	the critical path, as well
@@ -2726,6 +2746,11 @@ namespace flopoco{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
+		//check if the signal has already been scheduled
+		if(targetSignal->getHasBeenImplemented() == true)
+			//there is nothing else to be done
+			return;
+
 		//initialize the maximum cycle and critical path of the predecessors
 		if(targetSignal->predecessors()->size() != 0)
 		{
@@ -2738,6 +2763,10 @@ namespace flopoco{
 		{
 			Signal* currentPred = targetSignal->predecessor(i);
 			int currentPredCycleDelay = targetSignal->predecessorPair(i)->second;
+
+			//constant signals are not taken into account
+			if(currentPred->type() == Signal::constant)
+				continue;
 
 			//check if the predecessor is at a later cycle
 			if(currentPred->getCycle()+currentPredCycleDelay >= maxCycle)
@@ -3000,6 +3029,16 @@ namespace flopoco{
 		signalList_.clear();
 		signalList_.insert(signalList_.begin(), newSignalList.begin(), newSignalList.end());
 
+		//create deep copies of the inputs/outputs
+		vector<Signal*> newIOList;
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		{
+			Signal* tmpSignal = new Signal(this, ioList_[i]);
+			newIOList.push_back(tmpSignal);
+		}
+		ioList_.clear();
+		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
+
 		//recreate the signal dependences, for each of the signals
 		for(unsigned int i=0; i<signalList_.size(); i++)
 		{
@@ -3028,21 +3067,11 @@ namespace flopoco{
 			addSuccessors(signalList_[i], newSuccessors);
 		}
 
-		//create deep copies of the inputs/outputs
-		vector<Signal*> newIOList;
-		for(unsigned int i=0; i<ioList_.size(); i++)
-		{
-			Signal* tmpSignal = new Signal(this, ioList_[i]);
-			newIOList.push_back(tmpSignal);
-		}
-		ioList_.clear();
-		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
-
 		//update the signal map
 		for(unsigned int i=0; i<signalList_.size(); i++)
 			signalMap_[signalList_[i]->getName()] = signalList_[i];
 		for(unsigned int i=0; i<ioList_.size(); i++)
-					signalMap_[ioList_[i]->getName()] = ioList_[i];
+			signalMap_[ioList_[i]->getName()] = ioList_[i];
 
 		//no need to recreate the signal dependences for each of the input/output signals,
 		//	as this is done in instance
