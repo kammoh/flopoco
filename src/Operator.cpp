@@ -1952,9 +1952,38 @@ namespace flopoco{
 	string Operator::buildVHDLComponentDeclarations() {
 		ostringstream o;
 
-		for(unsigned int i=0; i<oplist.size(); i++) {
-			oplist[i]->outputVHDLComponent(o, oplist[i]->uniqueName_);
-			o << endl;
+		for(unsigned int i=0; i<oplist.size(); i++)
+		{
+			//if this is a global operator, then it should be output only once,
+			//	and with the name of the global copy, not that of the local copy
+			string componentName = oplist[i]->getName();
+
+			if(componentName.find("_cpy_") != string::npos)
+			{
+				//a global component; only the first copy should be output
+				bool isComponentOutput = false;
+
+				componentName = componentName.substr(0, componentName.find("_cpy_"));
+
+				for(unsigned int j=0; j<i; j++)
+					if(oplist[j]->getName().find(componentName) != string::npos)
+					{
+						isComponentOutput = true;
+						break;
+					}
+				if(isComponentOutput)
+					continue;
+				else
+				{
+					oplist[i]->outputVHDLComponent(o, componentName);
+					o << endl;
+				}
+			}else
+			{
+				//just a regular subcomponent
+				oplist[i]->outputVHDLComponent(o, componentName);
+				o << endl;
+			}
 		}
 
 		return o.str();
