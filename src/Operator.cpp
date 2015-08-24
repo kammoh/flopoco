@@ -1812,8 +1812,8 @@ namespace flopoco{
 
 		if(isGlobalOperator)
 		{
-			for(unsigned int i=0; i<oplist.size(); i++)
-				if(oplist[i]->getName() == op->getName())
+			for(unsigned int i=0; i<getTarget()->getGlobalOpListRef()->size(); i++)
+				if((*getTarget()->getGlobalOpListRef())[i]->getName() == op->getName())
 				{
 					newOpFirstAdd = false;
 					break;
@@ -2631,6 +2631,14 @@ namespace flopoco{
 			//	mark it as scheduled, and return
 			setIsOperatorScheduled(true);
 
+			//start scheduling the signals connected to the output of the sub-component
+			for(unsigned int i=0; i<ioList_.size(); i++)
+				if(ioList_[i]->type() == Signal::out)
+				{
+					for(unsigned int j=0; j<ioList_[i]->successors()->size(); j++)
+						scheduleSignal(ioList_[i]->successor(j));
+				}
+
 			return;
 		}
 
@@ -3023,6 +3031,9 @@ namespace flopoco{
 		vector<Signal*> newSignalList;
 		for(unsigned int i=0; i<signalList_.size(); i++)
 		{
+			if((signalList_[i]->type() == Signal::in) || (signalList_[i]->type() == Signal::out))
+				continue;
+
 			Signal* tmpSignal = new Signal(this, signalList_[i]);
 			newSignalList.push_back(tmpSignal);
 		}
@@ -3038,11 +3049,16 @@ namespace flopoco{
 		}
 		ioList_.clear();
 		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
+		signalList_.insert(signalList_.end(), newIOList.begin(), newIOList.end());
 
 		//recreate the signal dependences, for each of the signals
 		for(unsigned int i=0; i<signalList_.size(); i++)
 		{
 			vector<pair<Signal*, int>> newPredecessors, newSuccessors;
+
+			//no need to recreate the dependences for the inputs/outputs, as this is done in instance
+			if((signalList_[i]->type() == Signal::in) || (signalList_[i]->type() == Signal::out))
+				continue;
 
 			//create the new list of predecessors for the signal currently treated
 			for(unsigned int j=0; j<op->signalList_[i]->predecessors()->size(); j++)
@@ -3070,8 +3086,6 @@ namespace flopoco{
 		//update the signal map
 		for(unsigned int i=0; i<signalList_.size(); i++)
 			signalMap_[signalList_[i]->getName()] = signalList_[i];
-		for(unsigned int i=0; i<ioList_.size(); i++)
-			signalMap_[ioList_[i]->getName()] = ioList_[i];
 
 		//no need to recreate the signal dependences for each of the input/output signals,
 		//	as this is done in instance
