@@ -1906,7 +1906,9 @@ namespace flopoco{
 
 		for(unsigned int i=0; i<signalList_.size(); i++) {
 			//constant signals don't need a declaration
-			if(signalList_[i]->type() == Signal::constant)
+			//inputs/outputs treated separately
+			if((signalList_[i]->type() == Signal::constant) ||
+				(signalList_[i]->type() == Signal::in) || (signalList_[i]->type() == Signal::out))
 				continue;
 
 			o << signalList_[i]->toVHDLDeclaration() << endl;
@@ -2625,6 +2627,7 @@ namespace flopoco{
 				currentSignal->setCriticalPath(originalOperator->getSignalByName(currentSignal->getName())->getCriticalPath());
 				currentSignal->setCriticalPathContribution(originalOperator->getSignalByName(currentSignal->getName())->getCriticalPathContribution());
 				currentSignal->updateLifeSpan(originalOperator->getSignalByName(currentSignal->getName())->getLifeSpan());
+				currentSignal->setHasBeenImplemented(true);
 			}
 
 			//the operator is now scheduled
