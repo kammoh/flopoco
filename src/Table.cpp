@@ -119,7 +119,10 @@ namespace flopoco{
 		else{
 			delay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay(); 
 		}
-		
+
+		// TODO I'm stuck here. If U put the declare in outputVHDL it is too late.
+		// If I put it here nothing happens 
+		declare(delay, "Y0"); 
 	}
 
 
@@ -177,7 +180,9 @@ namespace flopoco{
 	*/
 
 	//old version -- just for testing
-	
+
+
+#if 1
 	void Table::outputVHDL(std::ostream& o, std::string name)
 	{
 		licence(o);
@@ -190,7 +195,6 @@ namespace flopoco{
 			int i,x;
 			mpz_class y;
 			beginArchitecture(o);
-			declare(delay,"Y0");
 			o	<< "  with X select  Y0 <= " << endl;
 			REPORT(FULL,"Table.cpp: Filling the table");
 			for (x = minIn; x <= maxIn; x++) {
@@ -203,7 +207,7 @@ namespace flopoco{
 			for (i = 0; i < wOut; i++)
 				o << "-";
 			o <<  "\" when others;" << endl;
-			vhdl << tab << "Y <= Y0;" <<endl;
+			o << tab << "Y <= Y0;" <<endl;
 		}
 		/* TODO The code below generates VHDL specific to one tool, one architecture, one FPGA...
 	 it was probabaly added because it was improving performance. */
@@ -301,7 +305,7 @@ namespace flopoco{
 		endArchitecture(o);
 		REPORT(DEBUG, "This table has delay " <<  getCPContributionFromSignal("Y0"));
 	}
-
+#endif
 
 	int Table::size_in_LUTs() {
 		return wOut*int(intpow2(wIn-getTarget()->lutInputs()));
