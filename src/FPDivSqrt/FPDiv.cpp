@@ -79,13 +79,10 @@ namespace flopoco{
 		wInit << "w"<<nDigit-1;
 		vhdl << tab << declare(wInit.str(), wF+3) <<" <=  \"00\" & fX;" << endl;
 
-		nextCycle();/////////////////////////////////////////////////////////////
-		setCriticalPath(0);
 
 		double srt4stepdelay =  2*target->lutDelay() + 2*target->localWireDelay() + target->adderDelay(wF+4);
 
 		for(i=nDigit-1; i>=1; i--) {
-			manageCriticalPath(srt4stepdelay);
 
 			ostringstream wi, qi, wim1, seli, qiTimesD, wipad, wim1full;
 			wi << "w" << i;
@@ -119,11 +116,9 @@ namespace flopoco{
 			vhdl << tab << declare(wim1full.str(), wF+4) << "<= " << wipad.str() << " - " << qiTimesD.str() << " when '0'," << endl;
 			vhdl << tab << "      " << wipad.str() << " + " << qiTimesD.str() << " when others;" << endl;
 			vhdl << endl;
-			vhdl << tab << declare(wim1.str(),wF+3) << " <= " << wim1full.str()<<range(wF+1,0)<<" & \"0\";" << endl;
+			vhdl << tab << declare(srt4stepdelay, wim1.str(),wF+3) << " <= " << wim1full.str()<<range(wF+1,0)<<" & \"0\";" << endl;
 		}
- 
- 
-		manageCriticalPath(srt4stepdelay);
+		// TODO piplining from here
 	
 		vhdl << tab << declare("q0",3) << "(2 downto 0) <= \"000\" when  w0 = (" << wF+2 << " downto 0 => '0')" << endl;
 		vhdl << tab << "             else w0(" << wF+2 << ") & \"10\";" << endl;
