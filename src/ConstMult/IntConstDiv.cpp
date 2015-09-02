@@ -116,11 +116,10 @@ namespace flopoco{
 		ri = join("r", k);
 		vhdl << tab << declare(ri, gamma) << " <= " << zg(gamma, 0) << ";" << endl;
 
-		setCriticalPath( getMaxInputDelays(inputDelays) );
+		//		setCriticalPath( getMaxInputDelays(inputDelays) );
 
 		for (int i=k-1; i>=0; i--) {
 
-			manageCriticalPath(tableDelay);
 
 			//			cerr << i << endl;
 			xi = join("x", i);
@@ -138,8 +137,9 @@ namespace flopoco{
 			vhdl << instance(table, join("table",i));
 			ri = join("r", i);
 			qi = join("q", i);
-			vhdl << tab << declare(qi, alpha, true) << " <= " << outi << range(alpha+gamma-1, gamma) << ";" << endl; 
-			vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl; 
+			// TODO the pipelining below assumes Table doesn't manage the delay. Remove it when it does!
+			vhdl << tab << declare(tableDelay,qi, alpha, true) << " <= " << outi << range(alpha+gamma-1, gamma) << ";" << endl; 
+			vhdl << tab << declare(tableDelay,ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl; 
 		}
 
 

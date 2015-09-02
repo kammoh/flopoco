@@ -56,19 +56,15 @@ namespace flopoco{
 
 	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable, map<string, double> inputDelays) :
 		Operator(target_),
-		target(target_), wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
+		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
 	{
+		srcFileName = "Table";
 		if(wIn<0){
-			stringstream err;
-			err<<"wIn="<<wIn<<"; Input size cannot be negative"<<endl;
-			THROWERROR(err);
+			THROWERROR("wIn="<<wIn<<"; Input size cannot be negative"<<endl);
 		}
 		if(wOut<0){
-			stringstream err;
-			err<<"wOut="<<wOut<<"; Output size cannot be negative"<<endl;
-			THROWERROR(err);
+			THROWERROR("wOut="<<wOut<<"; Output size cannot be negative"<<endl);
 		}
-		srcFileName="Table";
 		setCopyrightString("Florent de Dinechin (2007-2012)");
 
 		// Set up the IO signals
@@ -97,7 +93,7 @@ namespace flopoco{
 		else if (_logicTable==-1)
 			logicTable=false;
 		else { // the constructor should decide
-			logicTable = (wIn <= target->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*target->sizeOfMemoryBlock());
+			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
 			if(!logicTable)
 				REPORT(DETAILED, "This table will be implemented in memory blocks");
 		}
@@ -108,27 +104,22 @@ namespace flopoco{
 		// computation of the needed number of cycles (out of Target etc)
 		// The delaying of TableOut will be managed by buildVHDLRegisters() as soon as we have manually defined its lifeSpan
 
-		declare("TableOut",  wOut);
-		setCriticalPath(getMaxInputDelays(inputDelays));
-
 		if (logicTable)  {
 			// Delay is that of broadcasting the input bits to wOut LUTs, plus the LUT delay itself
-			if(wIn <= target->lutInputs())
-				addToCriticalPath(target->localWireDelay(wOut) + target->lutDelay());
+			if(wIn <= getTarget()->lutInputs())
+				delay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
 			else{
-				int lutsPerBit=1<<(wIn-target->lutInputs());
+				int lutsPerBit=1<<(wIn-getTarget()->lutInputs());
 				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
-				// TODO this doesn't take into account the F5 muxes etc: there should be a logicTableDelay() in Target
+				// TODO this doesn't take into account the F5 muxes etc: there should be a logicTableDelay() in GetTarget()
 				// The following is enough for practical sizes, but it is an overestimation.
-				addToCriticalPath(target->localWireDelay(wOut*lutsPerBit) + target->lutDelay() + target->localWireDelay() + target->lutDelay());
+				delay = getTarget()->localWireDelay(wOut*lutsPerBit) + getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
 			}
 		}
 		else{
-			manageCriticalPath(target->LogicToRAMWireDelay() + target->RAMToLogicWireDelay() + target->RAMDelay()); // will hopefully insert the extra register when needed
+			delay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay(); 
 		}
-
-		getSignalByName("TableOut") -> updateLifeSpan(getCurrentCycle());
-		getOutDelayMap()["Y"] =   getCriticalPath();
+		
 	}
 
 
@@ -186,20 +177,21 @@ namespace flopoco{
 	*/
 
 	//old version -- just for testing
+	
 	void Table::outputVHDL(std::ostream& o, std::string name)
 	{
 		licence(o);
 		o << "library ieee; " << endl;
 		o << "use ieee.std_logic_1164.all;" << endl;
-		o << "use ieee.numeric_std.all;" << endl;
 		o << "library work;" << endl;
 		outputVHDLEntity(o);
 		newArchitecture(o,name);
-		if (logicTable==1 || wIn <= target->lutInputs()){
+		if (logicTable==1 || wIn <= getTarget()->lutInputs()){
 			int i,x;
 			mpz_class y;
 			beginArchitecture(o);
-			o	<< "  with X select  Y <= " << endl;
+			declare(delay,"Y0");
+			o	<< "  with X select  Y0 <= " << endl;
 			REPORT(FULL,"Table.cpp: Filling the table");
 			for (x = minIn; x <= maxIn; x++) {
 				y=function(x);
@@ -211,10 +203,10 @@ namespace flopoco{
 			for (i = 0; i < wOut; i++)
 				o << "-";
 			o <<  "\" when others;" << endl;
-			//			Operator::outputVHDL(o,  name);
+			vhdl << tab << "Y <= Y0;" <<endl;
 		}
 		/* TODO The code below generates VHDL specific to one tool, one architecture, one FPGA...
-	It is therefore currently unplugged, but it was probabaly added because it was improving performance. */
+	 it was probabaly added because it was improving performance. */
 		else {
 			int x;
 			mpz_class y;
@@ -235,7 +227,7 @@ namespace flopoco{
 
 			int left = (wOut%2==0?wOut/2:(wOut+1)/2);
 			int right= wOut - left;
-			if (maxIn-minIn <= 256 && wOut>36 /* TODO Replace with target->getBRAMWidth */){
+			if (maxIn-minIn <= 256 && wOut>36 /* TODO Replace with getTarget()->getBRAMWidth */){
 				/*special BRAM packing */
 				//The first maxIn/2 go in the upper part of the table
 				for (x = minIn; x <= maxIn; x++) {
@@ -307,6 +299,7 @@ namespace flopoco{
 		}
 
 		endArchitecture(o);
+		REPORT(DEBUG, "This table has delay " <<  getCPContributionFromSignal("Y0"));
 	}
 
 
