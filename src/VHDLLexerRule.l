@@ -325,12 +325,21 @@ label					  ({identifier}{space_character}*":")
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		yyextra->extraRhsNames.push_back(yytext);
+		
+		//switch the parsing mode to the next stage, selectedSignalAssignment2
+		yyextra->lexingMode = LexerContext::selectedSignalAssignment;
+		
+		//save the left-hand side name for later to create the dependence
+		yyextra->extraRhsNames.push_back(yytext);
 	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
 	{
 		// this signal is on the left side of the assignment
-		(*yyextra->os) << yytext;
+		(*yyextra->os) << "??" << yytext << "??";
 		
 		yyextra->lhsName = yytext;
+		
+		//switch the parsing mode to the next stage, selectedSignalAssignment3
+        yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
 	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment3)
 	{
 		// this signal is on the right side of the assignment

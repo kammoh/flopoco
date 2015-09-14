@@ -2428,6 +2428,7 @@ namespace flopoco{
 		// code that doesn't need to be modified: it goes directly to the new vhdl code buffer
 		// code that needs to be modified: ?? should be removed from lhs_name, $$ should be removed from rhs_name,
 		//		delays of the type rhs_name_xxx should be added for the right-hand side signals
+		bool isSelectedAssignment = (oldStr.find('?') > oldStr.find('$'));
 		currentPos = 0;
 		nextPos = oldStr.find('?');
 		while(nextPos != string::npos)
@@ -2442,11 +2443,21 @@ namespace flopoco{
 			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)+1-nextPos-2);
 
 			//extract the lhs_name
-			lhsName = workStr.substr(0, workStr.find('?'));
-			lhsNameLength = lhsName.size();
+			if(isSelectedAssignment == true)
+			{
+				int lhsNameStart, lhsNameStop;
 
-			//copy lhsName to the new vhdl buffer
-			newStr << lhsName;
+				lhsNameStart = workStr.find('?');
+				lhsNameStop  = workStr.find('?', lhsNameStart+2);
+				lhsName = workStr.substr(lhsNameStart+2, lhsNameStop-lhsNameStart-2);
+			}else
+			{
+				lhsName = workStr.substr(0, workStr.find('?'));
+
+				//copy lhsName to the new vhdl buffer
+				newStr << lhsName;
+			}
+			lhsNameLength = lhsName.size();
 
 			//check for component instances
 			//	the first parse marks the name of the component as a lhsName
@@ -2474,10 +2485,80 @@ namespace flopoco{
 			}
 			lhsSignal = getSignalByName(lhsName);
 
+			//check for selected signal assignments
+			//	with signal_name select... etc
+			//	the problem is there is a signal belonging to the right hand side
+			//	on the left-hand side, before the left hand side signal, which breaks the regular flow
+			if(workStr.find("select") != string::npos)
+			{
+				//extract the first rhs signal name
+				tmpCurrentPos = 0;
+				tmpNextPos = workStr.find('$');
+
+				rhsName = workStr.substr(tmpCurrentPos, tmpNextPos);
+
+				//this could also be a delayed signal name
+				try{
+					rhsSignal = getSignalByName(rhsName);
+				}catch(string e){
+					try{
+						rhsSignal = getDelayedSignalByName(rhsName);
+						//extract the name
+						rhsName = rhsName.substr(0, rhsName.find('^'));
+					}catch(string e2){
+						THROWERROR("Error in parse2(): signal " << rhsName << " not found:" << e2);
+					}
+				}catch(...){
+					THROWERROR("Error in parse2(): signal " << rhsName << " not found:");
+				}
+
+				//output the rhs signal name
+				newStr << rhsName;
+				if(getTarget()->isPipelined() && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
+					newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
+
+				//copy the code up until the lhs signal name
+				tmpCurrentPos = tmpNextPos+2;
+				tmpNextPos = workStr.find('?', tmpCurrentPos);
+
+				newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+
+				//copy the lhs signal name
+				newStr << lhsName;
+
+				//prepare to parse a new rhs name
+				tmpCurrentPos = tmpNextPos+4+lhsNameLength;
+				tmpNextPos = workStr.find('$', tmpCurrentPos);
+
+				//if there are is more code that needs preparing, then just pass
+				//to the next instruction
+				if(tmpNextPos == string::npos)
+				{
+					//copy the rest of the code
+					newStr << workStr.substr(tmpCurrentPos, workStr.size()-tmpCurrentPos);
+
+					//prepare for a new instruction to be parsed
+					currentPos = nextPos + workStr.size() + 2;
+					nextPos = oldStr.find('?', currentPos);
+					//special case for the selected assignment statements
+					isSelectedAssignment = false;
+					if(oldStr.find('$', currentPos) < nextPos)
+					{
+						nextPos = oldStr.find('$', currentPos);
+						isSelectedAssignment = true;
+					}
+
+					continue;
+				}
+			}
+
 			//extract the rhsNames and annotate them find the position of the rhsName, and copy
 			// the vhdl code up to the rhsName in the new vhdl code buffer
-			tmpCurrentPos = lhsNameLength+2;
-			tmpNextPos = workStr.find('$', lhsNameLength+2);
+			if(workStr.find("select") == string::npos)
+			{
+				tmpCurrentPos = lhsNameLength+2;
+				tmpNextPos = workStr.find('$', lhsNameLength+2);
+			}
 			while(tmpNextPos != string::npos)
 			{
 				int cycleDelay;
@@ -2525,6 +2606,13 @@ namespace flopoco{
 			//get a new line to parse
 			currentPos = nextPos + workStr.size() + 2;
 			nextPos = oldStr.find('?', currentPos);
+			//special case for the selected assignment statements
+			isSelectedAssignment = false;
+			if(oldStr.find('$', currentPos) < nextPos)
+			{
+				nextPos = oldStr.find('$', currentPos);
+				isSelectedAssignment = true;
+			}
 		}
 
 		//copy the remaining code to the vhdl code buffer
