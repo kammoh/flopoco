@@ -451,6 +451,15 @@ void usage(char *name, string opName = ""){
 	}
 
 
+	if ( full || opName == "GenericTable"){
+		OP( "GenericTable","wIn wOut logicTable");
+		cerr << "A generic table, filled with data passed to the constructor \n";
+		cerr << "  wIn: width of the address port \n";
+		cerr << "  wOut: width of the output \n";
+		cerr << "  logicTable: logic-based/RAM-based table \n";
+	}
+
+
 
 
 	if ( full )
@@ -1688,6 +1697,25 @@ bool parseCommandLine(int argc, char* argv[]){
 			int lsbO = atoi(argv[i++]);
 			int degree = atoi(argv[i++]);
 			Operator* tg = new FixFunctionByPiecewisePoly(target, func, lsbI, msbO, lsbO, degree, true /*final rounding*/);
+			addOperator(tg);
+		}
+
+
+		else if (opname == "GenericTable") {
+			int nargs = 3;
+			if (i+nargs > argc)
+				usage(argv[0],opname); // and exit
+			int wIn = atoi(argv[i++]);
+			int wOut = atoi(argv[i++]);
+			int logicTable = checkBoolean(argv[i++], argv[0]);
+
+			//build the values for the table
+			vector<mpz_class> values;
+
+			for(int i=0; i<(1<<wIn); i++)
+				values.push_back(i);
+
+			Operator* tg = new GenericTable(target, wIn, wOut, values, logicTable);
 			addOperator(tg);
 		}
 

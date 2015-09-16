@@ -671,6 +671,27 @@ public:
 	 */
 	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false);
 
+	/**
+	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
+	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
+	 * @param name is the name of the signal
+	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param tableValues: the code used to declare and initialize the table (if needed)
+	 * @return name
+	 */
+	string declareTable(string name, Signal::SignalType regType = Signal::table, std::string tableValues = "");
+
+	/**
+	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
+	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
+	 * @param name is the name of the signal
+	 * @param isbus: if true, declares the signal as std_logic_vector; else declares the signal as std_logic
+	 * @param regType: the registring type of this signal. See also the Signal Class for mor info
+	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
+	 * @return name
+	 */
+	string declareTable(double criticalPathContribution, string name, Signal::SignalType regType = Signal::table, std::string tableValues = "");
+
 
 	/**
 	 * Initialize a newly declared signal.

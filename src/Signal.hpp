@@ -30,6 +30,7 @@ class Operator;
 			out,                             /**< if the signal is an output signal */
 			wire,                            /**< if the signal is a wire (not registered) */
 			constant,                        /**< if the signal is a constant */
+			table,                           /**< if the signal is a table (either logic, or RAM-based) */
 			registeredWithoutReset,          /**< if the signal is registered, but does not have a reset */
 			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */
 			registeredWithSyncReset,         /**< if the signal is registered, and has an synchronous reset */
@@ -67,6 +68,16 @@ class Operator;
 		 * @param constValue     the value of the constant
 		 */
 		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue);
+
+		/**
+		 * Signal constructor.
+		 * The standard constructor for signals that are used for tables.
+		 * @param parentOp       the operator containing the signal
+		 * @param name           the name of the signal
+		 * @param type           the type of the signal, @see SignalType
+		 * @param tableValue     the values stored in the table, as well as the possible required type declarations
+		 */
+		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const std::string tableValue = "");
 
 		/**
 		 * Signal constructor.
@@ -137,6 +148,17 @@ class Operator;
 		 * Returns the width of the signal
 		 */
 		int width() const;
+
+
+		/**
+		 * Returns the extra declarations, if this is a table
+		 */
+		const std::string& tableValue() const;
+
+		/**
+		 * Set the extra declarations, if this is a table
+		 */
+		void setTableValue(std::string newTableValue);
 
 
 		/**
@@ -377,6 +399,8 @@ class Operator;
 		int           width_;              /**< The width of the signal */
 
 		double       constValue_;          /**< The value of the constant, for a constant signal */
+
+		std::string   tableValue_;          /**< The values that will be used to fill the table, when implemented as a hard RAM block */
 
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 

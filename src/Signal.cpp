@@ -9,7 +9,7 @@ namespace flopoco{
 
 	// plain logic vector, or wire
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
-		parentOp_(parentOp), name_(name), type_(type), width_(width), constValue_(0.0), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), width_(width), constValue_(0.0), tableValue_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		hasBeenScheduled_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -19,7 +19,7 @@ namespace flopoco{
 
 	// constant signal
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue) :
-		parentOp_(parentOp), name_(name), type_(type), constValue_(constValue), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), constValue_(constValue), tableValue_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		hasBeenScheduled_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -31,9 +31,21 @@ namespace flopoco{
 	}
 
 
+	// table
+	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const std::string tableValue) :
+		parentOp_(parentOp), name_(name), type_(type), width_(0), constValue_(0.0), tableValue_(tableValue), numberOfPossibleValues_(1),
+		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
+		hasBeenScheduled_(false),
+		isFP_(false), isFix_(false), isIEEE_(false),
+		wE_(0), wF_(0), MSB_(0), LSB_(0),
+		isSigned_(false), isBus_(false)
+	{
+	}
+
+
 	// fixed point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) :
-		parentOp_(parentOp), name_(name), type_(type), width_(MSB-LSB+1), constValue_(0.0), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), width_(MSB-LSB+1), constValue_(0.0), tableValue_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		hasBeenScheduled_(false),
 		isFP_(false), isFix_(true),  isIEEE_(false),
@@ -44,7 +56,7 @@ namespace flopoco{
 
 	// floating point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) :
-		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), constValue_(0.0), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), constValue_(0.0), tableValue_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		hasBeenScheduled_(false),
 		isFP_(true), isFix_(false), isIEEE_(false),
@@ -65,6 +77,7 @@ namespace flopoco{
 		type_ = originalSignal->type();
 		lifeSpan_ = 0;
 		constValue_ = originalSignal->constValue_;
+		tableValue_ = originalSignal->tableValue();
 		isFix_ = originalSignal->isFix();
 		isFP_ = originalSignal->isFP();
 		cycle_ = originalSignal->getCycle();
@@ -97,6 +110,7 @@ namespace flopoco{
 		type_ = originalSignal->type();
 		lifeSpan_ = originalSignal->lifeSpan_;
 		constValue_ = originalSignal->constValue_;
+		tableValue_ = originalSignal->tableValue();
 		isFix_ = originalSignal->isFix();
 		isFP_ = originalSignal->isFP();
 		cycle_ = originalSignal->getCycle();
@@ -149,6 +163,14 @@ namespace flopoco{
 	}
 
 	int Signal::width() const {return width_;}
+
+	const std::string& Signal::tableValue() const {
+		return tableValue_;
+	}
+
+	void Signal::setTableValue(std::string newTableValue){
+		tableValue_ = newTableValue;
+	}
 
 	int Signal::wE() const {return(wE_);}
 
@@ -218,6 +240,11 @@ namespace flopoco{
 
 	string Signal::toVHDLType() {
 		ostringstream o;
+
+		if(tableValue_!="")
+			o << " memory_t := init_rom;";
+		return o.str();
+
 		if ((1==width())&&(!isBus_))
 			o << " std_logic" ;
 		else
@@ -240,7 +267,13 @@ namespace flopoco{
 
 	string Signal::toVHDL() {
 		ostringstream o;
-		if(type()==Signal::wire || type()==Signal::registeredWithoutReset
+
+		if((type()==Signal::table) && (tableValue_!="")){
+			o << endl << tableValue_ << endl;
+		}
+
+		if(type()==Signal::wire || type()==Signal::table
+				|| type()==Signal::registeredWithoutReset
 				|| type()==Signal::registeredWithAsyncReset || type()==Signal::registeredWithSyncReset
 				|| type()==Signal::registeredWithZeroInitialiser)
 			o << "signal ";

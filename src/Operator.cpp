@@ -1406,6 +1406,33 @@ namespace flopoco{
 	}
 
 
+	std::string Operator::declareTable(string name, Signal::SignalType regType, std::string tableValues)
+	{
+		return declareTable(0.0, name, regType, tableValues);
+	}
+
+	std::string Operator::declareTable(double criticalPathContribution, string name, Signal::SignalType regType, std::string tableValues)
+	{
+		Signal* s;
+
+		// check the signals doesn't already exist
+		if(signalMap_.find(name) !=  signalMap_.end()) {
+			THROWERROR("ERROR in declareFixPoint(), signal " << name << " already exists" << endl);
+		}
+
+		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
+		s = new Signal(this, name, regType, tableValues);
+
+		initNewSignal(s, criticalPathContribution, regType);
+
+		s->setIsFix(false);
+		s->setIsFP(false);
+		s->setIsIEEE(false);
+
+		return name;
+	}
+
+
 	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType)
 	{
 		//set, if needed, the global parameters used for generating the registers

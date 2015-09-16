@@ -52,6 +52,11 @@ namespace flopoco{
 	}
 #endif
 
+	mpz_class Table::call_function(int x)
+	{
+		return function(x);
+	}
+
 
 
 	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable, map<string, double> inputDelays) :
@@ -71,7 +76,8 @@ namespace flopoco{
 		addInput ("X"  , wIn, true);
 		addOutput ("Y"  , wOut, 1, true);
 
-		if(maxIn==-1) maxIn=(1<<wIn)-1;
+		if(maxIn==-1)
+			maxIn=(1<<wIn)-1;
 		if(minIn<0) {
 			cerr<<"ERROR in Table::Table, minIn<0\n";
 			exit(EXIT_FAILURE);
@@ -104,7 +110,8 @@ namespace flopoco{
 		// computation of the needed number of cycles (out of Target etc)
 		// The delaying of TableOut will be managed by buildVHDLRegisters() as soon as we have manually defined its lifeSpan
 
-		if (logicTable)  {
+		if(logicTable)
+		{
 			// Delay is that of broadcasting the input bits to wOut LUTs, plus the LUT delay itself
 			if(wIn <= getTarget()->lutInputs())
 				delay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
@@ -117,12 +124,127 @@ namespace flopoco{
 			}
 		}
 		else{
-			delay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay(); 
+			delay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay();
 		}
 
-		// TODO I'm stuck here. If U put the declare in outputVHDL it is too late.
-		// If I put it here nothing happens 
-		declare(delay, "Y0"); 
+		/*
+		 * The new version of table, which does not rely on outputVHDL to create all the code
+		 */
+		if (logicTable==1 || wIn <= getTarget()->lutInputs())
+		{
+			//logic table
+			mpz_class y;
+
+			declare(delay, "Y0", wOut);
+			vhdl << tab << "with X select Y0 <= " << endl;
+
+			REPORT(FULL,"Table.cpp: Filling the table");
+			for(int x = minIn; x <= maxIn; x++)
+			{
+				y = call_function(x);
+				vhdl << tab << tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
+			}
+			vhdl << tab << tab << "\"";
+			for(int i = 0; i < wOut; i++)
+				vhdl << "-";
+			vhdl <<  "\" when others;" << endl;
+
+			vhdl << tab << "Y <= Y0;" << endl;
+		}else
+		{
+			//RAM block based table
+			int x, left, right;
+			mpz_class y;
+			ostringstream vhdlTypeDeclaration;
+
+			vhdl << tab << "-- Build a 2-D array type for the ROM" << endl;
+
+			if((maxIn-minIn <= 256) && (wOut > 36))
+			{
+				vhdlTypeDeclaration << tab << "subtype word_t is std_logic_vector("<< (wOut%2==0 ? wOut/2-1 : (wOut+1)/2-1) <<" downto 0);" << endl;
+				vhdlTypeDeclaration << tab << "type memory_t is array(0 to 511) of word_t;" << endl;
+			}else
+			{
+				vhdlTypeDeclaration << tab << "subtype word_t is std_logic_vector("<< wOut-1 <<" downto 0);" << endl;
+				vhdlTypeDeclaration << tab << "type memory_t is array(0 to " << ((1<<wIn) -1) <<") of word_t;" << endl;
+			}
+
+			vhdlTypeDeclaration << tab <<"function init_rom" << endl;
+			vhdlTypeDeclaration << tab << tab << "return memory_t is " << endl;
+			vhdlTypeDeclaration << tab << tab << "variable tmp : memory_t := (" << endl;
+
+			left = (wOut%2==0 ? wOut/2 : (wOut+1)/2);
+			right= wOut - left;
+
+			//TODO Replace with getTarget()->getBRAMWidth
+			if((maxIn-minIn <= 256) && (wOut > 36))
+			{
+				//special BRAM packing
+				//	the first maxIn/2 go in the upper part of the table
+				for(x = minIn; x <= maxIn; x++){
+					y = call_function(x);
+					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y>>right, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+				}
+				for(x = maxIn; x < 255; x++){
+					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+				}
+				for(x = minIn; x <= maxIn; x++){
+					y = call_function(x);
+					y = y % (mpz_class(1) << right);
+					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+				}
+				for(x = maxIn; x < 255; x++){
+					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+				}
+			}else{
+				for(x = minIn; x <= maxIn; x++)
+				{
+					y = call_function(x);
+					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y, wOut) << "\"," << endl;
+				}
+			}
+
+			vhdlTypeDeclaration << tab << tab << "others => (others => '0'));" << endl;
+			vhdlTypeDeclaration << tab << tab << "	begin " << endl;
+			vhdlTypeDeclaration << tab << tab << "return tmp;" << endl;
+			vhdlTypeDeclaration << tab << tab << "end init_rom;" << endl;
+
+			declareTable(delay, "rom", Signal::table, vhdlTypeDeclaration.str());
+
+			if (maxIn-minIn <= 256 && wOut>36){
+				vhdl << declare(getTarget()->localWireDelay(), "Z0", 9)
+						<< " <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '1' & X;" << endl;
+				vhdl << declare(getTarget()->localWireDelay(), "Z1", 9)
+						<< " <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '0' & X;" << endl;
+			}
+
+			if(getTarget()->isPipelined()){
+				vhdl << "	process(clk)" << endl;
+				vhdl << tab << "begin" << endl;
+				vhdl << tab << "if(rising_edge(clk)) then" << endl;
+			}
+
+			if(maxIn-minIn <= 256 && wOut>36){
+				vhdl << tab << tab << declare(delay, "Y0",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
+						" <= rom(  TO_INTEGER(unsigned(Z0)));" << endl;
+				vhdl << tab << tab << declare(delay, "Y1",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
+						" <= rom(  TO_INTEGER(unsigned(Z1)));" << endl;
+			}else
+			{
+				vhdl << tab << tab << declare(delay, "Y0", wOut) <<
+						" <= rom(  TO_INTEGER(unsigned(X))  );" << endl;
+			}
+
+			if(getTarget()->isPipelined()){
+				vhdl << tab << "end if;" << endl;
+				vhdl << tab << "end process;" << endl;
+			}
+
+			if (maxIn-minIn <= 256 && wOut>36)
+				vhdl << tab << " Y <= Y1 & Y0" << range((wOut%2==0?wOut/2-1:(wOut-1)/2-1),0) << ";" << endl;
+			else
+				vhdl << tab << " Y <= Y0;" << endl;
+		}
 	}
 
 
@@ -183,128 +305,131 @@ namespace flopoco{
 
 
 #if 1
-	void Table::outputVHDL(std::ostream& o, std::string name)
-	{
-		licence(o);
-		o << "library ieee; " << endl;
-		o << "use ieee.std_logic_1164.all;" << endl;
-		o << "library work;" << endl;
-		outputVHDLEntity(o);
-		newArchitecture(o,name);
-		if (logicTable==1 || wIn <= getTarget()->lutInputs()){
-			int i,x;
-			mpz_class y;
-			beginArchitecture(o);
-			o	<< "  with X select  Y0 <= " << endl;
-			REPORT(FULL,"Table.cpp: Filling the table");
-			for (x = minIn; x <= maxIn; x++) {
-				y=function(x);
-				//if( y>=(1<<wOut) || y<0)
-				//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
-				o<< tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
-			}
-			o << tab << "\"";
-			for (i = 0; i < wOut; i++)
-				o << "-";
-			o <<  "\" when others;" << endl;
-			o << tab << "Y <= Y0;" <<endl;
-		}
-		/* TODO The code below generates VHDL specific to one tool, one architecture, one FPGA...
-	 it was probabaly added because it was improving performance. */
-		else {
-			int x;
-			mpz_class y;
-
-			o << tab << "-- Build a 2-D array type for the RoM" << endl;
-
-			if (maxIn-minIn<=256 && wOut>36){
-				o << tab << "subtype word_t is std_logic_vector("<< (wOut%2==0?wOut/2-1:(wOut+1)/2-1) <<" downto 0);" << endl;
-				o << tab << "type memory_t is array(0 to 511) of word_t;" << endl;
-			}else{
-				o << tab << "subtype word_t is std_logic_vector("<< wOut-1 <<" downto 0);" << endl;
-				o << tab << "type memory_t is array(0 to " << ((1<<wIn) -1) <<") of word_t;" << endl;
-			}
-
-			o << tab <<"function init_rom" << endl;
-			o << tab << tab << "return memory_t is " << endl;
-			o << tab << tab << "variable tmp : memory_t := (" << endl;
-
-			int left = (wOut%2==0?wOut/2:(wOut+1)/2);
-			int right= wOut - left;
-			if (maxIn-minIn <= 256 && wOut>36 /* TODO Replace with getTarget()->getBRAMWidth */){
-				/*special BRAM packing */
-				//The first maxIn/2 go in the upper part of the table
-				for (x = minIn; x <= maxIn; x++) {
-					y=function(x);
-					o << tab << "\"" << unsignedBinary(y>>right, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-				for (x = maxIn; x < 255; x++) {
-					o << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-				for (x = minIn; x <= maxIn; x++) {
-					y=function(x);
-					y=y % (mpz_class(1) << right);
-					o << tab << "\"" << unsignedBinary(y, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-				for (x = maxIn; x < 255; x++) {
-					o << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-			}else{
-				for (x = minIn; x <= maxIn; x++) {
-					y=function(x);
-					//if( y>=(1<<wOut) || y<0)
-					//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
-					o << tab << "\"" << unsignedBinary(y, wOut) << "\"," << endl;
-				}
-			}
-
-			o << tab << tab << "others => (others => '0'));" << endl;
-			o << tab << tab << "	begin " << endl;
-			o << tab << tab << "return tmp;" << endl;
-			o << tab << tab << "end init_rom;" << endl;
-
-			o << "	signal rom : memory_t := init_rom;" << endl;
-			if (maxIn-minIn <= 256 && wOut>36){
-				declare("Y1",(wOut%2==0?wOut/2:(wOut+1)/2));
-				declare("Y0",(wOut%2==0?wOut/2:(wOut+1)/2));
-				declare("Z1",9);
-				declare("Z0",9);
-			}else{
-				declare("Y0",wOut);
-			}
-
-			outputVHDLSignalDeclarations(o);
-			beginArchitecture(o);
-
-			if (maxIn-minIn <= 256 && wOut>36){
-				o << "Z0 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '1' & X;"<<endl;
-				o << "Z1 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '0' & X;"<<endl;
-			}
-
-			if(isSequential()){
-				o << "	process(clk)" << endl;
-				o << tab << "begin" << endl;
-				o << tab << "if(rising_edge(clk)) then" << endl;
-			}
-			if (maxIn-minIn <= 256 && wOut>36){
-				o << tab << "	Y1 <= rom(  TO_INTEGER(unsigned(Z1)));" << endl;
-				o << tab << "	Y0 <= rom(  TO_INTEGER(unsigned(Z0)));" << endl;
-			}else{
-				o << tab << "	Y0 <= rom(  TO_INTEGER(unsigned(X))  );" << endl;
-			}
-			if(isSequential()){
-				o << tab << "end if;" << endl;
-				o << tab << "end process;" << endl;
-			}
-			if (maxIn-minIn <= 256 && wOut>36){
-				o << tab << " Y <= Y1 & Y0"<<range((wOut%2==0?wOut/2-1:(wOut-1)/2-1),0)<<";"<<endl;
-			}else
-				o << tab << " Y <= Y0;"<<endl;
-		}
-
-		endArchitecture(o);
-		REPORT(DEBUG, "This table has delay " <<  getCPContributionFromSignal("Y0"));
-	}
+//	void Table::outputVHDL(std::ostream& o, std::string name)
+//	{
+//		licence(o);
+//		o << "library ieee; " << endl;
+//		o << "use ieee.std_logic_1164.all;" << endl;
+//		o << "library work;" << endl;
+//		outputVHDLEntity(o);
+//		newArchitecture(o,name);
+//		if (logicTable==1 || wIn <= getTarget()->lutInputs()){
+//			int i,x;
+//			mpz_class y;
+//			beginArchitecture(o);
+//			o	<< "  with X select  Y0 <= " << endl;
+//			REPORT(FULL,"Table.cpp: Filling the table");
+//			for (x = minIn; x <= maxIn; x++) {
+//				y=function(x);
+//				//if( y>=(1<<wOut) || y<0)
+//				//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
+//				o<< tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
+//			}
+//			o << tab << "\"";
+//			for (i = 0; i < wOut; i++)
+//				o << "-";
+//			o <<  "\" when others;" << endl;
+//			o << tab << "Y <= Y0;" <<endl;
+//		}
+//		/*
+//		 * TODO The code below generates VHDL specific to one tool, one architecture, one FPGA...
+//		 * it was probably added because it was improving performance.
+//		 */
+//		else
+//		{
+//			int x;
+//			mpz_class y;
+//
+//			o << tab << "-- Build a 2-D array type for the RoM" << endl;
+//
+//			if (maxIn-minIn<=256 && wOut>36){
+//				o << tab << "subtype word_t is std_logic_vector("<< (wOut%2==0 ? wOut/2-1 : (wOut+1)/2-1) <<" downto 0);" << endl;
+//				o << tab << "type memory_t is array(0 to 511) of word_t;" << endl;
+//			}else{
+//				o << tab << "subtype word_t is std_logic_vector("<< wOut-1 <<" downto 0);" << endl;
+//				o << tab << "type memory_t is array(0 to " << ((1<<wIn) -1) <<") of word_t;" << endl;
+//			}
+//
+//			o << tab <<"function init_rom" << endl;
+//			o << tab << tab << "return memory_t is " << endl;
+//			o << tab << tab << "variable tmp : memory_t := (" << endl;
+//
+//			int left = (wOut%2==0 ? wOut/2 : (wOut+1)/2);
+//			int right= wOut - left;
+//			if (maxIn-minIn <= 256 && wOut>36 /* TODO Replace with getTarget()->getBRAMWidth */){
+//				/*special BRAM packing */
+//				//The first maxIn/2 go in the upper part of the table
+//				for (x = minIn; x <= maxIn; x++) {
+//					y=function(x);
+//					o << tab << "\"" << unsignedBinary(y>>right, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+//				}
+//				for (x = maxIn; x < 255; x++) {
+//					o << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+//				}
+//				for (x = minIn; x <= maxIn; x++) {
+//					y=function(x);
+//					y=y % (mpz_class(1) << right);
+//					o << tab << "\"" << unsignedBinary(y, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+//				}
+//				for (x = maxIn; x < 255; x++) {
+//					o << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
+//				}
+//			}else{
+//				for (x = minIn; x <= maxIn; x++) {
+//					y=function(x);
+//					//if( y>=(1<<wOut) || y<0)
+//					//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
+//					o << tab << "\"" << unsignedBinary(y, wOut) << "\"," << endl;
+//				}
+//			}
+//
+//			o << tab << tab << "others => (others => '0'));" << endl;
+//			o << tab << tab << "	begin " << endl;
+//			o << tab << tab << "return tmp;" << endl;
+//			o << tab << tab << "end init_rom;" << endl;
+//
+//			o << "	signal rom : memory_t := init_rom;" << endl;
+//			if (maxIn-minIn <= 256 && wOut>36){
+//				declare("Y1",(wOut%2==0?wOut/2:(wOut+1)/2));
+//				declare("Y0",(wOut%2==0?wOut/2:(wOut+1)/2));
+//				declare("Z1",9);
+//				declare("Z0",9);
+//			}else{
+//				declare("Y0",wOut);
+//			}
+//
+//			outputVHDLSignalDeclarations(o);
+//			beginArchitecture(o);
+//
+//			if (maxIn-minIn <= 256 && wOut>36){
+//				o << "Z0 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '1' & X;"<<endl;
+//				o << "Z1 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '0' & X;"<<endl;
+//			}
+//
+//			if(isSequential()){
+//				o << "	process(clk)" << endl;
+//				o << tab << "begin" << endl;
+//				o << tab << "if(rising_edge(clk)) then" << endl;
+//			}
+//			if (maxIn-minIn <= 256 && wOut>36){
+//				o << tab << "	Y1 <= rom(  TO_INTEGER(unsigned(Z1)));" << endl;
+//				o << tab << "	Y0 <= rom(  TO_INTEGER(unsigned(Z0)));" << endl;
+//			}else{
+//				o << tab << "	Y0 <= rom(  TO_INTEGER(unsigned(X))  );" << endl;
+//			}
+//			if(isSequential()){
+//				o << tab << "end if;" << endl;
+//				o << tab << "end process;" << endl;
+//			}
+//			if (maxIn-minIn <= 256 && wOut>36){
+//				o << tab << " Y <= Y1 & Y0"<<range((wOut%2==0?wOut/2-1:(wOut-1)/2-1),0)<<";"<<endl;
+//			}else
+//				o << tab << " Y <= Y0;"<<endl;
+//		}
+//
+//		endArchitecture(o);
+//		REPORT(DEBUG, "This table has delay " <<  getCPContributionFromSignal("Y0"));
+//	}
 #endif
 
 	int Table::size_in_LUTs() {
