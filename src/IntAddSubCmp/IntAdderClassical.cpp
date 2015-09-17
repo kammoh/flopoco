@@ -467,6 +467,30 @@ namespace flopoco {
 		return -1;
 	}
 
+	OperatorPtr IntAdderClassical::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		int optimizeType;
+		UserInterface::parseStrictlyPositiveInt(args, "optimizeType", &optimizeType);
+		bool srl;
+		UserInterface::parseBoolean(args, "srl", &srl);
+		return new IntAdderClassical(target, wIn, emptyDelayMap, optimizeType, srl);
+	}
+
+	void IntAdderClassical::registerFactory(){
+		UserInterface::add("IntAdderClassical", // name
+											 "A classical integer adder.",
+											 "BasicInteger", // category
+											 "",
+											 "wIn(int): input size in bits; \
+optimizeType(int)=2: 0=LUT, 1=REG, 2=SLICE, 3=LATENCY; \
+srl(bool)=true: optimize for the use of hardware shift register;",
+											 "",
+											 IntAdderClassical::parseArguments
+											 ) ;
+
+	}
+
 }
 
 

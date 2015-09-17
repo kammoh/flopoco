@@ -500,7 +500,7 @@ namespace flopoco{
 	
 		sXOverflow = xOvf;
 	
-		if (verbose==1)
+		if (UserInterface::verbose==1)
 			cout<<" i="         << currentIteration
 #ifdef  _WIN32	
 				 <<",a=" << mpz2string(AccValue_);
@@ -514,7 +514,7 @@ namespace flopoco{
 			else
 				AccValue_ = AccValue_ - mapFP2Acc(fpX);
 		}
-		if (verbose==1){
+		if (UserInterface::verbose==1){
 			if (fpX.getExceptionSignalValue()!=0)
 #ifdef  _WIN32
 				cout<< (fpX.getSignSignalValue()==0?" + ":" - ")<< mpz2string(mapFP2Acc(fpX)) << " = "<<mpz2string(AccValue_)<<";"; 
@@ -606,4 +606,31 @@ namespace flopoco{
 		emulate(tc);
 		return tc;
 	}
+	
+	OperatorPtr FPLargeAcc::parseArguments(Target *target, vector<string> &args) {
+		int wEX, wFX, MaxMSBX, MSBA, LSBA;
+		UserInterface::parseStrictlyPositiveInt(args, "wEX", &wEX); 
+		UserInterface::parseStrictlyPositiveInt(args, "wFX", &wFX);
+		UserInterface::parseInt(args, "MaxMSBX", &MaxMSBX);
+		UserInterface::parseInt(args, "MSBA", &MSBA);
+		UserInterface::parseInt(args, "LSBA", &LSBA);
+		return new FPLargeAcc(target, wEX, wFX, MaxMSBX, MSBA, LSBA);
+	}
+
+	void FPLargeAcc::registerFactory(){
+		UserInterface::add("FPLargeAcc", // name
+											 "Accumulator of floating-point numbers into a large fixed-point accumulator.",
+											 "CompositeFloatingPoint",
+											 "LargeAccToFP", // seeAlso
+											 "wEX(int): the width of the exponent ; \
+                        wFX(int): the width of the fractional part;  \
+                        MaxMSBX(int): the weight of the MSB of the expected exponent of X; \
+                        MSBA(int): the weight of the least significand bit of the accumulator;\
+                        LSBA(int): the weight of the most significand bit of the accumulator",
+											 "Kulisch-like accumulator of floating-point numbers into a large fixed-point accumulator. By tuning the MaxMSB_in, LSB_acc and MSB_acc parameters to a given application, rounding error may be reduced to a provably arbitrarily low level, at a very small hardware cost compared to using a floating-point adder for accumulation. <br> For details on the technique used and an example of application, see <a href=\"bib/flopoco.html#DinechinPascaCret2008:FPT\">this article</a>",
+											 FPLargeAcc::parseArguments
+											 ) ;
+		
+	}
+	
 }

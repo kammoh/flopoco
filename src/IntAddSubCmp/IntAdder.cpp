@@ -106,11 +106,84 @@ namespace flopoco {
 //		REPORT(DEBUG, "Finished implementing the adder");
 	}
 
-	/**************************************************************************/
+
+	void IntAdder::updateParameters ( Target* target, int &alpha, int &beta, int &k )
+	{
+		target->suggestSlackSubaddSize ( alpha , wIn_, target->ffDelay() + target->localWireDelay() ); /* chunk size */
+		if ( wIn_ == alpha )
+		{ /* addition requires one chunk */
+			beta = 0;
+			k    = 1;
+		}
+		else
+		{
+			beta = ( wIn_ % alpha == 0 ? alpha : wIn_ % alpha );
+			k    = ( wIn_ % alpha == 0 ? wIn_ / alpha : int ( ceil ( double ( wIn_ ) / double ( alpha ) ) ) );
+		}
+	}
+
+	void IntAdder::updateParameters ( Target* target, map<string, double> inputDelays, int &alpha, int &beta, int &gamma, int &k )
+	{
+		int typeOfChunks = 1;
+		bool status = target->suggestSlackSubaddSize ( gamma , wIn_, getMaxInputDelays(inputDelays) ); // the first chunk size
+		if (!status){ /* well, it will not work in this case, we will have to register the inputs */
+			k     = -1;
+			alpha =  0;
+			beta  =  0;
+			gamma =  0;
+		}
+		else if (wIn_ - gamma > 0)
+		{ //more than 1 chunk
+			target->suggestSlackSubaddSize (alpha, wIn_-gamma, target->ffDelay() + target->localWireDelay());
+			if (wIn_ - gamma == alpha)
+				typeOfChunks++;
+			else
+				typeOfChunks+=2; /* beta will have to be computed as well */
+
+			if (typeOfChunks == 3)
+				beta = ( (wIn_-gamma) % alpha == 0 ? alpha : ( wIn_-gamma ) % alpha );
+			else
+				beta = alpha;
+
+			if ( typeOfChunks==2 )
+				k = 2;
+			else
+				k = 2 + int ( ceil ( double ( wIn_ - beta - gamma ) / double ( alpha ) ) );
+		}
+		else
+		{ /* in thiis case there is only one chunk type: gamma */
+			alpha = 0;
+			beta  = 0;
+			k     = 1;
+		}
+	}
+
+	void IntAdder::updateParameters ( Target* target, map<string, double> inputDelays, int &alpha, int &beta, int &k )
+	{
+		bool status = target->suggestSlackSubaddSize ( alpha , wIn_,  getMaxInputDelays ( inputDelays ) ); /* chunk size */
+		if ( !status ) {
+			k=-1;
+			alpha=0;
+			beta=0;
+		}
+		else if ( wIn_ == alpha )
+		{
+			/* addition requires one chunk */
+			beta = 0;
+			k    = 1;
+		}
+		else
+		{
+			beta = ( wIn_ % alpha == 0 ? alpha : wIn_ % alpha );
+			k    = ( wIn_ % alpha == 0 ? wIn_ / alpha : int ( ceil ( double ( wIn_ ) / double ( alpha ) ) ) );
+		}
+	}
+	
+	/*************************************************************************/
 	IntAdder::~IntAdder() {
 	}
 
-	/******************************************************************************/
+	/*************************************************************************/
 	void IntAdder::emulate ( TestCase* tc ) {
 		// get the inputs from the TestCase
 		mpz_class svX = tc->getInputValue ( "X" );
@@ -124,6 +197,34 @@ namespace flopoco {
 
 		// complete the TestCase with this expected output
 		tc->addExpectedOutput ( "R", svR );
+	}
+
+	
+	OperatorPtr IntAdder::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		int arch;
+		int optObjective;
+		bool srl;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn, false);
+		UserInterface::parseInt(args, "arch", &arch, false);
+		UserInterface::parseInt(args, "optObjective", &optObjective, false);
+		UserInterface::parseBoolean(args, "srl", &srl, false);
+		return new IntAdder(target, wIn,emptyDelayMap,optObjective,srl,arch);
+	}
+
+	void IntAdder::registerFactory(){
+		UserInterface::add("IntAdder", // name
+											 "Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
+											 "BasicInteger", // category
+											 "",
+											 "wE(int): exponent size in bits;\
+                        arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency;\
+                        optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count;\
+                        SRL(bool)=true: optimize for shift registers",
+											 "",
+											 IntAdder::parseArguments
+											 ) ;
+
 	}
 
 //    void IntAdder::changeName(std::string operatorName){

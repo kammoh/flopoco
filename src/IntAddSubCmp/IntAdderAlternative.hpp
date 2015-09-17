@@ -70,6 +70,11 @@ namespace flopoco {
 			*/
 			~IntAdderAlternative();
 
+			// User-interface stuff
+			/** Factory method */
+			static OperatorPtr parseArguments(Target *target , vector<string> &args);
+			static void registerFactory();
+
 		protected:
 			int wIn_;                         /**< the width for X, Y and R*/
 

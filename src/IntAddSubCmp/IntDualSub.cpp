@@ -45,11 +45,7 @@ namespace flopoco{
 			name << "IntDualAddSub_";
 		}
 		name << wIn;
-		if(target->isPipelined())
-			name << "_"<<target->frequencyMHz() ;
-		else
-			name << "comb";
-		setName(name.str());
+		setNameWithFreq(name.str());
 
 
 		// Set up the IO signals
@@ -185,7 +181,7 @@ namespace flopoco{
 			}
 		}else{
 			vhdl << tab << "RxMy <= X + not(Y) + '1';" <<endl;
-			vhdl << tab << "R"<<son_<<" <= "<< (opType_==0?"not(X)":"X")<<" + Y"<<(opType_==0?"":" + '1'")<<";"<<endl;
+			vhdl << tab << "R"<<son_<<" <= "<< (opType_==0 ? "not(X) + Y + '1'" : "X+Y")<<";"<<endl;
 		}
 	}
 
@@ -226,7 +222,26 @@ namespace flopoco{
 		tc->addInput("Y", mpz_class(-1));
 		emulate(tc);
 		tcl->add(tc);
+	}
 
+	OperatorPtr IntDualSub::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		int opType;
+		UserInterface::parseStrictlyPositiveInt(args, "opType", &opType);
+		return new IntDualSub(target, wIn, opType);
+	}
+
+	void IntDualSub::registerFactory(){
+		UserInterface::add("IntDualSub", // name
+											 "Pipelined dual adder/subtractor",
+											 "BasicInteger", // category
+											 "",
+											 "wIn(int): input size in bits;\
+opType(int): 1=compute X-Y and X+Y, 2=compute X-Y and Y-X;",
+											 "",
+											 IntDualSub::parseArguments
+											 ) ;
 
 	}
 }

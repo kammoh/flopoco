@@ -59,7 +59,7 @@ namespace flopoco{
 		 * @param[in] target the target device
 		 * @param[in] wIn    the with of the input in bits
 		 * @param[in] wOut   the with of the output in bits
-     * @param[in] logicTable   1 if the table is intended to be implemented as logic; -1 if the table is intended to be implemented as BRAM; 0: let the constructor decide
+     	 * @param[in] logicTable   1 if the table is intended to be implemented as logic; -1 if the table is intended to be implemented as BRAM; 0: let the constructor decide
 		 **/
 		Table(Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1, int logicTable = 0,  map<string, double> inputDelays = emptyDelayMap );
 

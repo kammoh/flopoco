@@ -196,7 +196,8 @@ namespace flopoco{
 				for(x = maxIn; x < 255; x++){
 					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
 				}
-			}else{
+			}else
+			{
 				for(x = minIn; x <= maxIn; x++)
 				{
 					y = call_function(x);
@@ -302,7 +303,6 @@ namespace flopoco{
 	*/
 
 	//old version -- just for testing
-
 
 #if 1
 //	void Table::outputVHDL(std::ostream& o, std::string name)

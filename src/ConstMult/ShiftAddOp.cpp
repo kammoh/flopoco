@@ -25,12 +25,14 @@
 
 using namespace std;
 
+		
 
 namespace flopoco{
 
 
 	ShiftAddOp::ShiftAddOp(ShiftAddDag* impl, ShiftAddOpType op, ShiftAddOp* i, int s, ShiftAddOp* j) :
-		impl(impl), op(op), i(i), j(j), s(s) {
+		impl(impl), op(op), i(i), j(j), s(s)
+	{
 		n=impl->computeConstant(op, i, s, j);
 		// now compute the size according to this constant, as the log2 of the max value the result can take
 		if (n >= 0)
@@ -80,5 +82,31 @@ namespace flopoco{
 
 	}
 
+	std::ostream& operator<<(std::ostream& o, const ShiftAddOp& sao ) // output
+	{    
+		o << sao.name << " <-  ";
+		switch(sao.op) {
+			case X:        o << " X"; break;
+			case Add:      o << sao.i->name << "<<" << sao.s << "  + " << sao.j->name;   break;
+			case Sub:      o << sao.i->name << "<<" << sao.s << "  - " << sao.j->name;   break;
+			case RSub:     o << sao.j->name << "  - " << sao.i->name << "<<" << sao.s ;   break;
+			case Shift:    o << " " << sao.i->name << "<<" << sao.s;                     break;
+			case Neg:      o << "-" << sao.i->name;   break;
+		}   
+		return o;
+	}
 
+	FlopocoStream& operator<<(FlopocoStream& o, const ShiftAddOp& sao ) // output
+	{    
+		o << sao.name << " <-  ";
+		switch(sao.op) {
+			case X:        o << " X"; break;
+			case Add:      o << sao.i->name << "<<" << sao.s << "  + " << sao.j->name;   break;
+			case Sub:      o << sao.i->name << "<<" << sao.s << "  - " << sao.j->name;   break;
+			case RSub:      o << sao.j->name << "  - " << sao.i->name << "<<" << sao.s ;   break;
+			case Shift:    o << " " << sao.i->name << "<<" << sao.s;                     break;
+			case Neg:      o << "-" << sao.i->name;   break;
+		}   
+		return o;
+	}
 }

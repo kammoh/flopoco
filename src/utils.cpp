@@ -305,10 +305,10 @@ namespace flopoco{
 		double x = 1.0;
 		if(power>0){
 			for (int i = 0; i < power; i++)
-				x *= 2;
+				x *= 2.0;
 		} else if(power<0) {
 			for (int i = 0; i < -power; i++)
-				x /= 2;
+				x /= 2.0;
 		}
 		return x;
 	}

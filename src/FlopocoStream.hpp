@@ -7,6 +7,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <cstdlib>
+#include <string.h>
 
 #include <string>
 

@@ -163,5 +163,30 @@ namespace flopoco{
 		tc->addExpectedOutput ( "R", svR );
 	}
 
+	OperatorPtr IntComparator::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		int criteria;
+		UserInterface::parseStrictlyPositiveInt(args, "criteria", &criteria);
+		bool constant;
+		UserInterface::parseBoolean(args, "constant", &constant);
+		int constValue;
+		UserInterface::parseStrictlyPositiveInt(args, "constValue", &constValue);
+		return new IntComparator(target, wIn, criteria, constant, constValue);
+	}
 
+	void IntComparator::registerFactory(){
+		UserInterface::add("IntComparator", // name
+											 "An integer comparator.",
+											 "BasicInteger", // category
+											 "",
+											 "wIn(int): input size in bits;\
+criteria(int): -2=lesser than, -1=lesser or equal, 0=equal, 1=greater or equal, 2=greater;\
+constant(bool): ;\
+constValue(int): the value to compare to;",
+											 "",
+											 IntComparator::parseArguments
+											 ) ;
+
+}
 }

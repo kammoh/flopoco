@@ -254,4 +254,28 @@ namespace flopoco{
 		return tc;
 	}
 
+	OperatorPtr LargeAccToFP::parseArguments(Target *target, vector<string> &args) {
+		int MSBA, LSBA, wE_out, wF_out;
+		UserInterface::parseStrictlyPositiveInt(args, "wE_out", &wE_out); 
+		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		UserInterface::parseInt(args, "MSBA", &MSBA);
+		UserInterface::parseInt(args, "LSBA", &LSBA);
+		return new LargeAccToFP(target, MSBA, LSBA, wE_out, wF_out);
+	}
+
+	void LargeAccToFP::registerFactory(){
+		UserInterface::add("LargeAccToFP", // name
+											 "Post-normalisation unit for FPLargeAcc.",
+											 "CompositeFloatingPoint",
+											 "FPLArgeAcc", // seeAlso
+											 "wE_out(int): the width of the output exponent ; \
+                        wF_out(int): the width of the output fractional part;  \
+                        MSBA(int): the weight of the most significand bit of the accumulator; \
+                        LSBA(int): the weight of the least significand bit of the accumulator",
+											 "Converts the (fixed-point) output of FPLargeAcc or FPDotProduct (with the same parameters) into a floating-point number.  <br> For details on the technique used and an example of application, see <a href=\"bib/flopoco.html#DinechinPascaCret2008:FPT\">this article</a>",
+											 LargeAccToFP::parseArguments
+											 ) ;
+		
+	}
+	
 }

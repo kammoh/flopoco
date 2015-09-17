@@ -566,7 +566,8 @@ namespace flopoco{
 		//as long as the closest line to the current is more than a line
 		//	away, move the line upwards so as to fill the gaps
 		do{
-			int minGapSize = flComponentCordVirtual.size(), minGapLine = 0;
+			unsigned int minGapSize = flComponentCordVirtual.size();
+			int minGapLine = 0;
 
 			for(map<string, coordinateType>::iterator it = flComponentCordVirtual.begin(); it != flComponentCordVirtual.end(); it++){
 				coordinateType tempCoordinate = it->second;
@@ -584,7 +585,7 @@ namespace flopoco{
 						closestCoordinate = tempCoordinate2;
 				}
 
-				if((closestCoordinate.y-tempCoordinate.y < minGapSize) && (closestCoordinate.y-tempCoordinate.y > 1)){
+				if((closestCoordinate.y-tempCoordinate.y > 1) && ((unsigned int)(closestCoordinate.y-tempCoordinate.y) < minGapSize)){
 					minGapSize = closestCoordinate.y-tempCoordinate.y;
 					minGapLine = tempCoordinate.y;
 				}
@@ -650,7 +651,7 @@ namespace flopoco{
 		if(parentOp->reHelper->estimatedCountDSP!=0
 				|| parentOp->reHelper->estimatedCountRAM!=0 || parentOp->reHelper->estimatedCountROM!=0){ // for modules with DSPs/RAMs
 			int nrLines = 0, nrColumns = 0;
-			int maxDSPperLine = 0, maxDSPperColumn = 0, maxRAMperLine = 0, maxRAMperColumn = 0;
+			//int maxDSPperLine = 0, maxDSPperColumn = 0, maxRAMperLine = 0, maxRAMperColumn = 0;
 			vector<int> nrDSPperLine, nrDSPperColumn, nrRAMperLine, nrRAMperColumn;
 			vector< vector<string> > subcomponentMatrixLines, subcomponentMatrixColumns;
 			int maxComponentHeight = 0;
@@ -716,7 +717,7 @@ namespace flopoco{
 			result << tab << "Testing if the DSP/RAM requirements can be satisfied by the current floorplan" << endl;
 
 			for(int i=0; i<nrLines; i++){
-				if((nrDSPperLine[i] > target->multiplierPosition.size()) || (nrRAMperLine[i] > target->memoryPosition.size())){
+				if((nrDSPperLine[i] > (int)target->multiplierPosition.size()) || (nrRAMperLine[i] > (int)target->memoryPosition.size())){
 					result << "Error: the current floorplan will not fit on the design;"
 								<< " try changing the design orientation or having less elements in a line" << endl;
 					result << "Floorplan creation abandoned" << endl;
@@ -819,7 +820,7 @@ namespace flopoco{
 						continue;
 
 					srand(time(NULL));
-					int pivotIndex = rand() % tempArray.size();
+					unsigned int pivotIndex = rand() % tempArray.size();
 					string pivot = tempArray[pivotIndex];
 					vector<string> lesser, greater;
 

@@ -25,6 +25,7 @@
 #include "utils.hpp"
 #include "IntMult/IntSquarer.hpp"
 #include "ConstMult/IntIntKCM.hpp"
+#include "UserInterface.hpp"
 
 
 using namespace std;
@@ -115,7 +116,7 @@ namespace flopoco{
 					/ ((double)(1<<(wIn))); // 1.0 11...11 (binary)
 			j=function(i);
 			y=output2double(j);
-			if(verbose)
+			if(UserInterface::verbose)
 				cout << "i="<<i<< " ("<<input2double(i)<<") j="<<j
 					  <<" min="<< x1*y <<" max="<< x2*y<< endl;
 			prod=x1*y; if (prod<minMulOut) minMulOut=prod;
@@ -426,7 +427,7 @@ namespace flopoco{
 		stages = i-1;
 		gLog=max(4, intlog2(3+0.5+0.5+3*stages));
 
-		if(verbose>=2) {
+		if(UserInterface::verbose>=2) {
 			cerr << "> IterativeLog\t Initial parameters:" << endl;
 			for(i=0; i<=stages; i++) {
 				cerr << "> IterativeLog\t";
@@ -439,7 +440,7 @@ namespace flopoco{
 		pfinal = p[stages+1];
 		int extraBits = pfinal - ((wF+gLog-2)>>1);
 		int extraBitsperstage =  floor(((double)extraBits) / ((double)(stages+1)));
-		if(verbose)
+		if(UserInterface::verbose)
 			cerr << "> IterativeLog\t before optimization:  pfinal=" << pfinal << "--- extraBits=" << extraBits << "---extraBitsperstage=" << extraBitsperstage << endl;
 		if(bitsPerStage>6) {
 			for (i=0; i<= stages; i++)
@@ -474,16 +475,16 @@ namespace flopoco{
 
 		extraBits = pfinal -  ((wF+gLog-2)>>1);
 
-		if(verbose>=2)
+		if(UserInterface::verbose>=2)
 			cerr << "> IterativeLog\t after optimization:   pfinal=" << pfinal << "--- extraBits=" << extraBits << endl;
 
 
-		if(verbose)
+		if(UserInterface::verbose)
 			cerr << "> IterativeLog"<<tab<<"Guard bits: " << gLog << endl;
 
 
 		target_prec = wF + pfinal +gLog;
-		if(verbose==2)
+		if(UserInterface::verbose==2)
 			cerr << "> IterativeLog"<<tab<<"Target precision: " << target_prec << endl;
 
 		s[0] = wF+2;
@@ -531,9 +532,9 @@ namespace flopoco{
 		// size will be target_prec - p[stages+1]
 
 
-		if(verbose)
+		if(UserInterface::verbose)
 			cerr<<"> IterativeLog\t needs 1+"<<stages<<" range reduction stages"<<endl;
-		if(verbose>=2) {
+		if(UserInterface::verbose>=2) {
 			for(i=0; i<=stages; i++) {
 				cerr << "> IterativeLog\t";
 				cerr<<"\tp"<<i<<"=" << p[i];
@@ -696,7 +697,7 @@ namespace flopoco{
 			setCriticalPath( pi->getOutputDelay("R") );
 
 #else
-			if(verbose) cerr << "> IterativeLog: unpipelined multiplier for P"<<i<<", implemented as * in VHDL" << endl;
+			if(UserInterface::verbose) cerr << "> IterativeLog: unpipelined multiplier for P"<<i<<", implemented as * in VHDL" << endl;
 			nextCycle();//
 			vhdl << tab << declare(join("P",i),  psize[i] + a[i]) << " <= " << join("A",i) << "*" << join("ZM",i) << ";" << endl;
 			nextCycle();
@@ -1250,6 +1251,30 @@ namespace flopoco{
 		emulate(tc);
 		// add to the test case list
 		return tc;
+	}
+
+		OperatorPtr IterativeLog::parseArguments(Target *target, vector<string> &args) {
+		int wE;
+		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		int wF;
+		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		int inTableSize;
+		UserInterface::parseStrictlyPositiveInt(args, "inTableSize", &inTableSize);
+		return new IterativeLog(target, wE, wF, inTableSize);
+	}
+
+	void IterativeLog::registerFactory(){
+		UserInterface::add("FPLog", // name
+											 "Floating-point logarithm using an iterative method.",
+											 "ElementaryFunctions", // categories
+											 "",
+											 "wE(int): exponent size in bits; \
+                        wF(int): mantissa size in bits; \
+                        inTableSize(int)=0: The input size to the tables, in bits, between 6 and 16. 0 choses a a sensible value",
+											 "For details on the technique used, see <a href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research report</a>.",
+											 IterativeLog::parseArguments
+											 ) ;
+
 	}
 
 }

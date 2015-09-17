@@ -97,13 +97,12 @@ namespace flopoco{
 
 
 
-	void Operator::addSubComponent(Operator* op) {
+	void Operator::addSubComponent(OperatorPtr op) {
 		oplist.push_back(op);
 
 		cerr << "WARNING: function addSubComponent() should only be used inside Operator!" << endl
 				<< tab << tab << "Subcomponents should add the instance, with its port mappings, not just the sub-operator" << endl;
 	}
-
 
 
 
@@ -455,14 +454,26 @@ namespace flopoco{
 		uniqueName_ = operatorName;
 	}
 
+	// TODO Should be removed in favor of setNameWithFreqAndUID
 	void Operator::setNameWithFreq(std::string operatorName){
 		std::ostringstream o;
 
 		o <<  operatorName <<  "_" ;
 		if(target_->isPipelined())
-			o << target_->frequencyMHz() ;
+			o << "F" << target_->frequencyMHz() ;
 		else
 			o << "comb";
+		uniqueName_ = o.str();
+	}
+
+	void Operator::setNameWithFreqAndUID(std::string operatorName){
+		std::ostringstream o;
+		o <<  operatorName <<  "_" ;
+		if(target_->isPipelined())
+			o << "F"<<target_->frequencyMHz() ;
+		else
+			o << "comb";
+		o << "_uid" << getNewUId();
 		uniqueName_ = o.str();
 	}
 
@@ -758,7 +769,7 @@ namespace flopoco{
 				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getOpList().size() << " children";
 				throw o.str();
 			}
-			getOpListR()[0]->outputFinalReport(level);
+			getOpList()[0]->outputFinalReport(s, level);
 		}
 		else{
 			// Hard operator
@@ -777,11 +788,11 @@ namespace flopoco{
 				ctabs << "|" << tab;
 			}
 
-			cerr << tabs.str() << "Entity " << uniqueName_ << endl;
+			s << tabs.str() << "Entity " << uniqueName_ << endl;
 			if(this->getPipelineDepth() != 0)
-				cerr << ctabs.str() << tab << "Pipeline depth = " << getPipelineDepth() << endl;
+				s << ctabs.str() << tab << "Pipeline depth = " << getPipelineDepth() << endl;
 			else
-				cerr << ctabs.str() << tab << "Not pipelined"<< endl;
+				s << ctabs.str() << tab << "Not pipelined"<< endl;
 		}
 	}
 
@@ -1272,6 +1283,7 @@ namespace flopoco{
 				totalDelay -= (1.0/target_->frequency()) + target_->ffDelay();
 				// cout << " after one nextCycle total delay =" << totalDelay << endl;
 			}
+					return true;
 #endif
 		}
 		else {
@@ -3313,12 +3325,11 @@ namespace flopoco{
 	void Operator::outputVHDLToFile(ofstream& file){
 		vector<Operator*> oplist;
 
-		REPORT(DEBUG, "outputVHDLToFile");
+		REPORT(DEBUG, "Entering outputVHDLToFile");
 
 		//build a copy of the global oplist hidden in Target (if it exists):
-		vector<Operator*> *goplist = target_->getGlobalOpListRef();
-		for (unsigned i=0; i<goplist->size(); i++)
-			oplist.push_back((*goplist)[i]);
+		for (unsigned i=0; i<UserInterface::globalOpList.size(); i++)
+			oplist.push_back(UserInterface::globalOpList[i]);
 		// add self (and all its subcomponents) to this list
 		oplist.push_back(this);
 		// generate the code

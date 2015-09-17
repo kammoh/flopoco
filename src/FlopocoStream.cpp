@@ -49,11 +49,9 @@ namespace flopoco{
 	FlopocoStream::~FlopocoStream(){
 	}
 
-
 	string FlopocoStream::str(){
 		if(!codeParsed)
 			flush();
-
 		return vhdlCode.str();
 	}
 
@@ -69,17 +67,17 @@ namespace flopoco{
 	void FlopocoStream::flush(){
 		ostringstream bufferCode;
 
-		/* parse the buffer if it is not empty */
+		//parse the buffer if it is not empty
 		if(vhdlCodeBuffer.str() != string(""))
 		{
-			/* scan the code buffer and build the dependence table and annotate the code */
+			//scan the code buffer and build the dependence table and annotate the code
 			bufferCode.str("");
 			bufferCode << parseCode();
 
-			/* fix the dependence table, to the correct content type */
+			//fix the dependence table, to the correct content type 
 			cleanupDependenceTable();
 
-			/* the newly processed code is appended to the existing one */
+			//the newly processed code is appended to the existing one
 			vhdlCode << bufferCode.str();
 		}
 	}
@@ -222,16 +220,3 @@ namespace flopoco{
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

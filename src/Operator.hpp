@@ -7,13 +7,13 @@
 
 #include <vector>
 #include <map>
+#include <memory>
 #include <gmpxx.h>
 #include <float.h>
 #include <utility>
 
 #include "Target.hpp"
 #include "Signal.hpp"
-//#include "Instance.hpp"
 
 #include "TestBenches/TestCase.hpp"
 
@@ -27,11 +27,14 @@
 
 using namespace std;
 
-// variables set by the command-line interface in main.cpp
+namespace flopoco {
+	class Operator;
+ 	typedef Operator* OperatorPtr;
+}
 
+#include "UserInterface.hpp"
 
 namespace flopoco {
-
 	// global const variables
 	static const map<string, double> emptyDelayMap;
 	const std::string tab = "   ";
@@ -46,7 +49,7 @@ namespace flopoco {
 #define INNER_SEPARATOR "................................................................................"
 #define DEBUG_SEPARATOR "________________________________________________________________________________"
 #define OUTER_SEPARATOR "################################################################################"
-#define REPORT(level, stream) {if ((level)<=(verbose)){ cerr << "> " << srcFileName << ": " << stream << endl;}else{}}
+#define REPORT(level, stream) {if ((level)<=(UserInterface::verbose)){ cerr << "> " << srcFileName << ": " << stream << endl;}else{}} 
 #define THROWERROR(stream) {{ostringstream o; o << " ERROR in " << uniqueName_ << " (" << srcFileName << "): " << stream << endl; throw o.str();}}
 
 
@@ -185,7 +188,8 @@ public:
 	// Test:
 	// One option is that fixed-point I/Os should always be plain std_logic_vectors.
 	// It just makes the framework simpler, and anyway typing is managed internally
-	// FP I/O need to be typed to manage the testbenches, e.g. FP equality does not resume to equality on the bit vectors.
+	// FP I/O need to be typed to manage the testbenches, e.g. FP equality does
+	// not resume to equality on the bit vectors.  
 	// This is not the case for fixed-point
 	// (comment by F de Dinechin)
 
@@ -306,7 +310,12 @@ public:
 	*/
 	void setNameWithFreq(std::string operatorName = "UnknownOperator");
 
-	/**
+	/** Sets Operator name to given name, with either the frequency appended, or "comb" for combinatorial, and a unique identifier for good measure.
+	 * @param operatorName new name of the operator
+	*/
+	void setNameWithFreqAndUID(std::string operatorName = "UnknownOperator");
+
+	/** Sets Operator name to givenName.
 	 * Sets the name of the operator to operatorName.
 	 * @param operatorName new name of the operator
 	*/
@@ -352,7 +361,6 @@ public:
  /*****************************************************************************/
  /*        VHDL-related methods (for defining an operator architecture)       */
  /*****************************************************************************/
-
 
 	/**
 	 * Functions related to pipeline management
@@ -439,7 +447,8 @@ public:
 	 * DEPRECATED
 	 * Set the current cycle and the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before.
-	 * @param criticalPath is the critical path delay associated to this signal: typically getDelay(name)
+	 * @param criticalPath is the critical path delay associated to this 
+	 * 		  signal: typically getDelay(name)
 	 * @param report is a boolean, if true it will report the cycle
 	 */
 	void setCycleFromSignal(string name, double criticalPath, bool report=true) ;
@@ -587,8 +596,10 @@ public:
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal (optional, default 1)
-	 * @param isbus: a signal of width 1 is declared as std_logic when false, as std_logic_vector when true (optional, default false)
-	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param isbus: a signal of width 1 is declared as std_logic when false, 
+	 * 				 as std_logic_vector when true (optional, default false)
+	 * @param regType: the registring type of this signal. See also the Signal 
+	 * 				   Class for more info
 	 * @return name
 	 */
 	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire);
@@ -776,8 +787,6 @@ public:
 	string instance(Operator* op, string instanceName, bool isGlobalOperator = false);
 
 
-
-
 	/**
 	 * Adds attributes to the generated VHDL so that the tools use embedded RAM blocks for an instance
 	 * @param t a pointer to this instance
@@ -938,8 +947,6 @@ public:
 
 
 
-
-
 	/**
 	 * Returns true if the operator needs a clock signal;
 	 * It will also get a rst but doesn't need to use it.
@@ -968,7 +975,6 @@ public:
 	void setCombinatorial();
 
 
-
 	/**
 	 * Set the operator to need a recirculation signal in order to
 	 * trigger the pipeline work
@@ -987,10 +993,6 @@ public:
 	 * is an error if a feedback of more than one cycle happens.
 	 */
 	bool hasDelay1Feedbacks();
-
-
-
-
 
 
 
@@ -1144,7 +1146,7 @@ public:
 	 * By default, reports the pipeline depth, but feel free to overload
 	 * it if you have anything useful to tell to the end user
 	*/
-	virtual void outputFinalReport(int level);
+	virtual void outputFinalReport(ostream& s, int level);	
 
 
 	/**
@@ -1687,7 +1689,8 @@ public:
 	 * 		- count registers added due to pipelining framework
 	 * 		- count input/output ports
 	 * 		- count resources in subcomponents
-	 * Should not be used together with the manual estimation functions addWireCount, addPortCount, addComponentResourceCount!
+	 * Should not be used together with the manual estimation functions 
+	 * addWireCount, addPortCount, addComponentResourceCount!
 	 * @return the string describing the performed operation
 	 */
 	void addAutomaticResourceEstimations();
@@ -1894,10 +1897,8 @@ private:
 	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled */
 };
 
-	// global variables used through most of FloPoCo,
-	// to be encapsulated in something, someday?
-
-	extern int verbose;
 
 } //namespace
+
+
 #endif

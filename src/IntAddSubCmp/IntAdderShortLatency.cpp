@@ -135,7 +135,6 @@ namespace flopoco {
 								<< "  <= (\"0\" & " << uname1.str() << range(cSize[j]-1, 0) << ")"
 								<< " + (\"0\" & " << uname2.str() << range(cSize[j]-1, 0) << ") + scIn;" << endl;
 					}
-
 #else
 					if ( j>0 ) { //for all chunks greater than zero we perform this additions
 						vhdl << tab << declare ( dnameZero.str(),cSize[j]+1 ) << " <= (\"0\" & "<< uname1.str() <<range ( cSize[j]-1,0 ) <<") +  (\"0\" & "<< uname2.str() <<range ( cSize[j]-1,0 ) <<");"<<endl;
@@ -723,6 +722,29 @@ namespace flopoco {
 		tc->addExpectedOutput ( "R", svR );
 	}
 
+	OperatorPtr IntAdderShortLatency::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		int optimizeType;
+		UserInterface::parseStrictlyPositiveInt(args, "optimizeType", &optimizeType);
+		bool srl;
+		UserInterface::parseBoolean(args, "srl", &srl);
+		return new IntAdderShortLatency(target, wIn, emptyDelayMap, optimizeType, srl);
+	}
+
+	void IntAdderShortLatency::registerFactory(){
+		UserInterface::add("IntAdderShortLatency", // name
+											 "A fast integer adder for large sizes.",
+											 "BasicInteger",
+											 "",
+											 "wIn(int): input size in bits; \
+optimizeType(int)=2: 0=LUT, 1=REG, 2=SLICE, 3=LATENCY; \
+srl(bool)=true: optimize for the use of hardware shift register;",
+											 "",
+											 IntAdderShortLatency::parseArguments
+											 ) ;
+
+	}
 
 }
 

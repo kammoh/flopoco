@@ -62,13 +62,19 @@ namespace flopoco {
 		 * The buildStandardTestCases function from Operator
 		 */
 		void buildStandardTestCases(TestCaseList * tcl) ;
+		
+		/** Factory method that parses arguments and calls the constructor */
+		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+
+		/** Factory register method */ 
+		static void registerFactory();
 
 	protected:
 
 		int wIn;                     					/**< input width */
 		int wOut;                    					/**< output width */
 
-		bool negateByComplement=false;                  /**< An architecture parameter: we negate negative values to obtain the first octant */
+		bool negateByComplement=false; /**< An architecture parameter: we negate negative values to obtain the first octant */
 		mpfr_t constPi;
 	};
 
