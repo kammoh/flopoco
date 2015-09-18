@@ -58,7 +58,7 @@ namespace flopoco
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
 		return v;
 	}();
-	
+
 	const vector<string> UserInterface::known_fpgas = []()->vector<string>{
 				vector<string> v;
 				v.push_back("virtex4");
@@ -84,7 +84,7 @@ namespace flopoco
 			}();
 
 	const vector<option_t> UserInterface::options = []()->vector<option_t>{
-				vector<option_t> v;	
+				vector<option_t> v;
 				vector<string> values;
 
 				// Boolean options
@@ -96,13 +96,13 @@ namespace flopoco
 				v.push_back(option_t("generateFigures", values));
 				v.push_back(option_t("useHardMults", values));
 
-				//free options, using an empty vector of values 
+				//free options, using an empty vector of values
 				values.clear();
 				v.push_back(option_t("name", values));
 				v.push_back(option_t("outputFile", values));
 				v.push_back(option_t("hardMultThreshold", values));
 				v.push_back(option_t("frequency", values));
-				
+
 				//verbosity level
 				values.clear();
 				for(unsigned int i = 0 ; i < 3 ; ++i) {
@@ -113,8 +113,8 @@ namespace flopoco
 				//target option
 				v.push_back(option_t("target", known_fpgas));
 				return v;
-			}();		
-		
+			}();
+
 	void UserInterface::main(int argc, char* argv[]) {
 		try {
 			sollya_lib_init();
@@ -122,14 +122,14 @@ namespace flopoco
 			buildAll(argc, argv);
 			schedule();
 			outputVHDL();
-			finalReport(cerr); 
+			finalReport(cerr);
 			sollya_lib_close();
 		}
 		catch (string e) {
 			cerr << endl << e;
 		}
 	}
-	
+
 
 
 
@@ -152,7 +152,7 @@ namespace flopoco
 	}
 
 
-	
+
 	// Global factory list
 	vector<pair<string,OperatorFactoryPtr>> UserInterface::factoryList;
 
@@ -186,30 +186,29 @@ namespace flopoco
 
 
 	/* The recursive method */
-	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file){
+	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file)
+	{
 		string srcFileName = "Operator.cpp"; // for REPORT
+
 		for(auto i: oplist) {
-			try {
-				REPORT(FULL, "---------------OPERATOR: "<<i->getName() <<"-------------");
-				REPORT(FULL, "  DECLARE LIST" << printMapContent(i->getDeclareTable()));
-				REPORT(FULL, "  USE LIST" << printVectorContent(  (i->getFlopocoVHDLStream())->getUseTable()) );
-
+			try
+			{
 				// check for subcomponents
-				if (! i->getOpList().empty() ){
-					//recursively call to print subcomponent
-					outputVHDLToFile(i->getOpList(), file);
+				if(! i->getOpListR().empty() ){
+					//recursively call to print subcomponents
+					outputVHDLToFile(i->getOpListR(), file);
 				}
-				i->getFlopocoVHDLStream()->flush();
 
-				/* second parse is only for sequential operators */
-				if (i->isSequential()){
-					REPORT (FULL, "  2nd PASS");
-					i->parse2();
+				//output the vhdl code to file
+				//	for global operators, this is done only once
+				if(!i->isOperatorImplemented())
+				{
+					i->outputVHDL(file);
+					i->setIsOperatorImplemented(true);
 				}
-				i->outputVHDL(file);
-
-			} catch (std::string s) {
-					cerr << "Exception while generating '" << i->getName() << "': " << s <<endl;
+			}catch (std::string &s)
+			{
+				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
 			}
 		}
 	}
@@ -222,7 +221,7 @@ namespace flopoco
 			i->outputFinalReport(s, 0);
 		}
 		cerr << "Output file: " << outputFileName <<endl;
-		
+
 		// Messages for testbenches. Only works if you have only one TestBench
 		Operator* op = globalOpList.back();
 		if(op->getSrcFileName() == "TestBench"){
@@ -240,7 +239,7 @@ namespace flopoco
 			cerr <<  "ghdl -r " << simlibs << op->getName() << " --vcd=" << op->getName() << ".vcd --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			cerr <<  "gtkwave " << op->getName() << ".vcd" << endl;
 		}
-		
+
 	}
 
 
@@ -261,10 +260,10 @@ namespace flopoco
 			if (it.first == operatorName)
 				return  it.second;
 		}
-		throw ("No operator factory for " + operatorName); 
+		throw ("No operator factory for " + operatorName);
 	}
 
-	
+
 	void UserInterface::initialize(){
 		// Initialize all the command-line options
 		verbose=1;
@@ -274,7 +273,7 @@ namespace flopoco
 		pipeline=true;
 		useHardMult=true;
 		unusedHardMultThreshold=0.7;
-		
+
 	}
 
 	void UserInterface::buildAll(int argc, char* argv[]) {
@@ -295,7 +294,7 @@ namespace flopoco
 
 		// First convert for convenience the input arg list into
 		// 1/ a (possibly empty) vector of global args / initial options,
-		// 2/ a vector of operator specification, each being itself a vector of strings 
+		// 2/ a vector of operator specification, each being itself a vector of strings
 		vector<string> initialOptions;
 		vector<vector<string>> operatorSpecs;
 
@@ -323,7 +322,7 @@ namespace flopoco
 			}
 			operatorSpecs.push_back(opSpec);
 		}
-	
+
 
 		// Now we have organized our input: do the parsing itself. All the sub-parsers erase the data they consume from the string vectors
 		try {
@@ -337,7 +336,7 @@ namespace flopoco
 				s << endl;
 				throw s.str();
 			}
-			
+
 			for (auto opParams: operatorSpecs) {
 
 				string opName = opParams[0];  // operator Name
@@ -405,20 +404,20 @@ namespace flopoco
 		}
 
 		//schedule the signals
-		for(int i=0; i<oplist->size(); i++){
+		for(int i=0; i<globalOpList.size(); i++){
 			if(!globalOpList[i]->isOperatorImplemented())
 				globalOpList[i]->startScheduling();
 		}
 
 		//start the second code parse
-		for(int i=0; i<oplist->size(); i++){
+		for(int i=0; i<globalOpList.size(); i++){
 			globalOpList[i]->parseVHDL(2);
 		}
 	}
 
 
 	void UserInterface::outputVHDL() {
-		ofstream file; 
+		ofstream file;
 		file.open(outputFileName.c_str(), ios::out);
 		outputVHDLToFile(file);
 		file.close();
@@ -534,7 +533,7 @@ namespace flopoco
 	}
 
 
-	
+
 	void UserInterface::parsePositiveInt(vector<string> &args, string key, int* variable, bool genericOption){
 		string val=getVal(args, key);
 		if(val=="") {
@@ -548,7 +547,7 @@ namespace flopoco
  			}
 		}
 		size_t end;
-		
+
 		int intval=stoi(val, &end);
 		if (val.length() == 0 || val.length() != end)
 			throw (args[0] +": expecting an int for parameter " + key + ", got "+val);
@@ -556,7 +555,7 @@ namespace flopoco
 			*variable = intval;
 		else
 			throw (args[0] +": expecting strictly positive value for " + key + ", got " + val );
-	
+
 	}
 
 
@@ -584,7 +583,7 @@ namespace flopoco
 
 
 	void UserInterface::add( string name,
-													 string description, /**< for the HTML doc and the detailed help */ 
+													 string description, /**< for the HTML doc and the detailed help */
 													 string category,
 													 string seeAlso,
 													 string parameterList, /**< semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
@@ -598,7 +597,7 @@ namespace flopoco
 #if 0
 	const int outputToHTML=1;
 	const int outputToConsole=2;
-	
+
 	string colorParameter(string s, int techno, bool optional) {
 		string o
 		if (techno==outputToHTML)
@@ -609,7 +608,7 @@ namespace flopoco
 	}
 #endif
 
-	
+
 	string UserInterface::getFullDoc(){
 		ostringstream s;
 		s << "Usage: " << COLOR_BOLD << "flopoco  [options]  OperatorName parameters  [OperatorName parameters]..." << COLOR_NORMAL << endl;
@@ -736,7 +735,7 @@ namespace flopoco
 		tabber("$pipedOpList ) reponse=$i;;");
 		indent_level--;
 		tabber("esac"); // fin case
-		indent_level--; 
+		indent_level--;
 		tabber("done"); //fin for
 		tabber("echo $reponse");
 		indent_level--;
@@ -956,7 +955,7 @@ namespace flopoco
 
 		cout << "Bash autocomplete successfully generated !!" << endl;
 		cout << "(this is in no case a warranty nor a guarantee that the script will work)" << endl;
-		cout << "In order to make it work, we recommend that you link this file in your ~/.bash_completion.d directory" << 
+		cout << "In order to make it work, we recommend that you link this file in your ~/.bash_completion.d directory" <<
 			endl << "you might have to create the ~/.bash_completion.d directory" << endl << endl;
 		cout << "\t\tmv flopoco_autocomplete ~/.bash_completion.d/flopoco" << endl << endl;
 		cout << "and then add the following line to your .bashrc :"<< endl << endl;
@@ -978,7 +977,7 @@ namespace flopoco
 			s << "  " << ("" != m_paramDefault[pname]?COLOR_BOLD_BLUE_NORMAL:COLOR_BOLD) << pname <<COLOR_NORMAL<< " (" << m_paramType[pname] << "): " << m_paramDoc[pname] << "  ";
 			if("" != m_paramDefault[pname])
 				s << COLOR_RED_NORMAL << "  (optional, default value is " << m_paramDefault[pname] <<")"<< COLOR_NORMAL;
-			s<< endl;			
+			s<< endl;
 		}
 		return s.str();
 	}
@@ -1025,7 +1024,7 @@ namespace flopoco
 
 		vector<string> mandatoryOptions;
 		vector<string> nonMandatoryOptions;
-		
+
 		for (string optionName : m_paramNames) {
 			if (getDefaultParamVal(optionName) == "") {
 				mandatoryOptions.push_back(optionName);
@@ -1033,7 +1032,7 @@ namespace flopoco
 				nonMandatoryOptions.push_back(optionName);
 			}
 		}
-	
+
 		tabber("_mandatoryoptions_"+m_name+"()");
 		tabber("{");
 		indent_level++;
@@ -1050,7 +1049,7 @@ namespace flopoco
 		tabber("_nonmandatoryoptions_"+m_name+"()");
 		tabber("{");
 		indent_level++;
-		buf.str(string());	
+		buf.str(string());
 		buf << "echo \" ";
 		for (string optionName : nonMandatoryOptions) {
 			buf << optionName << " ";
@@ -1078,18 +1077,18 @@ namespace flopoco
 		return s.str();
 	}
 
-	
+
 	string OperatorFactory::getDefaultParamVal(const string& key){
 		return  m_paramDefault[key];
 	}
 
 	OperatorFactory::OperatorFactory(
 						 string name,
-						 string description, /* for the HTML doc and the detailed help */ 
+						 string description, /* for the HTML doc and the detailed help */
 						 string category,
 						 string seeAlso,
-						 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */ 
-						 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */ 
+						 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
+						 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
 						 parser_func_t parser  )
 		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser)
 	{
@@ -1151,7 +1150,7 @@ namespace flopoco
 		}
 	}
 
-	const vector<string>& OperatorFactory::param_names(void) const{	
+	const vector<string>& OperatorFactory::param_names(void) const{
 		return m_paramNames;
 	}
 

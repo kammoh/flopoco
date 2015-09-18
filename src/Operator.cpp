@@ -106,33 +106,6 @@ namespace flopoco{
 
 
 
-	void Operator::addToGlobalOpList() {
-		// We assume all the operators added to GlobalOpList are un-pipelined.
-		addToGlobalOpList(this);
-	}
-
-	void Operator::addToGlobalOpList(Operator *op) {
-		// We assume all the operators added to GlobalOpList are un-pipelined.
-		bool alreadyPresent = false;
-		vector<Operator*> *globalOpListRef = target_->getGlobalOpListRef();
-
-		for(unsigned i=0; i<globalOpListRef->size(); i++){
-			if( op->getName() == (*globalOpListRef)[i]->getName() ){
-				alreadyPresent = true;
-				REPORT(DEBUG, "Operator::addToGlobalOpListRef(): " << op->getName() << " already present in globalOpList");
-				break;
-			}
-		}
-
-		if(!alreadyPresent)
-			globalOpListRef->push_back(op);
-
-		cerr << "WARNING: function addToGlobalOpList() should only be used inside Operator!" << endl
-				<< tab << tab << "Subcomponents should add the instance, with its port mappings, not just the sub-operator" << endl;
-	}
-
-
-
 
 	void Operator::addInput(const std::string name, const int width, const bool isBus) {
 		//search if the signal has already been declared
@@ -760,22 +733,22 @@ namespace flopoco{
 		pipelineDepth_ = maxOutputCycle-minInputCycle;
 	}
 
-	void Operator::outputFinalReport(int level) {
+	void Operator::outputFinalReport(ostream& s, int level) {
 
-		if (getIndirectOperator() != NULL){
+		if (getIndirectOperator()!=NULL){
 			// interface operator
-			if(getOpList().size() != 1){
+			if(getOpList().size()!=1){
 				ostringstream o;
-				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getOpList().size() << " children";
+				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getOpList().size() << "children";
 				throw o.str();
 			}
 			getOpList()[0]->outputFinalReport(s, level);
-		}
-		else{
+		}else
+		{
 			// Hard operator
-			for (unsigned i=0; i< getOpList().size(); i++)
-				if (!getOpListR().empty())
-					getOpListR()[i]->outputFinalReport(level+1);
+			if (! getOpList().empty())
+				for (auto i: getOpList())
+					i->outputFinalReport(s, level+1);
 
 			ostringstream tabs, ctabs;
 			for (int i=0;i<level-1;i++){
@@ -789,7 +762,7 @@ namespace flopoco{
 			}
 
 			s << tabs.str() << "Entity " << uniqueName_ << endl;
-			if(this->getPipelineDepth() != 0)
+			if(this->getPipelineDepth()!=0)
 				s << ctabs.str() << tab << "Pipeline depth = " << getPipelineDepth() << endl;
 			else
 				s << ctabs.str() << tab << "Not pipelined"<< endl;
@@ -1851,8 +1824,8 @@ namespace flopoco{
 
 		if(isGlobalOperator)
 		{
-			for(unsigned int i=0; i<getTarget()->getGlobalOpListRef()->size(); i++)
-				if((*getTarget()->getGlobalOpListRef())[i]->getName() == op->getName())
+			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
+				if(UserInterface::globalOpList[i]->getName() == op->getName())
 				{
 					newOpFirstAdd = false;
 					break;
@@ -1885,7 +1858,7 @@ namespace flopoco{
 			//	the original to the global operator list, as well
 			if(newOpFirstAdd == true)
 			{
-				addToGlobalOpList(op);
+				UserInterface::addToGlobalOpList(op);
 				op->setIsOperatorImplemented(false);
 			}
 		}else{
@@ -2702,7 +2675,7 @@ namespace flopoco{
 		//	scheduling of the global copy
 		//test if this operator is a global operator
 		bool isGlobalOperator = false;
-		vector<Operator*> *globalOperatorList = getTarget()->getGlobalOpListRef();
+		vector<Operator*> globalOperatorList = UserInterface::globalOpList;
 		string globalOperatorName = getName();
 
 		//this might be a copy of the global operator, so try to remove the postfix
@@ -2710,8 +2683,8 @@ namespace flopoco{
 			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
 
 		//look in the global operator list for the operator
-		for(unsigned int i=0; i<globalOperatorList->size(); i++)
-			if((*globalOperatorList)[i]->getName() == globalOperatorName)
+		for(unsigned int i=0; i<globalOperatorList.size(); i++)
+			if(globalOperatorList[i]->getName() == globalOperatorName)
 			{
 				isGlobalOperator = true;
 				break;
@@ -2725,10 +2698,10 @@ namespace flopoco{
 			int maxInputCycle = 0;
 
 			//search for the global copy of the operator, which should already be scheduled
-			for(unsigned int i=0; i<globalOperatorList->size(); i++)
-				if((*globalOperatorList)[i]->getName() == globalOperatorName)
+			for(unsigned int i=0; i<globalOperatorList.size(); i++)
+				if(globalOperatorList[i]->getName() == globalOperatorName)
 				{
-					originalOperator = (*globalOperatorList)[i];
+					originalOperator = globalOperatorList[i];
 					break;
 				}
 

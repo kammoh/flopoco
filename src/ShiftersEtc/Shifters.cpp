@@ -34,18 +34,12 @@ namespace flopoco{
 
 
 	Shifter::Shifter(Target* target, int wIn, int maxShift, ShiftDirection direction, map<string, double> inputDelays) :
-		Operator(target, inputDelays), wIn_(wIn), maxShift_(maxShift), direction_(direction) {
-
-		srcFileName = "Shifters";
+			Operator(target, inputDelays), wIn_(wIn), maxShift_(maxShift), direction_(direction)
+	{
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2011)" );
-		ostringstream name;
-		if(direction_==Left) name <<"LeftShifter_";
-		else                 name <<"RightShifter_";
-		name<<wIn_<<"_by_max_"<<maxShift;
-		setNameWithFreqAndUID(name.str());
+		srcFileName = (direction==Right ? "RightShifter" : "LeftShifter");
 
-		
-		REPORT(DETAILED, " wIn="<<wIn<<" maxShift="<<maxShift<<" direction="<< (direction == Right?  "RightShifter": "LeftShifter") );
+		REPORT( INFO, " wIn="<<wIn<<" maxShift="<<maxShift<<" direction="<< (direction == Right ? "RightShifter" : "LeftShifter") );
 
 		// -------- Parameter set up -----------------
 		wOut_         = wIn_ + maxShift_;
@@ -61,13 +55,12 @@ namespace flopoco{
 		//vhdl << tab << declare(getTarget()->localWireDelay(), "ps", wShiftIn_) << "<= S;" << endl;
 		vhdl << tab << declare("ps", wShiftIn_) << "<= S;" << endl;
 
-		
-#if 0 // Can't understand the following
 		// local variables
 		int    lastRegLevel = -1;
 		int    unregisteredLevels = 0;
 		int    dep = 0;
 		setCriticalPath( getMaxInputDelays( inputDelays) );
+
 		for(int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
 			//compute current level delay
 			unregisteredLevels = currentLevel - lastRegLevel;
@@ -80,10 +73,8 @@ namespace flopoco{
 
 			double wireD = target->localWireDelay(2*wIn);//the delay is unusually high
 			REPORT(DEBUG, " wire delay is " << wireD << " and unregisteredLevels="<<unregisteredLevels);
-
 			/*
 			if (manageCriticalPath( intlog( mpz_class(target->lutInputs()/2), mpz_class(dep)) * target->lutDelay() + (intlog( mpz_class(target->lutInputs()/2), mpz_class(dep))-1)*target->localWireDelay()+ wireD)){
-
 				lastRegLevel = currentLevel;
 				REPORT(DEBUG, tab << "REG LEVEL current delay is:" << getCriticalPath());
 			}
@@ -97,14 +88,7 @@ namespace flopoco{
 
 			if (currentLevel<wShiftIn_-1)
 				setCriticalPath(0.0);
-#endif
 
-			if(true || target->lutInputs()<6) { // levels are not grouped
-				for (int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
-					int stageWidth= wIn+intpow2(currentLevel+1)-1;
-					double delay = target->localWireDelay(stageWidth) // diffusion of the selection signal
-						+ target->lutDelay() ;   // the mux
-					manageCriticalPath(delay);
 			ostringstream currentLevelName, nextLevelName;
 			currentLevelName << "level"<<currentLevel;
 			nextLevelName << "level"<<currentLevel+1;
@@ -123,7 +107,6 @@ namespace flopoco{
 				vhdl << "= '1' else "
 					  << tab <<" ("<<intpow2(currentLevel)-1<<" downto 0 => '0') & "<< currentLevelName.str() <<";"<<endl;
 			}
-				}
 
 		}
 		//update the output slack
@@ -185,12 +168,12 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		UserInterface::parseStrictlyPositiveInt(args, "maxShift", &maxShift);
 		UserInterface::parseBoolean(args, "dir", &dirArg);
-		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);		
+		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);
 		return new Shifter(target, wIn, maxShift, dir);
 	}
 
 
-	
+
 	void Shifter::registerFactory(){
 		UserInterface::add("Shifter", // name
 											 "A classical barrel shifter. The output size is computed.",
@@ -200,7 +183,7 @@ namespace flopoco{
 											 "", // no particular extra doc needed
 											 Shifter::parseArguments
 											 ) ;
-		
+
 	}
 
 

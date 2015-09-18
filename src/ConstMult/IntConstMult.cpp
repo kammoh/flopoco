@@ -580,7 +580,6 @@ namespace flopoco{
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
 
-				outDelayMap["R"] = delay;
 #else
 				//experimenting with bitheaps
 				double delay;
@@ -1277,7 +1276,7 @@ namespace flopoco{
 	// Assumes: implementation is initialized
 	ShiftAddDag*  IntConstMult::buildMultBoothTreeFromLeft(mpz_class n){
 		ShiftAddDag* tree_try= new ShiftAddDag(this);
-		int k,j,nk,nonZeroInBoothCode,globalshift; 
+		int k,j,nk,nonZeroInBoothCode,globalshift;
 		ShiftAddOp *result;
 		ShiftAddOp *MX=0;
 		ShiftAddOp**  level;
@@ -1327,7 +1326,7 @@ namespace flopoco{
 	// Assumes: implementation is initialized
 	ShiftAddDag*  IntConstMult::buildMultBoothTreeToMiddle(mpz_class n){
 		ShiftAddDag* tree_try= new ShiftAddDag(this);
-		int k,j,nk,nonZeroInBoothCode,globalshift; 
+		int k,j,nk,nonZeroInBoothCode,globalshift;
 		ShiftAddOp *result;
 		ShiftAddOp *MX=0;
 		ShiftAddOp**  level;
