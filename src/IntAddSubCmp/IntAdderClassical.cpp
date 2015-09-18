@@ -31,7 +31,8 @@ using namespace std;
 namespace flopoco {
 
 	IntAdderClassical::IntAdderClassical ( Target* target, int wIn, map<string, double> inputDelays, int optimizeType, bool srl) :
-	IntAdder(target, wIn, inputDelays, true), wIn_ ( wIn ) {
+			IntAdder(target, wIn, inputDelays, true), wIn_ ( wIn )
+	{
 		srcFileName="IntAdderClassical";
 		ostringstream name;
 
@@ -479,15 +480,15 @@ namespace flopoco {
 
 	void IntAdderClassical::registerFactory(){
 		UserInterface::add("IntAdderClassical", // name
-											 "A classical integer adder.",
-											 "BasicInteger", // category
-											 "",
-											 "wIn(int): input size in bits; \
-optimizeType(int)=2: 0=LUT, 1=REG, 2=SLICE, 3=LATENCY; \
-srl(bool)=true: optimize for the use of hardware shift register;",
-											 "",
-											 IntAdderClassical::parseArguments
-											 ) ;
+							"A classical integer adder.",
+							"BasicInteger", // category
+							"",
+							"wIn(int): input size in bits; \
+							optimizeType(int)=2: 0=LUT, 1=REG, 2=SLICE, 3=LATENCY; \
+							srl(bool)=true: optimize for the use of hardware shift register;",
+							"",
+							IntAdderClassical::parseArguments
+							);
 
 	}
 

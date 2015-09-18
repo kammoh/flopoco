@@ -6,15 +6,15 @@ using namespace std;
 namespace flopoco{
 
 
-		MultiplierBlock::MultiplierBlock(int wX, int wY, int lsbX, int lsbY, string input1, string input2, int weightShift_, int cycle) :
+		MultiplierBlock::MultiplierBlock(int wX, int wY, int lsbX, int lsbY, string input1, string input2, int weightShift_, int cycle_) :
 			wX(wX), wY(wY), lsbX(lsbX), lsbY(lsbY), weightShift(weightShift_), inputName1(input1), inputName2(input2)
 		{
-			srcFileName=":MultiplierBlock";
-			cycle=cycle;
+			srcFileName = ":MultiplierBlock";
+			cycle = cycle_;
 			//before update weight=lsbX+lsbY-weightShift;
-			weight=lsbX+lsbY+weightShift;
-			previous=NULL;
-			next=NULL;
+			weight = lsbX+lsbY+weightShift;
+			previous = NULL;
+			next = NULL;
 		}
 
 

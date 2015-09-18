@@ -241,9 +241,11 @@ namespace flopoco{
 	string Signal::toVHDLType() {
 		ostringstream o;
 
-		if(tableValue_!="")
+		if((type_ == Signal::table) && (tableValue_!=""))
+		{
 			o << " memory_t := init_rom;";
-		return o.str();
+			return o.str();
+		}
 
 		if ((1==width())&&(!isBus_))
 			o << " std_logic" ;
@@ -279,6 +281,7 @@ namespace flopoco{
 			o << "signal ";
 		o << getName();
 		o << " : ";
+
 		if (type()==Signal::in)
 			o << "in ";
 		if(type()==Signal::out)
