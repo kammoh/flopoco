@@ -7,7 +7,7 @@ For typical use, see src/ExpLog/FPExp.*
 Author : David Thomas, Florent de Dinechin
 
 Initial software.
-Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,  
+Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 2015-.
   All rights reserved.S
 
@@ -23,14 +23,14 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
 namespace flopoco
 {
-	
+
 	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function to a function taking as parameters Target* etc., and returning an OperatorPtr
 	class OperatorFactory;
 	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
 
 	typedef pair<string, vector<string>> option_t;
 
-	
+
 	/** This is the class that manages a list of OperatorFactories, and the overall command line and documentation.
 			Each OperatorFactory is responsible for the command line and parsing for one Operator sub-class. */
 	class UserInterface
@@ -55,18 +55,18 @@ namespace flopoco
 
 		/** generates a report for operators in globalOpList, and all their subcomponents */
 		static void finalReport(ostream & s);
-		
 
-		/**a helper factory function. For the parameter documentation, see the OperatorFactory constructor */ 
+
+		/**a helper factory function. For the parameter documentation, see the OperatorFactory constructor */
 		static void add(
 										string name,
-										string description, 
+										string description,
 										string category,
 										string seeAlso,
-										string parameterList, 
-										string extraHTMLDoc,  
+										string parameterList,
+										string extraHTMLDoc,
 										parser_func_t parser	);
-		
+
 		static unsigned getFactoryCount();
 		static OperatorFactoryPtr getFactoryByIndex(unsigned i);
 		static OperatorFactoryPtr getFactoryByName(string operatorName);
@@ -85,9 +85,9 @@ namespace flopoco
 		static string getFullDoc();
 
 		/** add an operator to the global (first-level) list, which is stored in its Target (not really its place, sorry).
-				This method should be called by 
-				1/ the main / top-level, or  
-				2/ for sub-components that are really basic operators, 
+				This method should be called by
+				1/ the main / top-level, or
+				2/ for sub-components that are really basic operators,
 				expected to be used several times, *in a way that is independent of the context/timing*.
 				Typical example is a table designed to fit in a LUT or parallel row of LUTs
 		*/
@@ -99,7 +99,7 @@ namespace flopoco
 
 		/** generates the code for operators in globalOpList, and all their subcomponents */
 		static void outputVHDLToFile(ofstream& file);
-		
+
 
 	private:
 		/** register a factory */
@@ -115,7 +115,7 @@ namespace flopoco
 
 		/** Build flopoco bash autocompletion file **/
 		static void buildAutocomplete();
-		
+
 	public:
 		static vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 		static int    verbose;
@@ -134,7 +134,7 @@ namespace flopoco
 		static bool   floorplanning;
 		static bool   reDebug;
 		static bool   flpDebug;
-		static vector<pair<string,OperatorFactoryPtr>> factoryList; // used to be a map, but I dont want them listed in alphabetical order
+		static vector<pair<string,OperatorFactoryPtr>> factoryList; // used to be a map, but I don't want them listed in alphabetical order
 		static const vector<pair<string,string>> categories;
 
 		static const vector<string> known_fpgas;
@@ -143,14 +143,14 @@ namespace flopoco
 
 	};
 
-	/** This is the abstract class that each operator factory will inherit. 
+	/** This is the abstract class that each operator factory will inherit.
 			Each OperatorFactory is responsible for the command line and parsing for one Operator sub-class.  */
 	class OperatorFactory
 	{
 		friend UserInterface;
 	private:
-		
-		string m_name; /**< see constructor doc */ 
+
+		string m_name; /**< see constructor doc */
 		string m_description;  /**< see constructor doc */
 		string m_category;  /**< see constructor doc */
 		string m_seeAlso; /**< see constructor doc */
@@ -158,31 +158,31 @@ namespace flopoco
 		map<string,string> m_paramType;  /**< type of parameters listed in m_paramNames */
 		map<string,string> m_paramDoc;  /**< description of parameters listed in m_paramNames */
 		map<string,string> m_paramDefault; /* If equal to "", this parameter is mandatory (no default). Otherwise, default value (as a string, to be parsed) */
-		string m_extraHTMLDoc; 
+		string m_extraHTMLDoc;
 		parser_func_t m_parser;
 
 	public:
-		
+
 		/** Implements a no-frills factory
-				\param name         Name for the operator. 
+				\param name         Name for the operator.
 				\param description  The short documentation
 				\param category     A category used to organize the doc.
 				\param parameters   A semicolon-separated list of parameter description, each being name(type)[=default]:short_description
 				\param parser       A function that can parse a vector of string arguments into an Operator instance
-				\param extraHTMLDoc Extra information to go to the HTML doc, for instance links to articles or details on the algorithms 
+				\param extraHTMLDoc Extra information to go to the HTML doc, for instance links to articles or details on the algorithms
 		**/
 		OperatorFactory(
 						 string name,
-						 string description, 
+						 string description,
 						 string category,
 						 string seeAlso,
-						 string parameters,  
-						 string extraHTMLDoc,  
+						 string parameters,
+						 string extraHTMLDoc,
 						 parser_func_t parser	);
 
 		virtual const string &name() const // You can see in this prototype that it was not written by Florent
-		{ return m_name; } 
-		
+		{ return m_name; }
+
 		/** Provide a string with the full documentation. */
 		string getFullDoc();
 		/** Provide a string with the full documentation in HTML. */

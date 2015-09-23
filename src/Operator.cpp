@@ -100,8 +100,7 @@ namespace flopoco{
 	void Operator::addSubComponent(OperatorPtr op) {
 		oplist.push_back(op);
 
-		cerr << "WARNING: function addSubComponent() should only be used inside Operator!" << endl
-				<< tab << tab << "Subcomponents should add the instance, with its port mappings, not just the sub-operator" << endl;
+		cerr << "WARNING: function addSubComponent() should only be used inside Operator!" << endl;
 	}
 
 
@@ -1858,21 +1857,18 @@ namespace flopoco{
 			//	the original to the global operator list, as well
 			if(newOpFirstAdd == true)
 			{
-				UserInterface::addToGlobalOpList(op);
 				op->setIsOperatorImplemented(false);
+				UserInterface::addToGlobalOpList(op);
 			}
 		}else{
 			//save a reference
 			opCpy = op;
 		}
 
-		//add the operator to the subcomponent list/map
-		oplist.push_back(opCpy);
-		subComponents_[instanceName] = opCpy;
-
 		//update the signals to take into account the input and output port maps
 		//update the inputs
-		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++){
+		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
+		{
 			//add componentPortName as a successor of actualSignalName,
 			// and actualSignalName as a predecessor of componentPortName
 			addPredecessor(opCpy->getSignalByName(it->first), it->second, 0);
@@ -1889,12 +1885,17 @@ namespace flopoco{
 		}
 
 		//update the outputs
-		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++){
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+		{
 			//add componentPortName as a predecessor of actualSignalName,
 			// and actualSignalName as a successor of componentPortName
 			addSuccessor(opCpy->getSignalByName(it->first), it->second, 0);
 			addPredecessor(it->second, opCpy->getSignalByName(it->first), 0);
 		}
+
+		//add the operator to the subcomponent list/map
+		oplist.push_back(opCpy);
+		subComponents_[instanceName] = opCpy;
 
 		//clear the port mappings
 		tmpInPortMap_.clear();
@@ -2675,7 +2676,6 @@ namespace flopoco{
 		//	scheduling of the global copy
 		//test if this operator is a global operator
 		bool isGlobalOperator = false;
-		vector<Operator*> globalOperatorList = UserInterface::globalOpList;
 		string globalOperatorName = getName();
 
 		//this might be a copy of the global operator, so try to remove the postfix
@@ -2683,8 +2683,8 @@ namespace flopoco{
 			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
 
 		//look in the global operator list for the operator
-		for(unsigned int i=0; i<globalOperatorList.size(); i++)
-			if(globalOperatorList[i]->getName() == globalOperatorName)
+		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
+			if(UserInterface::globalOpList[i]->getName() == globalOperatorName)
 			{
 				isGlobalOperator = true;
 				break;
@@ -2698,10 +2698,10 @@ namespace flopoco{
 			int maxInputCycle = 0;
 
 			//search for the global copy of the operator, which should already be scheduled
-			for(unsigned int i=0; i<globalOperatorList.size(); i++)
-				if(globalOperatorList[i]->getName() == globalOperatorName)
+			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
+				if(UserInterface::globalOpList[i]->getName() == globalOperatorName)
 				{
-					originalOperator = globalOperatorList[i];
+					originalOperator = UserInterface::globalOpList[i];
 					break;
 				}
 
@@ -3168,6 +3168,12 @@ namespace flopoco{
 			{
 				pair<Signal*, int> tmpPair = *(op->signalList_[i]->predecessorPair(j));
 
+				//if the signal is connected to the output of a subcomponent,
+				//	then just skip this predecessor, as it will be added later on
+				if((tmpPair.first->type() == Signal::out)
+						&& (tmpPair.first->parentOp()->getName() != op->signalList_[i]->parentOp()->getName()))
+					continue;
+
 				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
 			//replace the old list of predecessors with the new one
@@ -3179,6 +3185,12 @@ namespace flopoco{
 			{
 				pair<Signal*, int> tmpPair = *(op->signalList_[i]->successorPair(j));
 
+				//if the signal is connected to the input of a subcomponent,
+				//	then just skip this successor, as it will be added later on
+				if((tmpPair.first->type() == Signal::in)
+						&& (tmpPair.first->parentOp()->getName() != op->signalList_[i]->parentOp()->getName()))
+					continue;
+
 				newSuccessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
 			//replace the old list of predecessors with the new one
@@ -3187,22 +3199,62 @@ namespace flopoco{
 		}
 
 		//update the signal map
+		signalMap_.clear();
 		for(unsigned int i=0; i<signalList_.size(); i++)
 			signalMap_[signalList_[i]->getName()] = signalList_[i];
 
 		//no need to recreate the signal dependences for each of the input/output signals,
-		//	as this is done in instance
+		//	as this is either done by instance, or it is done by the parent operator of this operator
+		//	or, they may not need to be set at all (e.g. when you just copy an operator)
 
 		//create deep copies of the subcomponents
-		//	only one level of subcomponents will be copied
+		//	and connect their inputs and outputs to the corresponding signals
 		vector<Operator*> newOpList;
 		for(unsigned int i=0; i<op->getOpList().size(); i++)
 		{
 			Operator* tmpOp = new Operator(op->getOpList()[i]->getTarget());
 
 			tmpOp->deepCloneOperator(op->getOpList()[i]);
+
+			//connect the inputs/outputs of the subcomponent
+			for(unsigned int j=0; j<tmpOp->getIOList()->size(); j++)
+			{
+				Signal *currentIO = tmpOp->getIOListSignal(j), *originalIO;
+
+				//clear the IO's predecessor and successor list
+				resetPredecessors(currentIO);
+				resetSuccessors(currentIO);
+
+				//recreate the predecessor and successor list, as it is in
+				//	the original operator, which we are cloning
+				originalIO = op->getSignalByName(currentIO->getName());
+				//recreate the predecessor/successor (for the input/output) list
+				for(unsigned int k=0; k<originalIO->predecessors()->size(); k++)
+				{
+					pair<Signal*, int> tmpPair = *(originalIO->predecessorPair(k));
+					if(currentIO->type() == Signal::in)
+					{
+						addPredecessor(currentIO, getSignalByName(tmpPair.first->getName()), tmpPair.second);
+						addSuccessor(getSignalByName(tmpPair.first->getName()), currentIO, tmpPair.second);
+					}else if(currentIO->type() == Signal::out)
+					{
+						addPredecessor(currentIO, tmpOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
+						addSuccessor(tmpOp->getSignalByName(tmpPair.first->getName()), currentIO, tmpPair.second);
+					}
+				}
+				//recreate the successor/predecessor (for the input/output) list
+				for(unsigned int k=0; k<originalIO->successors()->size(); k++)
+				{
+					pair<Signal*, int> tmpPair = *(originalIO->successorPair(k));
+					addSuccessor(currentIO, getSignalByName(tmpPair.first->getName()), tmpPair.second);
+					addPredecessor(getSignalByName(tmpPair.first->getName()), currentIO, tmpPair.second);
+				}
+			}
+
+			//add the new subcomponent to the subcomponent list
 			newOpList.push_back(tmpOp);
 		}
+		oplist.clear();
 		oplist = newOpList;
 
 		//create deep copies of the instances

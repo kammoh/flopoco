@@ -169,19 +169,19 @@ namespace flopoco
 	void UserInterface::addToGlobalOpList(OperatorPtr op) {
 		bool alreadyPresent=false;
 		// We assume all the operators added to GlobalOpList are unpipelined.
-		for (auto i: globalOpList){
+		for (auto i: UserInterface::globalOpList){
 			if( op->getName() == i->getName() ) {
-					alreadyPresent=true;
-					// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
-				}
+				alreadyPresent=true;
+				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
 			}
-			if(!alreadyPresent)
-				globalOpList.push_back(op);
+		}
+		if(!alreadyPresent)
+			UserInterface::globalOpList.push_back(op);
 	}
 
 
 	void UserInterface::outputVHDLToFile(ofstream& file){
-		outputVHDLToFile(globalOpList, file);
+		outputVHDLToFile(UserInterface::globalOpList, file);
 	}
 
 
@@ -217,13 +217,13 @@ namespace flopoco
 
 	void UserInterface::finalReport(ostream& s){
 		s << endl<<"Final report:"<<endl;
-		for(auto i: globalOpList) {
+		for(auto i: UserInterface::globalOpList) {
 			i->outputFinalReport(s, 0);
 		}
 		cerr << "Output file: " << outputFileName <<endl;
 
 		// Messages for testbenches. Only works if you have only one TestBench
-		Operator* op = globalOpList.back();
+		Operator* op = UserInterface::globalOpList.back();
 		if(op->getSrcFileName() == "TestBench"){
 			cerr << "To run the simulation using ModelSim, type the following in 'vsim -c':" <<endl;
 			cerr << tab << "vdel -all -lib work" <<endl;
@@ -398,20 +398,20 @@ namespace flopoco
 
 	void UserInterface::schedule() {
 		//start the first code parse
-		for(int i=0; i<globalOpList.size(); i++){
-			if(!globalOpList[i]->isOperatorImplemented())
-				globalOpList[i]->parseVHDL(1);
+		for(int i=0; i<UserInterface::globalOpList.size(); i++){
+			if(!UserInterface::globalOpList[i]->isOperatorImplemented())
+				UserInterface::globalOpList[i]->parseVHDL(1);
 		}
 
 		//schedule the signals
-		for(int i=0; i<globalOpList.size(); i++){
-			if(!globalOpList[i]->isOperatorImplemented())
-				globalOpList[i]->startScheduling();
+		for(int i=0; i<UserInterface::globalOpList.size(); i++){
+			if(!UserInterface::globalOpList[i]->isOperatorImplemented())
+				UserInterface::globalOpList[i]->startScheduling();
 		}
 
 		//start the second code parse
-		for(int i=0; i<globalOpList.size(); i++){
-			globalOpList[i]->parseVHDL(2);
+		for(int i=0; i<UserInterface::globalOpList.size(); i++){
+			UserInterface::globalOpList[i]->parseVHDL(2);
 		}
 	}
 
