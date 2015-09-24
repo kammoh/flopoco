@@ -2652,6 +2652,12 @@ namespace flopoco{
 			addPredecessor(lhs, rhs, delay);
 			addSuccessor(rhs, lhs, delay);
 		}
+
+		//start the parsing of the dependence table for the subcomponents
+		for(unsigned int i=0; i<oplist.size(); i++)
+		{
+			oplist[i]->extractSignalDependences();
+		}
 	}
 
 
@@ -2669,6 +2675,9 @@ namespace flopoco{
 		//if the operator is already scheduled, then there is nothing else to do
 		if(isOperatorScheduled())
 			return;
+
+		//extract the dependences between the operator's internal signals
+		extractSignalDependences();
 
 		//check if this is a global operator
 		//	if this is a global operator, and this is the global copy, then schedule it
@@ -2731,7 +2740,7 @@ namespace flopoco{
 			}
 
 			//the operator is now scheduled
-			//	mark it as scheduled, and return
+			//	so mark it as scheduled, and return
 			setIsOperatorScheduled(true);
 
 			//start scheduling the signals connected to the output of the sub-component
@@ -2744,9 +2753,6 @@ namespace flopoco{
 
 			return;
 		}
-
-		//extract the dependences between the operator's internal signals
-		extractSignalDependences();
 
 		//schedule each of the input signals
 		for(unsigned int i=0; i<ioList_.size(); i++)
@@ -3079,7 +3085,7 @@ namespace flopoco{
 
 //		vhdl.dependenceTable.clear();
 //		vhdl.dependenceTable.insert(vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.end());
-		vhdl.dependenceTable = op->vhdl.dependenceTable;
+		vhdl.dependenceTable        = op->vhdl.dependenceTable;
 
 		srcFileName                 = op->getSrcFileName();
 		//disabled during the overhaul
@@ -3158,20 +3164,23 @@ namespace flopoco{
 		for(unsigned int i=0; i<signalList_.size(); i++)
 		{
 			vector<pair<Signal*, int>> newPredecessors, newSuccessors;
-
-			//no need to recreate the dependences for the inputs/outputs, as this is done in instance
-			if((signalList_[i]->type() == Signal::in) || (signalList_[i]->type() == Signal::out))
-				continue;
+			Signal *originalSignal = op->getSignalByName(signalList_[i]->getName());
 
 			//create the new list of predecessors for the signal currently treated
-			for(unsigned int j=0; j<op->signalList_[i]->predecessors()->size(); j++)
+			for(unsigned int j=0; j<originalSignal->predecessors()->size(); j++)
 			{
-				pair<Signal*, int> tmpPair = *(op->signalList_[i]->predecessorPair(j));
+				pair<Signal*, int> tmpPair = *(originalSignal->predecessorPair(j));
+
+				//for the input signals, there is no need to do the predecessor list here
+				if(signalList_[i]->type() == Signal::in)
+				{
+					break;
+				}
 
 				//if the signal is connected to the output of a subcomponent,
 				//	then just skip this predecessor, as it will be added later on
 				if((tmpPair.first->type() == Signal::out)
-						&& (tmpPair.first->parentOp()->getName() != op->signalList_[i]->parentOp()->getName()))
+						&& (tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName()))
 					continue;
 
 				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
@@ -3181,14 +3190,20 @@ namespace flopoco{
 			addPredecessors(signalList_[i], newPredecessors);
 
 			//create the new list of successors for the signal currently treated
-			for(unsigned int j=0; j<op->signalList_[i]->successors()->size(); j++)
+			for(unsigned int j=0; j<originalSignal->successors()->size(); j++)
 			{
-				pair<Signal*, int> tmpPair = *(op->signalList_[i]->successorPair(j));
+				pair<Signal*, int> tmpPair = *(originalSignal->successorPair(j));
+
+				//for the output signals, there is no need to do the successor list here
+				if(signalList_[i]->type() == Signal::out)
+				{
+					break;
+				}
 
 				//if the signal is connected to the input of a subcomponent,
 				//	then just skip this successor, as it will be added later on
 				if((tmpPair.first->type() == Signal::in)
-						&& (tmpPair.first->parentOp()->getName() != op->signalList_[i]->parentOp()->getName()))
+						&& (tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName()))
 					continue;
 
 				newSuccessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
@@ -3231,23 +3246,30 @@ namespace flopoco{
 				//recreate the predecessor/successor (for the input/output) list
 				for(unsigned int k=0; k<originalIO->predecessors()->size(); k++)
 				{
-					pair<Signal*, int> tmpPair = *(originalIO->predecessorPair(k));
+					pair<Signal*, int>* tmpPair = originalIO->predecessorPair(k);
 					if(currentIO->type() == Signal::in)
 					{
-						addPredecessor(currentIO, getSignalByName(tmpPair.first->getName()), tmpPair.second);
-						addSuccessor(getSignalByName(tmpPair.first->getName()), currentIO, tmpPair.second);
+						addPredecessor(currentIO, getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						addSuccessor(getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
 					}else if(currentIO->type() == Signal::out)
 					{
-						addPredecessor(currentIO, tmpOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
-						addSuccessor(tmpOp->getSignalByName(tmpPair.first->getName()), currentIO, tmpPair.second);
+						addPredecessor(currentIO, tmpOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						addSuccessor(tmpOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
 					}
 				}
 				//recreate the successor/predecessor (for the input/output) list
 				for(unsigned int k=0; k<originalIO->successors()->size(); k++)
 				{
-					pair<Signal*, int> tmpPair = *(originalIO->successorPair(k));
-					addSuccessor(currentIO, getSignalByName(tmpPair.first->getName()), tmpPair.second);
-					addPredecessor(getSignalByName(tmpPair.first->getName()), currentIO, tmpPair.second);
+					pair<Signal*, int>* tmpPair = originalIO->successorPair(k);
+					if(currentIO->type() == Signal::in)
+					{
+						addSuccessor(currentIO, tmpOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						addPredecessor(tmpOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+					}else if(currentIO->type() == Signal::out)
+					{
+						addSuccessor(currentIO, getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						addPredecessor(getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+					}
 				}
 			}
 
