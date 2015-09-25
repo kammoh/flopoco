@@ -2687,7 +2687,7 @@ namespace flopoco{
 		bool isGlobalOperator = false;
 		string globalOperatorName = getName();
 
-		//this might be a copy of the global operator, so try to remove the postfix
+		//this might be a copy of the global operator, so try to remove the suffix
 		if(globalOperatorName.find("_cpy_") != string::npos)
 			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
 
@@ -3144,6 +3144,16 @@ namespace flopoco{
 				continue;
 
 			Signal* tmpSignal = new Signal(this, signalList_[i]);
+
+			//if this a constant signal, then it doesn't need to be scheduled
+			if(tmpSignal->type() == Signal::constant)
+			{
+				tmpSignal->setCycle(0);
+				tmpSignal->setCriticalPath(0.0);
+				tmpSignal->setCriticalPathContribution(0.0);
+				tmpSignal->setHasBeenImplemented(true);
+			}
+
 			newSignalList.push_back(tmpSignal);
 		}
 		signalList_.clear();
@@ -3154,11 +3164,39 @@ namespace flopoco{
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			Signal* tmpSignal = new Signal(this, ioList_[i]);
+
+			//if this a constant signal, then it doesn't need to be scheduled
+			if(tmpSignal->type() == Signal::constant)
+			{
+				tmpSignal->setCycle(0);
+				tmpSignal->setCriticalPath(0.0);
+				tmpSignal->setCriticalPathContribution(0.0);
+				tmpSignal->setHasBeenImplemented(true);
+			}
+
 			newIOList.push_back(tmpSignal);
 		}
 		ioList_.clear();
 		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
 		signalList_.insert(signalList_.end(), newIOList.begin(), newIOList.end());
+
+		//update the signal map
+		signalMap_.clear();
+		for(unsigned int i=0; i<signalList_.size(); i++)
+			signalMap_[signalList_[i]->getName()] = signalList_[i];
+
+		//create deep copies of the subcomponents
+		vector<Operator*> newOpList;
+		for(unsigned int i=0; i<op->getOpList().size(); i++)
+		{
+			Operator* tmpOp = new Operator(op->getOpList()[i]->getTarget());
+
+			tmpOp->deepCloneOperator(op->getOpList()[i]);
+			//add the new subcomponent to the subcomponent list
+			newOpList.push_back(tmpOp);
+		}
+		oplist.clear();
+		oplist = newOpList;
 
 		//recreate the signal dependences, for each of the signals
 		for(unsigned int i=0; i<signalList_.size(); i++)
@@ -3182,6 +3220,17 @@ namespace flopoco{
 				if((tmpPair.first->type() == Signal::out)
 						&& (tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName()))
 					continue;
+
+				continue here
+
+				//signals connected only to constants are already scheduled
+				if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
+				{
+					signalList_[i]->setCycle(0);
+					signalList_[i]->setCriticalPath(0.0);
+					signalList_[i]->setCriticalPathContribution(0.0);
+					signalList_[i]->setHasBeenImplemented(true);
+				}
 
 				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
@@ -3222,27 +3271,27 @@ namespace flopoco{
 		//	as this is either done by instance, or it is done by the parent operator of this operator
 		//	or, they may not need to be set at all (e.g. when you just copy an operator)
 
-		//create deep copies of the subcomponents
-		//	and connect their inputs and outputs to the corresponding signals
-		vector<Operator*> newOpList;
-		for(unsigned int i=0; i<op->getOpList().size(); i++)
+		//connect the inputs and outputs of the subcomponents to the corresponding signals
+		for(unsigned int i=0; i<oplist.size(); i++)
 		{
-			Operator* tmpOp = new Operator(op->getOpList()[i]->getTarget());
+			Operator *currentOp = oplist[i], *originalOp;
 
-			tmpOp->deepCloneOperator(op->getOpList()[i]);
+			//look for the original operator
+			for(unsigned int j=0; j<op->getOpList().size(); j++)
+				if(currentOp->getName() == op->getOpList()[j]->getName())
+				{
+					originalOp = op->getOpList()[j];
+					break;
+				}
 
 			//connect the inputs/outputs of the subcomponent
-			for(unsigned int j=0; j<tmpOp->getIOList()->size(); j++)
+			for(unsigned int j=0; j<currentOp->getIOList()->size(); j++)
 			{
-				Signal *currentIO = tmpOp->getIOListSignal(j), *originalIO;
-
-				//clear the IO's predecessor and successor list
-				resetPredecessors(currentIO);
-				resetSuccessors(currentIO);
+				Signal *currentIO = currentOp->getIOListSignal(j), *originalIO;
 
 				//recreate the predecessor and successor list, as it is in
 				//	the original operator, which we are cloning
-				originalIO = op->getSignalByName(currentIO->getName());
+				originalIO = originalOp->getSignalByName(currentIO->getName());
 				//recreate the predecessor/successor (for the input/output) list
 				for(unsigned int k=0; k<originalIO->predecessors()->size(); k++)
 				{
@@ -3253,8 +3302,8 @@ namespace flopoco{
 						addSuccessor(getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
 					}else if(currentIO->type() == Signal::out)
 					{
-						addPredecessor(currentIO, tmpOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
-						addSuccessor(tmpOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+						addPredecessor(currentIO, currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						addSuccessor(currentOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
 					}
 				}
 				//recreate the successor/predecessor (for the input/output) list
@@ -3263,8 +3312,8 @@ namespace flopoco{
 					pair<Signal*, int>* tmpPair = originalIO->successorPair(k);
 					if(currentIO->type() == Signal::in)
 					{
-						addSuccessor(currentIO, tmpOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
-						addPredecessor(tmpOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+						addSuccessor(currentIO, currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						addPredecessor(currentOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
 					}else if(currentIO->type() == Signal::out)
 					{
 						addSuccessor(currentIO, getSignalByName(tmpPair->first->getName()), tmpPair->second);
@@ -3272,27 +3321,15 @@ namespace flopoco{
 					}
 				}
 			}
-
-			//add the new subcomponent to the subcomponent list
-			newOpList.push_back(tmpOp);
 		}
-		oplist.clear();
-		oplist = newOpList;
 
 		//create deep copies of the instances
 		//	replace the references in the instances to references to
 		//	the newly created deep copies
 		//the port maps for the instances do not need to be modified
-		for(map<string, Operator*>::iterator it=subComponents_.begin(); it!=subComponents_.end(); it++)
-		{
-			string opName = it->first;
-			Operator *tmpOp = it->second;
-
-			//look for the instance with the same name
-			for(unsigned int j=0; j<oplist.size(); j++)
-				if(oplist[j]->getName() == tmpOp->getName())
-					subComponents_[opName] = oplist[j];
-		}
+		subComponents_.clear();
+		for(unsigned int i=0; i<oplist.size(); i++)
+			subComponents_[oplist[i]->getName()] = oplist[i];
 
 	}
 
