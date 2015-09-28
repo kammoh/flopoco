@@ -242,25 +242,25 @@ namespace flopoco{
 			vhdl << tab << tab << tab << "expected_size_"<< s->getName() << " := inline'Length;"<< endl; // the remainder is the vector of expected outputs: remember how long it is
 			vhdl << tab << tab << tab << "expected_"<< s->getName() << " := inline.all & (expected_size_"<< s->getName() << "+1 to 1000 => ' ');"<< endl; // because we have to pad it to 1000 chars
 			string expectedString = "expected_" +  s->getName() + "(1 to expected_size_" + s->getName() + ")"; //  will be used several times below, so better have a Single Source of Bug
-			vhdl << tab << tab << tab << "if possibilityNumber = 0 then" << endl; 
+			vhdl << tab << tab << tab << "if possibilityNumber = 0 then" << endl;
 			vhdl << tab << tab << tab << tab << "localErrorCounter := 0;" << endl;//read(inline,tmpChar);" << endl; // we consume the character between each outputs
 			vhdl << tab << tab << tab << "elsif possibilityNumber = 1 then " << endl;
 			vhdl << tab << tab << tab << tab << "read(inline ,V_"<< s->getName() << ");" << endl;
 			vhdl << tab << tab << tab << tab << "if ";
-			if (s->isFP()) { 
+			if (s->isFP()) {
  			vhdl << "not fp_equal(fp"<< s->width() << "'(" << s->getName() << ") ,to_stdlogicvector(V_" <<  s->getName() << "))";
-			} else if (s->isIEEE()) {  
+			} else if (s->isIEEE()) {
 			    vhdl << "not fp_equal_ieee(" << s->getName() << " ,to_stdlogicvector(V_" <<  s->getName() << "),"<<s->wE()<<" , "<<s->wF()<<")";
-			} else if ((s->width() == 1) && (!s->isBus())) { 
+			} else if ((s->width() == 1) && (!s->isBus())) {
 				vhdl << "not (" << s->getName() << "= to_stdlogic(V_" << s->getName() << "))";
 			} else {
 				vhdl << "not (" << s->getName() << "= to_stdlogicvector(V_" << s->getName() << "))";
 			}
 			vhdl << " then " << endl;
-			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for " 
+			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for "
 					 << s->getName() << ": \" & lf & ";
 			vhdl << "\"  expected value: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;  
+			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
 			vhdl << tab << tab << tab << tab << "end if;" << endl;
 
 			vhdl << tab << tab << tab << "else" << endl;
@@ -284,7 +284,7 @@ namespace flopoco{
 			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for "
 					 << s->getName() << ": \" & lf & ";
 			vhdl << "\" expected values: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;  
+			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
 
 			vhdl << tab << tab << tab << tab << "end if;" << endl;
 			vhdl << tab << tab << tab << "end if;" << endl;
@@ -626,13 +626,13 @@ namespace flopoco{
 
 
 
-	
-	
+
+
 	OperatorPtr TestBench::parseArguments(Target *target, vector<string> &args) {
 		int n;
 		bool file;
 		if(UserInterface::globalOpList.empty()){
-			throw("ERROR: TestBench has no operator to wrap (it should come after the operator it wraps)");		
+			throw("ERROR: TestBench has no operator to wrap (it should come after the operator it wraps)");
 		}
 		UserInterface::parseInt(args, "n", &n);
 		UserInterface::parseBoolean(args, "file", &file);
@@ -650,7 +650,7 @@ namespace flopoco{
 											 "",
 											 TestBench::parseArguments
 											 ) ;
-		
+
 	}
 
 }

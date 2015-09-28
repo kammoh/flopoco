@@ -51,10 +51,12 @@ int main(int argc, char* argv[] )
 		LZOCShifterSticky::registerFactory();
 
 		IntAdder::registerFactory();
-#if 0 // Plug them for debug purpose only
+
 		IntAdderClassical::registerFactory();
 		IntAdderAlternative::registerFactory();
 		IntAdderShortLatency::registerFactory();
+
+#if 0 // Plug them for debug purpose only
 		IntAdderSpecific::registerFactory();
 		LongIntAdderAddAddMuxGen1::registerFactory();
 		LongIntAdderAddAddMuxGen2::registerFactory();
@@ -82,6 +84,7 @@ int main(int argc, char* argv[] )
 		PiecewisePolyApprox::registerFactory();
 		FixRealKCM::registerFactory();
 		TestBench::registerFactory();
+		Wrapper::registerFactory();
 		FPAdd::registerFactory();
 		FPAddSub::registerFactory();
 		FPAddDualPath::registerFactory();
@@ -97,7 +100,7 @@ int main(int argc, char* argv[] )
 		FPLargeAcc::registerFactory();
 		LargeAccToFP::registerFactory();
 		FPDotProduct::registerFactory();
-		
+
 		FPExp::registerFactory();
 		IterativeLog::registerFactory();
 		FPPow::registerFactory();

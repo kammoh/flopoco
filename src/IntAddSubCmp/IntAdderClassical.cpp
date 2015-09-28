@@ -472,7 +472,7 @@ namespace flopoco {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int optimizeType;
-		UserInterface::parseStrictlyPositiveInt(args, "optimizeType", &optimizeType);
+		UserInterface::parsePositiveInt(args, "optimizeType", &optimizeType);
 		bool srl;
 		UserInterface::parseBoolean(args, "srl", &srl);
 		return new IntAdderClassical(target, wIn, emptyDelayMap, optimizeType, srl);
