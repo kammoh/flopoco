@@ -3221,8 +3221,6 @@ namespace flopoco{
 						&& (tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName()))
 					continue;
 
-				continue here
-
 				//signals connected only to constants are already scheduled
 				if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
 				{
@@ -3296,6 +3294,17 @@ namespace flopoco{
 				for(unsigned int k=0; k<originalIO->predecessors()->size(); k++)
 				{
 					pair<Signal*, int>* tmpPair = originalIO->predecessorPair(k);
+
+					//if the signal is only connected to a constant,
+					//	then the signal doesn't need to be scheduled
+					if((tmpPair->first->type() == Signal::constant) && (originalIO->predecessors()->size() == 1))
+					{
+						currentIO->setCycle(0);
+						currentIO->setCriticalPath(0.0);
+						currentIO->setCriticalPathContribution(0.0);
+						currentIO->setHasBeenImplemented(true);
+					}
+
 					if(currentIO->type() == Signal::in)
 					{
 						addPredecessor(currentIO, getSignalByName(tmpPair->first->getName()), tmpPair->second);
@@ -3310,6 +3319,7 @@ namespace flopoco{
 				for(unsigned int k=0; k<originalIO->successors()->size(); k++)
 				{
 					pair<Signal*, int>* tmpPair = originalIO->successorPair(k);
+
 					if(currentIO->type() == Signal::in)
 					{
 						addSuccessor(currentIO, currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
