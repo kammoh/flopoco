@@ -250,186 +250,71 @@ namespace flopoco{
 
 
 
+	Table::Table(Target* target, vector<mpz_class> _values, int _wIn, int _wOut, bool _logicTable) :
+		Operator(target_),
+		wIn(_wIn), wOut(_wOut), values(_values)
+	{
+		srcFileName = "Table";
+
+		if(values.size() == 0)
+			THROWERROR("Error in table: the set of values to be written in the table is empty" << endl);
+
+		if(wIn<0){
+			REPORT(DEBUG, "WARNING: wIn value not set, will be inferred from the values which are to be written in the table.");
+
+			//set the value of wIn
+			wIn = intlog2(values.size());
+		}
+		if(wOut<0){
+			REPORT(DEBUG, "WARNING: wOut value not set, will be inferred from the values which are to be written in the table.");
+
+			mpz_class maxValue = values[0];
+
+			maxValue = -1;
+			//this assumes that the values stored in the values array are all positive
+			for(unsigned int i=0; i<values.size(); i++)
+			{
+				if(values[i] < 0)
+					THROWERROR("Error in table: value stored in table is negative: " << values[i] << endl);
+				if(intlog2(maxValue) > intlog2(values[i]))
+					maxValue = values[i];
+			}
+			//set the value of wOut
+			wOut = intlog2(maxValue);
+		}
+
+		// Set up the IO signals
+		addInput ("X"  , wIn, true);
+		addOutput ("Y"  , wOut, 1, true);
+
+		if(maxIn==-1)
+			maxIn=(1<<wIn)-1;
+		if(minIn<0) {
+			cerr<<"ERROR in Table::Table, minIn<0\n";
+			exit(EXIT_FAILURE);
+		}
+		if(maxIn>=(1<<wIn)) {
+			cerr<<"ERROR in Table::Table, maxIn too large\n";
+			exit(EXIT_FAILURE);
+		}
+		if((minIn==0) && (maxIn==(1<<wIn)-1))
+			full=true;
+		else
+			full=false;
+		if (wIn > 10)
+			REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
+
+
+	}
+
+
+
 
 	Table::Table(Target* target) :
 		Operator(target){
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2010)");
 	}
 
-
-	// We have to define this method because the constructor of Table cannot use the (pure virtual) function()
-	// If the table has internal pipeline registers, they must be managed manually here and it is a pain
-
-	//this version is currently disabled because it doesn't allow for tables implemented as BRAMs
-	/*
-	void Table::outputVHDL(std::ostream& o, std::string name) {
-
-		licence(o);
-			o << "library ieee; " << endl;
-			o << "use ieee.std_logic_1164.all;" << endl;
-			o << "library work;" << endl;
-		outputVHDLEntity(o);
-		newArchitecture(o,name);
-		o << buildVHDLSignalDeclarations();
-
-		// All the following is a generic table, hoping that the synthesis tools will do the job.
-		// Xilinx-specific BRAM code generation can be found in the older versions, to be resurrected if needed
-		int i,x;
-		mpz_class y;
-		beginArchitecture(o);
-		o<<buildVHDLRegisters();
-		o	<< "  with X select TableOut <= " << endl;
-		REPORT(FULL,"Table.cpp: Filling the table");
-		for (x = minIn; x <= maxIn; x++) {
-			y=function(x);
-			//if( y>=(1<<wOut) || y<0)
-			//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
-			o<< tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
-		}
-		o << tab << "\"";
-		for (i = 0; i < wOut; i++)
-			o << "-";
-		o <<  "\" when others;" << endl;
-
-		// Delay the output properly
-		o << tab << " Y <= TableOut";
-		if(isSequential() && getPipelineDepth()!=0) {
-			o << "_d" << getPipelineDepth();
-		}
-		o << ";" << endl;
-
-		endArchitecture(o);
-	}
-	*/
-
-	//old version -- just for testing
-
-#if 1
-//	void Table::outputVHDL(std::ostream& o, std::string name)
-//	{
-//		licence(o);
-//		o << "library ieee; " << endl;
-//		o << "use ieee.std_logic_1164.all;" << endl;
-//		o << "library work;" << endl;
-//		outputVHDLEntity(o);
-//		newArchitecture(o,name);
-//		if (logicTable==1 || wIn <= getTarget()->lutInputs()){
-//			int i,x;
-//			mpz_class y;
-//			beginArchitecture(o);
-//			o	<< "  with X select  Y0 <= " << endl;
-//			REPORT(FULL,"Table.cpp: Filling the table");
-//			for (x = minIn; x <= maxIn; x++) {
-//				y=function(x);
-//				//if( y>=(1<<wOut) || y<0)
-//				//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
-//				o<< tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
-//			}
-//			o << tab << "\"";
-//			for (i = 0; i < wOut; i++)
-//				o << "-";
-//			o <<  "\" when others;" << endl;
-//			o << tab << "Y <= Y0;" <<endl;
-//		}
-//		/*
-//		 * TODO The code below generates VHDL specific to one tool, one architecture, one FPGA...
-//		 * it was probably added because it was improving performance.
-//		 */
-//		else
-//		{
-//			int x;
-//			mpz_class y;
-//
-//			o << tab << "-- Build a 2-D array type for the RoM" << endl;
-//
-//			if (maxIn-minIn<=256 && wOut>36){
-//				o << tab << "subtype word_t is std_logic_vector("<< (wOut%2==0 ? wOut/2-1 : (wOut+1)/2-1) <<" downto 0);" << endl;
-//				o << tab << "type memory_t is array(0 to 511) of word_t;" << endl;
-//			}else{
-//				o << tab << "subtype word_t is std_logic_vector("<< wOut-1 <<" downto 0);" << endl;
-//				o << tab << "type memory_t is array(0 to " << ((1<<wIn) -1) <<") of word_t;" << endl;
-//			}
-//
-//			o << tab <<"function init_rom" << endl;
-//			o << tab << tab << "return memory_t is " << endl;
-//			o << tab << tab << "variable tmp : memory_t := (" << endl;
-//
-//			int left = (wOut%2==0 ? wOut/2 : (wOut+1)/2);
-//			int right= wOut - left;
-//			if (maxIn-minIn <= 256 && wOut>36 /* TODO Replace with getTarget()->getBRAMWidth */){
-//				/*special BRAM packing */
-//				//The first maxIn/2 go in the upper part of the table
-//				for (x = minIn; x <= maxIn; x++) {
-//					y=function(x);
-//					o << tab << "\"" << unsignedBinary(y>>right, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-//				}
-//				for (x = maxIn; x < 255; x++) {
-//					o << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-//				}
-//				for (x = minIn; x <= maxIn; x++) {
-//					y=function(x);
-//					y=y % (mpz_class(1) << right);
-//					o << tab << "\"" << unsignedBinary(y, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-//				}
-//				for (x = maxIn; x < 255; x++) {
-//					o << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-//				}
-//			}else{
-//				for (x = minIn; x <= maxIn; x++) {
-//					y=function(x);
-//					//if( y>=(1<<wOut) || y<0)
-//					//REPORT(0, "Output out of range" << "x=" << x << "  y= " << y );
-//					o << tab << "\"" << unsignedBinary(y, wOut) << "\"," << endl;
-//				}
-//			}
-//
-//			o << tab << tab << "others => (others => '0'));" << endl;
-//			o << tab << tab << "	begin " << endl;
-//			o << tab << tab << "return tmp;" << endl;
-//			o << tab << tab << "end init_rom;" << endl;
-//
-//			o << "	signal rom : memory_t := init_rom;" << endl;
-//			if (maxIn-minIn <= 256 && wOut>36){
-//				declare("Y1",(wOut%2==0?wOut/2:(wOut+1)/2));
-//				declare("Y0",(wOut%2==0?wOut/2:(wOut+1)/2));
-//				declare("Z1",9);
-//				declare("Z0",9);
-//			}else{
-//				declare("Y0",wOut);
-//			}
-//
-//			outputVHDLSignalDeclarations(o);
-//			beginArchitecture(o);
-//
-//			if (maxIn-minIn <= 256 && wOut>36){
-//				o << "Z0 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '1' & X;"<<endl;
-//				o << "Z1 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '0' & X;"<<endl;
-//			}
-//
-//			if(isSequential()){
-//				o << "	process(clk)" << endl;
-//				o << tab << "begin" << endl;
-//				o << tab << "if(rising_edge(clk)) then" << endl;
-//			}
-//			if (maxIn-minIn <= 256 && wOut>36){
-//				o << tab << "	Y1 <= rom(  TO_INTEGER(unsigned(Z1)));" << endl;
-//				o << tab << "	Y0 <= rom(  TO_INTEGER(unsigned(Z0)));" << endl;
-//			}else{
-//				o << tab << "	Y0 <= rom(  TO_INTEGER(unsigned(X))  );" << endl;
-//			}
-//			if(isSequential()){
-//				o << tab << "end if;" << endl;
-//				o << tab << "end process;" << endl;
-//			}
-//			if (maxIn-minIn <= 256 && wOut>36){
-//				o << tab << " Y <= Y1 & Y0"<<range((wOut%2==0?wOut/2-1:(wOut-1)/2-1),0)<<";"<<endl;
-//			}else
-//				o << tab << " Y <= Y0;"<<endl;
-//		}
-//
-//		endArchitecture(o);
-//		REPORT(DEBUG, "This table has delay " <<  getCPContributionFromSignal("Y0"));
-//	}
 #endif
 
 	int Table::size_in_LUTs() {
