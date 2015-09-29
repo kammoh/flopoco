@@ -692,7 +692,8 @@ namespace flopoco{
 		pipelineDepth_ = d;
 	}
 
-	void Operator::setPipelineDepth() {
+	void Operator::setPipelineDepth()
+	{
 		int minInputCycle, maxOutputCycle;
 		bool firstInput = true, firstOutput = true;
 
@@ -1609,9 +1610,12 @@ namespace flopoco{
 		//check if the signal connected to the port exists, and return it if so
 		//	or create it if it doesn't exist
 		if(newSignal){
-			s = new Signal(this, formal); 	// create a copy using the default copy constructor
-			s->setName(actualSignalName); 	// except for the name
-			s->setType(Signal::wire); 		// ... and the fact that we declare a wire
+			s = new Signal(this, formal); 			// create a copy using the default copy constructor
+			s->setName(actualSignalName); 			// except for the name
+			s->setType(Signal::wire); 				// ... and the fact that we declare a wire
+			s->setCycle(0);							// ... and the timing details
+			s->setCriticalPath(0.0);
+			s->setCriticalPathContribution(0.0);
 
 			//initialize the signals predecessors and successors
 			resetPredecessors(s);
@@ -2773,7 +2777,7 @@ namespace flopoco{
 				continue;
 
 			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
-					scheduleSignal(currentSignal->successor(j));
+				scheduleSignal(currentSignal->successor(j));
 		}
 
 		setIsOperatorScheduled(true);
@@ -2798,7 +2802,12 @@ namespace flopoco{
 
 		//update the lifespan of targetSignal's predecessors
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
+		{
+			//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+			if(targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->getName())
+				continue;
 			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
+		}
 
 		//check if this is an input signal for a sub-component
 		//	it's safe to test if the signal belongs to a sub-component by checking
