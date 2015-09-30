@@ -139,7 +139,7 @@ namespace flopoco{
 			vhdl << tab << "with X select Y0 <= " << endl;
 
 			REPORT(FULL,"Table.cpp: Filling the table");
-			for(int x = minIn; x <= maxIn; x++)
+			for(int x = minIn.get_ui(); x <= maxIn.get_ui(); x++)
 			{
 				y = call_function(x);
 				vhdl << tab << tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
@@ -181,24 +181,24 @@ namespace flopoco{
 			{
 				//special BRAM packing
 				//	the first maxIn/2 go in the upper part of the table
-				for(x = minIn; x <= maxIn; x++){
+				for(x = minIn.get_ui(); x <= maxIn.get_ui(); x++){
 					y = call_function(x);
 					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y>>right, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
 				}
-				for(x = maxIn; x < 255; x++){
+				for(x = maxIn.get_ui(); x < 255; x++){
 					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
 				}
-				for(x = minIn; x <= maxIn; x++){
+				for(x = minIn.get_ui(); x <= maxIn.get_ui(); x++){
 					y = call_function(x);
 					y = y % (mpz_class(1) << right);
 					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
 				}
-				for(x = maxIn; x < 255; x++){
+				for(x = maxIn.get_ui(); x < 255; x++){
 					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
 				}
 			}else
 			{
-				for(x = minIn; x <= maxIn; x++)
+				for(x = minIn.get_ui(); x <= maxIn.get_ui(); x++)
 				{
 					y = call_function(x);
 					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y, wOut) << "\"," << endl;
@@ -250,61 +250,128 @@ namespace flopoco{
 
 
 
-	Table::Table(Target* target, vector<mpz_class> _values, int _wIn, int _wOut, bool _logicTable) :
+	Table::Table(Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) :
 		Operator(target_),
-		wIn(_wIn), wOut(_wOut), values(_values)
+		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";
 
+		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
 			THROWERROR("Error in table: the set of values to be written in the table is empty" << endl);
 
-		if(wIn<0){
+		//set wIn
+		if(wIn < 0){
 			REPORT(DEBUG, "WARNING: wIn value not set, will be inferred from the values which are to be written in the table.");
-
+			//set the value of wIn
+			wIn = intlog2(values.size());
+		}else if((1<<wIn) < values.size())
+		{
+			REPORT(DEBUG, "WARNING: wIn set to a value lower than the number of values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
 		}
-		if(wOut<0){
+
+		//determine the lowest and highest values stored in the table
+		mpz_class maxValue = 0, minValue = 0;
+
+		//this assumes that the values stored in the values array are all positive
+		for(unsigned int i=0; i<values.size(); i++)
+		{
+			if(values[i] < 0)
+				THROWERROR("Error in table: value stored in table is negative: " << values[i] << endl);
+			if(maxValue < values[i])
+				maxValue = values[i];
+			if(minValue > values[i])
+				minValue = values[i];
+		}
+
+		//set wOut
+		if(wOut < 0){
 			REPORT(DEBUG, "WARNING: wOut value not set, will be inferred from the values which are to be written in the table.");
-
-			mpz_class maxValue = values[0];
-
-			maxValue = -1;
-			//this assumes that the values stored in the values array are all positive
-			for(unsigned int i=0; i<values.size(); i++)
-			{
-				if(values[i] < 0)
-					THROWERROR("Error in table: value stored in table is negative: " << values[i] << endl);
-				if(intlog2(maxValue) > intlog2(values[i]))
-					maxValue = values[i];
-			}
+			//set the value of wOut
+			wOut = intlog2(maxValue);
+		}else if(wOut < intlog2(maxValue))
+		{
+			REPORT(DEBUG, "WARNING: wOut value set to a value lower than the size of the values which are to be written in the table.");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
 		}
 
-		// Set up the IO signals
-		addInput ("X"  , wIn, true);
-		addOutput ("Y"  , wOut, 1, true);
+		setNameWithFreq(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
 
-		if(maxIn==-1)
-			maxIn=(1<<wIn)-1;
-		if(minIn<0) {
-			cerr<<"ERROR in Table::Table, minIn<0\n";
+		// Set up the IO signals
+		addInput("X", wIn, true);
+		addOutput("Y", wOut, 1, true);
+
+		//set minIn
+		if(minIn < 0){
+			REPORT(DEBUG, "WARNING: minIn not set, or set to an invalid value; will use the value determined from the values to be written in the table.");
+			minIn = minValue;
+		}
+		//set maxIn
+		if(maxIn < 0){
+			REPORT(DEBUG, "WARNING: maxIn not set, or set to an invalid value; will use the value determined from the values to be written in the table.");
+			maxIn = maxValue;
+		}
+
+		if(maxIn >= (1<<wIn)){
+			cerr << "ERROR: in Table constructor: maxIn too large\n";
 			exit(EXIT_FAILURE);
 		}
-		if(maxIn>=(1<<wIn)) {
-			cerr<<"ERROR in Table::Table, maxIn too large\n";
-			exit(EXIT_FAILURE);
-		}
+
+		//determine if this is a full table
 		if((minIn==0) && (maxIn==(1<<wIn)-1))
 			full=true;
 		else
 			full=false;
-		if (wIn > 10)
+
+		//user warnings
+		if(wIn > 10)
 			REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
 
+		//checks for logic table
+		if(_logicTable == 0)
+			logicTable = false;
+		else if(_logicTable == 1)
+			logicTable = true;
+		else
+			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
+		if(!logicTable
+				&& ((wIn <= getTarget()->lutInputs())  ||  (wOut*(mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock())))
+			//the table is built using a RAM, but is underutilized
+			REPORT(0, "Warning: the table is built using a RAM block, but is underutilized");
 
+		//create the code for the table
+		if((logicTable == 1) || (wIn <= getTarget()->lutInputs()))
+		{
+			REPORT(FULL,"Table.cpp: Filling the table");
+
+			if(wIn <= getTarget()->lutInputs())
+				delay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
+			else{
+				int lutsPerBit;
+
+				lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
+				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
+				delay = getTarget()->localWireDelay(wOut*lutsPerBit)
+						+ getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
+			}
+
+
+			vhdl << tab << "with X select " << declare(delay, "Y0", wOut) << " <= " << endl;
+			for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
+				vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
+			vhdl << tab << tab << "\"";
+			for(int i=0; i<wOut; i++)
+				vhdl << "-";
+			vhdl <<  "\" when others;" << endl;
+
+			vhdl << tab << "Y <= Y0;" << endl;
+		}else
+		{
+
+		}
 	}
 
 
@@ -315,10 +382,47 @@ namespace flopoco{
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2010)");
 	}
 
-#endif
 
 	int Table::size_in_LUTs() {
 		return wOut*int(intpow2(wIn-getTarget()->lutInputs()));
+	}
+
+	//FOR TEST PURPOSES ONLY
+	mpz_class Table::function(int x){
+		return 0;
+	}
+
+
+	//FOR TEST PURPOSES ONLY
+	OperatorPtr Table::parseArguments(Target *target, vector<string> &args) {
+		int wIn_;
+		int wOut_;
+		int logicTable_;
+		vector<mpz_class> values_;
+
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn_, false);
+		UserInterface::parseStrictlyPositiveInt(args, "wOut", &wOut_, false);
+		UserInterface::parseInt(args, "logicTable", &logicTable_, false);
+
+		for(unsigned int i=0; i<(1<<wIn_); i++)
+			values_.push_back(i);
+
+		return new Table(target, values_, wIn_, wOut_, logicTable_);
+	}
+
+	//FOR TEST PURPOSES ONLY
+	void Table::registerFactory(){
+		UserInterface::add("Table", // name
+				"A generic table. FOR TEST PURPOSES ONLY.",
+				"Miscellaneous", // category
+				"",
+				"wIn(int): input width;\
+				wOut(int): output width;\
+				logicTable(int): logic-based/RAM-based table",
+				"",
+				Table::parseArguments
+		);
+
 	}
 
 }

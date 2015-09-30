@@ -49,10 +49,10 @@ namespace flopoco{
 		int wOut;
 
 		/** minimal input value (default 0) */
-		int minIn;
+		mpz_class minIn;
 
 		/** maximal input value (default 2^wIn-1) */
-		int maxIn;
+		mpz_class maxIn;
 
 		/**
 		 * The Table constructor
@@ -71,12 +71,19 @@ namespace flopoco{
 		 * @param[in] wOut   		the with of the output in bits
 		 * @param[in] logicTable 	true if the table is intended to be implemented as logic;
 		 * 							false (default value) if the table is intended to be implemented as BRAM
+		 * @param[in] minIn			minimal input value (default: smallest value in values)
+		 * @param[in] maxIn			maximal input value (default: largest value in values)
 		 */
-		Table(Target* target, vector<mpz_class> values, int wIn = -1, int wOut = -1, bool logicTable = false);
+		Table(Target* target, vector<mpz_class> _values, int _wIn = -1, int _wOut = -1, int _logicTable = -1, int _minIn = -1, int _maxIn = -1);
 
 		Table(Target* target);
 
 		virtual ~Table() {};
+
+
+		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+
+		static void registerFactory();
 
 
 
@@ -85,7 +92,7 @@ namespace flopoco{
 		 * @param[in] x  input to the table, an integer value between minIn and maxIn
 		 * @return    an mpz integer  between 0 and 2^wOut-1
 		 */
-		virtual mpz_class function(int x) = 0;
+		virtual mpz_class function(int x);//FOR TESTING = 0;
 
 		/**
 		 * This method is required as a trick mechanism:

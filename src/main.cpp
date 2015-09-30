@@ -56,6 +56,9 @@ int main(int argc, char* argv[] )
 		IntAdderAlternative::registerFactory();
 		IntAdderShortLatency::registerFactory();
 
+		//FOR TEST PURPOSES ONLY
+		Table::registerFactory();
+
 #if 0 // Plug them for debug purpose only
 		IntAdderSpecific::registerFactory();
 		LongIntAdderAddAddMuxGen1::registerFactory();

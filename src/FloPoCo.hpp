@@ -15,6 +15,8 @@
 
 //#include "Instance.hpp"
 
+#include "Table.hpp"
+
 /* operator pipeline work* ------------------------------------ */
 #include "OperatorPipeline/OperatorPipeline.hpp"
 

@@ -2447,7 +2447,7 @@ namespace flopoco{
 		//		delays of the type rhs_name_xxx should be added for the right-hand side signals
 		bool isSelectedAssignment = (oldStr.find('?') > oldStr.find('$'));
 		currentPos = 0;
-		nextPos = oldStr.find('?');
+		nextPos = (isSelectedAssignment ? oldStr.find('$') : oldStr.find('?'));
 		while(nextPos != string::npos)
 		{
 			string lhsName, rhsName;
@@ -2804,7 +2804,7 @@ namespace flopoco{
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 		{
 			//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
-			if(targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->getName())
+			if(targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName())
 				continue;
 			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 		}
