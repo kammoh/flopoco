@@ -307,15 +307,15 @@ namespace flopoco{
 		//set minIn
 		if(minIn < 0){
 			REPORT(DEBUG, "WARNING: minIn not set, or set to an invalid value; will use the value determined from the values to be written in the table.");
-			minIn = minValue;
+			minIn = 0;
 		}
 		//set maxIn
 		if(maxIn < 0){
 			REPORT(DEBUG, "WARNING: maxIn not set, or set to an invalid value; will use the value determined from the values to be written in the table.");
-			maxIn = maxValue;
+			maxIn = values.size()-1;
 		}
 
-		if(maxIn >= (1<<wIn)){
+		if((1<<wIn) < maxIn){
 			cerr << "ERROR: in Table constructor: maxIn too large\n";
 			exit(EXIT_FAILURE);
 		}
@@ -357,7 +357,6 @@ namespace flopoco{
 				delay = getTarget()->localWireDelay(wOut*lutsPerBit)
 						+ getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
 			}
-
 
 			vhdl << tab << "with X select " << declare(delay, "Y0", wOut) << " <= " << endl;
 			for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
@@ -405,7 +404,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "logicTable", &logicTable_, false);
 
 		for(unsigned int i=0; i<(1<<wIn_); i++)
-			values_.push_back(i);
+			values_.push_back(random()%(mpz_class(1)<<wOut_));
 
 		return new Table(target, values_, wIn_, wOut_, logicTable_);
 	}
