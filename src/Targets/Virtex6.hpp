@@ -29,18 +29,22 @@ namespace flopoco{
 			multXInputs_    		= 25;
 			multYInputs_    		= 18;
 			// all these values are set precisely to match the Virtex6
-			fdCtoQ_         		= 0.280e-9; //the gate delay, without the NET delay (~0.279e-9)
-			lut2_           		= 0.053e-9;
+			fdCtoQ_         		= 0.280e-9;
+			lut2_           		= 0.053e-9;	//the gate delay, without the NET delay (~0.279e-9)
 			lut3_           		= 0.053e-9;
 			lut4_           		= 0.053e-9;
 			lut5_           		= 0.053e-9;
 			lut6_           		= 0.053e-9;
+			lut_net_                = 0.279e-9;
 			muxcyStoO_      		= 0.219e-9;
 			muxcyCINtoO_    		= 0.015e-9;
 			ffd_            		= -0.012e-9;
 			muxf5_          		= 0.291e-9;
 			muxf7_          		= 0.187e-9; //without the NET delay (~0.357e-9)
+			muxf7_net_         		= 0.357e-9;
 			muxf8_          		= 0.131e-9; //without the NET delay (~0.481e-9)
+			muxf8_net_         		= 0.481e-9;
+			muxf_net_         		= 0.279e-9;
 			slice2sliceDelay_   	= 0.393e-9;
 			xorcyCintoO_    		= 0.180e-9;
 
@@ -146,13 +150,16 @@ namespace flopoco{
 		double lut4_;           /**< The LUT delay for 4 inputs */
 		double lut5_;           /**< The LUT delay for 5 inputs */
 		double lut6_;           /**< The LUT delay for 6 inputs */
+		double lut_net_;        /**< The LUT NET delay */
 		double muxcyStoO_;      /**< The delay of the carry propagation MUX, from Source to Out*/
 		double muxcyCINtoO_;    /**< The delay of the carry propagation MUX, from CarryIn to Out*/
 		double ffd_;            /**< The Flip-Flop D delay*/
 		double muxf5_;          /**< The delay of the almighty mux F5*/
 		double muxf7_;          /**< The delay of the even mightier mux F7*/
 		double muxf7_net_;      /**< The NET delay of the even mightier mux F7*/
+		double muxf8_;          /**< The delay of the mightiest mux F8*/
 		double muxf8_net_;      /**< The NET delay of the mightiest mux F8*/
+		double muxf_net_;       /**< The NET delay while inside the slice */
 		double slice2sliceDelay_;       /**< This is approximate. It approximates the wire delays between Slices */
 		double xorcyCintoO_;    /**< the S to O delay of the xor gate */
 		int nrDSPs_;			/**< Number of available DSPs on this target */

@@ -46,7 +46,7 @@ namespace flopoco{
 
 	double Virtex6::localWireDelay(int fanout){
 		// TODO the 50 below is a perfectly random value
-		return  elemWireDelay_*(1+double(fanout)/50.0);
+		return  elemWireDelay_*(1+double(fanout)/51.0);
 	};
 
 	double Virtex6::distantWireDelay(int n){
@@ -57,8 +57,39 @@ namespace flopoco{
 		return lutDelay_;
 	};
 
-	double tableDelay(int wIn_, int wOut_){
+	double Virtex6::tableDelay(int wIn_, int wOut_){
+		double totalDelay = 0.0;
+		double delays[];
+		double delaysNet[];
+		int i;
 
+		if(wIn_ <= lutInputs_)
+			//table fits inside a LUT
+			totalDelay = localWireDelay(wOut_) + lut6_ + lut_net_;
+		else if(wIn_ <= lutInputs_+2){
+			//table fits inside a slice
+			delays = {lut6_, muxf7_, muxf8_};
+			delaysNet = {lut_net_, muxf7_net_, muxf8_net_};
+
+			totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
+			for(i=lutInputs_; i<=wIn_; i++){
+				totalDelay += delays[i-lutInputs_];
+			}
+			totalDelay += muxf_net_;
+		}else{
+			//table requires resources from multiple slices
+			delays = {lut6_, 0, muxf7_};
+			delaysNet = {lut_net_, lut_net_, muxf7_net_};
+
+			totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
+			for(i=lutInputs_+3; i<=wIn_; i++){
+				totalDelay += delays[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
+			}
+			i--;
+			totalDelay += delaysNet[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
+		}
+
+		return totalDelay;
 	}
 
 	long Virtex6::sizeOfMemoryBlock()

@@ -356,6 +356,7 @@ namespace flopoco{
 				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
 				delay = getTarget()->localWireDelay(wOut*lutsPerBit)
 						+ getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
+				delay = getTarget()->tableDelay(wIn, wOut);
 			}
 
 			vhdl << tab << "with X select " << declare(delay, "Y0", wOut) << " <= " << endl;

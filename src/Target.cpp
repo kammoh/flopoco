@@ -37,7 +37,7 @@ namespace flopoco{
 			useHardMultipliers_= true;
 			unusedHardMultThreshold_=0.5;
 		}
-	
+
 	Target::~Target()
 	{
 		//VIDE
@@ -172,6 +172,11 @@ namespace flopoco{
 		}
 		cout << "> Target: Warning: using generic Target::plainMultDepth(); pipelining a "<<wX<<"x"<<wY<< " multiplier in " << cycles << " cycles using a gross estimate of the target" << endl;
 		return cycles;
+	}
+
+	double Target::tableDelay(int wIn_, int wOut_){
+		cout << "Warning: using the generic Target::tableDelay(); pipelining using a gross estimate of the target" << endl;
+		return 2;
 	}
 
 

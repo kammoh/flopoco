@@ -315,7 +315,7 @@ namespace flopoco{
 		 * @param wIn the size of the input address port of the table
 		 * @param wOut the size of the data output port of the table
 		 */
-		virtual double tableDelay(int wIn_, int wOut_)=0;
+		virtual double tableDelay(int wIn_, int wOut_);
 
 
 		/** Function which returns the size of a primitive memory block,which could be recognized by the synthesizer as a dual block.
