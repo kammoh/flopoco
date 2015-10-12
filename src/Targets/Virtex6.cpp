@@ -45,8 +45,21 @@ namespace flopoco{
 	};
 
 	double Virtex6::localWireDelay(int fanout){
-		// TODO the 50 below is a perfectly random value
-		return  elemWireDelay_*(1+double(fanout)/51.0);
+		// TODO the values used here were found experimentally using Planahead 14.7
+		if(fanout <= 16)
+			return  elemWireDelay_ + (double(fanout) * 0.063e-9);
+		else if(fanout <= 32)
+			return  elemWireDelay_ + (double(fanout) * 0.035e-9);
+		else if(fanout <= 64)
+			return  elemWireDelay_ + (double(fanout) * 0.030e-9);
+		else if(fanout <= 128)
+			return  elemWireDelay_ + (double(fanout) * 0.017e-9);
+		else if(fanout <= 256)
+			return  elemWireDelay_ + (double(fanout) * 0.007e-9);
+		else if(fanout <= 512)
+			return  elemWireDelay_ + (double(fanout) * 0.004e-9);
+		else
+			return  elemWireDelay_ + (double(fanout) * 0.002e-9);
 	};
 
 	double Virtex6::distantWireDelay(int n){
@@ -57,36 +70,39 @@ namespace flopoco{
 		return lutDelay_;
 	};
 
-	double Virtex6::tableDelay(int wIn_, int wOut_){
+	double Virtex6::tableDelay(int wIn_, int wOut_, bool logicTable_){
 		double totalDelay = 0.0;
-		double delays[];
-		double delaysNet[];
 		int i;
 
-		if(wIn_ <= lutInputs_)
-			//table fits inside a LUT
-			totalDelay = localWireDelay(wOut_) + lut6_ + lut_net_;
-		else if(wIn_ <= lutInputs_+2){
-			//table fits inside a slice
-			delays = {lut6_, muxf7_, muxf8_};
-			delaysNet = {lut_net_, muxf7_net_, muxf8_net_};
+		if(logicTable_)
+		{
+			if(wIn_ <= lutInputs_)
+				//table fits inside a LUT
+				totalDelay = localWireDelay(wOut_) + lut6_ + lut_net_;
+			else if(wIn_ <= lutInputs_+2){
+				//table fits inside a slice
+				double delays[] = {lut6_, muxf7_, muxf8_};
 
-			totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
-			for(i=lutInputs_; i<=wIn_; i++){
-				totalDelay += delays[i-lutInputs_];
-			}
-			totalDelay += muxf_net_;
-		}else{
-			//table requires resources from multiple slices
-			delays = {lut6_, 0, muxf7_};
-			delaysNet = {lut_net_, lut_net_, muxf7_net_};
+				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
+				for(i=lutInputs_; i<=wIn_; i++){
+					totalDelay += delays[i-lutInputs_];
+				}
+				totalDelay += muxf_net_;
+			}else{
+				//table requires resources from multiple slices
+				double delays[] = {lut6_, 0, muxf7_};
+				double delaysNet[] = {lut_net_, lut_net_, muxf7_net_};
 
-			totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
-			for(i=lutInputs_+3; i<=wIn_; i++){
-				totalDelay += delays[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
+				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
+				for(i=lutInputs_+3; i<=wIn_; i++){
+					totalDelay += delays[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
+				}
+				i--;
+				totalDelay += delaysNet[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
 			}
-			i--;
-			totalDelay += delaysNet[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
+		}else
+		{
+
 		}
 
 		return totalDelay;

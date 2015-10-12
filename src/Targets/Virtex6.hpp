@@ -115,7 +115,7 @@ namespace flopoco{
 		void   delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay);
 
 		double RAMDelay() { return RAMDelay_; }
-		double tableDelay(int wIn_, int wOut_);
+		double tableDelay(int wIn_, int wOut_, bool logicTable_);
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
 

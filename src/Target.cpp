@@ -174,9 +174,9 @@ namespace flopoco{
 		return cycles;
 	}
 
-	double Target::tableDelay(int wIn_, int wOut_){
+	double Target::tableDelay(int wIn_, int wOut_, bool logicTable_){
 		cout << "Warning: using the generic Target::tableDelay(); pipelining using a gross estimate of the target" << endl;
-		return 2;
+		return 2e-9;
 	}
 
 

@@ -273,7 +273,7 @@ namespace flopoco{
 		}
 
 		//determine the lowest and highest values stored in the table
-		mpz_class maxValue = 0, minValue = 0;
+		mpz_class maxValue = values[0], minValue = values[0];
 
 		//this assumes that the values stored in the values array are all positive
 		for(unsigned int i=0; i<values.size(); i++)
@@ -356,7 +356,7 @@ namespace flopoco{
 				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
 				delay = getTarget()->localWireDelay(wOut*lutsPerBit)
 						+ getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
-				delay = getTarget()->tableDelay(wIn, wOut);
+				delay = getTarget()->tableDelay(wIn, wOut, logicTable);
 			}
 
 			vhdl << tab << "with X select " << declare(delay, "Y0", wOut) << " <= " << endl;
@@ -405,7 +405,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "logicTable", &logicTable_, false);
 
 		for(unsigned int i=0; i<(1<<wIn_); i++)
-			values_.push_back(random()%(mpz_class(1)<<wOut_));
+			values_.push_back( (mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random())) % (mpz_class(1)<<wOut_) );
 
 		return new Table(target, values_, wIn_, wOut_, logicTable_);
 	}
