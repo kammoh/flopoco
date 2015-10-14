@@ -75,9 +75,10 @@ class Operator;
 		 * @param parentOp       the operator containing the signal
 		 * @param name           the name of the signal
 		 * @param type           the type of the signal, @see SignalType
+		 * @param width          the width of the signal
 		 * @param tableValue     the values stored in the table, as well as the possible required type declarations
 		 */
-		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const std::string tableValue = "");
+		Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const int width = 1, const std::string tableValue = "");
 
 		/**
 		 * Signal constructor.
@@ -153,12 +154,12 @@ class Operator;
 		/**
 		 * Returns the extra declarations, if this is a table
 		 */
-		const std::string& tableValue() const;
+		const std::string& tableAttributes() const;
 
 		/**
 		 * Set the extra declarations, if this is a table
 		 */
-		void setTableValue(std::string newTableValue);
+		void setTableAttributes(std::string newTableAttributes);
 
 
 		/**
@@ -400,7 +401,7 @@ class Operator;
 
 		double       constValue_;          /**< The value of the constant, for a constant signal */
 
-		std::string   tableValue_;          /**< The values that will be used to fill the table, when implemented as a hard RAM block */
+		std::string   tableAttributes_;    /**< The values that will be used to fill the table, when implemented as a hard RAM block, or other attributes needed when declaring the table */
 
 		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 

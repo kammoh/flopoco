@@ -114,17 +114,17 @@ namespace flopoco{
 		{
 			// Delay is that of broadcasting the input bits to wOut LUTs, plus the LUT delay itself
 			if(wIn <= getTarget()->lutInputs())
-				delay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
+				cpDelay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
 			else{
 				int lutsPerBit=1<<(wIn-getTarget()->lutInputs());
 				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
 				// TODO this doesn't take into account the F5 muxes etc: there should be a logicTableDelay() in GetTarget()
 				// The following is enough for practical sizes, but it is an overestimation.
-				delay = getTarget()->localWireDelay(wOut*lutsPerBit) + getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
+				cpDelay = getTarget()->localWireDelay(wOut*lutsPerBit) + getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
 			}
 		}
 		else{
-			delay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay();
+			cpDelay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay();
 		}
 
 		/*
@@ -135,7 +135,7 @@ namespace flopoco{
 			//logic table
 			mpz_class y;
 
-			declare(delay, "Y0", wOut);
+			declare(cpDelay, "Y0", wOut);
 			vhdl << tab << "with X select Y0 <= " << endl;
 
 			REPORT(FULL,"Table.cpp: Filling the table");
@@ -210,7 +210,7 @@ namespace flopoco{
 			vhdlTypeDeclaration << tab << tab << "return tmp;" << endl;
 			vhdlTypeDeclaration << tab << tab << "end init_rom;" << endl;
 
-			declareTable(delay, "rom", Signal::table, vhdlTypeDeclaration.str());
+			declareTable(cpDelay, "rom", Signal::table, vhdlTypeDeclaration.str());
 
 			if (maxIn-minIn <= 256 && wOut>36){
 				vhdl << declare(getTarget()->localWireDelay(), "Z0", 9)
@@ -226,13 +226,13 @@ namespace flopoco{
 			}
 
 			if(maxIn-minIn <= 256 && wOut>36){
-				vhdl << tab << tab << declare(delay, "Y0",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
+				vhdl << tab << tab << declare(cpDelay, "Y0",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
 						" <= rom(  TO_INTEGER(unsigned(Z0)));" << endl;
-				vhdl << tab << tab << declare(delay, "Y1",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
+				vhdl << tab << tab << declare(cpDelay, "Y1",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
 						" <= rom(  TO_INTEGER(unsigned(Z1)));" << endl;
 			}else
 			{
-				vhdl << tab << tab << declare(delay, "Y0", wOut) <<
+				vhdl << tab << tab << declare(cpDelay, "Y0", wOut) <<
 						" <= rom(  TO_INTEGER(unsigned(X))  );" << endl;
 			}
 
@@ -343,35 +343,41 @@ namespace flopoco{
 			REPORT(0, "Warning: the table is built using a RAM block, but is underutilized");
 
 		//create the code for the table
-		if((logicTable == 1) || (wIn <= getTarget()->lutInputs()))
-		{
-			REPORT(FULL,"Table.cpp: Filling the table");
+		REPORT(FULL,"Table.cpp: Filling the table");
+		std::string tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
 
-			if(wIn <= getTarget()->lutInputs())
-				delay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
-			else{
-				int lutsPerBit;
-
-				lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
-				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
-				delay = getTarget()->localWireDelay(wOut*lutsPerBit)
-						+ getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
-				delay = getTarget()->tableDelay(wIn, wOut, logicTable);
-			}
-
-			vhdl << tab << "with X select " << declare(delay, "Y0", wOut) << " <= " << endl;
-			for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
-				vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
-			vhdl << tab << tab << "\"";
-			for(int i=0; i<wOut; i++)
-				vhdl << "-";
-			vhdl <<  "\" when others;" << endl;
-
-			vhdl << tab << "Y <= Y0;" << endl;
-		}else
-		{
-
+		//set the table attributes
+		if((logicTable == 1) || (wIn <= getTarget()->lutInputs())){
+			//logic
+			tableAttributes += "\"pipe_distributed\";";
+		}else{
+			//block RAM
+			tableAttributes += "\"block\";";
 		}
+
+		if(logicTable){
+			int lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
+			REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
+		}
+		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
+
+		vhdl << tab << "with X select " << declareTable("Y0", wOut, tableAttributes) << " <= " << endl;
+		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
+			vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
+		vhdl << tab << tab << "\"";
+		for(int i=0; i<wOut; i++)
+			vhdl << "-";
+		vhdl <<  "\" when others;" << endl;
+
+		if((logicTable == false) && (cpDelay < (double)(1.0/getTarget()->frequency())))
+		{
+			cerr << "Warning: critical path of table increased by 1 cycle, in order to insure implementation as Block RAM" << endl;
+			vhdl << tab << "Y <= " << delay("Y0", 1) << ";" << endl;
+		}
+		else
+			vhdl << tab << "Y <= Y0;" << endl;
+
+		getSignalByName("Y")->setCriticalPathContribution(cpDelay);
 	}
 
 
@@ -404,8 +410,10 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wOut", &wOut_, false);
 		UserInterface::parseInt(args, "logicTable", &logicTable_, false);
 
-		for(unsigned int i=0; i<(1<<wIn_); i++)
-			values_.push_back( (mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random())) % (mpz_class(1)<<wOut_) );
+		for(unsigned int i=0; i<(1<<wIn_); i++){
+			mpz_class tmpMPZ = mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random());
+			values_.push_back( (tmpMPZ*tmpMPZ) % (mpz_class(1)<<wOut_) );
+		}
 
 		return new Table(target, values_, wIn_, wOut_, logicTable_);
 	}

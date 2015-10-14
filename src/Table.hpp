@@ -150,7 +150,7 @@ namespace flopoco{
 	private:
 		bool full; 					/**< true if there is no "don't care" inputs, i.e. minIn=0 and maxIn=2^wIn-1 */
 		bool logicTable; 			/**< true: LUT-based table; false: BRAM-based */
-		double delay;  				/**< For a LUT-based table, its delay; */
+		double cpDelay;  				/**< For a LUT-based table, its delay; */
 
 		vector<mpz_class> values;	/**< the values used to fill the table */
 	};

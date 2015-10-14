@@ -20,7 +20,7 @@ namespace flopoco{
 		Virtex6() : Target()	{
 			id_             		= "Virtex6";
 			vendor_         		= "Xilinx";
-			sizeOfBlock_ 			= 18432;	// the size of a primitive block is 2^11 * 9
+			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 18 (36Kb, can be used as 2 independent 2^11*9)
 			maxFrequencyMHz_		= 500;
 			// all these values are set more or less randomly, to match  virtex 6 more or less
 			fastcarryDelay_ 		= 0.015e-9; //s
@@ -49,7 +49,7 @@ namespace flopoco{
 			xorcyCintoO_    		= 0.180e-9;
 
 			lutInputs_ 				= 6;
-			nrDSPs_ 				= 160; // XC5VLX30 has 1 column of 32 DSPs
+			nrDSPs_ 				= 160;
 			dspFixedShift_ 			= 17;
 
 			DSPMultiplierDelay_		= 1.638e-9;
@@ -58,7 +58,8 @@ namespace flopoco{
 			DSPToLogicWireDelay_	= 0.436e-9;
 
 			RAMDelay_				= 1.591e-9; //TODO
-			RAMToLogicWireDelay_	= 0.235e-9; //TODO
+			RAMToLogicWireDelay_	= 0.279e-9; //TODO
+			logicWireToRAMDelay_	= 0.361e-9; //TODO
 
 			//---------------Floorplanning related----------------------
 			multiplierPosition.push_back(15);
@@ -171,7 +172,8 @@ namespace flopoco{
 		double DSPToLogicWireDelay_;
 
 		double RAMDelay_;
-		double RAMToLogicWireDelay_;;
+		double RAMToLogicWireDelay_;
+		double logicWireToRAMDelay_;
 
 	};
 

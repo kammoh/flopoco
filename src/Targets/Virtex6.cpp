@@ -102,7 +102,7 @@ namespace flopoco{
 			}
 		}else
 		{
-
+			totalDelay = RAMDelay_ + RAMToLogicWireDelay_;
 		}
 
 		return totalDelay;

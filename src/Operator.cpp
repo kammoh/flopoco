@@ -1391,12 +1391,12 @@ namespace flopoco{
 	}
 
 
-	std::string Operator::declareTable(string name, Signal::SignalType regType, std::string tableValues)
+	std::string Operator::declareTable(string name, int width, std::string tableAttributes)
 	{
-		return declareTable(0.0, name, regType, tableValues);
+		return declareTable(0.0, name, width, tableAttributes);
 	}
 
-	std::string Operator::declareTable(double criticalPathContribution, string name, Signal::SignalType regType, std::string tableValues)
+	std::string Operator::declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes)
 	{
 		Signal* s;
 
@@ -1406,9 +1406,9 @@ namespace flopoco{
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(this, name, regType, tableValues);
+		s = new Signal(this, name, Signal::table, width, tableAttributes);
 
-		initNewSignal(s, criticalPathContribution, regType);
+		initNewSignal(s, criticalPathContribution, Signal::table);
 
 		s->setIsFix(false);
 		s->setIsFP(false);
@@ -2120,7 +2120,8 @@ namespace flopoco{
 				o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 			for(unsigned int i=0; i<signalList_.size(); i++) {
 				Signal *s = signalList_[i];
-				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser) || (s->type() == Signal::wire))
+				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser)
+						|| (s->type() == Signal::wire) || (s->type() == Signal::table))
 					if(s->getLifeSpan() > 0) {
 						for(int j=1; j <= s->getLifeSpan(); j++)
 							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
