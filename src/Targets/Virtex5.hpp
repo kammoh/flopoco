@@ -33,10 +33,18 @@ namespace flopoco{
 			lut2_           		= 0.086e-9;
 			lut3_           		= 0.086e-9; //TODO
 			lut4_           		= 0.086e-9; //TODO
+			lut5_           		= 0.086e-9; //TODO
+			lut6_           		= 0.086e-9; //TODO
+			lut_net_                = 0.290e-9;
 			muxcyStoO_      		= 0.305e-9;
 			muxcyCINtoO_    		= 0.023e-9;
 			ffd_            		= 0.022e-9;
 			muxf5_          		= 0.291e-9;
+			muxf7_          		= 0.214e-9; //without the NET delay (~0.823e-9)
+			muxf7_net_         		= 0.823e-9;
+			muxf8_          		= 0.161e-9; //without the NET delay (~0.487e-9)
+			muxf8_net_         		= 0.487e-9;
+			muxf_net_         		= 0.286e-9;
 			slice2sliceDelay_		= 0.436e-9;
 			xorcyCintoO_    		= 0.300e-9;
 			lutInputs_ 				= 6;
@@ -103,6 +111,7 @@ namespace flopoco{
 		void   delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay);
 		
 		double RAMDelay() { return RAMDelay_; }
+		double tableDelay(int wIn_, int wOut_, bool logicTable_);
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
 		
@@ -135,10 +144,18 @@ namespace flopoco{
 		double lut2_;           /**< The LUT delay for 2 inputs */
 		double lut3_;           /**< The LUT delay for 3 inputs */
 		double lut4_;           /**< The LUT delay for 4 inputs */
+		double lut5_;           /**< The LUT delay for 5 inputs */
+		double lut6_;           /**< The LUT delay for 6 inputs */
+		double lut_net_;           /**< The LUT NET delay */
 		double muxcyStoO_;      /**< The delay of the carry propagation MUX, from Source to Out*/
 		double muxcyCINtoO_;    /**< The delay of the carry propagation MUX, from CarryIn to Out*/
 		double ffd_;            /**< The Flip-Flop D delay*/
 		double muxf5_;          /**< The delay of the almighty mux F5*/
+		double muxf7_;          /**< The delay of the even mightier mux F7*/
+		double muxf7_net_;      /**< The NET delay of the even mightier mux F7*/
+		double muxf8_;          /**< The delay of the mightiest mux F8*/
+		double muxf8_net_;      /**< The NET delay of the mightiest mux F8*/
+		double muxf_net_;      /**< The NET delay of a mux, inside a slice*/
 		double slice2sliceDelay_;       /**< This is approximate. It approximates the wire delays between Slices */
 		double xorcyCintoO_;    /**< the S to O delay of the xor gate */
 		int nrDSPs_;			/**< Number of available DSPs on this target */

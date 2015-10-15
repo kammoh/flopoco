@@ -58,6 +58,45 @@ namespace flopoco{
 		return lutDelay_;
 	};
 	
+	double Virtex5::tableDelay(int wIn_, int wOut_, bool logicTable_){
+		double totalDelay = 0.0;
+		int i;
+
+		if(logicTable_)
+		{
+			if(wIn_ <= lutInputs_)
+				//table fits inside a LUT
+				totalDelay = localWireDelay(wOut_) + lut6_ + lut_net_;
+			else if(wIn_ <= lutInputs_+3){
+				//table fits inside a slice
+				double delays[] = {lut6_, muxf7_, muxf8_, lut6_};
+
+				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
+				for(i=lutInputs_; i<=wIn_; i++){
+					totalDelay += delays[i-lutInputs_];
+				}
+				if(i == (lutInputs_+4))
+					totalDelay += lut_net_;
+				else
+					totalDelay += muxf_net_;
+			}else{
+				//table requires resources from multiple slices
+				double delays[] = {lut6_, muxf7_};
+				double delaysNet[] = {lut_net_, muxf7_net_};
+
+				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + 2*(lut6_ + muxf7_ + muxf7_net_);
+				for(i=lutInputs_+4; i<=wIn_; i++){
+					totalDelay += lut6_ + 1.8*lut_net_;
+				}
+			}
+		}else
+		{
+			totalDelay = RAMDelay_ + RAMToLogicWireDelay_;
+		}
+
+		return totalDelay;
+	}
+
 	long Virtex5::sizeOfMemoryBlock()
 	{
 		return sizeOfBlock_;	
