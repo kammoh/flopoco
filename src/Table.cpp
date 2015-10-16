@@ -344,12 +344,22 @@ namespace flopoco{
 
 		//create the code for the table
 		REPORT(FULL,"Table.cpp: Filling the table");
-		std::string tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
+		std::string tableAttributes;
 
 		//set the table attributes
+		if(getTarget()->getID() == "Virtex6")
+			tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
+		else if(getTarget()->getID() == "Virtex5")
+			tableAttributes =  "attribute rom_extract: string;\nattribute rom_style: string;\nattribute rom_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
+		else
+			tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
+
 		if((logicTable == 1) || (wIn <= getTarget()->lutInputs())){
 			//logic
-			tableAttributes += "\"pipe_distributed\";";
+			if(getTarget()->getID() == "Virtex6")
+				tableAttributes += "\"pipe_distributed\";";
+			else
+				tableAttributes += "\"distributed\";";
 		}else{
 			//block RAM
 			tableAttributes += "\"block\";";
@@ -412,7 +422,7 @@ namespace flopoco{
 
 		for(unsigned int i=0; i<(1<<wIn_); i++){
 			mpz_class tmpMPZ = mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random());
-			values_.push_back( (tmpMPZ*tmpMPZ) % (mpz_class(1)<<wOut_) );
+			values_.push_back( (tmpMPZ*tmpMPZ+mpz_class(random())) % (mpz_class(1)<<wOut_) );
 		}
 
 		return new Table(target, values_, wIn_, wOut_, logicTable_);

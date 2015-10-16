@@ -46,9 +46,22 @@ namespace flopoco{
 	};
 	
 	double Virtex5::localWireDelay(int fanout){
-				// TODO the 50 below is a perfectly random value
-		return  elemWireDelay_*(1+double(fanout)/50.0) ;
-	};
+		// TODO the values used here were found experimentally using Planahead 14.7
+		if(fanout <= 16)
+			return  elemWireDelay_ + (double(fanout) * 0.068e-9);
+		else if(fanout <= 32)
+			return  elemWireDelay_ + (double(fanout) * 0.032e-9);
+		else if(fanout <= 64)
+			return  elemWireDelay_ + (double(fanout) * 0.016e-9);
+		else if(fanout <= 128)
+			return  elemWireDelay_ + (double(fanout) * 0.008e-9);
+		else if(fanout <= 256)
+			return  elemWireDelay_ + (double(fanout) * 0.004e-9);
+		else if(fanout <= 512)
+			return  elemWireDelay_ + (double(fanout) * 0.002e-9);
+		else
+			return  elemWireDelay_ + (double(fanout) * 0.001e-9);
+	}
 	
 	double Virtex5::distantWireDelay(int n){
 		return n*elemWireDelay_;
@@ -81,9 +94,6 @@ namespace flopoco{
 					totalDelay += muxf_net_;
 			}else{
 				//table requires resources from multiple slices
-				double delays[] = {lut6_, muxf7_};
-				double delaysNet[] = {lut_net_, muxf7_net_};
-
 				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + 2*(lut6_ + muxf7_ + muxf7_net_);
 				for(i=lutInputs_+4; i<=wIn_; i++){
 					totalDelay += lut6_ + 1.8*lut_net_;

@@ -24,7 +24,7 @@ namespace flopoco{
 			maxFrequencyMHz_		= 500;
 			// all these values are set more or less randomly, to match  virtex 5 more or less
 			fastcarryDelay_ 		= 0.023e-9; //s   
-			elemWireDelay_  		= 0.436e-9;
+			elemWireDelay_  		= 0.396e-9;
 			lutDelay_       		= 0.086e-9; 
 			multXInputs_    		= 25;
 			multYInputs_    		= 18;
@@ -56,8 +56,9 @@ namespace flopoco{
 			DSPCascadingWireDelay_	= 0.235e-9;
 			DSPToLogicWireDelay_	= 0.436e-9;
 
-			RAMDelay_				= 1.750e-9; 
-			RAMToLogicWireDelay_	= 0.436e-9;
+			RAMDelay_				= 1.892e-9;
+			RAMToLogicWireDelay_	= 0.286e-9;
+			logicWireToRAMDelay_	= 0.272e-9;
 
 			hasFastLogicTernaryAdders_ = false;
 			
@@ -168,6 +169,7 @@ namespace flopoco{
 		
 		double RAMDelay_;
 		double RAMToLogicWireDelay_;
+		double logicWireToRAMDelay_;
 
 	};
 
