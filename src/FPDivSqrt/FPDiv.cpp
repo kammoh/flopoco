@@ -289,7 +289,6 @@ namespace flopoco{
 
 			SelFunctionTable* table;
 			table = new SelFunctionTable(target, 0.5, 1.0, 1, 4, 3, 4, 5, 3);
-			addSubComponent(table);
 
 		for(i=nDigit-1; i>=1; i--) {
 
@@ -321,7 +320,7 @@ namespace flopoco{
 			vhdl << tab << declare(seli.str(),5) << " <= " << wi.str() << range( wF+2, wF-1)<<" & fY"<<of(wF-1)<<";" << endl; 
 				inPortMap (table , "X", seli.str());
 				outPortMap(table , "Y", qi.str());
-				vhdl << instance(table , tInstance.str());
+				vhdl << instance(table , tInstance.str(), true);
 			vhdl << endl;
 				// Two options for radix 4. More experiments are needed 
 #if 1  // The following leads to higher frequency and higher resource usage: 

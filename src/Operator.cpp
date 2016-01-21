@@ -2484,9 +2484,16 @@ namespace flopoco{
 			{
 				newStr << workStr.substr(lhsNameLength+2, workStr.size());
 
-				//get a new line to parse
+				//prepare for a new instruction to be parsed
 				currentPos = nextPos + workStr.size() + 2;
 				nextPos = oldStr.find('?', currentPos);
+				//special case for the selected assignment statements
+				isSelectedAssignment = false;
+				if(oldStr.find('$', currentPos) < nextPos)
+				{
+					nextPos = oldStr.find('$', currentPos);
+					isSelectedAssignment = true;
+				}
 
 				continue;
 			}
