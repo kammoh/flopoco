@@ -84,14 +84,10 @@ namespace flopoco {
 
 		   Each code transmited to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
 		*/
-		vhdl << declare("T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
+		vhdl << declare(target->adderDelay(param0+1), "T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
 
 
-		/* declaring a new cycle, each variable used after this line will be delayed 
-		   with respect to his state in the precedent cycle
-		*/
-		nextCycle();
-		vhdl << declare("R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
+		vhdl << declare(target->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
 
 		// we first put the most significant bit of the result into R
 		vhdl << "S <= (R" << of(param0 +1) << " & ";
@@ -134,21 +130,22 @@ namespace flopoco {
 		
 	}
 
+	
 	void UserDefinedOperator::registerFactory(){
 		UserInterface::add("UserDefinedOperator", // name
-											 "A toy operator to be used as a skeleton for your FloPoCo developments.", // description, string
+											 "An heavily commented example operator to start with FloPoCo.", // description, string
 											 "Miscellaneous", // category, from the list defined in UserInterface.cpp
 											 "", //seeAlso
 											 // Now comes the parameter description string.
 											 // Respect its syntax because it will be used to generate the parser and the docs
 											 // Syntax is: a semicolon-separated list of parameterDescription;
-											 // where parameterDescription is parameterName (parameterType) : parameterDescriptionString 
-											 "param0(int): A first parameter, here used as the input size; \
+											 // where parameterDescription is parameterName (parameterType) [=defaultValue]: parameterDescriptionString 
+											 "param0(int)=16: A first parameter, here used as the input size; \
                         param1(int): A second parameter, here used as the output size",
+											 // More documentation for the HTML pages. If you want to link to your blog, it is here.
 											 "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
 											 UserDefinedOperator::parseArguments
 											 ) ;
 	}
-
 
 }//namespace
