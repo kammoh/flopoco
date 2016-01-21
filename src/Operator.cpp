@@ -100,7 +100,7 @@ namespace flopoco{
 	void Operator::addSubComponent(OperatorPtr op) {
 		oplist.push_back(op);
 
-		cerr << "WARNING: function addSubComponent() should only be used inside Operator!" << endl;
+		REPORT(0, "WARNING: function addSubComponent() is deprecated! It seems it is still used for " << op->getName());
 	}
 
 
@@ -825,9 +825,9 @@ namespace flopoco{
 		}
 		*/
 
-		cerr << "WARNING: function nextCycle() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function nextCycle() is deprecated and no longer has any effect!" << endl
+						<< tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+						<< tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl);
 	}
 
 	void Operator::previousCycle(bool report) {
@@ -1076,8 +1076,8 @@ namespace flopoco{
 					&& (predecessorPair.first->type() == predecessor->type())
 					&& (predecessorPair.second == delayCycles))
 			{
-				REPORT(FULL, "ERROR in addPredecessor(): trying to add an already existing signal "
-						<< predecessor->getName() << " to the predecessor list");
+				REPORT(LIST, "ERROR in addPredecessor(): trying to add an already existing signal "
+							 << predecessor->getName() << " to the predecessor list of " << targetSignal->getName() );
 				//nothing else to do
 				return;
 			}
@@ -1132,8 +1132,8 @@ namespace flopoco{
 					&& (successorPair.first->type() == successor->type())
 					&& (successorPair.second == delayCycles))
 			{
-				REPORT(FULL, "ERROR in addSuccessor(): trying to add an already existing signal "
-						<< successor->getName() << " to the predecessor list");
+				REPORT(LIST, "ERROR in addSuccessor(): trying to add an already existing signal "
+							 << successor->getName() << " to the succssor list of " << targetSignal->getName() );
 				//nothing else to do
 				return;
 			}
