@@ -72,7 +72,15 @@ namespace flopoco{
 		{
 			//scan the code buffer and build the dependence table and annotate the code
 			bufferCode.str("");
-			bufferCode << parseCode();
+
+			if(disabledParsing){
+				bufferCode << vhdlCodeBuffer.str();
+				codeParsed = true;
+				vhdlCodeBuffer.str("");
+			}
+			else{
+				bufferCode << parseCode();
+			}
 
 			//fix the dependence table, to the correct content type 
 			cleanupDependenceTable();

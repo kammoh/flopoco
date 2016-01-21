@@ -611,6 +611,9 @@ namespace flopoco{
 				}
 		}
 
+		//prevent the code from being parsed (first round of parsing)
+		vhdl.disableParsing(true);
+
 		o << "begin\n";
 		o << vhdl.str() << endl;
 		o << "end architecture;" << endl << endl;
@@ -631,13 +634,17 @@ namespace flopoco{
 	OperatorPtr TestBench::parseArguments(Target *target, vector<string> &args) {
 		int n;
 		bool file;
+
 		if(UserInterface::globalOpList.empty()){
 			throw("ERROR: TestBench has no operator to wrap (it should come after the operator it wraps)");
 		}
+
 		UserInterface::parseInt(args, "n", &n);
 		UserInterface::parseBoolean(args, "file", &file);
 		Operator* toWrap = UserInterface::globalOpList.back();
-		return new TestBench(target, toWrap, n, file);
+		Operator* newOp = new TestBench(target, toWrap, n, file);
+
+		return newOp;
 	}
 
 	void TestBench::registerFactory(){
