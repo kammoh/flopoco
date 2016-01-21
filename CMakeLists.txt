@@ -228,8 +228,12 @@ ADD_LIBRARY(FloPoCoLib STATIC
 #--------------------------------------------------------------------
 #               OPERATORS          
 #--------------------------------------------------------------------
+
+src/UserDefinedOperator
+
 #src/OperatorPipeline/OperatorPipeline
 #src/FPExpressions/ExpressionParserData
+
 
 
 # Conversions ----------------------------------------------------

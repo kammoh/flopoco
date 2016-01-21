@@ -93,8 +93,6 @@ namespace flopoco {
 		nextCycle();
 		vhdl << declare("R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
 
-		/* the use(variable) is a deprecated function, that can still be encoutered 
-		   in old Flopoco's operators, simply use vhdl << "S" (flopoco will generate the correct delayed value as soon as a previous declare("S") exists */
 		// we first put the most significant bit of the result into R
 		vhdl << "S <= (R" << of(param0 +1) << " & ";
 		// and then we place the last param1 bits
@@ -126,4 +124,31 @@ namespace flopoco {
 	void UserDefinedOperator::buildStandardTestCases(TestCaseList * tcl) {
 		// please fill me with regression tests or corner case tests!
 	}
+
+
+	OperatorPtr UserDefinedOperator::parseArguments(Target *target, vector<string> &args) {
+		int param0, param1;
+		UserInterface::parseStrictlyPositiveInt(args, "param0", &param0); 
+		UserInterface::parseStrictlyPositiveInt(args, "param1", &param1); 
+		return new UserDefinedOperator(target, param0, param1);
+		
+	}
+
+	void UserDefinedOperator::registerFactory(){
+		UserInterface::add("UserDefinedOperator", // name
+											 "A toy operator to be used as a skeleton for your FloPoCo developments.", // description, string
+											 "Miscellaneous", // category, from the list defined in UserInterface.cpp
+											 "", //seeAlso
+											 // Now comes the parameter description string.
+											 // Respect its syntax because it will be used to generate the parser and the docs
+											 // Syntax is: a semicolon-separated list of parameterDescription;
+											 // where parameterDescription is parameterName (parameterType) : parameterDescriptionString 
+											 "param0(int): A first parameter, here used as the input size; \
+                        param1(int): A second parameter, here used as the output size",
+											 "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
+											 UserDefinedOperator::parseArguments
+											 ) ;
+	}
+
+
 }//namespace

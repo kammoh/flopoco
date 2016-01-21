@@ -114,6 +114,8 @@ int main(int argc, char* argv[] )
 		FixFIR::registerFactory();
 		FixSOPC::registerFactory();
 		FixIIR::registerFactory();
+
+		UserDefinedOperator::registerFactory();
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;

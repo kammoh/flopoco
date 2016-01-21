@@ -345,15 +345,17 @@ namespace flopoco{
 				vhdl << tab << tab << tab << "\"00\" & fY & \"0\"       when \"010\" | \"110\"| \"011\" | \"101\"," << endl;
 				vhdl << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')  when others;" << endl;
 
-				vhdl << tab << tab << declare(qiTimesD.str(),wF+4) << " <= " << join("addendA",i) << " + " << join("addendB",i) << ";"<< endl ;
+				vhdl << tab << tab << declare(target->adderDelay(wF+4), qiTimesD.str(),wF+4)
+						 << " <= " << join("addendA",i) << " + " << join("addendB",i) << ";"<< endl ;
 				vhdl << endl;
 #endif				
 			vhdl << tab << declare(wipad.str(), wF+4) << " <= " << wi.str() << " & \"0\";" << endl;
 			vhdl << tab << "with " << qi.str() << "(2) select" << endl;
-			vhdl << tab << declare(wim1full.str(), wF+4) << "<= " << wipad.str() << " - " << qiTimesD.str() << " when '0'," << endl;
-			vhdl << tab << "      " << wipad.str() << " + " << qiTimesD.str() << " when others;" << endl;
+			vhdl << tab << declare(target->adderDelay(wF+4), wim1full.str(), wF+4) << "<= "
+					 << wipad.str() << " - " << qiTimesD.str() << " when '0'," << endl
+					 << tab << "      " << wipad.str() << " + " << qiTimesD.str() << " when others;" << endl;
 			vhdl << endl;
-			vhdl << tab << declare(srt4stepdelay, wim1.str(),wF+3) << " <= " << wim1full.str()<<range(wF+1,0)<<" & \"0\";" << endl;
+			vhdl << tab << declare(wim1.str(),wF+3) << " <= " << wim1full.str()<<range(wF+1,0)<<" & \"0\";" << endl;
 		}
 		// TODO piplining from here
 	
