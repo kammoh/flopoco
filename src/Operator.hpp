@@ -683,21 +683,20 @@ public:
 	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false);
 
 	/**
-	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
-	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
+	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
-	 * @param tableAttributes: the code used to declare and initialize the table (if needed)
+	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
 	 * @return name
 	 */
 	string declareTable(string name, int width, std::string tableAttributes = "");
 
 	/**
-	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
+	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
 	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
-	 * @param tableAttributes: the code used to declare and initialize the table (if needed)
+	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
 	 * @return name
 	 */
 	string declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes = "");

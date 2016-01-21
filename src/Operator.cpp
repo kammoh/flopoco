@@ -1076,7 +1076,7 @@ namespace flopoco{
 					&& (predecessorPair.first->type() == predecessor->type())
 					&& (predecessorPair.second == delayCycles))
 			{
-				REPORT(LIST, "ERROR in addPredecessor(): trying to add an already existing signal "
+				REPORT(FULL, "in addPredecessor(): trying to add an already existing signal "
 							 << predecessor->getName() << " to the predecessor list of " << targetSignal->getName() );
 				//nothing else to do
 				return;
@@ -1132,7 +1132,7 @@ namespace flopoco{
 					&& (successorPair.first->type() == successor->type())
 					&& (successorPair.second == delayCycles))
 			{
-				REPORT(LIST, "ERROR in addSuccessor(): trying to add an already existing signal "
+				REPORT(FULL, "in addSuccessor(): trying to add an already existing signal "
 							 << successor->getName() << " to the succssor list of " << targetSignal->getName() );
 				//nothing else to do
 				return;
