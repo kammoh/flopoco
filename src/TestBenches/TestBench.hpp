@@ -55,6 +55,7 @@ namespace flopoco{
 		int       n_;   /**< The parameter from the constructor */
 		TestCaseList tcl_; /**< Test case list */
 		int simulationTime; /**< Total simulation time */
+		bool fromFile_; /**< Flag for external file I/O */
 	};
 
 }
