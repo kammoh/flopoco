@@ -19,7 +19,7 @@ namespace flopoco
 	const char COLOR_REVERSEVIDEO_BLACK_GREEN[] = { 0x1b, '[', '7', ';', '3', '0', ';', '4', '2', 'm', 0 };
 	const char COLOR_BOLD_MAGENTA_NORMAL[] = { 0x1b, '[', '1', ';', '3', '5', ';', '4', '9', 'm', 0 };
 
-	const char* defaultFPGA="Virtex5";
+	const char* defaultFPGA="Virtex6";
 
 	// Allocation of the global objects
 	string UserInterface::outputFileName;
@@ -398,19 +398,19 @@ namespace flopoco
 
 	void UserInterface::schedule() {
 		//start the first code parse
-		for(int i=0; i<UserInterface::globalOpList.size(); i++){
+		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 			if(!UserInterface::globalOpList[i]->isOperatorImplemented())
 				UserInterface::globalOpList[i]->parseVHDL(1);
 		}
 
 		//schedule the signals
-		for(int i=0; i<UserInterface::globalOpList.size(); i++){
+		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 			if(!UserInterface::globalOpList[i]->isOperatorImplemented())
 				UserInterface::globalOpList[i]->startScheduling();
 		}
 
 		//start the second code parse
-		for(int i=0; i<UserInterface::globalOpList.size(); i++){
+		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 			UserInterface::globalOpList[i]->parseVHDL(2);
 		}
 	}
