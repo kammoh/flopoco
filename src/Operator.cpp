@@ -2256,7 +2256,7 @@ namespace flopoco{
 	map<string, double> Operator::getInputDelayMap(){
 		map<string, double> inputDelayMap;
 
-		cerr << "WARNING: this function no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
+		cerr << "WARNING: getInputDelayMap() no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
 				<< tab << "the delay map for the instance being built will be returned" << endl;
 		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
 			inputDelayMap[it->first] = it->second->getCriticalPath();
@@ -2267,7 +2267,7 @@ namespace flopoco{
 	map<string, double> Operator::getOutDelayMap(){
 		map<string, double> outputDelayMap;
 
-		cerr << "WARNING: this function no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
+		cerr << "WARNING: getOutDelayMap() no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
 				<< tab << "the delay map for the instance being built will be returned" << endl;
 		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 			outputDelayMap[it->first] = it->second->getCriticalPath();
