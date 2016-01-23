@@ -42,7 +42,6 @@ namespace flopoco{
 		setName("TestBench_" + op_->getName());
 
 		setCombinatorial(); // this is a combinatorial operator
-		setCycle(0);
 
 		// initialization of flopoco random generator
 		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
