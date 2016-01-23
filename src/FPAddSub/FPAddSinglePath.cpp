@@ -89,11 +89,11 @@ namespace flopoco{
 
 		addComment("exponent difference");
 		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
-													"eXmeY",wE+1)	<< " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
+													"eXmeY",wE)	<< " <= (X"<<range(wE+wF-1,wF)<<") - (Y"<<range(wE+wF-1,wF)<<");"<<endl;
 		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
-													"eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
+													"eYmeX",wE) << " <= (Y"<<range(wE+wF-1,wF)<<") - (X"<<range(wE+wF-1,wF)<<");"<<endl;
 		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
-											 "expDiff",wE+1) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
+											 "expDiff",wE) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 
 
 		string pmY="Y";
@@ -153,7 +153,7 @@ namespace flopoco{
 			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
 		}
 		else 	{ //  wE< sizeRightShift
-			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE-1) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
+			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
 		}
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
