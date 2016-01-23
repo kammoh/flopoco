@@ -34,7 +34,6 @@ namespace flopoco{
 		Operator(target, inputDelays), wIn_(wIn), wOut_(wOut), wCount_(wCount), computeSticky_(computeSticky), countType_(countType) {
 
 		// -------- Parameter set up -----------------
-		setEntityType( (countType_==-1?gen:spec) );
 		srcFileName = "LZOCShifterSticky";
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007)");
 
@@ -45,14 +44,8 @@ namespace flopoco{
 			  << (computeSticky_?"Sticky":"") << "_" << wIn_ << "_to_"<<wOut_<<"_counting_"<<(1<<wCount_);
 		setNameWithFreqAndUID(name.str());
 
-
-
-		// -------- Parameter set up -----------------
-		setEntityType( (countType_==-1?gen:spec) );
-
-
 		addInput ("I", wIn_);
-		if (entityType_==gen) addInput ("OZb"); /* if we generate a generic LZOC */
+		if (countType_==-1) addInput ("OZb"); /* if we generate a generic LZOC */
 		addOutput("Count", wCount_);
 		addOutput("O", wOut_);
 		if (computeSticky_)   addOutput("Sticky"); /* if we require a sticky bit computation */
@@ -63,61 +56,75 @@ namespace flopoco{
 
 
 		vhdl << tab << declare(join("level",wCount_), wIn_) << " <= I ;"   <<endl;
-		if (entityType_==gen) vhdl << tab << declare("sozb") << "<= OZb;"<<endl;
+		if (countType_==-1) vhdl << tab << declare("sozb") << "<= OZb;"<<endl;
 		if ((computeSticky_)&&(wOut_<wIn))   vhdl << tab << declare(join("sticky",wCount_)) << " <= '0' ;"<<endl; //init sticky
 
-		int currLev=wIn, prevLev=0;
 
-		setCriticalPath( getMaxInputDelays(inputDelays) );
+		// Now comes the main loop.
+		// i is the level index. Level i counts 2^i bits, and shifts by 2^i
+		int currLevSize=wIn, prevLevSize=0;
 		for (int i=wCount_-1; i>=0; i--){
-			//int currLev = (wOut_>intpow2(i)?wOut_:intpow2(i));
-			prevLev = currLev;
+			prevLevSize = currLevSize;
 
 			// level(k) = max ( max (2^k, wOut) + 2^k -1) , wIn)
-			currLev = (wOut_>intpow2(i)?wOut_:intpow2(i));
-			currLev += (intpow2(i)-1);
-			currLev = (currLev > wIn_? wIn_: currLev);
+			currLevSize = (wOut_>intpow2(i)?wOut_:intpow2(i));
+			currLevSize += (intpow2(i)-1);
+			currLevSize = (currLevSize > wIn_? wIn_: currLevSize);
 
+			// Delay evaluation.
+			// As we output the count bits, their computation will not be merged inside the shift
+			double countBitDelay = target->localWireDelay();
 			if (countType>=0)
-				manageCriticalPath( target->localWireDelay() + target->eqConstComparatorDelay( intpow2(i) ) ) ;
+				countBitDelay += target->eqConstComparatorDelay( intpow2(i) )  ;
 			else
-				manageCriticalPath( target->localWireDelay() + target->eqComparatorDelay( intpow2(i) ) ) ;
+				countBitDelay += target->eqComparatorDelay( intpow2(i) ) ;
 
-			vhdl << tab << declare(join("count",i)) << "<= '1' when " <<join("level",i+1)<<range(prevLev-1,prevLev - intpow2(i))<<" = "
-				  <<"("<<prevLev-1<<" downto "<<prevLev - intpow2(i)<<"=>"<< (countType_==-1? "sozb": countType_==0?"'0'":"'1'")<<") else '0';"<<endl;
+			vhdl << tab << declare(countBitDelay, join("count",i))
+					 << "<= '1' when " <<join("level",i+1)<<range(prevLevSize-1,prevLevSize - intpow2(i))<<" = "
+					 <<"("<<prevLevSize-1<<" downto "<<prevLevSize - intpow2(i)<<"=>"<< (countType_==-1? "sozb": countType_==0?"'0'":"'1'")<<") else '0';"<<endl;
 
-			manageCriticalPath( target->localWireDelay() + target->lutDelay() );
-			vhdl << tab << declare(join("level",i),currLev) << "<= " << join("level",i+1)<<"("<<prevLev-1<<" downto "<< prevLev-currLev << ")"
-				  << " when " << join("count",i) << "='0' else ";
+			// The shift will take at most one LUT delay per level. We don't take into account that shift level can be merged: TODO ? It seems non-trivial.
+			double shiftDelay = target->localWireDelay() + target->lutDelay();
+			vhdl << tab << declare(shiftDelay,join("level",i),currLevSize)
+					 << "<= " << join("level",i+1)<<"("<<prevLevSize-1<<" downto "<< prevLevSize-currLevSize << ")"
+					 << " when " << join("count",i) << "='0' else ";
 			int l,r;
-			l = prevLev - intpow2(i) - 1;
-			r = (currLev < prevLev - intpow2(i) ? (prevLev - intpow2(i)) - currLev : 0 );
+			l = prevLevSize - intpow2(i) - 1;
+			r = (currLevSize < prevLevSize - intpow2(i) ? (prevLevSize - intpow2(i)) - currLevSize : 0 );
 			if (l>=r)
-				vhdl << join("level",i+1) << "("<<prevLev - intpow2(i) - 1 <<" downto "<< (currLev < prevLev - intpow2(i) ? (prevLev - intpow2(i)) - currLev : 0 ) <<")";
-
-			if (prevLev - intpow2(i) < currLev )
-				vhdl << (l>=r?" & ":"") << rangeAssign(currLev -(prevLev - intpow2(i))-1,0,"'0'");
+				vhdl << join("level",i+1) << "("<<prevLevSize - intpow2(i) - 1 <<" downto "<< (currLevSize < prevLevSize - intpow2(i) ? (prevLevSize - intpow2(i)) - currLevSize : 0 ) <<")";
+			
+			if (prevLevSize - intpow2(i) < currLevSize )
+				vhdl << (l>=r?" & ":"") << rangeAssign(currLevSize -(prevLevSize - intpow2(i))-1,0,"'0'");
 			vhdl << ";"<<endl;
 
 			if ((computeSticky_)&&(wOut_<wIn)) {
 
-				manageCriticalPath( compDelay( max( prevLev-currLev, (currLev < prevLev - intpow2(i) ? (prevLev - int(intpow2(i)) ) - currLev : 0 ))  ) );
+				// Delay computation. Here we try to compute as much of the sticky in each level.
+				double levelStickyDelay;
+				// n is the size on which we compute the sticky bit
+				int n = max( prevLevSize-currLevSize,
+										 (currLevSize < prevLevSize - intpow2(i) ? (prevLevSize - int(intpow2(i)) ) - currLevSize : 0 ))  ;
+				if ( countType_ == -1 )
+					levelStickyDelay= getTarget()->localWireDelay() + getTarget()->eqComparatorDelay(n);
+				else
+					levelStickyDelay= getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(n);
+				
 
 				vhdl << tab << declare(join("sticky_high_",i)) << "<= '0'";
-				if (prevLev-currLev > 0)
-					vhdl << "when " << join("level",i+1)<<"("<<prevLev-currLev -1 <<" downto "<< 0 <<") = CONV_STD_LOGIC_VECTOR(0,"<< prevLev-currLev <<") else '1'";
+				if (prevLevSize-currLevSize > 0)
+					vhdl << "when " << join("level",i+1)<<"("<<prevLevSize-currLevSize -1 <<" downto "<< 0 <<") = CONV_STD_LOGIC_VECTOR(0,"<< prevLevSize-currLevSize <<") else '1'";
 				vhdl << ";"<<endl;
 
    			vhdl << tab << declare(join("sticky_low_",i)) << "<= '0'";
-				if ((currLev < prevLev - intpow2(i) ? (prevLev - intpow2(i)) - currLev : 0 ) > 0)
-					vhdl << "when " <<join("level",i+1)<<"("<<(currLev < prevLev - intpow2(i) ? (prevLev - intpow2(i)) - currLev : 0 ) -1
-						  <<" downto "<< 0 <<") = CONV_STD_LOGIC_VECTOR(0,"<< (currLev < prevLev - intpow2(i) ? (prevLev - intpow2(i)) - currLev : 0 ) <<") else '1'";
+				if ((currLevSize < prevLevSize - intpow2(i) ? (prevLevSize - intpow2(i)) - currLevSize : 0 ) > 0)
+					vhdl << "when " <<join("level",i+1)<<"("<<(currLevSize < prevLevSize - intpow2(i) ? (prevLevSize - intpow2(i)) - currLevSize : 0 ) -1
+						  <<" downto "<< 0 <<") = CONV_STD_LOGIC_VECTOR(0,"<< (currLevSize < prevLevSize - intpow2(i) ? (prevLevSize - intpow2(i)) - currLevSize : 0 ) <<") else '1'";
 				vhdl << ";"<<endl;
 
-				manageCriticalPath( muxDelay(currLev) );
-
-				vhdl << tab << declare(join("sticky",i)) << "<= " << join("sticky",i+1) << " or " << join("sticky_high_",i)
-					  << " when " << join("count",i) << "='0' else " << join("sticky",i+1) << " or " << join("sticky_low_",i)<<";"<<endl;
+				vhdl << tab << declare(levelStickyDelay, join("sticky",i))
+						 << "<= " << join("sticky",i+1) << " or " << join("sticky_high_",i)
+						 << " when " << join("count",i) << "='0' else " << join("sticky",i+1) << " or " << join("sticky_low_",i)<<";"<<endl;
 			}
 
 			vhdl <<endl;
@@ -127,9 +134,6 @@ namespace flopoco{
 		wOut_ =  wOut_true;
 		vhdl << tab << "O <= "<< join("level",0)
 			  << (wOut_<=wIn?"":join("&",rangeAssign(wOut_-wIn-1,0,"'0'")))<<";"<<endl;
-
-		getOutDelayMap()["O"] = getCriticalPath();
-		getOutDelayMap()["Count"] = getCriticalPath();
 
 
 		vhdl << tab << declare("sCount",wCount_) <<(wCount_==1?"(0)":"")<<" <= ";
@@ -149,9 +153,7 @@ namespace flopoco{
 		}
 
 
-
 		if (computeSticky_){
-			getOutDelayMap()["Sticky"] = getCriticalPath();
 			if (wOut_>=wIn)
 				vhdl << tab << "Sticky <= '0';"<<endl;
 			else
@@ -162,102 +164,60 @@ namespace flopoco{
 	LZOCShifterSticky::~LZOCShifterSticky() {
 	}
 
-	void LZOCShifterSticky::setEntityType(entityType_t eType){
-		entityType_ = eType;
-	}
 
 	int LZOCShifterSticky::getCountWidth() const{
 		return wCount_;
 	}
 
 
-	double LZOCShifterSticky::compDelay(int n){
-		if ( countType_ == -1 )
-			return getTarget()->localWireDelay() + getTarget()->adderDelay(n/2);
-		else{
-			if (n <= getTarget()->lutInputs())
-					return getTarget()->localWireDelay() + getTarget()->lutDelay();
-			else if ( n<= getTarget()->lutInputs()*getTarget()->lutInputs() )
-				return 2*getTarget()->localWireDelay() + 2*getTarget()->lutDelay();
-			else if ( n< getTarget()->lutInputs()*getTarget()->lutInputs()*getTarget()->lutInputs() )
-				return 3*getTarget()->localWireDelay() + 3*getTarget()->lutDelay();
-				else
-					return getTarget()->localWireDelay() + getTarget()->adderDelay(n/4);
-		}
-	}
-
-	double LZOCShifterSticky::muxDelay(int selFanout){
-		return getTarget()->localWireDelay(selFanout) + getTarget()->lutDelay();
-	}
-
 
 	void LZOCShifterSticky::emulate(TestCase* tc)
 	{
-		mpz_class si   = tc->getInputValue("I");
+		mpz_class inputValue  = tc->getInputValue("I");
 
 		mpz_class sozb = 42; //dummy value
 		if (countType_ == -1)
 			sozb = tc->getInputValue("OZb");
 
 		int sticky=0;
-		int j, icount;
+		int count =0;
+		mpz_class shiftOutputValue = inputValue;
 
-		/* Count the leading zero/one s */
+
 		mpz_class bit = (countType_ == -1) ? sozb : (countType_ == 0 ? 0 : 1); /* what are we counting in the specific case */
-		/* from the MSB towards the LSB, check if current bit of input = to the bit we test against */
-		for (j = wIn_-1; j >= 0; j--)
-			if (mpz_tstbit(si.get_mpz_t(), j) != bit)
-				break;
 
-		/* the number of bits is then equal to:
-			the index of the MSB - the index where we stoped previously */
-		icount = (wIn_-1) - j;
-		tc->addExpectedOutput("Count", icount);
-
-		/* compute the max value on wOut_ bits */
-		maxValue_ = mpzpow2(wOut_)-1;
-		mpz_class inputValue = si;
-
-		mpz_class stickyTest =  1 ;//(countType_==-1) ? (sozb==0?1:0) : (countType_ == 0 ? 1 : 0) ;
-
-		//compute output value and sticky
-		if ((countType_==0) || (sozb==0)){
-
-			if (inputValue > 0)
-				while (!((inputValue <= maxValue_) && (2*inputValue > maxValue_)))
-					if (inputValue>maxValue_){
-						if(mpz_tstbit(inputValue.get_mpz_t(), 0)==stickyTest)
-							sticky=1;
-						inputValue=inputValue/2;
-					}else
-						inputValue=inputValue*2;
-			else {}
-		}
-		else /* if we are counting ones */
-			{
-				int restOfBits = wIn_ - icount;
-				if (icount>0){
-					mpz_class ones = mpzpow2(icount)-1;
-					ones *= mpzpow2(restOfBits);
-
-					inputValue-=ones; // the input without the leading ones
-				}
-
-				if ((wIn_<=wOut_) || ((wIn_>wOut_) && (restOfBits<wOut_) ))	//shift result in place
-					inputValue *=mpzpow2(wOut_-restOfBits);
-				else
-					for (int i=1;i<=restOfBits-wOut_;i++){
-						if(mpz_tstbit(inputValue.get_mpz_t(), 0)==stickyTest) //FIXME What do we count out when we count ones, the one or the zero?
-							sticky=1;
-						inputValue=inputValue/2;
-					}
+		int j=wIn_-1;
+		while ((count < (1<<wCount_)-1) &&  (j>=0)  && mpz_tstbit(inputValue.get_mpz_t(), j) == bit)   {
+			count ++;
+			j--;
+			shiftOutputValue = shiftOutputValue <<1;
 			}
-		tc->addExpectedOutput("O",inputValue);
+
+		// Now reformat the output value to its size, and compute the sticky of the remaining bits.
+		// The max size of shiftOutputValue is ((1<<wCount)-1) + wIn
+		mpz_class outputMask = (mpz_class(1) << wOut_) -1;
+		int numBitsForSticky = wIn_ - wOut_;
+		if(numBitsForSticky >= 0) {// should be the typical use case where we need to compute a sticky bit
+			mpz_class stickyMask = (mpz_class(1) << numBitsForSticky) -1;
+			mpz_class bitsForSticky = shiftOutputValue & stickyMask;
+			sticky = (bitsForSticky==0? 0 :1 );
+			shiftOutputValue = (shiftOutputValue >> numBitsForSticky) & outputMask;
+		}
+		else {
+			shiftOutputValue = (shiftOutputValue << numBitsForSticky) & outputMask;
+			sticky=0;
+		}
+			
+		
+		tc->addExpectedOutput("O", shiftOutputValue);
+		tc->addExpectedOutput("Count", count);
 
 		if (computeSticky_)
 			tc->addExpectedOutput("Sticky",sticky);
 	}
 
+
+	
 
 	OperatorPtr LZOCShifterSticky::parseArguments(Target *target, std::vector<std::string> &args) {
 		int wIn, wOut, wCount, countType;
