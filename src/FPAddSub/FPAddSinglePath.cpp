@@ -68,46 +68,33 @@ namespace flopoco{
 		//=========================================================================|
 		//                          Swap/Difference                                |
 		// ========================================================================|
-		vhdl<<"-- Exponent difference and swap  --"<<endl;
-
+		addFullComment("Exponent difference and swap when Y>X");
+		// In principle the comparison could be done on the exponent only, but then the result of the effective addition could be negative,
+		// so we would have to take its absolute value, which would cost the same as comparing exp+frac here.
 		vhdl << tab << declare("excExpFracX",2+wE+wF) << " <= X"<<range(wE+wF+2, wE+wF+1) << " & X"<<range(wE+wF-1, 0)<<";"<<endl;
 		vhdl << tab << declare("excExpFracY",2+wE+wF) << " <= Y"<<range(wE+wF+2, wE+wF+1) << " & Y"<<range(wE+wF-1, 0)<<";"<<endl;
 
-		/*		setCriticalPath(getMaxInputDelays(inputDelays));
-					manageCriticalPath(target->localWireDelay() + target->eqComparatorDelay(wE+wF+2));
-					vhdl<< tab << declare("eqdiffsign") << " <= '1' when excExpFracX = excExpFracY else '0';"<<endl; */
-
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
-		vhdl<< tab << declare("eXmeY",wE+1) << " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
-		vhdl<< tab << declare("eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
-		double cpeXmeY = getCriticalPath();
 
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
+		vhdl << tab << declare("addCmpOp1",wE+wF+3) << "<= '0'  & excExpFracX;"<<endl;
+		vhdl << tab << declare("addCmpOp2",wE+wF+3) << "<= '1'  & not excExpFracY;"<<endl;
+		IntAdder *cmpAdder = new IntAdder(target, wE+wF+3);
+		inPortMap(cmpAdder, "X", "addCmpOp1");
+		inPortMap(cmpAdder, "Y", "addCmpOp2");
+		inPortMapCst(cmpAdder, "Cin", "'1'");
+		outPortMap (cmpAdder, "R", "cmpRes");
 
-		if (wF < 30){
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wE)); //comparator delay implemented for now as adder
-			vhdl<< tab << declare("swap")       << " <= '0' when excExpFracX >= excExpFracY else '1';"<<endl;
-		}else{
-			IntAdder *cmpAdder = new IntAdder(target, wE+wF+2+1);
-			oplist.push_back(cmpAdder);
+		vhdl << instance(cmpAdder, "cmpAdder") << endl;
+		vhdl<< tab << declare("swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 
-			vhdl << tab << declare("addCmpOp1",wE+wF+2+1) << "<= " << zg(1,0) << " & excExpFracX;"<<endl;
-			vhdl << tab << declare("addCmpOp2",wE+wF+2+1) << "<= " << og(1,0) << " & not(excExpFracY);"<<endl;
+		addComment("exponent difference");
+		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
+													"eXmeY",wE+1)	<< " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
+		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
+													"eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
+		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+											 "expDiff",wE+1) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 
-			inPortMap(cmpAdder, "X", "addCmpOp1");
-			inPortMap(cmpAdder, "Y", "addCmpOp2");
-			inPortMapCst(cmpAdder, "Cin", "'1'");
-			outPortMap (cmpAdder, "R", "cmpRes");
-
-			vhdl << instance(cmpAdder, "cmpAdder") << endl;
-			syncCycleFromSignal("cmpRes");
-			setCriticalPath( cmpAdder->getOutputDelay("R") );
-			vhdl<< tab << declare("swap")       << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
-		}
-
-		double cpswap = getCriticalPath();
 
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
 
@@ -147,15 +134,6 @@ namespace flopoco{
 		vhdl <<tab<<declare("signR") << "<= '0' when (sXsYExnXY=\"100000\" or sXsYExnXY=\"010000\") else signX;"<<endl;
 
 
-		setCycleFromSignal("swap");;
-		if ( getCycleFromSignal("eYmeX") == getCycleFromSignal("swap") )
-			setCriticalPath(max(cpeXmeY, cpswap));
-		else{
-			if (syncCycleFromSignal("eYmeX"))
-				setCriticalPath(cpeXmeY);
-		}
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());//multiplexer
-		vhdl<<tab<<declare("expDiff",wE+1) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wE+1));
 		vhdl<<tab<<declare("shiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
 		//shiftVal=the number of positions that fracY must be shifted to the right
@@ -191,7 +169,6 @@ namespace flopoco{
 		vhdl << instance(rightShifter, "RightShifterComponent");
 		syncCycleFromSignal("shiftedFracY");
 		setCriticalPath(rightShifter->getOutputDelay("R"));
-		nextCycle();         ////
 		setCriticalPath(0.0);////
 		double cpshiftedFracY = getCriticalPath();
 		//sticky compuation in parallel with addition, no need for manageCriticalPath
@@ -202,7 +179,6 @@ namespace flopoco{
 		double cpsticky = getCriticalPath();
 
 		setCycleFromSignal("shiftedFracY");
-		nextCycle();         ////
 		setCriticalPath(0.0);////
 		setCriticalPath(cpshiftedFracY);
 		//pad fraction of Y [overflow][shifted frac having inplicit 1][guard][round]
@@ -495,11 +471,11 @@ namespace flopoco{
 
 	void FPAddSinglePath::registerFactory(){
 		UserInterface::add("FPAddSInglePath", // name
-											 "A floating-point adder with a new, more compact single-path architecture.",
+											 "A floating-point adder with a compact single-path architecture.",
 											 "BasicFloatingPoint", // categories
 											 "",
 											 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits;",
+                        wF(int): mantissa size in bits;",
 											 "",
 											 FPAddSinglePath::parseArguments
 											 ) ;
