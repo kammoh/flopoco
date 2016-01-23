@@ -2430,8 +2430,8 @@ namespace flopoco{
 	{
 		ostringstream newStr;
 		string oldStr, workStr;
-		int currentPos, nextPos, count;
-		int tmpCurrentPos, tmpNextPos, lhsNameLength, rhsNameLength;
+	  size_t currentPos, nextPos, tmpCurrentPos, tmpNextPos;
+		int count, lhsNameLength, rhsNameLength;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
@@ -2449,7 +2449,7 @@ namespace flopoco{
 		bool isSelectedAssignment = (oldStr.find('?') > oldStr.find('$'));
 		currentPos = 0;
 		nextPos = (isSelectedAssignment ? oldStr.find('$') : oldStr.find('?'));
-		while(nextPos != string::npos)
+		while(nextPos !=  string::npos)
 		{
 			string lhsName, rhsName;
 			Signal *lhsSignal, *rhsSignal;
