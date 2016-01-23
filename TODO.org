@@ -6,10 +6,7 @@ TODO file for FloPoCo
 		FP2Fix
 		InputIEEE
 		OutputIEEE
-
-		Shifter
 		LZOC
-		LZOCShifterSticky
 
 		IntAdder
 
