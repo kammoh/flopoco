@@ -183,9 +183,8 @@ namespace flopoco{
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building far path right shifter");
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right, inDelayMap("X",getCriticalPath()));
+		Shifter* rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right, inDelayMap("X",getCriticalPath()));
 		rightShifter->changeName(getName()+"_RightShifter");
-		addSubComponent(rightShifter);
 		inPortMap  (rightShifter, "X", "fracY");
 		inPortMap  (rightShifter, "S", "shiftVal");
 		outPortMap (rightShifter, "R","shiftedFracY");
@@ -223,8 +222,7 @@ namespace flopoco{
 		vhdl<<tab<< declare("cInAddFar")           << " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
-		fracAddFar = new IntAdder(target,wF+4, inDelayMap("X", getCriticalPath()));
-		addSubComponent(fracAddFar);
+		IntAdder* fracAddFar = new IntAdder(target,wF+4, inDelayMap("X", getCriticalPath()));
 		inPortMap  (fracAddFar, "X", "fracXfar");
 		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
 		inPortMap  (fracAddFar, "Cin", "cInAddFar");
@@ -247,8 +245,7 @@ namespace flopoco{
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
 
-		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
-		addSubComponent(lzocs);
+		LZOCShifterSticky* lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
 		inPortMap  (lzocs, "I", "fracGRS");
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFrac");
@@ -297,7 +294,6 @@ namespace flopoco{
 				setCriticalPath(cpexpFrac);
 
 		IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
-		addSubComponent(ra);
 
 		inPortMap(ra,"X", "expFrac");
 		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
