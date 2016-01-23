@@ -57,7 +57,7 @@ namespace flopoco{
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2010)");
 
 		sizeRightShift = intlog2(wF+3);
-
+		REPORT(DEBUG, "sizeRightShift = " <<  sizeRightShift);
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,8 +96,6 @@ namespace flopoco{
 											 "expDiff",wE+1) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-
 		string pmY="Y";
 		if ( sub ) {
 			vhdl << tab << declare("mY",wE+wF+3)   << " <= Y" << range(wE+wF+2,wE+wF+1) << " & not(Y"<<of(wE+wF)<<") & Y" << range(wE+wF-1,0) << ";"<<endl;
@@ -106,9 +104,14 @@ namespace flopoco{
 
 		// depending on the value of swap, assign the corresponding values to the newX and newY signals
 
-		vhdl<<tab<<declare("newX",wE+wF+3) << " <= X when swap = '0' else "<< pmY << ";"<<endl;
-		vhdl<<tab<<declare("newY",wE+wF+3) << " <= " << pmY <<" when swap = '0' else X;"<<endl;
+		addComment("input swap so that |X|>|Y|");
+		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+											 "newX",wE+wF+3) << " <= X when swap = '0' else "<< pmY << ";"<<endl;
+		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+											 "newY",wE+wF+3) << " <= " << pmY <<" when swap = '0' else X;"<<endl;
+
 		//break down the signals
+		addComment("now we decompose the inputs into their sign, exponent, fraction");
 		vhdl << tab << declare("expX",wE) << "<= newX"<<range(wE+wF-1,wF)<<";"<<endl;
 		vhdl << tab << declare("excX",2)  << "<= newX"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
 		vhdl << tab << declare("excY",2)  << "<= newY"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
@@ -117,46 +120,40 @@ namespace flopoco{
 		vhdl << tab << declare("EffSub") << " <= signX xor signY;"<<endl;
 		vhdl << tab << declare("sXsYExnXY",6) << " <= signX & signY & excX & excY;"<<endl;
 		vhdl << tab << declare("sdExnXY",4) << " <= excX & excY;"<<endl;
-		manageCriticalPath(target->localWireDelay()+ target->lutDelay());
-		vhdl << tab << declare("fracY",wF+1) << " <= "<< zg(wF+1)<<" when excY=\"00\" else ('1' & newY("<<wF-1<<" downto 0));"<<endl;
-		double cpfracY = getCriticalPath();
 
+		vhdl << tab << declare(target->localWireDelay()+ target->lutDelay(),
+													 "fracY",wF+1) << " <= "<< zg(wF+1)<<" when excY=\"00\" else ('1' & newY("<<wF-1<<" downto 0));"<<endl;
 
-
-		//exception bits: need to be updated but for not FIXME
-		manageCriticalPath(target->localWireDelay()+2*target->lutDelay());
+		addComment("Exception management logic");
+		double exnDelay;
+		if (target->lutInputs()>=6)
+			exnDelay = target->localWireDelay()+target->lutDelay();
+		else
+			exnDelay = 2*(target->localWireDelay()+target->lutDelay());
 		vhdl <<tab<<"with sXsYExnXY select "<<endl;
-		vhdl <<tab<<declare("excRt",2) << " <= \"00\" when \"000000\"|\"010000\"|\"100000\"|\"110000\","<<endl
+		vhdl <<tab<<declare(exnDelay,"excRt",2) << " <= \"00\" when \"000000\"|\"010000\"|\"100000\"|\"110000\","<<endl
 				 <<tab<<tab<<"\"01\" when \"000101\"|\"010101\"|\"100101\"|\"110101\"|\"000100\"|\"010100\"|\"100100\"|\"110100\"|\"000001\"|\"010001\"|\"100001\"|\"110001\","<<endl
 				 <<tab<<tab<<"\"10\" when \"111010\"|\"001010\"|\"001000\"|\"011000\"|\"101000\"|\"111000\"|\"000010\"|\"010010\"|\"100010\"|\"110010\"|\"001001\"|\"011001\"|\"101001\"|\"111001\"|\"000110\"|\"010110\"|\"100110\"|\"110110\", "<<endl
 				 <<tab<<tab<<"\"11\" when others;"<<endl;
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl <<tab<<declare("signR") << "<= '0' when (sXsYExnXY=\"100000\" or sXsYExnXY=\"010000\") else signX;"<<endl;
+		
+		vhdl <<tab<<declare(target->localWireDelay() + target->lutDelay(), "signR")
+				 << "<= '0' when (sXsYExnXY=\"100000\" or sXsYExnXY=\"010000\") else signX;"<<endl;
 
 
-		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wE+1));
-		vhdl<<tab<<declare("shiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
+		vhdl<<tab<<declare(target->localWireDelay() + target->eqConstComparatorDelay(wE+1), "shiftedOut")
+				<< " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
 		//shiftVal=the number of positions that fracY must be shifted to the right
 
-		//		cout << "********" << wE << " " <<  sizeRightShift  <<endl;
-
 		if (wE>sizeRightShift) {
-			manageCriticalPath(target->localWireDelay() + target->lutDelay());
-			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0)"
-					<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
+			vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(), "shiftVal",sizeRightShift)
+					<< " <= expDiff("<< sizeRightShift-1<<" downto 0)"
+					<< " when shiftedOut='0' else \"" << unsignedBinary(wF+3,sizeRightShift) << "\";" << endl;  // was CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<")
 		}
 		else if (wE==sizeRightShift) {
 			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
 		}
 		else 	{ //  wE< sizeRightShift
-			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
-		}
-
-		if ( getCycleFromSignal("fracY") == getCycleFromSignal("shiftVal") )
-			setCriticalPath( max(cpfracY, getCriticalPath()) );
-		else{
-			if (syncCycleFromSignal("fracY"))
-				setCriticalPath(cpfracY);
+			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE-1) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
 		}
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
