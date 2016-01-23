@@ -1,5 +1,83 @@
 TODO file for FloPoCo
 
+* List of operators to port to the new pipeline framework
+	Remove an operator from the list below when it is done.
+		Fix2FP
+		FP2Fix
+		InputIEEE
+		OutputIEEE
+
+		Shifter
+		LZOC
+		LZOCShifterSticky
+
+		IntAdder
+
+		IntAdderClassical
+		IntAdderAlternative
+		IntAdderShortLatency
+
+		//FOR TEST PURPOSES ONLY
+		Table
+
+#if 0 // Plug them for debug purpose only
+		IntAdderSpecific
+		LongIntAdderAddAddMuxGen1
+		LongIntAdderAddAddMuxGen2
+		LongIntAdderCmpAddIncGen1
+		LongIntAdderCmpAddIncGen2
+		LongIntAdderCmpCmpAddGen1
+		LongIntAdderCmpCmpAddGen2
+		LongIntAdderMuxNetwork
+		IntComparatorSpecific
+#endif
+		IntComparator
+		IntDualSub
+		IntMultiplier
+		IntSquarer
+
+		FPConstMult
+		FPRealKCM
+		IntConstDiv
+		FPConstDiv
+		FixFunctionByTable
+		FixFunctionBySimplePoly
+		FixFunctionByPiecewisePoly
+		FixFunctionByMultipartiteTable
+		BasicPolyApprox
+		PiecewisePolyApprox
+		FixRealKCM
+		TestBench
+		Wrapper
+		FPAdd
+		FPAddSub
+		FPAddDualPath
+		FPAdd3Input
+		FPAddSinglePath
+		FPMult
+		//FPMultKaratsuba
+		FPSquare
+		FPDiv
+		NbBitsMinRegisterFactory();
+		FPSqrt
+
+		FPLargeAcc
+		LargeAccToFP
+		FPDotProduct
+
+		FPExp
+		IterativeLog
+		FPPow
+		FixSinCos
+		CordicSinCos
+		FixAtan2
+		//FixedComplexAdder
+		FixFIR
+		FixSOPC
+		FixIIR
+
+		UserDefinedOperator
+ 
 * Release-critical (current regressions):
 ** FPPipeline
 ** lut_rng
@@ -24,13 +102,31 @@ TODO file for FloPoCo
 
 ** clean up Target
 
+* Targets
+** Xilinx series 7
+** Altera 10
+* Continuous Test framework
+This is TODO from scratch.
+** Plan
+a test programme iterates through the operators, testing them one by one for various values of the parameters. Forever.
+** Implementation
+add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
+The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
 * Janitoring
+*** Replace pointers with smart pointers
+*** replace inPortMap and outPortMap by an additional argument to instance()
+This argument should be a vector of "formal:effective" strings
+inPortMap and outPortMap should be made private to Operator
+
+*** gradually convert everything to standard lib arithmetic, getting rid of the synopsis ones.
 *** TargetFactory
 *** uniformize name construction 
 using setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
 
 *** add more  newComponentAndInstance() on the model of FixMultAdd
-
+Linked with "replace inPortMap and outPortMap by an additional argument to instance()" ?
+List of operators that would most benefit from it: 
+The most used, i.e. IntAdder, Shifters, etc
 *** rename pow2, intpow2 etc as exp2
 *** doxygen: exclude unplugged operators
 * Bit heap and multipliers
@@ -45,7 +141,6 @@ using setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp
 ** Check all these registered etc nonsense in Signal. Is it really used?
 ** Bug (ds FixRealKCM?) ./flopoco -verbose=3 FPExp 7 12 
 ** With Matei: see the nextCycles in FPExp and see if we can push them in IntMultiplier somehow
-
 
 * BitHeapization 
 (and provide a bitheap-only constructor for all the following):
@@ -66,7 +161,6 @@ using setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp
 
 Testbench
 
-
 * Framework
 ** define a Timing as a (Cycle, CriticalPath), and associate that cleanly to Signals with getTiming methods that set both cycle and critical path.
 ** Bug on outputs that are bits with isBus false and  multiple-valued  
@@ -75,13 +169,11 @@ Testbench
 ** global switch to ieee standard signed and unsigned libraries
 ** fix the default getCycleFromSignal . 
 
-
 * Wanted operators
 ** Multipartite (with HOTBM)
 ** Sum of n squares
 ** LUT-based integer comparators
 ** BoxMuller
-
 
 * Improvements to do, operator by operator
 ** Collision
@@ -107,7 +199,6 @@ ConstMult:
 *** provide finer spec, see the TODOs inside Shifter.cpp
 
 General
-
 
 * If we could start pipeline from scratch
 If we were to redo the pipeline framework from scratch, here is the proper way to do it.
@@ -164,7 +255,7 @@ Questions and remarks:
   
   !- resource estimation during timing: we already have some information about the circuit's interal, so why not use this information for resource estimation, as well?
 
-* Options for signed/unsigned
+* Options for signed/unsigned  DONE, text should stay here while the janitoring isn't done
 Option 0: Do nothing radical. It seems when the options
  --ieee=standard --ieee=synopsys
 are passed to ghdl in this order, we may mix standard and synopsys entities
@@ -175,14 +266,14 @@ Option 1:
  * Keep only std_logic_vector as IO,
  * Add an option to declare() for signed / unsigned / std_logic_vector DONE
     The default should still be std_logic_vector because we don't want to edit all the existing operators
- * add conversions to the VHDL.
- * No need to edit the TestBench architecture
+ * add conversions to the VHDL. DONE 
+ * No need to edit the TestBench architecture (DONE, actually some editing was needed)
 
 Option 2 (out: see discussion below)
  Same as Option 1, but allow signed/unsigned IOs
  * Need to edit the TestBench architecture
  * Cleaner but adds more coding. For instance, in Table, need to manage the types of IOs.
- - Too many operators have sign-agnostic information
+ - Too many operators have sign-agnostic information, e.g. Table and all its descendants
 
 ---------------------------------------------------
 Should we allow signed/unsigned IO?
