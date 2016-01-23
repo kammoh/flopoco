@@ -1812,7 +1812,7 @@ namespace flopoco{
 
 		//build the code for the outputs
 		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++){
-			if(!((it == tmpOutPortMap_.begin()) && (tmpInPortMap_.size() != 0)) || op->isSequential())
+			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
 				o << "," << endl <<  tab << tab << "           ";
 
 			o << it->first << " => " << it->second->getName();
