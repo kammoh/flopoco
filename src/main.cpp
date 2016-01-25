@@ -27,11 +27,6 @@
 #include "FloPoCo.hpp"
 #include "utils.hpp"
 #include "main.hpp"
-#include "FPDivSqrt/Tools/NbBitsMin.cpp"
-#include "IntAddSubCmp/IntAdderSpecific.hpp"
-#include "IntAddSubCmp/IntAdderAlternative.hpp"
-#include "IntAddSubCmp/IntAdderClassical.hpp"
-#include "IntAddSubCmp/IntAdderShortLatency.hpp"
 
 using namespace std;
 using namespace flopoco;
@@ -97,7 +92,7 @@ int main(int argc, char* argv[] )
 		//FPMultKaratsuba::registerFactory();
 		FPSquare::registerFactory();
 		FPDiv::registerFactory();
-		NbBitsMinRegisterFactory();
+		FPDiv::NbBitsMinRegisterFactory();
 		FPSqrt::registerFactory();
 
 		FPLargeAcc::registerFactory();
@@ -115,7 +110,12 @@ int main(int argc, char* argv[] )
 		FixSOPC::registerFactory();
 		FixIIR::registerFactory();
 
-		UserDefinedOperator::registerFactory();
+		// hidden for now
+		// Fix2DNorm::registerFactory();
+
+
+		// Uncomment me to play within FloPoCo operator development
+	  UserDefinedOperator::registerFactory();
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;

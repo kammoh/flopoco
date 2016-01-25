@@ -152,6 +152,7 @@ namespace flopoco{
 		bool logicTable; 			/**< true: LUT-based table; false: BRAM-based */
 		double cpDelay;  				/**< For a LUT-based table, its delay; */
 
+		public:
 		vector<mpz_class> values;	/**< the values used to fill the table */
 	};
 

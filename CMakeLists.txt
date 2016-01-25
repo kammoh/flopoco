@@ -317,10 +317,9 @@ src/Complex/FixComplexKCM
  src/FPMultSquare/FPSquare
 
 # Floating-point dividers and square roots
-src/FPDivSqrt/SelFunctionTable
 src/FPDivSqrt/FPDiv
 src/FPDivSqrt/FPSqrt
-src/FPDivSqrt/Tools/NbBitsMin
+#src/FPDivSqrt/Tools/NbBitsMin
 # src/FPDivSqrt/FPSqrtPoly # Resurrect some day?
 
 
@@ -362,6 +361,10 @@ src/Trigs/FixAtan2ByCORDIC
 src/Trigs/FixAtan2ByRecipMultAtan
 src/Trigs/FixAtan2ByBivariateApprox
 src/Trigs/Atan2Table
+
+src/Trigs/Fix2DNorm
+
+
 src/Tools/Plane
 src/Tools/Point
 
@@ -369,6 +372,9 @@ src/Tools/Point
 src/ExpLog/FPExp
 src/ExpLog/IterativeLog
 src/ExpLog/FPPow
+
+# If you want to add your operator, feel free
+src/UserDefinedOperator
 )
 
 IF (SOLLYA_LIB)

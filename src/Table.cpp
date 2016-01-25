@@ -64,6 +64,7 @@ namespace flopoco{
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
 	{
 		srcFileName = "Table";
+		THROWERROR("\n\n Deprecated constructor.\n Please replace whatever inheritance you may have with a plain Table.\n See FPDiv for an example. " << endl);
 		if(wIn<0){
 			THROWERROR("wIn="<<wIn<<"; Input size cannot be negative"<<endl);
 		}
@@ -105,147 +106,6 @@ namespace flopoco{
 		}
 
 
-		// Pipelining is managed as follows:
-		// Declaration of the signal TableOut at cycle 0. It will be assigned in outputVHDL() below
-		// computation of the needed number of cycles (out of Target etc)
-		// The delaying of TableOut will be managed by buildVHDLRegisters() as soon as we have manually defined its lifeSpan
-
-		if(logicTable)
-		{
-			// Delay is that of broadcasting the input bits to wOut LUTs, plus the LUT delay itself
-			if(wIn <= getTarget()->lutInputs())
-				cpDelay = getTarget()->localWireDelay(wOut) + getTarget()->lutDelay();
-			else{
-				int lutsPerBit=1<<(wIn-getTarget()->lutInputs());
-				REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
-				// TODO this doesn't take into account the F5 muxes etc: there should be a logicTableDelay() in GetTarget()
-				// The following is enough for practical sizes, but it is an overestimation.
-				cpDelay = getTarget()->localWireDelay(wOut*lutsPerBit) + getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->lutDelay();
-			}
-		}
-		else{
-			cpDelay = getTarget()->LogicToRAMWireDelay() + getTarget()->RAMToLogicWireDelay() + getTarget()->RAMDelay();
-		}
-
-		/*
-		 * The new version of table, which does not rely on outputVHDL to create all the code
-		 */
-		if (logicTable==1 || wIn <= getTarget()->lutInputs())
-		{
-			//logic table
-			mpz_class y;
-
-			declare(cpDelay, "Y0", wOut);
-			vhdl << tab << "with X select Y0 <= " << endl;
-
-			REPORT(FULL,"Table.cpp: Filling the table");
-			for(int x = minIn.get_ui(); x <= maxIn.get_ui(); x++)
-			{
-				y = call_function(x);
-				vhdl << tab << tab << "\"" << unsignedBinary(y, wOut) << "\" when \"" << unsignedBinary(x, wIn) << "\"," << endl;
-			}
-			vhdl << tab << tab << "\"";
-			for(int i = 0; i < wOut; i++)
-				vhdl << "-";
-			vhdl <<  "\" when others;" << endl;
-
-			vhdl << tab << "Y <= Y0;" << endl;
-		}else
-		{
-			//RAM block based table
-			int x, left, right;
-			mpz_class y;
-			ostringstream vhdlTypeDeclaration;
-
-			vhdl << tab << "-- Build a 2-D array type for the ROM" << endl;
-
-			if((maxIn-minIn <= 256) && (wOut > 36))
-			{
-				vhdlTypeDeclaration << tab << "subtype word_t is std_logic_vector("<< (wOut%2==0 ? wOut/2-1 : (wOut+1)/2-1) <<" downto 0);" << endl;
-				vhdlTypeDeclaration << tab << "type memory_t is array(0 to 511) of word_t;" << endl;
-			}else
-			{
-				vhdlTypeDeclaration << tab << "subtype word_t is std_logic_vector("<< wOut-1 <<" downto 0);" << endl;
-				vhdlTypeDeclaration << tab << "type memory_t is array(0 to " << ((1<<wIn) -1) <<") of word_t;" << endl;
-			}
-
-			vhdlTypeDeclaration << tab <<"function init_rom" << endl;
-			vhdlTypeDeclaration << tab << tab << "return memory_t is " << endl;
-			vhdlTypeDeclaration << tab << tab << "variable tmp : memory_t := (" << endl;
-
-			left = (wOut%2==0 ? wOut/2 : (wOut+1)/2);
-			right= wOut - left;
-
-			//TODO Replace with getTarget()->getBRAMWidth
-			if((maxIn-minIn <= 256) && (wOut > 36))
-			{
-				//special BRAM packing
-				//	the first maxIn/2 go in the upper part of the table
-				for(x = minIn.get_ui(); x <= maxIn.get_ui(); x++){
-					y = call_function(x);
-					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y>>right, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-				for(x = maxIn.get_ui(); x < 255; x++){
-					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-				for(x = minIn.get_ui(); x <= maxIn.get_ui(); x++){
-					y = call_function(x);
-					y = y % (mpz_class(1) << right);
-					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-				for(x = maxIn.get_ui(); x < 255; x++){
-					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(0, (wOut%2==0?wOut/2:(wOut+1)/2)) << "\"," << endl;
-				}
-			}else
-			{
-				for(x = minIn.get_ui(); x <= maxIn.get_ui(); x++)
-				{
-					y = call_function(x);
-					vhdlTypeDeclaration << tab << "\"" << unsignedBinary(y, wOut) << "\"," << endl;
-				}
-			}
-
-			vhdlTypeDeclaration << tab << tab << "others => (others => '0'));" << endl;
-			vhdlTypeDeclaration << tab << tab << "	begin " << endl;
-			vhdlTypeDeclaration << tab << tab << "return tmp;" << endl;
-			vhdlTypeDeclaration << tab << tab << "end init_rom;" << endl;
-
-			declareTable(cpDelay, "rom", Signal::table, vhdlTypeDeclaration.str());
-
-			if (maxIn-minIn <= 256 && wOut>36){
-				vhdl << declare(getTarget()->localWireDelay(), "Z0", 9)
-						<< " <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '1' & X;" << endl;
-				vhdl << declare(getTarget()->localWireDelay(), "Z1", 9)
-						<< " <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '0' & X;" << endl;
-			}
-
-			if(getTarget()->isPipelined()){
-				vhdl << "	process(clk)" << endl;
-				vhdl << tab << "begin" << endl;
-				vhdl << tab << "if(rising_edge(clk)) then" << endl;
-			}
-
-			if(maxIn-minIn <= 256 && wOut>36){
-				vhdl << tab << tab << declare(cpDelay, "Y0",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
-						" <= rom(  TO_INTEGER(unsigned(Z0)));" << endl;
-				vhdl << tab << tab << declare(cpDelay, "Y1",(wOut%2==0?wOut/2:(wOut+1)/2)) <<
-						" <= rom(  TO_INTEGER(unsigned(Z1)));" << endl;
-			}else
-			{
-				vhdl << tab << tab << declare(cpDelay, "Y0", wOut) <<
-						" <= rom(  TO_INTEGER(unsigned(X))  );" << endl;
-			}
-
-			if(getTarget()->isPipelined()){
-				vhdl << tab << "end if;" << endl;
-				vhdl << tab << "end process;" << endl;
-			}
-
-			if (maxIn-minIn <= 256 && wOut>36)
-				vhdl << tab << " Y <= Y1 & Y0" << range((wOut%2==0?wOut/2-1:(wOut-1)/2-1),0) << ";" << endl;
-			else
-				vhdl << tab << " Y <= Y0;" << endl;
-		}
 	}
 
 
@@ -265,7 +125,7 @@ namespace flopoco{
 			REPORT(DEBUG, "WARNING: wIn value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
-		}else if((1<<wIn) < values.size())
+		}else if(((unsigned)1<<wIn) < values.size())
 		{
 			REPORT(DEBUG, "WARNING: wIn set to a value lower than the number of values which are to be written in the table.");
 			//set the value of wIn
@@ -420,7 +280,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wOut", &wOut_, false);
 		UserInterface::parseInt(args, "logicTable", &logicTable_, false);
 
-		for(unsigned int i=0; i<(1<<wIn_); i++){
+		for(int i=0; i<(1<<wIn_); i++){
 			mpz_class tmpMPZ = mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random());
 			values_.push_back( (tmpMPZ*tmpMPZ+mpz_class(random())) % (mpz_class(1)<<wOut_) );
 		}
