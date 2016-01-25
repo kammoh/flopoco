@@ -75,8 +75,8 @@ namespace flopoco{
 
 
 
-		vhdl << tab << declare("addCmpOp1",wE+wF+3) << "<= '0'  & excExpFracX;"<<endl;
-		vhdl << tab << declare("addCmpOp2",wE+wF+3) << "<= '1'  & not excExpFracY;"<<endl;
+		vhdl << tab << declare("addCmpOp1",wE+wF+3) << " <= '0'  & excExpFracX;"<<endl;
+		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
 		IntAdder *cmpAdder = new IntAdder(target, wE+wF+3);
 		inPortMap(cmpAdder, "X", "addCmpOp1");
 		inPortMap(cmpAdder, "Y", "addCmpOp2");

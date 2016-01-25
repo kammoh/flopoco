@@ -2430,7 +2430,7 @@ namespace flopoco{
 	{
 		ostringstream newStr;
 		string oldStr, workStr;
-	  size_t currentPos, nextPos, tmpCurrentPos, tmpNextPos;
+		size_t currentPos, nextPos, tmpCurrentPos, tmpNextPos;
 		int count, lhsNameLength, rhsNameLength;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
@@ -2514,7 +2514,7 @@ namespace flopoco{
 			//	with signal_name select... etc
 			//	the problem is there is a signal belonging to the right hand side
 			//	on the left-hand side, before the left hand side signal, which breaks the regular flow
-			if(workStr.find("select") != string::npos)
+			if(workStr.find("select ") != string::npos)
 			{
 				//extract the first rhs signal name
 				tmpCurrentPos = 0;
@@ -2522,19 +2522,25 @@ namespace flopoco{
 
 				rhsName = workStr.substr(tmpCurrentPos, tmpNextPos);
 
+				//remove the possible parentheses around the rhsName
+				string newRhsName = rhsName;
+				if(rhsName.find("(") != string::npos)
+				{
+					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
+				}
 				//this could also be a delayed signal name
 				try{
-					rhsSignal = getSignalByName(rhsName);
+					rhsSignal = getSignalByName(newRhsName);
 				}catch(string e){
 					try{
-						rhsSignal = getDelayedSignalByName(rhsName);
+						rhsSignal = getDelayedSignalByName(newRhsName);
 						//extract the name
-						rhsName = rhsName.substr(0, rhsName.find('^'));
+						rhsName = rhsName.substr(0, newRhsName.find('^'));
 					}catch(string e2){
-						THROWERROR("Error in parse2(): signal " << rhsName << " not found:" << e2);
+						THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
 					}
 				}catch(...){
-					THROWERROR("Error in parse2(): signal " << rhsName << " not found:");
+					THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
 				}
 
 				//output the rhs signal name
@@ -2596,20 +2602,26 @@ namespace flopoco{
 				//extract a new rhsName
 				rhsName = workStr.substr(tmpNextPos, workStr.find('$', tmpNextPos)-tmpNextPos);
 				rhsNameLength = rhsName.size();
+				//remove the possible parentheses around the rhsName
+				string newRhsName = rhsName;
+				if(rhsName.find("(") != string::npos)
+				{
+					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
+				}
 
 				//this could also be a delayed signal name
 				try{
-					rhsSignal = getSignalByName(rhsName);
+					rhsSignal = getSignalByName(newRhsName);
 				}catch(string e){
 					try{
-						rhsSignal = getDelayedSignalByName(rhsName);
+						rhsSignal = getDelayedSignalByName(newRhsName);
 						//extract the name
-						rhsName = rhsName.substr(0, rhsName.find('^'));
+						rhsName = rhsName.substr(0, newRhsName.find('^'));
 					}catch(string e2){
-						THROWERROR("Error in parse2(): signal " << rhsName << " not found:" << e2);
+						THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
 					}
 				}catch(...){
-					THROWERROR("Error in parse2(): signal " << rhsName << " not found:");
+					THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
 				}
 
 				//copy the rhsName with the delay information into the new vhdl buffer
