@@ -59,13 +59,13 @@ namespace flopoco
 
 		/**a helper factory function. For the parameter documentation, see the OperatorFactory constructor */
 		static void add(
-										string name,
-										string description,
-										string category,
-										string seeAlso,
-										string parameterList,
-										string extraHTMLDoc,
-										parser_func_t parser	);
+				string name,
+				string description,
+				string category,
+				string seeAlso,
+				string parameterList,
+				string extraHTMLDoc,
+				parser_func_t parser	);
 
 		static unsigned getFactoryCount();
 		static OperatorFactoryPtr getFactoryByIndex(unsigned i);

@@ -2531,7 +2531,7 @@ namespace flopoco{
 				//this could also be a delayed signal name
 				try{
 					rhsSignal = getSignalByName(newRhsName);
-				}catch(string e){
+				}catch(string &e){
 					try{
 						rhsSignal = getDelayedSignalByName(newRhsName);
 						//extract the name
@@ -2612,7 +2612,7 @@ namespace flopoco{
 				//this could also be a delayed signal name
 				try{
 					rhsSignal = getSignalByName(newRhsName);
-				}catch(string e){
+				}catch(string &e){
 					try{
 						rhsSignal = getDelayedSignalByName(newRhsName);
 						//extract the name
@@ -2824,7 +2824,8 @@ namespace flopoco{
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 		{
 			//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
-			if(targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName())
+			if((targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName()) &&
+					(targetSignal->predecessor(i)->type() == Signal::out))
 				continue;
 			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 		}
@@ -2870,8 +2871,20 @@ namespace flopoco{
 					//if we have to delay the input, the we need to reset
 					//	the critical path, as well
 					//else, there is nothing else to do
-					targetSignal->parentOp()->getIOListSignal(i)->setCycle(maxCycle);
-					targetSignal->parentOp()->getIOListSignal(i)->setCriticalPath(0.0);
+					Signal *inputSignal = targetSignal->parentOp()->getIOListSignal(i);
+
+					inputSignal->setCycle(maxCycle);
+					inputSignal->setCriticalPath(0.0);
+
+					//update the lifespan of inputSignal's predecessors
+					for(unsigned int i=0; i<inputSignal->predecessors()->size(); i++)
+					{
+						//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+						if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
+								(inputSignal->predecessor(i)->type() == Signal::out))
+							continue;
+						inputSignal->predecessor(i)->updateLifeSpan(inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
+					}
 				}
 
 			//start the scheduling of the parent operator of targetSignal
