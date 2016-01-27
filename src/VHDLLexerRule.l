@@ -357,7 +357,12 @@ label					  ({identifier}{space_character}*":")
 		(*yyextra->os) << yytext;
 	}else if(yyextra->lexingMode == LexerContext::instance)
 	{
-		(*yyextra->os) << yytext;
+		(*yyextra->os) << "??" << yytext << "??";
+		yyextra->lexingMode = LexerContext::instance2;
+	}else if(yyextra->lexingMode == LexerContext::instance2)
+	{
+		(*yyextra->os) << "$$" << yytext << "$$";
+		yyextra->lexingMode = LexerContext::instance;
 	}else if(yyextra->lexingMode == LexerContext::caseStatement)
 	{
 		(*yyextra->os) << yytext;

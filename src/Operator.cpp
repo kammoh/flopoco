@@ -2445,7 +2445,7 @@ namespace flopoco{
 		//iterate through the old code, one statement at the time
 		// code that doesn't need to be modified: it goes directly to the new vhdl code buffer
 		// code that needs to be modified: ?? should be removed from lhs_name, $$ should be removed from rhs_name,
-		//		delays of the type rhs_name_xxx should be added for the right-hand side signals
+		//		delays of the type rhs_name_dxxx should be added for the right-hand side signals
 		bool isSelectedAssignment = (oldStr.find('?') > oldStr.find('$'));
 		currentPos = 0;
 		nextPos = (isSelectedAssignment ? oldStr.find('$') : oldStr.find('?'));
@@ -2479,10 +2479,56 @@ namespace flopoco{
 
 			//check for component instances
 			//	the first parse marks the name of the component as a lhsName
-			//	must remove the markings and output the code normally
+			//	must remove the markings
+			//the rest of the code contains pairs of ??lhsName?? => $$rhsName$$ pairs
+			//	for which the helper signals must be removed and delays _dxxx must be added
 			if(workStr.find("port map") != string::npos)
 			{
-				newStr << workStr.substr(lhsNameLength+2, workStr.size());
+				//try to parse the names of the signals in the port mapping
+				if(workStr.find("?", workStr.find("port map")) == string::npos)
+				{
+					//empty port mapping
+					newStr << workStr.substr(lhsNameLength+2, workStr.size());
+				}
+				else
+				{
+					//parse a list of ??lhsName?? => $$rhsName$$
+					int tmpCurrentPos, tmpNextPos;
+
+					tmpCurrentPos = workStr.find("?", workStr.find("port map"));
+					while(tmpCurrentPos != string::npos)
+					{
+						//extract a lhsName
+						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
+						lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
+
+						//copy lhsName to the new vhdl buffer
+						newStr << lhsName;
+
+						//copy the code up to the next rhsName to the new vhdl buffer
+						tmpCurrentPos = tmpNextPos+2;
+						tmpNextPos = workStr.find("$", tmpCurrentPos);
+						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+
+						//extract a rhsName
+						tmpCurrentPos = tmpNextPos+2;
+						tmpNextPos = workStr.find("$", tmpCurrentPos);
+						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+
+						//copy rhsName to the new vhdl buffer
+						//	annotate it if necessary
+						newStr << rhsName;
+
+						//prepare to parse a new pair
+						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
+
+						//copy the rest of the code to the new vhdl buffer
+						if(tmpCurrentPos != string::npos)
+							newStr << workStr.substr(tmpNextPos+2, tmpCurrentPos-tmpNextPos-2);
+						else
+							newStr << workStr.substr(tmpNextPos+2, workStr.size());
+					}
+				}
 
 				//prepare for a new instruction to be parsed
 				currentPos = nextPos + workStr.size() + 2;

@@ -20,6 +20,7 @@ public:
 		selectedSignalAssignment3,
 		variableAssignment,
 		instance,
+		instance2,
 		process,
 		caseStatement
 	} LexMode;
@@ -48,7 +49,6 @@ public:
 		extraRhsNames.clear();
 		dependenceTable.clear();
 		lexingMode = LexMode::unset;
-
 	}
 
 	//these methods are generated in VHDLLexer.cpp 
