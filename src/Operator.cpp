@@ -2430,7 +2430,7 @@ namespace flopoco{
 	{
 		ostringstream newStr;
 		string oldStr, workStr;
-	  size_t currentPos, nextPos, tmpCurrentPos, tmpNextPos;
+		size_t currentPos, nextPos, tmpCurrentPos, tmpNextPos;
 		int count, lhsNameLength, rhsNameLength;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
@@ -2445,13 +2445,14 @@ namespace flopoco{
 		//iterate through the old code, one statement at the time
 		// code that doesn't need to be modified: it goes directly to the new vhdl code buffer
 		// code that needs to be modified: ?? should be removed from lhs_name, $$ should be removed from rhs_name,
-		//		delays of the type rhs_name_xxx should be added for the right-hand side signals
+		//		delays of the type rhs_name_dxxx should be added for the right-hand side signals
 		bool isSelectedAssignment = (oldStr.find('?') > oldStr.find('$'));
 		currentPos = 0;
 		nextPos = (isSelectedAssignment ? oldStr.find('$') : oldStr.find('?'));
 		while(nextPos !=  string::npos)
 		{
 			string lhsName, rhsName;
+			int auxPosition;
 			Signal *lhsSignal, *rhsSignal;
 
 			//copy the code from the beginning to this position directly to the new vhdl buffer
@@ -2468,21 +2469,128 @@ namespace flopoco{
 				lhsNameStart = workStr.find('?');
 				lhsNameStop  = workStr.find('?', lhsNameStart+2);
 				lhsName = workStr.substr(lhsNameStart+2, lhsNameStop-lhsNameStart-2);
+
+				auxPosition = lhsNameStop+2;
 			}else
 			{
 				lhsName = workStr.substr(0, workStr.find('?'));
 
 				//copy lhsName to the new vhdl buffer
 				newStr << lhsName;
+
+				auxPosition = lhsName.size()+2;
 			}
 			lhsNameLength = lhsName.size();
 
 			//check for component instances
 			//	the first parse marks the name of the component as a lhsName
-			//	must remove the markings and output the code normally
+			//	must remove the markings
+			//the rest of the code contains pairs of ??lhsName?? => $$rhsName$$ pairs
+			//	for which the helper signals must be removed and delays _dxxx must be added
 			if(workStr.find("port map") != string::npos)
 			{
-				newStr << workStr.substr(lhsNameLength+2, workStr.size());
+				//try to parse the names of the signals in the port mapping
+				if(workStr.find("?", workStr.find("port map")) == string::npos)
+				{
+					//empty port mapping
+					newStr << workStr.substr(auxPosition, workStr.size());
+				}
+				else
+				{
+					//parse a list of ??lhsName?? => $$rhsName$$
+					//	or ??lhsName?? => 'x' or ??lhsName?? => "xxxx"
+					int tmpCurrentPos, tmpNextPos;
+
+					//copy the code up to the port mappings
+					newStr << workStr.substr(auxPosition, workStr.find("?", workStr.find("port map"))-auxPosition);
+
+					tmpCurrentPos = workStr.find("?", workStr.find("port map"));
+					while(tmpCurrentPos != string::npos)
+					{
+						bool singleQuoteSep = false, doubleQuoteSep = false;
+
+						//extract a lhsName
+						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
+						lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
+
+						//copy lhsName to the new vhdl buffer
+						newStr << lhsName;
+
+						//copy the code up to the next rhsName to the new vhdl buffer
+						tmpCurrentPos = tmpNextPos+2;
+						tmpNextPos = workStr.find("$", tmpCurrentPos);
+
+						//check for constant as rhs name
+						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)
+						{
+							tmpNextPos = workStr.find("\'", tmpCurrentPos);
+							singleQuoteSep = true;
+						}else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)
+						{
+							tmpNextPos = workStr.find("\"", tmpCurrentPos);
+							doubleQuoteSep = true;
+						}
+
+						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+
+						//extract a rhsName
+						//	this might be a constant
+						if(singleQuoteSep)
+						{
+							//a 1-bit constant
+							tmpCurrentPos = tmpNextPos+1;
+							tmpNextPos = workStr.find("\'", tmpCurrentPos);
+						}else if(doubleQuoteSep)
+						{
+							//a multiple bit constant
+							tmpCurrentPos = tmpNextPos+1;
+							tmpNextPos = workStr.find("\"", tmpCurrentPos);
+						}else
+						{
+							//a regular signal name
+							tmpCurrentPos = tmpNextPos+2;
+							tmpNextPos = workStr.find("$", tmpCurrentPos);
+						}
+						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+
+						//copy rhsName to the new vhdl buffer
+						//	annotate it if necessary
+						if((lhsName != "clk") && (lhsName != "rst") && !(singleQuoteSep || doubleQuoteSep))
+						{
+							//obtain the rhs signal
+							rhsSignal = getSignalByName(rhsName);
+
+							//obtain the lhs signal, from the list of successors of the rhs signal
+							for(int i=0; i<rhsSignal->successors()->size(); i++)
+								if((rhsSignal->successor(i)->getName() == lhsName)
+										//the lhs signal must be the input of a subcomponent
+										&& (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
+								{
+									lhsSignal = rhsSignal->successor(i);
+									break;
+								}
+
+							newStr << rhsName;
+							if(getTarget()->isPipelined() && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
+								newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
+						} else
+						{
+							//this signal is clk, rst or a constant
+							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
+									<< rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+						}
+
+						//prepare to parse a new pair
+						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
+
+						//copy the rest of the code to the new vhdl buffer
+						if(tmpCurrentPos != string::npos)
+							newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep ? 1 : 2),
+									tmpCurrentPos-tmpNextPos-(singleQuoteSep||doubleQuoteSep ? 1 : 2));
+						else
+							newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep ? 1 : 2), workStr.size());
+					}
+				}
 
 				//prepare for a new instruction to be parsed
 				currentPos = nextPos + workStr.size() + 2;
@@ -2514,7 +2622,7 @@ namespace flopoco{
 			//	with signal_name select... etc
 			//	the problem is there is a signal belonging to the right hand side
 			//	on the left-hand side, before the left hand side signal, which breaks the regular flow
-			if(workStr.find("select") != string::npos)
+			if(workStr.find("select ") != string::npos)
 			{
 				//extract the first rhs signal name
 				tmpCurrentPos = 0;
@@ -2522,19 +2630,25 @@ namespace flopoco{
 
 				rhsName = workStr.substr(tmpCurrentPos, tmpNextPos);
 
+				//remove the possible parentheses around the rhsName
+				string newRhsName = rhsName;
+				if(rhsName.find("(") != string::npos)
+				{
+					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
+				}
 				//this could also be a delayed signal name
 				try{
-					rhsSignal = getSignalByName(rhsName);
-				}catch(string e){
+					rhsSignal = getSignalByName(newRhsName);
+				}catch(string &e){
 					try{
-						rhsSignal = getDelayedSignalByName(rhsName);
+						rhsSignal = getDelayedSignalByName(newRhsName);
 						//extract the name
-						rhsName = rhsName.substr(0, rhsName.find('^'));
+						rhsName = rhsName.substr(0, newRhsName.find('^'));
 					}catch(string e2){
-						THROWERROR("Error in parse2(): signal " << rhsName << " not found:" << e2);
+						THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
 					}
 				}catch(...){
-					THROWERROR("Error in parse2(): signal " << rhsName << " not found:");
+					THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
 				}
 
 				//output the rhs signal name
@@ -2596,20 +2710,26 @@ namespace flopoco{
 				//extract a new rhsName
 				rhsName = workStr.substr(tmpNextPos, workStr.find('$', tmpNextPos)-tmpNextPos);
 				rhsNameLength = rhsName.size();
+				//remove the possible parentheses around the rhsName
+				string newRhsName = rhsName;
+				if(rhsName.find("(") != string::npos)
+				{
+					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
+				}
 
 				//this could also be a delayed signal name
 				try{
-					rhsSignal = getSignalByName(rhsName);
-				}catch(string e){
+					rhsSignal = getSignalByName(newRhsName);
+				}catch(string &e){
 					try{
-						rhsSignal = getDelayedSignalByName(rhsName);
+						rhsSignal = getDelayedSignalByName(newRhsName);
 						//extract the name
-						rhsName = rhsName.substr(0, rhsName.find('^'));
+						rhsName = rhsName.substr(0, newRhsName.find('^'));
 					}catch(string e2){
-						THROWERROR("Error in parse2(): signal " << rhsName << " not found:" << e2);
+						THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
 					}
 				}catch(...){
-					THROWERROR("Error in parse2(): signal " << rhsName << " not found:");
+					THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
 				}
 
 				//copy the rhsName with the delay information into the new vhdl buffer
@@ -2812,7 +2932,8 @@ namespace flopoco{
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 		{
 			//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
-			if(targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName())
+			if((targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName()) &&
+					(targetSignal->predecessor(i)->type() == Signal::out))
 				continue;
 			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 		}
@@ -2858,8 +2979,20 @@ namespace flopoco{
 					//if we have to delay the input, the we need to reset
 					//	the critical path, as well
 					//else, there is nothing else to do
-					targetSignal->parentOp()->getIOListSignal(i)->setCycle(maxCycle);
-					targetSignal->parentOp()->getIOListSignal(i)->setCriticalPath(0.0);
+					Signal *inputSignal = targetSignal->parentOp()->getIOListSignal(i);
+
+					inputSignal->setCycle(maxCycle);
+					inputSignal->setCriticalPath(0.0);
+
+					//update the lifespan of inputSignal's predecessors
+					for(unsigned int i=0; i<inputSignal->predecessors()->size(); i++)
+					{
+						//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+						if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
+								(inputSignal->predecessor(i)->type() == Signal::out))
+							continue;
+						inputSignal->predecessor(i)->updateLifeSpan(inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
+					}
 				}
 
 			//start the scheduling of the parent operator of targetSignal

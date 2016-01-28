@@ -164,6 +164,11 @@ namespace flopoco{
 			string newRhsName;
 			int rhsDelay = 0;
 
+			//remove the possible parentheses around the rhsName
+			if(rhsName.find("(") != string::npos)
+			{
+				rhsName = rhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
+			}
 			//search for dependence edges where the right-hand side can be
 			//	a delayed signal. Delayed signals are of the form
 			//	ID_Name^cycle_delays

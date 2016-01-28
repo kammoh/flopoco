@@ -75,8 +75,8 @@ namespace flopoco{
 
 
 
-		vhdl << tab << declare("addCmpOp1",wE+wF+3) << "<= '0'  & excExpFracX;"<<endl;
-		vhdl << tab << declare("addCmpOp2",wE+wF+3) << "<= '1'  & not excExpFracY;"<<endl;
+		vhdl << tab << declare("addCmpOp1",wE+wF+3) << " <= '0'  & excExpFracX;"<<endl;
+		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
 		IntAdder *cmpAdder = new IntAdder(target, wE+wF+3);
 		inPortMap(cmpAdder, "X", "addCmpOp1");
 		inPortMap(cmpAdder, "Y", "addCmpOp2");
@@ -97,7 +97,8 @@ namespace flopoco{
 
 		string pmY="Y";
 		if ( sub ) {
-			vhdl << tab << declare("mY",wE+wF+3)   << " <= Y" << range(wE+wF+2,wE+wF+1) << " & not(Y"<<of(wE+wF)<<") & Y" << range(wE+wF-1,0) << ";"<<endl;
+			vhdl << tab << declare(target->localWireDelay() + target->lutDelay(), "mY", wE+wF+3)
+					<< " <= Y" << range(wE+wF+2,wE+wF+1) << " & not(Y"<<of(wE+wF)<<") & Y" << range(wE+wF-1,0) << ";"<<endl;
 			pmY = "mY";
 		}
 
@@ -247,7 +248,8 @@ namespace flopoco{
 		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
 											 "excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
-		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
+		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(), "signR2")
+				<< " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
 
 
 		// assign result
