@@ -2452,7 +2452,7 @@ namespace flopoco{
 		while(nextPos !=  string::npos)
 		{
 			string lhsName, rhsName;
-			int auxPosition;
+			int auxPosition, auxPosition2;
 			Signal *lhsSignal, *rhsSignal;
 
 			//copy the code from the beginning to this position directly to the new vhdl buffer
@@ -2487,10 +2487,11 @@ namespace flopoco{
 			//	must remove the markings
 			//the rest of the code contains pairs of ??lhsName?? => $$rhsName$$ pairs
 			//	for which the helper signals must be removed and delays _dxxx must be added
-			if(workStr.find("port map") != string::npos)
+			auxPosition2 = workStr.find("port map");
+			if(auxPosition2 != string::npos)
 			{
 				//try to parse the names of the signals in the port mapping
-				if(workStr.find("?", workStr.find("port map")) == string::npos)
+				if(workStr.find("?", auxPosition2) == string::npos)
 				{
 					//empty port mapping
 					newStr << workStr.substr(auxPosition, workStr.size());
@@ -2502,9 +2503,9 @@ namespace flopoco{
 					int tmpCurrentPos, tmpNextPos;
 
 					//copy the code up to the port mappings
-					newStr << workStr.substr(auxPosition, workStr.find("?", workStr.find("port map"))-auxPosition);
+					newStr << workStr.substr(auxPosition, workStr.find("?", auxPosition2)-auxPosition);
 
-					tmpCurrentPos = workStr.find("?", workStr.find("port map"));
+					tmpCurrentPos = workStr.find("?", auxPosition2);
 					while(tmpCurrentPos != string::npos)
 					{
 						bool singleQuoteSep = false, doubleQuoteSep = false;
@@ -2622,7 +2623,7 @@ namespace flopoco{
 			//	with signal_name select... etc
 			//	the problem is there is a signal belonging to the right hand side
 			//	on the left-hand side, before the left hand side signal, which breaks the regular flow
-			if(workStr.find("select ") != string::npos)
+			if(isSelectedAssignment == true)
 			{
 				//extract the first rhs signal name
 				tmpCurrentPos = 0;
