@@ -385,9 +385,20 @@ label					  ({identifier}{space_character}*":")
 	(*yyextra->os) << yytext;
 }
 
-\&|\'|\(|\)|"**"|\*|\+|\,|\-|\:|">="|\<|\>|=|\/=|"<>"|\||!|\.|\/ { 
+\&|\'|\(|\)|"**"|\*|\+|\-|\:|">="|\<|\>|=|\/=|"<>"|\||!|\.|\/ { 
 	(*yyextra->os) << yytext;
-}	
+}
+
+(\,) {
+	(*yyextra->os) << yytext;
+	
+	//if, while parsing a component instance, there is a constant signal connected to
+	//	the port, then just reinitialize the state count
+	if(yyextra->lexingMode == LexerContext::instance2)
+	{
+		yyextra->lexingMode = LexerContext::instance;
+	}
+}
 
 
 ({decimal_literal})|({base}#{based_integer}(\.{based_integer})?#({exponent})?)|({base}:{based_integer}(\.{based_integer})?:({exponent})?) {

@@ -2452,6 +2452,7 @@ namespace flopoco{
 		while(nextPos !=  string::npos)
 		{
 			string lhsName, rhsName;
+			int auxPosition;
 			Signal *lhsSignal, *rhsSignal;
 
 			//copy the code from the beginning to this position directly to the new vhdl buffer
@@ -2468,12 +2469,16 @@ namespace flopoco{
 				lhsNameStart = workStr.find('?');
 				lhsNameStop  = workStr.find('?', lhsNameStart+2);
 				lhsName = workStr.substr(lhsNameStart+2, lhsNameStop-lhsNameStart-2);
+
+				auxPosition = lhsNameStop+2;
 			}else
 			{
 				lhsName = workStr.substr(0, workStr.find('?'));
 
 				//copy lhsName to the new vhdl buffer
 				newStr << lhsName;
+
+				auxPosition = lhsName.size()+2;
 			}
 			lhsNameLength = lhsName.size();
 
@@ -2488,16 +2493,22 @@ namespace flopoco{
 				if(workStr.find("?", workStr.find("port map")) == string::npos)
 				{
 					//empty port mapping
-					newStr << workStr.substr(lhsNameLength+2, workStr.size());
+					newStr << workStr.substr(auxPosition, workStr.size());
 				}
 				else
 				{
 					//parse a list of ??lhsName?? => $$rhsName$$
+					//	or ??lhsName?? => 'x' or ??lhsName?? => "xxxx"
 					int tmpCurrentPos, tmpNextPos;
+
+					//copy the code up to the port mappings
+					newStr << workStr.substr(auxPosition, workStr.find("?", workStr.find("port map"))-auxPosition);
 
 					tmpCurrentPos = workStr.find("?", workStr.find("port map"));
 					while(tmpCurrentPos != string::npos)
 					{
+						bool singleQuoteSep = false, doubleQuoteSep = false;
+
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
 						lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
@@ -2508,25 +2519,76 @@ namespace flopoco{
 						//copy the code up to the next rhsName to the new vhdl buffer
 						tmpCurrentPos = tmpNextPos+2;
 						tmpNextPos = workStr.find("$", tmpCurrentPos);
+
+						//check for constant as rhs name
+						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)
+						{
+							tmpNextPos = workStr.find("\'", tmpCurrentPos);
+							singleQuoteSep = true;
+						}else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)
+						{
+							tmpNextPos = workStr.find("\"", tmpCurrentPos);
+							doubleQuoteSep = true;
+						}
+
 						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
 						//extract a rhsName
-						tmpCurrentPos = tmpNextPos+2;
-						tmpNextPos = workStr.find("$", tmpCurrentPos);
+						//	this might be a constant
+						if(singleQuoteSep)
+						{
+							//a 1-bit constant
+							tmpCurrentPos = tmpNextPos+1;
+							tmpNextPos = workStr.find("\'", tmpCurrentPos);
+						}else if(doubleQuoteSep)
+						{
+							//a multiple bit constant
+							tmpCurrentPos = tmpNextPos+1;
+							tmpNextPos = workStr.find("\"", tmpCurrentPos);
+						}else
+						{
+							//a regular signal name
+							tmpCurrentPos = tmpNextPos+2;
+							tmpNextPos = workStr.find("$", tmpCurrentPos);
+						}
 						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
 						//copy rhsName to the new vhdl buffer
 						//	annotate it if necessary
-						newStr << rhsName;
+						if((lhsName != "clk") && (lhsName != "rst") && !(singleQuoteSep || doubleQuoteSep))
+						{
+							//obtain the rhs signal
+							rhsSignal = getSignalByName(rhsName);
+
+							//obtain the lhs signal, from the list of successors of the rhs signal
+							for(int i=0; i<rhsSignal->successors()->size(); i++)
+								if((rhsSignal->successor(i)->getName() == lhsName)
+										//the lhs signal must be the input of a subcomponent
+										&& (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
+								{
+									lhsSignal = rhsSignal->successor(i);
+									break;
+								}
+
+							newStr << rhsName;
+							if(getTarget()->isPipelined() && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
+								newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
+						} else
+						{
+							//this signal is clk, rst or a constant
+							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
+									<< rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+						}
 
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
 
 						//copy the rest of the code to the new vhdl buffer
 						if(tmpCurrentPos != string::npos)
-							newStr << workStr.substr(tmpNextPos+2, tmpCurrentPos-tmpNextPos-2);
+							newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep ? 1 : 2),
+									tmpCurrentPos-tmpNextPos-(singleQuoteSep||doubleQuoteSep ? 1 : 2));
 						else
-							newStr << workStr.substr(tmpNextPos+2, workStr.size());
+							newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep ? 1 : 2), workStr.size());
 					}
 				}
 
