@@ -170,11 +170,7 @@ namespace flopoco{
 					 << tab << tab << tab << "(\"000\" & fX) + (\"0\" & fX & \"00\") when \"01\","<<endl  ////////////////[5/8, 3/4[*5/4 => [25/32, 15/16[
 			     << tab << tab << tab << "\"0\" & fX &\"00\" when others;"<<endl; /////////no prescaling
 
-			ostringstream wInit;
-			wInit << "w" << nDigit-1;
-			vhdl << tab << declare(wInit.str(), wF+6) << " <=  \"00\" & prescaledfX;" << endl; //TODO : review that
-
-
+			vhdl << tab << declare(join("w", nDigit-1), wF+6) << " <=  \"00\" & prescaledfX;" << endl; //TODO : review that, maybe MSB 0 to save
 
 			vector<mpz_class> tableContent = selFunctionTable(0.75, 1.0, 2, 5, 7, 8, 7, 4);
 			Table* selfunctiontable = new Table(target, tableContent,7,4);
@@ -198,40 +194,40 @@ namespace flopoco{
 
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
-				vhdl << tab << "with " << qi.str() << range(1,0) << " select " << endl;
-				vhdl << tab << declare(wim1fulla.str(), wF+7) << " <= " << endl;
-				vhdl << tab << tab << wipad.str() << " - (\"0000\" & prescaledfY)			when \"01\"," << endl;
-				vhdl << tab << tab << wipad.str() << " + (\"0000\" & prescaledfY)			when \"11\"," << endl;
-				vhdl << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")	  when \"10\"," << endl;
-				vhdl << tab << tab << wipad.str() << " 			   		  when others;" << endl;
+				vhdl << tab << "with " << qi.str() << range(1,0) << " select " << endl
+						 << tab << declare(target->adderDelay(wF+7), wim1fulla.str(), wF+7) << " <= " << endl
+						 << tab << tab << wipad.str() << " - (\"0000\" & prescaledfY)			when \"01\"," << endl
+						 << tab << tab << wipad.str() << " + (\"0000\" & prescaledfY)			when \"11\"," << endl
+						 << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")		when \"10\"," << endl
+						 << tab << tab << wipad.str() << "							when others;" << endl;
+				
 #if 0 // Splitting the following logic into two levels gives better synthesis results...
 				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl;
-				vhdl << tab << declare(wim1full.str(), wF+7) << " <= " << endl;
+				vhdl << tab << declare(target->adderDelay(wF+7), wim1full.str(), wF+7) << " <= " << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - (\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - (\"0\" & prescaledfY & \"000\")			when \"011\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " + (\"00\" & prescaledfY & \"00\")			when \"110\" | \"101\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " + (\"0\" & prescaledfY & \"000\")			when \"100\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " 			   		  when others;" << endl;
 #else
-				ostringstream fYdec;
-				fYdec << "fYdec" << i-1;	//
-				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl;
-				vhdl << tab << declare(fYdec.str(), wF+7) << " <= " << endl;
-				vhdl << tab << tab << "(\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl;
-				vhdl << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl;
-				vhdl << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
-
+				string fYdec =join("fYdec", i-1);	//
+				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl
+						 << tab << declare(target->lutDelay(), fYdec, wF+7) << " <= " << endl
+						 << tab << tab << "(\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl
+						 << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl
+						 << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
+				
 				vhdl << tab << "with " << qi.str() << of(3) << " select" << endl; // Remark here: seli(6)==qi(3) but it we get better results using the latter.
-				vhdl << tab << declare(wim1full.str(), wF+7) << " <= " << endl;
-				vhdl << tab << tab << wim1fulla.str() << " - " << fYdec.str() << "			when '0'," << endl;
-				vhdl << tab << tab << wim1fulla.str() << " + " << fYdec.str() << "			when others;" << endl;
+				vhdl << tab << declare(target->adderDelay(wF+7), wim1full.str(), wF+7) << " <= " << endl;
+				vhdl << tab << tab << wim1fulla.str() << " - " << fYdec << "			when '0'," << endl;
+				vhdl << tab << tab << wim1fulla.str() << " + " << fYdec << "			when others;" << endl;
 
 #endif
 				vhdl << tab << declare(wim1.str(),wF+6) << " <= " << wim1full.str()<<range(wF+3,0)<<" & \"00\";" << endl;
 			}
 
 
-			vhdl << tab << declare("q0",4) << "(3 downto 0) <= \"0000\" when  w0 = (" << wF+5 << " downto 0 => '0')" << endl;
+			vhdl << tab << declare(target->eqConstComparatorDelay(wF+3), "q0",4) << "(3 downto 0) <= \"0000\" when  w0 = (" << wF+5 << " downto 0 => '0')" << endl;
 			vhdl << tab << "             else w0(" << wF+5 << ") & \"010\";" << endl;
 
 			for(i=nDigit-1; i>=1; i--) {
@@ -256,12 +252,10 @@ namespace flopoco{
 				vhdl << " & qM" << i;
 			vhdl << " & \"0\";" << endl;
 
-			vhdl << tab << declare("fR0", 3*nDigit) << " <= qP - qM;" << endl;
-
-			nextCycle();///////////////////////////////////////////////////////////////////////
+			vhdl << tab << declare(target->adderDelay(3*nDigit), "fR0", 3*nDigit) << " <= qP - qM;" << endl;
 
 			//The last +3 in computing nDigit is for this part
-			vhdl << tab << declare("fR", wF+6) << " <= ";
+			vhdl << tab << declare(target->localWireDelay(wF+6) + target->lutDelay(), "fR", wF+6) << " <= ";
 			if (wF % 3 == 1) //2 extra bit
 				vhdl << "fR0(" << 3*nDigit-1 << " downto 3) & (fR0(0) or fR0(1) or fR0(2)); " << endl;
 
@@ -271,36 +265,19 @@ namespace flopoco{
 			else // 3 extra bit
 				vhdl << "fR0(" << 3*nDigit-1 << " downto 4) & (fR0(0) or fR0(1) or fR0(2) or fR0(3)); " << endl;
 
-
+#if 1 //  Should be pushed to common code but sizes are a mess
 			vhdl << tab << "-- normalisation" << endl;
 			vhdl << tab << "with fR(" << wF+4 << ") select" << endl;
 
-			vhdl << tab << tab << declare("fRn1", wF+4) << " <= fR(" << wF+4 << " downto 2) & (fR(0) or fR(1)) when '1'," << endl;
-			vhdl << tab << tab << "        fR(" << wF+3 << " downto 0)          when others;" << endl;
+			vhdl << tab << tab << declare(target->lutDelay(), "fRn1", wF+4)
+					 << " <= fR(" << wF+4 << " downto 2) & (fR(0) or fR(1)) when '1'," << endl
+					 << tab << tab << "        fR(" << wF+3 << " downto 0)          when others;" << endl;
+			vhdl << tab << declare(target->lutDelay(), "round") << " <= fRn1(2) and (fRn1(0) or fRn1(1) or fRn1(3)); -- fRn1(0) is the sticky bit" << endl;
 
-			vhdl << tab << declare("expR1", wE+2) << " <= expR0"
+			vhdl << tab << declare(target->adderDelay(wE+2), "expR1", wE+2) << " <= expR0"
 				 << " + (\"000\" & (" << wE-2 << " downto 1 => '1') & fR(" << wF+4 << ")); -- add back bias" << endl;
+#endif
 
-
-			vhdl << tab << declare("round") << " <= fRn1(2) and (fRn1(0) or fRn1(1) or fRn1(3)); -- fRn1(0) is the sticky bit" << endl;
-
-			nextCycle();///////////////////////////////////////////////////////////////////////
-			vhdl << tab << "-- final rounding" <<endl;
-			vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
-				 << "expR1 & fRn1(" << wF+2 << " downto 3) ;" << endl;
-			vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
-				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
-			vhdl << tab <<  declare("exnR", 2) << " <=      \"00\"  when expfracR(" << wE+wF+1 << ") = '1'   -- underflow" <<endl;
-			vhdl << tab << "        else \"10\"  when  expfracR(" << wE+wF+1 << " downto " << wE+wF << ") =  \"01\" -- overflow" <<endl;
-			vhdl << tab << "        else \"01\";      -- 00, normal case" <<endl;
-
-
-			vhdl << tab << "with exnR0 select" <<endl;
-			vhdl << tab << tab << declare("exnRfinal", 2) << " <= " <<endl;
-			vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
-			vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
-			vhdl << tab << "R <= exnRfinal & sR & "
-				 << "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
 			}
 
 
@@ -471,7 +448,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 			else
 				vhdl << "fR0(" << 2*nDigit-1 << " downto 3)  & (fR0(2) or fR0(1));  -- even wF, fixing the round bit" << endl;
 
-
+#if 1 // Should be pushed to common code but sizes are a mess
 			vhdl << tab << "-- normalisation" << endl;
 			vhdl << tab << "with fR(" << wF+3 << ") select" << endl;
 
@@ -482,26 +459,32 @@ selfunctiontable = new Table(target, tableContent,9,3);
 
 			vhdl << tab << declare(target->adderDelay(wE+2), "expR1", wE+2) << " <= expR0"
 				  << " + (\"000\" & (" << wE-2 << " downto 1 => '1') & fR(" << wF+3 << ")); -- add back bias" << endl;
+#endif
 
 
-			vhdl << tab << "-- final rounding" <<endl;
-			vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
-				 << "expR1 & fRn1(" << wF+1 << " downto 2) ;" << endl;
-			vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
-				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
-			vhdl << tab <<  declare(target->lutDelay(), "exnR", 2)
-					 << " <=      \"00\"  when expfracR(" << wE+wF+1 << ") = '1'   -- underflow" <<endl;
-			vhdl << tab << "        else \"10\"  when  expfracR(" << wE+wF+1 << " downto " << wE+wF << ") =  \"01\" -- overflow" <<endl;
-			vhdl << tab << "        else \"01\";      -- 00, normal case" <<endl;
-
-
-			vhdl << tab << "with exnR0 select" <<endl;
-			vhdl << tab << tab << declare(target->lutDelay(), "exnRfinal", 2) << " <= " <<endl;
-			vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
-			vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
-			vhdl << tab << "R <= exnRfinal & sR & "
-				 << "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
 		}
+
+
+		vhdl << tab << "-- final rounding" <<endl;
+		vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
+				 << "expR1 & fRn1(" <<(radix==4?wF+1:wF+2) << " downto " << (radix==4?2:3)<< ") ;" << endl;
+		
+		vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
+				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
+
+		vhdl << tab <<  declare(target->lutDelay(), "exnR", 2)
+				 << " <=      \"00\"  when expfracR(" << wE+wF+1 << ") = '1'   -- underflow" <<endl;
+		vhdl << tab << "        else \"10\"  when  expfracR(" << wE+wF+1 << " downto " << wE+wF << ") =  \"01\" -- overflow" <<endl;
+		vhdl << tab << "        else \"01\";      -- 00, normal case" <<endl;
+
+		// Normalisation is common to both radix 4 and radix 8
+		vhdl << tab << "with exnR0 select" <<endl;
+		vhdl << tab << tab << declare(target->lutDelay(), "exnRfinal", 2) << " <= " <<endl;
+		vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
+		vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
+		vhdl << tab << "R <= exnRfinal & sR & "
+				 << "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
+		
 	}
 
 	FPDiv::~FPDiv() {
