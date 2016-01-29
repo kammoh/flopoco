@@ -177,9 +177,11 @@ namespace flopoco{
 
 			for(i=nDigit-1; i>=1; i--) {
 
-				ostringstream wi, qi, wim1, seli, wipad, wim1full, wim1fulla, tInstance;
+				// TODO: get rid of all the ostringstream on the model of qi
+				string qi =join("q", i);						//actual quotient digit, LUT's output
+
+				ostringstream wi, wim1, seli, wipad, wim1full, wim1fulla, tInstance;
 				wi << "w" << i;						//actual partial remainder
-				qi << "q" << i;						//actual quotient digit, LUT's output
 				wim1 << "w" << i-1;					//partial remainder for the next iteration, = left shifted wim1full
 				seli << "sel" << i;					//constructed as the wi's first 4 digits and D's first, LUT's input
 				wipad << "w" << i << "pad";			//1-left-shifted wi
@@ -189,21 +191,22 @@ namespace flopoco{
 
 				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & prescaledfY"<< range(wF, wF-1) <<";" << endl;
 				inPortMap (selfunctiontable , "X", seli.str());
-				outPortMap(selfunctiontable , "Y", qi.str());
+				outPortMap(selfunctiontable , "Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str(), true);
 
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
-				vhdl << tab << "with " << qi.str() << range(1,0) << " select " << endl
-						 << tab << declare(target->adderDelay(wF+7), wim1fulla.str(), wF+7) << " <= " << endl
+				// qui has a fanout of(wF+7), which we add to both its uses 
+				vhdl << tab << "with " << qi << range(1,0) << " select " << endl
+						 << tab << declare(target->adderDelay(wF+7)+target->localWireDelay(2*(wF+7)), wim1fulla.str(), wF+7) << " <= " << endl
 						 << tab << tab << wipad.str() << " - (\"0000\" & prescaledfY)			when \"01\"," << endl
 						 << tab << tab << wipad.str() << " + (\"0000\" & prescaledfY)			when \"11\"," << endl
 						 << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")		when \"10\"," << endl
 						 << tab << tab << wipad.str() << "							when others;" << endl;
 				
 #if 0 // Splitting the following logic into two levels gives better synthesis results...
-				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl;
-				vhdl << tab << declare(target->adderDelay(wF+7), wim1full.str(), wF+7) << " <= " << endl;
+				vhdl << tab << "with " << qi << range(3,1) << " select " << endl;
+				vhdl << tab << declare(target->adderDelay(wF+7)+target->localWireDelay(2*(wF+7)), wim1full.str(), wF+7) << " <= " << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - (\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - (\"0\" & prescaledfY & \"000\")			when \"011\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " + (\"00\" & prescaledfY & \"00\")			when \"110\" | \"101\"," << endl;
@@ -211,13 +214,13 @@ namespace flopoco{
 				vhdl << tab << tab << wim1fulla.str() << " 			   		  when others;" << endl;
 #else
 				string fYdec =join("fYdec", i-1);	//
-				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl
-						 << tab << declare(target->lutDelay(), fYdec, wF+7) << " <= " << endl
+				vhdl << tab << "with " << qi << range(3,1) << " select " << endl
+						 << tab << declare(target->lutDelay()+target->localWireDelay(2*(wF+7)), fYdec, wF+7) << " <= " << endl
 						 << tab << tab << "(\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl
 						 << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl
 						 << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
 				
-				vhdl << tab << "with " << qi.str() << of(3) << " select" << endl; // Remark here: seli(6)==qi(3) but it we get better results using the latter.
+				vhdl << tab << "with " << qi << of(3) << " select" << endl; // Remark here: seli(6)==qi(3) but it we get better results using the latter.
 				vhdl << tab << declare(target->adderDelay(wF+7), wim1full.str(), wF+7) << " <= " << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - " << fYdec << "			when '0'," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " + " << fYdec << "			when others;" << endl;
@@ -231,12 +234,12 @@ namespace flopoco{
 			vhdl << tab << "             else w0(" << wF+5 << ") & \"010\";" << endl;
 
 			for(i=nDigit-1; i>=1; i--) {
-				ostringstream qi, qPi, qMi;
-				qi << "q" << i;
+				string qi =join("q", i);
+				ostringstream qPi, qMi;
 				qPi << "qP" << i;
 				qMi << "qM" << i;
-				vhdl << tab << declare(qPi.str(), 3) <<" <=      " << qi.str() << "(2 downto 0);" << endl;
-				vhdl << tab << declare(qMi.str(), 3)<<" <=      " << qi.str() << "(3) & \"00\";" << endl;
+				vhdl << tab << declare(qPi.str(), 3) <<" <=      " << qi << "(2 downto 0);" << endl;
+				vhdl << tab << declare(qMi.str(), 3)<<" <=      " << qi << "(3) & \"00\";" << endl;
 			}
 
 			vhdl << tab << declare("qP0", 3) << " <= q0(2 downto 0);" << endl;
@@ -319,9 +322,9 @@ selfunctiontable = new Table(target, tableContent,9,3);
 
 			for(i=nDigit-1; i>=1; i--) {
 
-				ostringstream wi, qi, wim1, seli, qiTimesD, wipad, wim1full, tInstance;
+				string qi =join( "q", i);						//actual quotient digit, LUT's output
+				ostringstream wi, wim1, seli, qiTimesD, wipad, wim1full, tInstance;
 				wi << "w" << i;						//actual partial remainder
-				qi << "q" << i;						//actual quotient digit, LUT's output
 				wim1 << "w" << i-1;					//partial remainder for the next iteration, = left shifted wim1full
 				seli << "sel" << i;					//constructed as the wi's first 4 digits and D's first, LUT's input
 				qiTimesD << "q" << i << "D";		//qi*D
@@ -350,7 +353,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 					//vhdl << tab << declare(seli.str(),10) << " <= " << wi.str() << range( wF+2, wF-4) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					
 				inPortMap (selfunctiontable , "X", seli.str());
-				outPortMap(selfunctiontable , "Y", qi.str());
+				outPortMap(selfunctiontable , "Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str(), true);
 				vhdl << endl;
 
@@ -358,7 +361,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 					// Two options for radix 4. More experiments are needed, the best is probably target-dependent 
 #if 1  // The following leads to higher frequency and higher resource usage: 
 					// For (8,23) on Virtex6 with ISE this gives 466Mhz, 1083 regs+ 1029 LUTs 
-					vhdl << tab << "with " << qi.str() << " select" << endl;
+					vhdl << tab << "with " << qi << " select" << endl;
 					vhdl << tab << tab << declare(target->localWireDelay(wF+4) + target->adderDelay(wF+4), qiTimesD.str(),wF+4)
 							 << " <= "<< endl 
 							 << tab << tab << tab << "\"000\" & fY						when \"001\" | \"111\"," << endl
@@ -368,13 +371,13 @@ selfunctiontable = new Table(target, tableContent,9,3);
 #else // Recompute 3Y locally to save the registers: the LUT is used anyway (wrong! on Virtex6 ISE finds a MUX) 
 					// For (8,23) on Virtex6 with ISE this gives 345Mhz, 856 regs+ 1051 LUTs 
 					// Note that this option probably scales worse if we pipeline this addition  
-					vhdl << tab << "with " << qi.str() << " select" << endl
+					vhdl << tab << "with " << qi << " select" << endl
 							 << tab << tab << declare(target->localWireDelay(wF+4) + target->lutDelay(), join("addendA",i),wF+4)
 							 << " <= " << endl 
 							 << tab << tab << tab << "\"000\" & fY            when \"001\" | \"111\" | \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')  when others;" << endl;
 
-					vhdl << tab << "with " << qi.str() << " select" << endl
+					vhdl << tab << "with " << qi << " select" << endl
 							 << tab << tab << declare(join("addendB",i),wF+4) << " <= "<< endl 
 							 << tab << tab << tab << "\"00\" & fY & \"0\"       when \"010\" | \"110\"| \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')  when others;" << endl;
@@ -384,7 +387,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 #endif				
 
 					vhdl << tab << declare(wipad.str(), wF+4) << " <= " << wi.str() << " & \"0\";" << endl;
-					vhdl << tab << "with " << qi.str() << "(2) select" << endl;
+					vhdl << tab << "with " << qi << "(2) select" << endl;
 					vhdl << tab << declare(target->adderDelay(wF+4), wim1full.str(), wF+4)
 							 << "<= " << wipad.str() << " - " << qiTimesD.str() << " when '0'," << endl
 							 << tab << "      " << wipad.str() << " + " << qiTimesD.str() << " when others;" << endl << endl;
@@ -392,7 +395,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 					vhdl << tab << declare(wim1.str(),wF+3) << " <= " << wim1full.str()<<range(wF+1,0)<<" & \"0\";" << endl;
 				} // end if alpha=3
 				else {
-					vhdl << tab << "with " << qi.str() << " select" << endl;
+					vhdl << tab << "with " << qi << " select" << endl;
 					// no delay for qiTimesD, it should be merged in the following addition
 					vhdl << tab << tab << declare(qiTimesD.str(),wF+4) << " <= "<< endl 
 							 << tab << tab << tab << "\"000\" & fY						 when \"001\" | \"111\"," << endl
@@ -401,7 +404,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 					
 					vhdl << tab << declare(wipad.str(), wF+4) << " <= " << wi.str() << " & \"0\";" << endl;
 
-					vhdl << tab << "with " << qi.str() << "(2) select" << endl
+					vhdl << tab << "with " << qi << "(2) select" << endl
 							 << tab << declare(target->adderDelay(wF+4), wim1full.str(), wF+4)
 							 << "<= " << wipad.str() << " - " << qiTimesD.str() << " when '0'," << endl
 							 << tab << "      " << wipad.str() << " + " << qiTimesD.str() << " when others;" << endl << endl;
@@ -416,12 +419,12 @@ selfunctiontable = new Table(target, tableContent,9,3);
 			vhdl << tab << "             else w0(" << wF+2 << ") & \"10\";" << endl;
 
 			for(i=nDigit-1; i>=1; i--) {
-				ostringstream qi, qPi, qMi;
-				qi << "q" << i;
+				ostringstream qPi, qMi;
+				string qi = join("q",i);
 				qPi << "qP" << i;
 				qMi << "qM" << i;
-				vhdl << tab << declare(qPi.str(), 2) <<" <=      " << qi.str() << "(1 downto 0);" << endl;
-				vhdl << tab << declare(qMi.str(), 2)<<" <=      " << qi.str() << "(2) & \"0\";" << endl;
+				vhdl << tab << declare(qPi.str(), 2) <<" <=      " << qi << "(1 downto 0);" << endl;
+				vhdl << tab << declare(qMi.str(), 2)<<" <=      " << qi << "(2) & \"0\";" << endl;
 			}
 
 			vhdl << tab << declare("qP0", 2) << " <= q0(1 downto 0);" << endl;
