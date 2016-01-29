@@ -71,7 +71,7 @@ namespace flopoco{
 		if(wOut<0){
 			THROWERROR("wOut="<<wOut<<"; Output size cannot be negative"<<endl);
 		}
-		setCopyrightString("Florent de Dinechin (2007-2012)");
+		setCopyrightString("Florent de Dinechin, Matei Istoan (2007-2016)");
 
 		// Set up the IO signals
 		addInput ("X"  , wIn, true);
@@ -210,7 +210,7 @@ namespace flopoco{
 		if(getTarget()->getID() == "Virtex6")
 			tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
 		else if(getTarget()->getID() == "Virtex5")
-			tableAttributes =  "attribute rom_extract: string;\nattribute rom_style: string;\nattribute rom_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
+			tableAttributes =  "attribute rom_extract: string;\nattribute rom_style: string;\nattribute rom_extract of Y0: signal is \"yes\";\nattribute rom_style of Y0: signal is ";
 		else
 			tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
 
