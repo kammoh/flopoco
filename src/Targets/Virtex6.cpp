@@ -46,20 +46,26 @@ namespace flopoco{
 
 	double Virtex6::localWireDelay(int fanout){
 		// TODO the values used here were found experimentally using Planahead 14.7
+		double delay;
+#if 1 // All this commented out by Florent to better match ISE critical path report
+		// Then plugged back in because it really depends.
 		if(fanout <= 16)
-			return  elemWireDelay_ + (double(fanout) * 0.063e-9);
+			delay =  elemWireDelay_ + (double(fanout) * 0.063e-9);
 		else if(fanout <= 32)
-			return  elemWireDelay_ + (double(fanout) * 0.035e-9);
+			delay =  elemWireDelay_ + (double(fanout) * 0.035e-9);
 		else if(fanout <= 64)
-			return  elemWireDelay_ + (double(fanout) * 0.030e-9);
+			delay =  elemWireDelay_ + (double(fanout) * 0.030e-9);
 		else if(fanout <= 128)
-			return  elemWireDelay_ + (double(fanout) * 0.017e-9);
+			delay =  elemWireDelay_ + (double(fanout) * 0.017e-9);
 		else if(fanout <= 256)
-			return  elemWireDelay_ + (double(fanout) * 0.007e-9);
+			delay =  elemWireDelay_ + (double(fanout) * 0.007e-9);
 		else if(fanout <= 512)
-			return  elemWireDelay_ + (double(fanout) * 0.004e-9);
+			delay =  elemWireDelay_ + (double(fanout) * 0.004e-9);
 		else
-			return  elemWireDelay_ + (double(fanout) * 0.002e-9);
+#endif
+			delay =  elemWireDelay_ + (double(fanout) * 0.002e-9);
+		//cout << "localWireDelay(" << fanout << ") estimated to "<< delay*1e9 << "ns" << endl;
+		return delay;
 	};
 
 	double Virtex6::distantWireDelay(int n){
