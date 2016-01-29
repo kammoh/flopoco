@@ -179,6 +179,7 @@ namespace flopoco{
 
 			vector<mpz_class> tableContent = selFunctionTable(0.75, 1.0, 2, 5, 7, 8, 7, 4);
 			Table* selfunctiontable = new Table(target, tableContent,7,4);
+			selfunctiontable->setShared();
 
 			for(i=nDigit-1; i>=1; i--) {
 
@@ -195,7 +196,7 @@ namespace flopoco{
 				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & fY"<< range(wF, wF-1) <<";" << endl;
 				inPortMap (selfunctiontable , "X", seli.str());
 				outPortMap(selfunctiontable , "Y", qi.str());
-				vhdl << instance(selfunctiontable , tInstance.str(), true);
+				vhdl << instance(selfunctiontable , tInstance.str());
 
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
@@ -350,10 +351,11 @@ namespace flopoco{
 			}
 			else if(alpha==2){
 				tableContent = selFunctionTable(0.5, 1.0, 3, 6, 2, 4, 9, 3);
-selfunctiontable = new Table(target, tableContent,9,3);
+				selfunctiontable = new Table(target, tableContent,9,3);
 			}
 			else THROWERROR("alpha="<< alpha << " is not an option");
 
+			selfunctiontable->setShared();
 
 			////////////////////// Main SRT loop, unrolled ///////////////////////
 
@@ -391,7 +393,7 @@ selfunctiontable = new Table(target, tableContent,9,3);
 					
 				inPortMap (selfunctiontable , "X", seli.str());
 				outPortMap(selfunctiontable , "Y", qi.str());
-				vhdl << instance(selfunctiontable , tInstance.str(), true);
+				vhdl << instance(selfunctiontable , tInstance.str());
 				vhdl << endl;
 
 				if(alpha==3) {

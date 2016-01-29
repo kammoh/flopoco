@@ -779,10 +779,9 @@ public:
 	 * Returns the VHDL for an instance of a sub-component.
 	 * @param op represents the operator to be port mapped
 	 * @param instanceName is the name of the instance as a label
-	 * @param isGlobalOperator if true, the call to instance will add the operator to the globalOpLits as well
 	 * @return name
 	 */
-	string instance(Operator* op, string instanceName, bool isGlobalOperator = false);
+	string instance(Operator* op, string instanceName);
 
 
 	/**
@@ -1409,6 +1408,18 @@ public:
 	void setIsOperatorScheduled(bool newValue);
 
 
+	/**
+	 * Set the operator to be fully flattened in the design
+	 * @return the new value of isUnique_
+	 */
+	bool setShared();
+
+	/**
+	 * Get the value of isUnique_
+	 */
+	bool isUnique();
+
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////Functions used for resource estimations
 
@@ -1893,6 +1904,9 @@ private:
 
 	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not */
 	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled */
+
+	bool                   isUnique_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
+	bool                   uniquenessSet_;                  /**< Ensure single access to isUnique_ */
 };
 
 
