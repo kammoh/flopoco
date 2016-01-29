@@ -123,6 +123,22 @@ namespace flopoco{
 		addFPOutput("R", wE, wF);
 			
 
+		vhdl << tab << declare("fX",wF+1) << " <= \"1\" & X(" << wF-1 << " downto 0);" << endl;
+		vhdl << tab << declare("fY",wF+1) << " <= \"1\" & Y(" << wF-1 << " downto 0);" << endl;
+
+		vhdl << tab << "-- exponent difference, sign and exception combination computed early, to have less bits to pipeline" << endl;
+
+		vhdl << tab << declare("expR0", wE+2) << " <= (\"00\" & X(" << wE+wF-1 << " downto " << wF << ")) - (\"00\" & Y(" << wE+wF-1 << " downto " << wF<< "));" << endl;
+		vhdl << tab << declare(target->lutDelay(), "sR") << " <= X(" << wE+wF << ") xor Y(" << wE+wF<< ");" << endl;
+		vhdl << tab << "-- early exception handling " <<endl;
+		vhdl << tab << declare("exnXY",4) << " <= X(" << wE+wF+2 << " downto " << wE+wF+1  << ") & Y(" << wE+wF+2 << " downto " << wE+wF+1 << ");" <<endl;
+		
+		vhdl << tab << "with exnXY select" <<endl
+				 << tab << tab << declare(target->lutDelay(),"exnR0", 2) << " <= " << endl
+				 << tab << tab << tab << "\"01\"	 when \"0101\",										-- normal" <<endl
+				 << tab << tab << tab << "\"00\"	 when \"0001\" | \"0010\" | \"0110\", -- zero" <<endl
+				 << tab << tab << tab << "\"10\"	 when \"0100\" | \"1000\" | \"1001\", -- overflow" <<endl
+				 << tab << tab << tab << "\"11\"	 when others;										-- NaN" <<endl;
 
 		
 		/*****************************RADIX 8 SRT **********************************************/
@@ -137,43 +153,26 @@ namespace flopoco{
 
 			nDigit = floor(((double)(wF + extraBit))/3);
 
-			vhdl << tab << declare("partialFX",wF+1) << " <= \"1\" & X(" << wF-1 << " downto 0);" << endl; //IEEE norm, the first 1 is implicit
-			vhdl << tab << declare("partialFY",wF+1) << " <= \"1\" & Y(" << wF-1 << " downto 0);" << endl;
-
-			vhdl << tab << "-- exponent difference, sign and exception combination computed early, to have less bits to pipeline" << endl;
-
-			vhdl << tab << declare("expR0", wE+2) << " <= (\"00\" & X(" << wE+wF-1 << " downto " << wF << ")) - (\"00\" & Y(" << wE+wF-1 << " downto " << wF<< "));" << endl;
-			vhdl << tab << declare("sR") << " <= X(" << wE+wF << ") xor Y(" << wE+wF<< ");" << endl;
-			vhdl << tab << "-- early exception handling " <<endl;
-			vhdl << tab << declare("exnXY",4) << " <= X(" << wE+wF+2 << " downto " << wE+wF+1  << ") & Y(" << wE+wF+2 << " downto " << wE+wF+1 << ");" <<endl;
-			vhdl << tab << "with exnXY select" <<endl;
-			vhdl << tab << tab << declare("exnR0", 2) << " <= " << endl;
-			vhdl << tab << tab << tab << "\"01\"  when \"0101\",                   -- normal" <<endl;
-			vhdl << tab << tab << tab << "\"00\"  when \"0001\" | \"0010\" | \"0110\", -- zero" <<endl;
-			vhdl << tab << tab << tab << "\"10\"  when \"0100\" | \"1000\" | \"1001\", -- overflow" <<endl;
-			vhdl << tab << tab << tab << "\"11\"  when others;                   -- NaN" <<endl;
-
-
 
 			/////////////////////////////////////////////////////////////////////////Prescaling
 			//TODO : maybe we can reduce fX and fY
 			vhdl << tab << " -- Prescaling" << endl;
-			vhdl << tab << "with partialFY " << range(wF-1, wF-2) << " select" << endl;
-			vhdl << tab << tab << declare(target->adderDelay(wF+3), "fY", wF+3)
+			vhdl << tab << "with fY " << range(wF-1, wF-2) << " select" << endl;
+			vhdl << tab << tab << declare(target->adderDelay(wF+3), "prescaledfY", wF+3)
 					 << " <= " << endl //potentially *5/4 => we need 2 more bits
-					 << tab << tab << tab << "(\"0\" & partialFY & \"0\") + (partialFY & \"00\") when \"00\","<<endl /////////[1/2, 5/8[ * 3/2 => [3/4, 15/16[
-					 << tab << tab << tab << "(\"00\" & partialFY) + (partialFY & \"00\") when \"01\","<<endl ////////////////[5/8, 3/4[ * 5/4 => [25/32, 15/16[
-					 << tab << tab << tab << "partialFY &\"00\" when others;"<<endl; /////////no prescaling
+					 << tab << tab << tab << "(\"0\" & fY & \"0\") + (fY & \"00\") when \"00\","<<endl /////////[1/2, 5/8[ * 3/2 => [3/4, 15/16[
+					 << tab << tab << tab << "(\"00\" & fY) + (fY & \"00\") when \"01\","<<endl ////////////////[5/8, 3/4[ * 5/4 => [25/32, 15/16[
+					 << tab << tab << tab << "fY &\"00\" when others;"<<endl; /////////no prescaling
 
-			vhdl << tab << "with partialFY " << range(wF-1, wF-2) << " select" << endl
-					 << tab << tab << declare(target->adderDelay(wF+4), "fX", wF+4) << " <= " << endl
-					 << tab << tab << tab << "(\"00\" & partialFX & \"0\") + (\"0\" & partialFX & \"00\") when \"00\","<<endl  /////////[1/2, 5/[*3/2 => [3/4, 15/16[
-					 << tab << tab << tab << "(\"000\" & partialFX) + (\"0\" & partialFX & \"00\") when \"01\","<<endl  ////////////////[5/8, 3/4[*5/4 => [25/32, 15/16[
-			     << tab << tab << tab << "\"0\" & partialFX &\"00\" when others;"<<endl; /////////no prescaling
+			vhdl << tab << "with fY " << range(wF-1, wF-2) << " select" << endl
+					 << tab << tab << declare(target->adderDelay(wF+4), "prescaledfX", wF+4) << " <= " << endl
+					 << tab << tab << tab << "(\"00\" & fX & \"0\") + (\"0\" & fX & \"00\") when \"00\","<<endl  /////////[1/2, 5/[*3/2 => [3/4, 15/16[
+					 << tab << tab << tab << "(\"000\" & fX) + (\"0\" & fX & \"00\") when \"01\","<<endl  ////////////////[5/8, 3/4[*5/4 => [25/32, 15/16[
+			     << tab << tab << tab << "\"0\" & fX &\"00\" when others;"<<endl; /////////no prescaling
 
 			ostringstream wInit;
 			wInit << "w" << nDigit-1;
-			vhdl << tab << declare(wInit.str(), wF+6) << " <=  \"00\" & fX;" << endl; //TODO : review that
+			vhdl << tab << declare(wInit.str(), wF+6) << " <=  \"00\" & prescaledfX;" << endl; //TODO : review that
 
 
 
@@ -192,7 +191,7 @@ namespace flopoco{
 				wim1fulla << "w" << i-1 << "fulla";	//partial remainder after this iteration, = wi+qi*D
 				tInstance << "SelFunctionTable" << i;
 
-				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & fY"<< range(wF, wF-1) <<";" << endl;
+				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & prescaledfY"<< range(wF, wF-1) <<";" << endl;
 				inPortMap (selfunctiontable , "X", seli.str());
 				outPortMap(selfunctiontable , "Y", qi.str());
 				vhdl << instance(selfunctiontable , tInstance.str(), true);
@@ -201,25 +200,25 @@ namespace flopoco{
 
 				vhdl << tab << "with " << qi.str() << range(1,0) << " select " << endl;
 				vhdl << tab << declare(wim1fulla.str(), wF+7) << " <= " << endl;
-				vhdl << tab << tab << wipad.str() << " - (\"0000\" & fY)			when \"01\"," << endl;
-				vhdl << tab << tab << wipad.str() << " + (\"0000\" & fY)			when \"11\"," << endl;
-				vhdl << tab << tab << wipad.str() << " + (\"000\" & fY & \"0\")	  when \"10\"," << endl;
+				vhdl << tab << tab << wipad.str() << " - (\"0000\" & prescaledfY)			when \"01\"," << endl;
+				vhdl << tab << tab << wipad.str() << " + (\"0000\" & prescaledfY)			when \"11\"," << endl;
+				vhdl << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")	  when \"10\"," << endl;
 				vhdl << tab << tab << wipad.str() << " 			   		  when others;" << endl;
 #if 0 // Splitting the following logic into two levels gives better synthesis results...
 				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl;
 				vhdl << tab << declare(wim1full.str(), wF+7) << " <= " << endl;
-				vhdl << tab << tab << wim1fulla.str() << " - (\"00\" & fY & \"00\")			when \"001\" | \"010\"," << endl;
-				vhdl << tab << tab << wim1fulla.str() << " - (\"0\" & fY & \"000\")			when \"011\"," << endl;
-				vhdl << tab << tab << wim1fulla.str() << " + (\"00\" & fY & \"00\")			when \"110\" | \"101\"," << endl;
-				vhdl << tab << tab << wim1fulla.str() << " + (\"0\" & fY & \"000\")			when \"100\"," << endl;
+				vhdl << tab << tab << wim1fulla.str() << " - (\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\"," << endl;
+				vhdl << tab << tab << wim1fulla.str() << " - (\"0\" & prescaledfY & \"000\")			when \"011\"," << endl;
+				vhdl << tab << tab << wim1fulla.str() << " + (\"00\" & prescaledfY & \"00\")			when \"110\" | \"101\"," << endl;
+				vhdl << tab << tab << wim1fulla.str() << " + (\"0\" & prescaledfY & \"000\")			when \"100\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " 			   		  when others;" << endl;
 #else
 				ostringstream fYdec;
 				fYdec << "fYdec" << i-1;	//
 				vhdl << tab << "with " << qi.str() << range(3,1) << " select " << endl;
 				vhdl << tab << declare(fYdec.str(), wF+7) << " <= " << endl;
-				vhdl << tab << tab << "(\"00\" & fY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl;
-				vhdl << tab << tab << "(\"0\" & fY & \"000\")			when \"011\"| \"100\"," << endl;
+				vhdl << tab << tab << "(\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl;
+				vhdl << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl;
 				vhdl << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
 
 				vhdl << tab << "with " << qi.str() << of(3) << " select" << endl; // Remark here: seli(6)==qi(3) but it we get better results using the latter.
@@ -316,22 +315,6 @@ namespace flopoco{
 			// -------- Parameter set up -----------------
 			nDigit = (wF+6) >> 1;
 
-			vhdl << tab << declare("fX",wF+1) << " <= \"1\" & X(" << wF-1 << " downto 0);" << endl;
-			vhdl << tab << declare("fY",wF+1) << " <= \"1\" & Y(" << wF-1 << " downto 0);" << endl;
-
-			vhdl << tab << "-- exponent difference, sign and exception combination computed early, to have less bits to pipeline" << endl;
-
-			vhdl << tab << declare("expR0", wE+2) << " <= (\"00\" & X(" << wE+wF-1 << " downto " << wF << ")) - (\"00\" & Y(" << wE+wF-1 << " downto " << wF<< "));" << endl;
-			vhdl << tab << declare(target->lutDelay(), "sR") << " <= X(" << wE+wF << ") xor Y(" << wE+wF<< ");" << endl;
-			vhdl << tab << "-- early exception handling " <<endl;
-			vhdl << tab << declare("exnXY",4) << " <= X(" << wE+wF+2 << " downto " << wE+wF+1  << ") & Y(" << wE+wF+2 << " downto " << wE+wF+1 << ");" <<endl;
-			
-			vhdl << tab << "with exnXY select" <<endl
-					 << tab << tab << declare(target->lutDelay(),"exnR0", 2) << " <= " << endl
-					 << tab << tab << tab << "\"01\"	 when \"0101\",										-- normal" <<endl
-					 << tab << tab << tab << "\"00\"	 when \"0001\" | \"0010\" | \"0110\", -- zero" <<endl
-					 << tab << tab << tab << "\"10\"	 when \"0100\" | \"1000\" | \"1001\", -- overflow" <<endl
-					 << tab << tab << tab << "\"11\"	 when others;										-- NaN" <<endl;
 			
 			vhdl << tab << " -- compute 3Y" << endl;
 
