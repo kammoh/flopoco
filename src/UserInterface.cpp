@@ -121,6 +121,7 @@ namespace flopoco
 			initialize();
 			buildAll(argc, argv);
 			schedule();
+			drawDotDiagram();
 			outputVHDL();
 			finalReport(cerr);
 			sollya_lib_close();
@@ -412,6 +413,14 @@ namespace flopoco
 		//start the second code parse
 		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 			UserInterface::globalOpList[i]->parseVHDL(2);
+		}
+	}
+
+
+	void UserInterface::drawDotDiagram() {
+		//start the drawing procedures
+		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
+			UserInterface::globalOpList[i]->drawDotDiagram();
 		}
 	}
 

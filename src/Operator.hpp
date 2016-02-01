@@ -1336,6 +1336,12 @@ public:
 	void setSignalTiming(Signal* targetSignal);
 
 
+	/**
+	 * Start drawing the dot diagram for this Operator
+	 */
+	void drawDotDiagram();
+
+
 	void setuid(int mm);
 
 	int getuid();
@@ -1832,6 +1838,9 @@ public:
 
 	FlopocoStream          vhdl;                            /**< The internal stream to which the constructor will build the VHDL code */
 	int                    numberOfTests;                   /**< The number of tests, set by TestBench before this operator is tested */
+
+
+	std::ostringstream dotDiagram;                          /**< The internal stream to which the drawing methods will output */
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////

@@ -50,6 +50,9 @@ namespace flopoco
 		/** starts the scheduling on the operators */
 		static void schedule();
 
+		/** starts the dot diagram plotter on the operators */
+		static void drawDotDiagram();
+
 		/** generates the code to the default file */
 		static void outputVHDL();
 
