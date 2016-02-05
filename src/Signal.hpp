@@ -359,6 +359,16 @@ class Operator;
 		 */
 		void setHasBeenImplemented(bool newVal);
 
+		/**
+		 * Return the value of hasBeenDrawn
+		 */
+		bool getHasBeenDrawn();
+
+		/**
+		 * Set the new value of hasBeenDrawn
+		 */
+		void setHasBeenDrawn(bool newVal);
+
 
 		/**
 		 * Set the number of possible output values.
@@ -413,6 +423,7 @@ class Operator;
 	    double        criticalPathContribution_; /**< the delay that the signal adds to the critical path */
 
 	    bool          hasBeenScheduled_;    /**< Has the signal already been scheduled? */
+	    bool          hasBeenDrawn_;    /**< Has the signal already been drawn? */
 
 		bool          isFP_;               /**< If the signal is of the FloPoCo floating-point type */
 		bool          isFix_;              /**< If the signal is of the FloPoCo fixed-point type */

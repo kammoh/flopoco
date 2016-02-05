@@ -3099,6 +3099,12 @@ namespace flopoco{
 	}
 
 
+	void drawDotDiagram()
+	{
+
+	}
+
+
 	void Operator::setuid(int mm){
 		myuid = mm;
 	}
