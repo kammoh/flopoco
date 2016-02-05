@@ -41,7 +41,7 @@ namespace flopoco{
 	
 	OperatorPtr Fix2DNorm::parseArguments(Target *target, vector<string> &args) {		
 		int msb,lsb, method;
-		UserInterface::parseInt(args, "msb", &lsb);
+		UserInterface::parseInt(args, "msb", &msb);
 		UserInterface::parseInt(args, "lsb", &lsb);
 		UserInterface::parseInt(args, "method", &method);
 		//select the method
