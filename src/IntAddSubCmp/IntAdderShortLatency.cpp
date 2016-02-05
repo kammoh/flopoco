@@ -108,6 +108,7 @@ namespace flopoco {
 
 						//for all chunks greater than zero we perform these additions
 						IntAdder *adder  = new IntAdder(target, cSize[j]+1, emptyDelayMap, optimizeType, srl);
+						adder->setShared();
 
 						a.str("");
 						a<< "Adder" << cSize[j]+1 << "Zero" << j;
@@ -117,7 +118,7 @@ namespace flopoco {
 						inPortMapCst(adder, "Cin", "'0'" );
 						outPortMap  (adder, "R", dnameZero.str());
 
-						vhdl << instance(adder, a.str(), true);
+						vhdl << instance(adder, a.str());
 
 						a.str("");
 						a << "Adder" << cSize[j]+1 << "One" << j;
@@ -127,7 +128,7 @@ namespace flopoco {
 						inPortMapCst(adder, "Cin", "'1'" );
 						outPortMap  (adder, "R", dnameOne.str());
 
-						vhdl << instance(adder, a.str(), true);
+						vhdl << instance(adder, a.str());
 					}else
 					{
 						vhdl << tab << "-- the carry resulting from the addition of the chunk + Cin is obtained directly" << endl;

@@ -61,6 +61,9 @@ namespace flopoco{
 		isOperatorImplemented_       = false;
 		isOperatorScheduled_         = false;
 
+		isUnique_ = true;
+		uniquenessSet_ = false;
+
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
@@ -1728,8 +1731,12 @@ namespace flopoco{
 	}
 
 
-	string Operator::instance(Operator* op, string instanceName, bool isGlobalOperator){
+	string Operator::instance(Operator* op, string instanceName){
 		ostringstream o;
+
+		//block the state of this operator's implementation to
+		//	the currently chose state: either fully flattened, or shared
+		op->uniquenessSet_ = true;
 
 		// TODO add more checks here
 
@@ -1825,7 +1832,7 @@ namespace flopoco{
 		//	to the operator list. If it isn't, then insert the copy, instead
 		bool newOpFirstAdd = true;
 
-		if(isGlobalOperator)
+		if(!op->isUnique())
 		{
 			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
 				if(UserInterface::globalOpList[i]->getName() == op->getName())
@@ -1839,7 +1846,7 @@ namespace flopoco{
 		//	either the operator, or a copy of the operator
 		Operator *opCpy;
 
-		if(isGlobalOperator)
+		if(!op->isUnique())
 		{
 			//create a new operator
 			Operator *newOp = new Operator(op->getTarget());
@@ -3510,6 +3517,24 @@ namespace flopoco{
 
 	void Operator::setIsOperatorScheduled(bool newValue){
 		isOperatorScheduled_ = newValue;
+	}
+
+
+	bool Operator::setShared(){
+		if(uniquenessSet_ == true)
+		{
+			THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
+		}else
+		{
+			isUnique_ = false;
+			uniquenessSet_ = true;
+
+			return isUnique_;
+		}
+	}
+
+	bool Operator::isUnique(){
+		return isUnique_;
 	}
 
 
