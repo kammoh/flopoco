@@ -3099,7 +3099,7 @@ namespace flopoco{
 	}
 
 
-	void drawDotDiagram()
+	void Operator::drawDotDiagram()
 	{
 
 	}
