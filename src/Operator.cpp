@@ -616,13 +616,13 @@ namespace flopoco{
 		o<<"--------------------------------------------------------------------------------"<<endl;
 	}
 
-
-
+	
 	void Operator::pipelineInfo(std::ostream& o){
 		if(isSequential())
 			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl <<endl;
 		else
-			o<<"-- combinatorial"  <<endl <<endl;
+			o << "-- combinatorial"  <<endl <<endl;
+		
 	}
 
 
@@ -2220,6 +2220,22 @@ namespace flopoco{
 	}
 
 
+	void Operator::outputClock_xdc(){
+		ofstream file; 
+		file.open("/tmp/clock.xdc", ios::out);
+		file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
+		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]" << endl;
+		for(auto i: ioList_) {
+			if(i->type()==Signal::in)
+				file << "set_input_delay ";
+			else // should be output
+				file << "set_ouput_delay ";
+			file <<	"-clock clk 0 [get_ports " << i->getName() << "]" << endl;
+		}
+		file.close();
+	}
+
+	
 	void Operator::buildStandardTestCases(TestCaseList* tcl) {
 		// Each operator should overload this method. If not, it is mostly harmless but deserves a warning.
 		cerr << "WARNING: No standard test cases implemented for this operator" << endl;

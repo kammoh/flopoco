@@ -951,6 +951,11 @@ public:
 	bool isSequential();
 
 
+	/** writes a clock.xdc file in /tmp, to be used by vivado_runsyn */
+	void outputClock_xdc();
+
+	
+
 	/**
 	 * Returns true if the operator needs a recirculation signal
 	 *  TODO : change name

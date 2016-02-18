@@ -212,6 +212,8 @@ namespace flopoco
 				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
 			}
 		}
+		oplist.back()->outputClock_xdc();
+
 	}
 
 
