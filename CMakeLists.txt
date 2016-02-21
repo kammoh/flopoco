@@ -215,6 +215,7 @@ ADD_LIBRARY(FloPoCoLib STATIC
  # Targets -----------------------------------------------------------
  src/Targets/DSP
  src/Target 
+ src/TargetModel
  
  src/Targets/Spartan3 
  src/Targets/Virtex4 

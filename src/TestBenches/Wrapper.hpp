@@ -36,7 +36,6 @@ namespace flopoco{
 		 */
 		static void registerFactory();
 
-
 	private:
 		Operator* op_; /**< The operator to wrap */
 	};
