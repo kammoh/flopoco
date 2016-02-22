@@ -654,7 +654,9 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "file", &file);
 		Operator* toWrap = UserInterface::globalOpList.back();
 		Operator* newOp = new TestBench(target, toWrap, n, file);
-
+		// the instance in newOp has added toWrap as a subcomponent of newOp,
+		// so we may remove it from globalOpList
+		UserInterface::globalOpList.pop_back(); 
 		return newOp;
 	}
 
