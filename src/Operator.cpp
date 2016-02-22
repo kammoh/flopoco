@@ -2608,19 +2608,19 @@ namespace flopoco{
 							    rhsSignal = NULL;
 							    unknownRHSName = true;
 
-							    //this might be an undeclared lhs name
+							    //rhs name not found, so no tests done on lhs either
 							    lhsSignal = NULL;
 							    unknownLHSName = true;
 							}
 
 							newStr << rhsName;
-							if(getTarget()->isPipelined() && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
-								newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
+							if(getTarget()->isPipelined() && !unknownLHSName && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
+							  newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
 						} else
 						{
 							//this signal is clk, rst or a constant
 							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
-									<< rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+							    << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
 						}
 
 						//prepare to parse a new pair
@@ -2659,7 +2659,16 @@ namespace flopoco{
 					count++;
 				lhsName = lhsName.substr(1, count-1);
 			}
-			lhsSignal = getSignalByName(lhsName);
+
+			//this could be a user-defined name
+			try
+			{
+			    lhsSignal = getSignalByName(lhsName);
+			}catch(string &e)
+			{
+			    lhsSignal = NULL;
+			    unknownLHSName = true;
+			}
 
 			//check for selected signal assignments
 			//	with signal_name select... etc
@@ -2688,15 +2697,21 @@ namespace flopoco{
 						//extract the name
 						rhsName = rhsName.substr(0, newRhsName.find('^'));
 					}catch(string e2){
-						THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
+					    //THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
+					    //this is a user-defined name
+					    rhsSignal = NULL;
+					    unknownRHSName = true;
 					}
 				}catch(...){
-					THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
+					//THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
+					//this is a user-defined name
+					rhsSignal = NULL;
+					unknownRHSName = true;
 				}
 
 				//output the rhs signal name
 				newStr << rhsName;
-				if(getTarget()->isPipelined() && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
+				if(getTarget()->isPipelined() && !unknownLHSName  && !unknownRHSName && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
 					newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
 
 				//copy the code up until the lhs signal name
@@ -2769,17 +2784,24 @@ namespace flopoco{
 						//extract the name
 						rhsName = rhsName.substr(0, newRhsName.find('^'));
 					}catch(string e2){
-						THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
+						//THROWERROR("Error in parse2(): signal " << newRhsName << " not found:" << e2);
+						//this is a user-defined name
+						rhsSignal = NULL;
+						unknownRHSName = true;
 					}
 				}catch(...){
-					THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
+				    //THROWERROR("Error in parse2(): signal " << newRhsName << " not found:");
+				    //this is a user-defined name
+				    rhsSignal = NULL;
+				    unknownRHSName = true;
 				}
 
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
-				cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle();
+				if(!unknownLHSName && !unknownRHSName)
+				  cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle();
 				newStr << rhsName;
-				if(getTarget()->isPipelined() && (cycleDelay>0))
+				if(getTarget()->isPipelined() && !unknownLHSName && !unknownRHSName && (cycleDelay>0))
 					newStr << "_d" << vhdlize(cycleDelay);
 
 				//find the next rhsName, if there is one
@@ -2819,13 +2841,33 @@ namespace flopoco{
 		{
 			Signal *lhs, *rhs;
 			int delay;
+			bool unknownLHSName = false, unknownRHSName = false;
 
-			lhs = getSignalByName(it->first);
-			rhs = getSignalByName(it->second);
+			try
+			{
+			    lhs = getSignalByName(it->first);
+			}catch(string &e)
+			{
+			    REPORT(INFO, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
+			    unknownLHSName = true;
+			}
+
+			try
+			{
+			    rhs = getSignalByName(it->second);
+			}catch(string &e)
+			{
+			    REPORT(INFO, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
+			    unknownRHSName = true;
+			}
+
 			delay = it->third;
 
-			addPredecessor(lhs, rhs, delay);
-			addSuccessor(rhs, lhs, delay);
+			if(!unknownLHSName && !unknownRHSName)
+			{
+			  addPredecessor(lhs, rhs, delay);
+			  addSuccessor(rhs, lhs, delay);
+			}
 		}
 
 		//start the parsing of the dependence table for the subcomponents
