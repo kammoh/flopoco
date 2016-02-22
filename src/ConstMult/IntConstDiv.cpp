@@ -109,7 +109,6 @@ namespace flopoco{
 		EuclideanDivTable* table;
 		table = new EuclideanDivTable(target, d, alpha, gamma);
 		useSoftRAM(table);
-		oplist.push_back(table);
 		double tableDelay=table->getOutputDelay("Y"); 
 
 		string ri, xi, ini, outi, qi;

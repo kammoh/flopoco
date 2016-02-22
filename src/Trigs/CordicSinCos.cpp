@@ -271,7 +271,6 @@ namespace flopoco{
 			nextCycle();
 			//multiply X by Pi
 			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0, inDelayMap("X",getCriticalPath()) ); 
-			oplist.push_back(piMultiplier);
 			
 			vhdl << tab << declare("FinalZ", sizeZ+1) << " <= " << join("D", stage)<< " & " << join("Z", stage) << ";" << endl;
 			inPortMap(piMultiplier, "X", "FinalZ");
@@ -292,7 +291,6 @@ namespace flopoco{
 			
 			//multiply with the angle X to obtain the actual values for sine and cosine
 			IntMultiplier* zmultiplier = new IntMultiplier(target, sizeZ, sizeZ, true); // signed
-			oplist.push_back(zmultiplier);
 			
 			inPortMap(zmultiplier, "X", "CosTrunc");
 			inPortMap(zmultiplier, "Y", "PiZ");

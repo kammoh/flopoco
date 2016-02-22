@@ -269,9 +269,7 @@ exit(1);
 int tp = target->isPipelined();
 target->setPipelined(false);
 IntComparator *compZero = new IntComparator(target, cSize[j], 2, false, 0);
-oplist.push_back(compZero);
 IntComparator *compOne = new IntComparator(target, cSize[j], 1, false, 0);
-oplist.push_back(compOne);
 
 if (tp) target->setPipelined();
 

@@ -85,6 +85,9 @@ public:
 	 */
 	void addSubComponent(Operator* op);
 
+	/** Retrieve a sub-operator by its name, NULL if not found */
+	OperatorPtr getSubComponent(string name);
+
 
 	/**
 	 * Add this operator to the global (first-level) list, which is stored in its Target (not really its place, sorry).
@@ -1206,8 +1209,6 @@ public:
 
 	map<string, string> getPortMap();
 
-	map<string, Operator*> getSubComponents();
-
 	string getSrcFileName();
 
 	int getOperatorCost();
@@ -1246,9 +1247,9 @@ public:
 
 	void setIndirectOperator(Operator* op);
 
-	vector<Operator*> getOpList();
+	vector<Operator*> getSubComponentList();
 
-	vector<Operator*>& getOpListR();
+	vector<Operator*>& getSubComponentListR();
 
 
 	bool hasComponent(string s);
@@ -1836,7 +1837,7 @@ public:
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
 	//disabled during the overhaul
-	map<string, Operator*> subComponents_;					/**< The list of instantiated sub-components */
+	vector<Operator*>     subComponentList_;					/**< The list of instantiated sub-components */
 	//vector<Instance*>      instances_;                      /**< The list of instances (with the corresponding port maps) */
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;                         /**< The list of I/O signals of the operator */
@@ -1884,7 +1885,6 @@ protected:
 	//map<string, int>     declareTable;                      /**< Table containing the name and declaration cycle of the signal */
 	int                  myuid;                             /**< Unique id>*/
 	int                  cost;                              /**< The cost of the operator depending on different metrics */
-	vector<Operator*>    oplist;                            /**< A list of all the sub-operators */
 
 
 private:

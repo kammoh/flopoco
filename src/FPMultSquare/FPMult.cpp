@@ -96,7 +96,6 @@ namespace flopoco{
 		                                                     false  /* roundCompensate*/);
 #endif
 
-		oplist.push_back(intmult_);
 
 		inPortMap( intmult_, "X", "sigX");
 		inPortMap( intmult_, "Y", "sigY");
@@ -183,7 +182,6 @@ namespace flopoco{
 					vhdl << tab << declare("round") << " <= '1' ;" << endl;
 				}
 				IntAdder* intadd_ = new IntAdder(target, 2 + wER_ + wFR_, inDelayMap("X", getCriticalPath() ));
-				oplist.push_back(intadd_);
 
 				inPortMap    (intadd_, "X",   "expSig");
 				inPortMapCst (intadd_, "Y",   zg(2 + wER_ + wFR_,0));

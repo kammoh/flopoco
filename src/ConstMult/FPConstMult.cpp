@@ -90,7 +90,6 @@ namespace flopoco{
 			if(!mantissa_is_one) {
 				// sub component
 				icm = new IntConstMult(target, wF_in+1, cstIntSig);
-				oplist.push_back(icm);
 			}
 
 		}
@@ -299,7 +298,6 @@ namespace flopoco{
 
 
 			icm = new IntConstMult(target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
-			oplist.push_back(icm);
 
 		}
 		
@@ -368,7 +366,6 @@ namespace flopoco{
 		
 		if(!constant_is_zero && !mantissa_is_one) {
 			icm = new IntConstMult(target, wF_in+1, cstIntSig);
-			oplist.push_back(icm);
 		}
 			
 		

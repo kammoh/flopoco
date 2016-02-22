@@ -195,9 +195,9 @@ namespace flopoco
 			try
 			{
 				// check for subcomponents
-				if(! i->getOpListR().empty() ){
+				if(! i->getSubComponentListR().empty() ){
 					//recursively call to print subcomponents
-					outputVHDLToFile(i->getOpListR(), file);
+					outputVHDLToFile(i->getSubComponentListR(), file);
 				}
 
 				//output the vhdl code to file
