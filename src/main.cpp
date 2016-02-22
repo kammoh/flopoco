@@ -113,7 +113,7 @@ int main(int argc, char* argv[] )
 		// hidden for now
 		// Fix2DNorm::registerFactory();
 
-
+		TargetModel::registerFactory();
 		// Uncomment me to play within FloPoCo operator development
 	  UserDefinedOperator::registerFactory();
 	}

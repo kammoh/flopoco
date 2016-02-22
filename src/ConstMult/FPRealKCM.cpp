@@ -90,7 +90,6 @@ namespace flopoco{
 					-wF+iExp-1, 
 					constant
 				);
-		oplist.push_back(frkcm);
 
 		inPortMap(frkcm, "X", "fracX");
 		outPortMap(frkcm, "R", "fracMultRes");

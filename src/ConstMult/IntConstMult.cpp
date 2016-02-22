@@ -247,7 +247,6 @@ namespace flopoco{
 								use_pipelined_adder=true;
 								adder = new IntAdder(getTarget(), adder_size);
 								adder->changeName(getName() + "_" + sao->name + "_adder");
-								oplist.push_back(adder);
 
 								partial_delay =  (adder->getOutDelayMap())["R"]; //  getTarget()->adderDelay(adder->getLastChunkSize());
 							}

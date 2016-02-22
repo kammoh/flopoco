@@ -101,9 +101,18 @@ namespace flopoco{
 
 
 	void Operator::addSubComponent(OperatorPtr op) {
-		oplist.push_back(op);
+		subComponentList_.push_back(op);
 
 		REPORT(0, "WARNING: function addSubComponent() is deprecated! It seems it is still used for " << op->getName());
+	}
+
+
+	OperatorPtr Operator::getSubComponent(string name){
+		for (auto op: subComponentList_) {
+			if (op->getName()==name)
+				return op;
+		}
+		return NULL;
 	}
 
 
@@ -616,13 +625,13 @@ namespace flopoco{
 		o<<"--------------------------------------------------------------------------------"<<endl;
 	}
 
-
-
+	
 	void Operator::pipelineInfo(std::ostream& o){
 		if(isSequential())
 			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl <<endl;
 		else
-			o<<"-- combinatorial"  <<endl <<endl;
+			o << "-- combinatorial"  <<endl <<endl;
+		
 	}
 
 
@@ -740,17 +749,17 @@ namespace flopoco{
 
 		if (getIndirectOperator()!=NULL){
 			// interface operator
-			if(getOpList().size()!=1){
+			if(getSubComponentList().size()!=1){
 				ostringstream o;
-				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getOpList().size() << "children";
+				o << "!?! Operator " << getUniqueName() << " is an interface operator with " << getSubComponentList().size() << "children";
 				throw o.str();
 			}
-			getOpList()[0]->outputFinalReport(s, level);
+			getSubComponentList()[0]->outputFinalReport(s, level);
 		}else
 		{
 			// Hard operator
-			if (! getOpList().empty())
-				for (auto i: getOpList())
+			if (! getSubComponentList().empty())
+				for (auto i: getSubComponentList())
 					i->outputFinalReport(s, level+1);
 
 			ostringstream tabs, ctabs;
@@ -1905,8 +1914,7 @@ namespace flopoco{
 		}
 
 		//add the operator to the subcomponent list/map
-		oplist.push_back(opCpy);
-		subComponents_[instanceName] = opCpy;
+		subComponentList_.push_back(opCpy);
 
 		//clear the port mappings
 		tmpInPortMap_.clear();
@@ -1993,11 +2001,11 @@ namespace flopoco{
 	string Operator::buildVHDLComponentDeclarations() {
 		ostringstream o;
 
-		for(unsigned int i=0; i<oplist.size(); i++)
+		for(unsigned int i=0; i<subComponentList_.size(); i++)
 		{
 			//if this is a global operator, then it should be output only once,
 			//	and with the name of the global copy, not that of the local copy
-			string componentName = oplist[i]->getName();
+			string componentName = subComponentList_[i]->getName();
 
 			if(componentName.find("_cpy_") != string::npos)
 			{
@@ -2007,7 +2015,7 @@ namespace flopoco{
 				componentName = componentName.substr(0, componentName.find("_cpy_"));
 
 				for(unsigned int j=0; j<i; j++)
-					if(oplist[j]->getName().find(componentName) != string::npos)
+					if(subComponentList_[j]->getName().find(componentName) != string::npos)
 					{
 						isComponentOutput = true;
 						break;
@@ -2016,13 +2024,13 @@ namespace flopoco{
 					continue;
 				else
 				{
-					oplist[i]->outputVHDLComponent(o, componentName);
+					subComponentList_[i]->outputVHDLComponent(o, componentName);
 					o << endl;
 				}
 			}else
 			{
 				//just a regular subcomponent
-				oplist[i]->outputVHDLComponent(o, componentName);
+				subComponentList_[i]->outputVHDLComponent(o, componentName);
 				o << endl;
 			}
 		}
@@ -2220,6 +2228,22 @@ namespace flopoco{
 	}
 
 
+	void Operator::outputClock_xdc(){
+		ofstream file; 
+		file.open("/tmp/clock.xdc", ios::out);
+		file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
+		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]" << endl;
+		for(auto i: ioList_) {
+			if(i->type()==Signal::in)
+				file << "set_input_delay ";
+			else // should be output
+				file << "set_output_delay ";
+			file <<	"-clock clk 0 [get_ports " << i->getName() << "]" << endl;
+		}
+		file.close();
+	}
+
+	
 	void Operator::buildStandardTestCases(TestCaseList* tcl) {
 		// Each operator should overload this method. If not, it is mostly harmless but deserves a warning.
 		cerr << "WARNING: No standard test cases implemented for this operator" << endl;
@@ -2322,9 +2346,6 @@ namespace flopoco{
 		return tmpMap;
 	}
 
-	map<string, Operator*> Operator::getSubComponents(){
-		return subComponents_;
-	}
 
 	string Operator::getSrcFileName(){
 		return srcFileName;
@@ -2398,12 +2419,12 @@ namespace flopoco{
 		return indirectOperator_;
 	}
 
-	vector<Operator*> Operator::getOpList(){
-		return oplist;
+	vector<Operator*> Operator::getSubComponentList(){
+		return subComponentList_;
 	}
 
-	vector<Operator*>& Operator::getOpListR(){
-		return oplist;
+	vector<Operator*>& Operator::getSubComponentListR(){
+		return subComponentList_;
 	}
 
 	FlopocoStream* Operator::getFlopocoVHDLStream(){
@@ -2808,9 +2829,9 @@ namespace flopoco{
 		}
 
 		//start the parsing of the dependence table for the subcomponents
-		for(unsigned int i=0; i<oplist.size(); i++)
+		for(unsigned int i=0; i<subComponentList_.size(); i++)
 		{
-			oplist[i]->extractSignalDependences();
+			subComponentList_[i]->extractSignalDependences();
 		}
 	}
 
@@ -3141,17 +3162,15 @@ namespace flopoco{
 			op->setName(getName());//accordingly set the name of the implementation
 
 			signalList_ = op->signalList_;
-			//disabled during the overhaul
-			//subComponents_ = op->subComponents_;
-			oplist = op->oplist;
+			subComponentList_ = op->subComponentList_;
 			ioList_ = op->ioList_;
 		 }
 	}
 
 	void Operator::cleanup(vector<Operator*> *ol, Operator* op){
 		//iterate through all the components of op
-		for(unsigned int it=0; it<op->oplist.size(); it++)
-			cleanup(ol, oplist[it]);
+		for(unsigned int it=0; it<op->subComponentList_.size(); it++)
+			cleanup(ol, subComponentList_[it]);
 
 		for(unsigned j=0; j<(*ol).size(); j++){
 			if((*ol)[j]->myuid == op->myuid){
@@ -3219,7 +3238,7 @@ namespace flopoco{
 	}
 
 	bool Operator::hasComponent(string s){
-		return (subComponents_.find(s) != subComponents_.end());
+		return (getSubComponent(s) != NULL);
 	}
 
 	void Operator::addComment(string comment, string align){
@@ -3237,7 +3256,7 @@ namespace flopoco{
 
 	//Completely replace "this" with a copy of another operator.
 	void  Operator::cloneOperator(Operator *op){
-		subComponents_              = op->getSubComponents();
+		subComponentList_              = op->getSubComponentList();
 		//instances_                  = op->getInstances();
 		signalList_                 = op->getSignalList();
 		ioList_                     = op->getIOListV();
@@ -3269,7 +3288,7 @@ namespace flopoco{
 		//disabled during the overhaul
 		//declareTable = op->getDeclareTable();
 		cost                        = op->getOperatorCost();
-		oplist                      = op->getOpList();
+		subComponentList_           = op->getSubComponentList();
 		stdLibType_                 = op->getStdLibType();
 		numberOfInputs_             = op->getNumberOfInputs();
 		numberOfOutputs_            = op->getNumberOfOutputs();
@@ -3365,16 +3384,16 @@ namespace flopoco{
 
 		//create deep copies of the subcomponents
 		vector<Operator*> newOpList;
-		for(unsigned int i=0; i<op->getOpList().size(); i++)
+		for(unsigned int i=0; i<op->getSubComponentList().size(); i++)
 		{
-			Operator* tmpOp = new Operator(op->getOpList()[i]->getTarget());
+			Operator* tmpOp = new Operator(op->getSubComponentList()[i]->getTarget());
 
-			tmpOp->deepCloneOperator(op->getOpList()[i]);
+			tmpOp->deepCloneOperator(op->getSubComponentList()[i]);
 			//add the new subcomponent to the subcomponent list
 			newOpList.push_back(tmpOp);
 		}
-		oplist.clear();
-		oplist = newOpList;
+		subComponentList_.clear();
+		subComponentList_ = newOpList;
 
 		//recreate the signal dependences, for each of the signals
 		for(unsigned int i=0; i<signalList_.size(); i++)
@@ -3448,15 +3467,15 @@ namespace flopoco{
 		//	or, they may not need to be set at all (e.g. when you just copy an operator)
 
 		//connect the inputs and outputs of the subcomponents to the corresponding signals
-		for(unsigned int i=0; i<oplist.size(); i++)
+		for(unsigned int i=0; i<subComponentList_.size(); i++)
 		{
-			Operator *currentOp = oplist[i], *originalOp;
+			Operator *currentOp = subComponentList_[i], *originalOp;
 
 			//look for the original operator
-			for(unsigned int j=0; j<op->getOpList().size(); j++)
-				if(currentOp->getName() == op->getOpList()[j]->getName())
+			for(unsigned int j=0; j<op->getSubComponentList().size(); j++)
+				if(currentOp->getName() == op->getSubComponentList()[j]->getName())
 				{
-					originalOp = op->getOpList()[j];
+					originalOp = op->getSubComponentList()[j];
 					break;
 				}
 
@@ -3515,9 +3534,9 @@ namespace flopoco{
 		//	replace the references in the instances to references to
 		//	the newly created deep copies
 		//the port maps for the instances do not need to be modified
-		subComponents_.clear();
-		for(unsigned int i=0; i<oplist.size(); i++)
-			subComponents_[oplist[i]->getName()] = oplist[i];
+		subComponentList_.clear();
+		for(unsigned int i=0; i<subComponentList_.size(); i++)
+			subComponentList_.push_back(subComponentList_[i]);
 
 	}
 
@@ -3575,9 +3594,9 @@ namespace flopoco{
 		}
 
 		//trigger the first code parse for the operator's subcomponents
-		for(vector<Operator*>::iterator it=oplist.begin(); it!=oplist.end(); it++)
+		for(auto it: subComponentList_)
 		{
-			(*it)->parseVHDL(parseType);
+			it->parseVHDL(parseType);
 		}
 	}
 
@@ -3586,24 +3605,24 @@ namespace flopoco{
 	{
 		string srcFileName = "Operator.cpp"; // for REPORT
 
-		for(vector<Operator*>::iterator it=oplist.begin(); it!=oplist.end(); it++)
+		for(auto it: oplist)
 		{
 			try {
 				// check for subcomponents
-				if(! (*it)->getOpListR().empty() ){
+				if(! it->getSubComponentListR().empty() ){
 					//recursively call to print subcomponents
-					outputVHDLToFile((*it)->getOpListR(), file);
+					outputVHDLToFile(it->getSubComponentListR(), file);
 				}
 
 				//output the vhdl code to file
 				//	for global operators, this is done only once
-				if(!(*it)->isOperatorImplemented())
+				if(!it->isOperatorImplemented())
 				{
-					(*it)->outputVHDL(file);
-					(*it)->setIsOperatorImplemented(true);
+					it->outputVHDL(file);
+					it->setIsOperatorImplemented(true);
 				}
 			} catch (std::string &s) {
-					cerr << "Exception while generating '" << (*it)->getName() << "': " << s << endl;
+					cerr << "Exception while generating '" << it->getName() << "': " << s << endl;
 			}
 		}
 	}
@@ -3617,7 +3636,7 @@ namespace flopoco{
 
 		REPORT(DEBUG, "Entering outputVHDLToFile");
 
-		//build a copy of the global oplist hidden in Target (if it exists):
+		//build a copy of the global oplist hidden in UserInterface (if it exists):
 		for (unsigned i=0; i<UserInterface::globalOpList.size(); i++)
 			oplist.push_back(UserInterface::globalOpList[i]);
 		// add self (and all its subcomponents) to this list
@@ -3628,7 +3647,7 @@ namespace flopoco{
 #endif
 
 
-
+	// FIXME: get rid of this somewhere else
 	float Operator::pickRandomNum ( float limit, int fp, int sp )
 	{
 		static boost::mt19937 rng;

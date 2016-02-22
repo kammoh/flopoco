@@ -80,7 +80,6 @@ namespace flopoco{
 		{
 			KCMTable  *lastTable=0;
 			lastTable = new KCMTable(target, wIn_, constantWidth + wIn_, C, signedInput_);
-			oplist.push_back(lastTable);
 			useSoftRAM(lastTable);
 
 			// pipeline depth of a Table, so far, is always 0, but the table is well behaved and updates the critical path.
@@ -101,11 +100,9 @@ namespace flopoco{
 			KCMTable *firstTable=0, *lastTable=0;
 
 			firstTable = new KCMTable(target, lutWidth, constantWidth + lutWidth, C, false);
-			oplist.push_back(firstTable);
 			useSoftRAM(firstTable);
 
 			lastTable = new KCMTable(target, lastLutWidth, constantWidth + lastLutWidth, C, signedInput_);
-			oplist.push_back(lastTable);
 			useSoftRAM(lastTable);
 
 			// Critical path among the tables is through the last one, which may be larger

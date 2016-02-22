@@ -93,11 +93,32 @@ ELSE (MPFR_FOUND)
     MESSAGE(FATAL_ERROR "Could not find MPFR.\nOn Debian-based systems type: 'sudo apt-get install libmpfr-dev'")
 ENDIF (MPFR_FOUND)
 
+
+FIND_PATH(WCPG_H
+	  wcpg.h
+	  DOC "Path of wcpg.h, the include file for GNU MPFR library"
+		)
+
+FIND_LIBRARY(WCPG_LIB
+	NAMES wcpg
+	DOC "Directory of the WCPG library"
+	)
+
+IF (WCPG_H AND WCPG_LIB)
+    SET(WCPG_FOUND TRUE)
+ENDIF (WCPG_H AND WCPG_LIB)
+
+IF ( WCPG_FOUND )
+	MESSAGE ( STATUS "Found WCPG : ${WCPG_H} ${WCPG_LIB}" )
+  ADD_DEFINITIONS(-DHAVE_WCPG)
+ELSE ( WCPG_FOUND )
+	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator" )
+ENDIF ( WCPG_FOUND )
+
+
 ADD_DEFINITIONS(-DHAVE_LNS)
 
-# Create target for the lexer
- ADD_CUSTOM_TARGET(VHDLLexer echo "Creating VHDLLexer.c VHDLLexer.h")
-
+#
 # Create custom command for flex++/lex (note the outputs)
 FIND_PROGRAM(FLEXPP_EXECUTABLE
 	NAMES flex
@@ -114,14 +135,14 @@ ENDIF(FLEXPP_EXECUTABLE)
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions)
 
 ADD_CUSTOM_COMMAND(
-	SOURCE src/VHDLLexerRule.l
+	OUTPUT VHDLLexer.cpp
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
 	COMMAND ${FLEXPP_EXECUTABLE} 
 	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-	TARGET VHDLLexer
-	OUTPUTS VHDLLexer.cpp VHDLLexer.hpp)
+		)
 
-SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
+#SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
 
 
 # Create custom command for bison/yacc (note the outputs)
@@ -137,12 +158,11 @@ ELSE(BISON_EXECUTABLE)
 ENDIF(BISON_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	SOURCE src/FPExpressions/ExpressionParser.y
+	OUTPUT ExpressionParser.cpp
 	COMMAND ${BISON_EXECUTABLE}
 	ARGS -y -d --defines=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.h --output=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.cpp --name-prefix=FlopocoExpression
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
-	TARGET ExpressionParser
-	OUTPUTS ExpressionParser.cpp)
+)
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED) 
 
@@ -159,12 +179,11 @@ ELSE(FLEX_EXECUTABLE)
 ENDIF(FLEX_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	SOURCE src/FPExpressions/ExpressionScanner.l
+	OUTPUT ExpressionScanner.cpp
 	COMMAND ${FLEX_EXECUTABLE} 
 	ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
     ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
-	TARGET ExpressionScanner
-	OUTPUTS ExpressionScanner.cpp)
+	)
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
@@ -175,14 +194,14 @@ ADD_LIBRARY(FloPoCoLib STATIC
 #               FRAMEWORK
 #--------------------------------------------------------------------
 
- src/FloPoCo.hpp
+# src/FloPoCo.hpp
  src/Operator
  src/UserInterface
  src/Signal
  src/utils
  src/FlopocoStream
  src/TestState
- VHDLLexer
+ VHDLLexer # generated from .l
  
  src/Instance
  
@@ -195,6 +214,7 @@ ADD_LIBRARY(FloPoCoLib STATIC
  # Targets -----------------------------------------------------------
  src/Targets/DSP
  src/Target 
+ src/TargetModel
  
  src/Targets/Spartan3 
  src/Targets/Virtex4 
@@ -377,18 +397,17 @@ src/ExpLog/FPPow
 src/UserDefinedOperator
 )
 
-IF (SOLLYA_LIB)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib
-  mpfr gmp gmpxx xml2 mpfi ${SOLLYA_LIB}
-  )
-ELSE (SOLLYA_LIB)
 TARGET_LINK_LIBRARIES(
   FloPoCoLib 
   mpfr gmp gmpxx xml2 mpfi
   )
+
+IF (SOLLYA_LIB)
+TARGET_LINK_LIBRARIES(
+  FloPoCoLib
+  ${SOLLYA_LIB}
+	)
 ENDIF (SOLLYA_LIB)
-SET(FLOPOCO_LIB FloPoCoLib)
 
 IF (PYTHON_LIB)
 TARGET_LINK_LIBRARIES(
@@ -396,15 +415,22 @@ TARGET_LINK_LIBRARIES(
   ${PYTHON_LIB}
   )
 ENDIF (PYTHON_LIB)
-SET (FLOPOCO_LIB FloPoCoLib)
+
+IF (WCPG_FOUND)
+TARGET_LINK_LIBRARIES(
+  FloPoCoLib
+  ${WCPG_LIB}
+  )
+ENDIF (WCPG_FOUND)
+
 
 ADD_EXECUTABLE(flopoco
  src/main 
 )
-
+ 
 TARGET_LINK_LIBRARIES(
   flopoco  
-	${FLOPOCO_LIB}
+	FloPoCoLib 
   )
 
 # unplugged for now to speed up compilation, to revive some day
