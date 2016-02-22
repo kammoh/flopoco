@@ -2439,6 +2439,7 @@ namespace flopoco{
 		string oldStr, workStr;
 		size_t currentPos, nextPos, tmpCurrentPos, tmpNextPos;
 		int count, lhsNameLength, rhsNameLength;
+		bool unknownLHSName = false, unknownRHSName = false;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
 
@@ -2566,17 +2567,30 @@ namespace flopoco{
 						if((lhsName != "clk") && (lhsName != "rst") && !(singleQuoteSep || doubleQuoteSep))
 						{
 							//obtain the rhs signal
-							rhsSignal = getSignalByName(rhsName);
+							//	this might be an undeclared name (e.g. library function, constant etc.)
+							try
+							{
+							    rhsSignal = getSignalByName(rhsName);
 
-							//obtain the lhs signal, from the list of successors of the rhs signal
-							for(int i=0; i<rhsSignal->successors()->size(); i++)
-								if((rhsSignal->successor(i)->getName() == lhsName)
-										//the lhs signal must be the input of a subcomponent
-										&& (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
+							    //obtain the lhs signal, from the list of successors of the rhs signal
+							    for(int i=0; i<rhsSignal->successors()->size(); i++)
+							      if((rhsSignal->successor(i)->getName() == lhsName)
+								  //the lhs signal must be the input of a subcomponent
+								  && (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
 								{
-									lhsSignal = rhsSignal->successor(i);
-									break;
+								  lhsSignal = rhsSignal->successor(i);
+								  break;
 								}
+							}catch(string &e)
+							{
+							    //this might be an undeclared rhs name
+							    rhsSignal = NULL;
+							    unknownRHSName = true;
+
+							    //this might be an undeclared lhs name
+							    lhsSignal = NULL;
+							    unknownLHSName = true;
+							}
 
 							newStr << rhsName;
 							if(getTarget()->isPipelined() && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
