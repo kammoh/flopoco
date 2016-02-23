@@ -36,10 +36,13 @@ int main(int argc, char* argv[] )
 {
 	try {
 
-		Fix2FP::registerFactory();
-		FP2Fix::registerFactory();
-		InputIEEE::registerFactory();
-		OutputIEEE::registerFactory();
+		// Florent has commented out all the operators for now.
+		// Uncomment them only to bring them up to the new framework.
+
+		// Fix2FP::registerFactory();
+		// FP2Fix::registerFactory();
+		// InputIEEE::registerFactory();
+		// OutputIEEE::registerFactory();
 
 		Shifter::registerFactory();
 		LZOC::registerFactory();
@@ -65,50 +68,50 @@ int main(int argc, char* argv[] )
 		LongIntAdderMuxNetwork::registerFactory();
 		IntComparatorSpecific::registerFactory();
 #endif
-		IntComparator::registerFactory();
-		IntDualSub::registerFactory();
-		IntMultiplier::registerFactory();
-		IntSquarer::registerFactory();
+		// IntComparator::registerFactory();
+		// IntDualSub::registerFactory();
+		// IntMultiplier::registerFactory();
+		// IntSquarer::registerFactory();
 
-		FPConstMult::registerFactory();
-		FPRealKCM::registerFactory();
-		IntConstDiv::registerFactory();
-		FPConstDiv::registerFactory();
-		FixFunctionByTable::registerFactory();
-		FixFunctionBySimplePoly::registerFactory();
-		FixFunctionByPiecewisePoly::registerFactory();
-		FixFunctionByMultipartiteTable::registerFactory();
-		BasicPolyApprox::registerFactory();
-		PiecewisePolyApprox::registerFactory();
-		FixRealKCM::registerFactory();
-		TestBench::registerFactory();
-		Wrapper::registerFactory();
+		// FPConstMult::registerFactory();
+		// FPRealKCM::registerFactory();
+		// IntConstDiv::registerFactory();
+		// FPConstDiv::registerFactory();
+		// FixFunctionByTable::registerFactory();
+		// FixFunctionBySimplePoly::registerFactory();
+		// FixFunctionByPiecewisePoly::registerFactory();
+		// FixFunctionByMultipartiteTable::registerFactory();
+		// BasicPolyApprox::registerFactory();
+		// PiecewisePolyApprox::registerFactory();
+		// FixRealKCM::registerFactory();
+		// TestBench::registerFactory();
+		// Wrapper::registerFactory();
 		FPAdd::registerFactory();
-		FPAddSub::registerFactory();
-		FPAddDualPath::registerFactory();
-		FPAdd3Input::registerFactory();
-		FPAddSinglePath::registerFactory();
-		FPMult::registerFactory();
-		//FPMultKaratsuba::registerFactory();
-		FPSquare::registerFactory();
-		FPDiv::registerFactory();
-		FPDiv::NbBitsMinRegisterFactory();
-		FPSqrt::registerFactory();
+		// FPAddSub::registerFactory();
+		// FPAddDualPath::registerFactory();
+		// FPAdd3Input::registerFactory();
+		// FPAddSinglePath::registerFactory();
+		// FPMult::registerFactory();
+		// //FPMultKaratsuba::registerFactory();
+		// FPSquare::registerFactory();
+		// FPDiv::registerFactory();
+		// FPDiv::NbBitsMinRegisterFactory();
+		// FPSqrt::registerFactory();
 
-		FPLargeAcc::registerFactory();
-		LargeAccToFP::registerFactory();
-		FPDotProduct::registerFactory();
+		// FPLargeAcc::registerFactory();
+		// LargeAccToFP::registerFactory();
+		// FPDotProduct::registerFactory();
 
-		FPExp::registerFactory();
-		IterativeLog::registerFactory();
-		FPPow::registerFactory();
-		FixSinCos::registerFactory();
-		CordicSinCos::registerFactory();
-		FixAtan2::registerFactory();
-		//FixedComplexAdder::registerFactory();
-		FixFIR::registerFactory();
-		FixSOPC::registerFactory();
-		FixIIR::registerFactory();
+		// FPExp::registerFactory();
+		// IterativeLog::registerFactory();
+		// FPPow::registerFactory();
+		// FixSinCos::registerFactory();
+		// CordicSinCos::registerFactory();
+		// FixAtan2::registerFactory();
+		// //FixedComplexAdder::registerFactory();
+		// FixFIR::registerFactory();
+		// FixSOPC::registerFactory();
+		// FixIIR::registerFactory();
 
 		// hidden for now
 		// Fix2DNorm::registerFactory();
