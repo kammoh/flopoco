@@ -84,8 +84,8 @@ int main(int argc, char* argv[] )
 		// BasicPolyApprox::registerFactory();
 		// PiecewisePolyApprox::registerFactory();
 		// FixRealKCM::registerFactory();
-		// TestBench::registerFactory();
-		// Wrapper::registerFactory();
+		TestBench::registerFactory();
+		Wrapper::registerFactory();
 		FPAdd::registerFactory();
 		// FPAddSub::registerFactory();
 		// FPAddDualPath::registerFactory();
