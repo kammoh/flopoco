@@ -147,13 +147,15 @@ namespace flopoco{
 		if (wE>sizeRightShift) {
 			vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(), "shiftVal",sizeRightShift)
 					<< " <= expDiff("<< sizeRightShift-1<<" downto 0)"
-					<< " when shiftedOut='0' else \"" << unsignedBinary(wF+3,sizeRightShift) << "\";" << endl;  // was CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<")
+					//<< " when shiftedOut='0' else \"" << unsignedBinary(wF+3,sizeRightShift) << "\";" << endl;  // was CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<")
+					<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<");" << endl;
 		}
 		else if (wE==sizeRightShift) {
 			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
 		}
 		else 	{ //  wE< sizeRightShift
-			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
+			//vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
+			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= CONV_STD_LOGIC_VECTOR("<<sizeRightShift-wE <<", 0) & expDiff;" <<	endl;
 		}
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)

@@ -2484,6 +2484,9 @@ namespace flopoco{
 			int auxPosition, auxPosition2;
 			Signal *lhsSignal, *rhsSignal;
 
+			unknownLHSName = false;
+			unknownRHSName = false;
+
 			//copy the code from the beginning to this position directly to the new vhdl buffer
 			newStr << oldStr.substr(currentPos, nextPos-currentPos);
 
@@ -2538,6 +2541,9 @@ namespace flopoco{
 					while(tmpCurrentPos != string::npos)
 					{
 						bool singleQuoteSep = false, doubleQuoteSep = false;
+
+						unknownLHSName = false;
+						unknownRHSName = false;
 
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
@@ -2759,6 +2765,9 @@ namespace flopoco{
 			while(tmpNextPos != string::npos)
 			{
 				int cycleDelay;
+
+				unknownRHSName = false;
+
 				//copy into the new vhdl stream the code that doesn't need to be modified
 				newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
