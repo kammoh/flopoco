@@ -2287,8 +2287,8 @@ namespace flopoco{
 	map<string, double> Operator::getInputDelayMap(){
 		map<string, double> inputDelayMap;
 
-		cerr << "WARNING: getInputDelayMap() no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
-				<< tab << "the delay map for the instance being built will be returned" << endl;
+		 REPORT(INFO, "WARNING: getInputDelayMap() no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
+						<< tab << "the delay map for the instance being built will be returned");
 		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
 			inputDelayMap[it->first] = it->second->getCriticalPath();
 
@@ -2298,8 +2298,8 @@ namespace flopoco{
 	map<string, double> Operator::getOutDelayMap(){
 		map<string, double> outputDelayMap;
 
-		cerr << "WARNING: getOutDelayMap() no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
-				<< tab << "the delay map for the instance being built will be returned" << endl;
+		REPORT(INFO, "WARNING: getOutDelayMap() no longer has the same meaning, due to the overhaul of the pipeline framework;" << endl
+					 << tab << "the delay map for the instance being built will be returned");
 		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 			outputDelayMap[it->first] = it->second->getCriticalPath();
 
@@ -2307,9 +2307,9 @@ namespace flopoco{
 	}
 
 	map<string, int> Operator::getDeclareTable(){
-		cerr << "WARNING: function getDeclareTable() is deprecated and no longer has any effect!" << endl
-				<< tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-				<< tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(INFO, "WARNING: function getDeclareTable() is deprecated and no longer has any effect!" << endl
+					 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
+					 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!");
 
 		map<string, int> emptyMap;
 
