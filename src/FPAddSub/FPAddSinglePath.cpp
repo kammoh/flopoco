@@ -40,7 +40,7 @@ namespace flopoco{
 
 	FPAddSinglePath::FPAddSinglePath(Target* target,
 																	 int wE, int wF,
-																	 bool sub, map<string, double> inputDelays) :
+																	 bool sub) :
 		Operator(target), wE(wE), wF(wF), sub(sub) {
 
 		srcFileName="FPAddSinglePath";

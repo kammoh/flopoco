@@ -614,7 +614,7 @@ namespace flopoco{
 
 		// ao stands for "almost one"
 		vhdl << tab << "-- The left shifter for the 'small' case" <<endl;
-		ao_lshift = new Shifter(target, wF-pfinal+2,  wF-pfinal+2, Shifter::Left, inDelayMap("X",getCriticalPath()) );
+		ao_lshift = new Shifter(target, wF-pfinal+2,  wF-pfinal+2, Shifter::Left );
 
 		inPortMap(ao_lshift, "X", "absZ0");
 		inPortMap(ao_lshift, "S", "shiftvalinL");
@@ -975,7 +975,7 @@ namespace flopoco{
 		syncCycleFromSignal("Log_normal");
 		setCriticalPath( lnadder->getOutputDelay("R") );
 
-		final_norm = new LZOCShifterSticky(target, wE+target_prec, target_prec, intlog2(wE+(wF>>1))+1, false, 0, inDelayMap("I", target->localWireDelay() + getCriticalPath()));
+		final_norm = new LZOCShifterSticky(target, wE+target_prec, target_prec, intlog2(wE+(wF>>1))+1, false, 0);
 		inPortMap(final_norm, "I", "Log_normal");
 		outPortMap(final_norm, "Count", "E_normal");
 		outPortMap(final_norm, "O", "Log_normal_normd");
@@ -993,7 +993,7 @@ namespace flopoco{
 
 		vhdl << tab << declare("Z2o2_small_bs", Z2o2_small_size)  << " <= Z2o2_full_dummy" << range(2*squarerInSize -1, 2*squarerInSize -Z2o2_small_size) << ";" << endl;
 
-		ao_rshift = new Shifter(target, Z2o2_small_size, sfinal-pfinal+1, Shifter::Right, inDelayMap("X", getCriticalPath()) ) ;
+		ao_rshift = new Shifter(target, Z2o2_small_size, sfinal-pfinal+1, Shifter::Right ) ;
 		inPortMap(ao_rshift, "X", "Z2o2_small_bs");
 		inPortMap(ao_rshift, "S", "shiftvalinR");
 		outPortMap(ao_rshift, "R", "Z2o2_small_s");

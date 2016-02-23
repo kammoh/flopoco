@@ -147,7 +147,7 @@ namespace flopoco {
 		manageCriticalPath( getTarget()->lutDelay() + getTarget()->localWireDelay());
 		vhdl << tab << declare("XorY", sizeXYR-1) << " <= XR" << range(sizeXYR-1,1) << " or YR" << range(sizeXYR-1,1) << ";" << endl;
 		// The LZC
-		LZOC* lzc = new	LZOC(getTarget(), sizeXYR-1, inDelayMap("XorY", getCriticalPath()));
+		LZOC* lzc = new	LZOC(getTarget(), sizeXYR-1);
 		addSubComponent(lzc);
 
 		inPortMap(lzc, "I", "XorY");
@@ -161,7 +161,7 @@ namespace flopoco {
 		//		setCriticalPath( lzc->getOutputDelay("O") );
 
 		// The two shifters are two instance of the same component
-		Shifter* lshift = new Shifter(getTarget(), sizeXYR, sizeXYR-1, Shifter::Left, inDelayMap("S", getCriticalPath()));
+		Shifter* lshift = new Shifter(getTarget(), sizeXYR, sizeXYR-1, Shifter::Left);
 		addSubComponent(lshift);
 
 		inPortMap(lshift, "S", "S");

@@ -33,12 +33,11 @@ using namespace std;
 namespace flopoco{
 
 
-	Shifter::Shifter(Target* target, int wIn, int maxShift, ShiftDirection direction, map<string, double> inputDelays) :
-			Operator(target, inputDelays), wIn_(wIn), maxShift_(maxShift), direction_(direction)
+	Shifter::Shifter(Target* target, int wIn, int maxShift, ShiftDirection direction) :
+			Operator(target), wIn_(wIn), maxShift_(maxShift), direction_(direction)
 	{
-		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2011)" );
+		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		srcFileName = "Shifters";
-		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2011)" );	
 		ostringstream name;
 		if(direction_==Left) name <<"LeftShifter_";
 		else                 name <<"RightShifter_";
@@ -51,7 +50,6 @@ namespace flopoco{
 		// -------- Parameter set up -----------------
 		wOut_         = wIn_ + maxShift_;
 		wShiftIn_     = intlog2(maxShift_);
-		maxInputDelay_ = getMaxInputDelays(inputDelays);
 
 		addInput ("X", wIn_);
 		addInput ("S", wShiftIn_);
