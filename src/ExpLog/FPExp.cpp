@@ -415,7 +415,7 @@ namespace flopoco{
 
 		setCycleFromSignal("shiftVal", scp);
 
-		Shifter* lshift = new Shifter(target, wFIn+1, maxshift , Shifter::Left, inDelayMap("S", target->localWireDelay(wFIn+1) + getCriticalPath())  );
+		Shifter* lshift = new Shifter(target, wFIn+1, maxshift , Shifter::Left );
 		addSubComponent(lshift);
 		int shiftInSize = lshift->getShiftInWidth();
 		vhdl << tab  << declare("shiftValIn", shiftInSize) << " <= shiftVal" << range(shiftInSize-1, 0) << ";" << endl;

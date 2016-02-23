@@ -205,21 +205,21 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 			if (getCycleFromSignal("sval0")==getCycleFromSignal("fX"))
 				setCriticalPath( max(getCriticalPath(), shifterSignals) );
 		}
-		Shifter *s0 = new Shifter(target, wF+1, 2*wF, Shifter::Right, inDelayMap("X",target->localWireDelay() + getCriticalPath()));
+		Shifter *s0 = new Shifter(target, wF+1, 2*wF, Shifter::Right);
 
 		inPortMap  (s0, "X", "fX");
 		inPortMap  (s0, "S", "sval0");
 		outPortMap (s0, "R","sfX");
 		vhdl << instance(s0, "fxShifter");
 
-		Shifter *s1 = new Shifter(target, wF+1, 2*wF, Shifter::Right, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+		Shifter *s1 = new Shifter(target, wF+1, 2*wF, Shifter::Right);
 
 		inPortMap  (s1, "X", "fY");
 		inPortMap  (s1, "S", "sval1");
 		outPortMap (s1, "R","sfY");
 		vhdl << instance(s1, "fyShifter");
 
-		Shifter *s2 = new Shifter(target, wF+1, 2*wF, Shifter::Right, inDelayMap("X",target->localWireDelay() + getCriticalPath()));
+		Shifter *s2 = new Shifter(target, wF+1, 2*wF, Shifter::Right);
 		inPortMap  (s2, "X", "fZ");
 		inPortMap  (s2, "S", "sval2");
 		outPortMap (s2, "R","sfZ");
@@ -310,7 +310,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << declare("posExtFsticky", 2*wF + 4) << " <= posExtF"<<range(3 + 3*wF-1, wF) << " & sticky;" << endl;
 
 
-		lzocs = new LZOCShifterSticky(target, 2*wF + 4, 2*wF + 4, intlog2(2*wF + 4), false, 0, inDelayMap("I",target->localWireDelay() + getCriticalPath()));
+		lzocs = new LZOCShifterSticky(target, 2*wF + 4, 2*wF + 4, intlog2(2*wF + 4), false, 0);
 		inPortMap  (lzocs, "I", "posExtFsticky");
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFrac");

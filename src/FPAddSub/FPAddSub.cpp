@@ -186,7 +186,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 		}
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right, inDelayMap("X",getCriticalPath()));
+		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
 		rightShifter->changeName(getName()+"_RightShifter");
 		inPortMap  (rightShifter, "X", "fracY");
 		inPortMap  (rightShifter, "S", "shiftVal");
@@ -277,7 +277,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 		vhdl << tab << declare("fracGRSSub",wF+5) << "<= fracAdderResultSub & sticky; "<<endl;
 
 
-		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
+		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0);
 		inPortMap  (lzocs, "I", "fracGRSSub");
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFracSub");

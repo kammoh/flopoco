@@ -31,7 +31,7 @@ namespace flopoco{
 		 * @param[in]		maxShift	the maximum shift amount
 		 * @param[in]		direction	can be either Left of Right. Determines the shift direction
 		 **/
-		Shifter(Target* target, int wIn, int maxShift, ShiftDirection dir, map<string, double> inputDelays = emptyDelayMap);
+		Shifter(Target* target, int wIn, int maxShift, ShiftDirection dir);
 
 
 		/** Destructor */
@@ -67,7 +67,6 @@ namespace flopoco{
 
 	private:
 		ShiftDirection direction_;  /**< determines the shift direction. can be Left or Right */
-		double maxInputDelay_;      /**< the maximum delay found in the input map */
 
 	};
 
