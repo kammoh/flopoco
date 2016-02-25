@@ -53,6 +53,9 @@ namespace flopoco
 		/** starts the dot diagram plotter on the operators */
 		static void drawDotDiagram();
 
+		/** return a color for drawing a node */
+		static std::string getDotNodeColor(int index);
+
 		/** generates the code to the default file */
 		static void outputVHDL();
 
@@ -143,6 +146,8 @@ namespace flopoco
 		static const vector<string> known_fpgas;
 		static const vector<string> special_targets;
 		static const vector<option_t> options;
+
+		static const vector<string> dotNodeColors;
 
 	};
 

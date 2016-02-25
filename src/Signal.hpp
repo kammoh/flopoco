@@ -301,6 +301,18 @@ class Operator;
 
 
 		/**
+		 * Outputs the dot code used for drawing this signal as a graph node
+		 */
+		std::string toDotNodeDrawing();
+
+
+		/**
+		 * Outputs the dot code used for drawing this signal's connections as graph edges
+		 */
+		std::string toDotEdgesDrawing();
+
+
+		/**
 		 * Sets the cycle at which the signal is active
 		 */
 		void setCycle(int cycle) ;
