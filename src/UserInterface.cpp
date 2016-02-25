@@ -115,44 +115,6 @@ namespace flopoco
 				return v;
 			}();
 
-	const vector<string> UserInterface::dotNodeColors = []()->vector<string>{
-	    vector<string> v;
-
-	    v.push_back("coral");
-	    v.push_back("chartreuse");
-	    v.push_back("cyan");
-	    v.push_back("orchid");
-	    v.push_back("cadetblue");
-	    v.push_back("orangered");
-	    v.push_back("chocolate");
-	    v.push_back("mintcream");
-	    v.push_back("tomato");
-	    v.push_back("slategray");
-	    v.push_back("sienna");
-	    v.push_back("indigo");
-	    v.push_back("greenyellow");
-	    v.push_back("plum");
-	    v.push_back("maroon");
-	    v.push_back("palegoldenrod");
-	    v.push_back("cornflowerblue");
-	    v.push_back("khaki");
-	    v.push_back("aquamarine");
-	    v.push_back("peru");
-	    v.push_back("olivedrab");
-	    v.push_back("powderblue");
-	    v.push_back("darksalmon");
-	    v.push_back("aliceblue");
-	    v.push_back("burlywood");
-	    v.push_back("peachpuff");
-	    v.push_back("magenta");
-	    v.push_back("rosybrown");
-	    v.push_back("dodgerblue");
-	    v.push_back("sandybrown");
-	    v.push_back("papayawhip");
-
-	    return v;
-	}();
-
 	void UserInterface::main(int argc, char* argv[]) {
 		try {
 			sollya_lib_init();
@@ -462,10 +424,6 @@ namespace flopoco
 	  for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 	      UserInterface::globalOpList[i]->drawDotDiagram();
 	  }
-	}
-
-	std::string UserInterface::getDotNodeColor(int index) {
-	  return dotNodeColors[index%dotNodeColors.size()];
 	}
 
 

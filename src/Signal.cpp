@@ -7,6 +7,45 @@ using namespace std;
 namespace flopoco{
 
 
+	const vector<string> Signal::dotNodeColors = []()->vector<string>{
+  	    vector<string> v;
+
+  	    v.push_back("coral");
+  	    v.push_back("chartreuse");
+  	    v.push_back("cyan");
+  	    v.push_back("orchid");
+  	    v.push_back("cadetblue");
+  	    v.push_back("orangered");
+  	    v.push_back("chocolate");
+  	    v.push_back("mintcream");
+  	    v.push_back("tomato");
+  	    v.push_back("slategray");
+  	    v.push_back("sienna");
+  	    v.push_back("indigo");
+  	    v.push_back("greenyellow");
+  	    v.push_back("plum");
+  	    v.push_back("maroon");
+  	    v.push_back("palegoldenrod");
+  	    v.push_back("cornflowerblue");
+  	    v.push_back("khaki");
+  	    v.push_back("aquamarine");
+  	    v.push_back("peru");
+  	    v.push_back("olivedrab");
+  	    v.push_back("powderblue");
+  	    v.push_back("darksalmon");
+  	    v.push_back("aliceblue");
+  	    v.push_back("burlywood");
+  	    v.push_back("peachpuff");
+  	    v.push_back("magenta");
+  	    v.push_back("rosybrown");
+  	    v.push_back("dodgerblue");
+  	    v.push_back("sandybrown");
+  	    v.push_back("papayawhip");
+
+  	    return v;
+  	}();
+
+
 	// plain logic vector, or wire
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
 		parentOp_(parentOp), name_(name), type_(type), width_(width), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
@@ -324,26 +363,29 @@ namespace flopoco{
 		return o.str();
 	}
 
-	std::string Signal::toDotNodeDrawing()
+	std::string Signal::toDotNodeDrawing(std::string parentOpName)
 	{
 	  ostringstream stream;
 
 	  //output the node name
 	  //	for uniqueness purposes the name is signal_name::parent_operator_name
-	  stream << name_ << "::" << parentOp_->getName() << " ";
+	  stream << name_ << "::" << parentOpName << " ";
 
 	  //output the node's properties
 	  stream << "[ label=\"" << name_ << "\n" << cycle_ << "\n" << criticalPath_ << "\n" << criticalPathContribution_ << "\"";
-	  stream << ", group=" << parentOp_->getName();
+	  stream << ", group=" << parentOpName;
 	  stream << ", shape=ellipse, color=black";
-	  stream << ", fillcolor=" << UserInterface::getDotNodeColor(cycle_);
+	  stream << ", fillcolor=" << Signal::getDotNodeColor(cycle_);
 	  stream << ", peripheries=" << (type_ == SignalType::in ? "2" : type_ == SignalType::out ? "3" : "1");
 	  stream << " ]";
 
 	  return stream.str();
 	}
 
-	std::string Signal::toDotEdgesDrawing();
+	std::string Signal::toDotEdgesDrawing()
+	{
+
+	}
 
 	void Signal::setCycle(int cycle) {
 		cycle_ = cycle;
@@ -466,6 +508,11 @@ namespace flopoco{
 
 	void Signal::setType(SignalType t) {
 		type_ = t;
+	}
+
+
+	std::string Signal::getDotNodeColor(int index) {
+	  return dotNodeColors[index%dotNodeColors.size()];
 	}
 
 }
