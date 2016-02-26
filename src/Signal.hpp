@@ -301,19 +301,6 @@ class Operator;
 
 
 		/**
-		 * Outputs the dot code used for drawing this signal as a graph node
-		 * @param parentOpName the name of the parent operator (needed so as to avoid circular dependences)
-		 */
-		std::string toDotNodeDrawing(std::string parentOpName);
-
-
-		/**
-		 * Outputs the dot code used for drawing this signal's connections as graph edges
-		 */
-		std::string toDotEdgesDrawing();
-
-
-		/**
 		 * Sets the cycle at which the signal is active
 		 */
 		void setCycle(int cycle) ;

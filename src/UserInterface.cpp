@@ -37,6 +37,8 @@ namespace flopoco
 	bool   UserInterface::reDebug;
 	bool   UserInterface::flpDebug;
 
+	string UserInterface::dotFileName = "flopoco.dot";
+
 
 	const vector<pair<string,string>> UserInterface::categories = []()->vector<pair<string,string>>{
 		vector<pair<string,string>> v;
@@ -213,6 +215,40 @@ namespace flopoco
 			}
 		}
 		oplist.back()->outputClock_xdc();
+
+	}
+
+
+	void UserInterface::outputDotToFile(ofstream& file){
+	  outputDotToFile(UserInterface::globalOpList, file);
+	}
+
+
+	/* The recursive method */
+	void UserInterface::outputDotToFile(vector<OperatorPtr> &oplist, ofstream& file)
+	{
+
+	  for(auto i: oplist) {
+	      try
+	      {
+		  // check for subcomponents
+		  if(! i->getSubComponentListR().empty() ){
+		      //recursively call to print subcomponents
+		      outputDotToFile(i->getSubComponentListR(), file);
+		  }
+
+		  //output the dot code to file
+		  //	for global operators, this is done only once
+		  if(!i->isOperatorDrawn())
+		  {
+		    i->drawDotDiagram(file, 1);
+		    i->setIsOperatorDrawn(true);
+		  }
+	      }catch (std::string &s)
+	      {
+		  cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
+	      }
+	  }
 
 	}
 
@@ -420,18 +456,18 @@ namespace flopoco
 
 
 	void UserInterface::drawDotDiagram() {
-	  //start the drawing procedures
-	  for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
-	      UserInterface::globalOpList[i]->drawDotDiagram();
-	  }
+	  ofstream file;
+	  file.open(dotFileName.c_str(), ios::out);
+	  outputDotToFile(file);
+	  file.close();
 	}
 
 
 	void UserInterface::outputVHDL() {
-		ofstream file;
-		file.open(outputFileName.c_str(), ios::out);
-		outputVHDLToFile(file);
-		file.close();
+	  ofstream file;
+	  file.open(outputFileName.c_str(), ios::out);
+	  outputVHDLToFile(file);
+	  file.close();
 	}
 
 

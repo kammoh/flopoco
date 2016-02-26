@@ -60,6 +60,7 @@ namespace flopoco{
 
 		isOperatorImplemented_       = false;
 		isOperatorScheduled_         = false;
+		isOperatorDrawn_             = false;
 
 		isUnique_ = true;
 		uniquenessSet_ = false;
@@ -3185,9 +3186,80 @@ namespace flopoco{
 	}
 
 
-	void Operator::drawDotDiagram()
+	void Operator::drawDotDiagram(ofstream& file, int mode)
 	{
+	  //check if this operator has already been drawn
+	  if(isOperatorDrawn_ == true)
+	    //nothing else to do
+	    return;
 
+	  if(mode == 1)
+	  {
+	      //main component in the globalOpList
+	      file << "digraph " << getName() << " {\n";
+	  }else if(mode == 2)
+	  {
+	      //a subcomponent
+	      file << "subgraph cluster_" << getName() << " {\n";
+	  }else
+	  {
+	      THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
+	  }
+
+	  //draw the signals of this operator as nodes
+	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
+	    file << drawDotNode(signalList_[i]);
+
+	  //draw the out connections of each signal of this operator
+	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
+	    file << drawDotNodeEdges(signalList_[i]);
+
+	  //draw the subcomponents of this operator
+	  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
+	    drawDotDiagram(file, 2);
+
+	  file << "}\n";
+
+	  setIsOperatorDrawn(true);
+
+	  //continue here
+	}
+
+	std::string Operator::drawDotNode(Signal *node)
+	{
+	  ostringstream stream;
+
+	  //output the node name
+	  //	for uniqueness purposes the name is signal_name::parent_operator_name
+	  stream << node->getName() << "::" << node->parentOp()->getName() << " ";
+
+	  //output the node's properties
+	  stream << "[ label=\"" << node->getName() << "\n" << node->getCycle() << "\n"
+	      << node->getCriticalPath() << "\n" << node->getCriticalPathContribution() << "\"";
+	  stream << ", group=" << node->parentOp()->getName();
+	  stream << ", shape=ellipse, color=black";
+	  stream << ", fillcolor=" << Signal::getDotNodeColor(node->getCycle());
+	  stream << ", peripheries=" << (node->type() == Signal::in ? "2" : node->type() == Signal::out ? "3" : "1");
+	  stream << " ]\n";
+
+	  return stream.str();
+	}
+
+	std::string Operator::drawDotNodeEdges(Signal *node)
+	{
+	  ostringstream stream;
+
+	  stream << "\n";
+	  for(int i=0; (unsigned int)i<node->successors()->size(); i++)
+	  {
+	      stream << node->getName() << "::" << node->parentOp()->getName() << " -> "
+		   << node->successor(i)->getName() << "::" << node->successor(i)->parentOp()->getName() << " [";
+	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
+	      stream << " label=" << node->successorPair(i)->second;
+	      stream << " ]\n";
+	  }
+
+	  return stream.str();
 	}
 
 
@@ -3602,25 +3674,33 @@ namespace flopoco{
 	}
 
 	bool Operator::isOperatorScheduled(){
-		return isOperatorScheduled_;
+	  return isOperatorScheduled_;
 	}
 
 	void Operator::setIsOperatorScheduled(bool newValue){
-		isOperatorScheduled_ = newValue;
+	  isOperatorScheduled_ = newValue;
+	}
+
+	bool Operator::isOperatorDrawn(){
+		return isOperatorDrawn_;
+	}
+
+	void Operator::setIsOperatorDrawn(bool newValue){
+		isOperatorDrawn_ = newValue;
 	}
 
 
 	bool Operator::setShared(){
-		if(uniquenessSet_ == true)
-		{
-			THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
-		}else
-		{
-			isUnique_ = false;
-			uniquenessSet_ = true;
+	  if(uniquenessSet_ == true)
+	    {
+	      THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
+	    }else
+	      {
+		isUnique_ = false;
+		uniquenessSet_ = true;
 
-			return isUnique_;
-		}
+		return isUnique_;
+	      }
 	}
 
 	bool Operator::isUnique(){

@@ -363,30 +363,6 @@ namespace flopoco{
 		return o.str();
 	}
 
-	std::string Signal::toDotNodeDrawing(std::string parentOpName)
-	{
-	  ostringstream stream;
-
-	  //output the node name
-	  //	for uniqueness purposes the name is signal_name::parent_operator_name
-	  stream << name_ << "::" << parentOpName << " ";
-
-	  //output the node's properties
-	  stream << "[ label=\"" << name_ << "\n" << cycle_ << "\n" << criticalPath_ << "\n" << criticalPathContribution_ << "\"";
-	  stream << ", group=" << parentOpName;
-	  stream << ", shape=ellipse, color=black";
-	  stream << ", fillcolor=" << Signal::getDotNodeColor(cycle_);
-	  stream << ", peripheries=" << (type_ == SignalType::in ? "2" : type_ == SignalType::out ? "3" : "1");
-	  stream << " ]";
-
-	  return stream.str();
-	}
-
-	std::string Signal::toDotEdgesDrawing()
-	{
-
-	}
-
 	void Signal::setCycle(int cycle) {
 		cycle_ = cycle;
 	}

@@ -1344,8 +1344,23 @@ public:
 
 	/**
 	 * Start drawing the dot diagram for this Operator
+	 * @param file the file to which to output the dot drawing
+	 * @param mode the drawing mode, dependent on whether this is a global operator, or not
+	 * 		mode=1 global operator, mode=2 sub-component
 	 */
-	void drawDotDiagram();
+	void drawDotDiagram(ofstream& file, int mode);
+
+	/**
+	 * Outputs the dot code used for drawing this signal as a graph node
+	 * @param node the node to draw
+	 */
+	std::string drawDotNode(Signal *node);
+
+	/**
+	 * Outputs the dot code used for drawing this signal's connections as graph edges
+	 * @param node the node who's connections are to be drawn
+	 */
+	std::string drawDotNodeEdges(Signal *node);
 
 
 	void setuid(int mm);
@@ -1418,6 +1433,16 @@ public:
 	 * Set the value of isOperatorScheduled
 	 */
 	void setIsOperatorScheduled(bool newValue);
+
+	/**
+	 * Get the value of isOperatorScheduled
+	 */
+	bool isOperatorDrawn();
+
+	/**
+	 * Set the value of isOperatorScheduled
+	 */
+	void setIsOperatorDrawn(bool newValue);
 
 
 	/**
@@ -1913,11 +1938,12 @@ private:
 
 	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
-	int					   hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
+	int		       hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 
 	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not */
 	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled */
+	bool                   isOperatorDrawn_;                /**< Flag to show whether this operator has already been drawn, or not */
 
 	bool                   isUnique_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
 	bool                   uniquenessSet_;                  /**< Ensure single access to isUnique_ */
