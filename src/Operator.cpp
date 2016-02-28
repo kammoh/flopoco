@@ -1748,6 +1748,10 @@ namespace flopoco{
 		//	the currently chose state: either fully flattened, or shared
 		op->uniquenessSet_ = true;
 
+		//disable the drawing for this subcomponent
+		//	if needed, the drawing procedures will re-enable it
+		op->setIsOperatorDrawn(true);
+
 		// TODO add more checks here
 
 		//checking that all the signals are covered
@@ -1870,6 +1874,9 @@ namespace flopoco{
 
 			//mark the subcomponent as not requiring to be implemented
 			newOp->setIsOperatorImplemented(true);
+
+			//mark the subcomponent as drwan
+			newOp->setIsOperatorDrawn(true);
 
 			//save a reference
 			opCpy = newOp;
@@ -3189,10 +3196,21 @@ namespace flopoco{
 	void Operator::drawDotDiagram(ofstream& file, int mode)
 	{
 	  //check if this operator has already been drawn
-	  if(isOperatorDrawn_ == true)
-	    //nothing else to do
-	    return;
+	  if(mode == 1)
+	  {
+	      //for global operators, which are not subcomponents of other operators
+	      if(isOperatorDrawn_ == true)
+		//nothing else to do
+		return;
+	  }else
+	  {
+	      //for subcomponents, the logic is reversed
+	      if(isOperatorDrawn_ == false)
+		//nothing else to do
+		return;
+	  }
 
+	  file << "\n";
 	  if(mode == 1)
 	  {
 	      //main component in the globalOpList
@@ -3206,23 +3224,37 @@ namespace flopoco{
 	      THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
 	  }
 
+	  //draw the subcomponents of this operator
+	  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
+	    subComponentList_[i]->drawDotDiagram(file, 2);
+
+	  //draw the input/output signals
+	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+	    file << drawDotNode(ioList_[i]);
 	  //draw the signals of this operator as nodes
 	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
 	    file << drawDotNode(signalList_[i]);
 
+	  file << "\n";
+
+	  //draw the out connections of each input of this operator
+	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+	    if(ioList_[i]->type() == Signal::in)
+	      file << drawDotNodeEdges(ioList_[i]);
 	  //draw the out connections of each signal of this operator
 	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
 	    file << drawDotNodeEdges(signalList_[i]);
+	  //draw the out connections of each output of this operator
+	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+	    if(ioList_[i]->type() == Signal::out)
+	      file << drawDotNodeEdges(ioList_[i]);
 
-	  //draw the subcomponents of this operator
-	  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
-	    drawDotDiagram(file, 2);
+	  file << "}\n\n";
 
-	  file << "}\n";
-
-	  setIsOperatorDrawn(true);
-
-	  //continue here
+	  if(mode == 1)
+	    setIsOperatorDrawn(true);
+	  else
+	    setIsOperatorDrawn(false);
 	}
 
 	std::string Operator::drawDotNode(Signal *node)
@@ -3231,13 +3263,13 @@ namespace flopoco{
 
 	  //output the node name
 	  //	for uniqueness purposes the name is signal_name::parent_operator_name
-	  stream << node->getName() << "::" << node->parentOp()->getName() << " ";
+	  stream << node->getName() << "__" << node->parentOp()->getName() << " ";
 
 	  //output the node's properties
-	  stream << "[ label=\"" << node->getName() << "\n" << node->getCycle() << "\n"
-	      << node->getCriticalPath() << "\n" << node->getCriticalPathContribution() << "\"";
+	  stream << "[ label=\"" << node->getName() << "\\n" << node->getCycle() << "\\n"
+	      << node->getCriticalPath() << "\\n" << node->getCriticalPathContribution() << "\"";
 	  stream << ", group=" << node->parentOp()->getName();
-	  stream << ", shape=ellipse, color=black";
+	  stream << ", shape=ellipse, color=black, style=filled";
 	  stream << ", fillcolor=" << Signal::getDotNodeColor(node->getCycle());
 	  stream << ", peripheries=" << (node->type() == Signal::in ? "2" : node->type() == Signal::out ? "3" : "1");
 	  stream << " ]\n";
@@ -3249,11 +3281,10 @@ namespace flopoco{
 	{
 	  ostringstream stream;
 
-	  stream << "\n";
 	  for(int i=0; (unsigned int)i<node->successors()->size(); i++)
 	  {
-	      stream << node->getName() << "::" << node->parentOp()->getName() << " -> "
-		   << node->successor(i)->getName() << "::" << node->successor(i)->parentOp()->getName() << " [";
+	      stream << node->getName() << "__" << node->parentOp()->getName() << " -> "
+		   << node->successor(i)->getName() << "__" << node->successor(i)->parentOp()->getName() << " [";
 	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
 	      stream << " label=" << node->successorPair(i)->second;
 	      stream << " ]\n";
@@ -3439,6 +3470,7 @@ namespace flopoco{
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
 
 		isOperatorImplemented_      = op->isOperatorImplemented();
+		isOperatorDrawn_            = op->isOperatorDrawn();
 
 		resourceEstimate.str(op->resourceEstimate.str());
 		resourceEstimateReport.str(op->resourceEstimateReport.str());
