@@ -38,9 +38,9 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FPAddSinglePath::FPAddSinglePath(Target* target,
-																	 int wE, int wF,
-																	 bool sub) :
+  FPAddSinglePath::FPAddSinglePath(Target* target,
+				   int wE, int wF,
+				   bool sub) :
 		Operator(target), wE(wE), wF(wF), sub(sub) {
 
 		srcFileName="FPAddSinglePath";
