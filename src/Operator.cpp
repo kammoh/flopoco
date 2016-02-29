@@ -241,7 +241,7 @@ namespace flopoco{
 		signalMap_[name] = s ;
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
-			testCaseSignals_.push_back(s);
+		  testCaseSignals_.push_back(s);
 	}
 #endif
 
@@ -3214,15 +3214,17 @@ namespace flopoco{
 	  if(mode == 1)
 	  {
 	      //main component in the globalOpList
-	      file << "digraph " << getName() << " {\n";
+	      file << "digraph " << getName();
 	  }else if(mode == 2)
 	  {
 	      //a subcomponent
-	      file << "subgraph cluster_" << getName() << " {\n";
+	      file << "subgraph cluster_" << getName();
 	  }else
 	  {
 	      THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
 	  }
+
+	  file  << "{\n label=" << getName() << ";\n labelloc=bottom; \n labeljust=right; \n";
 
 	  //draw the subcomponents of this operator
 	  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
@@ -3261,6 +3263,9 @@ namespace flopoco{
 	{
 	  ostringstream stream;
 
+	  //process the node's name for correct dot format
+
+
 	  //output the node name
 	  //	for uniqueness purposes the name is signal_name::parent_operator_name
 	  stream << node->getName() << "__" << node->parentOp()->getName() << " ";
@@ -3272,7 +3277,7 @@ namespace flopoco{
 	  stream << ", shape=ellipse, color=black, style=filled";
 	  stream << ", fillcolor=" << Signal::getDotNodeColor(node->getCycle());
 	  stream << ", peripheries=" << (node->type() == Signal::in ? "2" : node->type() == Signal::out ? "3" : "1");
-	  stream << " ]\n";
+	  stream << " ];\n";
 
 	  return stream.str();
 	}
@@ -3287,7 +3292,7 @@ namespace flopoco{
 		   << node->successor(i)->getName() << "__" << node->successor(i)->parentOp()->getName() << " [";
 	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
 	      stream << " label=" << node->successorPair(i)->second;
-	      stream << " ]\n";
+	      stream << " ];\n";
 	  }
 
 	  return stream.str();
@@ -3530,12 +3535,16 @@ namespace flopoco{
 		}
 		ioList_.clear();
 		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
-		signalList_.insert(signalList_.end(), newIOList.begin(), newIOList.end());
+		//signalList_.insert(signalList_.end(), newIOList.begin(), newIOList.end());
 
 		//update the signal map
 		signalMap_.clear();
+		//insert the inputs/outputs
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		  signalMap_[ioList_[i]->getName()] = ioList_[i];
+		//insert the internal signals
 		for(unsigned int i=0; i<signalList_.size(); i++)
-			signalMap_[signalList_[i]->getName()] = signalList_[i];
+		  signalMap_[signalList_[i]->getName()] = signalList_[i];
 
 		//create deep copies of the subcomponents
 		vector<Operator*> newOpList;
@@ -3615,7 +3624,9 @@ namespace flopoco{
 		//update the signal map
 		signalMap_.clear();
 		for(unsigned int i=0; i<signalList_.size(); i++)
-			signalMap_[signalList_[i]->getName()] = signalList_[i];
+		  signalMap_[signalList_[i]->getName()] = signalList_[i];
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		  signalMap_[ioList_[i]->getName()] = ioList_[i];
 
 		//no need to recreate the signal dependences for each of the input/output signals,
 		//	as this is either done by instance, or it is done by the parent operator of this operator
