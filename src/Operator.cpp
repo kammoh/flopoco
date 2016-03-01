@@ -3226,16 +3226,16 @@ namespace flopoco{
 
 	  file  << "{\n label=" << getName() << ";\n labelloc=bottom; \n labeljust=right; \n";
 
+	  //draw the input/output signals
+	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+		  file << drawDotNode(ioList_[i]);
+	  //draw the signals of this operator as nodes
+	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
+		  file << drawDotNode(signalList_[i]);
+
 	  //draw the subcomponents of this operator
 	  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
 	    subComponentList_[i]->drawDotDiagram(file, 2);
-
-	  //draw the input/output signals
-	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
-	    file << drawDotNode(ioList_[i]);
-	  //draw the signals of this operator as nodes
-	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
-	    file << drawDotNode(signalList_[i]);
 
 	  file << "\n";
 
@@ -3262,16 +3262,18 @@ namespace flopoco{
 	std::string Operator::drawDotNode(Signal *node)
 	{
 	  ostringstream stream;
+	  std::string nodeName = node->getName();
 
 	  //process the node's name for correct dot format
-
+	  if(node->type() == Signal::constant)
+		  nodeName = node->getName().substr(node->getName().find("_cst")+1);
 
 	  //output the node name
 	  //	for uniqueness purposes the name is signal_name::parent_operator_name
-	  stream << node->getName() << "__" << node->parentOp()->getName() << " ";
+	  stream << nodeName << "__" << node->parentOp()->getName() << " ";
 
 	  //output the node's properties
-	  stream << "[ label=\"" << node->getName() << "\\n" << node->getCycle() << "\\n"
+	  stream << "[ label=\"" << nodeName << "\\n" << node->getCycle() << "\\n"
 	      << node->getCriticalPath() << "\\n" << node->getCriticalPathContribution() << "\"";
 	  stream << ", group=" << node->parentOp()->getName();
 	  stream << ", shape=ellipse, color=black, style=filled";
@@ -3285,11 +3287,22 @@ namespace flopoco{
 	std::string Operator::drawDotNodeEdges(Signal *node)
 	{
 	  ostringstream stream;
+	  std::string nodeName = node->getName();
+	  std::string nodeParentName;
+
+	  //process the node's name for correct dot format
+	  if(node->type() == Signal::constant)
+		  nodeName = node->getName().substr(node->getName().find("_cst")+1);
 
 	  for(int i=0; (unsigned int)i<node->successors()->size(); i++)
 	  {
-	      stream << node->getName() << "__" << node->parentOp()->getName() << " -> "
-		   << node->successor(i)->getName() << "__" << node->successor(i)->parentOp()->getName() << " [";
+		  if(node->successor(i)->type() == Signal::constant)
+			  nodeParentName = node->successor(i)->getName().substr(node->successor(i)->getName().find("_cst")+1);
+		  else
+			  nodeParentName = node->successor(i)->getName();
+
+	      stream << nodeName << "__" << node->parentOp()->getName() << " -> "
+		   << nodeParentName << "__" << node->successor(i)->parentOp()->getName() << " [";
 	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
 	      stream << " label=" << node->successorPair(i)->second;
 	      stream << " ];\n";
