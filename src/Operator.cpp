@@ -3247,11 +3247,25 @@ namespace flopoco{
 	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
 	    file << drawDotNodeEdges(signalList_[i]);
 	  //draw the out connections of each output of this operator
-	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
-	    if(ioList_[i]->type() == Signal::out)
-	      file << drawDotNodeEdges(ioList_[i]);
+	  //	only for main components
+	  if(mode == 1)
+	  {
+		  //draw the out connections of each output of this operator
+		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			  if(ioList_[i]->type() == Signal::out)
+				  file << drawDotNodeEdges(ioList_[i]);
+	  }
 
 	  file << "}\n\n";
+
+	  //for subcomponents, draw the connections of the output ports
+	  if(mode == 2)
+	  {
+		  //draw the out connections of each output of this operator
+		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			  if(ioList_[i]->type() == Signal::out)
+				  file << drawDotNodeEdges(ioList_[i]);
+	  }
 
 	  if(mode == 1)
 	    setIsOperatorDrawn(true);
@@ -3275,8 +3289,8 @@ namespace flopoco{
 	  //output the node's properties
 	  stream << "[ label=\"" << nodeName << "\\n" << node->getCycle() << "\\n"
 	      << node->getCriticalPath() << "\\n" << node->getCriticalPathContribution() << "\"";
-	  stream << ", group=" << node->parentOp()->getName();
-	  stream << ", shape=ellipse, color=black, style=filled";
+	  stream << ", shape=ellipse, color=black";
+	  stream << ", style" << ((node->type() == Signal::in || node->type() == Signal::out) ? "=\"bold, filled\"" : "=filled");
 	  stream << ", fillcolor=" << Signal::getDotNodeColor(node->getCycle());
 	  stream << ", peripheries=" << (node->type() == Signal::in ? "2" : node->type() == Signal::out ? "3" : "1");
 	  stream << " ];\n";
