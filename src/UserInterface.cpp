@@ -37,7 +37,8 @@ namespace flopoco
 	bool   UserInterface::reDebug;
 	bool   UserInterface::flpDebug;
 
-	string UserInterface::dotFileName = "flopoco.dot";
+	string UserInterface::dotFileName="";
+	string UserInterface::dotDrawing="";
 
 
 	const vector<pair<string,string>> UserInterface::categories = []()->vector<pair<string,string>>{
@@ -114,6 +115,14 @@ namespace flopoco
 
 				//target option
 				v.push_back(option_t("target", known_fpgas));
+
+				//dot drawing options
+				values.clear();
+				values.push_back("no");
+				values.push_back("full");
+				values.push_back("compressed");
+				v.push_back(option_t("drawDot", values));
+
 				return v;
 			}();
 
@@ -151,6 +160,7 @@ namespace flopoco
 		parseBoolean(args, "floorplanning", &floorplanning, true);
 		parseBoolean(args, "reDebug", &reDebug, true );
 		parseBoolean(args, "pipeline", &pipeline, true );
+		parseString(args, "dotDrawing", &dotDrawing, true);
 		//	parseBoolean(args, "", &  );
 	}
 
@@ -241,7 +251,7 @@ namespace flopoco
 		  //	for global operators, this is done only once
 		  if(!i->isOperatorDrawn())
 		  {
-		    i->drawDotDiagram(file, 1);
+		    i->drawDotDiagram(file, 1, dotDrawing);
 		    i->setIsOperatorDrawn(true);
 		  }
 	      }catch (std::string &s)
@@ -312,6 +322,9 @@ namespace flopoco
 		pipeline=true;
 		useHardMult=true;
 		unusedHardMultThreshold=0.7;
+
+		dotFileName = "flopoco.dot";
+		dotDrawing = "no";
 
 	}
 
@@ -457,6 +470,11 @@ namespace flopoco
 
 	void UserInterface::drawDotDiagram() {
 	  ofstream file;
+
+	  //if dot drawing is disabled, there's nothing else to do
+	  if(dotDrawing == "no")
+		  return;
+
 	  file.open(dotFileName.c_str(), ios::out);
 	  outputDotToFile(file);
 	  file.close();
@@ -673,6 +691,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "Sticky options apply to the rest of the command line, unless changed again" <<endl;
+		s << "  " << COLOR_BOLD << "drawDot" << COLOR_NORMAL << "=<string>:      generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s <<endl;
 		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;
 		// The following is an inefficient double loop to avoid duplicating the data structure: nobody needs efficiency here
@@ -865,7 +884,7 @@ namespace flopoco
 		file << endl;
 		tabber("lastOp=`_getLastOp \"$saisie\"`");
 		file << endl;
-		tabber("#Si l'opérateur est une cible foinale on s'arrête");
+		tabber("#Si l'opérateur est une cible finale on s'arrête");
 		tabber("spetrgtlst=\""+specialtargetList+"\"");
 		tabber("case $lastOp in");
 		indent_level++;

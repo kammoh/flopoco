@@ -1347,8 +1347,10 @@ public:
 	 * @param file the file to which to output the dot drawing
 	 * @param mode the drawing mode, dependent on whether this is a global operator, or not
 	 * 		mode=1 global operator, mode=2 sub-component
+	 * @param dotDrawingMode the dot drawing options
+	 * 		dotDrawingMode=full the fully flattened tree, dotDrawingMode=compact flattened, but with reduced viwe of the subcomponents
 	 */
-	void drawDotDiagram(ofstream& file, int mode);
+	void drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode);
 
 	/**
 	 * Outputs the dot code used for drawing this signal as a graph node
@@ -1361,6 +1363,13 @@ public:
 	 * @param node the node who's connections are to be drawn
 	 */
 	std::string drawDotNodeEdges(Signal *node);
+
+	/**
+	 * Outputs the dot code used for drawing the edge between @param source and @param sink
+	 * @param source the source node for the edge
+	 * @param sink the sink node for the edge
+	 */
+	std::string drawDotEdge(Signal *source, Signal *sink);
 
 
 	void setuid(int mm);

@@ -152,6 +152,7 @@ namespace flopoco
 		static const vector<option_t> options;
 
 		static string dotFileName;
+		static string dotDrawing;
 
 	};
 

@@ -3193,7 +3193,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::drawDotDiagram(ofstream& file, int mode)
+	void Operator::drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode)
 	{
 	  //check if this operator has already been drawn
 	  if(mode == 1)
@@ -3211,6 +3211,8 @@ namespace flopoco{
 	  }
 
 	  file << "\n";
+
+	  //draw a component (a graph) or a subcomponent (a subgraph)
 	  if(mode == 1)
 	  {
 	      //main component in the globalOpList
@@ -3224,48 +3226,75 @@ namespace flopoco{
 	      THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
 	  }
 
-	  file  << "{\n label=" << getName() << ";\n labelloc=bottom; \n labeljust=right; \n";
+	  file  << "{\nlabel=" << getName() << ";\nlabelloc=bottom;\nlabeljust=right;\n";
 
-	  //draw the input/output signals
-	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
-		  file << drawDotNode(ioList_[i]);
-	  //draw the signals of this operator as nodes
-	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
-		  file << drawDotNode(signalList_[i]);
+	  if(dotDrawingMode == "compact")
+		  file << "\nratio=compress;\n";
+	  else
+		  file << "\nratio=auto;\n";
 
-	  //draw the subcomponents of this operator
-	  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
-	    subComponentList_[i]->drawDotDiagram(file, 2);
-
-	  file << "\n";
-
-	  //draw the out connections of each input of this operator
-	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
-	    if(ioList_[i]->type() == Signal::in)
-	      file << drawDotNodeEdges(ioList_[i]);
-	  //draw the out connections of each signal of this operator
-	  for(int i=0; (unsigned int)i<signalList_.size(); i++)
-	    file << drawDotNodeEdges(signalList_[i]);
-	  //draw the out connections of each output of this operator
-	  //	only for main components
-	  if(mode == 1)
+	  //if the dot drawing option is compact
+	  //	then, if this is a subcomponent, only draw the input-output connections
+	  if((mode == 2) && (dotDrawingMode == "compact"))
 	  {
-		  //draw the out connections of each output of this operator
+		  //draw the input/output signals
+		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			  file << drawDotNode(ioList_[i]);
+
+		  //draw the subcomponents of this operator
+		  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
+			  subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode);
+
+		  file << "\n";
+
+		  //draw edges between the inputs and the outputs
 		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
 			  if(ioList_[i]->type() == Signal::out)
+			  {
+				  for(int j=0; (unsigned int)j<ioList_.size(); j++)
+					  if(ioList_[j]->type() == Signal::in)
+						  file << drawDotEdge(ioList_[j], ioList_[i]);
+			  }
+	  }else
+	  {
+		  //draw the input/output signals
+		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			  file << drawDotNode(ioList_[i]);
+		  //draw the signals of this operator as nodes
+		  for(int i=0; (unsigned int)i<signalList_.size(); i++)
+			  file << drawDotNode(signalList_[i]);
+
+		  //draw the subcomponents of this operator
+		  for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
+			  subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode);
+
+		  file << "\n";
+
+		  //draw the out connections of each input of this operator
+		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			  if(ioList_[i]->type() == Signal::in)
 				  file << drawDotNodeEdges(ioList_[i]);
+		  //draw the out connections of each signal of this operator
+		  for(int i=0; (unsigned int)i<signalList_.size(); i++)
+			  file << drawDotNodeEdges(signalList_[i]);
+		  //draw the out connections of each output of this operator
+		  //	only for main components
+		  if(mode == 1)
+		  {
+			  //draw the out connections of each output of this operator
+			  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				  if(ioList_[i]->type() == Signal::out)
+					  file << drawDotNodeEdges(ioList_[i]);
+		  }
 	  }
 
 	  file << "}\n\n";
 
 	  //for subcomponents, draw the connections of the output ports
-	  if(mode == 2)
-	  {
-		  //draw the out connections of each output of this operator
-		  for(int i=0; (unsigned int)i<ioList_.size(); i++)
-			  if(ioList_[i]->type() == Signal::out)
-				  file << drawDotNodeEdges(ioList_[i]);
-	  }
+	  //draw the out connections of each output of this operator
+	  for(int i=0; (unsigned int)i<ioList_.size(); i++)
+		  if(ioList_[i]->type() == Signal::out)
+			  file << drawDotNodeEdges(ioList_[i]);
 
 	  if(mode == 1)
 	    setIsOperatorDrawn(true);
@@ -3287,9 +3316,9 @@ namespace flopoco{
 	  stream << nodeName << "__" << node->parentOp()->getName() << " ";
 
 	  //output the node's properties
-	  stream << "[ label=\"" << nodeName << "\\n" << node->getCycle() << "\\n"
-	      << node->getCriticalPath() << "\\n" << node->getCriticalPathContribution() << "\"";
-	  stream << ", shape=ellipse, color=black";
+	  stream << "[ label=\"" << nodeName << "\\n" << node->getCriticalPathContribution() << "\\n(" << node->getCycle() << ", "
+	      << node->getCriticalPath() << ")\"";
+	  stream << ", shape=box, color=black";
 	  stream << ", style" << ((node->type() == Signal::in || node->type() == Signal::out) ? "=\"bold, filled\"" : "=filled");
 	  stream << ", fillcolor=" << Signal::getDotNodeColor(node->getCycle());
 	  stream << ", peripheries=" << (node->type() == Signal::in ? "2" : node->type() == Signal::out ? "3" : "1");
@@ -3323,6 +3352,28 @@ namespace flopoco{
 	  }
 
 	  return stream.str();
+	}
+
+	std::string Operator::drawDotEdge(Signal *source, Signal *sink)
+	{
+		ostringstream stream;
+		std::string sourceNodeName = source->getName();
+		std::string sinkNodeName = sink->getName();
+
+		//process the source node's name for correct dot format
+		if(source->type() == Signal::constant)
+			sourceNodeName = source->getName().substr(source->getName().find("_cst")+1);
+		//process the sink node's name for correct dot format
+		if(sink->type() == Signal::constant)
+			sinkNodeName = sink->getName().substr(sink->getName().find("_cst")+1);
+
+		stream << sourceNodeName << "__" << source->parentOp()->getName() << " -> "
+				<< sinkNodeName << "__" << sink->parentOp()->getName() << " [";
+		stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
+		stream << " label=" << sink->getCycle()-source->getCycle();
+		stream << " ];\n";
+
+		return stream.str();
 	}
 
 
