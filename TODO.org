@@ -79,6 +79,15 @@ TODO file for FloPoCo
 ** FPPipeline
 ** lut_rng
 * Cleaning up
+** get rid of rst signal
+Observation: no operator uses rst, except FixFIR and LargeAcc. 
+There is a good reason for that: it would prevent the inference of srl logic.
+
+Now FixFir doesn't manage rst in emulate(), which is a framework limitation.
+LargeAcc ignores rst. Instead it has an additional newDataSet input, which technically induces a synchronous reset
+We should generalize this way of expressing reset information.
+Benefit: it will remove rst from all the classical pipelined operators, and explicit it only when it is useful.
+
 ** get rid of use() in Operator
 ** Clean up DualTable
 ** Get rid of the useBitHeap arg in KCMs
