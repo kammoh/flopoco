@@ -1350,26 +1350,26 @@ public:
 	 * @param dotDrawingMode the dot drawing options
 	 * 		dotDrawingMode=full the fully flattened tree, dotDrawingMode=compact flattened, but with reduced viwe of the subcomponents
 	 */
-	void drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode);
+	void drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode, std::string tabs = "");
 
 	/**
 	 * Outputs the dot code used for drawing this signal as a graph node
 	 * @param node the node to draw
 	 */
-	std::string drawDotNode(Signal *node);
+	std::string drawDotNode(Signal *node, std::string tabs = "");
 
 	/**
 	 * Outputs the dot code used for drawing this signal's connections as graph edges
 	 * @param node the node who's connections are to be drawn
 	 */
-	std::string drawDotNodeEdges(Signal *node);
+	std::string drawDotNodeEdges(Signal *node, std::string tabs = "");
 
 	/**
 	 * Outputs the dot code used for drawing the edge between @param source and @param sink
 	 * @param source the source node for the edge
 	 * @param sink the sink node for the edge
 	 */
-	std::string drawDotEdge(Signal *source, Signal *sink);
+	std::string drawDotEdge(Signal *source, Signal *sink, std::string tabs = "");
 
 
 	void setuid(int mm);

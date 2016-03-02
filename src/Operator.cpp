@@ -3193,7 +3193,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode)
+	void Operator::drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode, std::string tabs)
 	{
 		bool mustDrawCompact = true;
 
@@ -3218,23 +3218,27 @@ namespace flopoco{
 		if(mode == 1)
 		{
 			//main component in the globalOpList
-			file << "digraph " << getName();
+			file << tabs << "digraph " << getName();
 		}else if(mode == 2)
 		{
 			//a subcomponent
-			file << "subgraph cluster_" << getName();
+			file << tabs << "subgraph cluster_" << getName();
 		}else
 		{
 			THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
 		}
 
-		file << "{\n\n//graph drawing options\n";
-		file  << "label=" << getName() << ";\nlabelloc=bottom;\nlabeljust=right;\n";
+		//increase the tabulation
+		tabs = join(tabs, "\t");
+
+		file << "{\n\n"<< tabs << "//graph drawing options\n";
+		file << tabs << "label=" << getName() << ";\n"
+				<< tabs << "labelloc=bottom;\n" << tabs << "labeljust=right;\n";
 
 		if(dotDrawingMode == "compact")
-			file << "ratio=compress\n";
+			file << tabs << "ratio=compress;\n" << tabs << "fontsize=8;\n";
 		else
-			file << "ratio=auto;\n";
+			file << tabs << "ratio=auto;\n";
 
 		//check if it's worth drawing the subcomponent in the compact style
 		int maxInputCycle = -1, maxOutputCycle = -1;
@@ -3252,71 +3256,71 @@ namespace flopoco{
 		//	then, if this is a subcomponent, only draw the input-output connections
 		if((mode == 2) && (dotDrawingMode == "compact") && mustDrawCompact)
 		{
-			file << "nodesep=0.15;\nranksep=0.15;\nconcentrate=yes;\nfontsize=8;\n\n";
+			file << tabs << "nodesep=0.15;\n" << tabs << "ranksep=0.15;\n" << tabs << "concentrate=yes;\n\n";
 
 			//draw the input/output signals
-			file << "//input/output signals of operator" << this->getName() << "\n";
+			file << tabs << "//input/output signals of operator" << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
-				file << drawDotNode(ioList_[i]);
+				file << drawDotNode(ioList_[i], tabs);
 
 			//draw the subcomponents of this operator
-			file << "//subcomponents of operator" << this->getName() << "\n";
+			file << "\n" << tabs << "//subcomponents of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
-				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode);
+				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode, tabs);
 
 			file << "\n";
 
 			//draw the invisible node, which replaces the content of the subcomponent
-			file << "//signal connections of operator" << this->getName() << "\n";
-			file << drawDotNode(NULL);
+			file << tabs << "//signal connections of operator" << this->getName() << "\n";
+			file << drawDotNode(NULL, tabs);
 			//draw edges between the inputs and the intermediary node
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				if(ioList_[i]->type() == Signal::in)
-					file << drawDotEdge(ioList_[i], NULL);
+					file << drawDotEdge(ioList_[i], NULL, tabs);
 			//draw edges between the intermediary node and the outputs
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				if(ioList_[i]->type() == Signal::out)
-					file << drawDotEdge(NULL, ioList_[i]);
+					file << drawDotEdge(NULL, ioList_[i], tabs);
 		}else
 		{
-			file << "nodesep=0.25;\nranksep=0.5;\n\n";
+			file << tabs << "nodesep=0.25;\n" << tabs << "ranksep=0.5;\n\n";
 
 			//draw the input/output signals
-			file << "//input/output signals of operator" << this->getName() << "\n";
+			file << tabs << "//input/output signals of operator" << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
-				file << drawDotNode(ioList_[i]);
+				file << drawDotNode(ioList_[i], tabs);
 			//draw the signals of this operator as nodes
-			file << "//internal signals of operator" << this->getName() << "\n";
+			file << tabs << "//internal signals of operator" << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<signalList_.size(); i++)
-				file << drawDotNode(signalList_[i]);
+				file << drawDotNode(signalList_[i], tabs);
 
 			//draw the subcomponents of this operator
-			file << "//subcomponents of operator" << this->getName() << "\n";
+			file << "\n" << tabs << "//subcomponents of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
-				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode);
+				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode, tabs);
 
 			file << "\n";
 
 			//draw the out connections of each input of this operator
-			file << "//input and internal signal connections of operator" << this->getName() << "\n";
+			file << tabs << "//input and internal signal connections of operator" << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				if(ioList_[i]->type() == Signal::in)
-					file << drawDotNodeEdges(ioList_[i]);
+					file << drawDotNodeEdges(ioList_[i], tabs);
 			//draw the out connections of each signal of this operator
 			for(int i=0; (unsigned int)i<signalList_.size(); i++)
-				file << drawDotNodeEdges(signalList_[i]);
+				file << drawDotNodeEdges(signalList_[i], tabs);
 		}
 
-		file << "}\n\n";
+		file << tabs << "}\n\n";
 
 		//for subcomponents, draw the connections of the output ports
 		//draw the out connections of each output of this operator
 		if(mode == 2)
 		{
-			file << "//output signal connections of operator" << this->getName() << "\n";
+			file << tabs << "//output signal connections of operator" << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				if(ioList_[i]->type() == Signal::out)
-					file << drawDotNodeEdges(ioList_[i]);
+					file << drawDotNodeEdges(ioList_[i], tabs);
 		}
 
 		if(mode == 1)
@@ -3325,7 +3329,7 @@ namespace flopoco{
 			setIsOperatorDrawn(false);
 	}
 
-	std::string Operator::drawDotNode(Signal *node)
+	std::string Operator::drawDotNode(Signal *node, std::string tabs)
 	{
 	  ostringstream stream;
 	  std::string nodeName = (node!=NULL ? node->getName() : "invisibleNode");
@@ -3335,7 +3339,7 @@ namespace flopoco{
 	  {
 		  //output the node name
 		  //	for uniqueness purposes the name is signal_name::parent_operator_name
-		  stream << nodeName << "__" << this->getName() << " ";
+		  stream << tabs << nodeName << "__" << this->getName() << " ";
 
 		  //output the node's properties
 		  stream << "[ label=\"...\", shape=plaintext, color=black, style=\"bold\", fontsize=32, fillcolor=white];\n";
@@ -3349,7 +3353,7 @@ namespace flopoco{
 
 	  //output the node name
 	  //	for uniqueness purposes the name is signal_name::parent_operator_name
-	  stream << nodeName << "__" << node->parentOp()->getName() << " ";
+	  stream << tabs << nodeName << "__" << node->parentOp()->getName() << " ";
 
 	  //output the node's properties
 	  stream << "[ label=\"" << nodeName << "\\n" << node->getCriticalPathContribution() << "\\n(" << node->getCycle() << ", "
@@ -3363,7 +3367,7 @@ namespace flopoco{
 	  return stream.str();
 	}
 
-	std::string Operator::drawDotNodeEdges(Signal *node)
+	std::string Operator::drawDotNodeEdges(Signal *node, std::string tabs)
 	{
 	  ostringstream stream;
 	  std::string nodeName = node->getName();
@@ -3380,7 +3384,7 @@ namespace flopoco{
 		  else
 			  nodeParentName = node->successor(i)->getName();
 
-	      stream << nodeName << "__" << node->parentOp()->getName() << " -> "
+	      stream << tabs << nodeName << "__" << node->parentOp()->getName() << " -> "
 		   << nodeParentName << "__" << node->successor(i)->parentOp()->getName() << " [";
 	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
 	      stream << " label=" << node->successorPair(i)->second;
@@ -3390,7 +3394,7 @@ namespace flopoco{
 	  return stream.str();
 	}
 
-	std::string Operator::drawDotEdge(Signal *source, Signal *sink)
+	std::string Operator::drawDotEdge(Signal *source, Signal *sink, std::string tabs)
 	{
 		ostringstream stream;
 		std::string sourceNodeName = (source == NULL ? "invisibleNode" : source->getName());
@@ -3403,7 +3407,7 @@ namespace flopoco{
 		if((sink != NULL) && (sink->type() == Signal::constant))
 			sinkNodeName = sink->getName().substr(sink->getName().find("_cst")+1);
 
-		stream << sourceNodeName << "__" << (source!=NULL ? source->parentOp()->getName() : this->getName()) << " -> "
+		stream << tabs << sourceNodeName << "__" << (source!=NULL ? source->parentOp()->getName() : this->getName()) << " -> "
 				<< sinkNodeName << "__" << (sink!=NULL ? sink->parentOp()->getName() : this->getName()) << " [";
 		stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
 		if((source != NULL) && (sink != NULL))
