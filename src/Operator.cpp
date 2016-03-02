@@ -60,6 +60,7 @@ namespace flopoco{
 
 		isOperatorImplemented_       = false;
 		isOperatorScheduled_         = false;
+		isOperatorDrawn_             = false;
 
 		isUnique_ = true;
 		uniquenessSet_ = false;
@@ -240,7 +241,7 @@ namespace flopoco{
 		signalMap_[name] = s ;
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
-			testCaseSignals_.push_back(s);
+		  testCaseSignals_.push_back(s);
 	}
 #endif
 
@@ -1747,6 +1748,10 @@ namespace flopoco{
 		//	the currently chose state: either fully flattened, or shared
 		op->uniquenessSet_ = true;
 
+		//disable the drawing for this subcomponent
+		//	if needed, the drawing procedures will re-enable it
+		op->setIsOperatorDrawn(true);
+
 		// TODO add more checks here
 
 		//checking that all the signals are covered
@@ -1869,6 +1874,9 @@ namespace flopoco{
 
 			//mark the subcomponent as not requiring to be implemented
 			newOp->setIsOperatorImplemented(true);
+
+			//mark the subcomponent as drwan
+			newOp->setIsOperatorDrawn(true);
 
 			//save a reference
 			opCpy = newOp;
@@ -3185,9 +3193,224 @@ namespace flopoco{
 	}
 
 
-	void Operator::drawDotDiagram()
+	void Operator::drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode)
 	{
+		bool mustDrawCompact = true;
 
+		//check if this operator has already been drawn
+		if(mode == 1)
+		{
+			//for global operators, which are not subcomponents of other operators
+			if(isOperatorDrawn_ == true)
+				//nothing else to do
+				return;
+		}else
+		{
+			//for subcomponents, the logic is reversed
+			if(isOperatorDrawn_ == false)
+				//nothing else to do
+				return;
+		}
+
+		file << "\n";
+
+		//draw a component (a graph) or a subcomponent (a subgraph)
+		if(mode == 1)
+		{
+			//main component in the globalOpList
+			file << "digraph " << getName();
+		}else if(mode == 2)
+		{
+			//a subcomponent
+			file << "subgraph cluster_" << getName();
+		}else
+		{
+			THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
+		}
+
+		file << "{\n\n//graph drawing options\n";
+		file  << "label=" << getName() << ";\nlabelloc=bottom;\nlabeljust=right;\n";
+
+		if(dotDrawingMode == "compact")
+			file << "ratio=compress\n";
+		else
+			file << "ratio=auto;\n";
+
+		//check if it's worth drawing the subcomponent in the compact style
+		int maxInputCycle = -1, maxOutputCycle = -1;
+		for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() > maxInputCycle))
+				maxInputCycle = ioList_[i]->getCycle();
+			else if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() > maxOutputCycle))
+				maxOutputCycle = ioList_[i]->getCycle();
+		//if the inputs and outputs of a subcomponent are at the same cycle,
+		//	then it's probably not worth drawing the operator in the compact style
+		if((maxOutputCycle-maxInputCycle < 1) && (dotDrawingMode == "compact") && (mode == 2))
+			mustDrawCompact = false;
+
+		//if the dot drawing option is compact
+		//	then, if this is a subcomponent, only draw the input-output connections
+		if((mode == 2) && (dotDrawingMode == "compact") && mustDrawCompact)
+		{
+			file << "nodesep=0.15;\nranksep=0.15;\nconcentrate=yes;\nfontsize=8;\n\n";
+
+			//draw the input/output signals
+			file << "//input/output signals of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				file << drawDotNode(ioList_[i]);
+
+			//draw the subcomponents of this operator
+			file << "//subcomponents of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
+				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode);
+
+			file << "\n";
+
+			//draw the invisible node, which replaces the content of the subcomponent
+			file << "//signal connections of operator" << this->getName() << "\n";
+			file << drawDotNode(NULL);
+			//draw edges between the inputs and the intermediary node
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				if(ioList_[i]->type() == Signal::in)
+					file << drawDotEdge(ioList_[i], NULL);
+			//draw edges between the intermediary node and the outputs
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				if(ioList_[i]->type() == Signal::out)
+					file << drawDotEdge(NULL, ioList_[i]);
+		}else
+		{
+			file << "nodesep=0.25;\nranksep=0.5;\n\n";
+
+			//draw the input/output signals
+			file << "//input/output signals of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				file << drawDotNode(ioList_[i]);
+			//draw the signals of this operator as nodes
+			file << "//internal signals of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<signalList_.size(); i++)
+				file << drawDotNode(signalList_[i]);
+
+			//draw the subcomponents of this operator
+			file << "//subcomponents of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
+				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode);
+
+			file << "\n";
+
+			//draw the out connections of each input of this operator
+			file << "//input and internal signal connections of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				if(ioList_[i]->type() == Signal::in)
+					file << drawDotNodeEdges(ioList_[i]);
+			//draw the out connections of each signal of this operator
+			for(int i=0; (unsigned int)i<signalList_.size(); i++)
+				file << drawDotNodeEdges(signalList_[i]);
+		}
+
+		file << "}\n\n";
+
+		//for subcomponents, draw the connections of the output ports
+		//draw the out connections of each output of this operator
+		if(mode == 2)
+		{
+			file << "//output signal connections of operator" << this->getName() << "\n";
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+				if(ioList_[i]->type() == Signal::out)
+					file << drawDotNodeEdges(ioList_[i]);
+		}
+
+		if(mode == 1)
+			setIsOperatorDrawn(true);
+		else
+			setIsOperatorDrawn(false);
+	}
+
+	std::string Operator::drawDotNode(Signal *node)
+	{
+	  ostringstream stream;
+	  std::string nodeName = (node!=NULL ? node->getName() : "invisibleNode");
+
+	  //different flow for the invisible node, that replaces the content of a subcomponent
+	  if(node == NULL)
+	  {
+		  //output the node name
+		  //	for uniqueness purposes the name is signal_name::parent_operator_name
+		  stream << nodeName << "__" << this->getName() << " ";
+
+		  //output the node's properties
+		  stream << "[ label=\"...\", shape=plaintext, color=black, style=\"bold\", fontsize=32, fillcolor=white];\n";
+
+		  return stream.str();
+	  }
+
+	  //process the node's name for correct dot format
+	  if(node->type() == Signal::constant)
+		  nodeName = node->getName().substr(node->getName().find("_cst")+1);
+
+	  //output the node name
+	  //	for uniqueness purposes the name is signal_name::parent_operator_name
+	  stream << nodeName << "__" << node->parentOp()->getName() << " ";
+
+	  //output the node's properties
+	  stream << "[ label=\"" << nodeName << "\\n" << node->getCriticalPathContribution() << "\\n(" << node->getCycle() << ", "
+	      << node->getCriticalPath() << ")\"";
+	  stream << ", shape=box, color=black";
+	  stream << ", style" << ((node->type() == Signal::in || node->type() == Signal::out) ? "=\"bold, filled\"" : "=filled");
+	  stream << ", fillcolor=" << Signal::getDotNodeColor(node->getCycle());
+	  stream << ", peripheries=" << (node->type() == Signal::in ? "2" : node->type() == Signal::out ? "3" : "1");
+	  stream << " ];\n";
+
+	  return stream.str();
+	}
+
+	std::string Operator::drawDotNodeEdges(Signal *node)
+	{
+	  ostringstream stream;
+	  std::string nodeName = node->getName();
+	  std::string nodeParentName;
+
+	  //process the node's name for correct dot format
+	  if(node->type() == Signal::constant)
+		  nodeName = node->getName().substr(node->getName().find("_cst")+1);
+
+	  for(int i=0; (unsigned int)i<node->successors()->size(); i++)
+	  {
+		  if(node->successor(i)->type() == Signal::constant)
+			  nodeParentName = node->successor(i)->getName().substr(node->successor(i)->getName().find("_cst")+1);
+		  else
+			  nodeParentName = node->successor(i)->getName();
+
+	      stream << nodeName << "__" << node->parentOp()->getName() << " -> "
+		   << nodeParentName << "__" << node->successor(i)->parentOp()->getName() << " [";
+	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
+	      stream << " label=" << node->successorPair(i)->second;
+	      stream << " ];\n";
+	  }
+
+	  return stream.str();
+	}
+
+	std::string Operator::drawDotEdge(Signal *source, Signal *sink)
+	{
+		ostringstream stream;
+		std::string sourceNodeName = (source == NULL ? "invisibleNode" : source->getName());
+		std::string sinkNodeName = (sink == NULL ? "invisibleNode" : sink->getName());
+
+		//process the source node's name for correct dot format
+		if((source != NULL) && (source->type() == Signal::constant))
+			sourceNodeName = source->getName().substr(source->getName().find("_cst")+1);
+		//process the sink node's name for correct dot format
+		if((sink != NULL) && (sink->type() == Signal::constant))
+			sinkNodeName = sink->getName().substr(sink->getName().find("_cst")+1);
+
+		stream << sourceNodeName << "__" << (source!=NULL ? source->parentOp()->getName() : this->getName()) << " -> "
+				<< sinkNodeName << "__" << (sink!=NULL ? sink->parentOp()->getName() : this->getName()) << " [";
+		stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
+		if((source != NULL) && (sink != NULL))
+			stream << " label=" << sink->getCycle()-source->getCycle();
+		stream << " ];\n";
+
+		return stream.str();
 	}
 
 
@@ -3367,6 +3590,7 @@ namespace flopoco{
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
 
 		isOperatorImplemented_      = op->isOperatorImplemented();
+		isOperatorDrawn_            = op->isOperatorDrawn();
 
 		resourceEstimate.str(op->resourceEstimate.str());
 		resourceEstimateReport.str(op->resourceEstimateReport.str());
@@ -3426,12 +3650,16 @@ namespace flopoco{
 		}
 		ioList_.clear();
 		ioList_.insert(ioList_.begin(), newIOList.begin(), newIOList.end());
-		signalList_.insert(signalList_.end(), newIOList.begin(), newIOList.end());
+		//signalList_.insert(signalList_.end(), newIOList.begin(), newIOList.end());
 
 		//update the signal map
 		signalMap_.clear();
+		//insert the inputs/outputs
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		  signalMap_[ioList_[i]->getName()] = ioList_[i];
+		//insert the internal signals
 		for(unsigned int i=0; i<signalList_.size(); i++)
-			signalMap_[signalList_[i]->getName()] = signalList_[i];
+		  signalMap_[signalList_[i]->getName()] = signalList_[i];
 
 		//create deep copies of the subcomponents
 		vector<Operator*> newOpList;
@@ -3511,7 +3739,9 @@ namespace flopoco{
 		//update the signal map
 		signalMap_.clear();
 		for(unsigned int i=0; i<signalList_.size(); i++)
-			signalMap_[signalList_[i]->getName()] = signalList_[i];
+		  signalMap_[signalList_[i]->getName()] = signalList_[i];
+		for(unsigned int i=0; i<ioList_.size(); i++)
+		  signalMap_[ioList_[i]->getName()] = ioList_[i];
 
 		//no need to recreate the signal dependences for each of the input/output signals,
 		//	as this is either done by instance, or it is done by the parent operator of this operator
@@ -3602,25 +3832,33 @@ namespace flopoco{
 	}
 
 	bool Operator::isOperatorScheduled(){
-		return isOperatorScheduled_;
+	  return isOperatorScheduled_;
 	}
 
 	void Operator::setIsOperatorScheduled(bool newValue){
-		isOperatorScheduled_ = newValue;
+	  isOperatorScheduled_ = newValue;
+	}
+
+	bool Operator::isOperatorDrawn(){
+		return isOperatorDrawn_;
+	}
+
+	void Operator::setIsOperatorDrawn(bool newValue){
+		isOperatorDrawn_ = newValue;
 	}
 
 
 	bool Operator::setShared(){
-		if(uniquenessSet_ == true)
-		{
-			THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
-		}else
-		{
-			isUnique_ = false;
-			uniquenessSet_ = true;
+	  if(uniquenessSet_ == true)
+	    {
+	      THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
+	    }else
+	      {
+		isUnique_ = false;
+		uniquenessSet_ = true;
 
-			return isUnique_;
-		}
+		return isUnique_;
+	      }
 	}
 
 	bool Operator::isUnique(){

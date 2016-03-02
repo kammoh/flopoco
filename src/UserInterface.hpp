@@ -94,14 +94,21 @@ namespace flopoco
 				expected to be used several times, *in a way that is independent of the context/timing*.
 				Typical example is a table designed to fit in a LUT or parallel row of LUTs
 		*/
-
 		static void addToGlobalOpList(OperatorPtr op);
+
 
 		/** generates the code for operators in oplist, and all their subcomponents */
 		static void outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file);
 
 		/** generates the code for operators in globalOpList, and all their subcomponents */
 		static void outputVHDLToFile(ofstream& file);
+
+
+		/** generates the dot code for operators in oplist, and all their subcomponents */
+		static void outputDotToFile(vector<OperatorPtr> &oplist, ofstream& file);
+
+		/** generates the dot code for operators in globalOpList, and all their subcomponents */
+		static void outputDotToFile(ofstream& file);
 
 
 	private:
@@ -143,6 +150,9 @@ namespace flopoco
 		static const vector<string> known_fpgas;
 		static const vector<string> special_targets;
 		static const vector<option_t> options;
+
+		static string dotFileName;
+		static string dotDrawing;
 
 	};
 

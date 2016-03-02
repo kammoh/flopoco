@@ -403,6 +403,9 @@ class Operator;
 		void setName(std::string name);
 		void setType(SignalType t);
 
+		/** return a color for drawing a node */
+		static std::string getDotNodeColor(int index);
+
 	private:
 		Operator*     parentOp_;           /**< The operator which contains this signal */
 		std::string   name_;               /**< The name of the signal */
@@ -419,11 +422,11 @@ class Operator;
 		std::vector<pair<Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
 		std::vector<pair<Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The second value in the pair contains the (possible) delay on the edge */
 		int           cycle_;              /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
-	    double        criticalPath_;       /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
-	    double        criticalPathContribution_; /**< the delay that the signal adds to the critical path */
+		double        criticalPath_;       /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+		double        criticalPathContribution_; /**< the delay that the signal adds to the critical path */
 
-	    bool          hasBeenScheduled_;    /**< Has the signal already been scheduled? */
-	    bool          hasBeenDrawn_;    /**< Has the signal already been drawn? */
+		bool          hasBeenScheduled_;    /**< Has the signal already been scheduled? */
+		bool          hasBeenDrawn_;    /**< Has the signal already been drawn? */
 
 		bool          isFP_;               /**< If the signal is of the FloPoCo floating-point type */
 		bool          isFix_;              /**< If the signal is of the FloPoCo fixed-point type */
@@ -435,7 +438,7 @@ class Operator;
 		bool          isSigned_;           /**< true if this a signed fixed-point signals, false otherwise */
 		bool          isBus_;              /**< True is the signal is a bus (std_logic_vector)*/
 
-
+		static const vector<string> dotNodeColors;
 	};
 
 }
