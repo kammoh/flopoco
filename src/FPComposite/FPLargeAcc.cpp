@@ -35,8 +35,9 @@ namespace flopoco{
 
 	FPLargeAcc::FPLargeAcc(Target* target, int wEX, int wFX, int MaxMSBX, int MSBA, int LSBA, map<string, double> inputDelays,  bool forDotProd, int wFY): 
 		Operator(target), 
-		wEX_(wEX), wFX_(wFX), MaxMSBX_(MaxMSBX), LSBA_(LSBA), MSBA_(MSBA), AccValue_(0), xOvf(0)
+		wEX(wEX), wFX(wFX), MaxMSBX(MaxMSBX), LSBA(LSBA), MSBA(MSBA), xOvf(0), accValue(0)
 	{
+		srcFileName="FPLargeAcc";
 		// You probably want to remove the following line to have the warnings come back
 		//if you modify this operator
 		setHasDelay1Feedbacks(); 
@@ -45,31 +46,28 @@ namespace flopoco{
 			wFY=wFX;
 		
 		int i;
-		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2008-2009)");		
+		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2008-2015)");		
 
 		//check input constraints, i.e, MaxMSBX <= MSBA, LSBA<MaxMSBx
-		if ((MaxMSBX_ > MSBA_)){
-			cerr << " FPLargeAcc: Input constraint MaxMSBX <= MSBA not met." << endl;
-			exit (EXIT_FAILURE);
+		if ((MaxMSBX > MSBA)){
+			THROWERROR("Input constraint MaxMSBX <= MSBA not met.");
 		}
-		if ((LSBA_ >= MaxMSBX_)){
-			cerr << " FPLargeAcc: Input constraint LSBA<MaxMSBx not met:"<<
-				" This accumulator would never accumulate a bit." << endl;
-			exit (EXIT_FAILURE);
+		if ((LSBA >= MaxMSBX)){
+			THROWERROR("Input constraint LSBA<MaxMSBx not met: This accumulator would never accumulate a bit.");
 		}
 
 		ostringstream name; 
-		name <<"FPLargeAcc_"<<wEX_<<"_"<<wFX_<<"_"
-				 <<(MaxMSBX_>=0?"":"M")<<abs(MaxMSBX_)<<"_"
-				 <<(MSBA_>=0?"":"M")<<abs(MSBA_)<<"_" 
-				 <<(LSBA_>=0?"":"M")<<abs(LSBA_);
+		name <<"FPLargeAcc_"<<wEX<<"_"<<wFX<<"_"
+				 <<(MaxMSBX>=0?"":"M")<<abs(MaxMSBX)<<"_"
+				 <<(MSBA>=0?"":"M")<<abs(MSBA)<<"_" 
+				 <<(LSBA>=0?"":"M")<<abs(LSBA);
 		setName(name.str());
 
 		// This operator is a sequential one
 		setSequential();
 
 		// Set up various architectural parameters
-		sizeAcc_ = MSBA_-LSBA_+1;
+		sizeAcc = MSBA-LSBA+1;
 
 		if (forDotProd){
 			addInput ("sigX_dprod");
@@ -77,22 +75,22 @@ namespace flopoco{
 			addInput ("fracX_dprod", 1+wFX+1+wFY);
 			addInput ("expX_dprod", wEX);
 		}else
-			addFPInput ("X", wEX_,wFX_);
+			addFPInput ("X", wEX,wFX);
 		
 
 		addInput   ("newDataSet");
 		addOutput  ("ready");
-		addOutput  ("A", sizeAcc_);  
-		addOutput  ("C", sizeAcc_);
+		addOutput  ("A", sizeAcc);  
+		addOutput  ("C", sizeAcc);
 		addOutput  ("XOverflow");  
 		addOutput  ("XUnderflow");  
 		addOutput  ("AccOverflow");  
 		
-		maxShift_        = MaxMSBX_-LSBA_;              // shift is 0 when the implicit 1 is at LSBA_
-		sizeShift_       = intlog2(maxShift_);         // the number of bits needed to control the shifter
-		sizeSummand_     = MaxMSBX_-LSBA_+1;         // the size of the summand (the maximum one - when the inplicit 1 is on MaxMSBX)
-		sizeShiftedFrac_ = maxShift_ + wFX_+1;   
-		E0X_ = (1<<(wEX_-1)) -1;                 // exponent bias
+		maxShift        = MaxMSBX-LSBA;              // shift is 0 when the implicit 1 is at LSBA
+		sizeShift       = intlog2(maxShift);         // the number of bits needed to control the shifter
+		sizeSummand     = MaxMSBX-LSBA+1;         // the size of the summand (the maximum one - when the inplicit 1 is on MaxMSBX)
+		sizeShiftedFrac = maxShift + wFX+1;   
+		E0X = (1<<(wEX-1)) -1;                 // exponent bias
 		// Shift is 0 when implicit 1 is on LSBA, that is when EX-bias = LSBA
 		// that is, EX-bias-LSBA = 0, EX-(bias + LSBA) = 0
 		// We are working in sign-magnitude, so we differentiate 2 cases:
@@ -106,31 +104,31 @@ namespace flopoco{
 		//MaxMSBx is one valid exponent value, that is, 
 		//1. after bias is added, value should be >= 0
 		//2. after bias is added, representation should still fit on no more than wEX bits
-		int biasedMaxMSBX_ = MaxMSBX_ + E0X_;
-		if(biasedMaxMSBX_ < 0 || intlog2(biasedMaxMSBX_)>wEX_) {
-			cerr<<"ERROR in FPLargeAcc: MaxMSBX_="<<MaxMSBX_<<" is not a valid exponent of X (range "
-				 <<(-E0X_)<< " to " << ((1<<wEX_)-1)-E0X_ <<endl;
+		int biasedMaxMSBX = MaxMSBX + E0X;
+		if(biasedMaxMSBX < 0 || intlog2(biasedMaxMSBX)>wEX) {
+			cerr<<"ERROR in FPLargeAcc: MaxMSBX="<<MaxMSBX<<" is not a valid exponent of X (range "
+				 <<(-E0X)<< " to " << ((1<<wEX)-1)-E0X <<endl;
 			exit (EXIT_FAILURE);
 		}
 
 		/* set-up carry-save parameters */		
-		int chunkSize_;
-		target->suggestSlackSubaddSize(chunkSize_ , sizeAcc_, target->localWireDelay() + target->lutDelay());
-		REPORT( DEBUG, "Addition chunk size in FPLargeAcc is:"<<chunkSize_);
+		int chunkSize;
+		target->suggestSlackSubaddSize(chunkSize , sizeAcc, target->localWireDelay() + target->lutDelay());
+		REPORT( DEBUG, "Addition chunk size in FPLargeAcc is:"<<chunkSize);
 		 
-		int nbOfChunks    = ceil(double(sizeAcc_)/double(chunkSize_));
-		int lastChunkSize = ( sizeAcc_ % chunkSize_ == 0 ? chunkSize_  : sizeAcc_ % chunkSize_);
+		int nbOfChunks    = ceil(double(sizeAcc)/double(chunkSize));
+		int lastChunkSize = ( sizeAcc % chunkSize == 0 ? chunkSize  : sizeAcc % chunkSize);
 
 
 		/* if FPLargeAcc is used in FPDotProduct, then its input fraction is twice as large */
 		if (!forDotProd){
-			vhdl << tab << declare("fracX",wFX_+1) << " <=  \"1\" & X" << range(wFX_-1,0) << ";" << endl;
-			vhdl << tab << declare("expX" ,wEX_  ) << " <= X" << range(wEX_+wFX_-1,wFX_) << ";" << endl;
-			vhdl << tab << declare("signX") << " <= X" << of(wEX_+wFX_) << ";" << endl;
-			vhdl << tab << declare("exnX" ,2     ) << " <= X" << range(wEX_+wFX_+2,wEX_+wFX_+1) << ";" << endl;
+			vhdl << tab << declare("fracX",wFX+1) << " <=  \"1\" & X" << range(wFX-1,0) << ";" << endl;
+			vhdl << tab << declare("expX" ,wEX  ) << " <= X" << range(wEX+wFX-1,wFX) << ";" << endl;
+			vhdl << tab << declare("signX") << " <= X" << of(wEX+wFX) << ";" << endl;
+			vhdl << tab << declare("exnX" ,2     ) << " <= X" << range(wEX+wFX+2,wEX+wFX+1) << ";" << endl;
 		}else{
-			vhdl << tab << declare("fracX",wFX_ + wFY +2) << " <= fracX_dprod;" << endl;
-			vhdl << tab << declare("expX" ,wEX_  ) << " <= expX_dprod;" << endl;
+			vhdl << tab << declare("fracX",wFX + wFY +2) << " <= fracXdprod;" << endl;
+			vhdl << tab << declare("expX" ,wEX  ) << " <= expX_dprod;" << endl;
 			vhdl << tab << declare("signX") << " <= sigX_dprod;" << endl;
 			vhdl << tab << declare("exnX" ,2     ) << " <= excX_dprod;" << endl;
 		}
@@ -143,19 +141,19 @@ namespace flopoco{
 		run. If Xoverflow has happened, then MaxMSBX needs to be increased and 
 		the accumulation result is invalidated. If Xunderflow is raised then 
 		user can lower LSBA for obtaining a even better accumulation precision */
-		vhdl << tab << declare("xOverflowCond" ,1, false, Signal::registeredWithSyncReset) << " <= '1' when (( expX > CONV_STD_LOGIC_VECTOR("<<MaxMSBX_ + E0X_<<","<< wEX_<<")) or (exnX >= \"10\")) else '0' ;"<<endl; 
-		vhdl << tab << declare("xUnderflowCond",1, false, Signal::registeredWithSyncReset) << " <= '1' when (expX < CONV_STD_LOGIC_VECTOR("<<LSBA_ + E0X_<<","<<wEX_<<")) else '0' ;" << endl;  
+		vhdl << tab << declare("xOverflowCond" ,1, false, Signal::registeredWithSyncReset) << " <= '1' when (( expX > CONV_STD_LOGIC_VECTOR("<<MaxMSBX + E0X<<","<< wEX<<")) or (exnX >= \"10\")) else '0' ;"<<endl; 
+		vhdl << tab << declare("xUnderflowCond",1, false, Signal::registeredWithSyncReset) << " <= '1' when (expX < CONV_STD_LOGIC_VECTOR("<<LSBA + E0X<<","<<wEX<<")) else '0' ;" << endl;  
 		
-		mpz_class exp_offset = E0X_+LSBA_;
-		vhdl << tab << declare("shiftVal",wEX_+1) << " <= (\"0\" & expX) - CONV_STD_LOGIC_VECTOR("<< exp_offset <<","<<  wEX_+1<<");" << endl;
+		mpz_class exp_offset = E0X+LSBA;
+		vhdl << tab << declare("shiftVal",wEX+1) << " <= (\"0\" & expX) - CONV_STD_LOGIC_VECTOR("<< exp_offset <<","<<  wEX+1<<");" << endl;
 
-		shifter_ = new Shifter(target, (forDotProd?wFX_+wFY+2:wFX_+1), maxShift_, Shifter::Left, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
-		addSubComponent(shifter_);
+		Shifter* shifter = new Shifter(target, (forDotProd?wFX+wFY+2:wFX+1), maxShift, Shifter::Left, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+		addSubComponent(shifter);
 
-		inPortMap   (shifter_, "X", "fracX");
-		inPortMapCst(shifter_, "S", "shiftVal"+range(shifter_->getShiftInWidth() - 1,0));
-		outPortMap  (shifter_, "R", "shifted_frac");
-		vhdl << instance(shifter_, "FPLargeAccInputShifter");
+		inPortMap   (shifter, "X", "fracX");
+		inPortMapCst(shifter, "S", "shiftVal"+range(shifter->getShiftInWidth() - 1,0));
+		outPortMap  (shifter, "R", "shifted_frac");
+		vhdl << instance(shifter, "FPLargeAccInputShifter");
 	
 		syncCycleFromSignal("shifted_frac");
 
@@ -163,20 +161,20 @@ namespace flopoco{
 
 		/* determine if the input has been shifted out from the accumulator. 
 		In this case the accumulator will added 0 */
-		vhdl << tab << declare("flushedToZero") << " <= '1' when (shiftVal" << of(wEX_)<<"='1' or exnX=\"00\") else '0';" << endl;
+		vhdl << tab << declare("flushedToZero") << " <= '1' when (shiftVal" << of(wEX)<<"='1' or exnX=\"00\") else '0';" << endl;
 
 		/* in most FPGAs computation of the summand2c will be done in one LUT level */
-		vhdl << tab << declare("summand", sizeSummand_, true, Signal::registeredWithSyncReset) << "<= " << 
-					zg(sizeSummand_) << " when flushedToZero='1' else shifted_frac" << range(sizeShiftedFrac_-1,wFX_)<<";" << endl;
+		vhdl << tab << declare("summand", sizeSummand, true, Signal::registeredWithSyncReset) << "<= " << 
+					zg(sizeSummand) << " when flushedToZero='1' else shifted_frac" << range(sizeShiftedFrac-1,wFX)<<";" << endl;
 
 		vhdl << tab << "-- 2's complement of the summand" << endl;
 		/* Don't compute 2's complement just yet, just invert the bits and leave 
 		the addition of the extra 1 in accumulation, as a carry in bit for the 
 		first chunk*/
-		vhdl << tab << declare("summand2c", sizeSummand_, true) << " <= summand when (signX='0' or flushedToZero='1') else not(summand);"<< endl;
+		vhdl << tab << declare("summand2c", sizeSummand, true) << " <= summand when (signX='0' or flushedToZero='1') else not(summand);"<< endl;
 
 		vhdl << tab << "-- sign extension of the summand to accumulator size" << endl;
-		vhdl << tab << declare("ext_summand2c",sizeAcc_,true) << " <= " << (sizeAcc_-1<sizeSummand_?"":rangeAssign(sizeAcc_-1, sizeSummand_, "signX and not flushedToZero")+" & ") << "summand2c;" << endl;
+		vhdl << tab << declare("ext_summand2c",sizeAcc,true) << " <= " << (sizeAcc-1<sizeSummand?"":rangeAssign(sizeAcc-1, sizeSummand, "signX and not flushedToZero")+" & ") << "summand2c;" << endl;
 
 		vhdl << tab << "-- accumulation itself" << endl;
 		//determine the value of the carry in bit
@@ -187,12 +185,12 @@ namespace flopoco{
 			ostringstream accReg;
 			accReg<<"acc_"<<i;
 
-			vhdl << tab << declare(join("acc_",i),(i!=nbOfChunks-1?chunkSize_:lastChunkSize) ,true, Signal::registeredWithSyncReset) << " <= " << 
-				join("acc_",i,"_ext")<<range((i!=nbOfChunks-1?chunkSize_-1:lastChunkSize-1),0) << ";" << endl;
-			vhdl << tab << declare(join("carryBit_",i+1),1, false, Signal::registeredWithSyncReset) <<"  <= " << join("acc_",i,"_ext")<<of((i!=nbOfChunks-1?chunkSize_:lastChunkSize)) << ";" << endl;
+			vhdl << tab << declare(join("acc_",i),(i!=nbOfChunks-1?chunkSize:lastChunkSize) ,true, Signal::registeredWithSyncReset) << " <= " << 
+				join("acc_",i,"_ext")<<range((i!=nbOfChunks-1?chunkSize-1:lastChunkSize-1),0) << ";" << endl;
+			vhdl << tab << declare(join("carryBit_",i+1),1, false, Signal::registeredWithSyncReset) <<"  <= " << join("acc_",i,"_ext")<<of((i!=nbOfChunks-1?chunkSize:lastChunkSize)) << ";" << endl;
 			nextCycle();		
-			vhdl << tab << declare(join("acc_",i,"_ext"),(i!=nbOfChunks-1?chunkSize_:lastChunkSize)+1) << " <= ( \"0\" & (" <<join("acc_",i)<< " and "<<rangeAssign( (i!=nbOfChunks-1?chunkSize_:lastChunkSize)-1,0, "not(newDataSet)") <<")) + " <<
-				"( \"0\" & ext_summand2c" << range( (i!=nbOfChunks-1?chunkSize_*(i+1)-1:sizeAcc_-1), chunkSize_*i) << ") + " << 
+			vhdl << tab << declare(join("acc_",i,"_ext"),(i!=nbOfChunks-1?chunkSize:lastChunkSize)+1) << " <= ( \"0\" & (" <<join("acc_",i)<< " and "<<rangeAssign( (i!=nbOfChunks-1?chunkSize:lastChunkSize)-1,0, "not(newDataSet)") <<")) + " <<
+				"( \"0\" & ext_summand2c" << range( (i!=nbOfChunks-1?chunkSize*(i+1)-1:sizeAcc-1), chunkSize*i) << ") + " << 
 				"("<<join("carryBit_",i) << (i>0?" and not(newDataSet)":"")<< ");" << endl;
 			setCycleFromSignal("carryBit_0");
 		}
@@ -208,14 +206,14 @@ namespace flopoco{
 		nextCycle();
 		
 		//compose the acc signal 
-		vhdl << tab << declare("acc", sizeAcc_) << " <= ";
+		vhdl << tab << declare("acc", sizeAcc) << " <= ";
 		for (i=nbOfChunks-1;i>=0;i--)
 			vhdl << join("acc_",i) <<  (i>0?" & ":";\n");
 	
-		vhdl << tab << declare("carry", sizeAcc_) << " <= ";
+		vhdl << tab << declare("carry", sizeAcc) << " <= ";
 		for (i=nbOfChunks-1;i>=0; i--){
 			vhdl << (i<nbOfChunks-1?join("carryBit_",i+1)+" & ":"");
-			vhdl << (i==nbOfChunks-1?zg(lastChunkSize-(i>0?1:0))+(i>0?" & ":""):(i>0?zg(chunkSize_-1)+" & ":zg(chunkSize_)));
+			vhdl << (i==nbOfChunks-1?zg(lastChunkSize-(i>0?1:0))+(i>0?" & ":""):(i>0?zg(chunkSize-1)+" & ":zg(chunkSize)));
 		}vhdl << ";" << endl;
 
 		if (nbOfChunks > 1 ){
@@ -247,23 +245,23 @@ namespace flopoco{
 
 		// initialisation
 		mpfr_init2(ref_acc, 10000);
-		mpfr_init2(long_acc, sizeAcc_+1);
-		mpfr_init2(fp_acc, wFX_+1);
-		mpfr_init2(r, wFX_+1);
+		mpfr_init2(long_acc, sizeAcc+1);
+		mpfr_init2(fp_acc, wFX+1);
+		mpfr_init2(r, wFX+1);
 		mpfr_init2(d, 100);
 		mpfr_init2(one, 100);
 		mpfr_init2(two, 100);
 		mpfr_init2(msb, 100);
 		mpfr_set_d(one, 1.0, GMP_RNDN);
 		mpfr_set_d(two, 2.0, GMP_RNDN);
-		mpfr_set_d(msb, (double)(1<<(MSBA_+1)), GMP_RNDN); // works for MSBA_<32
+		mpfr_set_d(msb, (double)(1<<(MSBA+1)), GMP_RNDN); // works for MSBA<32
 
 		//cout<<"%-------Acc. of positive numbers--------------- "<<endl;
 		mpfr_set_d(ref_acc, 0.0, GMP_RNDN);
 		mpfr_set_d(fp_acc, 0.0, GMP_RNDN);
-		//put a one in the MSBA_+1 bit will turn all the subsequent additions
+		//put a one in the MSBA+1 bit will turn all the subsequent additions
 		// into fixed-point ones
-		mpfr_set_d(long_acc, (double)(1<<(MSBA_+1)), GMP_RNDN);
+		mpfr_set_d(long_acc, (double)(1<<(MSBA+1)), GMP_RNDN);
 
 		FloPoCoRandomState::init(10, false);
 
@@ -310,9 +308,9 @@ namespace flopoco{
 
 		mpfr_set_d(ref_acc, 0.0, GMP_RNDN);
 		mpfr_set_d(fp_acc, 0.0, GMP_RNDN);
-		//put a one in the MSBA_+1 bit will turn all the subsequent additions
+		//put a one in the MSBA+1 bit will turn all the subsequent additions
 		// into fixed-point ones
-		mpfr_set_d(long_acc, (double)(1<<(MSBA_+1)), GMP_RNDN);
+		mpfr_set_d(long_acc, (double)(1<<(MSBA+1)), GMP_RNDN);
 
 		for(int i=0; i<n; i++){
 			//mpfr_random(r); // deprecated function; r is [0,1]
@@ -362,26 +360,26 @@ namespace flopoco{
 		// initialisation
 #define DPFPAcc 1
 		mpfr_init2(ref_acc, 10000);
-		mpfr_init2(long_acc, sizeAcc_+1);
+		mpfr_init2(long_acc, sizeAcc+1);
 #if DPFPAcc
 		mpfr_init2(fp_acc,52 +1);
 #else
-		mpfr_init2(fp_acc, wFX_+1);
+		mpfr_init2(fp_acc, wFX+1);
 #endif
-		mpfr_init2(r, wFX_+1);
+		mpfr_init2(r, wFX+1);
 		mpfr_init2(d, 100);
 		mpfr_init2(one, 100);
 		mpfr_init2(two, 100);
 		mpfr_init2(msb, 100);
 		mpfr_set_d(one, 1.0, GMP_RNDN);
 		mpfr_set_d(two, 2.0, GMP_RNDN);
-		mpfr_set_d(msb, (double)(1<<(MSBA_+1)), GMP_RNDN); // works for MSBA_<32
+		mpfr_set_d(msb, (double)(1<<(MSBA+1)), GMP_RNDN); // works for MSBA<32
 
 		mpfr_set_d(ref_acc, 0.0, GMP_RNDN);
 		mpfr_set_d(fp_acc, 0.0, GMP_RNDN);
-		//put a one in the MSBA_+1 bit will turn all the subsequent additions
+		//put a one in the MSBA+1 bit will turn all the subsequent additions
 		// into fixed-point ones
-		mpfr_set_d(long_acc, (double)(1<<(MSBA_+1)), GMP_RNDN);
+		mpfr_set_d(long_acc, (double)(1<<(MSBA+1)), GMP_RNDN);
 
 
 		ifstream myfile ("/home/fdedinec/accbobines.txt");
@@ -461,10 +459,10 @@ namespace flopoco{
 
 
 
-
+#if 0 //  unplugged, replaced with emulate()
 	//FIXME 	: IOs are defined as
-   // addFPInput ("X", wEX_,wFX_);
-	// addOutput  ("A", sizeAcc_);  
+   // addFPInput ("X", wEX,wFX);
+	// addOutput  ("A", sizeAcc);  
 	// addOutput  ("XOverflow");  
 	// addOutput  ("XUnderflow");  
 	// addOutput  ("AccOverflow");  
@@ -478,35 +476,28 @@ namespace flopoco{
 	
 		currentIteration++;
 
-		//the last additionNumberOfChunks_-1 inputs must be 0 in order to propagate the carry bit in the accumulator
-		if (currentIteration  > numberOfTests - additionNumberOfChunks_ + 1)
+		if (currentIteration  > numberOfTests + 1)
 			sX = 0;
 
 		//convert this raw number into a FP number accornding to the flopoco FP format
-		FPNumber fpX(wEX_, wFX_);
+		FPNumber fpX(wEX, wFX);
 		fpX = sX;
 	
 		//for now, we do not accept inputs which overflow, negative inputs or inputs having the exception bits INF and NaN
-		while ((fpX.getExponentSignalValue()-(intpow2(wEX_-1)-1)>MaxMSBX_)
+		while ((fpX.getExponentSignalValue()-(intpow2(wEX-1)-1)>MaxMSBX)
 				 //||(fpX.getSignSignalValue()==1) 
 				 || (fpX.getExceptionSignalValue()>1)){
-			sX = getLargeRandom(wEX_+wFX_+3);
+			sX = getLargeRandom(wEX+wFX+3);
 			fpX = sX;
 		}
 
 	
-		if ((fpX.getExceptionSignalValue()>1) || (fpX.getExponentSignalValue()-(intpow2(wEX_-1)-1)>MaxMSBX_))
+		if ((fpX.getExceptionSignalValue()>1) || (fpX.getExponentSignalValue()-(intpow2(wEX-1)-1)>MaxMSBX))
 			xOvf = 1;
 	
 		sXOverflow = xOvf;
 	
-		if (UserInterface::verbose==1)
-			cout<<" i="         << currentIteration
-#ifdef  _WIN32	
-				 <<",a=" << mpz2string(AccValue_);
-#else
-		<<",a=" << AccValue_;
-#endif
+		REPORT(DETAILED," i=" << currentIteration	 << ", a=" << AccValue_);
 
 		if (fpX.getExceptionSignalValue()!=0)  {
 			if (fpX.getSignSignalValue()==0)
@@ -525,36 +516,39 @@ namespace flopoco{
 #ifdef  _WIN32
 			cout<< "Exc="<<mpz2string(fpX.getExceptionSignalValue())
 				 <<", S="<<mpz2string(fpX.getSignSignalValue())
-				 <<", Exp="<<mpz2string(fpX.getExponentSignalValue()-(intpow2(wEX_-1)-1))
+				 <<", Exp="<<mpz2string(fpX.getExponentSignalValue()-(intpow2(wEX-1)-1))
 				 <<", Frac="<<mpz2string(fpX.getFractionSignalValue())<<endl;
 
 #else
 			cout<< "Exc="<<fpX.getExceptionSignalValue()
 				 <<", S="<<fpX.getSignSignalValue()
-				 <<", Exp="<<fpX.getExponentSignalValue()-(intpow2(wEX_-1)-1)
+				 <<", Exp="<<fpX.getExponentSignalValue()-(intpow2(wEX-1)-1)
 				 <<", Frac="<<fpX.getFractionSignalValue()<<endl;
 #endif				 
 		}
 	
 		//assign value to sA only at final iteration	
 		if (currentIteration==numberOfTests)
-			sA = sInt2C2(AccValue_, sizeAcc_);
+			sA = sInt2C2(AccValue_, sizeAcc);
 	
  
 	}
+#endif
 
+	
 	mpz_class FPLargeAcc::mapFP2Acc(FPNumber X)
 	{
 		//get true exponent of X
-		mpz_class expX = X.getExponentSignalValue() - ( intpow2(wEX_-1)-1 ); 
+		mpz_class expX = X.getExponentSignalValue() - ( intpow2(wEX-1)-1 ); 
 	
-		int keepBits = -LSBA_ + expX.get_si();
+		int keepBits = -LSBA + expX.get_si();
 		if (keepBits<0)
 			return 0;
-		else if (wFX_>keepBits)
-			return (X.getFractionSignalValue()/mpz_class(intpow2(wFX_-keepBits)));
+		else if (wFX>keepBits)
+			// The following is an _integer_ division that, by discarding its fractional part,  takes care of the truncation.
+			return (X.getFractionSignalValue()/mpz_class(intpow2(wFX-keepBits)));
 		else
-			return (X.getFractionSignalValue()*mpz_class(intpow2(keepBits-wFX_)));
+			return (X.getFractionSignalValue()*mpz_class(intpow2(keepBits-wFX)));
 	}
 
 	mpz_class FPLargeAcc::sInt2C2(mpz_class X, int width)
@@ -566,29 +560,51 @@ namespace flopoco{
 		}
 	}
 
+	/*TODOs: 
+		1/ only test the case when all the additions are exact.
+		Otherwise the accumulation error diverges : TODO
+		In between, it is enough to overload buildRandomTestCase to make sure it remains in this case...
+		This is definitely dishonest in term of accuracy, and doesn't test the case when a mantissa is partly shifted out 
+
+		2/ does not emulate the case when the accumulator is split with a C output;
+	*/
 	void FPLargeAcc::emulate(TestCase* tc){
+		mpz_class rst = tc->getInputValue("newDataSet");
+		if (rst==1)
+			accValue=0;
+		else {
+			
+			mpz_class bvx = tc->getInputValue("X");
+			FPNumber fpx(wEX, wFX, bvx);
+			accValue += mapFP2Acc(fpx);
+		}
+		tc->addExpectedOutput("A", accValue);
+
 	}
 
+
+	
 	TestCase* FPLargeAcc::buildRandomTestCase(int i){
 
 		TestCase *tc;
 		mpz_class x;
 
 		/* normal exception bits */
-		mpz_class normalExn = mpz_class(1)<<(wEX_+wFX_+1);
+		mpz_class normalExn = mpz_class(1)<<(wEX+wFX+1);
 
 		/*really random sign*/
-		mpz_class sign = mpz_class(getLargeRandom(1)%2)<<(wEX_+wFX_);
+		mpz_class sign = mpz_class(getLargeRandom(1)%2)<<(wEX+wFX);
 
 		/* do exponent */
-		mpz_class exponent = getLargeRandom(wEX_);
-		while (! (MaxMSBX_ >= exponent - (intpow2(wEX_-1)-1))){
-			exponent = getLargeRandom(wEX_);
+		mpz_class exponent = getLargeRandom(wEX);
+		while ((exponent>MaxMSBX) || (exponent-wFX<LSBA))  { // TODO: the second test is to ensure the mantissa is fully within the accumulator.
+			exponent = getLargeRandom(wEX);
 		}
 		/* shift exponent in place */
-		exponent = exponent << (wFX_);
+		REPORT(DEBUG, "buildRandomTestCase, i=" << i << ", exponent=" << exponent);
+		exponent = (exponent + intpow2(wEX-1)-1 ) << (wFX);
 
-		mpz_class frac = getLargeRandom(wFX_);		
+		mpz_class frac = getLargeRandom(wFX);		
 		
 		x = normalExn + sign + exponent + frac;
 

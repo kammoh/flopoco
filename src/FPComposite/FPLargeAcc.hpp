@@ -31,12 +31,15 @@ namespace flopoco{
 		void test_precision(int n); /**< Undocumented */
 		void test_precision2(); /**< Undocumented */
 	
+
+#if 0 //  unplugged, replaced with emulate()
 		/**
 		 * Gets the correct value associated to one or more inputs.
 		 * @param a the array which contains both already filled inputs and
 		 *          to be filled outputs in the order specified in getTestIOMap.
 		 */
 		void fillTestCase(mpz_class a[]);
+#endif
 
 		void emulate(TestCase* tc);
 
@@ -54,33 +57,26 @@ namespace flopoco{
 		static void registerFactory();
 
 	protected:
-		int wEX_;     /**< the width of the exponent  */
-		int wFX_;     /**< the width of the fractional part */
-		int MaxMSBX_; /**< the weight of the MSB of the expected exponent of X */
-		int LSBA_;    /**< the weight of the least significand bit of the accumulator */
-		int MSBA_;    /**< the weight of the most significand bit of the accumulator */
+		int wEX;     /**< the width of the exponent  */
+		int wFX;     /**< the width of the fractional part */
+		int MaxMSBX; /**< the weight of the MSB of the expected exponent of X */
+		int LSBA;    /**< the weight of the least significand bit of the accumulator */
+		int MSBA;    /**< the weight of the most significand bit of the accumulator */
 
-		mpz_class AccValue_;
 		int currentIteration;
 		int xOvf;	
 
 	private:
-		Shifter* shifter_;          /**<Shifter object for shifting X in place */
-		int      sizeAcc_;          /**<The size of the accumulator  = MSBA-LSBA+1; */
-		int      sizeAccL_;         /**< used only for carry-select implementation */
-		int      sizeSummand_;      /**< the maximum size of the summand  = MaxMSBX-LSBA+1; */
-		int      sizeShiftedFrac_;  /**< size of ths shifted frac  = sizeSummand + wFX;  to accomodate very small summands */
-		int      maxShift_;         /**< maximum shift ammount */
-		int      E0X_;              /**< the bias value */
-		int      sizeShift_;        /**< the shift size */
-		string   summand2cname_;    /**< ??? */
-		int      c2ChunkSize_;      /**< for c2 addition */
-		int      c2PipelineDepth_;  /**< for c2 addition */
+		int      sizeAcc;          /**<The size of the accumulator  = MSBA-LSBA+1; */
+		int      sizeSummand;      /**< the maximum size of the summand  = MaxMSBX-LSBA+1; */
+		int      sizeShiftedFrac;  /**< size of ths shifted frac  = sizeSummand + wFX;  to accomodate very small summands */
+		int      maxShift;         /**< maximum shift ammount */
+		int      E0X;              /**< the bias value */
+		int      sizeShift;        /**< the shift size */
+		int      c2ChunkSize;      /**< for c2 addition */
 
-		int additionNumberOfChunks_;         /**< Number of chunks of the accumulation addition */
-		int rebalancedAdditionChunkSize_;    /**< The chunk size after rebalancing */
-		int rebalancedAdditionLastChunkSize_;/**< The size of the last chunk after rebalancing */ 
-
+		// For emulate()
+		mpz_class accValue;
 	};
 
 }
