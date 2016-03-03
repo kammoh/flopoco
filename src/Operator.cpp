@@ -3218,20 +3218,22 @@ namespace flopoco{
 		if(mode == 1)
 		{
 			//main component in the globalOpList
-			file << tabs << "digraph " << getName();
+			file << tabs << "digraph " << getName() << "\n";
 		}else if(mode == 2)
 		{
 			//a subcomponent
-			file << tabs << "subgraph cluster_" << getName();
+			file << tabs << "subgraph cluster_" << getName() << "\n";
 		}else
 		{
 			THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
 		}
 
+		file << tabs << "{\n";
+
 		//increase the tabulation
 		tabs = join(tabs, "\t");
 
-		file << "{\n\n"<< tabs << "//graph drawing options\n";
+		file << tabs << "//graph drawing options\n";
 		file << tabs << "label=" << getName() << ";\n"
 				<< tabs << "labelloc=bottom;\n" << tabs << "labeljust=right;\n";
 
@@ -3311,7 +3313,12 @@ namespace flopoco{
 				file << drawDotNodeEdges(signalList_[i], tabs);
 		}
 
+		//decrease tabulation
+		tabs = tabs.substr(0, tabs.length()-1);
+		//end of component/subcomponent
 		file << tabs << "}\n\n";
+		//increase tabulation
+		tabs = join(tabs, "\t");
 
 		//for subcomponents, draw the connections of the output ports
 		//draw the out connections of each output of this operator
