@@ -178,7 +178,7 @@ namespace flopoco{
 
 		vhdl << tab << "-- accumulation itself" << endl;
 		//determine the value of the carry in bit
-		vhdl << tab << declare("carryBit_0",1,false) << " <= signX and not flushedToZero;" << endl; 
+		vhdl << tab << declare("carryBit_0",1,false, Signal::registeredWithSyncReset) << " <= signX and not flushedToZero;" << endl; 
 		
 		
 		for (i=0; i < nbOfChunks; i++) {
@@ -459,81 +459,6 @@ namespace flopoco{
 
 
 
-#if 0 //  unplugged, replaced with emulate()
-	//FIXME 	: IOs are defined as
-   // addFPInput ("X", wEX,wFX);
-	// addOutput  ("A", sizeAcc);  
-	// addOutput  ("XOverflow");  
-	// addOutput  ("XUnderflow");  
-	// addOutput  ("AccOverflow");  
-	// In the following there is no check on the two last ones
-
-	void FPLargeAcc::fillTestCase(mpz_class a[])
-	{
-		mpz_class& sX = a[0];
-		mpz_class& sA = a[1];
-		mpz_class& sXOverflow = a[2];
-	
-		currentIteration++;
-
-		if (currentIteration  > numberOfTests + 1)
-			sX = 0;
-
-		//convert this raw number into a FP number accornding to the flopoco FP format
-		FPNumber fpX(wEX, wFX);
-		fpX = sX;
-	
-		//for now, we do not accept inputs which overflow, negative inputs or inputs having the exception bits INF and NaN
-		while ((fpX.getExponentSignalValue()-(intpow2(wEX-1)-1)>MaxMSBX)
-				 //||(fpX.getSignSignalValue()==1) 
-				 || (fpX.getExceptionSignalValue()>1)){
-			sX = getLargeRandom(wEX+wFX+3);
-			fpX = sX;
-		}
-
-	
-		if ((fpX.getExceptionSignalValue()>1) || (fpX.getExponentSignalValue()-(intpow2(wEX-1)-1)>MaxMSBX))
-			xOvf = 1;
-	
-		sXOverflow = xOvf;
-	
-		REPORT(DETAILED," i=" << currentIteration	 << ", a=" << AccValue_);
-
-		if (fpX.getExceptionSignalValue()!=0)  {
-			if (fpX.getSignSignalValue()==0)
-				AccValue_ = AccValue_ + mapFP2Acc(fpX);
-			else
-				AccValue_ = AccValue_ - mapFP2Acc(fpX);
-		}
-		if (UserInterface::verbose==1){
-			if (fpX.getExceptionSignalValue()!=0)
-#ifdef  _WIN32
-				cout<< (fpX.getSignSignalValue()==0?" + ":" - ")<< mpz2string(mapFP2Acc(fpX)) << " = "<<mpz2string(AccValue_)<<";"; 
-#else 
-			cout<< (fpX.getSignSignalValue()==0?" + ":" - ")<< mapFP2Acc(fpX) << " = "<<AccValue_<<";"; 
-#endif
-
-#ifdef  _WIN32
-			cout<< "Exc="<<mpz2string(fpX.getExceptionSignalValue())
-				 <<", S="<<mpz2string(fpX.getSignSignalValue())
-				 <<", Exp="<<mpz2string(fpX.getExponentSignalValue()-(intpow2(wEX-1)-1))
-				 <<", Frac="<<mpz2string(fpX.getFractionSignalValue())<<endl;
-
-#else
-			cout<< "Exc="<<fpX.getExceptionSignalValue()
-				 <<", S="<<fpX.getSignSignalValue()
-				 <<", Exp="<<fpX.getExponentSignalValue()-(intpow2(wEX-1)-1)
-				 <<", Frac="<<fpX.getFractionSignalValue()<<endl;
-#endif				 
-		}
-	
-		//assign value to sA only at final iteration	
-		if (currentIteration==numberOfTests)
-			sA = sInt2C2(AccValue_, sizeAcc);
-	
- 
-	}
-#endif
 
 	
 	mpz_class FPLargeAcc::mapFP2Acc(FPNumber X)
@@ -600,12 +525,21 @@ namespace flopoco{
 		TestCase *tc;
 		mpz_class x;
 
+		tc = new TestCase(this); 
+
+		if (i == 0){
+			tc->addInput("newDataSet", mpz_class(1));	
+		}else{
+			tc->addInput("newDataSet", mpz_class(0));	
+		}
+
+
 		/* normal exception bits */
 		mpz_class normalExn = mpz_class(1)<<(wEX+wFX+1);
 
 		
-		/*really random sign*/ // TODO always positive
-		mpz_class sign = mpz_class(getLargeRandom(1)%2)<<(wEX+wFX);
+		/*really random sign*/ 
+		mpz_class sign = mpz_class(getLargeRandom(1)%2)<<(wEX+wFX) * 0; // TODO remove
 
 		/* do exponent */
 		mpz_class exponent = getLargeRandom(wEX) *0 ; //TODO Remove
@@ -615,19 +549,13 @@ namespace flopoco{
 		/* shift exponent in place */
 		exponent = (exponent + intpow2(wEX-1)-1 ) << (wFX);
 
-		mpz_class frac = getLargeRandom(wFX) *0;		
+		mpz_class frac = getLargeRandom(wFX) *0; //TODO remove		
 		
 		x = normalExn + sign + exponent + frac;
 		REPORT(DEBUG, "buildRandomTestCase, i=" << i << ", sign=" << sign << ", exponent=" << exponent << ", frac=" << frac << ",    x=" << x );
 
 		tc = new TestCase(this); 
 		tc->addInput("X", x);
-
-		if (i == 0){
-			tc->addInput("newDataSet", mpz_class(1));	
-		}else{
-			tc->addInput("newDataSet", mpz_class(0));	
-		}
 
 
 		/* Get correct outputs */
@@ -647,7 +575,7 @@ namespace flopoco{
 
 	void FPLargeAcc::registerFactory(){
 		UserInterface::add("FPLargeAcc", // name
-											 "Accumulator of floating-point numbers into a large fixed-point accumulator.",
+											 "Accumulator of floating-point numbers into a large fixed-point accumulator. CURRENTLY BROKEN, contact us if you want to use it",
 											 "CompositeFloatingPoint",
 											 "LargeAccToFP", // seeAlso
 											 "wEX(int): the width of the exponent ; \
