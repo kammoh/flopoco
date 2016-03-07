@@ -40,7 +40,7 @@ using namespace flopoco;
 int main(int argc, char* argv[] )
 {
 
-	Target* target = new Virtex4();
+	Target* target = new Virtex6();
 
 	int wE = 9;
 	int wF = 33;
@@ -50,13 +50,13 @@ int main(int argc, char* argv[] )
 	ofstream file;
 	file.open("FPAdd.vhdl", ios::out);
 	
-	op->outputVHDLToFile(file);
+	UserInterface::outputVHDLToFile(file);
 
 	file.close();
 	
 	
 	cerr << endl<<"Final report:"<<endl;
-	op->outputFinalReport(0);
+	UserInterface::finalReport(cerr);
 	return 0;
 }
 
