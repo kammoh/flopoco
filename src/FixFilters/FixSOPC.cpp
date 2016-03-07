@@ -192,13 +192,13 @@ namespace flopoco{
 		int sumSize = 1 + msbOut - lsbOut  + g ;
 		REPORT(DETAILED, "Sum size is: "<< sumSize );
 
-		//compute the guard bits from the KCM mulipliers, and take the max
+		//compute the guard bits from the KCM multipliers, and take the max
 		int guardBitsKCM = 0;
 		int lsbOutKCM = lsbOut-g; // we want each KCM to be faithful to this ulp
 		double targetUlpError = 1.0;
 
 		for(int i=0; i<n; i++)		{
-			int wInKCM = msbIn[i]-lsbIn[i]+1-g;	//p bits + 1 sign bit
+			int wInKCM = msbIn[i]-lsbIn[i]+1+g;	//p bits + 1 sign bit
 
 			int temp = FixRealKCM::neededGuardBits(
 					getTarget(), 
@@ -224,7 +224,7 @@ namespace flopoco{
 			for (int i=0; i<n; i++)	{
 				// Multiplication: instantiating a KCM object. It will add bits also to the right of lsbOutKCM
 				new FixRealKCM(
-						this,				// the envelopping operator
+						this,				// the enveloping operator
 						 getTarget(), 	// the target FPGA
 						 getSignalByName(join("X",i)),
 						 true, 		// signed

@@ -88,11 +88,20 @@ namespace flopoco{
 
 
 
+	void Operator::addToGlobalOpList(OperatorPtr op) {
+		addVirtualSubComponent(op);
+		UserInterface::addToGlobalOpList(op);
+	}
 
 	void Operator::addSubComponent(OperatorPtr op) {
 		subComponents_.push_back(op);
 		// In newPipeline, we deprecate this function and replace it with the following message.
 		// REPORT(INFO, "addSubComponent() is deprecated, instance() does it automatically. Remove it from the source code to get rid of this annoying message.");
+	}
+
+
+	void Operator::addVirtualSubComponent(OperatorPtr op) {
+		virtualSubComponents_.push_back(op);
 	}
 
 
@@ -1341,6 +1350,10 @@ namespace flopoco{
 	string Operator::buildVHDLComponentDeclarations() {
 		ostringstream o;
 		for(auto op: subComponents_) {
+			op->outputVHDLComponent(o);
+			o<< endl;
+		}
+		for(auto op: virtualSubComponents_) {
 			op->outputVHDLComponent(o);
 			o<< endl;
 		}

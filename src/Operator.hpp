@@ -76,8 +76,14 @@ class Operator
 
 public:
 
+	/** add a sub-operator to this operator and to the global operator list */
+	void addToGlobalOpList(OperatorPtr op);
+
 	/** add a sub-operator to this operator */
 	void addSubComponent(OperatorPtr op);
+
+	/** add a sub-operator (which is a global operator) to this operator */
+	void addVirtualSubComponent(OperatorPtr op);
 
 	/** Retrieve a sub-operator by its name, NULL if not found */
 	OperatorPtr getSubComponent(string name);
@@ -1347,7 +1353,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
-	vector<OperatorPtr> subComponents_;					/**< The list of sub-components */
+	vector<OperatorPtr> subComponents_;						/**< The list of sub-components */
 	vector<Signal*>     signalList_;      					/**< The list of internal signals of the operator */
 	vector<Signal*>     ioList_;          					/**< The list of I/O signals of the operator */
 
@@ -1373,7 +1379,7 @@ public:
 	FloorplanningHelper*		flpHelper;					/**< Tools for floorplanning */
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	static multimap < string, TestState > testMemory;			/**< multimap which will be used to test if the selected operator already had been tested */
+	static multimap < string, TestState > testMemory;		/**< multimap which will be used to test if the selected operator already had been tested */
 protected:    
 	string              uniqueName_;      					/**< By default, a name derived from the operator class and the parameters */
 	string 				architectureName_;					/**< Name of the operator architecture */
@@ -1387,6 +1393,8 @@ protected:
 	int                 myuid;              				/**<unique id>*/
 	int                 cost;             					/**< the cost of the operator depending on different metrics */
 	
+	vector<OperatorPtr> virtualSubComponents_;				/**< The list of sub-components which are implemented as global operators, but which are needed for the correct VHDL generation */
+
 
 private:    
 	Target*             target_;          					/**< The target on which the operator will be deployed */
