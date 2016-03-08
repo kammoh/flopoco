@@ -740,7 +740,7 @@ namespace flopoco{
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getCycle() != maxOutputCycle))
-				cerr << "WARNING: setPipelineDepth(): this operator's outputs are NOT SYNCHRONIZED!" << endl;
+				REPORT(INFO, "WARNING: setPipelineDepth(): this operator's outputs are NOT SYNCHRONIZED!");
 		}
 
 		pipelineDepth_ = maxOutputCycle-minInputCycle;
@@ -801,9 +801,7 @@ namespace flopoco{
 		}
 		*/
 
-		cerr << "WARNING: function setCycle() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0,"WARNING: function setCycle() is deprecated and no longer has any effect!");
 	}
 
 	int Operator::getCurrentCycle(){
@@ -812,10 +810,7 @@ namespace flopoco{
 		return currentCycle_;
 		*/
 
-		cerr << "WARNING: function getCurrentCycle() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
-
+		REPORT(0,"WARNING: function getCurrentCycle() is deprecated and no longer has any effect!");
 		return -1;
 	}
 
@@ -838,9 +833,7 @@ namespace flopoco{
 		}
 		*/
 
-		REPORT(0, "WARNING: function nextCycle() is deprecated and no longer has any effect!" << endl
-						<< tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-						<< tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl);
+		REPORT(0, "WARNING: function nextCycle() is deprecated and no longer has any effect!");
 	}
 
 	void Operator::previousCycle(bool report) {
@@ -859,9 +852,7 @@ namespace flopoco{
 		}
 		*/
 
-		cerr << "WARNING: function previousCycle() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function previousCycle() is deprecated and no longer has any effect!");
 	}
 
 
@@ -871,9 +862,7 @@ namespace flopoco{
 		setCycleFromSignal(name, 0.0, report);
 		*/
 
-		cerr << "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!");
 	}
 
 
@@ -915,9 +904,7 @@ namespace flopoco{
 		}
 		*/
 
-		cerr << "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!");
 	}
 
 
@@ -985,9 +972,7 @@ namespace flopoco{
 		return(syncCycleFromSignal(name, 0.0, report));
 		*/
 
-		cerr << "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!");
 
 		return false;
 	}
@@ -1044,21 +1029,18 @@ namespace flopoco{
 		return advanceCycle;
 		*/
 
-		cerr << "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
-
+		REPORT(0, "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!");
 		return false;
 	}
 
 	// TODO get rid of this method
 	void Operator::setSignalDelay(string name, double delay){
-		cout << "WARNING: setSignalDelay obsolete (used in " << srcFileName << ")" << endl;
+		REPORT(0, "WARNING: function setSignalDelay() is deprecated and no longer has any effect!");
 	}
 
 	// TODO get rid of this method
 	double Operator::getSignalDelay(string name){
-		cout << "WARNING: getSignalDelay is obsolete (used in " << srcFileName << ")" << endl;
+		REPORT(0, "WARNING: function getSignalDelay() is deprecated!");
 
 		Signal* s;
 
@@ -1208,9 +1190,7 @@ namespace flopoco{
 		return criticalPath_;
 		*/
 
-		cerr << "WARNING: function getCriticalPath() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function getCriticalPath() is deprecated!");
 
 		return -1;
 	}
@@ -1222,9 +1202,7 @@ namespace flopoco{
 		criticalPath_=delay;
 		*/
 
-		cerr << "WARNING: function setCriticalPath() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function setCriticalPath() is deprecated  and no longer has any effect!");
 	}
 
 	void Operator::addToCriticalPath(double delay)
@@ -1234,9 +1212,7 @@ namespace flopoco{
 		criticalPath_ += delay;
 		*/
 
-		cerr << "WARNING: function addToCriticalPath() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+		REPORT(0, "WARNING: function addToCriticalPath() is deprecated  and no longer has any effect!");
 	}
 
 
@@ -1278,9 +1254,8 @@ namespace flopoco{
 		}
 		*/
 
-		cerr << "WARNING: function manageCriticalPath() is deprecated and no longer has any effect!" << endl
-			 << tab << tab << "if you are using this function to build your circuit's pipeline, " << endl
-			 << tab << tab << "please NOTE that SYNCHRONIZATION IS NOW IMPLICIT!" << endl;
+
+		REPORT(0, "WARNING: function manageCriticalPath() is deprecated  and no longer has any effect!");
 
 		return false;
 	}
@@ -3478,11 +3453,13 @@ namespace flopoco{
 		if(w == s->width()){
 			//nothing to do
 			return name;
-		}else if(w < s->width()){
-			cout << "WARNING: you required a sign extension to " << w
-					<< " bits of signal " << name << " whose width is " << s->width() << endl;
+		}
+		else if(w < s->width()){
+			REPORT(INFO, "WARNING: signExtend() called for a sign extension to " << w
+						 << " bits of signal " << name << " whose width is " << s->width());
 			return name;
-		}else{
+		}
+		else{
 			ostringstream n;
 			n << "(";
 			for(int i=0; i<(w - s->width()); i++){
@@ -3507,11 +3484,12 @@ namespace flopoco{
 		if (w == s->width()){
 			//nothing to do
 			return name;
-		}else if(w < s->width()){
-			cout << "WARNING: you required a zero extension to " << w
-					<< " bits of signal " << name << " whose width is " << s->width() << endl;
+		}
+		else if(w < s->width()){
+			REPORT(INFO,  "WARNING: zeroExtend() to " << w << " bits of signal " << name << " whose width is " << s->width());
 			return name;
-		}else{
+		}
+		else{
 			ostringstream n;
 			n << "(" << zg(w-s->width()) << " &" << name << ")";
 			return n.str();
