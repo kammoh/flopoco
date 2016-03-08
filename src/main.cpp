@@ -49,11 +49,13 @@ int main(int argc, char* argv[] )
 		LZOCShifterSticky::registerFactory();
 
 		IntAdder::registerFactory();
-
+		
+#if 0 // Plug them back some day
 		IntAdderClassical::registerFactory();
 		IntAdderAlternative::registerFactory();
 		IntAdderShortLatency::registerFactory();
-
+#endif
+		
 		//FOR TEST PURPOSES ONLY
 		Table::registerFactory();
 

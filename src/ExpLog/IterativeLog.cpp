@@ -731,7 +731,7 @@ namespace flopoco{
 				vhdl << rangeAssign(2*p[i] -p[i+1] -2,  0,  "'0'")  << " & " << Yi << range(yisize-1,  yisize - (s[i+1] - (2*p[i]-p[i+1]) )-1) << ";" << endl ;
 			}
 
-			IntAdder* addCycleI1 = new IntAdder ( target, s[i+1], inDelayMap("X", getCriticalPath()) );
+			IntAdder* addCycleI1 = new IntAdder ( target, s[i+1]);
 
 			vhdl << tab << declare( join("addXIter",i), s[i+1] ) << " <= \"0\" & " << join("B",i);
 			if (s[i+1] > 1+(s[i]-a[i]))  // need to padd Bi
@@ -763,10 +763,10 @@ namespace flopoco{
 			double ctperiod;
 			ctperiod = 1.0 / target->frequency();
 			target->setFrequency( 1.0 / (ctperiod - target->LogicToDSPWireDelay() ) );
-			IntAdder* addCycleI2 = new IntAdder ( target, s[i+1], inDelayMap("X", getCriticalPath()) );
+			IntAdder* addCycleI2 = new IntAdder ( target, s[i+1]);
 			target->setFrequency( 1.0 / ctperiod );
 #else
-			IntAdder* addCycleI2 = new IntAdder ( target, s[i+1], inDelayMap("X", getCriticalPath()) );
+			IntAdder* addCycleI2 = new IntAdder ( target, s[i+1]);
 #endif
 
 
@@ -823,7 +823,7 @@ namespace flopoco{
 
 		vhdl << tab << declare("Z2o2_normal", sfinal-pfinal-1) << " <= Z2o2_full_dummy ("<< 2*squarerInSize-1 << "  downto " << 2*squarerInSize - (sfinal-pfinal-1) << ");" << endl;
 
-		IntAdder* addFinalLog1p_normal = new IntAdder( target, sfinal, inDelayMap( "X", target->localWireDelay() + getCriticalPath() ) );
+		IntAdder* addFinalLog1p_normal = new IntAdder( target, sfinal);
 
 		vhdl << tab << declare( "addFinalLog1pY", sfinal) << " <= (pfinal downto 0  => '1') & not(Z2o2_normal);" <<endl;
 
@@ -855,7 +855,7 @@ namespace flopoco{
 			if( target->normalizedFrequency() > 0.5  ) { // we targetting a deeply pipelined operator
 					nextCycle(); nextCycle();// gets absorbed in the BRams, and reinits the critical paths, and we have plenty of cycles to live in
 			}
-			IntAdder * adderS = new IntAdder( target, lt0->wOut, inDelayMap("X", target->RAMToLogicWireDelay() + getCriticalPath() ));
+			IntAdder * adderS = new IntAdder( target, lt0->wOut);
 			setCycle(getCurrentCycle()+adderS->getPipelineDepth());
 			setCriticalPath( adderS->getOutputDelay("R") );
 		}
@@ -901,7 +901,7 @@ namespace flopoco{
 			if( target->normalizedFrequency() > 0.5  ) { // we targetting a deeply pipelined operator
 				nextCycle(); nextCycle();// gets absorbed in the BRams, and reinits the critical paths, and we have plenty of cycles to live in
 			}
-			IntAdder * adderS = new IntAdder( target, lt0->wOut, inDelayMap("X", target->RAMToLogicWireDelay()+  getCriticalPath()));
+			IntAdder * adderS = new IntAdder( target, lt0->wOut);
 
 			inPortMap( adderS, "X", join("S",i) );
 			inPortMap( adderS, "Y", join("sopX",i) );
@@ -916,7 +916,7 @@ namespace flopoco{
 		nextCycle();
 		vhdl << tab << declare("almostLog", lt0->wOut) << " <= " << join("S",stages+1) << ";" << endl;
 
-		IntAdder* adderLogF_normal = new IntAdder( target, target_prec, inDelayMap("X", getCriticalPath() ) );
+		IntAdder* adderLogF_normal = new IntAdder( target, target_prec );
 
 		vhdl << tab << declare( "adderLogF_normalY", target_prec ) << " <= ((targetprec-1 downto sfinal => '0') & Log1p_normal);" << endl;
 
@@ -964,7 +964,7 @@ namespace flopoco{
 		vhdl << tab << declare("lnaddY", wE+target_prec) << " <= LogF_normal_pad when sR='0' else not(LogF_normal_pad); "<<endl;
 
 
-		IntAdder* lnadder = new IntAdder( target, wE+target_prec, inDelayMap("X", getCriticalPath()) );
+		IntAdder* lnadder = new IntAdder( target, wE+target_prec);
 
 		inPortMap( lnadder, "X", "lnaddX");
 		inPortMap( lnadder, "Y", "lnaddY");
@@ -1016,7 +1016,7 @@ namespace flopoco{
 		vhdl << tab << declare("Log_smallY", wF+gLog+2) << " <= Z2o2_small when sR='1' else not(Z2o2_small);" << endl;
 		vhdl << tab << declare("nsRCin",1, false) << " <= not ( sR );" << endl;
 
-		IntAdder* log_small_adder = new IntAdder(target,wF+gLog+2, inDelayMap( "X", target->localWireDelay() + getCriticalPath()) );
+		IntAdder* log_small_adder = new IntAdder(target,wF+gLog+2 );
 
 		inPortMap( log_small_adder, "X", "Z_small" );
 		inPortMap (log_small_adder, "Y", "Log_smallY");
@@ -1106,7 +1106,7 @@ namespace flopoco{
 
 		vhdl << tab << declare("fraX", wE+wF) << " <= (ER & Log_g(wF+g-1 downto g)) ; " << endl;
 		vhdl << tab << declare("fraY", wE+wF) << " <= ((wE+wF-1 downto 1 => '0') & round); " << endl;
-		IntAdder* finalRoundAdder = new IntAdder(target, wE+wF, inDelayMap("X", getCriticalPath()));
+		IntAdder* finalRoundAdder = new IntAdder(target, wE+wF);
 		inPortMap(finalRoundAdder, "X", "fraX");
 		inPortMap(finalRoundAdder, "Y", "fraY");
 		inPortMapCst(finalRoundAdder, "Cin", "'0'");

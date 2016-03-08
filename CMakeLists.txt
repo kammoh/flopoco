@@ -277,26 +277,26 @@ src/Conversions/Fix2FP
 
 # pipelined Integer addition -------------------------------------------------
  src/IntAddSubCmp/IntAdder  
- src/IntAddSubCmp/IntAdderClassical 
- src/IntAddSubCmp/IntAdderAlternative 
- src/IntAddSubCmp/IntAdderShortLatency
+# src/IntAddSubCmp/IntAdderClassical 
+# src/IntAddSubCmp/IntAdderAlternative 
+# src/IntAddSubCmp/IntAdderShortLatency
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualSub
  src/IntAddSubCmp/BasicCompressor
  
 # ---------- First generation of fast large adders ------------------------
- src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
- src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1 
- src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1 
+# src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
 
 # ---------- Second Generation of fast large adders -----------------------
- src/IntAddSubCmp/IntAdderSpecific 
- src/IntAddSubCmp/IntComparatorSpecific 
- src/IntAddSubCmp/CarryGenerationCircuit 
- src/IntAddSubCmp/LongIntAdderAddAddMuxGen2 
- src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2 
- src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
- src/IntAddSubCmp/LongIntAdderMuxNetwork
+# src/IntAddSubCmp/IntAdderSpecific 
+# src/IntAddSubCmp/IntComparatorSpecific 
+# src/IntAddSubCmp/CarryGenerationCircuit 
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen2 
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2 
+# src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
+# src/IntAddSubCmp/LongIntAdderMuxNetwork
 
 # Constant multiplications and divisions
  src/ConstMult/ShiftAddOp 

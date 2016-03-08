@@ -181,7 +181,7 @@ namespace flopoco{
 					{
 					vhdl << tab << declare("round") << " <= '1' ;" << endl;
 				}
-				IntAdder* intadd_ = new IntAdder(target, 2 + wER_ + wFR_, inDelayMap("X", getCriticalPath() ));
+				IntAdder* intadd_ = new IntAdder(target, 2 + wER_ + wFR_);
 
 				inPortMap    (intadd_, "X",   "expSig");
 				inPortMapCst (intadd_, "Y",   zg(2 + wER_ + wFR_,0));

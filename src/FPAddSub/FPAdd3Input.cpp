@@ -241,9 +241,9 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << declare("xsefZ",3 + 3*wF+1) << " <= (efZ xor "<<rangeAssign( 3 + 3*wF,0,"sZ") << ");"<<endl;
 
 		//sign them properly
-		IntAdder *ia0 = new IntAdder(target,3 + 3*wF+1, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
-		IntAdder *ia1 = new IntAdder(target,3 + 3*wF+1, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
-		IntAdder *ia2 = new IntAdder(target,3 + 3*wF+1, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+		IntAdder *ia0 = new IntAdder(target, 3 + 3*wF+1);
+		IntAdder *ia1 = new IntAdder(target, 3 + 3*wF+1);
+		IntAdder *ia2 = new IntAdder(target, 3 + 3*wF+1);
 
 		inPortMap(ia0, "X", "xsefX");
 		inPortMapCst(ia0, "Y", zg(3 + 3*wF+1) );
@@ -291,7 +291,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << declare("xposExtF",3 + 3*wF) << " <= (addRes"<<range(3 + 3*wF-1, 0) << " xor "<<rangeAssign(3 + 3*wF-1, 0, "trSign")<<");"<<endl;
 
 		// get the result back to positive and remove the signals
-		IntAdder *ia3 = new IntAdder(target, 3 + 3*wF, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+		IntAdder *ia3 = new IntAdder(target, 3 + 3*wF);
 
 		inPortMap(ia3, "X", "xposExtF");
 		inPortMapCst(ia3, "Y", zg(3 + 3*wF,0));
@@ -330,7 +330,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
 		vhdl<<tab<<declare("addToRoundBit")<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
 
-		IntAdder *ia4 = new IntAdder( target, 1 + wE + wF+1, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+		IntAdder *ia4 = new IntAdder( target, 1 + wE + wF+1);
 
 		vhdl << tab << declare("xroundedExpFrac", 1 + wE + wF+1) << "<= (\"0\" & eMax & tfracR);"<<endl;
 
