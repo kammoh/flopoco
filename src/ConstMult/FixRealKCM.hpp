@@ -123,6 +123,9 @@ namespace flopoco{
 				int lsbOut
 			);
 
+
+
+		
 		bool signedInput;
 		int msbIn;
 		int lsbIn;
@@ -165,19 +168,27 @@ namespace flopoco{
 		bool handleSpecialConstant(Operator* op, string inputName = "X");
 
 		/**
-		 * @brief branch table output to bitHeap
-		 * @param t : table array
-		 * @param doSize : array of table output width such that t[i] has an
-		 * output width of doSize[i]
-		 * @param op : operator from which vhdl stream will be used as output
-		 * stream
+		 * @brief compute the number of FixRealKCMTable that will be created by
+		 * a KCM
+		 * @param target : the target FPGA
+		 * @param wIn : Input width
+		 * @param msbC : constant most significant bit weight 
+		 * @param lsbIn : input lsb weight
+		 * @param lsbOut : output lsb weight (result precision)
+		 * @param targetUlpError : required precision
+		 * @param disize_target : where chunck sizes should be located when
+		 * function return
 		 */
-		void connectTablesToBitHeap(
-				FixRealKCMTable** t,
-				int* doSize,
-				int nbOfTables,
-				Operator* op
-			);
+		static int computeNumberOfTables(
+			Target* target,
+			int wIn,
+			int msbC, 
+			int lsbIn,
+			int lsbOut,
+			double targetUlpError,
+			int** disize_target = nullptr
+		);
+
 
 
 		/**
@@ -198,27 +209,21 @@ namespace flopoco{
 				string inputSignalName = "X"
 			);
 
+
 		/**
-		 * @brief compute the number of FixRealKCMTable that will be created by
-		 * a KCM
-		 * @param target : the target FPGA
-		 * @param wIn : Input width
-		 * @param msbC : constant most significant bit weight 
-		 * @param lsbIn : input lsb weight
-		 * @param lsbOut : output lsb weight (result precision)
-		 * @param targetUlpError : required precision
-		 * @param disize_target : where chunck sizes should be located when
-		 * function return
+		 * @brief connect table output to bitHeap
+		 * @param t : table array
+		 * @param doSize : array of table output width such that t[i] has an
+		 * output width of doSize[i]
+		 * @param op : operator from which vhdl stream will be used as output
+		 * stream
 		 */
-		static int computeTablesNumber(
-			Target* target,
-			int wIn,
-			int msbC, 
-			int lsbIn,
-			int lsbOut,
-			double targetUlpError,
-			int** disize_target = nullptr
-		);
+		void connectTablesToBitHeap(
+				FixRealKCMTable** t,
+				int* doSize,
+				int nbOfTables,
+				Operator* op
+			);
 
 		int bitheaplsb;
 

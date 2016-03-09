@@ -39,7 +39,7 @@ namespace flopoco{
 
 		srcFileName="FixRealKCM";
 
-		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team 2015");
+		setCopyrightString("Florent de Dinechin (2007-2016), 3IF Dev Team 2015");
 
 		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
@@ -215,7 +215,9 @@ namespace flopoco{
 		return guardBits;
 	}
 
-	int FixRealKCM::computeTablesNumber(
+
+	
+	int FixRealKCM::computeNumberOfTables(
 			Target* target,
 			int wIn,
 			int msbC,
@@ -270,7 +272,7 @@ namespace flopoco{
 
 		}
 		else {
-			cerr << "Input precision higher than required. Trying to optimize" << endl;
+			cerr <<("Small constant, input precision is higher than required. Trying to optimize");
 			//The loop is here to prevent neglictible input bits from being
 			//tabulated.
 			do { 
@@ -434,7 +436,7 @@ namespace flopoco{
 			if(!handleSpecialConstant(this))
 			{
 				int* diSize;
-				int nbOfTables = computeTablesNumber(
+				int nbOfTables = computeNumberOfTables(
 						target, 
 						wIn, 
 						msbC, 
@@ -516,14 +518,14 @@ namespace flopoco{
 		init();
 
 		//If constant is not zero or a power of two, then create tables and
-		//branc them to bitHeap
+		// connect them to bitHeap
 		if	(	mpfr_zero_p(mpC) == 0 && 
 				!handleSpecialConstant(parentOp, multiplicandX->getName())
 			)
 		{
 			// First set up all the sizes
 			int *diSize;
-			int nbOfTables = computeTablesNumber(
+			int nbOfTables = computeNumberOfTables(
 					target, 
 					wIn, 
 					msbC, 
@@ -533,8 +535,7 @@ namespace flopoco{
 					&diSize
 				);
 
-			REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables");		
-		
+			REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables"); 	
 
 			int* doSize;
 
@@ -740,7 +741,7 @@ namespace flopoco{
 		}
 		mpfr_clears(log2C, absC, mpC, NULL);
 
-		int nbOfTables = computeTablesNumber(
+		int nbOfTables = computeNumberOfTables(
 				target, 
 				wIn, 
 				msbC, 

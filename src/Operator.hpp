@@ -82,7 +82,7 @@ public:
 	/** add a sub-operator to this operator */
 	void addSubComponent(OperatorPtr op);
 
-	/** add a sub-operator (which is a global operator) to this operator */
+	/** add a sub-operator (which is a global operator) to this operator without adding it to the global op list */
 	void addVirtualSubComponent(OperatorPtr op);
 
 	/** Retrieve a sub-operator by its name, NULL if not found */

@@ -113,8 +113,8 @@ namespace flopoco{
 		srcFileName="FixSOPC";
 
 		ostringstream name;
-		name << "FixSOPC_uid" << getNewUId(); 
-		setName(name.str()); 
+		name << "FixSOPC"; 
+		setNameWithFreqAndUID(name.str()); 
 	
 		setCopyrightString("Matei Istoan, Louis Besème, Florent de Dinechin (2013-2015)");
 		
@@ -198,7 +198,7 @@ namespace flopoco{
 		double targetUlpError = 1.0;
 
 		for(int i=0; i<n; i++)		{
-			int wInKCM = msbIn[i]-lsbIn[i]+1+g;	//p bits + 1 sign bit
+			int wInKCM = msbIn[i]-lsbIn[i]+1;	//p bits + 1 sign bit
 
 			int temp = FixRealKCM::neededGuardBits(
 					getTarget(), 
