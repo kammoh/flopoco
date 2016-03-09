@@ -1015,7 +1015,7 @@ namespace flopoco
 		int /*maxCompressibleBits,*/ col0, col1;
 
 		//maxCompressibleBits = op->getTarget()->lutInputs();
-
+		BasicCompressor* compressor;
 
 
 #if 0 // The other alternative works better but has to be adapted to arbitrary lutInputs
@@ -1050,8 +1050,8 @@ namespace flopoco
 			vector<int> newVect;
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			fullAdder = new BasicCompressor(op->getTarget(), newVect);
-			possibleCompressors.push_back(fullAdder);
+			compressor = new BasicCompressor(op->getTarget(), newVect);
+			possibleCompressors.push_back(compressor);
 		}
 		*/
 		{
@@ -1066,24 +1066,24 @@ namespace flopoco
 			vector<int> newVect;
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			fullAdder = new BasicCompressor(op->getTarget(), newVect);
-			possibleCompressors.push_back(fullAdder);
+			compressor = new BasicCompressor(op->getTarget(), newVect);
+			possibleCompressors.push_back(compressor);
 		}
 		{// test
 			col0=5; col1=0;
 			vector<int> newVect;
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			fullAdder = new BasicCompressor(op->getTarget(), newVect);
-			possibleCompressors.push_back(fullAdder);
+			compressor = new BasicCompressor(op->getTarget(), newVect);
+			possibleCompressors.push_back(compressor);
 		}
 		{//test
 			col0=4; col1=0;
 			vector<int> newVect;
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			fullAdder = new BasicCompressor(op->getTarget(), newVect);
-			possibleCompressors.push_back(fullAdder);
+			compressor = new BasicCompressor(op->getTarget(), newVect);
+			possibleCompressors.push_back(compressor);
 		}
 		{
 			col0=3; col1=2;
@@ -1097,16 +1097,16 @@ namespace flopoco
 			vector<int> newVect;
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			fullAdder = new BasicCompressor(op->getTarget(), newVect);
-			possibleCompressors.push_back(fullAdder);
+			compressor = new BasicCompressor(op->getTarget(), newVect);
+			possibleCompressors.push_back(compressor);
 		}
 		{
 			col0=3; col1=0;
 			vector<int> newVect;
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			fullAdder = new BasicCompressor(op->getTarget(), newVect);
-			possibleCompressors.push_back(fullAdder);
+			compressor = new BasicCompressor(op->getTarget(), newVect);
+			possibleCompressors.push_back(compressor);
 		}
 
 #endif
