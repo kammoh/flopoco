@@ -150,7 +150,7 @@ namespace flopoco{
 
 		
 		private:
-		static int guardBitsFromTableNumber(
+		static int guardBitsFromNumberOfTables(
 					int nbTables,
 					double targetUlpError
 				);

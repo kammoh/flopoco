@@ -89,6 +89,7 @@ namespace flopoco{
 			(signedInput  ?"_signed" : "_unsigned");
 		setName(name.str());
 
+		//compute the logarithm only of the constants
 		mpfr_t log2C;
 		mpfr_init2(log2C, 100); // should be enough for anybody
 		mpfr_log2(log2C, absC, GMP_RNDN);
@@ -97,9 +98,7 @@ namespace flopoco{
 
 		msbOut = msbC + msbIn;
 		if(!signedInput && negativeConstant)
-		{
 			msbOut++; //Result would be signed
-		}
 
 		wOut = msbOut - lsbOut +1;
 
@@ -107,7 +106,7 @@ namespace flopoco{
 				msbIn << "," << lsbIn << ")   wIn=" << wIn << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
 				")   wOut=" << wOut
-			);
+		);
 
 		g = neededGuardBits(
 				getTarget(), 
@@ -116,7 +115,7 @@ namespace flopoco{
 				constant, 
 				lsbIn, 
 				lsbOut
-			);
+		);
 	}
 
 
@@ -187,10 +186,7 @@ namespace flopoco{
 		return false;
 	}
 	
-	int FixRealKCM::guardBitsFromTableNumber(
-			int nbOfTables,
-			double targetUlpError
-		)
+	int FixRealKCM::guardBitsFromNumberOfTables(int nbOfTables, double targetUlpError)
 	{
 		int guardBits;
 		if(targetUlpError > 1.0 || targetUlpError <= 0.5)
@@ -220,11 +216,10 @@ namespace flopoco{
 	int FixRealKCM::computeNumberOfTables(Target* target, int wIn, int msbC, int lsbIn, int lsbOut, double targetUlpError, int** disize_target)
 	{
 		int msbIn = wIn + lsbIn - 1;
-		int oldWIn = wIn;
 		/* optimalTableInputWidth will be target->lutInputs() or target->lutInputs()-1  */
 		int optimalTableInputWidth = target->lutInputs()-1;
 		int* diSize = nullptr;		
-		int nbTables, guardBits;
+		int nbTables;
 		int wOut = msbC + msbIn - lsbOut + 1;
 		int currentOffset;
 
@@ -235,7 +230,7 @@ namespace flopoco{
 		if(currentOffset >= lsbOut)
 		{
 			vector<int> diSizeVector;
-			int stopLimit = (lsbIn>lsbOut ? lsbIn : lsbOut);
+			int stopLimit = (lsbIn>=lsbOut ? lsbIn : (lsbOut < 0 ? lsbOut-1 : lsbOut+1));
 
 			//while the bits in a new table are not outside the target accuracy, add a new table
 			while(currentOffset >= stopLimit)
@@ -254,9 +249,21 @@ namespace flopoco{
 				{
 					diSizeVector.pop_back();
 					diSizeVector[diSizeVector.size()-1] += 1;
+				} else if(diSizeVector[diSizeVector.size()-1] == 0)
+				{
+					//the last table ended up being empty, so eliminate it
+					diSizeVector.pop_back();
+					currentOffset += optimalTableInputWidth;
 				}
+				//if the input is truncated, we need two extra bits to address the last table
+				if((currentOffset-(msbC < 0 ? msbC : 0) >= lsbIn+1) && (stopLimit >= lsbIn))
+					diSizeVector[diSizeVector.size()-1] += 2;
+				else if((currentOffset-(msbC < 0 ? msbC : 0) >= lsbIn) && (stopLimit >= lsbIn))
+					//if there's only one remaining bit
+					diSizeVector[diSizeVector.size()-1] += 1;
 
 				//convert the vector into an array, for output
+				nbTables = diSizeVector.size();
 				diSize = new int[nbTables];
 				for(int i=0; i<nbTables; i++)
 					diSize[i] = diSizeVector[i];
@@ -272,12 +279,7 @@ namespace flopoco{
 	}
 	
 
-	void FixRealKCM::connectTablesToBitHeap(
-				FixRealKCMTable** t,
-				int* doSize,
-				int nbOfTables,
-				Operator* op
-			)
+	void FixRealKCM::connectTablesToBitHeap(FixRealKCMTable** t, int* doSize, int nbOfTables, Operator* op)
 	{
 		Target* target = getTarget();
 
@@ -290,7 +292,7 @@ namespace flopoco{
 
 			op->inPortMap (t[i] , "X", join("d",i, "_kcmMult_", getuid()));
 			op->outPortMap(t[i] , "Y", join("pp",i, "_kcmMult_", getuid()));
-			op->vhdl << op->instance(t[i] , join("KCMTable_",i, "_kcmMult_", getuid()));
+			op->vhdl << op->instance(t[i] , join("KCMTable_", i, "_kcmMult_", getuid()));
 
 			//manage the critical path
 			op->syncCycleFromSignal(join("pp",i,"_kcmMult_", getuid()));
@@ -311,12 +313,11 @@ namespace flopoco{
 
 			} // w = table.msb + 1
 	
-			//Negative subproduct sign extension :
-			//As fast sign extension was enabled, we only need to add
-			//1 to each weight from table.msb to wOut - 1
+			//Negative sub-product sign extension :
+			//	add 1 at each weight from table.msb to wOut - 1
 			if(t[i]->negativeSubproduct)
 			{	
-				REPORT(DEBUG, "Negative subproduct sign extension for table "<<i);
+				REPORT(DEBUG, "Negative sub-product sign extension for table "<<i);
 				for(; w < bitheapSize ; w++)
 				{
 					bitHeap->addConstantOneBit(w);
@@ -366,14 +367,16 @@ namespace flopoco{
 		{
 			vhdl << tab << "R" << range(wOut - 1, 0) << " <= " << zg(wOut, 0) <<
 					";" << endl;
-		} else { //NonZero constant
+		}
+		else
+		{ 	//NonZero constant
 
 			//create the bitheap
 			bitHeap = new BitHeap(this, wOut+g);
 
 			if(!handleSpecialConstant(this))
 			{
-				int* diSize;
+				int* diSize = nullptr;
 				int nbOfTables = computeNumberOfTables(
 						target, 
 						wIn, 
@@ -450,7 +453,7 @@ namespace flopoco{
 		)
 		{
 			// First set up all the sizes
-			int *diSize;
+			int *diSize = nullptr;
 			int nbOfTables = computeNumberOfTables(
 					target, 
 					wIn, 
@@ -522,7 +525,7 @@ namespace flopoco{
 					tableDo, 
 					negativeConstant && (!last || !signedInput), 
 					last 
-				);
+			);
 
 			doSize[i] = tableDo;
 			REPORT(DEBUG, "Table i=" << i << ", input size=" << 
@@ -538,13 +541,9 @@ namespace flopoco{
 
 
 		if(doSize_target != nullptr)
-		{
 			*doSize_target = doSize;
-		}
 		else
-		{
 			delete[] doSize;
-		}
 
 		return t;
 
@@ -615,25 +614,18 @@ namespace flopoco{
 		mpfr_clears(mpX, mpR, NULL);
 	}
 
-	int FixRealKCM::neededGuardBits(
-			Target* target, 
-			int wIn, 
-			double targetUlpError,
-			string constant,
-			int lsbIn, 
-			int lsbOut
-		)
+	int FixRealKCM::neededGuardBits(Target* target, int wIn, double targetUlpError, string constant, int lsbIn, int lsbOut)
 	{
 		// Convert the input string into a sollya evaluation tree
 		sollya_obj_t node;
 		node = sollya_lib_parse_string(constant.c_str());	
-		/* If  parse error throw an exception */
+		// If this is a parse error, throw an exception
 		if (sollya_lib_obj_is_error(node))
 		{
-				ostringstream error;
-				error << " neededGuardBits : Unable to parse string "<< 
-					constant << " as a numeric constant" <<endl;
-				throw error.str();
+			ostringstream error;
+			error << " neededGuardBits : Unable to parse string "<<
+					constant << " as a numeric constant" << endl;
+			throw error.str();
 		}
 
 		mpfr_t mpC, absC;
@@ -665,14 +657,11 @@ namespace flopoco{
 				lsbOut,
 				targetUlpError, 
 				nullptr
-			);
-		return guardBitsFromTableNumber(nbOfTables, targetUlpError);
+		);
+		return guardBitsFromNumberOfTables(nbOfTables, targetUlpError);
 	}
 
-	OperatorPtr FixRealKCM::parseArguments(
-			Target* target, 
-			std::vector<std::string> &args
-		)
+	OperatorPtr FixRealKCM::parseArguments(Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
 		bool signedInput;
@@ -703,30 +692,20 @@ namespace flopoco{
 				"ConstMultDiv",
 				"",
 				"signedInput(bool): 0=unsigned, 1=signed; \
-         msbIn(int): weight associated to most significant bit (including sign bit);\
-         lsbIn(int): weight associated to least significant bit;\
-         lsbOut(int): weight associated to output least significant bit; \
-         constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
-         targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
+				msbIn(int): weight associated to most significant bit (including sign bit);\
+				lsbIn(int): weight associated to least significant bit;\
+				lsbOut(int): weight associated to output least significant bit; \
+				constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
+				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
 				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
 				FixRealKCM::parseArguments		
-			);
+		);
 	}
 
 	/************************** The FixRealKCMTable class ********************/
 
 
-	FixRealKCMTable::FixRealKCMTable(
-			Target* target, 
-			FixRealKCM* mother, 
-			int i,
-			int weight,
-			int wIn,
-			int wOut,
-			bool negativeSubproduct,
-			bool last,
-			int pipeline
-		):
+	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i, int weight, int wIn, int wOut, bool negativeSubproduct, bool last, int pipeline):
 			Table(target, wIn, wOut, 0, -1, pipeline), 
 			mother(mother), 
 			index(i), 
