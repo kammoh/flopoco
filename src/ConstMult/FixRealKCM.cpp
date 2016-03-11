@@ -244,6 +244,7 @@ namespace flopoco{
 			{
 				//the total number of bits might be larger than the width of the number, so reduce it if necessary
 				diSizeVector[diSizeVector.size()-1] -= (stopLimit-currentOffset);
+				currentOffset += (stopLimit-currentOffset);
 				//if the last table only has a single bit, eliminate it and increase the second to last table's size
 				if(diSizeVector[diSizeVector.size()-1] == 1)
 				{
