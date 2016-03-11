@@ -217,112 +217,58 @@ namespace flopoco{
 
 
 	
-	int FixRealKCM::computeNumberOfTables(
-			Target* target,
-			int wIn,
-			int msbC,
-			int lsbIn,
-			int lsbOut,
-			double targetUlpError,
-			int** disize_target
-		)
+	int FixRealKCM::computeNumberOfTables(Target* target, int wIn, int msbC, int lsbIn, int lsbOut, double targetUlpError, int** disize_target)
 	{
+		int msbIn = wIn + lsbIn - 1;
 		int oldWIn = wIn;
-		/** will be target->lutInputs() or target->lutInputs()-1  */
+		/* optimalTableInputWidth will be target->lutInputs() or target->lutInputs()-1  */
 		int optimalTableInputWidth = target->lutInputs()-1;
 		int* diSize = nullptr;		
-		int nbOfTables, guardBits;
-		int wOut = wIn + lsbIn + msbC - lsbOut;
-		int newWIn = wOut + msbC + 1;
-		int newGuardBits = 0;
+		int nbTables, guardBits;
+		int wOut = msbC + msbIn - lsbOut + 1;
+		int currentOffset;
 
-		if(wIn <= newWIn)
+		//only generate the architecture if the product with the constant
+		//	is completely out of the range of interest
+		nbTables = 0;
+		currentOffset = (msbC < 0 ? msbIn+msbC : msbIn);
+		if(currentOffset >= lsbOut)
 		{
-			int nbTablesEntieres = wIn / optimalTableInputWidth;
-			int remainingBits = wIn % optimalTableInputWidth;
-			nbOfTables = nbTablesEntieres;
+			vector<int> diSizeVector;
+			int stopLimit = (lsbIn>lsbOut ? lsbIn : lsbOut);
 
-			if(remainingBits != 0)
-			{ 
-				int guardBits_extendedTable = 
-					guardBitsFromTableNumber(nbTablesEntieres, targetUlpError);
-				int guardBits_extraTable =
-					guardBitsFromTableNumber(nbTablesEntieres + 1, targetUlpError);
-
-				//TODO : compute more accurately costs and compare them
-				if	(	guardBits_extraTable == guardBits_extendedTable )
-				{
-					nbOfTables++;
-					diSize = new int[nbOfTables];
-					for(int i = 0 ; i + 1 < nbOfTables ; diSize[i++] = optimalTableInputWidth );
-					diSize[nbOfTables - 1] = remainingBits;
-				}
-				else
-				{
-					diSize = new int[nbOfTables];
-					diSize[0] = remainingBits + optimalTableInputWidth;
-					for(int i = 1 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-				}
-			}
-			else
+			//while the bits in a new table are not outside the target accuracy, add a new table
+			while(currentOffset >= stopLimit)
 			{
-				diSize = new int[nbOfTables];	
-				for(int i = 0 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth);
+				currentOffset -= optimalTableInputWidth;
+				diSizeVector.push_back(optimalTableInputWidth);
+				nbTables++;
 			}
-
-		}
-		else {
-			cerr <<("Small constant, input precision is higher than required. Trying to optimize");
-			//The loop is here to prevent neglictible input bits from being
-			//tabulated.
-			do { 
-				if(diSize != nullptr) {
-					delete diSize;
-					diSize = nullptr;
+			//if there are any tables
+			if(nbTables > 0)
+			{
+				//the total number of bits might be larger than the width of the number, so reduce it if necessary
+				diSizeVector[diSizeVector.size()-1] -= (stopLimit-currentOffset);
+				//if the last table only has a single bit, eliminate it and increase the second to last table's size
+				if(diSizeVector[diSizeVector.size()-1] == 1)
+				{
+					diSizeVector.pop_back();
+					diSizeVector[diSizeVector.size()-1] += 1;
 				}
-				wIn = newWIn;
-				guardBits = newGuardBits;
 
-				int nbTablesEntieres = wIn / optimalTableInputWidth;
-				int remainingBits = wIn % optimalTableInputWidth;
-				nbOfTables = nbTablesEntieres;
-
-				if (remainingBits != 0) { 
-					int guardBits_extendedTable = 
-						guardBitsFromTableNumber(nbTablesEntieres, targetUlpError);
-					int guardBits_extraTable =
-						guardBitsFromTableNumber(nbTablesEntieres + 1, targetUlpError);
-					
-					//TODO : compute more accurately costs and compare them
-					if	(	guardBits_extraTable == guardBits_extendedTable ) {
-						nbOfTables++;
-						diSize = new int[nbOfTables];
-						for(int i = 0 ; i + 1 < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-						diSize[nbOfTables - 1] = remainingBits;
-					} else {
-						diSize = new int[nbOfTables];
-						diSize[0] = remainingBits + optimalTableInputWidth;
-						for(int i = 1 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth );
-					}
-				} else {
-					diSize = new int[nbOfTables];
-					for(int i = 0 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-				}
-				
-				newGuardBits = guardBitsFromTableNumber(nbOfTables, targetUlpError);
-				newWIn = wIn + newGuardBits - guardBits;
-			}while(newWIn > wIn && wIn <= oldWIn && newWIn <= oldWIn);
+				//convert the vector into an array, for output
+				diSize = new int[nbTables];
+				for(int i=0; i<nbTables; i++)
+					diSize[i] = diSizeVector[i];
+			}
 		}
 
 		if(disize_target != nullptr)
-		{
 			*disize_target = diSize;
-		}
 		else
-		{
 			delete[] diSize;
-		}
-		return nbOfTables;
+
+		return nbTables;
 	}
 	
 
@@ -400,34 +346,26 @@ namespace flopoco{
 
 
 	//standalone operator
-	FixRealKCM::FixRealKCM(
-				Target* target, 
-				bool signedInput_, 
-				int msbIn_, 
-				int lsbIn_, 
-				int lsbOut_, 
-				string constant_, 
-				double targetUlpError_,
-				map<string, double> inputDelays 
-			):Operator(target, inputDelays), 
-			signedInput(signedInput_),
-			msbIn(msbIn_), 
-			lsbIn(lsbIn_), 
-			wIn(msbIn_-lsbIn_+1), 
-			lsbOut(lsbOut_), 
-			constant(constant_), 
-			targetUlpError(targetUlpError_)
+	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays):
+							Operator(target, inputDelays),
+							signedInput(signedInput_),
+							msbIn(msbIn_),
+							lsbIn(lsbIn_),
+							wIn(msbIn_-lsbIn_+1),
+							lsbOut(lsbOut_),
+							constant(constant_),
+							targetUlpError(targetUlpError_)
 	{
 		init();		
 		bitheaplsb = lsbOut - g;
 		addInput("X", wIn);
 		addOutput("R", wOut);
-	
+
 		//Zero constant
 		if(mpfr_zero_p(mpC) != 0)
 		{
 			vhdl << tab << "R" << range(wOut - 1, 0) << " <= " << zg(wOut, 0) <<
-				";" << endl;
+					";" << endl;
 		} else { //NonZero constant
 
 			//create the bitheap
@@ -444,7 +382,7 @@ namespace flopoco{
 						lsbOut, 
 						targetUlpError, 
 						&diSize
-						);
+				);
 
 				REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables." <<
 						g << "guards bits are used.");
@@ -462,7 +400,7 @@ namespace flopoco{
 						nbOfTables,
 						&doSize,
 						this
-						);
+				);
 
 				connectTablesToBitHeap(t, doSize, nbOfTables, this);
 
@@ -477,51 +415,39 @@ namespace flopoco{
 
 			//because of final add in bit heap, add one more bit to the result
 			vhdl << declare("OutRes", wOut+g) << " <= " << 
-				bitHeap->getSumName() << range(wOut+g-1, 0) << ";" << endl;	
+					bitHeap->getSumName() << range(wOut+g-1, 0) << ";" << endl;
 
 			vhdl << tab << "R <= OutRes" << range(wOut+g-1, g) << ";" << endl;
 
 		}
 
-				outDelayMap["R"] = getCriticalPath();
+		outDelayMap["R"] = getCriticalPath();
 	}
 	
 	
 	//operator incorporated into a global compression
 	//	for use as part of a bigger operator
-	FixRealKCM::FixRealKCM(
-			Operator* parentOp, 
-			Target* target, 
-			Signal* multiplicandX, 
-			bool signedInput_, 
-			int msbIn_, 
-			int lsbIn_, 
-			int lsbOut_, 
-			string constant_, 
-			BitHeap* bitHeap_,
-			int bitheapLsb,
-			double targetUlpError_, 
-			map<string, double> inputDelays
-		):	
-			Operator(target, inputDelays),
-			signedInput(signedInput_), 
-			msbIn(msbIn_),
-			lsbIn(lsbIn_), 
-			wIn(msbIn_-lsbIn_+1), 
-			lsbOut(lsbOut_), 
-			constant(constant_), 
-			targetUlpError(targetUlpError_), 
-			bitHeap(bitHeap_),
-			bitheaplsb(bitheapLsb)
+	FixRealKCM::FixRealKCM(Operator* parentOp, Target* target, Signal* multiplicandX, bool signedInput_, int msbIn_, int lsbIn_,
+			int lsbOut_, string constant_, BitHeap* bitHeap_, int bitheapLsb, double targetUlpError_, map<string, double> inputDelays):
+					Operator(target, inputDelays),
+					signedInput(signedInput_),
+					msbIn(msbIn_),
+					lsbIn(lsbIn_),
+					wIn(msbIn_-lsbIn_+1),
+					lsbOut(lsbOut_),
+					constant(constant_),
+					targetUlpError(targetUlpError_),
+					bitHeap(bitHeap_),
+					bitheaplsb(bitheapLsb)
 	{
-		
+
 		init();
 
 		//If constant is not zero or a power of two, then create tables and
 		// connect them to bitHeap
 		if	(	mpfr_zero_p(mpC) == 0 && 
 				!handleSpecialConstant(parentOp, multiplicandX->getName())
-			)
+		)
 		{
 			// First set up all the sizes
 			int *diSize;
@@ -533,7 +459,7 @@ namespace flopoco{
 					lsbOut, 
 					targetUlpError, 
 					&diSize
-				);
+			);
 
 			REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables"); 	
 
@@ -545,7 +471,7 @@ namespace flopoco{
 					&doSize,
 					parentOp,
 					multiplicandX->getName()
-					);
+			);
 
 			connectTablesToBitHeap(t, doSize, nbOfTables, parentOp);
 
@@ -554,13 +480,7 @@ namespace flopoco{
 
 	}
 
-	FixRealKCMTable** FixRealKCM::createTables(
-			int* diSize,
-			int nbOfTables,
-			int** doSize_target,
-			Operator* op,
-			string inputSignalName
-		)
+	FixRealKCMTable** FixRealKCM::createTables(int* diSize, int nbOfTables, int** doSize_target, Operator* op, string inputSignalName)
 	{
 		Target* target = getTarget();
 		FixRealKCMTable** t = new FixRealKCMTable*[nbOfTables]; 
@@ -586,12 +506,8 @@ namespace flopoco{
 			// The previous one wOut+g-lastLutWidth
 			// the previous one wOut+g-anteLastLutWidth-lastlutWidth etc
 			
-			op-> vhdl << tab << 
-				op->declare(join("d",i,"_kcmMult_", getuid()), diSize[i]) << 
-				" <= " << 
-				inputSignalName << range(offset - 1, offset - diSize[i]) <<  
-				";" << endl;
-
+			op-> vhdl << tab << op->declare(join("d",i,"_kcmMult_", getuid()), diSize[i]) <<
+				" <= " << inputSignalName << range(offset - 1, offset - diSize[i]) << ";" << endl;
 
 			highBit -= diSize[i];
 			offset -= diSize[i];

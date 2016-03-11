@@ -176,8 +176,7 @@ namespace flopoco{
 		 * @param lsbIn : input lsb weight
 		 * @param lsbOut : output lsb weight (result precision)
 		 * @param targetUlpError : required precision
-		 * @param disize_target : where chunck sizes should be located when
-		 * function return
+		 * @param disize_target : where chunk sizes should be located when the function returns
 		 */
 		static int computeNumberOfTables(
 			Target* target,
