@@ -226,14 +226,14 @@ namespace flopoco{
 		//only generate the architecture if the product with the constant
 		//	is completely out of the range of interest
 		nbTables = 0;
-		currentOffset = (msbC < 0 ? msbIn+msbC : msbIn);
+		currentOffset = msbIn+msbC;
 		if(currentOffset >= lsbOut)
 		{
 			vector<int> diSizeVector;
-			int stopLimit = (lsbIn>=lsbOut ? lsbIn : (lsbOut < 0 ? lsbOut-1 : lsbOut+1));
+			int stopLimit = lsbOut;
 
 			//while the bits in a new table are not outside the target accuracy, add a new table
-			while(currentOffset >= stopLimit)
+			while((currentOffset >= stopLimit) && (currentOffset-msbC >= lsbIn))
 			{
 				currentOffset -= optimalTableInputWidth;
 				diSizeVector.push_back(optimalTableInputWidth);
@@ -243,8 +243,8 @@ namespace flopoco{
 			if(nbTables > 0)
 			{
 				//the total number of bits might be larger than the width of the number, so reduce it if necessary
-				diSizeVector[diSizeVector.size()-1] -= (stopLimit-currentOffset);
-				currentOffset += (stopLimit-currentOffset);
+				diSizeVector[diSizeVector.size()-1] -= ((lsbIn+msbC)-currentOffset);
+				currentOffset += ((lsbIn+msbC)-currentOffset);
 				//if the last table only has a single bit, eliminate it and increase the second to last table's size
 				if(diSizeVector[diSizeVector.size()-1] == 1)
 				{
@@ -254,12 +254,18 @@ namespace flopoco{
 				{
 					//the last table ended up being empty, so eliminate it
 					diSizeVector.pop_back();
-					currentOffset += optimalTableInputWidth;
+				} else if(diSizeVector[diSizeVector.size()-1] <= 0)
+				{
+					//the last table ended up being empty, so eliminate it
+					int tmp = diSizeVector.back();
+					diSizeVector.pop_back();
+					diSizeVector[diSizeVector.size()-1] += tmp;
+					currentOffset += tmp;
 				}
 				//if the input is truncated, we need two extra bits to address the last table
-				if((currentOffset-(msbC < 0 ? msbC : 0) >= lsbIn+1) && (stopLimit >= lsbIn))
+				if(currentOffset-msbC > lsbIn+1)
 					diSizeVector[diSizeVector.size()-1] += 2;
-				else if((currentOffset-(msbC < 0 ? msbC : 0) >= lsbIn) && (stopLimit >= lsbIn))
+				else if(currentOffset-msbC > lsbIn)
 					//if there's only one remaining bit
 					diSizeVector[diSizeVector.size()-1] += 1;
 
@@ -310,6 +316,7 @@ namespace flopoco{
 				manageCriticalPath(target->lutDelay());
 
 				s << join("pp",i, "_kcmMult_", getuid()) << of(w);
+
 				bitHeap->addBit(w+offset, s.str());
 
 			} // w = table.msb + 1
@@ -324,7 +331,7 @@ namespace flopoco{
 					bitHeap->addConstantOneBit(w);
 				}
 				bitHeap->addConstantOneBit(0);
-			} 
+			}
 			else if (i == nbOfTables - 1 && signedInput)
 			{
 				REPORT(DEBUG, "Sign extension for signed input msb table");
@@ -334,7 +341,7 @@ namespace flopoco{
 				}
 			}
 		
-		
+
 		}
 
 		if(g > 0)
@@ -717,7 +724,7 @@ namespace flopoco{
 		ostringstream name; 
 		srcFileName="FixRealKCM";
 		name << mother->getName() << "_Table_" << index;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team"); 
 	}
   
