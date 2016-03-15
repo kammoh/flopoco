@@ -49,7 +49,7 @@ if __name__ == '__main__':
     os.mkdir(workdir)
     os.chdir(workdir)
 
-    synthesis_only=True # some day to replace with a command-line switch
+    synthesis_only=False # some day to replace with a command-line switch
 
     # First futile attempt to get a timing report
 
