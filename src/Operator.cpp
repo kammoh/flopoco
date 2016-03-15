@@ -3156,6 +3156,9 @@ namespace flopoco{
 				totalDelay -= maxTargetCriticalPath + getTarget()->ffDelay();
 			}
 
+			if(totalDelay < 0)
+				totalDelay = 0.0;
+
 			targetSignal->setCycle(maxCycle);
 			targetSignal->setCriticalPath(totalDelay);
 		}else
