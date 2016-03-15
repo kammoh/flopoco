@@ -49,6 +49,7 @@ namespace flopoco {
 		addOutput ("R"  , wIn, 1 , true);
 
 		vhdl << tab << " R <= X + Y + Cin;" << endl;
+		REPORT(INFO, "Adder " << name.str() << " adding delay " << getTarget()->adderDelay(wIn+1));
 		getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn+1));
 
 	}

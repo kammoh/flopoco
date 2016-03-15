@@ -3102,7 +3102,7 @@ namespace flopoco{
 			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
 		}
 
-		//determine the maximum cycle and critical path of the signal's parents
+		//determine the lexicographic maximum cycle and critical path of the signal's parents
 		for(unsigned int i=1; i<targetSignal->predecessors()->size(); i++)
 		{
 			Signal* currentPred = targetSignal->predecessor(i);
@@ -3144,11 +3144,11 @@ namespace flopoco{
 		maxTargetCriticalPath = 1.0 / getTarget()->frequency();
 		//check if the signal needs to pass to the next cycle,
 		//	due to its critical path contribution
-		if(maxCriticalPath+targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
+		if(maxCriticalPath + targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
 		{
 			double totalDelay = maxCriticalPath + targetSignal->getCriticalPathContribution();
 
-			while((totalDelay+getTarget()->ffDelay()) > maxTargetCriticalPath)
+			while((totalDelay + getTarget()->ffDelay()) > maxTargetCriticalPath)
 			{
 				// if maxCriticalPath+criticalPathContribution > 1/frequency, it may insert several pipeline levels.
 				// This is what we want to pipeline block-RAMs and DSPs up to the nominal frequency by just passing their overall delay.
@@ -3158,13 +3158,20 @@ namespace flopoco{
 
 			if(totalDelay < 0)
 				totalDelay = 0.0;
-
 			targetSignal->setCycle(maxCycle);
+
+#define ASSUME_RETIMING 0 // we leave a bit of the critical path to this signal
+#if ASSUME_RETIMING
 			targetSignal->setCriticalPath(totalDelay);
+#else //ASSUME_NO_RETIMING
+			targetSignal->setCriticalPath(targetSignal->getCriticalPathContribution());			
+#endif
+			
+			
 		}else
 		{
 			targetSignal->setCycle(maxCycle);
-			targetSignal->setCriticalPath(maxCriticalPath+targetSignal->getCriticalPathContribution());
+			targetSignal->setCriticalPath( maxCriticalPath + targetSignal->getCriticalPathContribution());
 		}
 
 		targetSignal->setHasBeenImplemented(true);
