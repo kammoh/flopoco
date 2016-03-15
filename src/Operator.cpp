@@ -3182,7 +3182,7 @@ namespace flopoco{
 			}
 
 			targetSignal->setCycle(maxCycle);
-			targetSignal->setCriticalPath(0.0);
+			targetSignal->setCriticalPath(totalDelay);
 		}else
 		{
 			targetSignal->setCycle(maxCycle);
