@@ -267,28 +267,30 @@ namespace flopoco
 
 
 	void UserInterface::finalReport(ostream& s){
-		s << endl<<"Final report:"<<endl;
+		s << endl<<"*** Final report ***"<<endl;
+		s << "Output file: " << outputFileName <<endl;
+		Operator* op = UserInterface::globalOpList.back();
+		s << "Target: " << op->getTarget() -> getID()
+			<< " @ "<< op->getTarget() -> frequencyMHz() << " MHz" <<	endl;
 		for(auto i: UserInterface::globalOpList) {
 			i->outputFinalReport(s, 0);
 		}
-		cerr << "Output file: " << outputFileName <<endl;
 
 		// Messages for testbenches. Only works if you have only one TestBench
-		Operator* op = UserInterface::globalOpList.back();
 		if(op->getSrcFileName() == "TestBench"){
-			cerr << "To run the simulation using ModelSim, type the following in 'vsim -c':" <<endl;
-			cerr << tab << "vdel -all -lib work" <<endl;
-			cerr << tab << "vlib work" <<endl;
-			cerr << tab << "vcom " << outputFileName <<endl;
-			cerr << tab << "vsim " << op->getName() <<endl;
-			cerr << tab << "add wave -r *" <<endl;
-			cerr << tab << "run " << ((TestBench*)op)->getSimulationTime() << "ns" << endl;
-			cerr << "To run the simulation using gHDL, type the following in a shell prompt:" <<endl;
+			s << "To run the simulation using ModelSim, type the following in 'vsim -c':" <<endl;
+			s << tab << "vdel -all -lib work" <<endl;
+			s << tab << "vlib work" <<endl;
+			s << tab << "vcom " << outputFileName <<endl;
+			s << tab << "vsim " << op->getName() <<endl;
+			s << tab << "add wave -r *" <<endl;
+			s << tab << "run " << ((TestBench*)op)->getSimulationTime() << "ns" << endl;
+			s << "To run the simulation using gHDL, type the following in a shell prompt:" <<endl;
 			string simlibs="--ieee=standard --ieee=synopsys ";
-			cerr <<  "ghdl -a " << simlibs << "-fexplicit "<< outputFileName <<endl;
-			cerr <<  "ghdl -e " << simlibs << "-fexplicit " << op->getName() <<endl;
-			cerr <<  "ghdl -r " << simlibs << op->getName() << " --vcd=" << op->getName() << ".vcd --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
-			cerr <<  "gtkwave " << op->getName() << ".vcd" << endl;
+			s <<  "ghdl -a " << simlibs << "-fexplicit "<< outputFileName <<endl;
+			s <<  "ghdl -e " << simlibs << "-fexplicit " << op->getName() <<endl;
+			s <<  "ghdl -r " << simlibs << op->getName() << " --vcd=" << op->getName() << ".vcd --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
+			s <<  "gtkwave " << op->getName() << ".vcd" << endl;
 		}
 
 	}
