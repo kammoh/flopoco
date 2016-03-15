@@ -35,7 +35,10 @@ namespace flopoco{
 		//this operator is a sequential one	even if Target is unpipelined
 		setSequential();	
 	
+		// Add the wrapped operator to the subcomponent list
+		addVirtualSubComponent(op);
 
+		
 		// Copy the signals of the wrapped operator 
 		// This replaces addInputs and addOutputs
 		for(int i=0; i < op->getIOListSize(); i++)	{
