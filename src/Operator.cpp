@@ -3211,9 +3211,14 @@ namespace flopoco{
 		//increase the tabulation
 		tabs = join(tabs, "\t");
 
+		//if this is a
+
 		file << tabs << "//graph drawing options\n";
 		file << tabs << "label=" << getName() << ";\n"
 				<< tabs << "labelloc=bottom;\n" << tabs << "labeljust=right;\n";
+
+		if(mode == 2)
+			file << tabs << "style=\"bold, dotted\";\n";
 
 		if(dotDrawingMode == "compact")
 			file << tabs << "ratio=compress;\n" << tabs << "fontsize=8;\n";
@@ -3239,7 +3244,7 @@ namespace flopoco{
 			file << tabs << "nodesep=0.15;\n" << tabs << "ranksep=0.15;\n" << tabs << "concentrate=yes;\n\n";
 
 			//draw the input/output signals
-			file << tabs << "//input/output signals of operator" << this->getName() << "\n";
+			file << tabs << "//input/output signals of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				file << drawDotNode(ioList_[i], tabs);
 
@@ -3251,7 +3256,7 @@ namespace flopoco{
 			file << "\n";
 
 			//draw the invisible node, which replaces the content of the subcomponent
-			file << tabs << "//signal connections of operator" << this->getName() << "\n";
+			file << tabs << "//signal connections of operator " << this->getName() << "\n";
 			file << drawDotNode(NULL, tabs);
 			//draw edges between the inputs and the intermediary node
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
@@ -3266,11 +3271,37 @@ namespace flopoco{
 			file << tabs << "nodesep=0.25;\n" << tabs << "ranksep=0.5;\n\n";
 
 			//draw the input/output signals
-			file << tabs << "//input/output signals of operator" << this->getName() << "\n";
+			int inputCount = 0, outputCount = 0;
+			file << tabs << "//input/output signals of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			{
 				file << drawDotNode(ioList_[i], tabs);
+				inputCount += ((ioList_[i]->type() == Signal::in) ? 1 : 0);
+				outputCount += ((ioList_[i]->type() == Signal::out) ? 1 : 0);
+			}
+			//force all the inputs of the operator to have the same rank (same for the outputs)
+			string inputRankString = "", outputRankString = "";
+			for(int i=0; (unsigned int)i<ioList_.size(); i++)
+			{
+				if(ioList_[i]->type() == Signal::in)
+					inputRankString += " " + ioList_[i]->getName() + "__" + this->getName() + ",";
+				if(ioList_[i]->type() == Signal::out)
+					outputRankString += " " + ioList_[i]->getName() + "__" + this->getName() + ",";
+			}
+			if(inputRankString != "")
+			{
+				//remove the last comma
+				inputRankString = inputRankString.substr(0, inputRankString.size()-1);
+				file << tabs << "{rank=same" << inputRankString << "};" << "\n";
+			}
+			if(outputRankString != "")
+			{
+				//remove the last comma
+				outputRankString = outputRankString.substr(0, outputRankString.size()-1);
+				file << tabs << "{rank=same" << outputRankString << "};" << "\n";
+			}
 			//draw the signals of this operator as nodes
-			file << tabs << "//internal signals of operator" << this->getName() << "\n";
+			file << tabs << "//internal signals of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<signalList_.size(); i++)
 				file << drawDotNode(signalList_[i], tabs);
 
@@ -3282,7 +3313,7 @@ namespace flopoco{
 			file << "\n";
 
 			//draw the out connections of each input of this operator
-			file << tabs << "//input and internal signal connections of operator" << this->getName() << "\n";
+			file << tabs << "//input and internal signal connections of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				if(ioList_[i]->type() == Signal::in)
 					file << drawDotNodeEdges(ioList_[i], tabs);
@@ -3302,7 +3333,7 @@ namespace flopoco{
 		//draw the out connections of each output of this operator
 		if(mode == 2)
 		{
-			file << tabs << "//output signal connections of operator" << this->getName() << "\n";
+			file << tabs << "//output signal connections of operator " << this->getName() << "\n";
 			for(int i=0; (unsigned int)i<ioList_.size(); i++)
 				if(ioList_[i]->type() == Signal::out)
 					file << drawDotNodeEdges(ioList_[i], tabs);
