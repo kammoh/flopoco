@@ -84,7 +84,7 @@ namespace flopoco{
 		outPortMap (cmpAdder, "R", "cmpRes");
 
 		vhdl << instance(cmpAdder, "cmpAdder") << endl;
-		vhdl<< tab << declare("swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
+		vhdl<< tab << declare(target->localWireDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 
 		addComment("exponent difference");
 		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
@@ -104,10 +104,11 @@ namespace flopoco{
 
 		// depending on the value of swap, assign the corresponding values to the newX and newY signals
 
+		// REPORT(INFO, "Fan-out delay = " << target->localWireDelay(wE+wF+3));
 		addComment("input swap so that |X|>|Y|");
-		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+		vhdl<<tab<<declare( target->lutDelay(),
 											 "newX",wE+wF+3) << " <= X when swap = '0' else "<< pmY << ";"<<endl;
-		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+		vhdl<<tab<<declare( target->lutDelay(),
 											 "newY",wE+wF+3) << " <= " << pmY <<" when swap = '0' else X;"<<endl;
 
 		//break down the signals
