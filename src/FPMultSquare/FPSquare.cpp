@@ -112,7 +112,7 @@ namespace flopoco{
 			vhdl << tab << tab << "sqrFrac" << range(2*(wFX_+1)-3,2*(wFX_+1)-3+1-wFR) << ";" << endl;
 
 			//the rounding phase
-			IntAdder* add = new IntAdder(target, wE+2 + wFR, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+			IntAdder* add = new IntAdder(target, wE+2 + wFR);
 
 			vhdl << tab << declare("concatExpFrac", wE+2 + wFR) << " <= extExp & finalFrac;" << endl;
 			vhdl << tab << declare("addCin") << " <= (guard and sticky) or (fracULP and guard and not(sticky));"<<endl;

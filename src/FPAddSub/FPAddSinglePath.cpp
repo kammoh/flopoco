@@ -117,7 +117,8 @@ namespace flopoco{
 		vhdl << tab << declare("excY",2)  << "<= newY"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
 		vhdl << tab << declare("signX")   << "<= newX"<<of(wE+wF)<<";"<<endl;
 		vhdl << tab << declare("signY")   << "<= newY"<<of(wE+wF)<<";"<<endl;
-		vhdl << tab << declare("EffSub") << " <= signX xor signY;"<<endl;
+		vhdl << tab << declare(target->localWireDelay() + target->lutDelay(),
+													 "EffSub") << " <= signX xor signY;"<<endl;
 		vhdl << tab << declare("sXsYExnXY",6) << " <= signX & signY & excX & excY;"<<endl;
 		vhdl << tab << declare("sdExnXY",4) << " <= excX & excY;"<<endl;
 

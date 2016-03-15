@@ -28,51 +28,14 @@ namespace flopoco {
 			*            2: optimize slice/ALM count
 			* @param[in] srl              optimize for use of shift registers
 			**/
-			IntAdderClassical ( Target* target, int wIn, map<string, double> inputDelays = emptyDelayMap, int optimizeType = 2, bool srl = true);
+			IntAdderClassical ( Target* target, int wIn, int optimizeType = 2, bool srl = true);
 
-			/**
-			* Returns the cost in LUTs of the Classical implementation
-			* @param[in] target            the target device
-			* @param[in] wIn               the input width
-			* @param[in] inputDelays       the map containing the input delays
-			* @param[in] srl               optimize for use of shift registers
-			* @return                      the number of LUTS
-			*/
-			int getLutCostClassical ( Target* target, int wIn, map<string, double> inputDelays, bool srl );
-
-			/**
-			* Returns the cost in Registers of the Classical implementation
-			* @param[in] target            the target device
-			* @param[in] wIn               the input width
-			* @param[in] inputDelays       the map containing the input delays
-			* @param[in] srl               optimize for use of shift registers
-			* @return                      the number of Registers
-			*/
-			int getRegCostClassical ( Target* target, int wIn, map<string, double> inputDelays, bool srl );
-
-			/**
-			* Returns the cost in Slices of the Classical implementation
-			* @param[in] target            the target device
-			* @param[in] wIn               the input width
-			* @param[in] inputDelays       the map containing the input delays
-			* @param[in] srl               optimize for use of shift registers
-			* @return                      the number of Slices
-			*/
-			int getSliceCostClassical ( Target* target, int wIn, map<string, double> inputDelays, bool srl );
-
-			/** Factory method that parses arguments and calls the constructor */
-			static OperatorPtr parseArguments(Target *target , vector<string> &args);
-
-			/** Factory register method */
-			static void registerFactory();
 
 			/**
 			*  Destructor
 			*/
 			~IntAdderClassical();
 
-		protected:
-			int wIn_;                         /**< the width for X, Y and R*/
 
 		private:
 			//		map<string, double> inputDelays_; /**< a map between input signal names and their maximum delays */

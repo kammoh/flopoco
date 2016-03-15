@@ -71,20 +71,20 @@
 #include "IntAddSubCmp/IntDualSub.hpp"
 #include "IntAddSubCmp/IntComparator.hpp"
 
-#include "IntAddSubCmp/IntAdderClassical.hpp"
-#include "IntAddSubCmp/IntAdderAlternative.hpp"
-#include "IntAddSubCmp/IntAdderShortLatency.hpp"
+// #include "IntAddSubCmp/IntAdderClassical.hpp"
+// #include "IntAddSubCmp/IntAdderAlternative.hpp"
+// #include "IntAddSubCmp/IntAdderShortLatency.hpp"
 
 /* fast large adders ----------------------------------------- */
-#include "IntAddSubCmp/LongIntAdderAddAddMuxGen1.hpp"
-#include "IntAddSubCmp/LongIntAdderCmpCmpAddGen1.hpp"
-#include "IntAddSubCmp/LongIntAdderCmpAddIncGen1.hpp"
-#include "IntAddSubCmp/IntAdderSpecific.hpp"
-#include "IntAddSubCmp/LongIntAdderAddAddMuxGen2.hpp"
-#include "IntAddSubCmp/LongIntAdderCmpCmpAddGen2.hpp"
-#include "IntAddSubCmp/LongIntAdderCmpAddIncGen2.hpp"
-#include "IntAddSubCmp/IntComparatorSpecific.hpp"
-#include "IntAddSubCmp/LongIntAdderMuxNetwork.hpp"
+// #include "IntAddSubCmp/LongIntAdderAddAddMuxGen1.hpp"
+// #include "IntAddSubCmp/LongIntAdderCmpCmpAddGen1.hpp"
+// #include "IntAddSubCmp/LongIntAdderCmpAddIncGen1.hpp"
+// #include "IntAddSubCmp/IntAdderSpecific.hpp"
+// #include "IntAddSubCmp/LongIntAdderAddAddMuxGen2.hpp"
+// #include "IntAddSubCmp/LongIntAdderCmpCmpAddGen2.hpp"
+// #include "IntAddSubCmp/LongIntAdderCmpAddIncGen2.hpp"
+// #include "IntAddSubCmp/IntComparatorSpecific.hpp"
+// #include "IntAddSubCmp/LongIntAdderMuxNetwork.hpp"
 
 /* Integer and fixed-point multipliers ------------------------ */
 #include "IntMult/IntMultiplier.hpp"

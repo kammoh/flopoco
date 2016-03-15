@@ -138,7 +138,7 @@ namespace flopoco{
 		vhdl << tab << declare("notResFrac",wFOut_+1) << " <= resFrac xor "<<rangeAssign(wFOut_,0,"resSign")<<";"<<endl;
 
 		//convert fraction in sign-magnitude
-		IntAdder *smFracAdder = new IntAdder(target,wFOut_ + 1, inDelayMap("X", target->localWireDelay() + getCriticalPath()) );
+		IntAdder *smFracAdder = new IntAdder(target,wFOut_ + 1 );
 
 		inPortMap   (smFracAdder, "X",   "notResFrac");
 		inPortMapCst(smFracAdder, "Y",   zg(wFOut+1,0));

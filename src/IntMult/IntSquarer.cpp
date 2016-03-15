@@ -126,7 +126,8 @@ namespace flopoco{
 			vhdl << tab << declare("op1",84) << "<= x34_50_sqr & x17_33_sqr & x0_16_sqr" << range(33,18)<<";"<<endl;
 			vhdl << tab << declare("op2",84) << "<= \"0000000000000000\" & x17_33_x34_50 & x0_16_x34_50" << range(16,0)<<" & x0_16_x17_33" << range(16,0)<<";"<<endl;
 
-			intadder = new IntAdder(target, 84, inDelayMap("X", target->DSPToLogicWireDelay() + getCriticalPath()  ) );
+			// WAS:			intadder = new IntAdder(target, 84, inDelayMap("X", target->DSPToLogicWireDelay() + getCriticalPath()  ) );
+			intadder = new IntAdder(target, 84 );
 
 			inPortMap(intadder, "X", "op1");
 			inPortMap(intadder, "Y", "op2");
@@ -174,7 +175,8 @@ namespace flopoco{
 //			nextCycle(); ////////////////////////////////////////////////
 			vhdl << tab << declare("op1",101) << "<= x51_67_sqr & x34_50_sqr" << range(33,0) << " & x17_33_sqr" << range(33,1) <<  ";"<<endl;
 			vhdl << tab << declare("op2",101) << "<="<< zg(101-68,0)<<" & x_17_33_51_67_pshift & x_0_16_51_67_pshift" << range(16,0)<<" & x_0_16_34_50" << range(16,0)<<";"<<endl;
-			intadder = new IntAdder(target, 101, inDelayMap("X", target->DSPToLogicWireDelay() + getCriticalPath() ));
+			//WAS			intadder = new IntAdder(target, 101, inDelayMap("X", target->DSPToLogicWireDelay() + getCriticalPath() ));
+			intadder = new IntAdder(target, 101);
 
 			inPortMap(intadder, "X", "op1");
 			inPortMap(intadder, "Y", "op2");

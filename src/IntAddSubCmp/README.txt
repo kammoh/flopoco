@@ -1,5 +1,7 @@
+
+
 This directory contains everything related to integer addition.
-Specifically,
+Specifically, (currently moved to the Attic)
 - work related to pipelined adders of reasonable size
 	(IntAdderClassical, IntAdderAlternative, IntAdderShortLatency)
 - work related to fast adder structures for very large adders

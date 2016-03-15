@@ -151,8 +151,8 @@ namespace flopoco
 		static const vector<string> special_targets;
 		static const vector<option_t> options;
 
-		static string dotFileName;
-		static string dotDrawing;
+		static string depGraphFileName;
+		static string depGraphDrawing;
 
 	};
 

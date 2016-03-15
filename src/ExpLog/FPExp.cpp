@@ -503,8 +503,8 @@ namespace flopoco{
 
 		double ctperiod = 1.0 / target->frequency();
 		target->setFrequency( 1.0 / (ctperiod - target->LogicToRAMWireDelay() ) ); // Bogdan, WTF is that?
-		IntAdder *yPaddedAdder = new IntAdder(target, sizeY, // we know the leading bits will cancel out
-																					inDelayMap("X", target->localWireDelay() + getCriticalPath()) );
+		IntAdder *yPaddedAdder = new IntAdder(target, sizeY // we know the leading bits will cancel out
+																					 );
 		target->setFrequency( 1.0 / ctperiod );
 		addSubComponent(yPaddedAdder);
 
@@ -633,7 +633,7 @@ namespace flopoco{
 
 				vhdl << tab << "-- Computing Z + (exp(Z)-1-Z)" << endl;
 
-				addexpZminus1 = new IntAdder( target, sizeExpZm1, inDelayMap( "X", target->localWireDelay() + getCriticalPath() ) );
+				addexpZminus1 = new IntAdder( target, sizeExpZm1 );
 				addSubComponent(addexpZminus1);
 
 				vhdl << tab << declare( "expZminus1X", sizeExpZm1) << 
@@ -660,7 +660,7 @@ namespace flopoco{
 			if(useMagicTableExpZm1 || useMagicTableExpZmZm1) {
 				vhdl << tab << "-- Rounding expA to the same accuracy as expZminus1" << endl;
 				vhdl << tab << "--   (truncation would not be accurate enough and require one more guard bit)" << endl;
-				IntAdder* expArounded0 = new IntAdder( target, sizeMultIn+1, inDelayMap( "X", target->RAMToLogicWireDelay() + getCriticalPath()) );
+				IntAdder* expArounded0 = new IntAdder( target, sizeMultIn+1 );
 				addSubComponent(expArounded0);
 
 				inPortMapCst(expArounded0, "X", "expA"+range(sizeExpA-1, sizeExpA-sizeMultIn-1));
@@ -729,7 +729,7 @@ namespace flopoco{
 
 			vhdl << tab << "-- Final addition -- the product MSB bit weight is -k+2 = "<< -k+2 << endl;
 			// remember that sizeExpA==sizeExpY
-			IntAdder *finalAdder = new IntAdder(target, sizeExpY, inDelayMap( "X", target->localWireDelay() + getCriticalPath()));
+			IntAdder *finalAdder = new IntAdder(target, sizeExpY);
 			addSubComponent(finalAdder);
 
 
@@ -760,7 +760,7 @@ namespace flopoco{
 		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K(" << wE << ") & K & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit;" << endl;
 
 
-		IntAdder *roundedExpSigOperandAdder = new IntAdder(target, wE+wF+2, inDelayMap( "X", target->localWireDelay() + getCriticalPath()));
+		IntAdder *roundedExpSigOperandAdder = new IntAdder(target, wE+wF+2);
 		addSubComponent(roundedExpSigOperandAdder);
 
 		inPortMap(roundedExpSigOperandAdder, "X", "preRoundBiasSig");

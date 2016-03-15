@@ -158,7 +158,7 @@ namespace flopoco{
 						}
 
 					Operator* adder;
-					adder = new IntAdder(target, addOpSize, inDelayMap("X0", target->localWireDelay() + getCriticalPath()));
+					adder = new IntAdder(target, addOpSize);
 					addSubComponent(adder);
 					inPortMap (adder, "X" , join("addOp",0));
 					inPortMap (adder, "Y" , join("addOp",1));
