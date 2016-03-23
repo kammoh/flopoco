@@ -1549,7 +1549,9 @@ namespace flopoco{
 		ofstream file; 
 		file.open("/tmp/clock.xdc", ios::out);
 		file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
-		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]" << endl;
+		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency())
+			// << "  [get_ports clk]"
+				 << endl;
 		for(auto i: ioList_) {
 			if(i->type()==Signal::in)
 				file << "set_input_delay ";
