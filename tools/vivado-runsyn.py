@@ -14,6 +14,7 @@ import subprocess
 def usage():
     print "Usage: \nvivado-runsyn\nvivado-runsyn file.vhdl\nvivado-runsyn file.vhdl entity\n" 
     sys.exit()
+
     
 def get_last_entity(filename):
     vhdl=open(filename).read()
@@ -25,11 +26,16 @@ def get_last_entity(filename):
     last_entity_name_end = i
     entityname=vhdl[last_entity_name_start:last_entity_name_end]
     return entityname
-    
+
+
+
 #/* main */
 if __name__ == '__main__':
     if (len(sys.argv)>3):
         usage()
+
+
+    synthesis_only=False # some day to replace with a command-line switch
 
     if (len(sys.argv)==3):
         filename = sys.argv[1] 
@@ -49,7 +55,6 @@ if __name__ == '__main__':
     os.mkdir(workdir)
     os.chdir(workdir)
 
-    synthesis_only=True # some day to replace with a command-line switch
 
     # First futile attempt to get a timing report
 
@@ -73,7 +78,16 @@ if __name__ == '__main__':
     tclscriptfile.write("launch_runs " + result_name + "\n")
     tclscriptfile.write("wait_on_run " + result_name + "\n")
     tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
-    tclscriptfile.write("report_timing_summary -delay_type max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -file " + os.path.join(workdir, project_name+"_timing_report.txt") + " \n")
+#    tclscriptfile.write("report_timing_summary -delay_type max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -file " + os.path.join(workdir, project_name+"_timing_report.txt") + " \n")
+
+    # Timing report
+    timing_report_file = workdir + "/" + project_name + ".runs/" + result_name + "/" + entity + "_timing_"
+    if synthesis_only:
+        timing_report_file +="synth.rpt"
+    else:
+        timing_report_file +="placed.rpt"
+
+    tclscriptfile.write("report_timing -file " + timing_report_file + " \n")
         
     tclscriptfile.close()
 
@@ -81,13 +95,18 @@ if __name__ == '__main__':
     print vivado_command
     os.system(vivado_command)
 
-    utililization_report_file = workdir + "/" + project_name + ".runs/" + result_name + "/" + entity + "_utilization_"
+    # Reporting
+    utilization_report_file = workdir + "/" + project_name + ".runs/" + result_name + "/" + entity + "_utilization_"
     if synthesis_only:
-        utililization_report_file +="synth.rpt"
+        utilization_report_file +="synth.rpt"
     else:
-        utililization_report_file +="placed.rpt"
-    print("cat " + utililization_report_file)
-    os.system("cat " + utililization_report_file)
+        utilization_report_file +="placed.rpt"
+
+    print("cat " + utilization_report_file)
+    os.system("cat " + utilization_report_file)
+    print("cat " + timing_report_file)
+    os.system("cat " + timing_report_file)
+
     
     
     
