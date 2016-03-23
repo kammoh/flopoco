@@ -47,8 +47,6 @@ namespace flopoco{
 
 		virtual ~Target();
 
-		//obsolete		vector<Operator*> * getGlobalOpListRef();
-
 		/** Returns ID of instantiated target. This ID is represented by the name
 		 * @return the ID
 		 */
@@ -130,54 +128,6 @@ namespace flopoco{
 		 * @return the number of inputs for the look-up tables (LUTs) of the device
 		 */
 		int lutInputs();
-
-		/** Function for determining the submultiplication sizes so that the design is able
-		 * to function at a desired frequency ( multiplicatio is considerd X * Y )
-		 * @param[in,out] x the size of the submultiplication for x
-		 * @param[in,out] y the size of the submultiplication for y
-		 * @param[in] wInX the width of X
-		 * @param[in] wInY the width of Y
-		 */
-		virtual bool suggestSubmultSize(int &x, int &y, int wInX, int wInY)=0;
-
-		/** Function for determining the subadition sizes so that the design is able
-		 * to function at a desired frequency ( addition is considerd X + Y )
-		 * @param[in,out] x the size of the subaddition for x and y
-		 * @param[in] wIn the widths of X and Y
-		 */
-		virtual bool suggestSubaddSize(int &x, int wIn)=0;
-
-		/** Function for determining the ternary subadition sizes so that the design is able
-		 * to function at a desired frequency ( addition is considerd X + Y +Z )
-		 * @param[in,out] x the size of the subaddition for x and y and z
-		 * @param[in] wIn the widths of X and Y and Z
-		 */
-		virtual bool suggestSubadd3Size(int &x, int wIn)=0;
-
-		/** Function for determining the subadition sizes so that the design is able
-		 * to function at a desired frequency ( addition is considerd X + Y )
-		 * @param[in,out] x the size of the subaddition for x and y
-		 * @param[in] wIn the widths of X and Y
-		 * @param[in] slack the time delay consumed out of the input period
-		 */
-		virtual bool   suggestSlackSubaddSize(int &x, int wIn, double slack)=0;
-
-		/** Function for determining the ternary subadition sizes so that the design is able
-		 * to function at a desired frequency ( addition is considerd X + Y + Z )
-		 * @param[in,out] x the size of the subaddition for x and y and z
-		 * @param[in] wIn the widths of X and Y and Z
-		 * @param[in] slack the time delay consumed out of the input period
-		 */
-		virtual bool   suggestSlackSubadd3Size(int &x, int wIn, double slack)=0;
-
-		/** Function for determining the subcomparator sizes so that the design is able
-		* to function at a desired frequency
-		* @param[in,out] x the size of the subaddition for x and y
-		* @param[in] wIn the widths of x and y
-		* @param[in] slack the time delay consumed out of the input period
-		* @param[in] constant if the comparisson is done against a constant or Y
-		*/
-		virtual bool suggestSlackSubcomparatorSize(int &x, int wIn, double slack, bool constant)=0;
 
 
 		/* -------------------- Delay-related methods ------------------------*/
@@ -352,10 +302,6 @@ namespace flopoco{
 
 
 
-
-
-
-
 		/** defines the unused hard mult threshold, see the the corresponding attribute for its meaning
 		 */
 		void setUnusedHardMultThreshold(float v);
@@ -371,7 +317,7 @@ namespace flopoco{
 
 		/** Returns true if it is worth using hard multipliers for implementing a multiplier of size wX times wY */
 		bool worthUsingDSP(int wX, int wY);
-
+ 
 		/** Function which returns the number of LUTs needed to implement
 		 *	 a multiplier of the given width
 		 * @param	wInX the width (in bits) of the first operand
@@ -390,6 +336,54 @@ namespace flopoco{
 
 		/** Constructs a specific DSP to each target */
 		virtual DSP* createDSP() = 0;
+
+		/** Function for determining the submultiplication sizes so that the design is able
+		 * to function at a desired frequency ( multiplicatio is considerd X * Y )
+		 * @param[in,out] x the size of the submultiplication for x
+		 * @param[in,out] y the size of the submultiplication for y
+		 * @param[in] wInX the width of X
+		 * @param[in] wInY the width of Y
+		 */
+		virtual bool suggestSubmultSize(int &x, int &y, int wInX, int wInY)=0;
+
+		/** Function for determining the subadition sizes so that the design is able
+		 * to function at a desired frequency ( addition is considerd X + Y )
+		 * @param[in,out] x the size of the subaddition for x and y
+		 * @param[in] wIn the widths of X and Y
+		 */
+		virtual bool suggestSubaddSize(int &x, int wIn)=0;
+
+		/** Function for determining the ternary subadition sizes so that the design is able
+		 * to function at a desired frequency ( addition is considerd X + Y +Z )
+		 * @param[in,out] x the size of the subaddition for x and y and z
+		 * @param[in] wIn the widths of X and Y and Z
+		 */
+		virtual bool suggestSubadd3Size(int &x, int wIn)=0;
+
+		/** Function for determining the subadition sizes so that the design is able
+		 * to function at a desired frequency ( addition is considerd X + Y )
+		 * @param[in,out] x the size of the subaddition for x and y
+		 * @param[in] wIn the widths of X and Y
+		 * @param[in] slack the time delay consumed out of the input period
+		 */
+		virtual bool   suggestSlackSubaddSize(int &x, int wIn, double slack)=0;
+
+		/** Function for determining the ternary subadition sizes so that the design is able
+		 * to function at a desired frequency ( addition is considerd X + Y + Z )
+		 * @param[in,out] x the size of the subaddition for x and y and z
+		 * @param[in] wIn the widths of X and Y and Z
+		 * @param[in] slack the time delay consumed out of the input period
+		 */
+		virtual bool   suggestSlackSubadd3Size(int &x, int wIn, double slack)=0;
+
+		/** Function for determining the subcomparator sizes so that the design is able
+		* to function at a desired frequency
+		* @param[in,out] x the size of the subaddition for x and y
+		* @param[in] wIn the widths of x and y
+		* @param[in] slack the time delay consumed out of the input period
+		* @param[in] constant if the comparisson is done against a constant or Y
+		*/
+		virtual bool suggestSlackSubcomparatorSize(int &x, int wIn, double slack, bool constant)=0;
 
 
 		/*------------ Resource Estimation - target specific ---------*/

@@ -25,18 +25,18 @@ namespace flopoco{
 
 	
 	double Zynq7000::eqComparatorDelay(int size){
-		return lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_; 
+		return lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_; 
 	}
 	
 	double Zynq7000::eqConstComparatorDelay(int size){
-		return lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_; 
+		return lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_; 
 	}
 	double Zynq7000::ffDelay() {
-		return fdCtoQ_ + ffd_; 
+		return 1.443e-9; // 0.478 logic; 0.965 route 
 	};
 	
 	double Zynq7000::carryPropagateDelay() {
-		return  0; 
+		return carry4Delay_/4 ; 
 	};
 	
 	double Zynq7000::localWireDelay(int fanout){
@@ -67,7 +67,7 @@ namespace flopoco{
 
 			*/
 		if(fanout < 10)
-			return 0.640e-9 + 0.2*fanout;
+			return 0.640e-9 + 0.2e-9*fanout;
 		else
 			return 2.5e-9; // don't ask why
 
