@@ -20,13 +20,9 @@
 namespace flopoco{
 	
 	double Zynq7000::adderDelay(int size) {
-		return lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ ; 
+		return lutDelay_ + ((size+3)/4)* carry4Delay_ ; 
 	};
-	
-	void Zynq7000::getAdderParameters(double &k1, double &k2, int size){
-		k1 = lut2_ + muxcyStoO_ + xorcyCintoO_;
-		k2 = muxcyCINtoO_;
-	}
+
 	
 	double Zynq7000::eqComparatorDelay(int size){
 		return lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_; 
@@ -40,12 +36,41 @@ namespace flopoco{
 	};
 	
 	double Zynq7000::carryPropagateDelay() {
-		return  fastcarryDelay_; 
+		return  0; 
 	};
 	
 	double Zynq7000::localWireDelay(int fanout){
-		// TODO the 50 below is a perfectly random value
-		return  elemWireDelay_*(1+double(fanout)/50.0); 
+
+			/* Some data points from FPAdd 8 23, after synthesis  
+				 net (fo=4, unplaced)         0.494     0.972    test/cmpAdder/X_d1_reg[33][1]
+				 net (fo=102, unplaced)       0.412     3.377    test/cmpAdder/swap
+				 net (fo=10, unplaced)        0.948     5.464    test/fracAdder/expDiff[6]
+				 net (fo=15, unplaced)        0.472     6.261    test/cmpAdder/Y_d1_reg[29]_3
+				 net (fo=2, unplaced)         1.122     7.507    test/cmpAdder/sticky_d1_i_29_n_0
+				 net (fo=2, unplaced)         0.913     8.544    test/cmpAdder/sticky_d1_i_15_n_0
+				 net (fo=1, unplaced)         0.902     9.570    test/cmpAdder/sticky_d1_i_37_n_0
+				 net (fo=1, unplaced)         0.665    10.359    test/cmpAdder/sticky_d1_i_20_n_0
+				 net (fo=2, unplaced)         0.913    11.396    test/cmpAdder/sticky_d1_i_6_n_0
+	
+				 The same, after place and route
+				 
+				 102		   2.138 
+				 69	  		 2.901
+				 24		  	 0.878
+				 13			   1.103
+				 6				 1.465
+				 5  			 1.664
+				 2				 0.841
+				 2				 0.894
+				 1				 0.640
+				 C'est n'importe quoi.
+
+			*/
+		if(fanout < 10)
+			return 0.640e-9 + 0.2*fanout;
+		else
+			return 2.5e-9; // don't ask why
+
 	};
 	
 	double Zynq7000::distantWireDelay(int n){
@@ -324,4 +349,6 @@ namespace flopoco{
 		cycleDelay = floor(totalPeriod/targetPeriod);
 		cpDelay = totalPeriod-targetPeriod*cycleDelay;
 	}
+
+
 }

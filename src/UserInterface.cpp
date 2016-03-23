@@ -18,7 +18,7 @@ namespace flopoco
 	const char COLOR_REVERSEVIDEO_BLACK_GREEN[] = { 0x1b, '[', '7', ';', '3', '0', ';', '4', '2', 'm', 0 };
 	const char COLOR_BOLD_MAGENTA_NORMAL[] = { 0x1b, '[', '1', ';', '3', '5', ';', '4', '9', 'm', 0 };
 
-	const char* defaultFPGA="Virtex6";
+	const char* defaultFPGA="Zynq7000";
 
 	// Allocation of the global objects
 	string UserInterface::outputFileName;
@@ -64,6 +64,7 @@ namespace flopoco
 
 	const vector<string> UserInterface::known_fpgas = []()->vector<string>{
 				vector<string> v;
+				v.push_back("zynq7000");
 				v.push_back("virtex4");
 				v.push_back("virtex5");
 				v.push_back("virtex6");
@@ -419,6 +420,7 @@ namespace flopoco
 				else if (targetFPGA=="cycloneiii" || targetFPGA=="cyclone3") target=new CycloneIII();
 				else if (targetFPGA=="cycloneiv" || targetFPGA=="cyclone4") target=new CycloneIV();
 				else if (targetFPGA=="cyclonev" || targetFPGA=="cyclone5") target=new CycloneV();
+				else if (targetFPGA=="zynq7000")  target=new Zynq7000();
 				else {
 					throw("ERROR: unknown target: " + targetFPGA);
 					}
@@ -691,7 +693,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:  override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
 		s << "  " << COLOR_BOLD << "pipeline" << COLOR_NORMAL << "=<0|1>:       pipelined operator, or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "target" << COLOR_NORMAL << "=<string>:      target FPGA (default " << defaultFPGA << ") " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "     Supported targets: Stratix2...5, Virtex2...6, Cyclone2...5,Spartan3"<<endl;
+		s << "     Supported targets: Zynq7000, Stratix2...5, Virtex2...6, Cyclone2...5,Spartan3"<<endl;
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;

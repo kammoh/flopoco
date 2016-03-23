@@ -167,7 +167,8 @@ namespace flopoco{
 		else {
 			// assuming a plain block multiplier, critical path through wX+wY full adders. Could be refined.
 			double init, carry;
-			getAdderParameters(init, carry, wX+wY);
+			init = adderDelay(0);
+			carry = (adderDelay(100) - init) /100; 
 			cycles = (init + (wX+wY)*carry) *frequency_;
 		}
 		cout << "> Target: Warning: using generic Target::plainMultDepth(); pipelining a "<<wX<<"x"<<wY<< " multiplier in " << cycles << " cycles using a gross estimate of the target" << endl;

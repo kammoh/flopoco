@@ -4,10 +4,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
 
 
 namespace flopoco{
@@ -20,39 +16,23 @@ namespace flopoco{
 		Zynq7000() : Target()	{
 			id_             		= "Zynq7000";
 			vendor_         		= "Xilinx";
-			sizeOfBlock_ 			= 18432;	// the size of a primitive block is 2^11 * 9
+
 			maxFrequencyMHz_		= 500;
-			// all these values are set more or less randomly, to match  virtex 6 more or less
-			fastcarryDelay_ 		= 0.015e-9; //s   
-			elemWireDelay_  		= 0.313e-9;
-			lutDelay_       		= 0.053e-9; 
+
+			/////// Architectural parameters
+			lutInputs_ = 6;
 			multXInputs_    		= 25;
 			multYInputs_    		= 18;
-			// all these values are set precisely to match the Zynq7000
-			fdCtoQ_         		= 0.280e-9; //the deterministic delay + an approximate NET delay
-			lut2_           		= 0.053e-9;
-			lut3_           		= 0.053e-9; 
-			lut4_           		= 0.053e-9; 
-			muxcyStoO_      		= 0.219e-9;
-			muxcyCINtoO_    		= 0.015e-9;
-			ffd_            		= -0.012e-9;
-			muxf5_          		= 0.291e-9;
-			slice2sliceDelay_   	= 0.393e-9;
-			xorcyCintoO_    		= 0.180e-9;
+			sizeOfBlock_ 			= 18432;	// the size of a primitive block is 2^11 * 9
+			        // The blocks are 36kb configurable as dual 18k so I don't know.
 
-			lutInputs_ 				= 6;
-			nrDSPs_ 				= 160; // XC5VLX30 has 1 column of 32 DSPs
-			dspFixedShift_ 			= 17; 
-			
-			DSPMultiplierDelay_		= 1.638e-9;
-			DSPAdderDelay_			= 1.769e-9;
-			DSPCascadingWireDelay_	= 0.365e-9;
-			DSPToLogicWireDelay_	= 0.436e-9;
 
-			RAMDelay_				= 1.591e-9; //TODO
-			RAMToLogicWireDelay_	= 0.235e-9; //TODO
+			//////// Delay parameters, copypasted from Vivado timing reports
+			lutDelay_ = 0.124e-9;
+			carry4Delay_ = 0.117e-9;
 			
 			//---------------Floorplanning related----------------------
+			// TODO this was copypasted from another one: update
 			multiplierPosition.push_back(15);
 			multiplierPosition.push_back(47);
 			multiplierPosition.push_back(55);
@@ -93,8 +73,9 @@ namespace flopoco{
 		/** overloading the virtual functions of Target
 		 * @see the target class for more details 
 		 */
-		double carryPropagateDelay();
 		double adderDelay(int size);
+
+		double carryPropagateDelay();
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
 		double eqComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);
@@ -110,7 +91,6 @@ namespace flopoco{
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
 		
-		void   getAdderParameters(double &k1, double &k2, int size);
 		double localWireDelay(int fanout = 1);
 		double lutDelay();
 		double ffDelay();
@@ -129,16 +109,21 @@ namespace flopoco{
 		int    getNumberOfDSPs();
 		void   getDSPWidths(int &x, int &y, bool sign = false);
 		int    getIntNAdderCost(int wIn, int n);	
-	
+
+		
 	private:
-		double fastcarryDelay_; /**< The delay of the fast carry chain */
+
+
 		double lutDelay_;       /**< The delay between two LUTs */
+		double carry4Delay_;    /**< The delay of the fast carry chain */
 		double elemWireDelay_;  /**< The elementary wire dealy (for computing the distant wire delay) */
-	
-		double fdCtoQ_;         /**< The delay of the FlipFlop. Also contains an approximate Net Delay experimentally determined */
+
+
+		// From there on, obsolete stuff
 		double lut2_;           /**< The LUT delay for 2 inputs */
 		double lut3_;           /**< The LUT delay for 3 inputs */
 		double lut4_;           /**< The LUT delay for 4 inputs */
+		double fdCtoQ_;         /**< The delay of the FlipFlop. Also contains an approximate Net Delay experimentally determined */
 		double muxcyStoO_;      /**< The delay of the carry propagation MUX, from Source to Out*/
 		double muxcyCINtoO_;    /**< The delay of the carry propagation MUX, from CarryIn to Out*/
 		double ffd_;            /**< The Flip-Flop D delay*/

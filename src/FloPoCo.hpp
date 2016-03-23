@@ -49,6 +49,7 @@
 #include "Targets/CycloneIII.hpp"
 #include "Targets/CycloneIV.hpp"
 #include "Targets/CycloneV.hpp"
+#include "Targets/Zynq7000.hpp"
 
 #include "TestBenches/TestBench.hpp"
 

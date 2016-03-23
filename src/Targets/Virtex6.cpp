@@ -24,10 +24,6 @@ namespace flopoco{
 		return lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ ;
 	};
 
-	void Virtex6::getAdderParameters(double &k1, double &k2, int size){
-		k1 = lut2_ + muxcyStoO_ + xorcyCintoO_;
-		k2 = muxcyCINtoO_;
-	}
 
 	double Virtex6::eqComparatorDelay(int size){
 		return lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_;

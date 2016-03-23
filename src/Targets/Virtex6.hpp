@@ -120,7 +120,6 @@ namespace flopoco{
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
 
-		void   getAdderParameters(double &k1, double &k2, int size);
 		double localWireDelay(int fanout = 1);
 		double lutDelay();
 		double ffDelay();

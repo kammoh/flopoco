@@ -220,6 +220,7 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/Targets/Virtex4 
  src/Targets/Virtex5 
  src/Targets/Virtex6 
+ src/Targets/Zynq7000 
  
  src/Targets/StratixII 
  src/Targets/StratixIII 
