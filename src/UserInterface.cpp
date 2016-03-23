@@ -256,13 +256,15 @@ namespace flopoco
 	}
 
 
-	// TODO make this case-insensitive
 	OperatorFactoryPtr UserInterface::getFactoryByName(string operatorName)	{
+		std::transform(operatorName.begin(), operatorName.end(), operatorName.begin(), ::tolower);
 		for(auto it: UserInterface::factoryList) {
-			if (it.first == operatorName)
+			string lowerCaseFactoryName = it.first;
+			std::transform(lowerCaseFactoryName.begin(), lowerCaseFactoryName.end(), lowerCaseFactoryName.begin(), ::tolower);
+			if (lowerCaseFactoryName == operatorName)
 				return  it.second;
 		}
-		throw ("No operator factory for " + operatorName); 
+		throw ("No operator factory for " + operatorName);
 	}
 
 	
