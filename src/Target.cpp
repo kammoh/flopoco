@@ -130,6 +130,18 @@ namespace flopoco{
 		return unusedHardMultThreshold_;
 	}
 
+
+
+	double Target::logicDelay(int inputs){
+		double unitDelay = lutDelay()+localWireDelay();
+		if(inputs <= lutInputs())
+			return unitDelay;
+		else
+			return unitDelay * (inputs -lutInputs() + 1);
+	}
+
+	
+	
 	bool Target::hasFastLogicTernaryAdders(){
 		return hasFastLogicTernaryAdders_ ;
 	}

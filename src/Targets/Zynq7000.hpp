@@ -13,63 +13,9 @@ namespace flopoco{
 	{
 	public:
 		/** The default constructor. */  
-		Zynq7000() : Target()	{
-			id_             		= "Zynq7000";
-			vendor_         		= "Xilinx";
-
-			maxFrequencyMHz_		= 500;
-
-			/////// Architectural parameters
-			lutInputs_ = 6;
-			multXInputs_    		= 25;
-			multYInputs_    		= 18;
-			sizeOfBlock_ 			= 18432;	// the size of a primitive block is 2^11 * 9
-			        // The blocks are 36kb configurable as dual 18k so I don't know.
-
-
-			//////// Delay parameters, copypasted from Vivado timing reports
-			lutDelay_ = 0.124e-9;
-			carry4Delay_ = 0.117e-9;
-			
-			//---------------Floorplanning related----------------------
-			// TODO this was copypasted from another one: update
-			multiplierPosition.push_back(15);
-			multiplierPosition.push_back(47);
-			multiplierPosition.push_back(55);
-			multiplierPosition.push_back(107);
-			multiplierPosition.push_back(115);
-			multiplierPosition.push_back(147);
-						
-			memoryPosition.push_back(7);
-			memoryPosition.push_back(19);
-			memoryPosition.push_back(27);
-			memoryPosition.push_back(43);
-			memoryPosition.push_back(59);
-			memoryPosition.push_back(103);
-			memoryPosition.push_back(119);
-			memoryPosition.push_back(135);
-			memoryPosition.push_back(143);
-			memoryPosition.push_back(155);
-			memoryPosition.push_back(169);
-			
-			topSliceX = 169;
-			topSliceY = 359;
-			
-			lutPerSlice = 4;
-			ffPerSlice = 8;
-			
-			dspHeightInLUT = 3;		//3, actually
-			ramHeightInLUT = 5;
-			
-			dspPerColumn = 143;
-			ramPerColumn = 71;
-			//----------------------------------------------------------
-
-		}
-
+		Zynq7000();
 		/** The destructor */
-		virtual ~Zynq7000() {}
-
+		~Zynq7000();
 		/** overloading the virtual functions of Target
 		 * @see the target class for more details 
 		 */
@@ -94,7 +40,7 @@ namespace flopoco{
 		double localWireDelay(int fanout = 1);
 		double lutDelay();
 		double ffDelay();
-		double distantWireDelay(int n);
+
 		bool   suggestSubmultSize(int &x, int &y, int wInX, int wInY);
 		bool   suggestSubaddSize(int &x, int wIn);
 		bool   suggestSubadd3Size(int &x, int wIn){return 0;}; // currently irrelevant for Xilinx

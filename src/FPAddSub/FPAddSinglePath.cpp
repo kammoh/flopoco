@@ -87,17 +87,17 @@ namespace flopoco{
 		vhdl<< tab << declare(target->localWireDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 
 		addComment("exponent difference");
-		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
+		vhdl<< tab << declare(target->adderDelay(wE+1),
 													"eXmeY",wE)	<< " <= (X"<<range(wE+wF-1,wF)<<") - (Y"<<range(wE+wF-1,wF)<<");"<<endl;
-		vhdl<< tab << declare(target->localWireDelay() + target->adderDelay(wE+1),
+		vhdl<< tab << declare(target->adderDelay(wE+1),
 													"eYmeX",wE) << " <= (Y"<<range(wE+wF-1,wF)<<") - (X"<<range(wE+wF-1,wF)<<");"<<endl;
-		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+		vhdl<<tab<<declare(target->logicDelay(3),
 											 "expDiff",wE) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 
 
 		string pmY="Y";
 		if ( sub ) {
-			vhdl << tab << declare(target->localWireDelay() + target->lutDelay(), "mY", wE+wF+3)
+			vhdl << tab << declare(target->logicDelay(1), "mY", wE+wF+3)
 					<< " <= Y" << range(wE+wF+2,wE+wF+1) << " & not(Y"<<of(wE+wF)<<") & Y" << range(wE+wF-1,0) << ";"<<endl;
 			pmY = "mY";
 		}
@@ -106,9 +106,9 @@ namespace flopoco{
 
 		// REPORT(INFO, "Fan-out delay = " << target->localWireDelay(wE+wF+3));
 		addComment("input swap so that |X|>|Y|");
-		vhdl<<tab<<declare( target->lutDelay(),
+		vhdl<<tab<<declare( target->logicDelay(3),
 											 "newX",wE+wF+3) << " <= X when swap = '0' else "<< pmY << ";"<<endl;
-		vhdl<<tab<<declare( target->lutDelay(),
+		vhdl<<tab<<declare( target->logicDelay(3),
 											 "newY",wE+wF+3) << " <= " << pmY <<" when swap = '0' else X;"<<endl;
 
 		//break down the signals
@@ -118,36 +118,31 @@ namespace flopoco{
 		vhdl << tab << declare("excY",2)  << "<= newY"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
 		vhdl << tab << declare("signX")   << "<= newX"<<of(wE+wF)<<";"<<endl;
 		vhdl << tab << declare("signY")   << "<= newY"<<of(wE+wF)<<";"<<endl;
-		vhdl << tab << declare(target->localWireDelay() + target->lutDelay(),
+		vhdl << tab << declare(target->logicDelay(2),
 													 "EffSub") << " <= signX xor signY;"<<endl;
 		vhdl << tab << declare("sXsYExnXY",6) << " <= signX & signY & excX & excY;"<<endl;
 		vhdl << tab << declare("sdExnXY",4) << " <= excX & excY;"<<endl;
 
-		vhdl << tab << declare(target->localWireDelay()+ target->lutDelay(),
+		vhdl << tab << declare(target->logicDelay(2),
 													 "fracY",wF+1) << " <= "<< zg(wF+1)<<" when excY=\"00\" else ('1' & newY("<<wF-1<<" downto 0));"<<endl;
 
 		addComment("Exception management logic");
-		double exnDelay;
-		if (target->lutInputs()>=6)
-			exnDelay = target->localWireDelay()+target->lutDelay();
-		else
-			exnDelay = 2*(target->localWireDelay()+target->lutDelay());
 		vhdl <<tab<<"with sXsYExnXY select "<<endl;
-		vhdl <<tab<<declare(exnDelay,"excRt",2) << " <= \"00\" when \"000000\"|\"010000\"|\"100000\"|\"110000\","<<endl
+		vhdl <<tab<<declare(target->logicDelay(6),"excRt",2) << " <= \"00\" when \"000000\"|\"010000\"|\"100000\"|\"110000\","<<endl
 				 <<tab<<tab<<"\"01\" when \"000101\"|\"010101\"|\"100101\"|\"110101\"|\"000100\"|\"010100\"|\"100100\"|\"110100\"|\"000001\"|\"010001\"|\"100001\"|\"110001\","<<endl
 				 <<tab<<tab<<"\"10\" when \"111010\"|\"001010\"|\"001000\"|\"011000\"|\"101000\"|\"111000\"|\"000010\"|\"010010\"|\"100010\"|\"110010\"|\"001001\"|\"011001\"|\"101001\"|\"111001\"|\"000110\"|\"010110\"|\"100110\"|\"110110\", "<<endl
 				 <<tab<<tab<<"\"11\" when others;"<<endl;
 		
-		vhdl <<tab<<declare(target->localWireDelay() + target->lutDelay(), "signR")
+		vhdl <<tab<<declare(target->logicDelay(2), "signR")
 				 << "<= '0' when (sXsYExnXY=\"100000\" or sXsYExnXY=\"010000\") else signX;"<<endl;
 
 
-		vhdl<<tab<<declare(target->localWireDelay() + target->eqConstComparatorDelay(wE+1), "shiftedOut")
+		vhdl<<tab<<declare(target->eqConstComparatorDelay(wE+1), "shiftedOut")
 				<< " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
 		//shiftVal=the number of positions that fracY must be shifted to the right
 
 		if (wE>sizeRightShift) {
-			vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(), "shiftVal",sizeRightShift)
+			vhdl<<tab<<declare(target->logicDelay(2), "shiftVal",sizeRightShift)
 					<< " <= expDiff("<< sizeRightShift-1<<" downto 0)"
 					//<< " when shiftedOut='0' else \"" << unsignedBinary(wF+3,sizeRightShift) << "\";" << endl;  // was CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<")
 					<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<");" << endl;
@@ -169,18 +164,18 @@ namespace flopoco{
 		outPortMap (rightShifter, "R","shiftedFracY");
 		vhdl << instance(rightShifter, "RightShifterComponent");
 
-		vhdl<<tab<< declare(target->localWireDelay() + target->eqConstComparatorDelay(wF+1), "sticky")
+		vhdl<<tab<< declare(target->eqConstComparatorDelay(wF+1), "sticky")
 				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF) << ") else '1';"<<endl;
 
 		//pad fraction of Y [overflow][shifted frac having inplicit 1][guard][round]
 		vhdl<<tab<< declare("fracYfar", wF+4)      << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
 		vhdl<<tab<< declare("EffSubVector", wF+4) << " <= ("<<wF+3<<" downto 0 => EffSub);"<<endl;
-		vhdl<<tab<< declare(target->localWireDelay(wF+4) + target->lutDelay(), "fracYfarXorOp", wF+4)
+		vhdl<<tab<< declare(target->localWireDelay(wF+4) + target->logicDelay(2), "fracYfarXorOp", wF+4)
 				<< " <= fracYfar xor EffSubVector;"<<endl;
 		//pad fraction of X [overflow][inplicit 1][fracX][guard bits]
 		vhdl<<tab<< declare("fracXfar", wF+4)      << " <= \"01\" & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
 
-		vhdl<<tab<< declare(target->localWireDelay()+ target->lutDelay(), "cInAddFar")
+		vhdl<<tab<< declare(target->logicDelay(2), "cInAddFar")
 				<< " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
@@ -210,7 +205,7 @@ namespace flopoco{
 		// pipeline: I am assuming the two additions can be merged in a row of luts but I am not sure
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
-		vhdl << tab << declare(target->localWireDelay() + target->adderDelay(wE+2),
+		vhdl << tab << declare(target->adderDelay(wE+2),
 													 "updatedExp",wE+2) << " <= extendedExpInc - (" << zg(wE+2-lzocs->getCountWidth(),0) <<" & nZerosNew);"<<endl;
 		vhdl << tab << declare("eqdiffsign")<< " <= '1' when nZerosNew="<<og(lzocs->getCountWidth(),0)<<" else '0';"<<endl;
 
@@ -224,7 +219,7 @@ namespace flopoco{
 		vhdl<<tab<<declare("lsb")<<"<= shiftedFrac"<<of(4)<<";"<<endl;
 
 		//decide what to add to the guard bit
-		vhdl << tab << declare(target->localWireDelay() + target->lutDelay(),"addToRoundBit")
+		vhdl << tab << declare(target->logicDelay(4),"addToRoundBit")
 				<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
 
 
@@ -243,16 +238,16 @@ namespace flopoco{
 
 		vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
 		vhdl << tab << "with exExpExc select "<<endl;
-		vhdl << tab << declare(target->localWireDelay() + target->lutDelay(),
+		vhdl << tab << declare(target->logicDelay(4),
 													 "excRt2",2)
 				 << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
 				 <<tab<<tab<<"\"01\" when \"0001\","<<endl
 				 <<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
 				 <<tab<<tab<<"\"11\" when others;"<<endl;
-		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(),
+		vhdl<<tab<<declare(target->logicDelay(3),
 											 "excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
-		vhdl<<tab<<declare(target->localWireDelay() + target->lutDelay(), "signR2")
+		vhdl<<tab<<declare(target->logicDelay(3), "signR2")
 				<< " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
 
 
@@ -260,9 +255,6 @@ namespace flopoco{
 		vhdl<<tab<< declare("computedR",wE+wF+3) << " <= excR & signR2 & expR & fracR;"<<endl;
 		vhdl << tab << "R <= computedR;"<<endl;
 
-		/*		manageCriticalPath(target->localWireDelay() +  target->lutDelay());
-					vhdl<<tab<<"with sdExnXY select"<<endl;
-					vhdl<<tab<<"R <= newX when \"0100\"|\"1000\"|\"1001\", newY when \"0001\"|\"0010\"|\"0110\", computedR when others;"<<endl;*/
 
 
 	}

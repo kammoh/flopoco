@@ -18,18 +18,76 @@
 
 
 namespace flopoco{
+
+
+	
+	Zynq7000::Zynq7000(): Target()	{
+			id_             		= "Zynq7000";
+			vendor_         		= "Xilinx";
+
+			maxFrequencyMHz_		= 500;
+
+			/////// Architectural parameters
+			lutInputs_ = 6;
+			multXInputs_    		= 25;
+			multYInputs_    		= 18;
+			sizeOfBlock_ 			= 18432;	// the size of a primitive block is 2^11 * 9
+			        // The blocks are 36kb configurable as dual 18k so I don't know.
+
+
+			//////// Delay parameters, copypasted from Vivado timing reports
+			lutDelay_ = 0.124e-9;
+			carry4Delay_ = 0.117e-9;
+			
+			//---------------Floorplanning related----------------------
+			// TODO this was copypasted from another one: update
+			multiplierPosition.push_back(15);
+			multiplierPosition.push_back(47);
+			multiplierPosition.push_back(55);
+			multiplierPosition.push_back(107);
+			multiplierPosition.push_back(115);
+			multiplierPosition.push_back(147);
+						
+			memoryPosition.push_back(7);
+			memoryPosition.push_back(19);
+			memoryPosition.push_back(27);
+			memoryPosition.push_back(43);
+			memoryPosition.push_back(59);
+			memoryPosition.push_back(103);
+			memoryPosition.push_back(119);
+			memoryPosition.push_back(135);
+			memoryPosition.push_back(143);
+			memoryPosition.push_back(155);
+			memoryPosition.push_back(169);
+			
+			topSliceX = 169;
+			topSliceY = 359;
+			
+			lutPerSlice = 4;
+			ffPerSlice = 8;
+			
+			dspHeightInLUT = 3;		//3, actually
+			ramHeightInLUT = 5;
+			
+			dspPerColumn = 143;
+			ramPerColumn = 71;
+			//----------------------------------------------------------
+
+		}
+
+	Zynq7000::~Zynq7000() {};
 	
 	double Zynq7000::adderDelay(int size) {
-		return lutDelay_ + ((size+3)/4)* carry4Delay_ ; 
+		return localWireDelay() + lutDelay_ + ((size+3)/4)* carry4Delay_ ; 
 	};
 
 	
 	double Zynq7000::eqComparatorDelay(int size){
-		return lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_; 
+		return localWireDelay() + lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_; 
 	}
 	
 	double Zynq7000::eqConstComparatorDelay(int size){
-		return lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_; 
+		return localWireDelay() + lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_; 
 	}
 	double Zynq7000::ffDelay() {
 		return 1.443e-9; // 0.478 logic; 0.965 route 
@@ -67,14 +125,10 @@ namespace flopoco{
 
 			*/
 		if(fanout < 10)
-			return 0.640e-9 + 0.2e-9*fanout;
+			return 0.2e-9*fanout;
 		else
-			return 2.5e-9; // don't ask why
+			return 2e-9; // don't ask why
 
-	};
-	
-	double Zynq7000::distantWireDelay(int n){
-		return n*elemWireDelay_;
 	};
 	
 	double Zynq7000::lutDelay(){

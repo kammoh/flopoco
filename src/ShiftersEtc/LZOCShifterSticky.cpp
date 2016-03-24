@@ -35,7 +35,7 @@ namespace flopoco{
 
 		// -------- Parameter set up -----------------
 		srcFileName = "LZOCShifterSticky";
-		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007)");
+		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2016)");
 
 		REPORT( INFO, "wIn="<<wIn << " wOut="<<wOut << " wCount="<<wCount << " computeSticky=" << computeSticky  << " countType=" << countType);
 
@@ -73,18 +73,18 @@ namespace flopoco{
 
 			// Delay evaluation.
 			// As we output the count bits, their computation will not be merged inside the shift
-			double countBitDelay = target->localWireDelay();
+			double countBitDelay = target->localWireDelay(currLevSize);
 			if (countType>=0)
 				countBitDelay += target->eqConstComparatorDelay( intpow2(i) )  ;
 			else
 				countBitDelay += target->eqComparatorDelay( intpow2(i) ) ;
-
+			
 			vhdl << tab << declare(countBitDelay, join("count",i))
 					 << "<= '1' when " <<join("level",i+1)<<range(prevLevSize-1,prevLevSize - intpow2(i))<<" = "
 					 <<"("<<prevLevSize-1<<" downto "<<prevLevSize - intpow2(i)<<"=>"<< (countType_==-1? "sozb": countType_==0?"'0'":"'1'")<<") else '0';"<<endl;
 
 			// The shift will take at most one LUT delay per level. We don't take into account that shift level can be merged: TODO ? It seems non-trivial.
-			double shiftDelay = target->localWireDelay() + target->lutDelay();
+			double shiftDelay = target->localWireDelay() + target->logicDelay(3);
 			vhdl << tab << declare(shiftDelay,join("level",i),currLevSize)
 					 << "<= " << join("level",i+1)<<"("<<prevLevSize-1<<" downto "<< prevLevSize-currLevSize << ")"
 					 << " when " << join("count",i) << "='0' else ";
