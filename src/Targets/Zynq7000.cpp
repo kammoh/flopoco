@@ -76,18 +76,23 @@ namespace flopoco{
 		}
 
 	Zynq7000::~Zynq7000() {};
+
 	
+	double Zynq7000::addRoutingDelay(double d) {
+		return(3.0*d);
+	};
+
 	double Zynq7000::adderDelay(int size) {
-		return localWireDelay() + lutDelay_ + ((size+3)/4)* carry4Delay_ ; 
+		return addRoutingDelay(lutDelay_ + ((size+3)/4)* carry4Delay_) ; 
 	};
 
 	
 	double Zynq7000::eqComparatorDelay(int size){
-		return localWireDelay() + lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_; 
+		return addRoutingDelay( lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_); 
 	}
 	
 	double Zynq7000::eqConstComparatorDelay(int size){
-		return localWireDelay() + lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_; 
+		return addRoutingDelay( lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_ ); 
 	}
 	double Zynq7000::ffDelay() {
 		return 1.443e-9; // 0.478 logic; 0.965 route 

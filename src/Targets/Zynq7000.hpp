@@ -19,6 +19,8 @@ namespace flopoco{
 		/** overloading the virtual functions of Target
 		 * @see the target class for more details 
 		 */
+
+		double addRoutingDelay(double d);
 		double adderDelay(int size);
 
 		double carryPropagateDelay();
