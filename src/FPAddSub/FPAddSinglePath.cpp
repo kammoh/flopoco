@@ -164,9 +164,16 @@ namespace flopoco{
 		outPortMap (rightShifter, "R","shiftedFracY");
 		vhdl << instance(rightShifter, "RightShifterComponent");
 
-		vhdl<<tab<< declare(target->eqConstComparatorDelay(wF+1), "sticky")
+#if 0 // vivado compiles it very expensively
+		vhdl<<tab<< declare(target->eqConstComparatorDelay(wF+1), "sticky") 
 				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF) << ") else '1';"<<endl;
-
+#else // ugly but old-school VHDL
+		vhdl<<tab<< declare(target->eqConstComparatorDelay(wF+1), "sticky")	<< " <= shiftedFracY(0) ";
+		for (int i=1; i<=wF; i++)
+			vhdl << " or shiftedFracY(" << i <<")";
+		vhdl << ";" <<endl;
+#endif
+		
 		//pad fraction of Y [overflow][shifted frac having inplicit 1][guard][round]
 		vhdl<<tab<< declare("fracYfar", wF+4)      << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
 		vhdl<<tab<< declare("EffSubVector", wF+4) << " <= ("<<wF+3<<" downto 0 => EffSub);"<<endl;
