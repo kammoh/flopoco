@@ -4,7 +4,6 @@
 #include <iostream>
 #include <iomanip>
 
-// TODO check the hard mult threshold
 
 namespace flopoco
 {
@@ -83,6 +82,7 @@ namespace flopoco
 				return v;
 			}();
 
+
 	const vector<option_t> UserInterface::options = []()->vector<option_t>{
 				vector<option_t> v;	
 				vector<string> values;
@@ -94,7 +94,7 @@ namespace flopoco
 				v.push_back(option_t("pipeline", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
-				v.push_back(option_t("useHardMults", values));
+				v.push_back(option_t("useHardMult", values));
 
 				//free options, using an empty vector of values 
 				values.clear();
@@ -371,6 +371,7 @@ namespace flopoco
 				target->setPipelined(pipeline);
 				target->setFrequency(1e6*targetFrequencyMHz);
 				target->setUseHardMultipliers(useHardMult);
+				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
 				target->setPlainVHDL(plainVHDL);
 				target->setGenerateFigures(generateFigures);
 				// Now build the operator
@@ -607,6 +608,7 @@ namespace flopoco
 		s << "     Supported targets: Stratix2...5, Virtex2...6, Cyclone2...5,Spartan3"<<endl;
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
+		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
