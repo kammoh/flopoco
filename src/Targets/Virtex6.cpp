@@ -20,17 +20,115 @@
 
 namespace flopoco{
 
+
+	/** The default constructor. */
+	Virtex6::Virtex6() : Target()	{
+			id_             		= "Virtex6";
+			vendor_         		= "Xilinx";
+			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 18 (36Kb, can be used as 2 independent 2^11*9)
+			maxFrequencyMHz_		= 500;
+			// all these values are set more or less randomly, to match  virtex 6 more or less
+			fastcarryDelay_ 		= 0.015e-9; //s
+			elemWireDelay_  		= 0.313e-9;
+			lutDelay_       		= 0.053e-9;
+			multXInputs_    		= 25;
+			multYInputs_    		= 18;
+			// all these values are set precisely to match the Virtex6
+			fdCtoQ_         		= 0.280e-9;
+			lut2_           		= 0.053e-9;	//the gate delay, without the NET delay (~0.279e-9)
+			lut3_           		= 0.053e-9;
+			lut4_           		= 0.053e-9;
+			lut5_           		= 0.053e-9;
+			lut6_           		= 0.053e-9;
+			lut_net_                = 0.279e-9;
+			muxcyStoO_      		= 0.219e-9;
+			muxcyCINtoO_    		= 0.015e-9;
+			ffd_            		= -0.012e-9;
+			muxf5_          		= 0.291e-9;
+			muxf7_          		= 0.187e-9; //without the NET delay (~0.357e-9)
+			muxf7_net_         		= 0.357e-9;
+			muxf8_          		= 0.131e-9; //without the NET delay (~0.481e-9)
+			muxf8_net_         		= 0.481e-9;
+			muxf_net_         		= 0.279e-9;
+			slice2sliceDelay_   	= 0.393e-9;
+			xorcyCintoO_    		= 0.180e-9;
+
+			lutInputs_ 				= 6;
+			nrDSPs_ 				= 160;
+			dspFixedShift_ 			= 17;
+
+			DSPMultiplierDelay_		= 1.638e-9;
+			DSPAdderDelay_			= 1.769e-9;
+			DSPCascadingWireDelay_	= 0.365e-9;
+			DSPToLogicWireDelay_	= 0.436e-9;
+
+			RAMDelay_				= 1.591e-9; //TODO
+			RAMToLogicWireDelay_	= 0.279e-9; //TODO
+			logicWireToRAMDelay_	= 0.361e-9; //TODO
+
+			//---------------Floorplanning related----------------------
+			multiplierPosition.push_back(15);
+			multiplierPosition.push_back(47);
+			multiplierPosition.push_back(55);
+			multiplierPosition.push_back(107);
+			multiplierPosition.push_back(115);
+			multiplierPosition.push_back(147);
+
+			memoryPosition.push_back(7);
+			memoryPosition.push_back(19);
+			memoryPosition.push_back(27);
+			memoryPosition.push_back(43);
+			memoryPosition.push_back(59);
+			memoryPosition.push_back(103);
+			memoryPosition.push_back(119);
+			memoryPosition.push_back(135);
+			memoryPosition.push_back(143);
+			memoryPosition.push_back(155);
+			memoryPosition.push_back(169);
+
+			topSliceX = 169;
+			topSliceY = 359;
+
+			lutPerSlice = 4;
+			ffPerSlice = 8;
+
+			dspHeightInLUT = 3;		//3, actually
+			ramHeightInLUT = 5;
+
+			dspPerColumn = 143;
+			ramPerColumn = 71;
+			//----------------------------------------------------------
+
+		}
+
+	
+	double Virtex6::logicDelay(int inputs){
+		double unitDelay = lutDelay() + elemWireDelay_;
+		if(inputs <= lutInputs())
+			return unitDelay;
+		else if (inputs==lutInputs()+1) { // use mux
+			return  muxf5_ + unitDelay; // TODO this branch never checked against reality
+		}
+		else if (inputs==lutInputs()+2) { // use mux
+			return  muxf5_ + muxf7_ + muxf7_net_ + unitDelay; // TODO this branch never checked against reality
+		}
+		else
+			return unitDelay * (inputs -lutInputs() + 1);
+	}
+
+	
 	double Virtex6::adderDelay(int size) {
-		return lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ ;
+		return  lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ + elemWireDelay_;
 	};
 
+	
 
 	double Virtex6::eqComparatorDelay(int size){
-		return lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_;
+		return   lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_;
 	}
 
 	double Virtex6::eqConstComparatorDelay(int size){
-		return lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_;
+		return   lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_;
 	}
 	double Virtex6::ffDelay() {
 		return fdCtoQ_ + ffd_;
@@ -62,10 +160,6 @@ namespace flopoco{
 			delay =  elemWireDelay_ + (double(fanout) * 0.002e-9);
 		//cout << "localWireDelay(" << fanout << ") estimated to "<< delay*1e9 << "ns" << endl;
 		return delay;
-	};
-
-	double Virtex6::distantWireDelay(int n){
-		return n*elemWireDelay_;
 	};
 
 	double Virtex6::lutDelay(){

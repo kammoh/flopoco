@@ -506,8 +506,8 @@ namespace flopoco {
 											  msbOut(int): output most significant bit;\
                         lsbOut(int): output least significant bit;\
                         h(real)=0: worst-case peak gain: provide it only if WCPG is not installed;\
-                        coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=1.234567890123:sin(3*pi/8);\
-                        coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=1.234567890123:sin(3*pi/8);",
+                        coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
+                        coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\"",
 											 "",
 											 FixIIR::parseArguments
 											 ) ;

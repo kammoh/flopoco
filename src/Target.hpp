@@ -123,24 +123,42 @@ namespace flopoco{
 		/** should flopoco generate SVG figures */
 		void setGenerateFigures(bool b);
 
-		// Architecture-related methods
 		/** Returns the number of inputs that the LUTs have on the specific device
 		 * @return the number of inputs for the look-up tables (LUTs) of the device
 		 */
 		int lutInputs();
 
 
-		/* -------------------- Delay-related methods ------------------------*/
+		/* -------------------- Delay-related methods ------------------------
 
-		/* -------------------  logic related  -------------------------------*/
+			 Currently each of the high-level logic functions include a quantum of local routing.
+			 For large fanout, use localWireDelay(fanout) on top of that
 
-		/** Function which returns the lutDelay for this target
+			 lutDelay is the delay of a bare lut, without any routing
+		 */
+
+		/** Logic delay of a boolean functions of the given number of inputs
+				It includes one level of local routing.
+				Default implementation in target uses only lutDelay etc
+		*/
+		virtual double logicDelay(int inputs=0);
+		
+
+		/** Function which returns addition delay for an n bit addition
+				It includes one level of local routing.
+		 * @param n the number of bits of the addition (n-bit + n-bit )
+		 */
+		virtual double adderDelay(int n) =0;
+
+
+		/**  Do not use this if you can use logicDelay
+				 Function which returns the lutDelay for this target
 		 * @return the LUT delay
 		 */
 		virtual double lutDelay() =0;
 
 		/** Function which returns the flip-flop Delay for this target
-			 (not including any net delay)
+			 (including net delay)
 			 * @return the flip-flop delay
 			 */
 		virtual double ffDelay() =0;
@@ -150,11 +168,6 @@ namespace flopoco{
 		 */
 		virtual double carryPropagateDelay() =0;
 
-		/** Function which returns addition delay for an n bit addition
-		 * @param n the number of bits of the addition (n-bit + n-bit )
-		 * @return the addition delay for an n bit addition
-		 */
-		virtual double adderDelay(int n) =0;
 
 		/** Function which returns addition delay for an n bit ternary addition
 		 * NOTE: only relevant for architectures supporting native ternary addition
@@ -177,10 +190,6 @@ namespace flopoco{
 		virtual double eqConstComparatorDelay(int n) =0;
 
 
-		/** Function which returns the distant wire delay.
-		 * @return distant wire delay
-		 */
-		virtual double distantWireDelay(int n) =0;
 
 		/** Function which returns the local wire delay (local routing)
 		 * @return local wire delay
