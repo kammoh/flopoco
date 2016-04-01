@@ -73,9 +73,6 @@
 #include "Operator.hpp"
 #include "IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
-#include "Targets/StratixII.hpp"
-#include "Targets/StratixIII.hpp"
-#include "Targets/StratixIV.hpp"
 #include "../BitHeap/Plotter.hpp"
 
 using namespace std;
@@ -585,7 +582,7 @@ namespace flopoco {
 		// Multiplications that fit directly into a DSP
 		int dspXSize, dspYSize;
 
-		parentOp->getTarget()->getDSPWidths(dspXSize, dspYSize, signedIO);
+		parentOp->getTarget()->getMaxDSPWidths(dspXSize, dspYSize, signedIO);
 
 		//correct the DSP sizes for Altera targets
 		if(parentOp->getTarget()->getVendor() == "Altera")
@@ -771,7 +768,7 @@ namespace flopoco {
 
 		if(parentOp->getTarget()->useHardMultipliers()){
 			REPORT(DETAILED,"in fillBitHeap(): using DSP blocks for multiplier implementation");
-			parentOp->getTarget()->getDSPWidths(wxDSP, wyDSP, signedIO);
+			parentOp->getTarget()->getMaxDSPWidths(wxDSP, wyDSP, signedIO);
 			REPORT(DETAILED,"in fillBitHeap(): starting tiling with DSPs");
 			buildTiling();
 		}
@@ -805,13 +802,13 @@ namespace flopoco {
 	/**************************************************************************/
 	void IntMultiplier::buildTiling()
 	{
-#if 1
-		int* multiplierWidth;
-		int size;
 
 		if( parentOp->getTarget()->getVendor() == "Altera")
 		{
 			REPORT(DEBUG, "in buildTiling(): will construct tiling for Altera targets");
+#if 0 // for history , remove it when it works
+		int* multiplierWidth;
+		int size;
 			if ( parentOp->getTarget()->getID()=="StratixII")
 			{
 				StratixII* t = (StratixII*) parentOp->getTarget();
@@ -839,7 +836,10 @@ namespace flopoco {
 
 			for(int i=0; i<size; i++)
 				multWidths.push_back(multiplierWidth[i]);
-
+#endif
+			// The following code works because on Alter we always have square mults
+			for(auto i: parentOp->getTarget() -> possibleDSPConfigs()) 
+				multWidths.push_back(i.first);
 			buildAlteraTiling(0, 0, wX, wY, 0, signedIO, signedIO);
 		}else
 		{
@@ -850,7 +850,6 @@ namespace flopoco {
 			else
 				buildXilinxTiling();
 		}
-#endif
 	}
 
 

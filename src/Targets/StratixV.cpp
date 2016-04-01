@@ -19,6 +19,62 @@
 
 
 namespace flopoco{
+	StratixV::StratixV(): Target() {
+			id_							= "StratixV";
+			vendor_						= "Altera";
+			possibleDSPConfig_.push_back(make_pair(9,9));
+			whichDSPCongfigCanBeUnsigned_.push_back(true);
+			possibleDSPConfig_.push_back(make_pair(12,12));
+			whichDSPCongfigCanBeUnsigned_.push_back(true);
+			possibleDSPConfig_.push_back(make_pair(18,18));
+			whichDSPCongfigCanBeUnsigned_.push_back(true);
+			possibleDSPConfig_.push_back(make_pair(36,36));
+			whichDSPCongfigCanBeUnsigned_.push_back(true);
+
+			hasFastLogicTernaryAdders_	= true;
+			maxFrequencyMHz_			= 717;
+			sizeOfBlock_				= 20480; 		// the size of a primitive block is 2^11 * 10
+			
+			fastcarryDelay_				= 0.026e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			elemWireDelay_				= 0.110e-9;		// *obtained from Quartus 2 Chip Planner 11.1
+			lut2lutDelay_ 				= 0.410e-9;		// *obtained from Quartus 2 Chip Planner 11.1 - emulates R4+C3+Lab_Line
+			lutDelay_					= 0.433e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			ffDelay_					= 0.156e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			
+			lutInputs_					= 6;
+			almsPerLab_					= 10;			// there are 10 ALMs per LAB
+			// all these values are set precisely to match the Stratix 5
+			lut2_						= 0.298e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			lut3_						= 0.298e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			lut4_						= 0.298e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			
+			innerLABcarryDelay_			= 0.109e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			interLABcarryDelay_			= 0.231e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			shareOutToCarryOut_			= 0.287e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			muxStoO_					= 0.193e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
+			fdCtoQ_						= 0.110e-9; 	// TODO : check validity
+			carryInToSumOut_			= 0.116e-9;		// *obtained from Quartus 2 Chip Planner 11.1
+			
+			// DSP parameters
+			totalDSPs_					= 256;		
+			nrConfigs_					= 5;			// StratixV has 9, 16, 18, 27, 36 bit multipliers by default
+			
+
+			// contains the delay of the DSP register = 0.745ns (for 36x36 bits )
+			multiplierDelay_[0]			= 1.875e-9; 	// *obtained experimentaly from Quartus 2 11.1
+			multiplierDelay_[1]			= 1.875e-9; 	// *obtained experimentaly from Quartus 2 11.1
+			multiplierDelay_[2]			= 1.875e-9; 	// *obtained experimentaly from Quartus 2 11.1
+			multiplierDelay_[3]			= 2.500e-9; 	// *obtained experimentaly from Quartus 2 11.1
+			multiplierDelay_[4]			= 2.905e-9; 	// *obtained experimentaly from Quartus 2 11.1
+			
+			DSPMultiplierDelay_			= 1.875e-9;
+			DSPAdderDelay_				= 1.030e-9;
+			DSPCascadingWireDelay_		= 0.266e-9;		// TODO: update
+			DSPToLogicWireDelay_		= 0.266e-9;		// TODO: update
+			
+			RAMDelay_					= 1.197e-9; 	// *obtained experimentaly from Quartus 2 11.1
+			RAMToLogicWireDelay_		= 0.090e-9; 	// *obtained experimentaly from Quartus 2 11.1 - TODO: - check validity
+		}
 	
 	double StratixV::adderDelay(int size) 
 	{
@@ -79,7 +135,7 @@ namespace flopoco{
 		return  fastcarryDelay_; 
 	};
 	
-	double StratixV::localWireDelay(int fanout){
+	double StratixV::fanoutDelay(int fanout){
 		return lut2lutDelay_;
 	};
 	
@@ -103,7 +159,7 @@ namespace flopoco{
 	DSP* StratixV::createDSP() 
 	{
 		int multW, multH;
-		getDSPWidths(multW, multH);
+		getMaxDSPWidths(multW, multH);
 		
 		// create a DSP block having a shifting amount of 0
 		DSP* dsp_ = new DSP(0, multW, multH);
@@ -373,9 +429,9 @@ namespace flopoco{
 		return cost/2;
 	}
 	
-	//TODO: give the meaning for sign
-	//		check validity
-	void StratixV::getDSPWidths(int &x, int &y, bool sign)
+
+#if 0 // Should we do this? Or only useful for impractical large frequencies? 
+	void StratixV::getMaxDSPWidths(int &x, int &y, bool sign)
 	{ 
 	
 		if (sign == false)
@@ -392,11 +448,13 @@ namespace flopoco{
 				
 			}
 	}
+#endif
+	
 	
 	int StratixV::getEquivalenceSliceDSP(){
 		int lutCost = 0;
 		int x, y;
-		getDSPWidths(x,y);
+		getMaxDSPWidths(x,y);
 		// add multiplier cost
 		lutCost += getIntMultiplierCost(x, y);
 		// add accumulator cost
@@ -406,32 +464,8 @@ namespace flopoco{
 		return lutCost;
 	}
 	
-	int StratixV::getNumberOfDSPs() 
-	{
-		int x, y;
-		getDSPWidths(x, y);
-		
-		switch (x)
-		{
-			case 9: 
-					y = totalDSPs_*8;
-					break;
-			case 16: 
-					y = totalDSPs_*4;
-					break;
-			case 18: 
-					y = totalDSPs_*4;
-					break;
-			case 27: 
-					y = totalDSPs_*3;
-					break;
-			case 36: 
-					y = totalDSPs_*2;
-					break;
-		}
-		return y;		
-	};
-	
+
+
 	int StratixV::getIntNAdderCost(int wIn, int n)
 	{
 		int chunkSize, lastChunkSize, nr, a, b, cost;

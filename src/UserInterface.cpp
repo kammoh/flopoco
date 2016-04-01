@@ -408,22 +408,22 @@ namespace flopoco
 				std::transform(targetFPGA.begin(), targetFPGA.end(), targetFPGA.begin(), ::tolower);
 
 					// This could also be a factory but it is less critical
-				if(targetFPGA=="virtex4") target=new Virtex4();
-				else if (targetFPGA=="virtex5") target=new Virtex5();
+				if (targetFPGA=="zynq7000")  target=new Zynq7000();
+				//					else if(targetFPGA=="virtex4") target=new Virtex4();
+				//				else if (targetFPGA=="virtex5") target=new Virtex5();
 				else if (targetFPGA=="virtex6") target=new Virtex6();
-				else if (targetFPGA=="spartan3") target=new Spartan3();
-				else if (targetFPGA=="stratixii" || targetFPGA=="stratix2") target=new StratixII();
-				else if (targetFPGA=="stratixiii" || targetFPGA=="stratix3") target=new StratixIII();
-				else if (targetFPGA=="stratixiv" || targetFPGA=="stratix4") target=new StratixIV();
+				//					else if (targetFPGA=="spartan3") target=new Spartan3();
+				//					else if (targetFPGA=="stratixii" || targetFPGA=="stratix2") target=new StratixII();
+				//					else if (targetFPGA=="stratixiii" || targetFPGA=="stratix3") target=new StratixIII();
+				//				else if (targetFPGA=="stratixiv" || targetFPGA=="stratix4") target=new StratixIV();
 				else if (targetFPGA=="stratixv" || targetFPGA=="stratix5") target=new StratixV();
-				else if (targetFPGA=="cycloneii" || targetFPGA=="cyclone2") target=new CycloneII();
-				else if (targetFPGA=="cycloneiii" || targetFPGA=="cyclone3") target=new CycloneIII();
-				else if (targetFPGA=="cycloneiv" || targetFPGA=="cyclone4") target=new CycloneIV();
-				else if (targetFPGA=="cyclonev" || targetFPGA=="cyclone5") target=new CycloneV();
-				else if (targetFPGA=="zynq7000")  target=new Zynq7000();
+				//					else if (targetFPGA=="cycloneii" || targetFPGA=="cyclone2") target=new CycloneII();
+				//					else if (targetFPGA=="cycloneiii" || targetFPGA=="cyclone3") target=new CycloneIII();
+				//					else if (targetFPGA=="cycloneiv" || targetFPGA=="cyclone4") target=new CycloneIV();
+				//				else if (targetFPGA=="cyclonev" || targetFPGA=="cyclone5") target=new CycloneV();
 				else {
 					throw("ERROR: unknown target: " + targetFPGA);
-					}
+				}
 				target->setPipelined(pipeline);
 				target->setFrequency(1e6*targetFrequencyMHz);
 				target->setUseHardMultipliers(useHardMult);

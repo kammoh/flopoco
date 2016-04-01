@@ -25,14 +25,14 @@ namespace flopoco{
 	Virtex6::Virtex6() : Target()	{
 			id_             		= "Virtex6";
 			vendor_         		= "Xilinx";
+			possibleDSPConfig_.push_back(make_pair(25,18));
+			whichDSPCongfigCanBeUnsigned_.push_back(false);
 			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 18 (36Kb, can be used as 2 independent 2^11*9)
 			maxFrequencyMHz_		= 500;
 			// all these values are set more or less randomly, to match  virtex 6 more or less
 			fastcarryDelay_ 		= 0.015e-9; //s
 			elemWireDelay_  		= 0.313e-9;
 			lutDelay_       		= 0.053e-9;
-			multXInputs_    		= 25;
-			multYInputs_    		= 18;
 			// all these values are set precisely to match the Virtex6
 			fdCtoQ_         		= 0.280e-9;
 			lut2_           		= 0.053e-9;	//the gate delay, without the NET delay (~0.279e-9)
@@ -103,7 +103,7 @@ namespace flopoco{
 
 	
 	double Virtex6::logicDelay(int inputs){
-		double unitDelay = lutDelay() + elemWireDelay_;
+		double unitDelay = lutDelay_ + elemWireDelay_;
 		if(inputs <= lutInputs())
 			return unitDelay;
 		else if (inputs==lutInputs()+1) { // use mux
@@ -138,7 +138,7 @@ namespace flopoco{
 		return  fastcarryDelay_;
 	};
 
-	double Virtex6::localWireDelay(int fanout){
+	double Virtex6::fanoutDelay(int fanout){
 		// TODO the values used here were found experimentally using Planahead 14.7
 		double delay;
 #if 1 // All this commented out by Florent to better match ISE critical path report
@@ -163,7 +163,7 @@ namespace flopoco{
 	};
 
 	double Virtex6::lutDelay(){
-		return lutDelay_;
+		return lutDelay_+elemWireDelay_;
 	};
 
 	double Virtex6::tableDelay(int wIn_, int wOut_, bool logicTable_){
@@ -174,12 +174,12 @@ namespace flopoco{
 		{
 			if(wIn_ <= lutInputs_)
 				//table fits inside a LUT
-				totalDelay = localWireDelay(wOut_) + lut6_ + lut_net_;
+				totalDelay = fanoutDelay(wOut_) + lut6_ + lut_net_;
 			else if(wIn_ <= lutInputs_+2){
 				//table fits inside a slice
 				double delays[] = {lut6_, muxf7_, muxf8_};
 
-				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
+				totalDelay = fanoutDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
 				for(i=lutInputs_; i<=wIn_; i++){
 					totalDelay += delays[i-lutInputs_];
 				}
@@ -189,7 +189,7 @@ namespace flopoco{
 				double delays[] = {lut6_, 0, muxf7_};
 				double delaysNet[] = {lut_net_, lut_net_, muxf7_net_};
 
-				totalDelay = localWireDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
+				totalDelay = fanoutDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
 				for(i=lutInputs_+3; i<=wIn_; i++){
 					totalDelay += delays[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
 				}
@@ -213,7 +213,7 @@ namespace flopoco{
 	DSP* Virtex6::createDSP()
 	{
 		int x, y;
-		getDSPWidths(x, y);
+		getMaxDSPWidths(x, y);
 
 		/* create DSP block with constant shift of 17
 		* and a maxium unsigned multiplier width (17x17) for this target
@@ -225,14 +225,14 @@ namespace flopoco{
 
 	bool Virtex6::suggestSubmultSize(int &x, int &y, int wInX, int wInY){
 
-		getDSPWidths(x, y);
+		getMaxDSPWidths(x, y);
 
 		//	//try the two possible chunk splittings
 		//	int score1 = int(ceil((double(wInX)/double(x)))+ceil((double(wInY)/double(y))));
 		//	int score2 = int(ceil((double(wInY)/double(x)))+ceil((double(wInX)/double(y))));
 		//
 		//	if (score2 < score1)
-		//		getDSPWidths(y,x);
+		//		getMaxDSPWidths(y,x);
 
 		if (wInX <= x)
 			x = wInX;
@@ -399,21 +399,11 @@ namespace flopoco{
 			return cost*5/8;
 	};
 
-	void Virtex6::getDSPWidths(int &x, int &y, bool sign){
-		// unsigned multiplication
-		if (! sign ){
-			x = multXInputs_-1;
-			y = multYInputs_-1;
-		}else{
-			x = multXInputs_-1;
-			y = multYInputs_-1;
-		}
-	}
 
 	int Virtex6::getEquivalenceSliceDSP(){
 		int lutCost = 0;
 		int x, y;
-		getDSPWidths(x,y);
+		getMaxDSPWidths(x,y);
 		// add multiplier cost
 		lutCost += getIntMultiplierCost(x, y);
 		// add shifter and accumulator cost

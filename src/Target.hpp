@@ -47,6 +47,12 @@ namespace flopoco{
 
 		virtual ~Target();
 
+		/** Deprecated!
+		 * @return local wire delay
+		 */
+		double localWireDelay(int fanout = 1);
+
+
 		/** Returns ID of instantiated target. This ID is represented by the name
 		 * @return the ID
 		 */
@@ -110,6 +116,19 @@ namespace flopoco{
 		 */
 		void setUseHardMultipliers(bool v);
 
+
+		/** defines the unused hard mult threshold, see the the corresponding attribute for its meaning
+		 */
+		void setUnusedHardMultThreshold(float v);
+
+		/** returns the value of the unused hard mult threshold, see the the corresponding attribute for its meaning
+		 */
+		float unusedHardMultThreshold();
+
+		/** Returns true if the target has fast ternary adders in the logic blocks
+		 * @return the status of the hasFastLogicTernaryAdder_ parameter
+		 */
+
 		/** defines if flopoco should produce plain stupid VHDL
 		 */
 		void setPlainVHDL(bool v);
@@ -129,10 +148,12 @@ namespace flopoco{
 		int lutInputs();
 
 
-		/* -------------------- Delay-related methods ------------------------
+		/* -------------------- Perf declaration methods  ------------------------
+			 These methods return a delay in seconds.
+			 Some day they will also add to the global resource consumption.
 
 			 Currently each of the high-level logic functions include a quantum of local routing.
-			 For large fanout, use localWireDelay(fanout) on top of that
+			 For large fanout, use fanoutDelay(fanout) on top of that
 
 			 lutDelay is the delay of a bare lut, without any routing
 		 */
@@ -141,7 +162,7 @@ namespace flopoco{
 				It includes one level of local routing.
 				Default implementation in target uses only lutDelay etc
 		*/
-		virtual double logicDelay(int inputs=0);
+		virtual double logicDelay(int inputs=1);
 		
 
 		/** Function which returns addition delay for an n bit addition
@@ -150,6 +171,13 @@ namespace flopoco{
 		 */
 		virtual double adderDelay(int n) =0;
 
+
+		/** Function which returns addition delay for an n bit ternary addition
+		 * NOTE: only relevant for architectures supporting native ternary addition
+		 * @param n the number of bits of the addition (n-bit + n-bit + n-bit )
+		 * @return the addition delay for an n bit ternary addition
+		 */
+		virtual double adder3Delay(int n) =0;
 
 		/**  Do not use this if you can use logicDelay
 				 Function which returns the lutDelay for this target
@@ -169,13 +197,6 @@ namespace flopoco{
 		virtual double carryPropagateDelay() =0;
 
 
-		/** Function which returns addition delay for an n bit ternary addition
-		 * NOTE: only relevant for architectures supporting native ternary addition
-		 * @param n the number of bits of the addition (n-bit + n-bit + n-bit )
-		 * @return the addition delay for an n bit ternary addition
-		 */
-		virtual double adder3Delay(int n) =0;
-
 		/** Function which returns the delay for an n bit equality comparison
 		* @param n the number of bits of the comparisson
 		* @return the delay of the comparisson between two vectors
@@ -194,7 +215,8 @@ namespace flopoco{
 		/** Function which returns the local wire delay (local routing)
 		 * @return local wire delay
 		 */
-		virtual double localWireDelay(int fanout = 1) =0;
+		virtual double fanoutDelay(int fanout = 1) =0;
+
 
 		/* --------------------  DSP related  --------------------------------*/
 
@@ -277,6 +299,14 @@ namespace flopoco{
 		virtual double tableDelay(int wIn_, int wOut_, bool logicTable_);
 
 
+
+		/** get a vector of possible DSP configurations */
+		vector<pair<int,int>> possibleDSPConfigs();
+
+		/** get a vector telling which of the  possible DSP configurations can be used full width unsigned (typically true on Altera and false on Xilinx) */
+		vector<bool> whichDSPCongfigCanBeUnsigned();
+
+		
 		/** Function which returns the size of a primitive memory block,which could be recognized by the synthesizer as a dual block.
 		 * @return the size of the primitive memory block
 		 */
@@ -299,29 +329,14 @@ namespace flopoco{
 		 */
 		virtual int getEquivalenceSliceDSP() = 0;
 
-		/** Function which returns the number of DSPs that exist in FPGA
-		 * @return number of DSPs
-		 */
-			virtual int getNumberOfDSPs() = 0;
 
 		/** Function which returns the maximum widths of the operands of a DSP
 		 * @return widths with x>y
 		 */
-		virtual void getDSPWidths(int &x, int &y, bool sign = false) = 0;
+		void getMaxDSPWidths(int &x, int &y, bool sign = false);
 
 
 
-		/** defines the unused hard mult threshold, see the the corresponding attribute for its meaning
-		 */
-		void setUnusedHardMultThreshold(float v);
-
-		/** returns the value of the unused hard mult threshold, see the the corresponding attribute for its meaning
-		 */
-		float unusedHardMultThreshold();
-
-		/** Returns true if the target has fast ternary adders in the logic blocks
-		 * @return the status of the hasFastLogicTernaryAdder_ parameter
-		 */
 		bool hasFastLogicTernaryAdders();
 
 		/** Returns true if it is worth using hard multipliers for implementing a multiplier of size wX times wY */
@@ -656,6 +671,9 @@ namespace flopoco{
 		int    lutInputs_;          /**< The number of inputs for the LUTs */
 		// DSP related
 		bool   hasHardMultipliers_; /**< If true, this target offers hardware multipliers */
+		vector<pair<int,int>> possibleDSPConfig_; /**< configs in the signed case, e.g. virtexII will be only (18,18), virtex6 (25,18), stratixIV will be (9,9), ... (36,36). Largest (preferred) last */
+		vector<bool> whichDSPCongfigCanBeUnsigned_; /** which DSP configs can be used full size as unsigned*/
+		// TODO probably add a method to help chose among configs 
 		bool   hasFastLogicTernaryAdders_; /**< If true, this target offers support for ternary addition at the cost of binary addition */
 		int    multXInputs_;        /**< The size for the X dimension of the hardware multipliers (the largest, if they are not equal) */
 		int    multYInputs_;        /**< The size for the Y dimension of the hardware multipliers  (the smallest, if they are not equal)*/

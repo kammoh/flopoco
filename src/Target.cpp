@@ -43,6 +43,12 @@ namespace flopoco{
 		//VIDE
 	}
 
+
+	double Target::localWireDelay(int fanout){
+		cerr << "Target::localWireDelay is deprecated!\n";
+		return 0.0;
+	};
+
 	// vector<Operator*> *  Target::getGlobalOpListRef(){
 	// 	return & globalOpList;
 	// }
@@ -131,14 +137,14 @@ namespace flopoco{
 	}
 
 
-
 	double Target::logicDelay(int inputs){
-		double unitDelay = lutDelay()+localWireDelay();
+		double unitDelay = lutDelay();
 		if(inputs <= lutInputs())
 			return unitDelay;
 		else
 			return unitDelay * (inputs -lutInputs() + 1);
 	}
+
 
 	
 	
@@ -153,7 +159,6 @@ namespace flopoco{
 			return false;
 		else
 			return true;
-
 	}
 
 
@@ -187,6 +192,7 @@ namespace flopoco{
 		return cycles;
 	}
 
+	
 	double Target::tableDelay(int wIn_, int wOut_, bool logicTable_){
 		cout << "Warning: using the generic Target::tableDelay(); pipelining using a gross estimate of the target" << endl;
 		return 2e-9;
@@ -199,6 +205,26 @@ namespace flopoco{
 		return 2; // TODO
 	}
 
+
+	vector<pair<int,int>> Target::possibleDSPConfigs() {
+		return possibleDSPConfig_;
+	}
+
+	vector<bool> Target::whichDSPCongfigCanBeUnsigned() {
+		return whichDSPCongfigCanBeUnsigned_;
+	}
+
+	void Target::getMaxDSPWidths(int &x, int &y, bool sign){
+		pair<int,int> sizes = possibleDSPConfig_.back();
+		int dec; // remove 1 if unsigned and fullsize unsigned not supported
+		if(sign ||  whichDSPCongfigCanBeUnsigned_.back())
+			dec=0;
+		else
+			dec=1;
+		x = sizes.first - dec;
+		y = sizes.second - dec;
+		cout << "Target::getMaxDSPWidths for " << (sign?"":"un") << "signed mult returns x="<<x <<" and y=" << y<<endl << "get rid of this annoying message in Target.cpp once it is clear it works" << endl; 
+	}
 
 
 	/*-------- Resource Estimation - target specific functions -------*/
@@ -256,10 +282,12 @@ namespace flopoco{
 	}
 
 
+	
+
 	double Target::getMultPerDSP(int widthX, int widthY){
 		int defaultWidthX, defaultWidthY, maxWidth;
 
-		getDSPWidths(defaultWidthX, defaultWidthY, true);
+		getMaxDSPWidths(defaultWidthX, defaultWidthY, true);
 		(defaultWidthX>defaultWidthY) ? maxWidth = defaultWidthX : maxWidth = defaultWidthY;
 		if(vendor_ == "Xilinx"){
 			if(id_ == "Spartan3"){

@@ -29,9 +29,9 @@ namespace flopoco{
 
 			/////// Architectural parameters
 			lutInputs_ = 6;
-			multXInputs_    		= 25;
-			multYInputs_    		= 18;
-			sizeOfBlock_ 			= 18432;	// the size of a primitive block is 2^11 * 9
+			possibleDSPConfig_.push_back(make_pair(25,18));
+			whichDSPCongfigCanBeUnsigned_.push_back(false);
+			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 9
 			        // The blocks are 36kb configurable as dual 18k so I don't know.
 
 
@@ -39,48 +39,10 @@ namespace flopoco{
 			lutDelay_ = 0.124e-9;
 			carry4Delay_ = 0.117e-9;
 			
-			//---------------Floorplanning related----------------------
-			// TODO this was copypasted from another one: update
-			multiplierPosition.push_back(15);
-			multiplierPosition.push_back(47);
-			multiplierPosition.push_back(55);
-			multiplierPosition.push_back(107);
-			multiplierPosition.push_back(115);
-			multiplierPosition.push_back(147);
-						
-			memoryPosition.push_back(7);
-			memoryPosition.push_back(19);
-			memoryPosition.push_back(27);
-			memoryPosition.push_back(43);
-			memoryPosition.push_back(59);
-			memoryPosition.push_back(103);
-			memoryPosition.push_back(119);
-			memoryPosition.push_back(135);
-			memoryPosition.push_back(143);
-			memoryPosition.push_back(155);
-			memoryPosition.push_back(169);
-			
-			topSliceX = 169;
-			topSliceY = 359;
-			
-			lutPerSlice = 4;
-			ffPerSlice = 8;
-			
-			dspHeightInLUT = 3;		//3, actually
-			ramHeightInLUT = 5;
-			
-			dspPerColumn = 143;
-			ramPerColumn = 71;
-			//----------------------------------------------------------
-
 		}
 
 	Zynq7000::~Zynq7000() {};
 
-	
-	double Zynq7000::addRoutingDelay(double d) {
-		return(3.0*d);
-	};
 
 	double Zynq7000::adderDelay(int size) {
 		return addRoutingDelay(lutDelay_ + ((size+3)/4)* carry4Delay_) ; 
@@ -98,11 +60,15 @@ namespace flopoco{
 		return 1.443e-9; // 0.478 logic; 0.965 route 
 	};
 	
+	double Zynq7000::addRoutingDelay(double d) {
+		return(3.0*d);
+	};
+	
 	double Zynq7000::carryPropagateDelay() {
 		return carry4Delay_/4 ; 
 	};
 	
-	double Zynq7000::localWireDelay(int fanout){
+	double Zynq7000::fanoutDelay(int fanout){
 
 			/* Some data points from FPAdd 8 23, after synthesis  
 				 net (fo=4, unplaced)         0.494     0.972    test/cmpAdder/X_d1_reg[33][1]
@@ -149,7 +115,7 @@ namespace flopoco{
 	DSP* Zynq7000::createDSP() 
 	{
 		int x, y;
-		getDSPWidths(x, y);
+		getMaxDSPWidths(x, y);
 		
 		/* create DSP block with constant shift of 17
 		* and a maxium unsigned multiplier width (17x17) for this target
@@ -161,14 +127,14 @@ namespace flopoco{
 	
 	bool Zynq7000::suggestSubmultSize(int &x, int &y, int wInX, int wInY){
 		
-		getDSPWidths(x, y);
+		getMaxDSPWidths(x, y);
 		
 		//	//try the two possible chunk splittings
 		//	int score1 = int(ceil((double(wInX)/double(x)))+ceil((double(wInY)/double(y))));
 		//	int score2 = int(ceil((double(wInY)/double(x)))+ceil((double(wInX)/double(y))));
 		//	
 		//	if (score2 < score1)
-		//		getDSPWidths(y,x);		
+		//		getMaxDSPWidths(y,x);		
 		
 		if (wInX <= x)
 			x = wInX;
@@ -335,21 +301,11 @@ namespace flopoco{
 			return cost*5/8;
 	};
 	
-	void Zynq7000::getDSPWidths(int &x, int &y, bool sign){
-		// unsigned multiplication
-		if (! sign ){
-			x = multXInputs_-1;
-			y = multYInputs_-1;
-		}else{
-			x = multXInputs_-1;
-			y = multYInputs_-1;
-		}
-	}
 	
 	int Zynq7000::getEquivalenceSliceDSP(){
 		int lutCost = 0;
 		int x, y;
-		getDSPWidths(x,y);
+		getMaxDSPWidths(x,y);
 		// add multiplier cost
 		lutCost += getIntMultiplierCost(x, y);
 		// add shifter and accumulator cost

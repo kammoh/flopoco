@@ -20,10 +20,8 @@ namespace flopoco{
 		 * @see the target class for more details 
 		 */
 
-		double addRoutingDelay(double d);
 		double adderDelay(int size);
 
-		double carryPropagateDelay();
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
 		double eqComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);
@@ -39,7 +37,9 @@ namespace flopoco{
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
 		
-		double localWireDelay(int fanout = 1);
+		double carryPropagateDelay();
+		double addRoutingDelay(double d);
+		double fanoutDelay(int fanout = 1);
 		double lutDelay();
 		double ffDelay();
 
@@ -55,7 +55,6 @@ namespace flopoco{
 		DSP*   createDSP(); 
 		int    getEquivalenceSliceDSP();
 		int    getNumberOfDSPs();
-		void   getDSPWidths(int &x, int &y, bool sign = false);
 		int    getIntNAdderCost(int wIn, int n);	
 
 		

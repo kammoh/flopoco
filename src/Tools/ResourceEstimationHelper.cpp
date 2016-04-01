@@ -133,7 +133,7 @@ namespace flopoco{
 		map<int, int>::iterator it;
 
 		estimatedCountMultiplier += count;
-		target->getDSPWidths(widthX, widthY);
+		target->getMaxDSPWidths(widthX, widthY);
 		(widthX>widthY) ? maxWidth=widthX : maxWidth=widthY;
 		increment = ceil(count*maxWidth*target->getLUTPerMultiplier(widthX, widthY));
 		estimatedCountLUT += increment;
@@ -189,7 +189,7 @@ namespace flopoco{
 		double ratioX, ratioY;
 		map<int, int>::iterator it;
 
-		target->getDSPWidths(sizeDSPx, sizeDSPy, true);
+		target->getMaxDSPWidths(sizeDSPx, sizeDSPy, true);
 		(widthX>widthY) ? maxWidth=sizeDSPx : maxWidth=sizeDSPy;
 		ratioX = (double)widthX/sizeDSPx;
 		ratioY = (double)widthY/sizeDSPy;
@@ -357,7 +357,7 @@ namespace flopoco{
 		(count>0)? output << tab << "DSP count increased by " << count : output << "DSP count decreased by " << count;
 		output << endl;
 
-		target->getDSPWidths(widthX, widthY, true);
+		target->getMaxDSPWidths(widthX, widthY, true);
 		(widthX>widthY) ? maxWidth=widthX : maxWidth=widthY;
 		it = estimatedMultiplierTypes.find(maxWidth);
 		if(it == estimatedLUTTypes.end()){

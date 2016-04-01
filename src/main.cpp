@@ -72,7 +72,7 @@ int main(int argc, char* argv[] )
 #endif
 		// IntComparator::registerFactory();
 		// IntDualSub::registerFactory();
-		// IntMultiplier::registerFactory();
+		 IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
 		// FPConstMult::registerFactory();

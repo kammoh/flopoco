@@ -216,21 +216,21 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/Target 
  src/TargetModel
  
- src/Targets/Spartan3 
- src/Targets/Virtex4 
- src/Targets/Virtex5 
+# src/Targets/Spartan3 
+# src/Targets/Virtex4 
+# src/Targets/Virtex5 
  src/Targets/Virtex6 
  src/Targets/Zynq7000 
  
- src/Targets/StratixII 
- src/Targets/StratixIII 
- src/Targets/StratixIV
+# src/Targets/StratixII 
+# src/Targets/StratixIII 
+# src/Targets/StratixIV
  src/Targets/StratixV
  
- src/Targets/CycloneII 
- src/Targets/CycloneIII 
- src/Targets/CycloneIV 
- src/Targets/CycloneV 
+ #src/Targets/CycloneII 
+ #src/Targets/CycloneIII 
+ #src/Targets/CycloneIV 
+ #src/Targets/CycloneV 
 
 # TestBench-related -------------------------------------------------
  src/TestBenches/TestCase
