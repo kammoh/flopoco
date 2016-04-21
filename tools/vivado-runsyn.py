@@ -10,9 +10,10 @@ import sys
 import re
 import string
 import subprocess
+import argparse
 
 def usage():
-    print "Usage: \nvivado-runsyn\nvivado-runsyn file.vhdl\nvivado-runsyn file.vhdl entity\n" 
+    print "Usage: \nvivado-runsyn\n" 
     sys.exit()
 
     
@@ -31,21 +32,30 @@ def get_last_entity(filename):
 
 #/* main */
 if __name__ == '__main__':
-    if (len(sys.argv)>3):
-        usage()
 
 
-    synthesis_only=False # some day to replace with a command-line switch
+    parser = argparse.ArgumentParser(description='This is an helper script for FloPoCo that launches Xilinx Vivado and extracts resource consumption and critical path information')
+    parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
+    parser.add_argument('-f', '--file', help='File name (default flopoco.vhdl)')
+    parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
 
-    if (len(sys.argv)==3):
-        filename = sys.argv[1] 
-        entity = sys.argv[2] 
-    elif (len(sys.argv)==2):
-        filename=sys.argv[1]
+    options=parser.parse_args()
+
+    if (options.implement==True):
+        synthesis_only=False
+    else:
+        synthesis_only=True
+
+    if (options.file==None):
+        filename = "flopoco.vhdl"
+    else:
+        filename = options.file
+
+    if (options.entity==None):
         entity = get_last_entity(filename)
-    elif (len(sys.argv)==1):
-        filename="flopoco.vhdl"
-        entity = get_last_entity(filename)
+    else:
+        entityname=options.entity
+        
 
     workdir="/tmp/vivado_runsyn_files"
     project_name = "test_" + entity
