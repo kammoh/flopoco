@@ -33,6 +33,29 @@ The algo should be:
       c/ call startScheduling recursively.
    
 
+For Martin: 
+- Before generateCompressorVHDL is called, we will have the lexicographic timing 
+  (i.e. cycle + delay within a cycle) for all the bits that are input to the bit heap.
+  We really want Martin's algos to manage that.
+  Keep in mind the typical case of a large multiplier: it adds 
+      bits from its DSP blocks (arrive after 2 or 3 cycles) 
+      to bits from the logic-based multipliers (arrive at cycle 0 after a small delay)
+  Real-world bit heaps (e.g. sin/cos or exp or log) have even more complex, difficult to predict BH structures.
+  
+- Martin's algorithms compute cycles + delays. Two options to exploit this information:
+    a/ ignore the cycles, just have each signal declared with a delay in the compressor trees, 
+       and let Matei's scheduler re-compute cycles that will hopefully match those computed by Martin
+    b/ let Martin directly hack the cycles and delays into the DAG -- probably much more code.
+  I vote for a/ 
+
+- The BitHeap will be simplified, all the timing information will be removed: 
+   it is now in the Signals (once they have been scheduled).
+  So the actual interface to provide to Martin is not yet fixed.
+
+
+
+
+
 */
 
 #include <iostream>
