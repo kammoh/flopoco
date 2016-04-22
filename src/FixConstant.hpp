@@ -41,7 +41,7 @@ namespace flopoco{
 		bool isSigned;        /**< if the constant is a two's complement one */
 		int MSB;              /**< weight of the MSB*/
 		int LSB;              /**< weight of the LSB*/
-		int width;            /**< wMSB - wLSB +1*/
+		int width;            /**< MSB - LSB +1*/
 		mpfr_t fpValue;       /**< the value of this constant as an mpfr_t */
 		bool isZeroP;          /**< true if the constant is zero */
 

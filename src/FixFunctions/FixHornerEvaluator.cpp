@@ -138,6 +138,8 @@ namespace flopoco{
 		if(!signedXandCoeffs)
 			REPORT(0,"signedXandCoeffs=false, this code has probably never been tested in this case. If it works, please remove this warning. If it doesn't, we deeply apologize and invite you to fix it.");
 
+		if(roundingErrorBudget==-1)
+			roundingErrorBudget = exp2(-lsbOut);
 			// computing the coeff sizes
 		for (int i=0; i<=degree; i++)
 			coeffSize.push_back(msbCoeff[i]-lsbCoeff+1); // see FixConstant.hpp for the constant format

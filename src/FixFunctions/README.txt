@@ -1,25 +1,10 @@
 
-The attic directory is full of old stuff.
-
-TODO short term: 
-Finish (or rewrite) FixMultAdd. DONE
-Probably need to add signed/unsigned IOs to IntMultiplier (?FixMultiplier?) -- prepare discussion
-Add signed/unsigned support to the test framework (IO conversions from/to std_logic_vector).
-Write FixPolynomialHornerEvaluator
-Write FixFunctionByPiecewisePoly
-
-
-TODO long term: manage non-uniform errors; manage non-uniform segmentation; something for sin(sqrt(x))
-
-
 FixFunction
     Centralizes Sollya parsing and evaluation to various formats, including an emulate() that works for all FixFunctionBy*
 
 FixFunctionByTable: a flopoco operator that is the most basic implementation of a FixFunction
 
 
-BasicPolyApprox: mostly Sollya stuff to compute optimal coeff sizes, the machine-efficient polynomials.
-DONE
 
 
 PiecewisePolyApprox: Iterates over the previous to build a regular piecewise polynomial approximation. Roughly the approximation part of previous FunctionEvaluator
@@ -37,6 +22,8 @@ FixPolynomialHornerEvaluator:
 
 
 FixFunctionBySimplePoly: a flopoco operator plugging  BasicPolyApprox to FixPolynomialHornerEvaluator
+TODO we should get rid of this and replace it with a new constructor of FixFunctionByPiecewisePoly
+
 
 
 FixFunctionBySimpleBitHeap: an Operator plugging BasicPolyApprox to a bit heap back-end.
@@ -52,3 +39,18 @@ FixFunctionByPiecewisePoly:
 GenericEvaluator:
 	A wrapper class written by Sylvain that should be able to instantiate any of the others.
 	Still in the src but currently disabled, and to be renamed.
+
+
+
+
+
+The attic directory is full of old stuff.
+
+TODO short term: 
+Probably need to add signed/unsigned IOs to IntMultiplier (?FixMultiplier?) -- prepare discussion
+Add signed/unsigned support to the test framework (IO conversions from/to std_logic_vector).
+
+
+TODO long term: manage non-uniform errors; manage non-uniform segmentation; something for sin(sqrt(x))
+
+
