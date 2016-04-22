@@ -11,6 +11,30 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 */
 
 
+/*
+
+TODOs for pipelining + bith heap compression
+
+The algo should be:
+
+0/ All the operators must have a pointer to their bit heap list (TODO: add the corresponding attributes and methods)
+
+1/ if a bit heap bh is involved, the constructors perform all the bh->addBit() but do not call generateCompressorVHDL().
+   They still use bh->getSumName.
+   This leaves holes in the DAG corresponding to the vhdl stream 
+
+2/ When startScheduling is called, it does all what it can (current code is OK for that).
+   if some outputs are not scheduled
+     (it means that a bit heap needs compression)
+      a/ search in the (recursive) BH list one BH that is not yet scheduled and has all its bits already scheduled
+           (if none is found: the DAG has another hole: error!)
+      b/ generateCompressorTree for this BH.
+         This adds code to the vhdl stream of this operator: it will need to be re-parsed
+      c/ call startScheduling recursively.
+   
+
+*/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -2987,9 +3011,13 @@ namespace flopoco{
 				scheduleSignal(currentSignal->successor(j));
 		}
 
+		// TODO Sched+BH: here check if all the outputs are scheduled, and return true/false accordingly
+
 		setIsOperatorScheduled(true);
 	}
 
+
+	
 	void Operator::scheduleSignal(Signal *targetSignal)
 	{
 		//TODO: add more checks here
