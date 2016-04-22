@@ -2899,14 +2899,6 @@ namespace flopoco{
 	void Operator::startScheduling()
 	{
 		//TODO: add more checks here
-		//check that all the inputs are at the same cycle
-		for(unsigned int i=0; i<ioList_.size(); i++)
-			for(unsigned int j=i+1; j<ioList_.size(); j++)
-				if((ioList_[i]->type() == Signal::in) && (ioList_[j]->type() == Signal::in) && (ioList_[i]->getCycle() != ioList_[j]->getCycle()))
-					THROWERROR("Error in startScheduling(): not all signals are at the same cycle: signal "
-							+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
-							+ " but signal " + ioList_[j]->getName() + " is at cycle "
-							+ vhdlize(ioList_[j]->getCycle()));
 		//if the operator is already scheduled, then there is nothing else to do
 		if(isOperatorScheduled())
 			return;
@@ -2938,6 +2930,15 @@ namespace flopoco{
 		//	of the global copy
 		if(isGlobalOperator && (getName().find("_cpy_") != string::npos))
 		{
+			//check that all the inputs are at the same cycle
+			for(unsigned int i=0; i<ioList_.size(); i++)
+				for(unsigned int j=i+1; j<ioList_.size(); j++)
+					if((ioList_[i]->type() == Signal::in) && (ioList_[j]->type() == Signal::in) && (ioList_[i]->getCycle() != ioList_[j]->getCycle()))
+						THROWERROR("Error in startScheduling(): not all signals are at the same cycle: signal "
+								+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
+								+ " but signal " + ioList_[j]->getName() + " is at cycle "
+								+ vhdlize(ioList_[j]->getCycle()));
+
 			Operator* originalOperator;
 			int maxInputCycle = 0;
 
@@ -3012,8 +3013,12 @@ namespace flopoco{
 		}
 
 		// TODO Sched+BH: here check if all the outputs are scheduled, and return true/false accordingly
+		bool scheduleComplete = true;
 
-		setIsOperatorScheduled(true);
+		for(unsigned int i=0; i<ioList_.size(); i++)
+			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getHasBeenImplemented() == false))
+				scheduleComplete = false;
+		setIsOperatorScheduled(scheduleComplete);
 	}
 
 
@@ -3069,38 +3074,60 @@ namespace flopoco{
 				//if not, then we can just stop
 				return;
 
-			//all the other inputs of the parent operator of this signal have been scheduled
+			//test if this operator is a global operator
+			bool isGlobalOperator = false;
+			string globalOperatorName = getName();
+
+			//this might be a copy of the global operator, so try to remove the suffix
+			if(globalOperatorName.find("_cpy_") != string::npos)
+				globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
+
+			//look in the global operator list for the operator
+			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
+				if(UserInterface::globalOpList[i]->getName() == globalOperatorName)
+				{
+					isGlobalOperator = true;
+					break;
+				}
+
+			//if this is a global operator, and this is a copy, then
 			//	compute the maximum cycle of the inputs, and then synchronize
 			//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
-			int maxCycle = 0;
+			if(isGlobalOperator && (getName().find("_cpy_") != string::npos))
+			{
+				//all the other inputs of the parent operator of this signal have been scheduled
+				//	compute the maximum cycle of the inputs, and then synchronize
+				//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
+				int maxCycle = 0;
 
-			//determine the maximum cycle
-			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-				if(targetSignal->parentOp()->getIOListSignal(i)->getCycle() > maxCycle)
-					maxCycle = targetSignal->parentOp()->getIOListSignal(i)->getCycle();
-			//set all the inputs of the parent operator of targetSignal to the maximum cycle
-			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-				if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in) &&
-					(targetSignal->parentOp()->getIOListSignal(i)->getCycle() < maxCycle))
-				{
-					//if we have to delay the input, the we need to reset
-					//	the critical path, as well
-					//else, there is nothing else to do
-					Signal *inputSignal = targetSignal->parentOp()->getIOListSignal(i);
-
-					inputSignal->setCycle(maxCycle);
-					inputSignal->setCriticalPath(0.0);
-
-					//update the lifespan of inputSignal's predecessors
-					for(unsigned int i=0; i<inputSignal->predecessors()->size(); i++)
+				//determine the maximum cycle
+				for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
+					if(targetSignal->parentOp()->getIOListSignal(i)->getCycle() > maxCycle)
+						maxCycle = targetSignal->parentOp()->getIOListSignal(i)->getCycle();
+				//set all the inputs of the parent operator of targetSignal to the maximum cycle
+				for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
+					if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in) &&
+						(targetSignal->parentOp()->getIOListSignal(i)->getCycle() < maxCycle))
 					{
-						//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
-						if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
-								(inputSignal->predecessor(i)->type() == Signal::out))
-							continue;
-						inputSignal->predecessor(i)->updateLifeSpan(inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
+						//if we have to delay the input, the we need to reset
+						//	the critical path, as well
+						//else, there is nothing else to do
+						Signal *inputSignal = targetSignal->parentOp()->getIOListSignal(i);
+
+						inputSignal->setCycle(maxCycle);
+						inputSignal->setCriticalPath(0.0);
+
+						//update the lifespan of inputSignal's predecessors
+						for(unsigned int i=0; i<inputSignal->predecessors()->size(); i++)
+						{
+							//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+							if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
+									(inputSignal->predecessor(i)->type() == Signal::out))
+								continue;
+							inputSignal->predecessor(i)->updateLifeSpan(inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
+						}
 					}
-				}
+			}
 
 			//start the scheduling of the parent operator of targetSignal
 			targetSignal->parentOp()->startScheduling();
