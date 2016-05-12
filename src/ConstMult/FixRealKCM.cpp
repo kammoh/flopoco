@@ -31,7 +31,7 @@ using namespace std;
 namespace flopoco{
 
 	/**
-	* @brief init : all operator initialisation stuff goes here
+	* @brief init : all operator initialization stuff goes here
 	*/
 	void FixRealKCM::init()
 	{
@@ -224,7 +224,7 @@ namespace flopoco{
 		int currentOffset;
 
 		//only generate the architecture if the product with the constant
-		//	is completely out of the range of interest
+		//	is inside the range of interest
 		nbTables = 0;
 		currentOffset = msbIn+msbC;
 		if(currentOffset >= lsbOut)
@@ -243,8 +243,11 @@ namespace flopoco{
 			if(nbTables > 0)
 			{
 				//the total number of bits might be larger than the width of the number, so reduce it if necessary
-				diSizeVector[diSizeVector.size()-1] -= ((lsbIn+msbC)-currentOffset);
-				currentOffset += ((lsbIn+msbC)-currentOffset);
+				if(currentOffset < stopLimit)
+				{
+					diSizeVector[diSizeVector.size()-1] -= (stopLimit-currentOffset);
+					currentOffset += (stopLimit-currentOffset);
+				}
 				//if the last table only has a single bit, eliminate it and increase the second to last table's size
 				if(diSizeVector[diSizeVector.size()-1] == 1)
 				{
@@ -256,7 +259,7 @@ namespace flopoco{
 					diSizeVector.pop_back();
 				} else if(diSizeVector[diSizeVector.size()-1] <= 0)
 				{
-					//the last table ended up being empty, so eliminate it
+					//the last table ended up being negative, so eliminate it
 					int tmp = diSizeVector.back();
 					diSizeVector.pop_back();
 					diSizeVector[diSizeVector.size()-1] += tmp;
