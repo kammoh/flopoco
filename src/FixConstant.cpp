@@ -117,19 +117,22 @@ namespace flopoco{
 	}
 
 	void FixConstant::changeMSB(int newMSB){
+		if(newMSB<MSB){
+			// TODO: check that the number fits its new size, and bork otherwise.
+			throw(string("FixConstant::changeMSB: TODO : The case when the size is reduced is not yet implemented (rounding to do, etc)"));
+		}
 		MSB=newMSB;
 		width = (MSB-LSB+1);
-		if(newMSB>=MSB){
-			// Nothing to do! the new size includes the old one
-		}
-		else{
-			// TODO: check that the number fits its new size, and bork otherwise.
-			throw("FixConstant::changeMSB: TODO");
-		}
 	}
 
 	void FixConstant::changeLSB(int newLSB){
-		throw("FixConstant::changeLSB: TODO");
+		if(newLSB>LSB){
+			// TODO: check that the number fits its new size, and bork otherwise.
+			throw(string("FixConstant::changeLSB: TODO: The case when the size is reduced is not yet implemented (rounding to do, etc)"));
+		}
+
+		LSB = newLSB;
+		width = MSB - LSB +1;
 	}
 
 	void  FixConstant::addRoundBit(int weight){
@@ -143,9 +146,15 @@ namespace flopoco{
 		}
 		else {
 			if(weight<LSB) {
+#if 0				
 				ostringstream e;
 				e << "in FixConstant::addRoundBit, weight of the round bit is "<< weight << ", lower than LSB=" << LSB;
 				throw e.str();
+#else
+				LSB=weight;
+				width=MSB-LSB+1;
+				// no need to change the fpvalue
+#endif
 			}
 			mpfr_t b,s;
 			mpfr_init2(b,16);

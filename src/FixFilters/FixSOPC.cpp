@@ -355,7 +355,7 @@ namespace flopoco{
 											 "",
 											 "lsbIn(int): input's last significant bit;\
                         lsbOut(int): output's last significant bit;\
-                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=1.234567890123:sin(3*pi/8);",
+                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "",
 											 FixSOPC::parseArguments
 											 ) ;

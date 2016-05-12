@@ -13,6 +13,13 @@
 
   */
 
+/* 
+
+Error analysis: see FixFunctionByPiecewisePoly.cpp
+
+
+*/
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -27,7 +34,7 @@
 
 
 #include "FixFunctionBySimplePoly.hpp"
-#include "IntMult/FixMultAdd.hpp"
+#include "FixHornerEvaluator.hpp"
 
 using namespace std;
 
@@ -64,20 +71,31 @@ namespace flopoco{
 			vhdl << tab << declareFixPoint("Xs", true, 0, lsbIn) << " <= signed('0' & X);  -- sign extension of X" << endl;
 
 		// Polynomial approximation
-		double targetApproxError = pow(2,lsbOut-1);
+		double targetApproxError = exp2(lsbOut-2);
 		poly = new BasicPolyApprox(f, targetApproxError, -1);
 		double approxErrorBound = poly->approxErrorBound;
 
 		int degree = poly->degree;
-		if(msbOut<poly->coeff[0]->MSB) {
+		if(msbOut < poly->coeff[0]->MSB) {
 			REPORT(INFO, "user-provided msbO smaller that the MSB of the constant coefficient, I am worried it won't work");
 		}
 		vhdl << tab << "-- With the following polynomial, approx error bound is " << approxErrorBound << " ("<< log2(approxErrorBound) << " bits)" << endl;
 
 		// Adding the round bit to the degree-0 coeff
-		REPORT(DEBUG, "   A0 before adding round bit: " <<  poly->coeff[0]->report());
+		int oldLSB0 = poly->coeff[0]->LSB;
 		poly->coeff[0]->addRoundBit(lsbOut-1);
-		REPORT(DEBUG, "   A0 after adding round bit: " <<  poly->coeff[0]->report());
+		// The following is probably dead code. It was a fix for cases
+		// where BasicPolyApprox found LSB=lsbOut, hence the round bit is outside of MSB[0]..LSB
+		// In this case recompute the poly, it would give better approx error 
+		if(oldLSB0 != poly->coeff[0]->LSB) {
+			// deliberately at info level, I want to see if it happens
+			REPORT(INFO, "   addRoundBit has changed the LSB to " << poly->coeff[0]->LSB << ", recomputing the coefficients");
+			for(int i=0; i<=degree; i++) {
+				REPORT(DEBUG, poly->coeff[i]->report());
+			}
+			poly = new BasicPolyApprox(f->fS, degree, poly->coeff[0]->LSB, signedIn);
+		}
+
 
 		for(int i=0; i<=degree; i++) {
 			coeffMSB.push_back(poly->coeff[i]->MSB);
@@ -97,49 +115,25 @@ namespace flopoco{
 			vhdl << endl;
 		}
 
-		// TODO: error analysis for evaluation.
-		// The following comment is no longer true
-		// Here we assume all the coefficients already include the proper number of guard bits
-		int sigmaMSB=coeffMSB[degree];
-		int sigmaLSB=coeffLSB[degree];
-		vhdl << tab << declareFixPoint(join("Sigma", degree), true, sigmaMSB, sigmaLSB)
-				 << " <= " << join("A", degree)  << ";" << endl;
 
-		for(int i=degree-1; i>=0; i--) {
-
-			int xTruncLSB = max(lsbIn, sigmaLSB-sigmaMSB);
-
-			int pMSB=sigmaMSB+0 + 1;
-			sigmaMSB = max(pMSB-1, coeffMSB[i]) +1; // +1 to absorb addition overflow
-			sigmaLSB = coeffLSB[i];
-
-			resizeFixPoint(join("XsTrunc", i), "Xs", 0, xTruncLSB);
-
-			if(target->plainVHDL()) {				// No pipelining here
-				vhdl << tab << declareFixPoint(join("P", i), true, pMSB,  sigmaLSB  + xTruncLSB /*LSB*/)
-						 <<  " <= "<< join("XsTrunc", i) <<" * Sigma" << i+1 << ";" << endl;
-				// However the bit of weight pMSB is a 0. We want to keep the bits from  pMSB-1
-				resizeFixPoint(join("Ptrunc", i), join("P", i), sigmaMSB, sigmaLSB);
-				resizeFixPoint(join("Aext", i), join("A", i), sigmaMSB, sigmaLSB);
-
-				vhdl << tab << declareFixPoint(join("Sigma", i), true, sigmaMSB, sigmaLSB)   << " <= " << join("Aext", i) << " + " << join("Ptrunc", i) << ";" << endl;
+		// In principle we should compute the rounding error budget and pass it to FixHornerEval
+		// REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
+		
+		FixHornerEvaluator* h = new  FixHornerEvaluator(target, 
+																										lsbIn,
+																										msbOut,
+																										lsbOut,
+																										degree, 
+																										coeffMSB, 
+																										poly->coeff[0]->LSB // it is the smaller LSB
+																										);
+		addSubComponent(h);
+		inPortMap(h, "X", "Xs");
+		for(int i=0; i<=degree; i++) {
+			inPortMap(h, join("A",i), join("A",i));
 		}
-
-			else { // using FixMultAdd
-				REPORT(DETAILED, " i=" << i);
-				FixMultAdd::newComponentAndInstance(this,
-																						join("Step",i),     // instance name
-																						join("XsTrunc",i),  // x
-																						join("Sigma", i+1), // y
-																						join("A", i),       // a
-																						join("Sigma", i),   // result
-																						sigmaMSB, sigmaLSB  // outMSB, outLSB
-																						);
-				syncCycleFromSignal(join("Sigma", i));
-			}
-		}
-
-		resizeFixPoint("Ys", "Sigma0",  msbOut, lsbOut);
+		outPortMap(h, "R", "Ys");
+		vhdl << instance(h, "horner") << endl;
 
 		vhdl << tab << "Y <= " << "std_logic_vector(Ys);" << endl;
 	}

@@ -218,7 +218,7 @@ namespace flopoco {
 											 "",
 											 "lsbInOut(int): integer size in bits;\
                         rescale(bool)=false: If true, divides all coefficient by 1/sum(|coeff|);\
-                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=1.234567890123:sin(3*pi/8)",
+                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
 											 FixFIR::parseArguments
 											 ) ;

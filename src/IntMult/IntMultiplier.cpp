@@ -92,6 +92,8 @@ namespace flopoco {
 #define getCriticalPath parentOp->getCriticalPath
 #define setCycle parentOp->setCycle
 #define oplist parentOp->getOpListR()
+#define addSubComponent parentOp->addSubComponent
+#define	addToGlobalOpList parentOp->addToGlobalOpList
 
 
 	bool IntMultiplier::tabulatedMultiplierP(Target* target, int wX, int wY){
@@ -348,7 +350,7 @@ namespace flopoco {
 		IntMultiplier* f = new IntMultiplier(parentOp->getTarget(),
 																				 wX, wY, wOut, signedIO
 																				 );
-		parentOp->addSubComponent(f);
+		addSubComponent(f);
 
 		inPortMap(f, "X", xSignalName); // without op-> because of the #defines. This is dirty code
 		inPortMap(f, "Y", ySignalName);
@@ -1002,7 +1004,6 @@ namespace flopoco {
 
 				tSS = new SmallMultTable( target, dx, dy, dx+dy, false, true, true );
 				addToGlobalOpList(tSS);
-
 			}
 
 			setCycle(0); // TODO FIXME for the virtual multiplier case where inputs can arrive later
