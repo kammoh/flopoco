@@ -83,6 +83,7 @@ namespace flopoco
 			}();
 
 
+	// Currently used only in buildAutoComplete, see comment around UIOptions
 	const vector<option_t> UserInterface::options = []()->vector<option_t>{
 				vector<option_t> v;	
 				vector<string> values;
@@ -92,9 +93,10 @@ namespace flopoco
 				values.push_back(std::to_string(0));
 				values.push_back(std::to_string(1));
 				v.push_back(option_t("pipeline", values));
+				v.push_back(option_t("clockEnable", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
-				v.push_back(option_t("useHardMult", values));
+				v.push_back(option_t("", values));
 
 				//free options, using an empty vector of values 
 				values.clear();
@@ -114,7 +116,9 @@ namespace flopoco
 				v.push_back(option_t("target", known_fpgas));
 				return v;
 			}();		
-		
+
+
+	
 	void UserInterface::main(int argc, char* argv[]) {
 		try {
 			sollya_lib_init();
@@ -135,18 +139,19 @@ namespace flopoco
 
 
 	void UserInterface::parseGenericOptions(vector<string> &args) {
+		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
 		parseString(args, "name", &entityName, true); // not sticky: will be used, and reset, after the operator parser
 		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
+		parseBoolean(args, "pipeline", &pipeline, true );
 		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
-		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
-		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
-		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "plainVHDL", &plainVHDL, true);
+		parseBoolean(args, "clockEnable", &clockEnable, true);
+		parseBoolean(args, "useHardMult", &useHardMult, true);
+		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
 		parseBoolean(args, "generateFigures", &generateFigures, true);
 		parseBoolean(args, "floorplanning", &floorplanning, true);
-		parseBoolean(args, "reDebug", &reDebug, true );
-		parseBoolean(args, "pipeline", &pipeline, true );
+		parseBoolean(args, "reDebug", &reDebug, true ); // resource estimation debug -- hidden and undocumented for now 
 		//	parseBoolean(args, "", &  );
 	}
 
@@ -369,6 +374,7 @@ namespace flopoco
 					throw("ERROR: unknown target: " + targetFPGA);
 					}
 				target->setPipelined(pipeline);
+				target->setClockEnable(clockEnable);
 				target->setFrequency(1e6*targetFrequencyMHz);
 				target->setUseHardMultipliers(useHardMult);
 				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
@@ -601,6 +607,7 @@ namespace flopoco
 		s << "  Both options and parameters are lists of " << COLOR_BOLD << "name=value" << COLOR_NORMAL << " pairs (with case-insensitive name)" << endl;
 		s << COLOR_BLUE_NORMAL<< "Example: " << COLOR_NORMAL << "flopoco  frequency=300 target=Virtex5   FPExp  wE=8 wF=23 name=SinglePrecisionFPExp" << endl;
 		s << "Generic options include:" << endl;
+		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "name" << COLOR_NORMAL << "=<string>:        override the the default entity name "<<endl;
 		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:  override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
 		s << "  " << COLOR_BOLD << "pipeline" << COLOR_NORMAL << "=<0|1>:       pipelined operator, or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
@@ -608,10 +615,10 @@ namespace flopoco
 		s << "     Supported targets: Stratix2...5, Virtex2...6, Cyclone2...5,Spartan3"<<endl;
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
+		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:    add a clock enable signals to all pipeline registers. Default no because it prevents the use of SRL" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
-		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "Sticky options apply to the rest of the command line, unless changed again" <<endl;
 		s <<endl;
 		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;

@@ -28,7 +28,24 @@ namespace flopoco
 	class OperatorFactory;
 	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
 
-	typedef pair<string, vector<string>> option_t;
+
+	/* There is a bit of refactoring to do: all the pair=values CLI options should be encapsulated in something like
+	
+	class UIOption
+	{
+	public:
+		string name;
+		vector<string> type;
+		vector<string> possibleValues;
+		vector<string> description;
+		vector<string> defaultValue;
+	}
+
+	Currently we have this inside the operator factory for the operator parameters, but global options are managed completely differently.
+	*/
+
+	// so this would disappear
+	typedef pair<string, vector<string>> option_t; 
 
 	
 	/** This is the class that manages a list of OperatorFactories, and the overall command line and documentation.

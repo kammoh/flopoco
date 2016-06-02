@@ -26,6 +26,7 @@ TODO file for FloPoCo
 
 * Janitoring
 *** TargetFactory
+*** pair=value parsing in UserInterface
 *** uniformize name construction 
 using setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
 
