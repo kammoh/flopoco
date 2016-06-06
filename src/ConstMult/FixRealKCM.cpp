@@ -84,10 +84,12 @@ namespace flopoco{
 
 		// build the name
 		ostringstream name; 
-		name <<"FixRealKCM_" << vhdlize(lsbIn)  << "_" << vhdlize(msbIn) << 
-			"_" << vhdlize(lsbOut) << "_" << vhdlize(constant)  << 
-			(signedInput  ?"_signed" : "_unsigned");
-		setName(name.str());
+		name <<"FixRealKCM_"  << vhdlize(msbIn)
+				 << "_"  << vhdlize(lsbIn)
+				 <<	"_" << vhdlize(lsbOut)
+				 << "_" << vhdlize(constant)
+				 << (signedInput  ?"_signed" : "_unsigned");
+		setNameWithFreqAndUID(name.str());
 
 		//compute the logarithm only of the constants
 		mpfr_t log2C;
@@ -220,7 +222,6 @@ namespace flopoco{
 		int optimalTableInputWidth = target->lutInputs()-1;
 		int* diSize = nullptr;		
 		int nbTables;
-		int wOut = msbC + msbIn - lsbOut + 1;
 		int currentOffset;
 
 		//only generate the architecture if the product with the constant
