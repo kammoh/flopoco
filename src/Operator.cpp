@@ -2495,7 +2495,7 @@ namespace flopoco{
 		bool unknownLHSName = false, unknownRHSName = false;
 
 		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
-
+		REPORT(FULL, "vhdl stream before parse2(): " << endl << vhdl.str());
 		//reset the new vhdl code buffer
 		newStr.str("");
 

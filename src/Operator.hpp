@@ -1278,46 +1278,6 @@ public:
 	void extractSignalDependences();
 
 
-	/**
-	 * SCHEDULING
-	 *
-	 * Flow: start with the inputs of the circuit. The inputs are all synchronized
-	 * 		at the same cycle, and their critical path might vary. Each input
-	 * 		computes its timing and then starts the timing of its children.
-	 * 		When the timing is called on an internal node (i.e. not an input),
-	 * 		the node first checks if the node has already been scheduled. If yes,
-	 * 		then stop the timing procedures, as there is nothing else to do (this
-	 * 		might also be a backward loop).
-	 * 		Then, check if all of the predecessors have been scheduled.
-	 * 		If yes, then the node schedules itself, according to the timing of
-	 * 		its parents and to its own constraints, and then launches the timing
-	 * 		of its own children.
-	 * 		If not, then the timing procedures are stopped. This can be done
-	 * 		because it means that the node depends on another node that hasn't
-	 * 		yet been scheduled. When the predecessor will finally be scheduled,
-	 * 		the launch of the timing for the respective node will also be triggered.
-	 *
-	 * Backward loops: When dealing with a loop, the timing procedures will come
-	 * 		to a halt inside the loop, as they will detect that the node which has
-	 * 		data coming from the backward edge has already been scheduled, so there
-	 * 		is nothing else left to do.
-	 *
-	 * Sub-components: start by launching the scheduling procedures on the signals
-	 * 		of the operator.
-	 * 		We first schedule the signal, and then detect whether the signal and
-	 * 		its parent belong to the same operator (meaning the signal belongs to
-	 * 		a sub-component of the parent operator of the respective signal's parent).
-	 * 		If this is not an input signal, we start scheduling the signal's children.
-	 * 		If this is an input signal, we then check if all of the other inputs of the
-	 * 		respective sub-component have also been scheduled. If not, we can just
-	 * 		stop the current call. If yes, then we synchronize all of the inputs to
-	 * 		the same cycle, and then launch the scheduling procedure for the
-	 * 		sub-component.
-	 * 		When encountering an output port, the scheduling procedures should
-	 * 		treat it as a regular signal: set its timing and launch the scheduling
-	 * 		of its children.
-	 */
-
 
 	/**
 	 * Start the scheduling for this operator.
