@@ -98,18 +98,49 @@ namespace flopoco{
 		msbC = mpfr_get_si(log2C, GMP_RNDU);
 		mpfr_clears(log2C, NULL);
 
+		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
+		thisConstantRoundsToZero = false;
+		if(mpfr_zero_p(mpC) != 0){
+			thisConstantRoundsToZero = true;
+			msbOut=lsbOut; // let us return a result on one bit, why not.
+			wOut = 1;
+			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+			return;
+		}
+
+		// A few sanity checks related to the magnitude of the constant
+		int lsbInUseful = lsbOut -1 -msbC; // input bits with lower weights than that have no inpact on the output
+
+		if(msbIn<lsbInUseful){
+			thisConstantRoundsToZero = true;
+			msbOut=lsbOut; // let us return a result on one bit, why not.
+			wOut = 1;
+			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
+			return;
+		}
+
+		// Now we can discuss MSBs
 		msbOut = msbC + msbIn;
 		if(!signedInput && negativeConstant)
 			msbOut++; //Result would be signed
 
 		wOut = msbOut - lsbOut +1;
 
+		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have no impact on the output
+		lsbInOrig=lsbIn;
+		if(lsbIn<lsbInUseful) { // some of the user-provided input bits would have no impact on the output
+			lsbIn=lsbInUseful;   // therefore ignore them.
+			REPORT(DETAILED, "lsbIn="<<lsbInOrig << " but for such a small constant, bits of weight lower than " << lsbIn << " will have no impact on the output. Ignoring them.")  ;
+		}
+			
 		REPORT(DEBUG, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
-				msbIn << "," << lsbIn << ")   wIn=" << wIn << 
+					 msbIn << "," << lsbIn << ")    lsbInOrig=" << lsbInOrig << "    wIn=" << wIn << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
 				")   wOut=" << wOut
 		);
 
+
+#if 1
 		g = neededGuardBits(
 				getTarget(), 
 				wIn, 
@@ -118,6 +149,10 @@ namespace flopoco{
 				lsbIn, 
 				lsbOut
 		);
+#else
+
+		computeTableParameters();
+#endif
 	}
 
 
@@ -222,21 +257,20 @@ namespace flopoco{
 		int optimalTableInputWidth = target->lutInputs()-1;
 		int* diSize = nullptr;		
 		int nbTables;
-		int currentOffset;
+		int currentTableMSB;
 
-		//only generate the architecture if the product with the constant
-		//	is inside the range of interest
+		//only generate the architecture if the product with the constant	is inside the range of interest
 		nbTables = 0;
-		currentOffset = msbIn+msbC;
-		if(currentOffset >= lsbOut)
+		currentTableMSB = msbIn+msbC;
+		if(currentTableMSB >= lsbOut)
 		{
 			vector<int> diSizeVector;
 			int stopLimit = lsbOut;
 
 			//while the bits in a new table are not outside the target accuracy, add a new table
-			while((currentOffset >= stopLimit) && (currentOffset-msbC >= lsbIn))
+			while((currentTableMSB >= stopLimit) && (currentTableMSB-msbC >= lsbIn))
 			{
-				currentOffset -= optimalTableInputWidth;
+				currentTableMSB -= optimalTableInputWidth;
 				diSizeVector.push_back(optimalTableInputWidth);
 				nbTables++;
 			}
@@ -244,17 +278,18 @@ namespace flopoco{
 			if(nbTables > 0)
 			{
 				//the total number of bits might be larger than the width of the number, so reduce it if necessary
-				if(currentOffset < stopLimit)
+				if(currentTableMSB < stopLimit)
 				{
-					diSizeVector[diSizeVector.size()-1] -= (stopLimit-currentOffset);
-					currentOffset += (stopLimit-currentOffset);
+					diSizeVector[diSizeVector.size()-1] -= (stopLimit-currentTableMSB);
+					currentTableMSB += (stopLimit-currentTableMSB);
 				}
 				//if the last table only has a single bit, eliminate it and increase the second to last table's size
 				if(diSizeVector[diSizeVector.size()-1] == 1)
 				{
 					diSizeVector.pop_back();
 					diSizeVector[diSizeVector.size()-1] += 1;
-				} else if(diSizeVector[diSizeVector.size()-1] == 0)
+				}
+				else if(diSizeVector[diSizeVector.size()-1] == 0)
 				{
 					//the last table ended up being empty, so eliminate it
 					diSizeVector.pop_back();
@@ -264,20 +299,21 @@ namespace flopoco{
 					int tmp = diSizeVector.back();
 					diSizeVector.pop_back();
 					diSizeVector[diSizeVector.size()-1] += tmp;
-					currentOffset += tmp;
+					currentTableMSB += tmp;
 				}
 				//if the input is truncated, we need two extra bits to address the last table
-				if(currentOffset-msbC > lsbIn+1)
+				if(currentTableMSB-msbC > lsbIn+1)
 					diSizeVector[diSizeVector.size()-1] += 2;
-				else if(currentOffset-msbC > lsbIn)
+				else if(currentTableMSB-msbC > lsbIn)
 					//if there's only one remaining bit
 					diSizeVector[diSizeVector.size()-1] += 1;
 
 				//convert the vector into an array, for output
 				nbTables = diSizeVector.size();
 				diSize = new int[nbTables];
-				for(int i=0; i<nbTables; i++)
+				for(int i=0; i<nbTables; i++){
 					diSize[i] = diSizeVector[i];
+				}
 			}
 		}
 
@@ -375,10 +411,9 @@ namespace flopoco{
 		addOutput("R", wOut);
 
 		//Zero constant
-		if(mpfr_zero_p(mpC) != 0)
+		if(thisConstantRoundsToZero)
 		{
-			vhdl << tab << "R" << range(wOut - 1, 0) << " <= " << zg(wOut, 0) <<
-					";" << endl;
+			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
 		}
 		else
 		{ 	//NonZero constant
@@ -440,6 +475,7 @@ namespace flopoco{
 	}
 	
 	
+
 	//operator incorporated into a global compression
 	//	for use as part of a bigger operator
 	FixRealKCM::FixRealKCM(Operator* parentOp, Target* target, Signal* multiplicandX, bool signedInput_, int msbIn_, int lsbIn_,
@@ -460,8 +496,8 @@ namespace flopoco{
 
 		//If constant is not zero or a power of two, then create tables and
 		// connect them to bitHeap
-		if	(	mpfr_zero_p(mpC) == 0 && 
-				!handleSpecialConstant(parentOp, multiplicandX->getName())
+		if	(	! thisConstantRoundsToZero && 
+					!handleSpecialConstant(parentOp, multiplicandX->getName())
 		)
 		{
 			// First set up all the sizes
@@ -502,9 +538,11 @@ namespace flopoco{
 		int* doSize = new int[17*42];
 
 		//Useful bit entry width (we doesn't care of too precise bits)
-		int effectiveWin;
-		int i;
-		for(effectiveWin = i = 0; i < nbOfTables ; effectiveWin += diSize[i++]);
+		int effectiveWin=0;
+		for(int i = 0; i < nbOfTables ; i++){
+			//			cout << "diSize[" << i << "] = " << diSize[i] << endl;
+			effectiveWin += diSize[i];
+		};
 
 		//first split the input X into digits having lutWidth bits -> this
 		//is as generic as it gets :)
@@ -560,6 +598,8 @@ namespace flopoco{
 		return t;
 
 	}
+
+
 
 	// To have MPFR work in fix point, we perform the multiplication in very
 	// large precision using RN, and the RU and RD are done only when converting
@@ -625,6 +665,8 @@ namespace flopoco{
 		// clean up
 		mpfr_clears(mpX, mpR, NULL);
 	}
+
+
 
 	int FixRealKCM::neededGuardBits(Target* target, int wIn, double targetUlpError, string constant, int lsbIn, int lsbOut)
 	{

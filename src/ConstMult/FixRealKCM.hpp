@@ -133,6 +133,7 @@ namespace flopoco{
 		int msbOut;
 		int lsbOut;
 		int wOut;
+		int lsbInOrig; // for really small constants, we will use fewer bits of the input
 		string constant;
 		float targetUlpError;
 		mpfr_t mpC;
@@ -140,6 +141,7 @@ namespace flopoco{
 		int msbC;
 		int g;
 		bool negativeConstant;
+		bool thisConstantRoundsToZero;
 
 		/* The heap of weighted bits that will be used to do the additions */
 		BitHeap*	bitHeap;    	
@@ -150,6 +152,11 @@ namespace flopoco{
 
 		
 		private:
+
+		vector<int> m; /**< MSB of chunk i; m[0] == msbIn */
+		vector<int> l; /**< LSB of chunk i; l[numberOfTables-1] = lsbIn, or maybe >= lsbIn if not all the input bits are used due to a small constant */
+		
+		
 		static int guardBitsFromNumberOfTables(
 					int nbTables,
 					double targetUlpError
