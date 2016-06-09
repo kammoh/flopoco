@@ -9,7 +9,7 @@
   
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
-  2008-2011.
+  2008-2017.
   All rights reserved.
 
  */
@@ -40,7 +40,7 @@ namespace flopoco{
 		srcFileName="FPLargeAcc";
 		// You probably want to remove the following line to have the warnings come back
 		//if you modify this operator
-		setHasDelay1Feedbacks(); 
+		// setHasDelay1Feedbacks(); 
 
 		if (!forDotProd)
 			wFY=wFX;

@@ -25,13 +25,12 @@ TODO file for FloPoCo
 ** clean up Target
 
 * Janitoring
-*** TargetFactory
-*** pair=value parsing in UserInterface
 *** uniformize name construction 
 using setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
 
+*** TargetFactory
+*** pair=value parsing in UserInterface
 *** add more  newComponentAndInstance() on the model of FixMultAdd
-
 *** rename pow2, intpow2 etc as exp2
 *** doxygen: exclude unplugged operators
 * Bit heap and multipliers

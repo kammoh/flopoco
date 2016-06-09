@@ -173,6 +173,8 @@ namespace flopoco{
 		{
 			int wInKCM = msbIn[i]-lsbIn[i]+1;	//p bits + 1 sign bit
 
+#if 0 // TODO Fix it with the new interface to FixRealKCM
+			
 			int temp = FixRealKCM::neededGuardBits(
 					getTarget(), 
 					wInKCM, 
@@ -182,9 +184,10 @@ namespace flopoco{
 					//lsbOut
 					lsbOutKCM
 			);
-
+		 
 			if(temp > guardBitsKCM)
 				guardBitsKCM = temp;
+#endif
 		}
 
 		sumSize += guardBitsKCM;
@@ -197,6 +200,7 @@ namespace flopoco{
 
 			for (int i=0; i<n; i++)	{
 				// Multiplication: instantiating a KCM object. It will add bits also to the right of lsbOutKCM
+#if 0 // TODO Fix it with the new interface to FixRealKCM
 				new FixRealKCM(
 						this,                         // the enveloping operator
 						getTarget(),                  // the target FPGA
@@ -209,6 +213,7 @@ namespace flopoco{
 						bitHeap,                      // pass the reference to the bitheap that will accumulate the intermediary products
 						lsbOutKCM - guardBitsKCM
 				);
+#endif
 			}
 
 			//add rounding bit if necessary

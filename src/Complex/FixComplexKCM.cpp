@@ -147,6 +147,7 @@ namespace flopoco {
 		}
 		else
 		{
+#if 0 // TODO restore with new interface
 			int kcmImGuardBits = FixRealKCM::neededGuardBits(
 					target,
 					input_width,
@@ -173,7 +174,10 @@ namespace flopoco {
 					lsb_in,
 					lsb_out - guard_bits
 				);
+#else // just so that it compiles
+						int kcmImGuardBits, kcmMImGuardBits,kcmReGuardBits;
 
+#endif
 			// basic message
 			REPORT(INFO,"Declaration of FixComplexKCM\n");
 
@@ -193,6 +197,7 @@ namespace flopoco {
 			bitheapIm->addConstantOneBit(0);
 			bitheapRe->addConstantOneBit(0);
 
+#if 0 // TODO restore with new interface
 			//---- Real part computation ------------------------------------------
 			new FixRealKCM(
 					this,
@@ -247,7 +252,7 @@ namespace flopoco {
 					bitheapIm,
 					lsb_out - guard_bits - guardBits_im
 				);
-
+#endif
 			//BitHeap management
 			bitheapIm->generateCompressorVHDL();
 			bitheapRe->generateCompressorVHDL();

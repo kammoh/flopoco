@@ -1,3 +1,4 @@
+@
 # FPSquare wE wFin wFout
 
 flopoco FPSquare 8 23 23

@@ -137,6 +137,7 @@ namespace flopoco {
 		int guardBitsKCM_A = 0;
 		int guardBitsKCM_B = 0;
 		for (int i=0; i<m; i++){
+#if 0 // TODO Fix it with the new interface to FixRealKCM
 			int gbtmpA = FixRealKCM::neededGuardBits(
 					target, 
 					wInKCM_A, 
@@ -149,9 +150,12 @@ namespace flopoco {
 			{
 				guardBitsKCM_A = gbtmpA;
 			}
+#endif
 		}
 
 		for (int i=0; i<n; i++){
+#if 0 // TODO Fix it with the new interface to FixRealKCM
+
 			int gbtmpB = FixRealKCM::neededGuardBits(
 					target, 
 					wInKCM_B, 
@@ -164,6 +168,7 @@ namespace flopoco {
 			{
 				guardBitsKCM_B = gbtmpB;
 			}
+#endif
 		}
 		int guardBitsKCM = max(guardBitsKCM_A, guardBitsKCM_B);
 
@@ -222,6 +227,7 @@ namespace flopoco {
 				// TODO possible mem leak here? The pointer is lost, do we keep
 				// pointers to the subtables?  Multiplication: instantiating a
 				// KCM object. It will add bits also to the right of lsbOutKCM
+#if 0 // TODO Fix it with the new interface to FixRealKCM
 				new FixRealKCM(this,				// the envelopping operator
 					target, 	// the target FPGA
 					getSignalByName(join("Yb",i)),
@@ -233,12 +239,14 @@ namespace flopoco {
 					bitHeapB,	// pass the reference to the bitheap that will accumulate the intermediary products
 					lsbOutKCM - guardBitsKCM_B
 				);
+#endif
 			}
 
 
 			for (int i=0; i<m; i++)
 			{
 				// Multiplication: instantiating a KCM object. It will add bits also to the right of lsbOutKCM
+#if 0 // TODO Fix it with the new interface to FixRealKCM
 				new FixRealKCM(this,				// the envelopping operator
 						target, 	// the target FPGA
 						getSignalByName(join("Ya",i)),
@@ -250,6 +258,7 @@ namespace flopoco {
 						bitHeapA,		// pass the reference to the bitheap that will accumulate the intermediary products
 						lsbOutKCM - guardBitsKCM_A
 					);
+#endif
 			}
 
 
