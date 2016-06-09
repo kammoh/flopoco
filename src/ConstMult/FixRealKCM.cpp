@@ -1,3 +1,4 @@
+// TODO: repair FixSOPC, FixIIR, FixComplexKCM
 /*
  * A faithful multiplier by a real constant, using a variation of the KCM method
  *
@@ -35,6 +36,8 @@ namespace flopoco{
 	/**
 	* @brief init : all operator initialization stuff goes here
 	*/
+	// Init computes the table splitting, because it is independent of g.
+	// It is, however, dependent on lsbOut: for "small constants" we consider lsbOut to decide which bits of the input will be used. 
 	void FixRealKCM::init()
 	{
 		useNumericStd();
@@ -106,6 +109,7 @@ namespace flopoco{
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			wOut = 1;
+			errorInUlps=0;
 			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
 			return;
 		}
@@ -117,6 +121,7 @@ namespace flopoco{
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			wOut = 1;
+			errorInUlps=0.5;// TODO this is an overestimation
 			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
 			return;
 		}
@@ -137,9 +142,21 @@ namespace flopoco{
 
 		// Finally, check if the constant is a power of two -- obvious optimization there
 		constantIsPowerOfTwo = (mpfr_cmp_ui_2exp(absC, 1, msbC) == 0);
-		if(constantIsPowerOfTwo)
-			REPORT(DEBUG, "Constant is a power of two. Simple shift will be used instead of tables");
-			
+		if(constantIsPowerOfTwo) {
+			// What is the error in this case ? 0 if no truncation, 1 if truncation
+			// We decide considering lsbOut only. It is an overestimation (therefore it is OK):
+			// maybe due to guard bits there will be no truncation and we assumed there would be one...  
+			if(lsbInOrig+msbC<lsbOut) {
+				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
+				errorInUlps=1;
+				return;
+			}
+			else {
+				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
+				errorInUlps=0;
+				return;
+			}
+		}
 
 		
 		REPORT(DEBUG, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
@@ -149,8 +166,46 @@ namespace flopoco{
 		);
 
 		// Compute the splitting of the input bits.
-		int optimalTableInputWidth = getTarget()->lutInputs()-1;
+		// Ordering: Table 0 is the one that inputs the MSBs of the input 
+		// Let us call l the native LUT size (discounting the MUXes internal to logic clusters that enable to assemble them as larger LUTs).
+		// Asymptotically (for large wIn), it is better to split the input in l-bit slices than (l+1)-bit slices, even if we have these muxes for free:
+		// costs (in LUTs) are roundUp(wIn/l) versus 2*roundUp(wIn/(l+1))
+		// Exception: when one of the tables is a 1-bit one, having it as a separate table will cost one LUT and one addition more,
+		// whereas integrating it in the previous table costs one more LUT and one more MUX (the latter being for free) 
+		// Fact: the tables which inputs MSBs have larger outputs, hence cost more.
+		// Therefore, the table that will have this double LUT cost should be the rightmost one.
+
 		
+		int optimalTableInputWidth = getTarget()->lutInputs();
+		//		int wIn = msbIn-lsbIn+1;
+
+		// first do something naive, then we'll optimize it.
+		numberOfTables=0;
+		int tableInMSB= msbIn; 
+		int tableInLSB = msbIn-(optimalTableInputWidth-1);
+		while (tableInLSB>lsbIn) {
+			m.push_back(tableInMSB);
+			l.push_back(tableInLSB);
+			tableInMSB -= optimalTableInputWidth ;
+			tableInLSB -= optimalTableInputWidth ;
+			numberOfTables++;
+		}
+		tableInLSB=lsbIn;
+		
+		// For the last table we just check if is not of size 1
+		if(tableInLSB==tableInMSB && numberOfTables>0) {
+			// better enlarge the previous table
+			l[numberOfTables-1] --;
+		}
+		else { // last table is normal
+			m.push_back(tableInMSB);
+			l.push_back(tableInLSB);
+			numberOfTables++;			
+		}
+		for (int i=0; i<numberOfTables; i++) {
+			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] );
+		}
+
 	}
 
 

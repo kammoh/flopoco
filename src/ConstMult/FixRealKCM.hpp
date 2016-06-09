@@ -120,7 +120,7 @@ namespace flopoco{
 		bool negativeConstant;
 		bool constantRoundsToZero;
 		bool constantIsPowerOfTwo;
-
+		float errorInUlps;
 
 		/* The heap of weighted bits that will be used to do the additions */
 		BitHeap*	bitHeap;    	
