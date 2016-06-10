@@ -83,11 +83,8 @@ namespace flopoco{
 		ostringstream o;
 
 		o << (type?"FPPowr_":"FPPow_") << wE << "_" << wF << "_";
-		if(target->isPipelined())
-			o << target->frequencyMHz() ;
-		else
-			o << "comb";
-		setName(o.str());
+
+		setNameWithFreqAndUID(o.str());
 
 		addFPInput("X", wE, wF);
 		addFPInput("Y", wE, wF);

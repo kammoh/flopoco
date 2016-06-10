@@ -40,7 +40,7 @@ namespace flopoco {
 		// build the name
 		ostringstream name;
 		name <<"FixAtan2ByBivariateApprox_" << vhdlize(wIn) << "_" << vhdlize(wOut) << "_archType_" << vhdlize(architectureType);
-		setNameWithFreq( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		//double ratio = getTarget()->unusedHardMultThreshold(); // TODO this should be automatic/default: check
 

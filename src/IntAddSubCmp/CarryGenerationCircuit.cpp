@@ -34,7 +34,7 @@ namespace flopoco{
 		Operator(target,inputDelays), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		srcFileName="CarryGenerationCircuit";
-		setName(join("CarryGenerationCircuit_", wIn_));
+		setNameWithFreqAndUID(join("CarryGenerationCircuit_", wIn_));
 
 		// Set up the IO signals
 		addInput ( "X", wIn_,true);

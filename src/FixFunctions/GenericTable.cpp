@@ -26,7 +26,7 @@ namespace flopoco{
 
 		srcFileName="GenericTable";
 		name <<"GenericTable_" << wIn << "_" << wOut;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 	}
 
 	GenericTable::~GenericTable() {}

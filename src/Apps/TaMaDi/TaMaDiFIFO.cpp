@@ -46,8 +46,8 @@ namespace flopoco{
 		srcFileName="TaMaDiFIFO";
 		ostringstream name;
 
-		name <<"TaMaDiFIFO_w"<<w<<"_depth"<<n<<"_m"<<moreThan<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		name <<"TaMaDiFIFO_w"<<w<<"_depth"<<n<<"_m"<<moreThan;
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

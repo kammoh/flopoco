@@ -13,7 +13,7 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "sub", &sub);
 		UserInterface::parseBoolean(args, "dualPath", &dualPath);
 		if(dualPath)
-			return new FPAddDualPath(target, wE, wF, sub); 
+			return new FPAddDualPath(target, wE, wF, sub);
 		else
 			return new FPAddSinglePath(target, wE, wF, sub);
 	}

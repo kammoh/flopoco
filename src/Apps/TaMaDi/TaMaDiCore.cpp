@@ -44,8 +44,8 @@ namespace flopoco{
 		srcFileName="TaMaDiCore";
 		ostringstream name;
 
-		name <<"TaMaDiCore_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		name <<"TaMaDiCore_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d;
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

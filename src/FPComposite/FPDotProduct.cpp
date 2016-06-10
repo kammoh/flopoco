@@ -47,11 +47,7 @@ namespace flopoco{
 			  <<(LSBA>=0?"":"M")<<abs(LSBA)<<"_"
 			  <<(MSBA>=0?"":"M")<<abs(MSBA) ;
 
-		if(target->isPipelined()) 
-			name << target->frequencyMHz() ;
-		else
-			name << "comb";
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008-2011)");		
 

@@ -45,7 +45,7 @@ namespace flopoco{
 			name << "IntDualAddSub_";
 		}
 		name << wIn;
-		setNameWithFreq(name.str());
+		setNameWithFreqAndUID(name.str());
 
 
 		// Set up the IO signals

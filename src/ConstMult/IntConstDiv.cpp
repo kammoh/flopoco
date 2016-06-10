@@ -32,7 +32,7 @@ namespace flopoco{
 				ostringstream name;
 				srcFileName="IntConstDiv::EuclideanDivTable";
 				name <<"EuclideanDivTable_" << d << "_" << alpha ;
-				setName(name.str());
+				setNameWithFreqAndUID(name.str());
 			};
 
 

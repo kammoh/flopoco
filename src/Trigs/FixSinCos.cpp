@@ -153,7 +153,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// definition of the name of the operator
 	ostringstream name;
 	name << "FixSinCos_" << w;
-	setNameWithFreq(name.str());
+	setNameWithFreqAndUID(name.str());
 
 	setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
 

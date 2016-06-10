@@ -36,7 +36,7 @@ namespace flopoco{
 		Operator(target), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		srcFileName="LongIntAdderAddAddMuxGen1";
-		setName(join("LongIntAdderAddAddMuxGen1_", wIn_));
+		setNameWithFreqAndUID(join("LongIntAdderAddAddMuxGen1_", wIn_));
 		int version = 1; /* this will go into the parameters */
 
 		// Set up the IO signals

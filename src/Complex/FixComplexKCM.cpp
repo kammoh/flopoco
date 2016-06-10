@@ -28,7 +28,7 @@ namespace flopoco {
 			vhdlize(constant_im) << "_" << ((signedInput) ? "" : "un") <<
 			"signed" ;
 
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		
 		// Copyright 
 		setCopyrightString("3IF 2015 dev team (2015)");

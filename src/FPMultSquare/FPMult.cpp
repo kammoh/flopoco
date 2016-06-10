@@ -35,8 +35,8 @@ namespace flopoco{
 		Operator(target), wEX_(wEX), wFX_(wFX), wEY_(wEY), wFY_(wFY), wER_(wER), wFR_(wFR), normalized_(norm), correctlyRounded_(correctlyRounded)  {
 
 		ostringstream name;
-		name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_<<"_uid"<<getNewUId();
-		setName(name.str());
+		name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_;
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin 2008-2011");
 
 

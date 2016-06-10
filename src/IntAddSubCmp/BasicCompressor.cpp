@@ -49,7 +49,7 @@ BasicCompressor::BasicCompressor(Target * target, vector<int> h)
 	wOut=intlog2(param);
 
 	name << "_" << wOut;
-	setName(name.str());
+	setNameWithFreqAndUID(name.str());
 	setCopyrightString("Bogdan Popa, Illyes Kinga, 2012");
 
 

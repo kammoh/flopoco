@@ -34,7 +34,7 @@ namespace flopoco{
 		Operator(target,inputDelays), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		srcFileName="IntAdderSpecific";
-		setName(join("IntAdderSpecific_", wIn_,"_",getNewUId()));
+		setNameWithFreqAndUID(join("IntAdderSpecific_", wIn_));
 
 		// Set up the IO signals
 		addInput ( "X", wIn_,true);

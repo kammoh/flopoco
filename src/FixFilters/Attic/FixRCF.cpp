@@ -16,8 +16,8 @@ namespace flopoco{
 		srcFileName="FixRCF";
 
 		ostringstream name;
-		name << "FixRCF_" << p << "_" << N << "_taps_rollof_" << alpha << "_uid" << getNewUId();
-		setName(name.str());
+		name << "FixRCF_" << p << "_" << N << "_taps_rollof_" << alpha;
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin, Matei Istoan (2014)");
 

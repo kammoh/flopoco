@@ -23,8 +23,8 @@ namespace flopoco {
 		srcFileName="FP2DNorm";
 					
 		ostringstream name;
-		name<<"FP2DNorm_"<<wE<<"_"<<wF<<"_uid"<<getNewUId(); 
-		setName(name.str()); 
+		name<<"FP2DNorm_"<<wE<<"_"<<wF; 
+		setNameWithFreqAndUID(name.str()); 
 	
 		setCopyrightString("Florent de Dinechin (2013)");		
 	

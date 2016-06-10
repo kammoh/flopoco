@@ -42,8 +42,8 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		srcFileName="FPAdd3Input";
 
 		ostringstream name;
-		name<<"FPAdd3Input_"<<wE<<"_"<<wF<<"_uid"<<getNewUId();
-		setName(name.str());
+		name<<"FPAdd3Input_"<<wE<<"_"<<wF;
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Bogdan Pasca (2010)");
 

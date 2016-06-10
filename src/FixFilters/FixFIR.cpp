@@ -29,7 +29,7 @@ namespace flopoco {
 
 		ostringstream name;
 		name << "FixFIR_uid" << getNewUId();
-		setNameWithFreq( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		buildVHDL();
 	};

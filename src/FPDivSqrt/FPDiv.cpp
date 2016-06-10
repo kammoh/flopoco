@@ -49,7 +49,7 @@ namespace flopoco{
 
 		srcFileName="FPDiv";
 		name<<"FPDiv_"<<wE<<"_"<<wF;
-		setNameWithFreq(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		if(radix !=0  && radix!=4 && radix !=8) {
 			THROWERROR("Got radix = " << radix << ". Only possible choices for radix are 0, 4 or 8" );

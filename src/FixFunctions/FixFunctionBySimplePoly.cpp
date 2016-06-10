@@ -54,8 +54,8 @@ namespace flopoco{
 		}
 
 		ostringstream name;
-		name<<"FixFunctionBySimplePoly_"<<getNewUId();
-		setName(name.str());
+		name<<"FixFunctionBySimplePoly_";
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin (2014)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");

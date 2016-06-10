@@ -36,8 +36,8 @@ namespace flopoco {
 		ostringstream name;
 
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
-		name << "IntAdderClassical_" << wIn_<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
-		setName( name.str() );
+		name << "IntAdderClassical_" << wIn_;
+		setNameWithFreqAndUID( name.str() );
 
 		// Set up the IO signals
 		addInput  ( "X"  , wIn_, true );

@@ -45,8 +45,8 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 		wE = wEX;
 
 		ostringstream name;
-		name<<"FPAddSub_"<<wE<<"_"<<wF<<"_uid"<<getNewUId();
-		setName(name.str());
+		name<<"FPAddSub_"<<wE<<"_"<<wF;
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Matei Istoan, Florent de Dinechin (2012)");
 

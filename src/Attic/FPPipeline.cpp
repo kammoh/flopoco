@@ -55,8 +55,8 @@ namespace flopoco{
 		// Name HAS to be unique!
 		// will cause weird bugs otherwise
 		ostringstream complete_name;
-		complete_name << "Pipeline" << getNewUId(); 
-		setName(complete_name.str());
+		complete_name << "Pipeline"; 
+		setNameWithFreqAndUID(complete_name.str());
 		// r = x^2 + y^2 + z^2 example
 		srcFileName = "FPPipeline";
 

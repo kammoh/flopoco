@@ -13,7 +13,7 @@ namespace flopoco{
 	{
 		ostringstream name; 
 		name <<"InvTable_0_"<<wIn<<"_"<<wOut;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 	}
 

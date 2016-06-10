@@ -37,8 +37,8 @@ namespace flopoco{
 		Operator(target), wE_(wE), wFX_(wFX), wFR_(wFR){
 
 		ostringstream name;
-		name<<"FPSquare_"<<wE_<<"_"<<wFX_<<"_"<<wFR_<<"_uid"<<getNewUId();
-		setName(name.str());
+		name<<"FPSquare_"<<wE_<<"_"<<wFX_<<"_"<<wFR_;
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca (2009)");
 
 		/* Set up the IO signals */

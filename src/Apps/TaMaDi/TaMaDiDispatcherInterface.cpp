@@ -44,8 +44,8 @@ namespace flopoco{
 		srcFileName="TaMaDiDispatcherInterface";
 		ostringstream name;
 
-		name <<"TaMaDiDispatcherInterface_n"<<n<<"_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		name <<"TaMaDiDispatcherInterface_n"<<n<<"_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d;
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

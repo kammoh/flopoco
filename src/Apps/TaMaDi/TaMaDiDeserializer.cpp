@@ -43,8 +43,8 @@ namespace flopoco{
 		srcFileName="TaMaDiDeserializer";
 		ostringstream name; 
 
-		name <<"TaMaDiDeserializer_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		name <<"TaMaDiDeserializer_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d;
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 		

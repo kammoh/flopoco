@@ -26,11 +26,8 @@ namespace flopoco{
 		ostringstream name;
 
 		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2008-2012)" );
-		if(target->isPipelined())
-			name << "IntTwiddleMultiplier_" << w << "_w_exp_" << twiddleExponent << "_f"<< target->frequencyMHz() << "_uid" << getNewUId();
-		else
-			name << "IntTwiddleMultiplier_" << w << "_w_exp_" << twiddleExponent << "_uid" << getNewUId();
-		setName( name.str() );
+		name << "IntTwiddleMultiplier_" << w << "_w_exp_" << twiddleExponent;
+		setNameWithFreqAndUID( name.str() );
 
 		addInput("Xi", 		w, true);
 		addInput("Xr", 		w, true);

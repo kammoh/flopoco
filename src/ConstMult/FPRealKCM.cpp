@@ -60,7 +60,7 @@ namespace flopoco{
 		// build the name
 		ostringstream name; 
 		name <<"FPRealKCM_" << vhdlize(wE)  << "_" << vhdlize(wF) << "_" << vhdlize(constant);
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 				
 		int iExp = mpfr_get_exp(mpC);// - 1;
 		

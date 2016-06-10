@@ -26,7 +26,7 @@ namespace flopoco {
 		name <<"IntConstMCM_" << xsize;
 		for(int i=0; i<nbConst; i++)
 			name << "_" << mpz2string(constants[i]);
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		//add the input
 		addInput("X", xsize);

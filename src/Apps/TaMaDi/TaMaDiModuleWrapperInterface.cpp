@@ -43,8 +43,8 @@ namespace flopoco{
 		srcFileName="TaMaDiModuleWrapperInterface";
 		ostringstream name;
 
-		name <<"TaMaDiModuleWrapperInterface_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		name <<"TaMaDiModuleWrapperInterface_wp"<<wp<<"_interations"<<iterations<<"_degree"<<d;
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

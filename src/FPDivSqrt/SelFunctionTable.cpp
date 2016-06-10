@@ -17,7 +17,7 @@ namespace flopoco
 		ostringstream name;
 		srcFileName="SelFunctionTable";
 		name << "SelFunctionTable_r"<< radix;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		ro = ((double)digitSet)/(radix-1);
 }

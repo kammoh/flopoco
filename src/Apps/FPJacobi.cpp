@@ -42,8 +42,8 @@ namespace flopoco{
 		srcFileName="FPJacobi1";
 		ostringstream name;
 
-		name <<"FPJacobi_"<<wE<<"_"<<wF<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		name <<"FPJacobi_"<<wE<<"_"<<wF;
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2010)");		
 

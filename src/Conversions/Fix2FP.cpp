@@ -69,7 +69,7 @@ namespace flopoco{
 		int absMSB = MSBI>=0?MSBI:-MSBI;
 		int absLSB = LSBI>=0?LSBI:-LSBI;
 		name<<"Fix2FP_"<< (LSBI<0?"M":"")<<absLSB<<"_"<<(MSBI<0?"M":"")<<absMSB <<"_"<< (Signed?"S":"US") << "_" <<wER<<"_"<<wFR; 
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Radu Tudoran, Bogdan Pasca (2009)");		
 

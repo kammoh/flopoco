@@ -76,8 +76,8 @@ namespace flopoco{
 		srcFileName="FixFunctionByPiecewisePoly";
 		
 		ostringstream name;
-		name<<"FixFunctionByPiecewisePoly_"<<getNewUId(); 
-		setName(name.str()); 
+		name<<"FixFunctionByPiecewisePoly_"; 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCriticalPath(getMaxInputDelays(inputDelays));
 

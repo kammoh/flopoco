@@ -50,7 +50,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "FixAtan2ByRecipMultAtan_" << wIn_ << "_" << wOut_ << "_uid" << getNewUId();
-		setNameWithFreq( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		///////////// VHDL GENERATION
 

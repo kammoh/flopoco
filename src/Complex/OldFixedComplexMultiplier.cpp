@@ -23,11 +23,8 @@ namespace flopoco{
 		else
 			useStdLogicUnsigned();
 
-		if(target->isPipelined())
-			name << "OldFixedComplexMultiplier_" << wI << "_" << wO << "_f"<< target->frequencyMHz() << "_uid" << getNewUId();
-		else
-			name << "OldFixedComplexMultiplier_" << wI << "_" << wO << "_uid" << getNewUId();
-		setName( name.str() );
+		name << "OldFixedComplexMultiplier_" << wI << "_" << wO;
+		setNameWithFreqAndUID( name.str() );
 
 		addInput("Xr", 		wI, true);
 		addInput("Xi", 		wI, true);

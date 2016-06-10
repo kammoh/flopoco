@@ -58,7 +58,7 @@ namespace flopoco{
 				ostringstream name; 
 				srcFileName="FPExp::MagicSPExpTable";
 				name <<"MagicSPExpTable";
-				setName(name.str());
+				setNameWithFreqAndUID(name.str());
 	};
 
 
@@ -120,7 +120,7 @@ namespace flopoco{
 		ostringstream name; 
 		srcFileName="FPExp::ExpYTable";
 		name <<"ExpYTable_" << wIn << "_" << wOut;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		
 		outDelayMap["Y"] = target->RAMDelay();
 	};
@@ -177,7 +177,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "FPExp_" << wE << "_" << wF ;
-		setNameWithFreq(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("F. de Dinechin, Bogdan Pasca (2008-2013)");
 		srcFileName="FPExp";

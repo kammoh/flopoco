@@ -54,7 +54,7 @@ namespace flopoco{
 		else
 			name<<"FPAdd_";
 		name<<wE<<"_"<<wF;
-		setNameWithFreq(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008)");
 

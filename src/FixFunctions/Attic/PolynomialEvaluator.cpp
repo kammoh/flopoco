@@ -165,7 +165,7 @@ namespace flopoco{
 
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2010-2012)");
 		srcFileName = "PolynomialEvaluator";
-		setName(join("PolynomialEvaluator_degree",degree_,"_uid",getNewUId()));
+		setNameWithFreqAndUID(join("PolynomialEvaluator_degree",degree_));
 
 		setApproximationError(approxError); /* set the approximation error budget we are allowed */
 

@@ -40,7 +40,7 @@ namespace flopoco{
 	{
 		ostringstream name;
 		name <<"InvTable_0_"<<wIn<<"_"<<wOut;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 	}
 
@@ -145,7 +145,7 @@ namespace flopoco{
 	{
 		ostringstream name;
 		name <<"LogTable_0_"<<wIn<<"_"<<wOut;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		minIn = 0;
 		maxIn = (1<<wIn) -1;
@@ -249,7 +249,7 @@ namespace flopoco{
 	 {
 		 ostringstream name;
 		 name <<"LogTable_"<<which<<"_"<<wIn<<"_"<<wOut;
-		 setName(name.str());
+		 setNameWithFreqAndUID(name.str());
 	 }
 
 	 IterativeLog::OtherLogTable::~OtherLogTable() {}
@@ -361,11 +361,7 @@ namespace flopoco{
 		srcFileName = "IterativeLog";
 
 		o << "IterativeLog_" << wE << "_" << wF << "_" << inTableSize << "_";
-		if(target->isPipelined())
-			o << target->frequencyMHz() ;
-		else
-			o << "comb";
-		setName(o.str());
+		setNameWithFreqAndUID(o.str());
 
 		addFPInput("X", wE, wF);
 		addFPOutput("R", wE, wF, 2); // 2 because faithfully rounded

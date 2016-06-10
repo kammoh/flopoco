@@ -43,8 +43,8 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "BipartiteTable_f_" << vhdlize(functionName) << "_in_" << vhdlize(lsbIn) << "_out_"
-				<< vhdlize(msbOut) << "_" << vhdlize(lsbOut) << "_uid" << getNewUId();
-		setName(name.str());
+				<< vhdlize(msbOut) << "_" << vhdlize(lsbOut);
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin, Matei Istoan (2014)");
 
