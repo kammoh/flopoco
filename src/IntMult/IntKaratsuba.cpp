@@ -43,7 +43,7 @@ namespace flopoco{
 		ostringstream name;
 		name << "IntKaratsuba_" << wIn_<<"_f"<<target->frequencyMHz();
 		setCopyrightString("Bogdan Pasca (2008-2010)");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 	
 		/* Set up the IO signals
 		 * X and Y have wInX_ and wInY_ bits respectively 
