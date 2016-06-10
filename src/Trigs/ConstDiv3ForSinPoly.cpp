@@ -44,7 +44,7 @@ namespace flopoco{
 
 		srcFileName = "ConstDiv3ForSinPoly::EuclideanDiv3Table";
 		name << "EuclideanDiv3Table_" << d << "_" << alpha << "_" << delta << "zeros" << (lastTable ? "_lastTable" : "");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 	};
 
 

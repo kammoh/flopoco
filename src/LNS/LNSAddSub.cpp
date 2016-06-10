@@ -31,7 +31,7 @@ namespace flopoco{
 			wE = width of the integral part of the exponent
 			wF = width of the fractional part of the exponent */
 		name << "LNSAddSub_" << wE << "_" << wF; 
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		addInput ("nA", wE + wF + 3);
 		addInput ("nB", wE + wF + 3);

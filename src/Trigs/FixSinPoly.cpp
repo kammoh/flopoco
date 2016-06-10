@@ -71,7 +71,7 @@ namespace flopoco{
 		// build the name
 		ostringstream name;
 		name << "FixSinPoly_" << vhdlize(wIn) << "_" << vhdlize(wOut) << (truncated ? "_truncated" : "") << (signedInput ? "_signed" : "_unsigned");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		
 		//create the input and the output
 		addInput("X", wIn);
@@ -256,7 +256,7 @@ namespace flopoco{
 		// build the name
 		ostringstream name; 
 		name <<"FixSinPoly_" << vhdlize(wIn) << "_" << vhdlize(wOut) << "_" << (signedInput?"_signed":"_unsigned");
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		
 	}

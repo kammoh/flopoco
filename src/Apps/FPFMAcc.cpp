@@ -41,7 +41,7 @@ namespace flopoco{
 		ostringstream name;
 
 		name <<"FPFMAcc_"<<wE<<"_"<<wF<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2010)");		
 

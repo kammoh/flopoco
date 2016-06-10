@@ -49,8 +49,8 @@ namespace flopoco{
 		REPORT(DEBUG, "  degree=" << degree);
 
 		ostringstream name;
-		name << "FixAtan2ByRecipMultAtan_" << wIn_ << "_" << wOut_ << "_uid" << getNewUId();
-		setNameWithFreq( name.str() );
+		name << "FixAtan2ByRecipMultAtan_" << wIn_ << "_" << wOut_ ;
+		setNameWithFreqAndUID( name.str() );
 
 		///////////// VHDL GENERATION
 

@@ -38,7 +38,7 @@ namespace flopoco{
 		op->numberOfTests = n;
 
 		srcFileName="TestBench";
-		setName("TestBench_" + op_->getName());
+		setNameWithFreqAndUID("TestBench_" + op_->getName());
 
 		setCombinatorial(); // this is a combinatorial operator
 		setCycle(0);

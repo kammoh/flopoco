@@ -591,8 +591,8 @@ OperatorPipeline::OperatorPipeline(Target* target, string filename, bool fortran
     // will cause weird bugs otherwise
 
     ostringstream complete_name;
-    complete_name << "OperatorPipeline" << getNewUId();
-    setName(complete_name.str());
+    complete_name << "OperatorPipeline";
+    setNameWithFreqAndUID(complete_name.str());
     // r = x^2 + y^2 + z^2 example
     srcFileName = "OperatorPipeline";
 

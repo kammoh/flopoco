@@ -27,12 +27,8 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "CordicSinCos_" << (reducedIterations==1?"reducedIterations":"") << wIn_ << "_" << wOut_;
-		if(target->isPipelined())
-			name  <<"_f" << target->frequencyMHz();
-		else 
-			name << "_comb";
-		name << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
+
 
 		if(wIn<12){
 			REPORT(INFO, "wIn is small, are you sure you don't want to tabulate this operator in a ROM?");
