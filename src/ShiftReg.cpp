@@ -18,11 +18,7 @@ namespace flopoco {
 		useNumericStd_Unsigned();
 
 		ostringstream name;
-<<<<<<< HEAD
-		name << "ShiftReg_"<< w_ << "_uid" << getNewUId();
-=======
 		name << "ShiftReg_"<< w_;
->>>>>>> 60b1165b8307d74217c30a579a92759574d5c94d
 		setNameWithFreqAndUID( name.str() );
 
 		addInput("X", w, true);
