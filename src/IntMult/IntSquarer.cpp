@@ -32,8 +32,8 @@ namespace flopoco{
 		Operator(target, inputDelays), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		ostringstream name;
-		name << "IntSquarer_" << wIn_ << "_uid"<<getNewUId();
-		setName(name.str());
+		name << "IntSquarer_" << wIn_ ;
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca (2009)");
 
 		srcFileName = "IntSquarer";

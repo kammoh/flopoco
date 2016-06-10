@@ -41,7 +41,7 @@ namespace flopoco {
 		// definition of the name of the operator
 		ostringstream name;
 		name << "UserDefinedOperator_" << param0 << "_" << param1;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		// Copyright 
 		setCopyrightString("ACME and Co 2010");
 

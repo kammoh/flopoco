@@ -50,7 +50,7 @@ FixSinCos::SinCosTable::SinCosTable(Target* target_, int wIn_, int lsbOut_, int 
 	name << "SinCosTable_" << wIn << "_2x" << lsbOut;
 	if (g>0) 
 		name << "p" << g;
-	setName(name.str());
+	setNameWithFreqAndUID(name.str());
 	//	outDelayMap["Y"]=target->RMADelay();
 }
 

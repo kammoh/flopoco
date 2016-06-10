@@ -1738,7 +1738,7 @@ namespace flopoco{
 
 			// TODO outDelayMap["R"] = op->getOutputDelay("R"); //populate output delays
 			setCycle(op->getPipelineDepth());
-			op->setName (getName() );//accordingly set the name of the implementation
+			op->setNameWithFreqAndUID (getName() );//accordingly set the name of the implementation
 
 			signalList_ = op->signalList_;
 			subComponents_ = op->subComponents_;

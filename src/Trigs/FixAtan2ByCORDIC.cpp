@@ -44,7 +44,7 @@ namespace flopoco{
 		useNumericStd_Unsigned();
 
 		ostringstream name;
-		name << "FixAtan2ByCORDIC_" << wIn_ << "_" << wOut_ << "_uid" << getNewUId();
+		name << "FixAtan2ByCORDIC_" << wIn_ << "_" << wOut_;
 		setNameWithFreqAndUID( name.str() );
 	
 		mpfr_t  zatan; 

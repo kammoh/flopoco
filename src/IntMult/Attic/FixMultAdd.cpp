@@ -86,10 +86,9 @@ namespace flopoco {
 		// TODO manage the case when one is signed and not the other.
 		{
 			ostringstream name;
-			name <<"FixMultAdd_";
+			name <<"FixMultAdd";
 			// name << wX << "x" << wY << "p" << wA << "r" << wOut << "" << (signedIO?"s":"u");
-			name << Operator::getNewUId();
-			setName ( name.str() );
+			setNameWithFreqAndUID ( name.str() );
 			REPORT(DEBUG, "Building " << name.str() );
 		}
 

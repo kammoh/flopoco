@@ -24,10 +24,10 @@ namespace flopoco{
 
 		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2008-2012)" );
 		if(target->isPipelined())
-			name << "FixSinOrCos_" << w <<"_f"<< target->frequencyMHz() << "_uid" << getNewUId();
+			name << "FixSinOrCos_" << w;
 		else
 			name << "FixSinOrCos_" << w << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		// declaring inputs
 		addInput("X",1+w,true);

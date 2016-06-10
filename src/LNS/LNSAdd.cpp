@@ -32,7 +32,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name<<"LNSAdd_"<< wE <<"_"<< wF; 
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Sylvain Collange (2008)");		
 		setCombinatorial(); // TODO this should no longer be useful in the new framework
