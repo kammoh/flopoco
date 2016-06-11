@@ -1255,7 +1255,7 @@ namespace flopoco{
 		int wF;
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		int inTableSize;
-		UserInterface::parseStrictlyPositiveInt(args, "inTableSize", &inTableSize);
+		UserInterface::parsePositiveInt(args, "inTableSize", &inTableSize);
 		return new IterativeLog(target, wE, wF, inTableSize);
 	}
 
