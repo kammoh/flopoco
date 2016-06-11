@@ -378,8 +378,9 @@ namespace flopoco{
 			bitsPerStage=inTableSize;
 
 		if(bitsPerStage <6)
-			throw string("IterativeLog error: tables need at least 6 input bits");
+			THROWERROR("inTableSize="<<bitsPerStage <<" is too small, tables need at least 6 input bits");
 
+		REPORT(INFO, "Building an architecture with "<<bitsPerStage <<" input bits to each table");
 
 
 		// First compute the parameters of each iteration
@@ -849,7 +850,8 @@ namespace flopoco{
 		// We have to compute the sum of the outputs of the log tables, and we want this sum (AlmostLog) to be synchronized to Log1pNormal, to which it will be added.
 		// To get this synchro right, we have to do a first dummy evaluation of the pipeline to profile its depth
 		// We first do it in a dummy way, starting from cycle 0, to measure the depth of this sub-pipeline
-
+		// TODO throw all these tables into a bit heap?
+		
 		FirstLogTable* lt0 = new FirstLogTable(target, a[0], target_prec, it0, this);
 
 		int profilingDepth;
