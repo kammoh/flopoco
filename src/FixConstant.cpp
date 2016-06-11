@@ -119,7 +119,7 @@ namespace flopoco{
 	void FixConstant::changeMSB(int newMSB){
 		if(newMSB<MSB){
 			// TODO: check that the number fits its new size, and bork otherwise.
-			throw(string("FixConstant::changeMSB: TODO : The case when the size is reduced is not yet implemented (rounding to do, etc)"));
+			THROWERROR("FixConstant::changeMSB: old MSB is "<<MSB<< " newMSB="<<newMSB<< " ... hence TODO");
 		}
 		MSB=newMSB;
 		width = (MSB-LSB+1);
