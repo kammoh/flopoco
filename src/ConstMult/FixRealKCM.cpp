@@ -33,6 +33,115 @@ namespace flopoco{
 
 
 
+
+	
+	//standalone operator
+	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays):
+							Operator(target, inputDelays),
+							signedInput(signedInput_),
+							msbIn(msbIn_),
+							lsbIn(lsbIn_),
+							lsbOut(lsbOut_),
+							constant(constant_),
+							targetUlpError(targetUlpError_),
+							parentOp(this)
+	{
+		init();		 // check special cases, computes number of tables and g.
+		
+		addInput("X",  msbIn-lsbInOrig+1);
+		addOutput("R", msbOut-lsbOut+1);
+
+		// Special cases
+		if(constantRoundsToZero)
+		{
+			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
+			return;
+		}
+
+		if(constantIsPowerOfTwo)
+		{
+			// Shift it to its place
+			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
+			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
+			return;
+		}
+
+
+		// From now we have stuff to do.
+		//create the bitheap
+		int bitheaplsb = lsbOut - g;
+		bitHeap = new BitHeap(this, wOut+g);
+
+		buildForBitHeap(getSignalByName("X")); // does everything up to bit heap compression
+
+		setCriticalPath(getMaxInputDelays(inputDelays));
+		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+
+
+		//compress the bitheap and produce the result
+		bitHeap->generateCompressorVHDL();
+
+		//manage the critical path
+		syncCycleFromSignal(bitHeap->getSumName());
+
+		//because of final add in bit heap, add one more bit to the result
+		vhdl << declare("OutRes", wOut+g) << " <= " << 
+			bitHeap->getSumName() << range(wOut+g-1, 0) << ";" << endl;
+
+		vhdl << tab << "R <= OutRes" << range(wOut+g-1, g) << ";" << endl;
+		
+		outDelayMap["R"] = getCriticalPath();
+	}
+	
+	
+
+	//operator incorporated into a global bit heap for use as part of a bigger operator
+	// In this case, the flow is typically (see FixFIR)
+	//    1/ call the constructor below. It stops before the VHDL generation 
+	//    2/ have it report g using getGuardBits(). 
+	//    3/ the bigger operator computes the global g, builds the bit heap.
+	//    4/ It calls generateVHDL(bitheap, bitheapLSB)
+	FixRealKCM::FixRealKCM(Operator* parentOp_, Target* target_, Signal* fixPointInput, 
+			int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays_):
+					Operator(target_, inputDelays_),
+					signedInput(fixPointInput->isFixSigned()),
+					msbIn(fixPointInput->MSB()),
+					lsbIn(fixPointInput->LSB()),
+					lsbOut(lsbOut_),
+					constant(constant_),
+					targetUlpError(targetUlpError_),
+					parentOp(parentOp_)
+	{
+		// Run-time check that the input is a fixed-point signal -- a bit late after all the initializations.
+		if(!fixPointInput->isFix())
+			THROWERROR ("FixRealKCM bit heap constructor called for a non-fixpoint input: can't determine its msb and lsb");
+		
+		init(); // check special cases, computes number of tables and g. 
+		
+		// Special cases
+		if(constantRoundsToZero)		{
+			// do nothing
+			return;
+		}
+
+		if(constantIsPowerOfTwo)		{
+			// Shift it to its place
+			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
+			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
+			return;
+		}
+		buildForBitHeap(fixPointInput);
+	}
+					
+	
+
+
+
+
+
+
+
+
 	/**
 	* @brief init : all operator initialization stuff goes here
 	*/
@@ -206,110 +315,39 @@ namespace flopoco{
 			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] );
 		}
 
+		// Finally computing the error due to this setup. We express it as ulps at position lsbOut-g, whatever g will be
+		errorInUlps=0.5*numberOfTables;
 	}
 
 
 
-	//standalone operator
-	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays):
-							Operator(target, inputDelays),
-							signedInput(signedInput_),
-							msbIn(msbIn_),
-							lsbIn(lsbIn_),
-							lsbOut(lsbOut_),
-							constant(constant_),
-							targetUlpError(targetUlpError_)
-	{
-		init();		 // check special cases, computes number of tables and g.
-		
-		addInput("X", msbIn-lsbInOrig+1);
-		addOutput("R", wOut);
 
-		// Special cases
-		if(constantRoundsToZero)
-		{
-			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
-			return;
+
+
+
+
+	void FixRealKCM::buildForBitHeap(Signal* inputSignal) {
+
+		for(int i=0; i<numberOfTables; i++) {
+			string sliceInName = join(parentOp->getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.
+			string sliceOutName = join(parentOp->getName() + "_T", i); // Should be unique in a bit heap if each KCM got a UID.
+			string instanceName = join(parentOp->getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
+			
+			parentOp->vhdl << tab << declare(sliceInName, m[i]- l[i] +1 ) << " <= "
+										 << inputSignal->getName() << range(m[i]-lsbInOrig, l[i]-lsbInOrig) << ";" << endl;
+			FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
+			addSubComponent(t);
+			parentOp->inPortMap (t , "X", sliceInName);
+			parentOp->outPortMap(t , "Y", sliceOutName);
+			parentOp->vhdl << parentOp->instance(t , instanceName);
+
+			// Add these bits to the bit heap
+			bitHeap -> addSignedBitVector(0, // weight
+												 sliceOutName, // name
+												 getSignalByName(sliceOutName)->width() // size
+												 );
+
 		}
-
-		if(constantIsPowerOfTwo)
-		{
-			// Shift it to its place
-			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
-			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
-			return;
-		}
-
-
-		// From now we have stuff to do.
-		//create the bitheap
-		int bitheaplsb = lsbOut - g;
-		bitHeap = new BitHeap(this, wOut+g);
-
-		//		buildTables("X");
-		// addTablesToBitHeap();
-
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-
-
-		//compress the bitheap and produce the result
-		bitHeap->generateCompressorVHDL();
-
-		//manage the critical path
-		syncCycleFromSignal(bitHeap->getSumName());
-
-		//because of final add in bit heap, add one more bit to the result
-		vhdl << declare("OutRes", wOut+g) << " <= " << 
-			bitHeap->getSumName() << range(wOut+g-1, 0) << ";" << endl;
-
-		vhdl << tab << "R <= OutRes" << range(wOut+g-1, g) << ";" << endl;
-		
-		outDelayMap["R"] = getCriticalPath();
-	}
-	
-	
-
-	//operator incorporated into a global bit heap for use as part of a bigger operator
-	// In this case, the flow is typically (see FixFIR)
-	//    1/ call the constructor below. It stops before the VHDL generation 
-	//    2/ have it report g using getGuardBits(). 
-	//    3/ the bigger operator computes the global g, builds the bit heap.
-	//    4/ It calls generateVHDL(bitheap, bitheapLSB)
-	FixRealKCM::FixRealKCM(Operator* parentOp, Target* target, Signal* fixPointInput, 
-			int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays):
-					Operator(target, inputDelays),
-					signedInput(fixPointInput->isFixSigned()),
-					msbIn(fixPointInput->MSB()),
-					lsbIn(fixPointInput->LSB()),
-					lsbOut(lsbOut_),
-					constant(constant_),
-					targetUlpError(targetUlpError_)
-	{
-		// Run-time check that the input is a fixed-point signal -- a bit late after all the initializations.
-		if(!fixPointInput->isFix())
-			THROWERROR ("FixRealKCM bit heap constructor called for a non-fixpoint input: can't determine its msb and lsb");
-		
-		init(); // check special cases, computes number of tables and g. 
-		
-	}
-					
-	
-	void FixRealKCM::buildForBitHeap() {
-			// Special cases
-		if(constantRoundsToZero) { // .... do nothing
-			return;
-		}
-
-		if(constantIsPowerOfTwo)	{
-			// Shift it to its place
-			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
-			return;
-		}
-
-		// From now we have stuff to do.
-		//		buildTables(multiplicandX->getName());
-		//    addTablesToBitHeap();
 	}			
 
 
@@ -427,18 +465,21 @@ namespace flopoco{
 	/************************** The FixRealKCMTable class ********************/
 
 
-	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i, int weight, int wIn, int wOut, bool negativeSubproduct, bool last, int pipeline):
-			Table(target, wIn, wOut, 0, -1, pipeline), 
+	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i):
+			Table(target,
+						mother->m[i] - mother->l[i]+1, // wIn
+						mother->m[i] + mother->msbC  - mother->lsbOut + mother->g +1, //wOut
+						0, // minIn
+						-1, // maxIn
+						1), // logicTable 
 			mother(mother), 
-			index(i), 
-			weight(weight), 
-			negativeSubproduct(negativeSubproduct), 
-			last(last)
+			index(i),
+			lsbInWeight(mother->m[i])
 	{
 		ostringstream name; 
 		srcFileName="FixRealKCM";
 		name << mother->getName() << "_Table_" << index;
-		setNameWithFreqAndUID(name.str());
+		setName(name.str()); // This one not a setNameWithFreqAndUID
 		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team"); 
 	}
   
@@ -449,8 +490,8 @@ namespace flopoco{
 		
 		// get rid of two's complement
 		x = x0;
-		//Only the last "digit" has a negative weight
-		if(mother->signedInput && last)
+		//Only the MSB "digit" has a negative weight
+		if(mother->signedInput && (index==0))
 		{
 			if ( x0 > ((1<<(wIn-1))-1) )
 			{
@@ -472,15 +513,14 @@ namespace flopoco{
 		else
 		{
 			mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
-			//Getting real weight
-			mpfr_mul_2si(mpX, mpX, weight, GMP_RNDN); //Exact
+			// Scaling so that the input has its actual weight
+			mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
 
 
 			// do the mult in large precision
 			mpfr_mul(mpR, mpX, mother->absC, GMP_RNDN);
 			
-			// Result is integer*C, which is more or less what we need: just
-			// scale to add g bits.
+			// Result is integer*C, which is more or less what we need: just scale it to an integer.
 			mpfr_mul_2si(
 					mpR, 
 					mpR,
@@ -498,6 +538,7 @@ namespace flopoco{
 			}
 		}
 
+		// TODO F2D:  understand the following
 		//Result is result -1 in order to avoid to waste a sign bit
 		if(negativeSubproduct)
 		{
@@ -509,17 +550,12 @@ namespace flopoco{
 
 		//In case of global bitHeap, we need to invert msb for signedInput
 		//last bit for fast sign extension.
-		if(last && mother->signedInput)
-		{
-			mpz_class shiffter = mpz_class(1) << (wOut - 1);
-			if(result < shiffter )
-			{
-				result += shiffter;
-			}
+		if((index==0) && mother->signedInput)	{
+			mpz_class shiftedOne = mpz_class(1) << (wOut - 1);
+			if( result < shiftedOne ) // MSB=0
+				result += shiftedOne;  // set it to 1
 			else
-			{
-				result -= shiffter;
-			}
+				result -= shiftedOne;  // set it to 0
 		}
 
 

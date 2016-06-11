@@ -90,7 +90,7 @@ namespace flopoco{
 		 */
 		void init();
 
-		void buildForBitHeap();
+		void buildForBitHeap(Signal* inputSignal);
 
 		
 		// Overloading the virtual functions of Operator
@@ -120,7 +120,7 @@ namespace flopoco{
 		bool negativeConstant;
 		bool constantRoundsToZero;
 		bool constantIsPowerOfTwo;
-		float errorInUlps;
+		float errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
 
 		/* The heap of weighted bits that will be used to do the additions */
 		BitHeap*	bitHeap;    	
@@ -142,29 +142,15 @@ namespace flopoco{
 			FixRealKCMTable(
 					Target* target, 
 					FixRealKCM* mother, 
-					int i, 
-					int weight, 
-					int wIn, 
-					int wOut, 
-					//if true, table result will be input*C - 1 in order to
-					//avoid bit wasting for sign bit
-					//e.g. : if cste is -2 and input is 0001 result will be 
-					// 11101.
-					// For sign extension if output width is 9 we need to add
-					// 111100001 and that way we doesn't waste a useless sign bit
-					// (as we know that se subproduct sign is the constant sign)
-					bool negativeSubproduct, 
-					bool last, 
-					int logicTable = 1
+					int i
 					);
 
 			mpz_class function(int x);
 			FixRealKCM* mother;
 			int index;
 			//Weight of input lsb
-			int weight;
+			int lsbInWeight;
 			bool negativeSubproduct;
-			bool last;
 	};
 
 }
