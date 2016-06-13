@@ -3057,7 +3057,7 @@ namespace flopoco{
 		//check if all the signal's predecessors have been scheduled
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
 			if(targetSignal->predecessor(i)->getHasBeenImplemented() == false)
-				//not all predecessors are scheduled, so thee signal cannot be scheduled
+				//not all predecessors are scheduled, so the signal cannot be scheduled
 				return;
 
 		//if the preconditions are satisfied, schedule the signal
