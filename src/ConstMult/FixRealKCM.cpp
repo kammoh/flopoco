@@ -183,15 +183,14 @@ namespace flopoco{
 		mpfr_init2(absC, 10000);
 		sollya_lib_get_constant(mpC, node);
 
-		//if negative constant, then set negativeConstant and remake the
-		//constant positive
+		//if negative constant, then set negativeConstant and remake the constant positive
 		negativeConstant = false;
-		if(mpfr_cmp_si(mpC, 0) < 0)
-		{
+		if(mpfr_cmp_si(mpC, 0) < 0)	{
 			//throw string("FixRealKCMBH: only positive constants are supported");
 			negativeConstant = true;
 		}
 
+		signedOutput = negativeConstant || signedInput;
 		mpfr_abs(absC, mpC, GMP_RNDN);
 
 		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
@@ -235,6 +234,7 @@ namespace flopoco{
 			return;
 		}
 
+		
 		// Now we can discuss MSBs
 		msbOut = msbC + msbIn;
 		if(!signedInput && negativeConstant)
@@ -342,16 +342,23 @@ namespace flopoco{
 			parentOp->vhdl << parentOp->instance(t , instanceName);
 
 			// Add these bits to the bit heap
-			bitHeap -> addSignedBitVector(0, // weight
-												 sliceOutName, // name
-												 getSignalByName(sliceOutName)->width() // size
-												 );
-
+			if(i==0 && signedOutput) {
+				bitHeap -> addSignedBitVector(0, // weight
+																			sliceOutName, // name
+																			getSignalByName(sliceOutName)->width() // size
+																			);
+			} else {
+				bitHeap -> addUnsignedBitVector(0, // weight
+																				sliceOutName, // name
+																				getSignalByName(sliceOutName)->width() // size
+																				);
+			}
 		}
 	}			
 
 
 
+	// TODO manage correctly rounded cases, at least the powers of two
 	// To have MPFR work in fix point, we perform the multiplication in very
 	// large precision using RN, and the RU and RD are done only when converting
 	// to an int at the end.
@@ -360,14 +367,12 @@ namespace flopoco{
 		// Get I/O values
 		mpz_class svX = tc->getInputValue("X");
 		bool negativeInput = false;
-		int wIn=msbIn-lsbInOrig;
+		int wIn=msbIn-lsbInOrig+1;
 		
 		// get rid of two's complement
-		if(signedInput)
-		{
-			if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )
-			{
-				svX = (mpz_class(1)<<wIn) - svX;
+		if(signedInput)	{
+			if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )	 {
+				svX -= (mpz_class(1)<<wIn);
 				negativeInput = true;
 			}
 		}
@@ -394,20 +399,19 @@ namespace flopoco{
 		mpfr_get_z(svRd.get_mpz_t(), mpR, GMP_RNDD);
 		mpfr_get_z(svRu.get_mpz_t(), mpR, GMP_RNDU);
 
-		if(negativeInput != negativeConstant)
-		{
-			svRd = (mpz_class(1) << wOut) - svRd;
-			svRu = (mpz_class(1) << wOut) - svRu;
+		cout << " emulate x="<< svX <<"  before=" << svRd;
+ 		if(negativeInput != negativeConstant)		{
+			svRd += (mpz_class(1) << wOut);
+			svRu += (mpz_class(1) << wOut);
 		}
+		cout << " emulate after=" << svRd << endl;
 
 		//Border cases
-		if(svRd > (mpz_class(1) << wOut) - 1 )
-		{
+		if(svRd > (mpz_class(1) << wOut) - 1 )		{
 			svRd = 0;
 		}
 
-		if(svRu > (mpz_class(1) << wOut) - 1 )
-		{
+		if(svRu > (mpz_class(1) << wOut) - 1 )		{
 			svRu = 0;
 		}
 
@@ -474,7 +478,7 @@ namespace flopoco{
 						1), // logicTable 
 			mother(mother), 
 			index(i),
-			lsbInWeight(mother->m[i])
+			lsbInWeight(mother->l[i])
 	{
 		ostringstream name; 
 		srcFileName="FixRealKCM";
@@ -483,6 +487,9 @@ namespace flopoco{
 		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team"); 
 	}
   
+
+
+
 	mpz_class FixRealKCMTable::function(int x0)
 	{
 		int x;
@@ -495,10 +502,11 @@ namespace flopoco{
 		{
 			if ( x0 > ((1<<(wIn-1))-1) )
 			{
-				x = (1<<wIn) - x;
+				x -= (1<<wIn);
 				negativeInput = true;
 			}
 		}
+		cout << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   ";
 
 		mpz_class result;
 		mpfr_t mpR, mpX;
@@ -506,17 +514,17 @@ namespace flopoco{
 		mpfr_init2(mpR, 10*wOut);
 		mpfr_init2(mpX, 2*wIn); //To avoid mpfr bug if wIn = 1
 
-		if(x == 0)
-		{
+		if(x == 0){
 			result = mpz_class(0);
 		}
-		else
-		{
+		else	{
 			mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
 			// Scaling so that the input has its actual weight
 			mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
 
-
+			double dx = mpfr_get_d(mpX, GMP_RNDN);
+			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
+			
 			// do the mult in large precision
 			mpfr_mul(mpR, mpX, mother->absC, GMP_RNDN);
 			
@@ -528,36 +536,43 @@ namespace flopoco{
 					GMP_RNDN
 				); //Exact
 
+			double dr=mpfr_get_d(mpR, GMP_RNDN);
+			cout << "  dr=" << dr << "  ";
+			
 			// Here is when we do the rounding
 			mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
 
 			//Get the real sign
-			if(negativeInput != mother->negativeConstant && result != 0)
-			{
-				result = (mpz_class(1) << wOut) - result;
+			if(negativeInput != mother->negativeConstant && result != 0) {
+				if(result<0)
+					result +=(mpz_class(1) << wOut);
 			}
 		}
+			cout << "  sdr=" << result << "  ";
 
-		// TODO F2D:  understand the following
-		//Result is result -1 in order to avoid to waste a sign bit
-		if(negativeSubproduct)
-		{
-			if(result == 0)
-				result = (mpz_class(1) << wOut) - 1;
-			else
-				result -= 1;
-		}
+		// // TODO F2D:  understand the following
+		// //Result is result -1 in order to avoid to waste a sign bit
+		// if(negativeSubproduct)
+		// {
+		// 	if(result == 0)
+		// 		result = (mpz_class(1) << wOut) - 1;
+		// 	else
+		// 		result -= 1;
+		// }
 
-		//In case of global bitHeap, we need to invert msb for signedInput
-		//last bit for fast sign extension.
-		if((index==0) && mother->signedInput)	{
-			mpz_class shiftedOne = mpz_class(1) << (wOut - 1);
-			if( result < shiftedOne ) // MSB=0
-				result += shiftedOne;  // set it to 1
-			else
-				result -= shiftedOne;  // set it to 0
-		}
+		// //In case of global bitHeap, we need to invert msb for signedInput
+		// //last bit for fast sign extension.
+		// if((index==0) && mother->signedInput)	{
+		// 	mpz_class shiftedOne = mpz_class(1) << (wOut - 1);
+		// 	if( result < shiftedOne ) // MSB=0
+		// 		result += shiftedOne;  // set it to 1
+		// 	else
+		// 		result -= shiftedOne;  // set it to 0
+		// }
 
+		
+		cout << result << endl;
+			
 
 		return result;
 	}

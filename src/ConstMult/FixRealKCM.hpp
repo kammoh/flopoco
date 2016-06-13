@@ -105,6 +105,7 @@ namespace flopoco{
 		static void registerFactory();
 		
 		bool signedInput;
+		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
 		int msbIn;
 		int lsbIn;
 		int msbOut;
