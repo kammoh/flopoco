@@ -7,6 +7,46 @@ The VHDL Lexer (implemented in src/VHDLLexerRule.l)
 - invokes the scheduler at each ";"
 
 
+* Overview of the scheduling process
+- the loops in the circuit are handled with the help of the user
+	- the user inserts a new directive at the beginning of the loop
+	- the scheduling is stopped from that point on
+	- ? insert a new register
+	- instead of scheduling as usual, the scheduler only increases the critical path
+	- the user inserts a new directive to restart the scheduling
+	- ? insert a new register
+- the loops just detected will give the maximum achievable frequency
+	- imposed by the largest loop
+- then start pipelining the circuit using this maximum frequency
+- pipelining is done on the go, during the constructor
+- after each statement that is written into the vhdl stream (statement in the sense of a VHDL statement, so it will be triggered by a ';')
+	- the lexer is invoked, then the scheduler is invoked on all of the nodes that were added/modified
+		- the vhdl stream needs to be able to trigger the scheduler and the lexer
+	- new nodes are added to the graph by declare
+	- the vhdl is lexed and the corresponding edges are added to the graph
+		- need to know a list of edges that contain unknown nodes
+		- edges that contain unknown names are put to the side
+			- ? list of to-be-processed edges
+			- ? list of the corresponding to-be-scheduled nodes
+		- theses edges are tested when the next instructions are processed and when new declares are made
+		- ? when adding these delayed edges, checks must be made to see if the predecessor is also a successor, in which case this is a loop
+			- this can be achieved by doing a depth-first traversal of the tree, while remembering the node from which the node originated
+	- the scheduling is restarted for the newly added nodes, and the nodes that have been affected by the newly added edges
+		- need to know the newly added nodes and the newly modified nodes
+		- the scheduling for a node changes the timing of the node itself
+		- the scheduling also updates the node's predecessors
+- ? bitheap code gets inserted in a separate stream, and is only added at the end
+	- if the nodes which are inputs to the bitheap have their timing modified after the bitheap is compressed, then the compression is called again and the new compression code replaces the old one in the separate bitheap code stream
+- loops are detected and processed within the same pass
+	- the start of the loop is indicated by the user
+	- the end of the loop is indicated by the user
+	- care must be taken for smaller loops inside the original loop
+		- same remark as before: this can be avoided if we stop the scheduler when it reaches an already scheduled node
+- once the constructor call is over, a new scheduler can be called: asap or alap
+	- uses the same tree
+	- constructs a new schedule
+
+
 * Abandoned alternative 
 The following alternative was considerered (and even completely implemented):
 1/ build the complete signal dependency graph, 
