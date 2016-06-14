@@ -8,24 +8,38 @@ The VHDL Lexer (implemented in src/VHDLLexerRule.l)
 
 
 * Overview of the scheduling process
+
+In case of loops we will do two scheduling passes.
+- first pass: do as if there was no loop, see below
 - the loops in the circuit are handled with the help of the user
 	- the user inserts a new directive at the beginning of the loop
+  		void stopPipelining(bool insertRegister=true)
 	- the scheduling is stopped from that point on
-	- ? insert a new register
 	- instead of scheduling as usual, the scheduler only increases the critical path
 	- the user inserts a new directive to restart the scheduling
-	- ? insert a new register
-- the loops just detected will give the maximum achievable frequency
-	- imposed by the largest loop
-- then start pipelining the circuit using this maximum frequency
+  		void restartPipelining(bool insertRegister=true)
+  - the loops just detected will give the maximum achievable frequency
+   	- imposed by the largest loop
+- Second pass: then start pipelining the circuit using this maximum frequency
+
+
+The bit heap compression is part of the scheduling process, not part of the constructor code
+ - add to Operator a list of its bit heaps
+ - addBit() etc build the bit heap in edges
+ - getSumName() builds the out edges
+ - generateCompressorVHDL() 
+    - does some bookkeeping so that we can re-launch it in case of loops
+    - writes its VHDL to a separate stream (attribute of BitHeap)
+    - scheduled separately because we know it has no loops (using Martin's algos for instance)
+
+First pass (and only pass if no loop):  
 - pipelining is done on the go, during the constructor
+- new nodes are added to the graph by declare
 - after each statement that is written into the vhdl stream (statement in the sense of a VHDL statement, so it will be triggered by a ';')
 	- the lexer is invoked, then the scheduler is invoked on all of the nodes that were added/modified
-		- the vhdl stream needs to be able to trigger the scheduler and the lexer
-	- new nodes are added to the graph by declare
-	- the vhdl is lexed and the corresponding edges are added to the graph
+		- vhdlStream needs to be able to trigger the scheduler and the lexer
 		- need to know a list of edges that contain unknown nodes
-		- edges that contain unknown names are put to the side
+		- edges that contain unknown signal names are put to the side
 			- ? list of to-be-processed edges
 			- ? list of the corresponding to-be-scheduled nodes
 		- theses edges are tested when the next instructions are processed and when new declares are made
