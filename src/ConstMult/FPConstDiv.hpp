@@ -5,7 +5,7 @@
 #include <gmpxx.h>
 #include "Operator.hpp"
 #include "IntConstDiv.hpp"
-#include "TestState.hpp"
+//#include "TestState.hpp"
 
 
 namespace flopoco{
@@ -38,7 +38,7 @@ namespace flopoco{
 		static void registerFactory();
 
 		/** @brief Static method used for tests on the Operator */
-		static void nextTest ( TestState * ts );
+		//static void nextTest ( TestState * ts );
 
 	private:
 		int d; /**< The operator divides by d.2^dExp */

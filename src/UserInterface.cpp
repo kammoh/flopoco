@@ -1,4 +1,5 @@
 #include "UserInterface.hpp"
+#include "Tester/Tester.hpp"
 #include "FloPoCo.hpp"
 #include <algorithm>
 #include <iostream>
@@ -260,6 +261,10 @@ namespace flopoco
 		return factoryList.size();
 	}
 
+	OperatorFactoryPtr UserInterface::getFactoryByIndex(unsigned i)
+	{
+		return UserInterface::factoryList[i].second;
+	}
 
 	OperatorFactoryPtr UserInterface::getFactoryByName(string operatorName)	{
 		std::transform(operatorName.begin(), operatorName.end(), operatorName.begin(), ::tolower);
@@ -298,6 +303,15 @@ namespace flopoco
 		}
 		if(argc==2 && string(argv[1])=="BuildAutocomplete") {
 			buildAutocomplete();
+			exit(EXIT_SUCCESS);
+		}
+		if((argc==3 || argc==4 )&& string(argv[1])=="Test")
+		{
+			bool testDependences = false;
+			string opName = string(argv[2]);
+			if(argc==4 && string(argv[3])=="Dependences")
+				testDependences = true;
+			Tester tester(opName,testDependences);
 			exit(EXIT_SUCCESS);
 		}
 
@@ -580,8 +594,9 @@ namespace flopoco
 													 string seeAlso,
 													 string parameterList, /**< semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
 													 string extraHTMLDoc, /**< Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
-													 parser_func_t parser	 ) {
-		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser));
+													 parser_func_t parser,
+													 nextTestState_func_t nextTestState	 ) {
+		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser, nextTestState));
 		UserInterface::registerFactory(factory);
 	}
 
@@ -1083,8 +1098,9 @@ namespace flopoco
 						 string seeAlso,
 						 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */ 
 						 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */ 
-						 parser_func_t parser  )
-		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser)
+						 parser_func_t parser,
+						 nextTestState_func_t nextTestState )
+		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser), m_nextTestState(nextTestState)
 	{
 		int start;
 		// Parse the parameter description

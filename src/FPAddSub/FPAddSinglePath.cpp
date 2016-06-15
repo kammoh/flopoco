@@ -28,65 +28,65 @@
 #include <Operator.hpp>
 
 
-using namespace std;
+  using namespace std;
 
 //TODO +- inf for exponent => update exception
 
-namespace flopoco{
+  namespace flopoco{
 
 
 #define DEBUGVHDL 0
 
 
-	FPAddSinglePath::FPAddSinglePath(Target* target,
-																	 int wE, int wF,
-																	 bool sub, map<string, double> inputDelays) :
-		Operator(target), wE(wE), wF(wF), sub(sub) {
+  	FPAddSinglePath::FPAddSinglePath(Target* target,
+  		int wE, int wF,
+  		bool sub, map<string, double> inputDelays) :
+  	Operator(target), wE(wE), wF(wF), sub(sub) {
 
-		srcFileName="FPAddSinglePath";
+  		srcFileName="FPAddSinglePath";
 
-		ostringstream name;
-		if(sub)
-			name<<"FPSub_";
-		else
-			name<<"FPAdd_";
+  		ostringstream name;
+  		if(sub)
+  			name<<"FPSub_";
+  		else
+  			name<<"FPAdd_";
 
-		name <<wE<<"_"<<wF;
-		setNameWithFreqAndUID(name.str());
+  		name <<wE<<"_"<<wF;
+  		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2010)");
+  		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2010)");
 
-		sizeRightShift = intlog2(wF+3);
+  		sizeRightShift = intlog2(wF+3);
 
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		addFPInput ("X", wE, wF);
-		addFPInput ("Y", wE, wF);
-		addFPOutput("R", wE, wF);
+  		addFPInput ("X", wE, wF);
+  		addFPInput ("Y", wE, wF);
+  		addFPOutput("R", wE, wF);
 
 		//=========================================================================|
 		//                          Swap/Difference                                |
 		// ========================================================================|
-		vhdl<<"-- Exponent difference and swap  --"<<endl;
+  		vhdl<<"-- Exponent difference and swap  --"<<endl;
 
-		vhdl << tab << declare("excExpFracX",2+wE+wF) << " <= X"<<range(wE+wF+2, wE+wF+1) << " & X"<<range(wE+wF-1, 0)<<";"<<endl;
-		vhdl << tab << declare("excExpFracY",2+wE+wF) << " <= Y"<<range(wE+wF+2, wE+wF+1) << " & Y"<<range(wE+wF-1, 0)<<";"<<endl;
+  		vhdl << tab << declare("excExpFracX",2+wE+wF) << " <= X"<<range(wE+wF+2, wE+wF+1) << " & X"<<range(wE+wF-1, 0)<<";"<<endl;
+  		vhdl << tab << declare("excExpFracY",2+wE+wF) << " <= Y"<<range(wE+wF+2, wE+wF+1) << " & Y"<<range(wE+wF-1, 0)<<";"<<endl;
 
 		/*		setCriticalPath(getMaxInputDelays(inputDelays));
 					manageCriticalPath(target->localWireDelay() + target->eqComparatorDelay(wE+wF+2));
 					vhdl<< tab << declare("eqdiffsign") << " <= '1' when excExpFracX = excExpFracY else '0';"<<endl; */
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
-		vhdl<< tab << declare("eXmeY",wE+1) << " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
-		vhdl<< tab << declare("eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
-		double cpeXmeY = getCriticalPath();
+					setCriticalPath(getMaxInputDelays(inputDelays));
+					manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
+					vhdl<< tab << declare("eXmeY",wE+1) << " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
+					vhdl<< tab << declare("eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
+					double cpeXmeY = getCriticalPath();
 
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
+					setCriticalPath(getMaxInputDelays(inputDelays));
 
-		if (wF < 30){
+					if (wF < 30){
 			manageCriticalPath(target->localWireDelay() + target->adderDelay(wE)); //comparator delay implemented for now as adder
 			vhdl<< tab << declare("swap")       << " <= '0' when excExpFracX >= excExpFracY else '1';"<<endl;
 		}else{
@@ -140,9 +140,9 @@ namespace flopoco{
 		manageCriticalPath(target->localWireDelay()+2*target->lutDelay());
 		vhdl <<tab<<"with sXsYExnXY select "<<endl;
 		vhdl <<tab<<declare("excRt",2) << " <= \"00\" when \"000000\"|\"010000\"|\"100000\"|\"110000\","<<endl
-				 <<tab<<tab<<"\"01\" when \"000101\"|\"010101\"|\"100101\"|\"110101\"|\"000100\"|\"010100\"|\"100100\"|\"110100\"|\"000001\"|\"010001\"|\"100001\"|\"110001\","<<endl
-				 <<tab<<tab<<"\"10\" when \"111010\"|\"001010\"|\"001000\"|\"011000\"|\"101000\"|\"111000\"|\"000010\"|\"010010\"|\"100010\"|\"110010\"|\"001001\"|\"011001\"|\"101001\"|\"111001\"|\"000110\"|\"010110\"|\"100110\"|\"110110\", "<<endl
-				 <<tab<<tab<<"\"11\" when others;"<<endl;
+		<<tab<<tab<<"\"01\" when \"000101\"|\"010101\"|\"100101\"|\"110101\"|\"000100\"|\"010100\"|\"100100\"|\"110100\"|\"000001\"|\"010001\"|\"100001\"|\"110001\","<<endl
+		<<tab<<tab<<"\"10\" when \"111010\"|\"001010\"|\"001000\"|\"011000\"|\"101000\"|\"111000\"|\"000010\"|\"010010\"|\"100010\"|\"110010\"|\"001001\"|\"011001\"|\"101001\"|\"111001\"|\"000110\"|\"010110\"|\"100110\"|\"110110\", "<<endl
+		<<tab<<tab<<"\"11\" when others;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
 		vhdl <<tab<<declare("signR") << "<= '0' when (sXsYExnXY=\"100000\" or sXsYExnXY=\"010000\") else signX;"<<endl;
 
@@ -165,7 +165,7 @@ namespace flopoco{
 		if (wE>sizeRightShift) {
 			manageCriticalPath(target->localWireDelay() + target->lutDelay());
 			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0)"
-					<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
+			<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
 		}
 		else if (wE==sizeRightShift) {
 			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
@@ -219,7 +219,7 @@ namespace flopoco{
 		else
 			if (syncCycleFromSignal("sticky"))
 				setCriticalPath(cpsticky);
-		manageCriticalPath(target->localWireDelay()+ target->lutDelay());
+			manageCriticalPath(target->localWireDelay()+ target->lutDelay());
 		vhdl<<tab<< declare("cInAddFar")           << " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
@@ -296,144 +296,144 @@ namespace flopoco{
 			if (syncCycleFromSignal("expFrac"))
 				setCriticalPath(cpexpFrac);
 
-		IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
-		addSubComponent(ra);
+			IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
+			addSubComponent(ra);
 
-		inPortMap(ra,"X", "expFrac");
-		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
-		inPortMap( ra, "Cin", "addToRoundBit");
-		outPortMap( ra, "R", "RoundedExpFrac");
-		vhdl << instance(ra, "roundingAdder");
-		setCycleFromSignal("RoundedExpFrac");
-		setCriticalPath(ra->getOutputDelay("R"));
+			inPortMap(ra,"X", "expFrac");
+			inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
+			inPortMap( ra, "Cin", "addToRoundBit");
+			outPortMap( ra, "R", "RoundedExpFrac");
+			vhdl << instance(ra, "roundingAdder");
+			setCycleFromSignal("RoundedExpFrac");
+			setCriticalPath(ra->getOutputDelay("R"));
 
 		// 		vhdl<<tab<<declare("RoundedExpFrac",wE+2+wF+1)<<"<= expFrac + addToRoundBit;"<<endl;
 
 		//possible update to exception bits
-		vhdl << tab << declare("upExc",2)<<" <= RoundedExpFrac"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
+			vhdl << tab << declare("upExc",2)<<" <= RoundedExpFrac"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
 
-		vhdl << tab << declare("fracR",wF)<<" <= RoundedExpFrac"<<range(wF,1)<<";"<<endl;
-		vhdl << tab << declare("expR",wE) <<" <= RoundedExpFrac"<<range(wF+wE,wF+1)<<";"<<endl;
+			vhdl << tab << declare("fracR",wF)<<" <= RoundedExpFrac"<<range(wF,1)<<";"<<endl;
+			vhdl << tab << declare("expR",wE) <<" <= RoundedExpFrac"<<range(wF+wE,wF+1)<<";"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
-		vhdl << tab << "with (exExpExc) select "<<endl;
-		vhdl << tab << declare("excRt2",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
-				 <<tab<<tab<<"\"01\" when \"0001\","<<endl
-				 <<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
-				 <<tab<<tab<<"\"11\" when others;"<<endl;
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl<<tab<<declare("excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;
+			manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
+			vhdl << tab << "with (exExpExc) select "<<endl;
+			vhdl << tab << declare("excRt2",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
+			<<tab<<tab<<"\"01\" when \"0001\","<<endl
+			<<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
+			<<tab<<tab<<"\"11\" when others;"<<endl;
+			manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			vhdl<<tab<<declare("excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
-		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
+			vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
 
 
 		// assign result
-		vhdl<<tab<< declare("computedR",wE+wF+3) << " <= excR & signR2 & expR & fracR;"<<endl;
-		vhdl << tab << "R <= computedR;"<<endl;
+			vhdl<<tab<< declare("computedR",wE+wF+3) << " <= excR & signR2 & expR & fracR;"<<endl;
+			vhdl << tab << "R <= computedR;"<<endl;
 
 		/*		manageCriticalPath(target->localWireDelay() +  target->lutDelay());
 					vhdl<<tab<<"with sdExnXY select"<<endl;
 					vhdl<<tab<<"R <= newX when \"0100\"|\"1000\"|\"1001\", newY when \"0001\"|\"0010\"|\"0110\", computedR when others;"<<endl;*/
 
 
-	}
+				}
 
-	FPAddSinglePath::~FPAddSinglePath() {
-	}
+				FPAddSinglePath::~FPAddSinglePath() {
+				}
 
 
-	void FPAddSinglePath::emulate(TestCase * tc)
-	{
+				void FPAddSinglePath::emulate(TestCase * tc)
+				{
 		/* Get I/O values */
-		mpz_class svX = tc->getInputValue("X");
-		mpz_class svY = tc->getInputValue("Y");
+					mpz_class svX = tc->getInputValue("X");
+					mpz_class svY = tc->getInputValue("Y");
 
 		/* Compute correct value */
-		FPNumber fpx(wE, wF, svX);
-		FPNumber fpy(wE, wF, svY);
-		mpfr_t x, y, r;
-		mpfr_init2(x, 1+wF);
-		mpfr_init2(y, 1+wF);
-		mpfr_init2(r, 1+wF);
-		fpx.getMPFR(x);
-		fpy.getMPFR(y);
-		if(sub)
-			mpfr_sub(r, x, y, GMP_RNDN);
-		else
-			mpfr_add(r, x, y, GMP_RNDN);
+					FPNumber fpx(wE, wF, svX);
+					FPNumber fpy(wE, wF, svY);
+					mpfr_t x, y, r;
+					mpfr_init2(x, 1+wF);
+					mpfr_init2(y, 1+wF);
+					mpfr_init2(r, 1+wF);
+					fpx.getMPFR(x);
+					fpy.getMPFR(y);
+					if(sub)
+						mpfr_sub(r, x, y, GMP_RNDN);
+					else
+						mpfr_add(r, x, y, GMP_RNDN);
 
 		// Set outputs
-		FPNumber  fpr(wE, wF, r);
-		mpz_class svR = fpr.getSignalValue();
-		tc->addExpectedOutput("R", svR);
+					FPNumber  fpr(wE, wF, r);
+					mpz_class svR = fpr.getSignalValue();
+					tc->addExpectedOutput("R", svR);
 
 		// clean up
-		mpfr_clears(x, y, r, NULL);
-	}
+					mpfr_clears(x, y, r, NULL);
+				}
 
 
 
 
 
-	void FPAddSinglePath::buildStandardTestCases(TestCaseList* tcl){
-		TestCase *tc;
+				void FPAddSinglePath::buildStandardTestCases(TestCaseList* tcl){
+					TestCase *tc;
 
 		// Regression tests
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", 1.0);
+					tc->addFPInput("Y", -1.0);
+					emulate(tc);
+					tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::plusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", 1.0);
+					tc->addFPInput("Y", FPNumber::plusDirtyZero);
+					emulate(tc);
+					tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", 1.0);
+					tc->addFPInput("Y", FPNumber::minusDirtyZero);
+					emulate(tc);
+					tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", FPNumber::plusInfty);
+					tc->addFPInput("Y", FPNumber::minusInfty);
+					emulate(tc);
+					tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", FPNumber::plusInfty);
+					tc->addFPInput("Y", FPNumber::plusInfty);
+					emulate(tc);
+					tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", FPNumber::minusInfty);
+					tc->addFPInput("Y", FPNumber::minusInfty);
+					emulate(tc);
+					tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", -4.375e1);
-		tc->addFPInput("Y", 4.375e1);
-		emulate(tc);
-		tcl->add(tc);
+					tc = new TestCase(this);
+					tc->addFPInput("X", -4.375e1);
+					tc->addFPInput("Y", 4.375e1);
+					emulate(tc);
+					tcl->add(tc);
 
-	}
+				}
 
 
 
-	TestCase* FPAddSinglePath::buildRandomTestCase(int i){
+				TestCase* FPAddSinglePath::buildRandomTestCase(int i){
 
-		TestCase *tc;
-		mpz_class x,y;
-		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
-		mpz_class negative  = mpz_class(1)<<(wE+wF);
+					TestCase *tc;
+					mpz_class x,y;
+					mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
+					mpz_class negative  = mpz_class(1)<<(wE+wF);
 
-		tc = new TestCase(this);
+					tc = new TestCase(this);
 		/* Fill inputs */
 		if ((i & 7) == 0) {// cancellation, same exponent
 			mpz_class e = getLargeRandom(wE);
@@ -489,7 +489,7 @@ namespace flopoco{
 		return tc;
 	}
 
-		OperatorPtr FPAddSinglePath::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPAddSinglePath::parseArguments(Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
@@ -498,12 +498,12 @@ namespace flopoco{
 	}
 
 	void FPAddSinglePath::registerFactory(){
-		UserInterface::add("FPAddSInglePath", // name
-											 "A floating-point adder with a new, more compact single-path architecture.",
+		UserInterface::add("FPAddSinglePath", // name
+			"A floating-point adder with a new, more compact single-path architecture.",
 											 "BasicFloatingPoint", // categories
 											 "",
 											 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits;",
+											 wF(int): mantissa size in bits;",
 											 "",
 											 FPAddSinglePath::parseArguments
 											 ) ;

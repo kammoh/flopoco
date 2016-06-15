@@ -26,50 +26,50 @@ namespace flopoco{
 		 * @param[in]		wE			the the with of the exponent
 		 * @param[in]		wF			the the with of the fraction
 		 */
-		FPAddSinglePath(Target* target, int wE, int wF, bool sub=false, map<string, double> inputDelays = emptyDelayMap);
+		 FPAddSinglePath(Target* target, int wE, int wF, bool sub=false, map<string, double> inputDelays = emptyDelayMap);
 
 		/**
 		 * FPAddSinglePath destructor
 		 */
-		~FPAddSinglePath();
+		 ~FPAddSinglePath();
 
 
-		void emulate(TestCase * tc);
-		void buildStandardTestCases(TestCaseList* tcl);
-		TestCase* buildRandomTestCase(int i);
+		 void emulate(TestCase * tc);
+		 void buildStandardTestCases(TestCaseList* tcl);
+		 TestCase* buildRandomTestCase(int i);
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		 static OperatorPtr parseArguments(Target *target , vector<string> &args);
 
-		static void registerFactory();
+		 static void registerFactory();
 
 
-	private:
+		private:
 		/** The width of the exponent */
-		int wE;
+			int wE;
 		/** The width of the fraction */
-		int wF;
+			int wF;
 		/** Is this an FPAdd or an FPSub? */
-		bool sub;
+			bool sub;
 
 		/** The combined leading zero counter and shifter for the close path */
-		LZOCShifterSticky* lzocs;
+			LZOCShifterSticky* lzocs;
 		/** The integer adder object for subtraction in the close path */
-		IntAdder *fracSubClose;
+			IntAdder *fracSubClose;
 		/** The dual subtractor for the close path */
-		IntDualSub *dualSubClose;
+			IntDualSub *dualSubClose;
 		/** The fraction adder for the far path */
-		IntAdder *fracAddFar;
+			IntAdder *fracAddFar;
 		/** The adder that does the final rounding */
-		IntAdder *finalRoundAdd;
+			IntAdder *finalRoundAdd;
 		/** The right shifter for the far path */
-		Shifter* rightShifter;
+			Shifter* rightShifter;
 
-		int sizeRightShift;
+			int sizeRightShift;
 
-	};
+		};
 
-}
+	}
 
 #endif

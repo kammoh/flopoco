@@ -237,7 +237,7 @@ namespace flopoco{
 	* Method returning a vector containing values of the valid TestState ts up-to-dated
 	* it also update the multimap testMemory and increase the counter for the treated operator
 	**/
-	void FPConstDiv::nextTest ( TestState * ts ){
+	/*void FPConstDiv::nextTest ( TestState * ts ){
 		string opName = "FPConstDiv";
 
 		// establishment of the different values, pay attention to the order !!
@@ -271,7 +271,7 @@ namespace flopoco{
 		Operator::testMemory.insert ( pair < string, TestState > ( opName, *ts) );
 		// increase the counter of the treated operator indicating how many tests have been done on it
 		ts -> counter++;
-	}
+	}*/
 
 
 	OperatorPtr FPConstDiv::parseArguments(Target *target, vector<string> &args) {

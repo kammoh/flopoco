@@ -16,17 +16,18 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 #define UserInterface_hpp
 
 #include "Operator.hpp"
+#include "Tester/TestState.hpp"
 #include <memory>
 
 // Operator Factory, based on the one by David Thomas, with a bit of clean up.
 // For typical use, see src/ShiftersEtc/Shifter  or   src/ExpLog/FPExp
 
-namespace flopoco
-{
-	
-	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	
-	class OperatorFactory;
-	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
+  namespace flopoco
+  {
+  	typedef void (*nextTestState_func_t)(TestState *);
+  	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	
+  	class OperatorFactory;
+  	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
 
 
 	/* There is a bit of refactoring to do: all the pair=values CLI options should be encapsulated in something like
@@ -72,13 +73,14 @@ namespace flopoco
 
 		/**a helper factory function. For the parameter documentation, see the OperatorFactory constructor */ 
 		static void add(
-										string name,
-										string description, 
-										string category,
-										string seeAlso,
-										string parameterList, 
-										string extraHTMLDoc,  
-										parser_func_t parser	);
+			string name,
+			string description, 
+			string category,
+			string seeAlso,
+			string parameterList, 
+			string extraHTMLDoc,  
+			parser_func_t parser,
+			nextTestState_func_t nextTestState = nullptr	);
 		
 		static unsigned getFactoryCount();
 		static OperatorFactoryPtr getFactoryByIndex(unsigned i);
@@ -105,48 +107,48 @@ namespace flopoco
 				Typical example is a table designed to fit in a LUT or parallel row of LUTs
 		*/
 
-		static void addToGlobalOpList(OperatorPtr op);
+				static void addToGlobalOpList(OperatorPtr op);
 
 		/** generates the code for operators in oplist, and all their subcomponents */
-		static void outputVHDLToFile(vector<OperatorPtr> oplist, ofstream& file);
+				static void outputVHDLToFile(vector<OperatorPtr> oplist, ofstream& file);
 
 		/** generates the code for operators in globalOpList, and all their subcomponents */
-		static void outputVHDLToFile(ofstream& file);
-		
+				static void outputVHDLToFile(ofstream& file);
 
-	private:
+
+			private:
 		/** register a factory */
-		static void registerFactory(OperatorFactoryPtr factory);
+				static void registerFactory(OperatorFactoryPtr factory);
 
 		/** error reporting */
-		static void throwMissingArgError(string opname, string key);
+				static void throwMissingArgError(string opname, string key);
 		/** parse all the generic options such as name, target, verbose, etc. */
-		static void parseGenericOptions(vector<string>& args);
+				static void parseGenericOptions(vector<string>& args);
 
 		/** Build operators.html directly into the doc directory. */
-		static void buildHTMLDoc();
+				static void buildHTMLDoc();
 
 		/** Build flopoco bash autocompletion file **/
-		static void buildAutocomplete();
-		
-	public:
+				static void buildAutocomplete();
+
+			public:
 		static vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
-		static int    verbose;
-	private:
-		static string outputFileName;
-		static string entityName;
-		static string targetFPGA;
-		static double targetFrequencyMHz;
-		static bool   pipeline;
-		static bool   clockEnable;
-		static bool   useHardMult;
-		static bool   plainVHDL;
-		static bool   generateFigures;
-		static double unusedHardMultThreshold;
-		static int    resourceEstimation;
-		static bool   floorplanning;
-		static bool   reDebug;
-		static bool   flpDebug;
+				static int    verbose;
+			private:
+				static string outputFileName;
+				static string entityName;
+				static string targetFPGA;
+				static double targetFrequencyMHz;
+				static bool   pipeline;
+				static bool   clockEnable;
+				static bool   useHardMult;
+				static bool   plainVHDL;
+				static bool   generateFigures;
+				static double unusedHardMultThreshold;
+				static int    resourceEstimation;
+				static bool   floorplanning;
+				static bool   reDebug;
+				static bool   flpDebug;
 		static vector<pair<string,OperatorFactoryPtr>> factoryList; // used to be a map, but I dont want them listed in alphabetical order
 		static const vector<pair<string,string>> categories;
 
@@ -173,6 +175,7 @@ namespace flopoco
 		map<string,string> m_paramDefault; /* If equal to "", this parameter is mandatory (no default). Otherwise, default value (as a string, to be parsed) */
 		string m_extraHTMLDoc; 
 		parser_func_t m_parser;
+		nextTestState_func_t m_nextTestState;
 
 	public:
 		
@@ -184,14 +187,15 @@ namespace flopoco
 				\param parser       A function that can parse a vector of string arguments into an Operator instance
 				\param extraHTMLDoc Extra information to go to the HTML doc, for instance links to articles or details on the algorithms 
 		**/
-		OperatorFactory(
-						 string name,
-						 string description, 
-						 string category,
-						 string seeAlso,
-						 string parameters,  
-						 string extraHTMLDoc,  
-						 parser_func_t parser	);
+				OperatorFactory(
+					string name,
+					string description, 
+					string category,
+					string seeAlso,
+					string parameters,  
+					string extraHTMLDoc,  
+					parser_func_t parser,
+					nextTestState_func_t nextState	);
 
 		virtual const string &name() const // You can see in this prototype that it was not written by Florent
 		{ return m_name; } 
@@ -213,13 +217,22 @@ namespace flopoco
 			factory to check the types and whether there are enough.
 			\param consumed On exit, the factory indicates how many of the arguments are used up.
 		*/
-		virtual OperatorPtr parseArguments(Target* target, vector<string> &args	)
-		{
-			return m_parser(target, args);
-		}
+			virtual OperatorPtr parseArguments(Target* target, vector<string> &args	)
+			{
+				return m_parser(target, args);
+			}
+
+			virtual void nextTestStateGenerator(TestState* previousTestState)
+			{
+				if(m_nextTestState != nullptr)
+				{
+
+					m_nextTestState(previousTestState);
+				}
+			}
 
 
-	};
+		};
 }; // namespace flopoco
 
 #endif
