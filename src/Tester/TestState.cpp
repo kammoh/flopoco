@@ -1,16 +1,13 @@
 #include "TestState.hpp"
 
+#include <iostream>
+
 namespace flopoco
 {
 
 	void TestState::addParam(string name, string value)
 	{
 		testParam.insert(make_pair(name,value));
-	}
-
-	void TestState::removeParam(string name)
-	{
-		testParam.erase(name);
 	}
 
 	void TestState::clean()
@@ -42,17 +39,24 @@ namespace flopoco
 		testBenchNumber = pTestBenchNumber;
 	}
 
+	void TestState::setIterationIndex(int pIterationIndex)
+	{
+		iterationIndex = pIterationIndex;
+	}
+
 	int TestState::getTestBenchNumber()
 	{
 		return testBenchNumber;
 	}
 
+	int TestState::getIterationIndex()
+	{
+		return iterationIndex;
+	}
+
 	string TestState::getValue(string name)
 	{
-		if(testParam.find(name) != testParam.end())
-			return testParam.find(name)->second;
-		else
-			return "NotFound";
+		return testParam.find(name)->second;
 	}
 
 	map<string,string> TestState::getMap()
@@ -65,9 +69,21 @@ namespace flopoco
 		return (iterationIndex<iterationNumber);
 	}
 
-	bool TestState::isEmpty()
+	bool TestState::isUnchanged()
 	{
-		return testParam.empty();
+		bool unchanged = true;
+
+		map<string,string>::iterator itMap;
+
+		for(itMap = testParam.begin(); itMap != testParam.end(); ++itMap)
+		{
+			if(itMap->second != "" && iterationNumber != 0)
+			{
+				unchanged = false;
+			}
+		}
+
+		return unchanged;
 	}
 
 	TestState::TestState()

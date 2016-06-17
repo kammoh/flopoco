@@ -20,12 +20,53 @@ namespace flopoco{
 
 	void FPAdd::nextTestState(TestState * previousTestState)
 	{
-		if(previousTestState->isEmpty())
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIterationIndex() == 0)
 		{
-			previousTestState->setIterationNumber(1);
-			previousTestState->addParam("wE","8");
-			previousTestState->addParam("wF","23");
-			previousTestState->setTestBenchNumber(100);
+
+			for(int j = 0; j<2; j++)
+			{
+				paramList.push_back(make_pair("wE","8"));
+				paramList.push_back(make_pair("wF","23"));
+				if(j==1)
+				{
+					paramList.push_back(make_pair("dualPath","true"));
+				}
+				testStateList.push_back(paramList);
+				paramList.clear();
+				paramList.push_back(make_pair("wE","11"));
+				paramList.push_back(make_pair("wF","52"));
+				if(j==1)
+				{
+					paramList.push_back(make_pair("dualPath","true"));
+				}
+				testStateList.push_back(paramList);
+
+
+				for(int i = 5; i<53; i++)
+				{
+					int nbByteWE = 6+(i/10);
+					paramList.clear();
+					paramList.push_back(make_pair("wF",to_string(i)));
+					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+					if(j==1)
+					{
+						paramList.push_back(make_pair("dualPath","true"));
+					}
+					testStateList.push_back(paramList);
+				}
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int indexIteration = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
 		}
 	}
 

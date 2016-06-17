@@ -81,7 +81,7 @@ int main(int argc, char* argv[] )
 		FPAddSub::registerFactory();
 		FPAddDualPath::registerFactory();
 		FPAdd3Input::registerFactory();
-		FPAddSinglePath::registerFactory();
+		//FPAddSinglePath::registerFactory();
 		FPMult::registerFactory();
 		//FPMultKaratsuba::registerFactory();
 		FPSquare::registerFactory();

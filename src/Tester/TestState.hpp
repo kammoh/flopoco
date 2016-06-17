@@ -22,12 +22,6 @@ namespace flopoco
 		void addParam(string name, string value);
 
 		/**
-		* Remove a parameter from the TestState using its name
-		* @param name Name of the parameter
-		*/
-		void removeParam(string name);
-
-		/**
 		* Clean the TestState, clear all the parameters and iteration values.
 		*/
 		void clean();
@@ -56,11 +50,19 @@ namespace flopoco
 		*/
 		void setTestBenchNumber(int pTestBenchNumber);
 
+		void setIterationIndex(int pIterationIndex);
+
 		/**
 		* Get the number of tests for the TestBench
 		* @return Number of tests for the TestBench
 		*/
 		int getTestBenchNumber();
+
+		/**
+		* Get the index of the current iteration
+		* @return Index of the current iteration
+		*/
+		int getIterationIndex();
 
 		/**
 		* Get the value of a parameter using its name
@@ -83,10 +85,10 @@ namespace flopoco
 		bool canIterate();
 
 		/**
-		* Check if the TestState is empty
+		* Check if the TestState's parameters are all unspecified
 		* @return true or false
 		*/
-		bool isEmpty();
+		bool isUnchanged();
 
 		/**
 		* Constructor of a TestState

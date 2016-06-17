@@ -32,14 +32,62 @@ namespace flopoco
 			// Test all the operators ?
 			if(opName == "All")
 			{
-				// We get the operators' names
+				// We get the operators' names to add them in the testedOperator set
 				unsigned nbFactory = UserInterface::getFactoryCount();
 
 				for (unsigned i=0; i<nbFactory ; i++)
 				{
 					opFact = UserInterface::getFactoryByIndex(i);
 					testedOperator.insert(opFact->name());
-				} 
+				}
+
+				// Test the first two TestState for each Operator before testing all the TestStates
+				for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
+				{
+					cout << "Testing first tests for Operator : " << (*itOperator) << endl;
+					opFact = UserInterface::getFactoryByName(*itOperator);
+					paramNames = opFact->param_names();
+
+				// Fetch all parameters and default values for readability
+					for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
+					{
+						currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
+					}
+
+					opFact->nextTestStateGenerator(currentTestState);
+
+				// Is the TestState is unchanged, meaning the NextState method is not implemented
+					if(!currentTestState->isUnchanged())
+					{
+						while(currentTestState->getIterationIndex()<2)
+						{
+							// Get the next state and create the flopoco command corresponding
+							opFact->nextTestStateGenerator(currentTestState);
+							commandLine = "./testScript.sh " + (*itOperator);
+
+						// Get the map containing the parameters
+							testStateParam = currentTestState->getMap();
+
+							for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
+							{
+								commandLine += " " + itMap->first + "=" + itMap->second;
+							}
+
+							commandLine += " TestBench n=" + to_string(currentTestState->getTestBenchNumber());
+
+							system(commandLine.c_str());
+							currentTestState->nextIteration();
+						}
+					}
+					else
+					{
+						cout << "No nextTestState method defined" << endl;
+					}
+
+					currentTestState->clean();
+				}
+
+				currentTestState->setIterationIndex(3);
 			}
 			else
 			{
@@ -94,30 +142,30 @@ namespace flopoco
 						}
 					}
 				}
-			}		
+			}
+
+			// For each tested Operator, we run a number of tests defined by the Operator		
 			for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 			{
 				cout << "Testing Operator : " << (*itOperator) << endl;
 				opFact = UserInterface::getFactoryByName(*itOperator);
 				paramNames = opFact->param_names();
-				currentTestState->clean();
+
+				// Fetch all parameters and default values for readability
+				for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
+				{
+					currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
+				}
+
 				opFact->nextTestStateGenerator(currentTestState);
 
-				// Is the TestState empty, meaning the NextState method is not implemented
-				if(!currentTestState->isEmpty())
+				// Is the TestState is unchanged, meaning the NextState method is not implemented
+				if(!currentTestState->isUnchanged())
 				{
 					while(currentTestState->canIterate())
 					{
+						// Get the next state and create the flopoco command corresponding
 						commandLine = "./testScript.sh " + (*itOperator);
-
-					// Fetch the default values for readability
-						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
-						{
-							if(currentTestState->getValue(*itParam) == "NotFound")
-							{
-								currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
-							}
-						}
 
 						// Get the map containing the parameters
 						testStateParam = currentTestState->getMap();
@@ -131,14 +179,21 @@ namespace flopoco
 
 						system(commandLine.c_str());
 						currentTestState->nextIteration();
+						if(currentTestState->canIterate())
+							opFact->nextTestStateGenerator(currentTestState);
 					}
 				}
 				else
 				{
 					cout << "No nextTestState method defined" << endl;
 				}
+
+				currentTestState->clean();
 			}
 			cout << "Tests are finished" << endl;
+			delete currentTestState;
+			// Clean all temporary file
+			system("./cleanTest.sh");
 		}
 		else
 		{
