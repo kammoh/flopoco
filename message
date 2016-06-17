@@ -4,3 +4,845 @@
 [ 94%] Built target fp2bin
 [ 97%] Built target longacc2fp
 [100%] Built target bin2fp
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
+flopoco.vhdl:526:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_5_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:530:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_6_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:534:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_7_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:538:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_8_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:701:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_9_f400_uid2_f400_uid98
+ghdl: compilation error
+flopoco.vhdl:901:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_10_f400_uid2_f400_uid135
+ghdl: compilation error
+flopoco.vhdl:952:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_11_f400_uid2_f400_uid137
+ghdl: compilation error
+flopoco.vhdl:994:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_12_f400_uid2_f400_uid147
+ghdl: compilation error
+flopoco.vhdl:1091:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_13_f400_uid2_f400_uid161
+ghdl: compilation error
+flopoco.vhdl:1142:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_14_f400_uid2_f400_uid167
+ghdl: compilation error
+flopoco.vhdl:1099:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_15_f400_uid2_f400_uid177
+ghdl: compilation error
+flopoco.vhdl:1145:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_16_f400_uid2_f400_uid209
+ghdl: compilation error
+flopoco.vhdl:1148:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_17_f400_uid2_f400_uid211
+ghdl: compilation error
+flopoco.vhdl:765:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_18_f400_uid2_f400_uid124
+ghdl: compilation error
+flopoco.vhdl:770:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_19_f400_uid2_f400_uid124
+ghdl: compilation error
+flopoco.vhdl:890:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_20_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:894:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_21_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:903:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_22_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:3320:34: two underscores can't be consecutive
+flopoco.vhdl:3326:48: two underscores can't be consecutive
+flopoco.vhdl:3972:40: two underscores can't be consecutive
+flopoco.vhdl:4219:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_24_f400_uid2_f400_uid266
+ghdl: compilation error
+flopoco.vhdl:3402:34: two underscores can't be consecutive
+flopoco.vhdl:3408:48: two underscores can't be consecutive
+flopoco.vhdl:4080:40: two underscores can't be consecutive
+flopoco.vhdl:4327:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_25_f400_uid2_f400_uid272
+ghdl: compilation error
+flopoco.vhdl:3541:34: two underscores can't be consecutive
+flopoco.vhdl:3547:48: two underscores can't be consecutive
+flopoco.vhdl:4461:40: two underscores can't be consecutive
+flopoco.vhdl:4708:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_26_f400_uid2_f400_uid300
+ghdl: compilation error
+flopoco.vhdl:3785:34: two underscores can't be consecutive
+flopoco.vhdl:3791:48: two underscores can't be consecutive
+flopoco.vhdl:4740:40: two underscores can't be consecutive
+flopoco.vhdl:4994:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_27_f400_uid2_f400_uid324
+ghdl: compilation error
+flopoco.vhdl:3855:34: two underscores can't be consecutive
+flopoco.vhdl:3861:48: two underscores can't be consecutive
+flopoco.vhdl:4923:40: two underscores can't be consecutive
+flopoco.vhdl:5177:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_28_f400_uid2_f400_uid336
+ghdl: compilation error
+flopoco.vhdl:4105:34: two underscores can't be consecutive
+flopoco.vhdl:4111:48: two underscores can't be consecutive
+flopoco.vhdl:5336:40: two underscores can't be consecutive
+flopoco.vhdl:5590:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_29_f400_uid2_f400_uid360
+ghdl: compilation error
+flopoco.vhdl:3219:34: two underscores can't be consecutive
+flopoco.vhdl:3225:48: two underscores can't be consecutive
+flopoco.vhdl:4454:40: two underscores can't be consecutive
+flopoco.vhdl:4717:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_30_f400_uid2_f400_uid299
+ghdl: compilation error
+flopoco.vhdl:3261:34: two underscores can't be consecutive
+flopoco.vhdl:3267:48: two underscores can't be consecutive
+flopoco.vhdl:4766:40: two underscores can't be consecutive
+flopoco.vhdl:5029:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_31_f400_uid2_f400_uid332
+ghdl: compilation error
+flopoco.vhdl:3524:34: two underscores can't be consecutive
+flopoco.vhdl:3530:48: two underscores can't be consecutive
+flopoco.vhdl:5242:40: two underscores can't be consecutive
+flopoco.vhdl:5523:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_32_f400_uid2_f400_uid352
+ghdl: compilation error
+flopoco.vhdl:3362:34: two underscores can't be consecutive
+flopoco.vhdl:3368:48: two underscores can't be consecutive
+flopoco.vhdl:4559:40: two underscores can't be consecutive
+flopoco.vhdl:4835:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_33_f400_uid2_f400_uid293
+ghdl: compilation error
+flopoco.vhdl:3386:34: two underscores can't be consecutive
+flopoco.vhdl:3392:48: two underscores can't be consecutive
+flopoco.vhdl:4707:40: two underscores can't be consecutive
+flopoco.vhdl:4988:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_34_f400_uid2_f400_uid299
+ghdl: compilation error
+flopoco.vhdl:3510:34: two underscores can't be consecutive
+flopoco.vhdl:3516:48: two underscores can't be consecutive
+flopoco.vhdl:4874:40: two underscores can't be consecutive
+flopoco.vhdl:5150:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_35_f400_uid2_f400_uid313
+ghdl: compilation error
+flopoco.vhdl:3824:34: two underscores can't be consecutive
+flopoco.vhdl:3830:48: two underscores can't be consecutive
+flopoco.vhdl:5424:40: two underscores can't be consecutive
+flopoco.vhdl:5716:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_36_f400_uid2_f400_uid331
+ghdl: compilation error
+flopoco.vhdl:6063:34: two underscores can't be consecutive
+flopoco.vhdl:6069:48: two underscores can't be consecutive
+flopoco.vhdl:7716:40: two underscores can't be consecutive
+flopoco.vhdl:8022:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_37_f400_uid2_f400_uid469
+ghdl: compilation error
+flopoco.vhdl:4861:34: two underscores can't be consecutive
+flopoco.vhdl:4867:48: two underscores can't be consecutive
+flopoco.vhdl:6652:40: two underscores can't be consecutive
+flopoco.vhdl:6952:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_38_f400_uid2_f400_uid422
+ghdl: compilation error
+flopoco.vhdl:4983:34: two underscores can't be consecutive
+flopoco.vhdl:4989:48: two underscores can't be consecutive
+flopoco.vhdl:7026:40: two underscores can't be consecutive
+flopoco.vhdl:7326:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_39_f400_uid2_f400_uid447
+ghdl: compilation error
+flopoco.vhdl:5972:34: two underscores can't be consecutive
+flopoco.vhdl:5978:48: two underscores can't be consecutive
+flopoco.vhdl:7102:40: two underscores can't be consecutive
+flopoco.vhdl:7409:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_40_f400_uid2_f400_uid401
+ghdl: compilation error
+flopoco.vhdl:5159:34: two underscores can't be consecutive
+flopoco.vhdl:5165:48: two underscores can't be consecutive
+flopoco.vhdl:6551:40: two underscores can't be consecutive
+flopoco.vhdl:6856:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_41_f400_uid2_f400_uid375
+ghdl: compilation error
+flopoco.vhdl:6948:34: two underscores can't be consecutive
+flopoco.vhdl:6954:48: two underscores can't be consecutive
+flopoco.vhdl:8391:40: two underscores can't be consecutive
+flopoco.vhdl:8703:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_42_f400_uid2_f400_uid498
+ghdl: compilation error
+flopoco.vhdl:7264:34: two underscores can't be consecutive
+flopoco.vhdl:7270:48: two underscores can't be consecutive
+flopoco.vhdl:8872:40: two underscores can't be consecutive
+flopoco.vhdl:9183:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_43_f400_uid2_f400_uid556
+ghdl: compilation error
+flopoco.vhdl:7098:34: two underscores can't be consecutive
+flopoco.vhdl:7104:48: two underscores can't be consecutive
+flopoco.vhdl:8884:40: two underscores can't be consecutive
+flopoco.vhdl:9200:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_44_f400_uid2_f400_uid546
+ghdl: compilation error
+flopoco.vhdl:7418:34: two underscores can't be consecutive
+flopoco.vhdl:7424:48: two underscores can't be consecutive
+flopoco.vhdl:9372:40: two underscores can't be consecutive
+flopoco.vhdl:9688:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_45_f400_uid2_f400_uid592
+ghdl: compilation error
+flopoco.vhdl:7946:34: two underscores can't be consecutive
+flopoco.vhdl:7952:48: two underscores can't be consecutive
+flopoco.vhdl:10159:40: two underscores can't be consecutive
+flopoco.vhdl:10479:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_46_f400_uid2_f400_uid656
+ghdl: compilation error
+flopoco.vhdl:7698:34: two underscores can't be consecutive
+flopoco.vhdl:7704:48: two underscores can't be consecutive
+flopoco.vhdl:10174:40: two underscores can't be consecutive
+flopoco.vhdl:10494:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_47_f400_uid2_f400_uid656
+ghdl: compilation error
+flopoco.vhdl:8757:34: two underscores can't be consecutive
+flopoco.vhdl:8763:48: two underscores can't be consecutive
+flopoco.vhdl:11452:40: two underscores can't be consecutive
+flopoco.vhdl:11778:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_48_f400_uid2_f400_uid759
+ghdl: compilation error
+flopoco.vhdl:7661:34: two underscores can't be consecutive
+flopoco.vhdl:7667:48: two underscores can't be consecutive
+flopoco.vhdl:10488:40: two underscores can't be consecutive
+flopoco.vhdl:10828:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_49_f400_uid2_f400_uid680
+ghdl: compilation error
+flopoco.vhdl:6162:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_50_f400_uid2_f400_uid723
+ghdl: compilation error
+flopoco.vhdl:6350:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_51_f400_uid2_f400_uid763
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
+flopoco.vhdl:526:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_5_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:530:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_6_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:534:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_7_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:538:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_8_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:701:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_9_f400_uid2_f400_uid98
+ghdl: compilation error
+flopoco.vhdl:901:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_10_f400_uid2_f400_uid135
+ghdl: compilation error
+flopoco.vhdl:952:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_11_f400_uid2_f400_uid137
+ghdl: compilation error
+flopoco.vhdl:994:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_12_f400_uid2_f400_uid147
+ghdl: compilation error
+flopoco.vhdl:1091:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_13_f400_uid2_f400_uid161
+ghdl: compilation error
+flopoco.vhdl:1142:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_14_f400_uid2_f400_uid167
+ghdl: compilation error
+flopoco.vhdl:1099:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_15_f400_uid2_f400_uid177
+ghdl: compilation error
+flopoco.vhdl:1145:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_16_f400_uid2_f400_uid209
+ghdl: compilation error
+flopoco.vhdl:1148:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_17_f400_uid2_f400_uid211
+ghdl: compilation error
+flopoco.vhdl:765:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_18_f400_uid2_f400_uid124
+ghdl: compilation error
+flopoco.vhdl:770:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_19_f400_uid2_f400_uid124
+ghdl: compilation error
+flopoco.vhdl:890:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_20_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:894:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_21_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:903:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_22_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:3320:34: two underscores can't be consecutive
+flopoco.vhdl:3326:48: two underscores can't be consecutive
+flopoco.vhdl:3972:40: two underscores can't be consecutive
+flopoco.vhdl:4219:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_24_f400_uid2_f400_uid266
+ghdl: compilation error
+flopoco.vhdl:3402:34: two underscores can't be consecutive
+flopoco.vhdl:3408:48: two underscores can't be consecutive
+flopoco.vhdl:4080:40: two underscores can't be consecutive
+flopoco.vhdl:4327:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_25_f400_uid2_f400_uid272
+ghdl: compilation error
+flopoco.vhdl:3541:34: two underscores can't be consecutive
+flopoco.vhdl:3547:48: two underscores can't be consecutive
+flopoco.vhdl:4461:40: two underscores can't be consecutive
+flopoco.vhdl:4708:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_26_f400_uid2_f400_uid300
+ghdl: compilation error
+flopoco.vhdl:3785:34: two underscores can't be consecutive
+flopoco.vhdl:3791:48: two underscores can't be consecutive
+flopoco.vhdl:4740:40: two underscores can't be consecutive
+flopoco.vhdl:4994:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_27_f400_uid2_f400_uid324
+ghdl: compilation error
+flopoco.vhdl:3855:34: two underscores can't be consecutive
+flopoco.vhdl:3861:48: two underscores can't be consecutive
+flopoco.vhdl:4923:40: two underscores can't be consecutive
+flopoco.vhdl:5177:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_28_f400_uid2_f400_uid336
+ghdl: compilation error
+flopoco.vhdl:4105:34: two underscores can't be consecutive
+flopoco.vhdl:4111:48: two underscores can't be consecutive
+flopoco.vhdl:5336:40: two underscores can't be consecutive
+flopoco.vhdl:5590:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_29_f400_uid2_f400_uid360
+ghdl: compilation error
+flopoco.vhdl:3219:34: two underscores can't be consecutive
+flopoco.vhdl:3225:48: two underscores can't be consecutive
+flopoco.vhdl:4454:40: two underscores can't be consecutive
+flopoco.vhdl:4717:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_30_f400_uid2_f400_uid299
+ghdl: compilation error
+flopoco.vhdl:3261:34: two underscores can't be consecutive
+flopoco.vhdl:3267:48: two underscores can't be consecutive
+flopoco.vhdl:4766:40: two underscores can't be consecutive
+flopoco.vhdl:5029:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_31_f400_uid2_f400_uid332
+ghdl: compilation error
+flopoco.vhdl:3524:34: two underscores can't be consecutive
+flopoco.vhdl:3530:48: two underscores can't be consecutive
+flopoco.vhdl:5242:40: two underscores can't be consecutive
+flopoco.vhdl:5523:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_32_f400_uid2_f400_uid352
+ghdl: compilation error
+flopoco.vhdl:3362:34: two underscores can't be consecutive
+flopoco.vhdl:3368:48: two underscores can't be consecutive
+flopoco.vhdl:4559:40: two underscores can't be consecutive
+flopoco.vhdl:4835:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_33_f400_uid2_f400_uid293
+ghdl: compilation error
+flopoco.vhdl:3386:34: two underscores can't be consecutive
+flopoco.vhdl:3392:48: two underscores can't be consecutive
+flopoco.vhdl:4707:40: two underscores can't be consecutive
+flopoco.vhdl:4988:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_34_f400_uid2_f400_uid299
+ghdl: compilation error
+flopoco.vhdl:3510:34: two underscores can't be consecutive
+flopoco.vhdl:3516:48: two underscores can't be consecutive
+flopoco.vhdl:4874:40: two underscores can't be consecutive
+flopoco.vhdl:5150:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_35_f400_uid2_f400_uid313
+ghdl: compilation error
+flopoco.vhdl:3824:34: two underscores can't be consecutive
+flopoco.vhdl:3830:48: two underscores can't be consecutive
+flopoco.vhdl:5424:40: two underscores can't be consecutive
+flopoco.vhdl:5716:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_36_f400_uid2_f400_uid331
+ghdl: compilation error
+flopoco.vhdl:6063:34: two underscores can't be consecutive
+flopoco.vhdl:6069:48: two underscores can't be consecutive
+flopoco.vhdl:7716:40: two underscores can't be consecutive
+flopoco.vhdl:8022:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_37_f400_uid2_f400_uid469
+ghdl: compilation error
+flopoco.vhdl:4861:34: two underscores can't be consecutive
+flopoco.vhdl:4867:48: two underscores can't be consecutive
+flopoco.vhdl:6652:40: two underscores can't be consecutive
+flopoco.vhdl:6952:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_38_f400_uid2_f400_uid422
+ghdl: compilation error
+flopoco.vhdl:4983:34: two underscores can't be consecutive
+flopoco.vhdl:4989:48: two underscores can't be consecutive
+flopoco.vhdl:7026:40: two underscores can't be consecutive
+flopoco.vhdl:7326:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_39_f400_uid2_f400_uid447
+ghdl: compilation error
+flopoco.vhdl:5972:34: two underscores can't be consecutive
+flopoco.vhdl:5978:48: two underscores can't be consecutive
+flopoco.vhdl:7102:40: two underscores can't be consecutive
+flopoco.vhdl:7409:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_40_f400_uid2_f400_uid401
+ghdl: compilation error
+flopoco.vhdl:5159:34: two underscores can't be consecutive
+flopoco.vhdl:5165:48: two underscores can't be consecutive
+flopoco.vhdl:6551:40: two underscores can't be consecutive
+flopoco.vhdl:6856:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_41_f400_uid2_f400_uid375
+ghdl: compilation error
+flopoco.vhdl:6948:34: two underscores can't be consecutive
+flopoco.vhdl:6954:48: two underscores can't be consecutive
+flopoco.vhdl:8391:40: two underscores can't be consecutive
+flopoco.vhdl:8703:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_42_f400_uid2_f400_uid498
+ghdl: compilation error
+flopoco.vhdl:7264:34: two underscores can't be consecutive
+flopoco.vhdl:7270:48: two underscores can't be consecutive
+flopoco.vhdl:8872:40: two underscores can't be consecutive
+flopoco.vhdl:9183:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_43_f400_uid2_f400_uid556
+ghdl: compilation error
+flopoco.vhdl:7098:34: two underscores can't be consecutive
+flopoco.vhdl:7104:48: two underscores can't be consecutive
+flopoco.vhdl:8884:40: two underscores can't be consecutive
+flopoco.vhdl:9200:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_44_f400_uid2_f400_uid546
+ghdl: compilation error
+flopoco.vhdl:7418:34: two underscores can't be consecutive
+flopoco.vhdl:7424:48: two underscores can't be consecutive
+flopoco.vhdl:9372:40: two underscores can't be consecutive
+flopoco.vhdl:9688:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_45_f400_uid2_f400_uid592
+ghdl: compilation error
+flopoco.vhdl:7946:34: two underscores can't be consecutive
+flopoco.vhdl:7952:48: two underscores can't be consecutive
+flopoco.vhdl:10159:40: two underscores can't be consecutive
+flopoco.vhdl:10479:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_46_f400_uid2_f400_uid656
+ghdl: compilation error
+flopoco.vhdl:7698:34: two underscores can't be consecutive
+flopoco.vhdl:7704:48: two underscores can't be consecutive
+flopoco.vhdl:10174:40: two underscores can't be consecutive
+flopoco.vhdl:10494:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_47_f400_uid2_f400_uid656
+ghdl: compilation error
+flopoco.vhdl:8757:34: two underscores can't be consecutive
+flopoco.vhdl:8763:48: two underscores can't be consecutive
+flopoco.vhdl:11452:40: two underscores can't be consecutive
+flopoco.vhdl:11778:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_48_f400_uid2_f400_uid759
+ghdl: compilation error
+flopoco.vhdl:7661:34: two underscores can't be consecutive
+flopoco.vhdl:7667:48: two underscores can't be consecutive
+flopoco.vhdl:10488:40: two underscores can't be consecutive
+flopoco.vhdl:10828:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_49_f400_uid2_f400_uid680
+ghdl: compilation error
+flopoco.vhdl:6162:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_50_f400_uid2_f400_uid723
+ghdl: compilation error
+flopoco.vhdl:6350:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_51_f400_uid2_f400_uid763
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
+flopoco.vhdl:526:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_5_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:530:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_6_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:534:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_7_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:538:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_8_f400_uid2_f400_uid72
+ghdl: compilation error
+flopoco.vhdl:701:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_6_9_f400_uid2_f400_uid98
+ghdl: compilation error
+flopoco.vhdl:901:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_10_f400_uid2_f400_uid135
+ghdl: compilation error
+flopoco.vhdl:952:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_11_f400_uid2_f400_uid137
+ghdl: compilation error
+flopoco.vhdl:994:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_12_f400_uid2_f400_uid147
+ghdl: compilation error
+flopoco.vhdl:1091:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_13_f400_uid2_f400_uid161
+ghdl: compilation error
+flopoco.vhdl:1142:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_14_f400_uid2_f400_uid167
+ghdl: compilation error
+flopoco.vhdl:1099:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_15_f400_uid2_f400_uid177
+ghdl: compilation error
+flopoco.vhdl:1145:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_16_f400_uid2_f400_uid209
+ghdl: compilation error
+flopoco.vhdl:1148:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_17_f400_uid2_f400_uid211
+ghdl: compilation error
+flopoco.vhdl:765:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_18_f400_uid2_f400_uid124
+ghdl: compilation error
+flopoco.vhdl:770:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_7_19_f400_uid2_f400_uid124
+ghdl: compilation error
+flopoco.vhdl:890:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_20_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:894:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_21_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:903:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_22_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:907:21: length of value does not match length of target
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_23_f400_uid2_f400_uid156
+ghdl: compilation error
+flopoco.vhdl:3320:34: two underscores can't be consecutive
+flopoco.vhdl:3326:48: two underscores can't be consecutive
+flopoco.vhdl:3972:40: two underscores can't be consecutive
+flopoco.vhdl:4219:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_24_f400_uid2_f400_uid266
+ghdl: compilation error
+flopoco.vhdl:3402:34: two underscores can't be consecutive
+flopoco.vhdl:3408:48: two underscores can't be consecutive
+flopoco.vhdl:4080:40: two underscores can't be consecutive
+flopoco.vhdl:4327:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_25_f400_uid2_f400_uid272
+ghdl: compilation error
+flopoco.vhdl:3541:34: two underscores can't be consecutive
+flopoco.vhdl:3547:48: two underscores can't be consecutive
+flopoco.vhdl:4461:40: two underscores can't be consecutive
+flopoco.vhdl:4708:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_26_f400_uid2_f400_uid300
+ghdl: compilation error
+flopoco.vhdl:3785:34: two underscores can't be consecutive
+flopoco.vhdl:3791:48: two underscores can't be consecutive
+flopoco.vhdl:4740:40: two underscores can't be consecutive
+flopoco.vhdl:4994:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_27_f400_uid2_f400_uid324
+ghdl: compilation error
+flopoco.vhdl:3855:34: two underscores can't be consecutive
+flopoco.vhdl:3861:48: two underscores can't be consecutive
+flopoco.vhdl:4923:40: two underscores can't be consecutive
+flopoco.vhdl:5177:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_28_f400_uid2_f400_uid336
+ghdl: compilation error
+flopoco.vhdl:4105:34: two underscores can't be consecutive
+flopoco.vhdl:4111:48: two underscores can't be consecutive
+flopoco.vhdl:5336:40: two underscores can't be consecutive
+flopoco.vhdl:5590:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_8_29_f400_uid2_f400_uid360
+ghdl: compilation error
+flopoco.vhdl:3219:34: two underscores can't be consecutive
+flopoco.vhdl:3225:48: two underscores can't be consecutive
+flopoco.vhdl:4454:40: two underscores can't be consecutive
+flopoco.vhdl:4717:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_30_f400_uid2_f400_uid299
+ghdl: compilation error
+flopoco.vhdl:3261:34: two underscores can't be consecutive
+flopoco.vhdl:3267:48: two underscores can't be consecutive
+flopoco.vhdl:4766:40: two underscores can't be consecutive
+flopoco.vhdl:5029:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_31_f400_uid2_f400_uid332
+ghdl: compilation error
+flopoco.vhdl:3524:34: two underscores can't be consecutive
+flopoco.vhdl:3530:48: two underscores can't be consecutive
+flopoco.vhdl:5242:40: two underscores can't be consecutive
+flopoco.vhdl:5523:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_32_f400_uid2_f400_uid352
+ghdl: compilation error
+flopoco.vhdl:3362:34: two underscores can't be consecutive
+flopoco.vhdl:3368:48: two underscores can't be consecutive
+flopoco.vhdl:4559:40: two underscores can't be consecutive
+flopoco.vhdl:4835:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_33_f400_uid2_f400_uid293
+ghdl: compilation error
+flopoco.vhdl:3386:34: two underscores can't be consecutive
+flopoco.vhdl:3392:48: two underscores can't be consecutive
+flopoco.vhdl:4707:40: two underscores can't be consecutive
+flopoco.vhdl:4988:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_34_f400_uid2_f400_uid299
+ghdl: compilation error
+flopoco.vhdl:3510:34: two underscores can't be consecutive
+flopoco.vhdl:3516:48: two underscores can't be consecutive
+flopoco.vhdl:4874:40: two underscores can't be consecutive
+flopoco.vhdl:5150:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_35_f400_uid2_f400_uid313
+ghdl: compilation error
+flopoco.vhdl:3824:34: two underscores can't be consecutive
+flopoco.vhdl:3830:48: two underscores can't be consecutive
+flopoco.vhdl:5424:40: two underscores can't be consecutive
+flopoco.vhdl:5716:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_36_f400_uid2_f400_uid331
+ghdl: compilation error
+flopoco.vhdl:6063:34: two underscores can't be consecutive
+flopoco.vhdl:6069:48: two underscores can't be consecutive
+flopoco.vhdl:7716:40: two underscores can't be consecutive
+flopoco.vhdl:8022:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_37_f400_uid2_f400_uid469
+ghdl: compilation error
+flopoco.vhdl:4861:34: two underscores can't be consecutive
+flopoco.vhdl:4867:48: two underscores can't be consecutive
+flopoco.vhdl:6652:40: two underscores can't be consecutive
+flopoco.vhdl:6952:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_38_f400_uid2_f400_uid422
+ghdl: compilation error
+flopoco.vhdl:4983:34: two underscores can't be consecutive
+flopoco.vhdl:4989:48: two underscores can't be consecutive
+flopoco.vhdl:7026:40: two underscores can't be consecutive
+flopoco.vhdl:7326:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_9_39_f400_uid2_f400_uid447
+ghdl: compilation error
+flopoco.vhdl:5972:34: two underscores can't be consecutive
+flopoco.vhdl:5978:48: two underscores can't be consecutive
+flopoco.vhdl:7102:40: two underscores can't be consecutive
+flopoco.vhdl:7409:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_40_f400_uid2_f400_uid401
+ghdl: compilation error
+flopoco.vhdl:5159:34: two underscores can't be consecutive
+flopoco.vhdl:5165:48: two underscores can't be consecutive
+flopoco.vhdl:6551:40: two underscores can't be consecutive
+flopoco.vhdl:6856:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_41_f400_uid2_f400_uid375
+ghdl: compilation error
+flopoco.vhdl:6948:34: two underscores can't be consecutive
+flopoco.vhdl:6954:48: two underscores can't be consecutive
+flopoco.vhdl:8391:40: two underscores can't be consecutive
+flopoco.vhdl:8703:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_42_f400_uid2_f400_uid498
+ghdl: compilation error
+flopoco.vhdl:7264:34: two underscores can't be consecutive
+flopoco.vhdl:7270:48: two underscores can't be consecutive
+flopoco.vhdl:8872:40: two underscores can't be consecutive
+flopoco.vhdl:9183:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_43_f400_uid2_f400_uid556
+ghdl: compilation error
+flopoco.vhdl:7098:34: two underscores can't be consecutive
+flopoco.vhdl:7104:48: two underscores can't be consecutive
+flopoco.vhdl:8884:40: two underscores can't be consecutive
+flopoco.vhdl:9200:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_44_f400_uid2_f400_uid546
+ghdl: compilation error
+flopoco.vhdl:7418:34: two underscores can't be consecutive
+flopoco.vhdl:7424:48: two underscores can't be consecutive
+flopoco.vhdl:9372:40: two underscores can't be consecutive
+flopoco.vhdl:9688:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_45_f400_uid2_f400_uid592
+ghdl: compilation error
+flopoco.vhdl:7946:34: two underscores can't be consecutive
+flopoco.vhdl:7952:48: two underscores can't be consecutive
+flopoco.vhdl:10159:40: two underscores can't be consecutive
+flopoco.vhdl:10479:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_46_f400_uid2_f400_uid656
+ghdl: compilation error
+flopoco.vhdl:7698:34: two underscores can't be consecutive
+flopoco.vhdl:7704:48: two underscores can't be consecutive
+flopoco.vhdl:10174:40: two underscores can't be consecutive
+flopoco.vhdl:10494:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_47_f400_uid2_f400_uid656
+ghdl: compilation error
+flopoco.vhdl:8757:34: two underscores can't be consecutive
+flopoco.vhdl:8763:48: two underscores can't be consecutive
+flopoco.vhdl:11452:40: two underscores can't be consecutive
+flopoco.vhdl:11778:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_48_f400_uid2_f400_uid759
+ghdl: compilation error
+flopoco.vhdl:7661:34: two underscores can't be consecutive
+flopoco.vhdl:7667:48: two underscores can't be consecutive
+flopoco.vhdl:10488:40: two underscores can't be consecutive
+flopoco.vhdl:10828:36: two underscores can't be consecutive
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_10_49_f400_uid2_f400_uid680
+ghdl: compilation error
+flopoco.vhdl:6162:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_50_f400_uid2_f400_uid723
+ghdl: compilation error
+flopoco.vhdl:6350:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_51_f400_uid2_f400_uid763
+ghdl: compilation error
+flopoco.vhdl:6608:11: ';' is expected instead of '<character>'
+ghdl: compilation error
+/usr/bin/ghdl1-llvm: cannot find entity or configuration testbench_fpexp_11_52_f400_uid2_f400_uid803
+ghdl: compilation error
