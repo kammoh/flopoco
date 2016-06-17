@@ -200,7 +200,6 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/Signal
  src/utils
  src/FlopocoStream
- src/TestState
  VHDLLexer # generated from .l
  
  # Resource Estimation related ---------------------------------------
@@ -228,6 +227,10 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/Targets/CycloneIII 
  src/Targets/CycloneIV 
  src/Targets/CycloneV 
+
+# Tester ------------------------------------------------------------
+src/Tester/Tester
+src/Tester/TestState
 
 # TestBench-related -------------------------------------------------
  src/TestBenches/TestCase
