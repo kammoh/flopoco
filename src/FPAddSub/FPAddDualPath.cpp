@@ -275,7 +275,7 @@ namespace flopoco{
 		nextCycle();////////////////////////////////////////////////////////////////////////////////////
 
 		// compute sticky bit as the or of the shifted out bits during the alignment //
-		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF<<")) else '1';"<<endl;
+		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF+1<<")) else '1';"<<endl;
 
 		// one cycle only for the sticky (the far path has more time anyway)
 		nextCycle();////////////////////////////////////////////////////////////////////////////////////

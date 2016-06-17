@@ -199,7 +199,7 @@ namespace flopoco{
 		//FIXME: compute inside shifter;
 		//compute sticky bit as the or of the shifted out bits during the alignment //
 		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wF+1));
-		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF<<")) else '1';"<<endl;
+		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF+1<<")) else '1';"<<endl;
 		double cpsticky = getCriticalPath();
 
 		setCycleFromSignal("shiftedFracY");
