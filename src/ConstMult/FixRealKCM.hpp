@@ -33,40 +33,32 @@ namespace flopoco{
 		 * 							truncate the result
 		 */
 		FixRealKCM(
-				Target* target, 
-				bool signedInput, 
-				int msbIn, 
-				int lsbIn, 
-				int lsbOut, 
-				string constant, 
-				double targetUlpError = 1.0, 
-				map<string, double> inputDelays = emptyDelayMap
-			);
+							 Target* target, 
+							 bool signedInput, 
+							 int msbIn, 
+							 int lsbIn, 
+							 int lsbOut, 
+							 string constant, 
+							 double targetUlpError = 1.0
+							 );
 
 		/**
 		 * @brief Incorporated version of KCM. 
 		 * @param parentOp : operator frow which the KCM is a subentity
-		 * @param target : target on which we want the KCM to run
-		 * @param multiplicandX : signal which will be KCM input
-		 * @param signedInput : true if input are considered as 2'complemented
-		 * 						relative fixed point numbers
-		 * 						false if they are considered as positive number
-		 * @param msbin : power of two associated with input msb. For unsigned 
-		 * 				  input, msb weight will be 2^msb, for signed input, it
-		 * 				  will be -2^msb
-		 * 	@param lsbIn : power of two of input least significant bit
-		 * 	@param lsbOut : desired output precision i.e. output least 
+		 * @param multiplicandX : signal which will be KCM input (must be a fixed-point signal)
+		 * @param lsbOut : desired output precision i.e. output least 
 		 * 					significant bit has a weight of 2^lsbOut
-		 * 	@param constant : string that describes the constant with sollya
+		 * @param constant : string that describes the constant with sollya
 		 * 					  syntax
-		 * 	@param bitHeap : bit heap on which the KCM should throw is result
-		 * 	@param targetUlpError : exiged error bound on result. Difference
+		 * @param targetUlpError : exiged error bound on result. Difference
 		 * 							between result and real value should be
 		 * 							lesser than targetUlpError * 2^lsbOut.
 		 * 							Value has to be in ]0.5 ; 1] (if 0.5 wanted,
 		 * 							please consider to create a one bit more
 		 * 							precise KCM with a targetUlpError of 1 and
 		 * 							truncate the result
+		 * @param g : if -1, do a dry run to compute g (for internal use only): g is computed but no vhdl is generated.
+     *            otherwise take g as it is given (do not compute it). Bit 0 of the bit heap has weight lsbOut-g, and the bit heap must be large enough.
 		 *
 		 *  /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
 		 * 	WARNING : nothing is added to the bitHeap when constant is set to
@@ -75,24 +67,28 @@ namespace flopoco{
 		 *  /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
 		 */
 		FixRealKCM(
-				Operator* parentOp, 
-				Target* target, 
-				Signal* multiplicandX, /**<  must be a fixed-point signal */
-				int lsbOut, 
-				string constant,
-				double targetUlpError = 1.0, 
-				map<string, double> inputDelays = emptyDelayMap
-			);
+							 Operator* parentOp, 
+							 Signal* multiplicandX,
+							 int lsbOut, 
+							 string constant,
+							 bool addRoundBit,
+							 double targetUlpError = 1.0
+							 );
 
 
 		/**
-		 * @brief handle operator initialisation and constant parsing
+		 * @brief handle operator initialisation, constant parsing, computation of the needed guard bits
 		 */
 		void init();
 
-		void buildForBitHeap(Signal* inputSignal);
-
 		
+		/**
+		 * @brief do the actual VHDL generation.
+		 */
+		void buildForBitHeap(BitHeap* bitHeap, int g);
+
+
+
 		// Overloading the virtual functions of Operator
 
 		void emulate(TestCase* tc);
@@ -110,10 +106,11 @@ namespace flopoco{
 		int lsbIn;
 		int msbOut;
 		int lsbOut;
-		int wOut;
+		//		int wOut;
 		int lsbInOrig; // for really small constants, we will use fewer bits of the input
 		string constant;
 		float targetUlpError;
+		bool addRoundBit; /**< If false, do not add the round bit to the bit heap: somebody else will */ 
 		mpfr_t mpC;
 		mpfr_t absC;
 		int msbC;
@@ -123,11 +120,14 @@ namespace flopoco{
 		bool constantIsPowerOfTwo;
 		float errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
 
-		/* The heap of weighted bits that will be used to do the additions */
+		/** The heap of weighted bits that will be used to do the additions */
 		BitHeap*	bitHeap;    	
 
-		/* The operator which envelops this constant multiplier */
+		/** The operator which envelops this constant multiplier */
 		Operator*	parentOp;
+
+		/** The input signal. */
+		string inputSignalName;
 		
 		int numberOfTables;
 		vector<int> m; /**< MSB of chunk i; m[0] == msbIn */

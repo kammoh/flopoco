@@ -36,33 +36,36 @@ namespace flopoco{
 
 	
 	//standalone operator
-	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays):
-							Operator(target, inputDelays),
+	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
+							Operator(target),
 							signedInput(signedInput_),
 							msbIn(msbIn_),
 							lsbIn(lsbIn_),
 							lsbOut(lsbOut_),
 							constant(constant_),
 							targetUlpError(targetUlpError_),
-							parentOp(this)
+							parentOp(this),
+							addRoundBit(true)
 	{
+
 		init();		 // check special cases, computes number of tables and g.
+
+		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
+		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
 		
 		addInput("X",  msbIn-lsbInOrig+1);
+		inputSignalName = "X"; // for buildForBitHeap
 		addOutput("R", msbOut-lsbOut+1);
 
 		// Special cases
-		if(constantRoundsToZero)
-		{
-			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
+		if(constantRoundsToZero)	{
+			vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut, 0) << ";" << endl;
 			return;
 		}
 
-		if(constantIsPowerOfTwo)
-		{
+		if(constantIsPowerOfTwo)	{
 			// Shift it to its place
 			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
-			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
 			return;
 		}
 
@@ -70,13 +73,12 @@ namespace flopoco{
 		// From now we have stuff to do.
 		//create the bitheap
 		int bitheaplsb = lsbOut - g;
-		bitHeap = new BitHeap(this, wOut+g);
+		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
+		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
 
-		buildForBitHeap(getSignalByName("X")); // does everything up to bit heap compression
+		buildForBitHeap(bitHeap, g); // does everything up to bit heap compression
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-
 
 		//compress the bitheap and produce the result
 		bitHeap->generateCompressorVHDL();
@@ -84,11 +86,11 @@ namespace flopoco{
 		//manage the critical path
 		syncCycleFromSignal(bitHeap->getSumName());
 
-		//because of final add in bit heap, add one more bit to the result
-		vhdl << declare("OutRes", wOut+g) << " <= " << 
-			bitHeap->getSumName() << range(wOut+g-1, 0) << ";" << endl;
+		// Retrieve the bits we want from the bit heap
+		vhdl << declare("OutRes",msbOut-lsbOut+1+g) << " <= " << 
+			bitHeap->getSumName() << range(msbOut-lsbOut+g, 0) << ";" << endl; // This range is useful in case there was an overflow?
 
-		vhdl << tab << "R <= OutRes" << range(wOut+g-1, g) << ";" << endl;
+		vhdl << tab << "R <= OutRes" << range(msbOut-lsbOut+g, g) << ";" << endl;
 		
 		outDelayMap["R"] = getCriticalPath();
 	}
@@ -96,27 +98,37 @@ namespace flopoco{
 	
 
 	//operator incorporated into a global bit heap for use as part of a bigger operator
+	// It works in "dry run" mode: it computes g but does not generate any VHDL
 	// In this case, the flow is typically (see FixFIR)
 	//    1/ call the constructor below. It stops before the VHDL generation 
 	//    2/ have it report g using getGuardBits(). 
 	//    3/ the bigger operator computes the global g, builds the bit heap.
-	//    4/ It calls generateVHDL(bitheap, bitheapLSB)
-	FixRealKCM::FixRealKCM(Operator* parentOp_, Target* target_, Signal* fixPointInput, 
-			int lsbOut_, string constant_, double targetUlpError_, map<string, double> inputDelays_):
-					Operator(target_, inputDelays_),
-					signedInput(fixPointInput->isFixSigned()),
-					msbIn(fixPointInput->MSB()),
-					lsbIn(fixPointInput->LSB()),
-					lsbOut(lsbOut_),
-					constant(constant_),
-					targetUlpError(targetUlpError_),
-					parentOp(parentOp_)
+	//    4/ It calls buildForBitHeap(bitHeap, g)
+	FixRealKCM::FixRealKCM(
+												 Operator* parentOp_, 
+												 Signal* multiplicandX,
+												 int lsbOut_, 
+												 string constant_,
+												 bool addRoundBit_,
+												 double targetUlpError_
+												 ):
+		Operator(parentOp_->getTarget()),
+		signedInput(multiplicandX->isFixSigned()),
+		msbIn(multiplicandX->MSB()),
+		lsbIn(multiplicandX->LSB()),
+		lsbOut(lsbOut_),
+		constant(constant_),
+		targetUlpError(targetUlpError_),
+		parentOp(parentOp_),
+		bitHeap(NULL), // will be set by buildForBitHeap()
+		inputSignalName(multiplicandX->getName()),
+		addRoundBit(addRoundBit_)
 	{
 		// Run-time check that the input is a fixed-point signal -- a bit late after all the initializations.
-		if(!fixPointInput->isFix())
+		if(!multiplicandX->isFix())
 			THROWERROR ("FixRealKCM bit heap constructor called for a non-fixpoint input: can't determine its msb and lsb");
 		
-		init(); // check special cases, computes number of tables and g. 
+		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is. 
 		
 		// Special cases
 		if(constantRoundsToZero)		{
@@ -127,10 +139,8 @@ namespace flopoco{
 		if(constantIsPowerOfTwo)		{
 			// Shift it to its place
 			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
-			vhdl << tab << "R" << " <= " << zg(wOut, 0) << ";" << endl;
 			return;
 		}
-		buildForBitHeap(fixPointInput);
 	}
 					
 	
@@ -157,6 +167,9 @@ namespace flopoco{
 
 		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
+
+
+		g=0; // tentatively. 
     
 		if(targetUlpError > 1.0)
 			THROWERROR("FixRealKCM: Error, targetUlpError="<<
@@ -216,7 +229,6 @@ namespace flopoco{
 		if(mpfr_zero_p(mpC) != 0){
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
-			wOut = 1;
 			errorInUlps=0;
 			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
 			return;
@@ -228,8 +240,8 @@ namespace flopoco{
 		if(msbIn<lsbInUseful){
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
-			wOut = 1;
 			errorInUlps=0.5;// TODO this is an overestimation
+			g=0; // still no need for gard bits
 			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
 			return;
 		}
@@ -237,16 +249,16 @@ namespace flopoco{
 		
 		// Now we can discuss MSBs
 		msbOut = msbC + msbIn;
-		if(!signedInput && negativeConstant)
-			msbOut++; //Result would be signed
+		if(signedOutput)
+			msbOut++; // add the sign bit
 
-		wOut = msbOut - lsbOut +1;
-
-		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have no impact on the output
+		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
+		// Some day we compute a TMD using continued fractions and we can ignore useless bits.
+		// Meanwhile we just print a warning
 		lsbInOrig=lsbIn;
 		if(lsbIn<lsbInUseful) { // some of the user-provided input bits would have no impact on the output
-			lsbIn=lsbInUseful;   // therefore ignore them.
-			REPORT(DETAILED, "lsbIn="<<lsbInOrig << " but for such a small constant, bits of weight lower than " << lsbIn << " will have no impact on the output. Ignoring them.")  ;
+			// lsbIn=lsbInUseful;   // therefore ignore them.
+			REPORT(DETAILED, "WARNING: lsbIn="<<lsbInOrig << " but I observe that bits of weight lower than " << lsbIn << " will have very little impact on the output.")  ;
 		}
 
 		// Finally, check if the constant is a power of two -- obvious optimization there
@@ -257,7 +269,9 @@ namespace flopoco{
 			// maybe due to guard bits there will be no truncation and we assumed there would be one...  
 			if(lsbInOrig+msbC<lsbOut) {
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
+				// 
 				errorInUlps=1;
+				g=0;
 				return;
 			}
 			else {
@@ -271,7 +285,7 @@ namespace flopoco{
 		REPORT(DEBUG, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
 					 msbIn << "," << lsbIn << ")    lsbInOrig=" << lsbInOrig << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
-				")   wOut=" << wOut
+					 ")  signedOutput=" << signedOutput
 		);
 
 		// Compute the splitting of the input bits.
@@ -315,6 +329,14 @@ namespace flopoco{
 			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] );
 		}
 
+#if 1
+		// Now we have everything to compute g
+		if(numberOfTables==2 && targetUlpError==1.0)
+			g=0; // specific case: two CR tables make up a faithful sum
+		else
+			g = ceil(log2(numberOfTables/((targetUlpError-0.5)*exp2(-lsbOut)))) -1 -lsbOut;
+		REPORT(DEBUG, " g=" << g);
+#endif
 		// Finally computing the error due to this setup. We express it as ulps at position lsbOut-g, whatever g will be
 		errorInUlps=0.5*numberOfTables;
 	}
@@ -325,8 +347,9 @@ namespace flopoco{
 
 
 
-
-	void FixRealKCM::buildForBitHeap(Signal* inputSignal) {
+	void FixRealKCM::buildForBitHeap(BitHeap* bitHeap_, int g_) {
+		bitHeap=bitHeap_;
+		g=g_;
 
 		for(int i=0; i<numberOfTables; i++) {
 			string sliceInName = join(parentOp->getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.
@@ -334,7 +357,7 @@ namespace flopoco{
 			string instanceName = join(parentOp->getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
 			
 			parentOp->vhdl << tab << declare(sliceInName, m[i]- l[i] +1 ) << " <= "
-										 << inputSignal->getName() << range(m[i]-lsbInOrig, l[i]-lsbInOrig) << ";" << endl;
+										 << inputSignalName << range(m[i]-lsbInOrig, l[i]-lsbInOrig) << ";" << endl;
 			FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
 			addSubComponent(t);
 			parentOp->inPortMap (t , "X", sliceInName);
@@ -347,7 +370,8 @@ namespace flopoco{
 																			sliceOutName, // name
 																			getSignalByName(sliceOutName)->width() // size
 																			);
-			} else {
+			}
+			else {
 				bitHeap -> addUnsignedBitVector(0, // weight
 																				sliceOutName, // name
 																				getSignalByName(sliceOutName)->width() // size
@@ -358,6 +382,7 @@ namespace flopoco{
 
 
 
+	
 	// TODO manage correctly rounded cases, at least the powers of two
 	// To have MPFR work in fix point, we perform the multiplication in very
 	// large precision using RN, and the RU and RD are done only when converting
@@ -368,6 +393,7 @@ namespace flopoco{
 		mpz_class svX = tc->getInputValue("X");
 		bool negativeInput = false;
 		int wIn=msbIn-lsbInOrig+1;
+		int wOut=msbOut-lsbOut+1;
 		
 		// get rid of two's complement
 		if(signedInput)	{
@@ -379,11 +405,11 @@ namespace flopoco{
 		
 		// Cast it to mpfr 
 		mpfr_t mpX; 
-		mpfr_init2(mpX, msbIn-lsbIn+2);	
+		mpfr_init2(mpX, msbIn-lsbInOrig+2);	
 		mpfr_set_z(mpX, svX.get_mpz_t(), GMP_RNDN); // should be exact
 		
 		// scale appropriately: multiply by 2^lsbIn
-		mpfr_mul_2si(mpX, mpX, lsbIn, GMP_RNDN); //Exact
+		mpfr_mul_2si(mpX, mpX, lsbInOrig, GMP_RNDN); //Exact
 		
 		// prepare the result
 		mpfr_t mpR;
@@ -399,12 +425,12 @@ namespace flopoco{
 		mpfr_get_z(svRd.get_mpz_t(), mpR, GMP_RNDD);
 		mpfr_get_z(svRu.get_mpz_t(), mpR, GMP_RNDU);
 
-		cout << " emulate x="<< svX <<"  before=" << svRd;
+		//		cout << " emulate x="<< svX <<"  before=" << svRd;
  		if(negativeInput != negativeConstant)		{
 			svRd += (mpz_class(1) << wOut);
 			svRu += (mpz_class(1) << wOut);
 		}
-		cout << " emulate after=" << svRd << endl;
+		//		cout << " emulate after=" << svRd << endl;
 
 		//Border cases
 		if(svRd > (mpz_class(1) << wOut) - 1 )		{
@@ -506,7 +532,7 @@ namespace flopoco{
 				negativeInput = true;
 			}
 		}
-		cout << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   ";
+		//		cout << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   ";
 
 		mpz_class result;
 		mpfr_t mpR, mpX;
@@ -523,7 +549,7 @@ namespace flopoco{
 			mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
 
 			double dx = mpfr_get_d(mpX, GMP_RNDN);
-			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
+			//			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
 			
 			// do the mult in large precision
 			mpfr_mul(mpR, mpX, mother->absC, GMP_RNDN);
@@ -536,8 +562,8 @@ namespace flopoco{
 					GMP_RNDN
 				); //Exact
 
-			double dr=mpfr_get_d(mpR, GMP_RNDN);
-			cout << "  dr=" << dr << "  ";
+			//      double dr=mpfr_get_d(mpR, GMP_RNDN);
+			//			cout << "  dr=" << dr << "  ";
 			
 			// Here is when we do the rounding
 			mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
@@ -548,7 +574,8 @@ namespace flopoco{
 					result +=(mpz_class(1) << wOut);
 			}
 		}
-			cout << "  sdr=" << result << "  ";
+		
+		//			cout << "  sdr=" << result << "  ";
 
 		// // TODO F2D:  understand the following
 		// //Result is result -1 in order to avoid to waste a sign bit
@@ -571,9 +598,10 @@ namespace flopoco{
 		// }
 
 		
-		cout << result << endl;
+		//		cout << result << endl;
 			
-
+		if(mother->addRoundBit && (index==mother->numberOfTables-1) && (mother->g>0))
+			result += 1<<(mother->g-1);
 		return result;
 	}
 }

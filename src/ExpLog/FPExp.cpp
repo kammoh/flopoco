@@ -449,8 +449,7 @@ namespace flopoco{
 		                                         lsbXforFirstMult, // lsbIn 
 		                                         0,   // lsbOut,
 		                                         "1/log(2)", //  constant
-		                                         0.5 + 0.09, // error: we have 0.125 on X, and target is 0.5+0.22 
-		                                         inDelayMap( "X", target->localWireDelay(2) + getCriticalPath())
+		                                         0.5 + 0.09 // error: we have 0.125 on X, and target is 0.5+0.22 
 		                                         );
 		addSubComponent(mulInvLog2);
 		outPortMap(mulInvLog2, "R", "absK");
@@ -480,8 +479,7 @@ namespace flopoco{
 		                                     0,    // lsbIn
 		                                     -wF-g, // lsbOut
 		                                     "log(2)", 
-		                                     1.0, 
-		                                     inDelayMap( "X", target->localWireDelay(wF+g) + getCriticalPath()) );
+		                                     1.0 );
 
 		addSubComponent(mulLog2);
 		outPortMap(mulLog2, "R", "absKLog2");

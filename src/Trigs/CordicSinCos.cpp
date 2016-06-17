@@ -266,7 +266,7 @@ namespace flopoco{
 		
 			nextCycle();
 			//multiply X by Pi
-			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0, inDelayMap("X",getCriticalPath()) ); 
+			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0 ); 
 			addSubComponent(piMultiplier);
 			
 			vhdl << tab << declare("FinalZ", sizeZ+1) << " <= " << join("D", stage)<< " & " << join("Z", stage) << ";" << endl;
