@@ -66,6 +66,7 @@ First pass (and only pass if no loop):
     - all the code for creating an instance is hosted inside newInstance()
     - the connections (addInput() and addOutput()) are done before the call to the constructor of the new subcomponent
       - a list of (instance_name, source_signal_name, sink_signal_name) is created
+      - the list is created inside the parent operator that creates the subcomponents
     - then the call to the constructor of the subcomponent is made
       - when adding a new input/output (inside addInput()/addOutput()) checks are made to see if the respective input/output is connected to another signal
       - if the signal is connected, then the connection is made
