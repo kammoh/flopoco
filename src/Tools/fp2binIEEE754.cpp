@@ -36,24 +36,22 @@ using namespace flopoco;
 
 
 static void usage(char *name){
-  cerr << "\nUsage: "<<name<<" precision x" <<endl ;
-  cerr << "  precision can take following values: single /"<<endl;
-  cerr << "    double / double-extended"<<endl;
+  cerr << "\nUsage: "<<name<<" wE wF x" <<endl ;
   cerr << "  x is input as an arbitrary precision decimal number" <<endl ;
-  cerr << "    and will be rounded to the nearest IEEE754_FP(wE,wF) number." <<endl ;
+  cerr << "    and will be rounded to the nearest IEEE-754_FP(wE,wF) number." <<endl ;
   exit (EXIT_FAILURE);
 }
 
 
 
 
-string check_prescision_allowed(char* s, char* cmd) {
-  string p=string(s);
-  if (!(p=="single" || p=="double" || p=="double-extended")){
-    cerr << "ERROR: got "<<p<<", expected precision (single/double/double-extended)"<<endl;
+int check_strictly_positive(char* s, char* cmd) {
+  int n=atoi(s);
+  if (n<=0){
+    cerr<<"ERROR: got "<<s<<", expected strictly positive number."<<endl;
     usage(cmd);
   }
-  return p;
+  return n;
 }
 
 
@@ -61,30 +59,15 @@ string check_prescision_allowed(char* s, char* cmd) {
 int main(int argc, char* argv[] )
 {
 
-  if(argc != 3) usage(argv[0]);
-  string precision = check_prescision_allowed(argv[1], argv[0]);
-  int wE=0;
-  int wF=0;
+  if(argc != 4) usage(argv[0]);
+  int wE = check_strictly_positive(argv[1], argv[0]);
+  int wF = check_strictly_positive(argv[2], argv[0]);
 
-  if(precision=="single"){
-    wE=8;
-    wF=23;
-  }
-  else if(precision=="double"){
-    wE=11;
-    wF=52;
-  }
-  else if(precision=="double-extended"){
-    wE=15;
-    wF=64;
-  }
-  else
-    usage(argv[0]);
 
   mpfr_t mpx;
 
   mpfr_init2 (mpx, wF+1);
-  mpfr_set_str (mpx, argv[2], 10, GMP_RNDN);
+  mpfr_set_str (mpx, argv[3], 10, GMP_RNDN);
 
   cout<< fp2binIEEE754(mpx, wE, wF) << endl;
 }
