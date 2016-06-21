@@ -100,14 +100,14 @@ namespace flopoco{
 
 		static void registerFactory();
 		
+		Operator*	parentOp; 		/**< The operator which envelops this constant multiplier */
 		bool signedInput;
 		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
 		int msbIn;
 		int lsbIn;
 		int msbOut;
 		int lsbOut;
-		//		int wOut;
-		int lsbInOrig; // for really small constants, we will use fewer bits of the input
+		int lsbInOrig; /**< currently always equal to lsbIn, but for really small constants, we could use fewer bits of the input */
 		string constant;
 		float targetUlpError;
 		bool addRoundBit; /**< If false, do not add the round bit to the bit heap: somebody else will */ 
@@ -120,11 +120,10 @@ namespace flopoco{
 		bool constantIsPowerOfTwo;
 		float errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
 
+
+
 		/** The heap of weighted bits that will be used to do the additions */
 		BitHeap*	bitHeap;    	
-
-		/** The operator which envelops this constant multiplier */
-		Operator*	parentOp;
 
 		/** The input signal. */
 		string inputSignalName;

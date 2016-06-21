@@ -38,13 +38,13 @@ namespace flopoco{
 	//standalone operator
 	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
 							Operator(target),
+							parentOp(this),
 							signedInput(signedInput_),
 							msbIn(msbIn_),
 							lsbIn(lsbIn_),
 							lsbOut(lsbOut_),
 							constant(constant_),
 							targetUlpError(targetUlpError_),
-							parentOp(this),
 							addRoundBit(true)
 	{
 
@@ -54,25 +54,36 @@ namespace flopoco{
 		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
 		
 		addInput("X",  msbIn-lsbInOrig+1);
+		//		addFixInput("X", signedInput,  msbIn, lsbInOrig); // The world is not ready yet
 		inputSignalName = "X"; // for buildForBitHeap
 		addOutput("R", msbOut-lsbOut+1);
 
 		// Special cases
 		if(constantRoundsToZero)	{
-			vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut, 0) << ";" << endl;
+			vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << ";" << endl;
 			return;
 		}
 
 		if(constantIsPowerOfTwo)	{
-			// Shift it to its place
-			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
+			// Shift input from msbIn to msbOut
+			int shift = msbOut-msbIn;   // This is a shift left: negative means shift right
+			REPORT(0, "shift=" << shift) 
+			vhdl << tab << "R" << " <= ";
+			// Still there are two cases: if lsbIn+shift >= lsbOut, pad. Otherwise, truncate.
+			if(lsbIn+shift >= lsbOut) {
+				vhdl << "X & " << zg(lsbIn+shift - lsbOut);
+			}
+			else {
+				vhdl << "X" << range(msbIn, msbIn-(msbOut-lsbOut));
+			}
+			vhdl <<  ";" <<endl;
 			return;
 		}
 
 
 		// From now we have stuff to do.
 		//create the bitheap
-		int bitheaplsb = lsbOut - g;
+		//		int bitheaplsb = lsbOut - g;
 		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
 		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
 
@@ -113,16 +124,16 @@ namespace flopoco{
 												 double targetUlpError_
 												 ):
 		Operator(parentOp_->getTarget()),
+		parentOp(parentOp_),
 		signedInput(multiplicandX->isFixSigned()),
 		msbIn(multiplicandX->MSB()),
 		lsbIn(multiplicandX->LSB()),
 		lsbOut(lsbOut_),
 		constant(constant_),
 		targetUlpError(targetUlpError_),
-		parentOp(parentOp_),
-		bitHeap(NULL), // will be set by buildForBitHeap()
-		inputSignalName(multiplicandX->getName()),
-		addRoundBit(addRoundBit_)
+		addRoundBit(addRoundBit_), // will be set by buildForBitHeap()
+		bitHeap(NULL),
+		inputSignalName(multiplicandX->getName())
 	{
 		// Run-time check that the input is a fixed-point signal -- a bit late after all the initializations.
 		if(!multiplicandX->isFix())
@@ -249,8 +260,7 @@ namespace flopoco{
 		
 		// Now we can discuss MSBs
 		msbOut = msbC + msbIn;
-		if(signedOutput)
-			msbOut++; // add the sign bit
+		//???		if(signedOutput)	msbOut++; // add the sign bit
 
 		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
 		// Some day we compute a TMD using continued fractions and we can ignore useless bits.
@@ -277,12 +287,14 @@ namespace flopoco{
 			else {
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
 				errorInUlps=0;
+				g=0;
 				return;
 			}
 		}
 
+		// TODO : negative powers of two
 		
-		REPORT(DEBUG, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
+		REPORT(DETAILED, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
 					 msbIn << "," << lsbIn << ")    lsbInOrig=" << lsbInOrig << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
 					 ")  signedOutput=" << signedOutput
@@ -548,7 +560,7 @@ namespace flopoco{
 			// Scaling so that the input has its actual weight
 			mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
 
-			double dx = mpfr_get_d(mpX, GMP_RNDN);
+			//			double dx = mpfr_get_d(mpX, GMP_RNDN);
 			//			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
 			
 			// do the mult in large precision
