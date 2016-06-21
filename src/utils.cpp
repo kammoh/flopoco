@@ -176,6 +176,151 @@ namespace flopoco{
 		return s.str();
 	}
 
+	/** return the binary representation of a floating point number in the
+		 IEEE 754 format */
+	string fp2binIEEE754(mpfr_t x, int wE, int wF){
+		mpfr_t mpx, one, two;
+		ostringstream s;
+
+		// copy the input
+		mpfr_init2 (mpx, wF+1);
+		mpfr_set (mpx, x, GMP_RNDN);
+
+		mpfr_init2(one, 2);
+		mpfr_set_d(one, 1.0, GMP_RNDN);
+		mpfr_init2(two, 2);
+		mpfr_set_d(two, 2.0, GMP_RNDN);
+
+		// Not a Number case
+		if(mpfr_nan_p (mpx)) {
+			// sign bit
+			s<<"0";
+			// exponent  bits
+			for(int i=0; i<wE; i++)
+				s<< "1";
+			// mantissa bits
+			// use a string of ones to be different from infinity
+			for (int i=0; i<wF; i++) {
+				s << "1";				
+			}
+
+			mpfr_clear(mpx);
+			mpfr_clear(one);
+			mpfr_clear(two);
+			return s.str();
+		}
+
+		// sign bit
+		string sign;
+		if(mpfr_sgn(mpx)<0) {
+			sign="1";
+			mpfr_neg(mpx, mpx, GMP_RNDN);
+		}
+		else
+			sign="0";
+
+		// Zero cases
+		if(mpfr_zero_p (mpx)) {
+			// sign bit
+			s <<  sign;
+			// exponent  and mantissa bits
+			for(int i=0; i<wE+wF; i++)
+				s<< "0";
+
+			mpfr_clear(mpx);
+			mpfr_clear(one);
+			mpfr_clear(two);
+			return s.str();
+		}
+
+		if(mpfr_inf_p (mpx)) {
+			// sign bit
+			s << sign;			
+			// exponent bits
+			for(int i=0; i<wE; i++)
+				s<< "1";
+			// mantissa bits
+			for(int i=0; i<wF; i++)
+				s<< "0";
+
+			mpfr_clear(mpx);
+			mpfr_clear(one);
+			mpfr_clear(two);
+			return s.str();
+		}
+
+		// otherwise normal number
+
+		// compute exponent and mantissa
+		mpz_class exponent = 0;
+		mpz_class biased_exponent;
+
+
+		while(mpfr_less_p(mpx,one)) {
+			mpfr_mul(mpx, mpx, two, GMP_RNDN);
+			exponent --;
+		}
+		while(mpfr_greaterequal_p(mpx, two)) {
+			mpfr_div(mpx, mpx, two, GMP_RNDN);
+			exponent ++;
+		}
+
+		// add exponent bias
+		biased_exponent = exponent + (mpz_class(1)<<(wE-1)) - 1;
+
+		if ( biased_exponent<0 )  {
+			cerr << "IEEE754fp2bin warning: underflow, flushing to zero"<<endl;
+			s << sign;
+			for(int i=0; i<wE+wF; i++)
+				s<< "0";
+
+			mpfr_clear(mpx);
+			mpfr_clear(one);
+			mpfr_clear(two);
+			return s.str();
+		}
+
+		if (biased_exponent >= (mpz_class(1)<<wE) )  {
+			cerr << "IEEE754fp2bin warning: overflow, returning infinity"<<endl;
+			s <<sign;
+			for(int i=0; i<wE; i++)
+				s<< "1";
+			for(int i=0; i<wF; i++)
+				s<< "0";
+
+			mpfr_clear(mpx);
+			mpfr_clear(one);
+			mpfr_clear(two);
+			return s.str();
+		}
+
+		// normal number
+		s << sign;
+
+		// exponent
+		s << unsignedBinary(biased_exponent, wE);
+		
+		// significand
+		if(wF!=64) // if precision != double-extended
+			mpfr_sub(mpx, mpx, one, GMP_RNDN);
+		for (int i=0; i<wF; i++) {
+			if(!(wF==64 && i==0))
+				mpfr_mul(mpx, mpx, two, GMP_RNDN);
+			if(mpfr_greaterequal_p(mpx, one)) {
+				s << "1";
+				mpfr_sub(mpx, mpx, one, GMP_RNDN);
+			}
+			else
+				s << "0";
+		}
+
+		mpfr_clear(mpx);
+		mpfr_clear(one);
+		mpfr_clear(two);
+		return s.str();
+	}
+
+
 
 	std::string unsignedFixPointNumber(mpfr_t xx, int msb, int lsb, int margins)
 	{

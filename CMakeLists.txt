@@ -448,6 +448,12 @@ TARGET_LINK_LIBRARIES(bin2fp  mpfr gmp gmpxx)
 ADD_EXECUTABLE(longacc2fp src/Tools/longacc2fp  src/utils)
 TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
 
+ADD_EXECUTABLE(fp2binIEEE754 src/Tools/fp2binIEEE754  src/utils)
+TARGET_LINK_LIBRARIES(fp2binIEEE754  mpfr gmp gmpxx)
+
+ADD_EXECUTABLE(binIEEE7542fp src/Tools/binIEEE7542fp  src/utils)
+TARGET_LINK_LIBRARIES(binIEEE7542fp  mpfr gmp gmpxx)
+
 
 
 add_subdirectory(src/random)
