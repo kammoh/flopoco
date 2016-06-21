@@ -42,7 +42,7 @@ static void usage(char *name){
   cerr << "    <exceptions><sign><exponent><significand>" << endl ;
   cerr << "    exceptions: 2 bits, 00: null, 01: normal number, 10: infinity (signed), 11: NaN" << endl ;
   cerr << "    sign:  0: positive, 1: negative" << endl ;
-  cerr << "    exponent is on wF bits, biased such that 0 is coded by 011...11" << endl ;
+  cerr << "    exponent is on wE bits, biased such that 0 is coded by 011...11" << endl ;
   cerr << "    significand is on wF bits and codes 1.significand (implicit leading one)" << endl ;
   exit (EXIT_FAILURE);
 }

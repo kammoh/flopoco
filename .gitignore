@@ -10,12 +10,14 @@ CPackSourceConfig.cmake
 Makefile
 VHDLLexer.cpp
 bin2fp
+binIEEE7542fp
 cmake_install.cmake
 flopoco
 flopoco.o
 flopoco.vhdl
 flopoco_soaktest
 fp2bin
+fp2binIEEE754
 longacc2fp
 BitHeap*.svg
 tiling*.svg
