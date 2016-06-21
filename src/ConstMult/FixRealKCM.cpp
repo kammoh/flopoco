@@ -65,18 +65,32 @@ namespace flopoco{
 		}
 
 		if(constantIsPowerOfTwo)	{
+			// The code here is different that the one for the bit heap constructor:
+			// In the stand alone case we must compute full negation.
+
 			// Shift input from msbIn to msbOut
-			int shift = msbOut-msbIn;   // This is a shift left: negative means shift right
-			REPORT(0, "shift=" << shift) 
-			vhdl << tab << "R" << " <= ";
-			// Still there are two cases: if lsbIn+shift >= lsbOut, pad. Otherwise, truncate.
-			if(lsbIn+shift >= lsbOut) {
+			int extraBit = (negativeConstant?1:0); // bit added to msbOut if the constant was negative
+			int shift= msbOut-extraBit -msbIn;   // This is a shift left: negative means shift right
+			REPORT(DETAILED, "Shift left of " << shift << " bits");
+			// compute the product by the abs constant
+			vhdl << tab << declare("Rtmp", msbOut-lsbOut+1) << " <= ";
+			if(negativeConstant) // sign-extend x
+				vhdl << "X" << of(msbIn-lsbIn) << " & ";
+			// Still there are two cases: if lsbIn+shift >= lsbOut-g, pad. Otherwise, truncate.
+			if(shift>=0) {  // Shift left; pad
 				vhdl << "X & " << zg(lsbIn+shift - lsbOut);
 			}
-			else {
-				vhdl << "X" << range(msbIn, msbIn-(msbOut-lsbOut));
+			else { // shift right; truncate
+				vhdl << "X " << range(msbIn, msbIn-(msbOut-lsbOut)+extraBit);
 			}
 			vhdl <<  ";" <<endl;
+			
+			if(negativeConstant) {
+				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - Rtmp;" << endl;
+			}
+			else{		
+				vhdl << tab << "R <= Rtmp;" << endl;
+			}
 			return;
 		}
 
@@ -147,11 +161,27 @@ namespace flopoco{
 			return;
 		}
 
-		if(constantIsPowerOfTwo)		{
-			// Shift it to its place
+		if(constantIsPowerOfTwo)	{
 			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
-			return;
+			// Shift input from msbIn to msbOut
+			int shift = msbOut-msbIn;   // This is a shift left: negative means shift right
+			// compute the product by the abs constant
+			vhdl << tab << declare("Rtmp", msbOut-lsbOut+1+g) << " <= ";
+			// Still there are two cases: if lsbIn+shift >= lsbOut-g, pad. Otherwise, truncate.
+			if(lsbIn+shift >= lsbOut-g) {
+				vhdl << "X & " << zg(lsbIn+shift - lsbOut+g);
+			}
+			else {
+				vhdl << "X" << range(msbIn, msbIn-(msbOut-lsbOut+g));
+			}
+			vhdl <<  ";" <<endl;
+			
+			if(negativeConstant) {
+			}
+			else { // negate then truncate
+			}
 		}
+
 	}
 					
 	
@@ -170,7 +200,7 @@ namespace flopoco{
 	// It is, however, dependent on lsbOut: for "small constants" we consider lsbOut to decide which bits of the input will be used. 
 	void FixRealKCM::init()
 	{
-		useNumericStd();
+		//useNumericStd();
 
 		srcFileName="FixRealKCM";
 
@@ -260,7 +290,6 @@ namespace flopoco{
 		
 		// Now we can discuss MSBs
 		msbOut = msbC + msbIn;
-		//???		if(signedOutput)	msbOut++; // add the sign bit
 
 		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
 		// Some day we compute a TMD using continued fractions and we can ignore useless bits.
@@ -274,25 +303,26 @@ namespace flopoco{
 		// Finally, check if the constant is a power of two -- obvious optimization there
 		constantIsPowerOfTwo = (mpfr_cmp_ui_2exp(absC, 1, msbC) == 0);
 		if(constantIsPowerOfTwo) {
-			// What is the error in this case ? 0 if no truncation, 1 if truncation
-			// We decide considering lsbOut only. It is an overestimation (therefore it is OK):
-			// maybe due to guard bits there will be no truncation and we assumed there would be one...  
-			if(lsbInOrig+msbC<lsbOut) {
+
+			if(negativeConstant)
+				msbOut++; // To cater for the asymmetry of fixed-point : -2^(msbIn-1) has no representable opposite otherwise
+
+		
+			if(lsbInOrig+msbC<lsbOut) {   // The truncation case
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
-				// 
 				errorInUlps=1;
-				g=0;
-				return;
+				g=1; // so that the weight of this error is smaller than one half-ulp
 			}
-			else {
+
+			
+			else { // The padding case
+				// The stand alone constructor computes a full subtraction. The Bitheap one adds negated bits, and a constant one that completes the subtraction.
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
 				errorInUlps=0;
 				g=0;
-				return;
 			}
+			return; // init stops here.
 		}
-
-		// TODO : negative powers of two
 		
 		REPORT(DETAILED, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
 					 msbIn << "," << lsbIn << ")    lsbInOrig=" << lsbInOrig << 
@@ -428,7 +458,7 @@ namespace flopoco{
 		mpfr_init2(mpR, 10*wOut);
 		
 		// do the multiplication
-		mpfr_mul(mpR, mpX, absC, GMP_RNDN);
+		mpfr_mul(mpR, mpX, mpC, GMP_RNDN);
 		
 		// scale back to an integer
 		mpfr_mul_2si(mpR, mpR, -lsbOut, GMP_RNDN); //Exact
