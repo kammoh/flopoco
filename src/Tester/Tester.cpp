@@ -33,6 +33,9 @@ namespace flopoco
 			// Test all the operators ?
 			if(opName == "All")
 			{
+
+				int importantTestStateNumber = 5;
+
 				// We get the operators' names to add them in the testedOperator set
 				unsigned nbFactory = UserInterface::getFactoryCount();
 
@@ -42,7 +45,7 @@ namespace flopoco
 					testedOperator.insert(opFact->name());
 				}
 
-				// Test the first two TestState for each Operator before testing all the TestStates
+				// Test the first important TestState for each Operator before testing all the TestStates
 				for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 				{
 					cout << "Testing first tests for Operator : " << (*itOperator) << endl;
@@ -61,7 +64,7 @@ namespace flopoco
 				// Is the TestState is unchanged, meaning the NextState method is not implemented
 					if(!currentTestState->isUnchanged())
 					{
-						while(currentTestState->getIterationIndex()<2)
+						while(currentTestState->getIterationIndex()<importantTestStateNumber)
 						{
 							// Get the next state and create the flopoco command corresponding
 							commandLine = "./testScript.sh " + (*itOperator);
@@ -93,7 +96,7 @@ namespace flopoco
 					currentTestState->clean();
 				}
 
-				currentTestState->setIterationIndex(3);
+				currentTestState->setIterationIndex(importantTestStateNumber + 1 );
 			}
 			else
 			{

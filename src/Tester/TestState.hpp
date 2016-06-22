@@ -102,11 +102,6 @@ namespace flopoco
 		*/
 		int iterationIndex;
 
-		/**
-		* Number of tests for the TestBench
-		*/
-		int testBenchNumber;
-
 	};
 };
 
