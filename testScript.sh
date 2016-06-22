@@ -27,6 +27,9 @@ if grep 'gtkwave' temp > /dev/null; then
 			echo 'GHDL -r ERROR' >> report
 			cat ghdl > message
 		fi
+	else
+		echo 'GHDL -r ERROR' >> report
+		cat ghdl > message
 	fi
 else
 	echo 'VHDL not generated' >> report

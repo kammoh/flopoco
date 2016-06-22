@@ -1,6 +1,8 @@
-[  2%] Built target flopoco_random_lib
-[ 91%] Built target FloPoCoLib
-[ 92%] Built target flopoco
-[ 94%] Built target fp2bin
-[ 97%] Built target longacc2fp
-[100%] Built target bin2fp
+[  2%] Built target bin2fp
+[  4%] Built target fp2bin
+[  7%] Built target longacc2fp
+[  9%] Built target flopoco_random_lib
+[ 95%] Built target FloPoCoLib
+[ 96%] Built target flopoco
+[ 98%] Built target fp2binIEEE754
+[100%] Built target binIEEE7542fp
