@@ -1,4 +1,4 @@
-rm flopoco.vhdl flopoco.o e~testbench_* testbench_* TestBench_* temp ghdl work-obj93.cf > /dev/null 2>&1
+rm flopoco.vhdl flopoco.o e~testbench_* testbench_* TestBench_* temp ghdl work-obj93.cf gmon.out > /dev/null 2>&1
 nbTests=$(grep -c flopoco report)
 nbErrors=$(grep -c ERROR report)
 nbSuccess=$(grep -c SUCCESS report)

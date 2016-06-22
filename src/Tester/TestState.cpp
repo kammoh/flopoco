@@ -34,19 +34,9 @@ namespace flopoco
 		iterationNumber = pIterationNumber;
 	}
 
-	void TestState::setTestBenchNumber(int pTestBenchNumber)
-	{
-		testBenchNumber = pTestBenchNumber;
-	}
-
 	void TestState::setIterationIndex(int pIterationIndex)
 	{
 		iterationIndex = pIterationIndex;
-	}
-
-	int TestState::getTestBenchNumber()
-	{
-		return testBenchNumber;
 	}
 
 	int TestState::getIterationIndex()

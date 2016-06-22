@@ -18,10 +18,15 @@ if grep 'gtkwave' temp > /dev/null; then
 
 	ghdl=$(grep 'ghdl -r' temp)
 	$ghdl > ghdl 2>&1
+	nbError=$(grep -c error ghdl)
+	normalNbError=1
 	if grep '0 error(s) encoutered' ghdl > /dev/null; then
-		echo 'GHDL -r SUCCESS' >> report
-	else
-		echo 'GHDL -r ERROR' >> report
+		if [ $nbError -eq $normalNbError ]; then
+			echo 'GHDL -r SUCCESS' >> report
+		else
+			echo 'GHDL -r ERROR' >> report
+			cat ghdl > message
+		fi
 	fi
 else
 	echo 'VHDL not generated' >> report

@@ -44,19 +44,7 @@ namespace flopoco
 		*/
 		void setIterationNumber(int pIterationNumber);
 
-		/**
-		* Set the number of tests for the TestBench
-		* @param pTestBenchNumber Number of tests for the TestBench
-		*/
-		void setTestBenchNumber(int pTestBenchNumber);
-
 		void setIterationIndex(int pIterationIndex);
-
-		/**
-		* Get the number of tests for the TestBench
-		* @return Number of tests for the TestBench
-		*/
-		int getTestBenchNumber();
 
 		/**
 		* Get the index of the current iteration

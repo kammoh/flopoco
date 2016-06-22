@@ -30,6 +30,7 @@ namespace flopoco{
 			{
 				paramList.push_back(make_pair("wE","8"));
 				paramList.push_back(make_pair("wF","23"));
+				paramList.push_back(make_pair("n","100"));
 				if(j==1)
 				{
 					paramList.push_back(make_pair("dualPath","true"));
@@ -48,6 +49,10 @@ namespace flopoco{
 				for(int i = 5; i<53; i++)
 				{
 					int nbByteWE = 6+(i/10);
+					while(nbByteWE>i)
+					{
+						nbByteWE -= 2;
+					}
 					paramList.clear();
 					paramList.push_back(make_pair("wF",to_string(i)));
 					paramList.push_back(make_pair("wE",to_string(nbByteWE)));

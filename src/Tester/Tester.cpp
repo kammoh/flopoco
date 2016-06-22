@@ -22,6 +22,7 @@ namespace flopoco
 			OperatorFactoryPtr opFact;	
 			TestState * currentTestState = new TestState();
 			string commandLine;
+			string commandLineTestBench;
 			set<string> testedOperator;
 			set<string>::iterator itOperator;
 			vector<string> paramNames;
@@ -53,6 +54,7 @@ namespace flopoco
 					{
 						currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
 					}
+					currentTestState->addParam("n","100");
 
 					opFact->nextTestStateGenerator(currentTestState);
 
@@ -62,7 +64,6 @@ namespace flopoco
 						while(currentTestState->getIterationIndex()<2)
 						{
 							// Get the next state and create the flopoco command corresponding
-							opFact->nextTestStateGenerator(currentTestState);
 							commandLine = "./testScript.sh " + (*itOperator);
 
 						// Get the map containing the parameters
@@ -70,13 +71,18 @@ namespace flopoco
 
 							for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
 							{
-								commandLine += " " + itMap->first + "=" + itMap->second;
+								if(itMap->first=="n")
+								{
+									commandLineTestBench = " TestBench " + itMap->first + "=" + itMap->second;
+								}
+								else
+									commandLine += " " + itMap->first + "=" + itMap->second;
 							}
 
-							commandLine += " TestBench n=" + to_string(currentTestState->getTestBenchNumber());
-
-							system(commandLine.c_str());
+							system((commandLine + commandLineTestBench).c_str());
 							currentTestState->nextIteration();
+							if(currentTestState->canIterate())
+								opFact->nextTestStateGenerator(currentTestState);
 						}
 					}
 					else
@@ -156,6 +162,7 @@ namespace flopoco
 				{
 					currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
 				}
+				currentTestState->addParam("n","100");
 
 				opFact->nextTestStateGenerator(currentTestState);
 
@@ -172,12 +179,15 @@ namespace flopoco
 
 						for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
 						{
-							commandLine += " " + itMap->first + "=" + itMap->second;
+							if(itMap->first=="n")
+							{
+								commandLineTestBench = " TestBench " + itMap->first + "=" + itMap->second;
+							}
+							else
+								commandLine += " " + itMap->first + "=" + itMap->second;
 						}
 
-						commandLine += " TestBench n=" + to_string(currentTestState->getTestBenchNumber());
-
-						system(commandLine.c_str());
+						system((commandLine + commandLineTestBench).c_str());
 						currentTestState->nextIteration();
 						if(currentTestState->canIterate())
 							opFact->nextTestStateGenerator(currentTestState);
