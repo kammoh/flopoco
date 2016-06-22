@@ -73,6 +73,11 @@ First pass (and only pass if no loop):
       - if no information on the connection is present, then this is probably a global operator, so the inputs/outputs do not need to be connected to anything
     - instance performs as usual, called after the call to the constructor
     - only call to the scheduler of the subcomponent is needed
+    - newInstance()
+      - can be implemented directly in the Operator class
+      - it gets all the information required for creating a new instance from:
+        - the parameter configuration string: "param_name=value, param_name=value, ..."
+        - from the information contained in the UserInterface class, which contains all the parameter names and their default values, if they have any
 
 
 
