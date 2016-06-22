@@ -20,7 +20,6 @@
 #include "Operator.hpp"
 #include "Target.hpp"
 #include "Table.hpp"
-//#include "TestState.hpp"
 
 
 namespace flopoco{
@@ -56,9 +55,6 @@ namespace flopoco{
 		// void outputVHDL(std::ostream& o, std::string name);
 
 		void emulate(TestCase * tc);
-
-		// Static method used for tests on the Operator
-		//static void nextTest ( TestState * ts );
 
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArgumentsDiv(Target *target , vector<string> &args);

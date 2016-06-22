@@ -80,7 +80,6 @@ namespace flopoco
 	{
 		iterationIndex = 0;
 		iterationNumber = 0;
-		testBenchNumber = 100;
 	}
 
 };

@@ -19,7 +19,6 @@
 #include "utils.hpp"
 #include "Tools/ResourceEstimationHelper.hpp"
 #include "Tools/FloorplanningHelper.hpp"
-//#include "TestState.hpp"
 
 using namespace std;
 
@@ -1345,7 +1344,6 @@ public:
 	std::string createFloorplan();
 
 	static float pickRandomNum ( float limit = 0, int fp = 8, int sp = 4 );
-	//static bool checkExistence ( TestState parameters, string opName );
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1379,7 +1377,6 @@ public:
 	FloorplanningHelper*		flpHelper;					/**< Tools for floorplanning */
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	//static multimap < string, TestState > testMemory;		/**< multimap which will be used to test if the selected operator already had been tested */
 protected:    
 	string              uniqueName_;      					/**< By default, a name derived from the operator class and the parameters */
 	string 				architectureName_;					/**< Name of the operator architecture */

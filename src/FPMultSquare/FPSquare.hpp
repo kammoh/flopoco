@@ -37,9 +37,6 @@ namespace flopoco{
 		 */
 		void emulate(TestCase * tc);
 
-		// Static method used for tests on the Operator
-		//static void nextTest ( TestState * ts );
-
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);

@@ -30,7 +30,6 @@ namespace flopoco{
 	// global variables used through most of FloPoCo,
 	// to be encapsulated in something, someday?
 	int Operator::uid = 0; //init of the uid static member of Operator
-	//multimap < string, TestState > Operator::testMemory;		/*init the multimap */
 	int verbose=0;
 
 	Operator::Operator(Target* target, map<string, double> inputDelays){
@@ -2186,38 +2185,6 @@ namespace flopoco{
 		}
 		return element;
 	}
-
-	/**
-	* Once the valid TestState parameters is created with pickRandomNum, this method check
-	* if parameters already exist or no for the operator selected opName
-	* Tests are realized with the multimap testMemory
-	**/
-	/*bool Operator::checkExistence ( TestState parameters, string opName ){
-		if ( !testMemory.empty () ){
-			multimap < string, TestState >::key_compare memoryComp = testMemory.key_comp ();
-			multimap < string, TestState >::iterator it = testMemory.begin ();
-			while ( it != testMemory.end () && memoryComp ( ( *it ).first, opName ) ){
-				it++;
-			}
-
-			// boolean indicating that we are still analysing TestState on the same operator
-			bool firstEqual = true;
-			for (; it != testMemory.end () && firstEqual ; it++ ){
-				bool exist = false;
-				TestState  memoryVect = ( *it ).second;
-				if ( opName.compare ( ( * ( it ) ).first ) != 0 ){
-					firstEqual = false;
-				}
-				else{
-					exist = parameters.equality ( &memoryVect );
-					if ( exist ){
-						return exist;
-					}
-				}
-			}
-		}
-		return false;
-	}*/
 
 	void Operator::setHasDelay1Feedbacks()
 	{
