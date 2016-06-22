@@ -101,6 +101,7 @@ namespace flopoco{
 		for (int i=0; i< n; i++)
 			addInput(join("X",i), msbIn[i]-lsbIn[i]+1);
 
+
 		//reporting on the filter
 		ostringstream clist;
 		for (int i=0; i< n; i++)
@@ -164,56 +165,45 @@ namespace flopoco{
 		int sumSize = 1 + msbOut - lsbOut  + g ;
 		REPORT(DETAILED, "Sum size is: "<< sumSize );
 
+		vector<FixRealKCM*> kcm;
 		//compute the guard bits from the KCM multipliers, and take the max
 		int guardBitsKCM = 0;
 		int lsbOutKCM = lsbOut-g; // we want each KCM to be faithful to this ulp
 		double targetUlpError = 1.0;
 
-		for(int i=0; i<n; i++)
-		{
+		for(int i=0; i<n; i++)		{
 			int wInKCM = msbIn[i]-lsbIn[i]+1;	//p bits + 1 sign bit
 
-#if 0 // TODO Fix it with the new interface to FixRealKCM
-			
-			int temp = FixRealKCM::neededGuardBits(
-					getTarget(), 
-					wInKCM, 
-					targetUlpError,
-					coeff[i],
-					lsbIn[i],
-					//lsbOut
-					lsbOutKCM
-			);
-		 
-			if(temp > guardBitsKCM)
-				guardBitsKCM = temp;
-#endif
+			// instantiating a KCM object. This call does not build any VHDL but computes g.
+			FixRealKCM* m = new FixRealKCM(
+																		 this,                         // the enveloping operator
+																		 join("X",i), // input signal name
+																		 true,
+																		 msbIn[i],
+																		 lsbIn[i],
+																		 lsbOutKCM,                    // output LSB weight -- the output MSB is computed out of the constant
+																		 coeff[i],                     // pass the string unmodified
+																		 false, //  computeRounding -- TODO minor optim here
+																		 targetUlpError
+																		 );
+			kcm.push_back(m);
+			int gi = m->getGuardBits();
+			if( gi > guardBitsKCM)
+				guardBitsKCM = gi;
 		}
 
 		sumSize += guardBitsKCM;
 		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize);
+		
 
 		if(!getTarget()->plainVHDL())
 		{
 			//create the bitheap that computes the sum
 			bitHeap = new BitHeap(this, sumSize);
 
-			for (int i=0; i<n; i++)	{
-				// Multiplication: instantiating a KCM object. It will add bits also to the right of lsbOutKCM
-#if 0 // TODO Fix it with the new interface to FixRealKCM
-				new FixRealKCM(
-						this,                         // the enveloping operator
-						getTarget(),                  // the target FPGA
-						getSignalByName(join("X",i)), // input signal name
-						true,                         // signed
-						msbIn[i],                     // input MSB weight
-						lsbIn[i],                     // input LSB weight
-						lsbOutKCM,                    // output LSB weight -- the output MSB is computed out of the constant
-						coeff[i],                     // pass the string unmodified
-						bitHeap,                      // pass the reference to the bitheap that will accumulate the intermediary products
-						lsbOutKCM - guardBitsKCM
-				);
-#endif
+			// actually generate the code
+			for(int i=0; i<n; i++)		{
+				kcm[i]->addToBitHeap(bitHeap, guardBitsKCM);
 			}
 
 			//add rounding bit if necessary

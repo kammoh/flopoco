@@ -70,7 +70,7 @@ namespace flopoco{
 
 			// Shift input from msbIn to msbOut
 			int extraBit = (negativeConstant?1:0); // bit added to msbOut if the constant was negative
-			int shift= msbOut-extraBit -msbIn;   // This is a shift left: negative means shift right
+			int shift= msbOut-lsbOut-extraBit -msbIn+lsbIn;   // This is a shift left: negative means shift right
 			REPORT(DETAILED, "Shift left of " << shift << " bits");
 			// compute the product by the abs constant
 			vhdl << tab << declare("Rtmp", msbOut-lsbOut+1) << " <= ";
@@ -101,7 +101,7 @@ namespace flopoco{
 		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
 		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
 
-		buildForBitHeap(bitHeap, g); // does everything up to bit heap compression
+		buildTablesForBitHeap(); // does everything up to bit heap compression
 
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
 
@@ -131,7 +131,10 @@ namespace flopoco{
 	//    4/ It calls buildForBitHeap(bitHeap, g)
 	FixRealKCM::FixRealKCM(
 												 Operator* parentOp_, 
-												 Signal* multiplicandX,
+												 string multiplicandX,
+												 bool signedInput_,
+												 int msbIn_,
+												 int lsbIn_,
 												 int lsbOut_, 
 												 string constant_,
 												 bool addRoundBit_,
@@ -139,53 +142,26 @@ namespace flopoco{
 												 ):
 		Operator(parentOp_->getTarget()),
 		parentOp(parentOp_),
-		signedInput(multiplicandX->isFixSigned()),
-		msbIn(multiplicandX->MSB()),
-		lsbIn(multiplicandX->LSB()),
+		signedInput(signedInput_),
+		msbIn(msbIn_),
+		lsbIn(lsbIn_),
 		lsbOut(lsbOut_),
 		constant(constant_),
 		targetUlpError(targetUlpError_),
 		addRoundBit(addRoundBit_), // will be set by buildForBitHeap()
 		bitHeap(NULL),
-		inputSignalName(multiplicandX->getName())
+		inputSignalName(multiplicandX)
 	{
-		// Run-time check that the input is a fixed-point signal -- a bit late after all the initializations.
-		if(!multiplicandX->isFix())
-			THROWERROR ("FixRealKCM bit heap constructor called for a non-fixpoint input: can't determine its msb and lsb");
 		
 		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is. 
 		
-		// Special cases
-		if(constantRoundsToZero)		{
-			// do nothing
-			return;
-		}
-
-		if(constantIsPowerOfTwo)	{
-			THROWERROR ("thisConstantIsAPowerOfTwo: TODO");
-			// Shift input from msbIn to msbOut
-			int shift = msbOut-msbIn;   // This is a shift left: negative means shift right
-			// compute the product by the abs constant
-			vhdl << tab << declare("Rtmp", msbOut-lsbOut+1+g) << " <= ";
-			// Still there are two cases: if lsbIn+shift >= lsbOut-g, pad. Otherwise, truncate.
-			if(lsbIn+shift >= lsbOut-g) {
-				vhdl << "X & " << zg(lsbIn+shift - lsbOut+g);
-			}
-			else {
-				vhdl << "X" << range(msbIn, msbIn-(msbOut-lsbOut+g));
-			}
-			vhdl <<  ";" <<endl;
-			
-			if(negativeConstant) {
-			}
-			else { // negate then truncate
-			}
-		}
-
 	}
 					
 	
 
+	int FixRealKCM::getGuardBits() {
+		return g;
+	}
 
 
 
@@ -384,14 +360,69 @@ namespace flopoco{
 	}
 
 
-
-
-
-
-
-	void FixRealKCM::buildForBitHeap(BitHeap* bitHeap_, int g_) {
+	void FixRealKCM::addToBitHeap(BitHeap* bitHeap_, int g_) {
 		bitHeap=bitHeap_;
+		if(g_<g){
+			THROWERROR("buildForBitHeap called with " << g_ << " whereas previous value of g is " << g << ". This KCM would'nt be accurate anymore. Committing suicide to avoid such disgrace.");
+		}
+
 		g=g_;
+
+		bool special=specialCasesForBitHeap();
+		if(!special)
+			buildTablesForBitHeap();
+	}
+
+
+	bool FixRealKCM::specialCasesForBitHeap() {
+	// Special cases
+		if(constantRoundsToZero)		{
+			// do nothing
+			return true;
+		}
+
+		// In all the following it should be clear that lsbOut is the initial lsb asked by the larger operator.
+		// Some g was computed and we actually compute/tabulate to lsbOut -g
+		// We keep these two variables separated because it makes this two-step process more explicit than changing lsbOut.
+		
+		if(constantIsPowerOfTwo)	{
+			string rTempName = getName() + "_Rtemp"; // Should be unique in a bit heap if each KCM got a UID.
+			int rTempSize=msbOut-lsbOut+1+g;         // This msbOut may actually include an extra bit.
+			int extraBit = (negativeConstant?1:0); // bit added to msbOut if the constant was negative
+			int shift= msbOut-extraBit-lsbOut -msbIn+lsbIn - g;   // This is a shift left: negative means shift right. It takes g into account
+			REPORT(DETAILED, "Shift left of " << shift << " bits");
+			// compute the product by the abs constant
+			parentOp->vhdl << tab << parentOp->declare(rTempName, rTempSize) << " <= ";
+			if(negativeConstant) // sign-extend x
+				parentOp->vhdl << inputSignalName << of(msbIn-lsbIn) << " & ";
+			// Still there are two cases: if lsbIn+shift >= lsbOut-g, pad. Otherwise, truncate.
+			if(shift>=0) {  // Shift left; pad
+				parentOp->vhdl << inputSignalName << " & " << zg(lsbIn+shift - lsbOut+g);
+			}
+			else { // shift right; truncate
+				parentOp->vhdl << "X " << range(msbIn, msbIn-(msbOut-lsbOut)+extraBit+g);
+			}
+			parentOp->vhdl <<  ";" <<endl;
+
+			if(negativeConstant) {
+				bitHeap -> subtractSignedBitVector(0, rTempName, rTempSize);
+			}
+			else{
+				if(signedInput)
+					bitHeap -> addSignedBitVector(0, rTempName, rTempSize);
+				else // !negativeConstant and !signedInput
+					bitHeap -> addUnsignedBitVector(0, rTempName, rTempSize);
+			}
+			return true; // and that 's all folks.
+		}
+		// From now on we have a "normal" constant and we instantiate tables.
+		return false;
+	}
+
+
+
+
+	void FixRealKCM::buildTablesForBitHeap() {
 
 		for(int i=0; i<numberOfTables; i++) {
 			string sliceInName = join(parentOp->getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.

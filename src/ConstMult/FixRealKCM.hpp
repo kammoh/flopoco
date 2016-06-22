@@ -68,24 +68,32 @@ namespace flopoco{
 		 */
 		FixRealKCM(
 							 Operator* parentOp, 
-							 Signal* multiplicandX,
+							 string multiplicandX,
+							 bool signedInput,
+							 int msbIn,
+							 int lsbIn,
 							 int lsbOut, 
 							 string constant,
 							 bool addRoundBit,
 							 double targetUlpError = 1.0
 							 );
 
-
+		/** return the computed number of guard bits */
+		int getGuardBits();
+		
+		
 		/**
 		 * @brief handle operator initialisation, constant parsing, computation of the needed guard bits
 		 */
 		void init();
 
-		
+
+
+
 		/**
-		 * @brief do the actual VHDL generation.
+		 * @brief do the actual VHDL generation for the bitHeap KCM.
 		 */
-		void buildForBitHeap(BitHeap* bitHeap, int g);
+		void addToBitHeap(BitHeap* bitHeap, int g);
 
 
 
@@ -131,7 +139,12 @@ namespace flopoco{
 		int numberOfTables;
 		vector<int> m; /**< MSB of chunk i; m[0] == msbIn */
 		vector<int> l; /**< LSB of chunk i; l[numberOfTables-1] = lsbIn, or maybe >= lsbIn if not all the input bits are used due to a small constant */
-		
+
+
+	private:
+		bool specialCasesForBitHeap();
+		void buildTablesForBitHeap();
+
 	};
 
 
