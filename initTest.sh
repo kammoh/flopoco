@@ -1,7 +1,3 @@
-if make > message 2>&1 ; then
-	echo 'Compilation SUCCESS' > report
-	exit 0
-else
-	echo 'Compilation FAILED' > report
-	exit 1
-fi
+mkdir tests/$1
+echo -n "" > tests/$1/report
+echo -n "" > tests/$1/message

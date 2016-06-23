@@ -14,11 +14,10 @@ namespace flopoco
 	Tester::Tester(string opName, bool testDependences)
 	{
 		cout << "Call to make" << endl;
-		int status = system("./initTest.sh");
+		int status = system("./makeTest.sh");
 
 		if(status == 0)
 		{
-			cout << "Make succeeded" << endl;
 			OperatorFactoryPtr opFact;	
 			TestState * currentTestState = new TestState();
 			string commandLine;
@@ -48,6 +47,7 @@ namespace flopoco
 				// Test the first important TestState for each Operator before testing all the TestStates
 				for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 				{
+					system(("./initTest.sh " + (*itOperator)).c_str());
 					cout << "Testing first tests for Operator : " << (*itOperator) << endl;
 					opFact = UserInterface::getFactoryByName(*itOperator);
 					paramNames = opFact->param_names();
@@ -156,6 +156,7 @@ namespace flopoco
 			// For each tested Operator, we run a number of tests defined by the Operator		
 			for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 			{
+				system(("./initTest.sh " + (*itOperator)).c_str());
 				cout << "Testing Operator : " << (*itOperator) << endl;
 				opFact = UserInterface::getFactoryByName(*itOperator);
 				paramNames = opFact->param_names();
@@ -202,11 +203,11 @@ namespace flopoco
 				}
 
 				currentTestState->clean();
+				// Clean all temporary file
+				system(("./cleanTest.sh " + (*itOperator)).c_str());
 			}
 			cout << "Tests are finished" << endl;
 			delete currentTestState;
-			// Clean all temporary file
-			system("./cleanTest.sh");
 		}
 		else
 		{

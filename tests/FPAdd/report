@@ -1,0 +1,300 @@
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=23 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=11 wF=52 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=4 wF=5 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=6 wF=6 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=6 wF=7 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=6 wF=8 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=6 wF=9 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=10 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=11 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=12 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=13 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=14 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=15 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=16 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=17 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=18 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=7 wF=19 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=20 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=21 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=22 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=23 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=24 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=25 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=26 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=27 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=28 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=8 wF=29 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=30 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=31 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=32 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=33 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=34 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=35 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=36 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=37 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=38 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=9 wF=39 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=40 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=41 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=42 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=43 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=44 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=45 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=46 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=47 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=48 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=10 wF=49 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=11 wF=50 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=11 wF=51 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=false sub=false wE=11 wF=52 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=23 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=11 wF=52 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=4 wF=5 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=6 wF=6 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=6 wF=7 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=6 wF=8 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=6 wF=9 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=10 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=11 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=12 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=13 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=14 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=15 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=16 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=17 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=18 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=7 wF=19 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=20 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=21 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=22 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=23 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=24 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=25 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=26 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=27 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=28 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=8 wF=29 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=30 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=31 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=32 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=33 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=34 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=35 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=36 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=37 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=38 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=9 wF=39 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=40 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=41 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=42 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=43 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=44 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=45 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=46 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=47 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=48 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=10 wF=49 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=11 wF=50 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=11 wF=51 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
+-------------------------------------------
+./flopoco FPAdd dualPath=true sub=false wE=11 wF=52 TestBench n=100
+VHDL generated | GHDL -a SUCCESS | GHDL -e SUCCESS | GHDL -r SUCCESS
