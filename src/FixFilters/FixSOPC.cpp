@@ -15,15 +15,14 @@ namespace flopoco{
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
 
-	FixSOPC::FixSOPC(Target* target_, int lsbIn_, int lsbOut_, vector<string> coeff_
-	) :
-			Operator(target_),
-			lsbOut(lsbOut_),
-			coeff(coeff_),
-			g(-1),
-			computeMSBOut(true),
-			computeGuardBits(true),
-			addFinalRoundBit(true)
+	FixSOPC::FixSOPC(Target* target_, int lsbIn_, int lsbOut_, vector<string> coeff_) :
+		Operator(target_),
+		lsbOut(lsbOut_),
+		coeff(coeff_),
+		g(-1),
+		computeMSBOut(true),
+		computeGuardBits(true),
+		addFinalRoundBit(true)
 	{
 		n = coeff.size();
 		for (int i=0; i<n; i++) {
@@ -85,6 +84,7 @@ namespace flopoco{
 		for (int i=0; i<n; i++) {
 			mpfr_clear(mpcoeff[i]);
 		}
+		// TODO destroy kcm[]
 	}
 
 
@@ -104,19 +104,11 @@ namespace flopoco{
 
 		//reporting on the filter
 		ostringstream clist;
+		clist << coeff[0];
 		for (int i=0; i< n; i++)
-			clist << "    " << coeff[i] << ", ";
-		REPORT(INFO, "Building a " << n << "-tap FIR; lsbOut=" << lsbOut << 
-				" for coefficients " << clist.str());
-
-		if(computeGuardBits) {
-			// guard bits for a faithful result
-			//FIXME: why is the log rounded down?
-			//g = intlog2(n-1);
-			g = intlog2(n);
-			REPORT(INFO, "g=" << g);
-		}
-
+			clist << " : " << coeff[i];
+		REPORT(INFO, "FixSOPC  lsbOut=" << lsbOut <<  " coeff=\"" << clist.str() << "\"" ) ;
+		
 		for (int i=0; i< n; i++) {
 			// parse the coeffs from the string, with Sollya parsing
 			sollya_obj_t node;
@@ -156,46 +148,51 @@ namespace flopoco{
 				sumAbs*=2.0;
 				msbOut--;
 			}
-			REPORT(INFO, "Worst-case weight of MSB of the result is " << msbOut);
+			REPORT(INFO, "Computed msbOut=" << msbOut);
 			mpfr_clears(sumAbsCoeff, absCoeff, NULL);
 		}
 
 		addOutput("R", msbOut-lsbOut+1);
 
-		int sumSize = 1 + msbOut - lsbOut  + g ;
+		int sumSize = 1 + msbOut - lsbOut ;
 		REPORT(DETAILED, "Sum size is: "<< sumSize );
 
+
+		// Now call all the KCM constructors for lsbOut, 
+		//compute the guard bits and error for each, and deduce the overall guard bits.
 		vector<FixRealKCM*> kcm;
-		//compute the guard bits from the KCM multipliers, and take the max
-		int guardBitsKCM = 0;
-		int lsbOutKCM = lsbOut-g; // we want each KCM to be faithful to this ulp
 		double targetUlpError = 1.0;
+		double maxAbsError=0;
 
 		for(int i=0; i<n; i++)		{
-			int wInKCM = msbIn[i]-lsbIn[i]+1;	//p bits + 1 sign bit
-
-			// instantiating a KCM object. This call does not build any VHDL but computes g.
+			// instantiating a KCM object. This call does not build any VHDL but computes errorInUlps out of the tentative architecture for g=0.
 			FixRealKCM* m = new FixRealKCM(
 																		 this,                         // the enveloping operator
 																		 join("X",i), // input signal name
-																		 true,
+																		 true,        // input is signed
 																		 msbIn[i],
 																		 lsbIn[i],
-																		 lsbOutKCM,                    // output LSB weight -- the output MSB is computed out of the constant
-																		 coeff[i],                     // pass the string unmodified
-																		 false, //  computeRounding -- TODO minor optim here
+																		 lsbOut,   // output LSB weight we want -- this is tentative
+																		 coeff[i], // pass the string unmodified
+																		 false,    //  computeRounding -- TODO minor optim here
 																		 targetUlpError
 																		 );
 			kcm.push_back(m);
-			int gi = m->getGuardBits();
-			if( gi > guardBitsKCM)
-				guardBitsKCM = gi;
+			double errorInUlps=m->getErrorInUlps();
+			maxAbsError += errorInUlps;
+			REPORT(DETAILED,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps)
 		}
 
-		sumSize += guardBitsKCM;
-		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize);
+		g = 0;
+		double maxErrorWithGuardBits=maxAbsError;
+		while (maxErrorWithGuardBits>0.5) {
+			g++;
+			maxErrorWithGuardBits /= 2.0;
+		}
+		sumSize += g;
+		REPORT(DETAILED,"Overall error is " << maxAbsError  << " ulps, which we will manage by adding " << g << " guard bits to the bit heap" );
+		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize << " bits.");
 		
-
 		if(!getTarget()->plainVHDL())
 		{
 			//create the bitheap that computes the sum
@@ -203,20 +200,21 @@ namespace flopoco{
 
 			// actually generate the code
 			for(int i=0; i<n; i++)		{
-				kcm[i]->addToBitHeap(bitHeap, guardBitsKCM);
+				kcm[i]->addToBitHeap(bitHeap, g);
 			}
 
+#if 0 // TODO FIXME
 			//add rounding bit if necessary
 			if(addFinalRoundBit)
 				//only add the round bit if there were roundings performed
 				if(g+guardBitsKCM > 0)
 					bitHeap->addConstantOneBit(g+guardBitsKCM-1);
-
+#endif
 			//compress the bitheap
 			bitHeap -> generateCompressorVHDL();
 
 			vhdl << tab << "R" << " <= " << bitHeap-> getSumName() << 
-					range(sumSize-1, g+guardBitsKCM) << ";" << endl;
+					range(sumSize-1, g) << ";" << endl;
 		}
 		else
 		{

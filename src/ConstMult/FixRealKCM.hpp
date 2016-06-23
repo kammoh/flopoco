@@ -7,7 +7,16 @@
 
 namespace flopoco{
 
+	// Here is the principle for a bit-heap version.
+	// The parent first calls the constructor, which predicts the architecture (shift or tables, how many tables) and deduces errorInUlps.
+	// The parent sums these errors, and computes the actual g out of this.
+	// The asumption is that the error of each architecture will be multiplied by 2^-g.
+	// The parent then defines the bit heap.
+	// Then it calls addToBitHeap(bitHeap, g) for all its KCMs. This is where VHDL is generated.
 
+	// Only small sub-optimality: for c=0.5 and lsbOut=0, errorInUlps will be counted as 1 (bit lost in the shift, whereas if the bit heap has at least one guard bit the error becomes 0.
+	// Never mind.
+	
 	class FixRealKCMTable;
 
 	class FixRealKCM : public Operator
@@ -78,12 +87,12 @@ namespace flopoco{
 							 double targetUlpError = 1.0
 							 );
 
-		/** return the computed number of guard bits */
-		int getGuardBits();
+		/** return the error in bits */
+		double getErrorInUlps();
 		
 		
 		/**
-		 * @brief handle operator initialisation, constant parsing, computation of the needed guard bits
+		 * @brief handle operator initialisation, constant parsing
 		 */
 		void init();
 
@@ -122,11 +131,11 @@ namespace flopoco{
 		mpfr_t mpC;
 		mpfr_t absC;
 		int msbC;
-		int g;
+		double errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
+		int g; /**< computed late, either by the parent operator, or out of errorInUlps */
 		bool negativeConstant;
 		bool constantRoundsToZero;
 		bool constantIsPowerOfTwo;
-		float errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
 
 
 

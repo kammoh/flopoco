@@ -44,12 +44,27 @@ namespace flopoco{
 							lsbIn(lsbIn_),
 							lsbOut(lsbOut_),
 							constant(constant_),
-							targetUlpError(targetUlpError_),
-							addRoundBit(true)
+							targetUlpError(targetUlpError_)
 	{
 
-		init();		 // check special cases, computes number of tables and g.
+		init();		 // check special cases, computes number of tables and errorInUlps.
 
+		// Now we have everything to compute g
+		if(numberOfTables==2 && targetUlpError==1.0)
+			g=0; // specific case: two CR tables make up a faithful sum
+		else{
+			// Was:			g = ceil(log2(numberOfTables/((targetUlpError-0.5)*exp2(-lsbOut)))) -1 -lsbOut;
+			g=0;
+			double maxErrorWithGuardBits=errorInUlps;
+			double tableErrorBudget = targetUlpError-0.5 ; // 0.5 is for the final rounding
+			while (maxErrorWithGuardBits > tableErrorBudget) {
+				g++;
+				maxErrorWithGuardBits /= 2.0;
+			}
+		}
+			
+		REPORT(DEBUG, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
+		
 		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
 		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
 		
@@ -159,8 +174,8 @@ namespace flopoco{
 					
 	
 
-	int FixRealKCM::getGuardBits() {
-		return g;
+	double FixRealKCM::getErrorInUlps() {
+		return errorInUlps;
 	}
 
 
@@ -173,7 +188,7 @@ namespace flopoco{
 	* @brief init : all operator initialization stuff goes here
 	*/
 	// Init computes the table splitting, because it is independent of g.
-	// It is, however, dependent on lsbOut: for "small constants" we consider lsbOut to decide which bits of the input will be used. 
+	// It may take suboptimal decisions if lsbOut is later enlarged with guard bits. 
 	void FixRealKCM::init()
 	{
 		//useNumericStd();
@@ -184,9 +199,6 @@ namespace flopoco{
 
 		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
-
-
-		g=0; // tentatively. 
     
 		if(targetUlpError > 1.0)
 			THROWERROR("FixRealKCM: Error, targetUlpError="<<
@@ -252,13 +264,13 @@ namespace flopoco{
 		}
 		
 		// A few sanity checks related to the magnitude of the constant
-		int lsbInUseful = lsbOut -1 -msbC; // input bits with lower weights than that have no inpact on the output
+		// A bit of weight l is sent to position l+msbC+1 at most. For this to be useful we want l+msbC+1 > lsbOut.  
+		int lsbInUseful = lsbOut -1 - msbC -1; // Second -1 for the rounding;  input bits with lower weights than lsbInUseful have at most rounding inpact on the output
 
 		if(msbIn<lsbInUseful){
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			errorInUlps=0.5;// TODO this is an overestimation
-			g=0; // still no need for gard bits
 			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
 			return;
 		}
@@ -273,7 +285,7 @@ namespace flopoco{
 		lsbInOrig=lsbIn;
 		if(lsbIn<lsbInUseful) { // some of the user-provided input bits would have no impact on the output
 			// lsbIn=lsbInUseful;   // therefore ignore them.
-			REPORT(DETAILED, "WARNING: lsbIn="<<lsbInOrig << " but I observe that bits of weight lower than " << lsbIn << " will have very little impact on the output.")  ;
+			REPORT(DETAILED, "WARNING: lsbIn="<<lsbInOrig << " but I observe that bits of weight lower than " << lsbInUseful << " will have very little impact on the output.")  ;
 		}
 
 		// Finally, check if the constant is a power of two -- obvious optimization there
@@ -287,7 +299,6 @@ namespace flopoco{
 			if(lsbInOrig+msbC<lsbOut) {   // The truncation case
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
 				errorInUlps=1;
-				g=1; // so that the weight of this error is smaller than one half-ulp
 			}
 
 			
@@ -295,7 +306,6 @@ namespace flopoco{
 				// The stand alone constructor computes a full subtraction. The Bitheap one adds negated bits, and a constant one that completes the subtraction.
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
 				errorInUlps=0;
-				g=0;
 			}
 			return; // init stops here.
 		}
@@ -347,25 +357,14 @@ namespace flopoco{
 			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] );
 		}
 
-#if 1
-		// Now we have everything to compute g
-		if(numberOfTables==2 && targetUlpError==1.0)
-			g=0; // specific case: two CR tables make up a faithful sum
-		else
-			g = ceil(log2(numberOfTables/((targetUlpError-0.5)*exp2(-lsbOut)))) -1 -lsbOut;
-		REPORT(DEBUG, " g=" << g);
-#endif
 		// Finally computing the error due to this setup. We express it as ulps at position lsbOut-g, whatever g will be
 		errorInUlps=0.5*numberOfTables;
+		REPORT(DETAILED,"errorInUlps=" << errorInUlps);
 	}
 
 
 	void FixRealKCM::addToBitHeap(BitHeap* bitHeap_, int g_) {
 		bitHeap=bitHeap_;
-		if(g_<g){
-			THROWERROR("buildForBitHeap called with " << g_ << " whereas previous value of g is " << g << ". This KCM would'nt be accurate anymore. Committing suicide to avoid such disgrace.");
-		}
-
 		g=g_;
 
 		bool special=specialCasesForBitHeap();
@@ -400,7 +399,7 @@ namespace flopoco{
 				parentOp->vhdl << inputSignalName << " & " << zg(lsbIn+shift - lsbOut+g);
 			}
 			else { // shift right; truncate
-				parentOp->vhdl << "X " << range(msbIn, msbIn-(msbOut-lsbOut)+extraBit+g);
+				parentOp->vhdl << inputSignalName << range(msbIn, msbIn-(msbOut-lsbOut)+extraBit+g);
 			}
 			parentOp->vhdl <<  ";" <<endl;
 
@@ -425,29 +424,28 @@ namespace flopoco{
 	void FixRealKCM::buildTablesForBitHeap() {
 
 		for(int i=0; i<numberOfTables; i++) {
-			string sliceInName = join(parentOp->getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.
-			string sliceOutName = join(parentOp->getName() + "_T", i); // Should be unique in a bit heap if each KCM got a UID.
-			string instanceName = join(parentOp->getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
+			string sliceInName = join(getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.
+			string sliceOutName = join(getName() + "_T", i); // Should be unique in a bit heap if each KCM got a UID.
+			string instanceName = join(getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
 			
-			parentOp->vhdl << tab << declare(sliceInName, m[i]- l[i] +1 ) << " <= "
+			parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
 										 << inputSignalName << range(m[i]-lsbInOrig, l[i]-lsbInOrig) << ";" << endl;
 			FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
-			addSubComponent(t);
+			parentOp->addSubComponent(t);
 			parentOp->inPortMap (t , "X", sliceInName);
 			parentOp->outPortMap(t , "Y", sliceOutName);
 			parentOp->vhdl << parentOp->instance(t , instanceName);
-
 			// Add these bits to the bit heap
 			if(i==0 && signedOutput) {
 				bitHeap -> addSignedBitVector(0, // weight
 																			sliceOutName, // name
-																			getSignalByName(sliceOutName)->width() // size
+																			parentOp->getSignalByName(sliceOutName)->width() // size
 																			);
 			}
 			else {
 				bitHeap -> addUnsignedBitVector(0, // weight
 																				sliceOutName, // name
-																				getSignalByName(sliceOutName)->width() // size
+																				parentOp->getSignalByName(sliceOutName)->width() // size
 																				);
 			}
 		}
