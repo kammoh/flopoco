@@ -87,6 +87,9 @@ namespace flopoco
 							if(currentTestState->canIterate())
 								opFact->nextTestStateGenerator(currentTestState);
 						}
+
+						// Clean all temporary file
+						system(("./cleanTest.sh " + (*itOperator)).c_str());
 					}
 					else
 					{
@@ -196,6 +199,9 @@ namespace flopoco
 						if(currentTestState->canIterate())
 							opFact->nextTestStateGenerator(currentTestState);
 					}
+
+					// Clean all temporary file
+					system(("./cleanTest.sh " + (*itOperator)).c_str());
 				}
 				else
 				{
@@ -203,8 +209,6 @@ namespace flopoco
 				}
 
 				currentTestState->clean();
-				// Clean all temporary file
-				system(("./cleanTest.sh " + (*itOperator)).c_str());
 			}
 			cout << "Tests are finished" << endl;
 			delete currentTestState;
