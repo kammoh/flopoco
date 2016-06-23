@@ -22,7 +22,7 @@ import fileinput
 
 test_cases_per_combination = 1000
 useModelSim=False #False # if True, use modelsim; if False, use ghdl
-testBench = "TestBenchFile"   #one of TestBench or TestBenchFile
+testBench = "TestBench"   #one of TestBench or TestBenchFile
 timeUntilDiscardTest = 50
 
 #-------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 				if ((line[0]!='#') and (len(line)>1) and (skipfile == False) and (completedFile == False)):
 					resultfile = open( "release_test.res", "a")
 
-					run_cmd = line[:len(line)-1] + " " + testBench + " " + `test_cases_per_combination`
+					run_cmd = line[:len(line)-1] + " " + testBench + " n=" + `test_cases_per_combination`
 					print run_cmd
 					logfile.write(run_cmd+"\n")
 					modelsim_food = commands.getoutput(run_cmd)
