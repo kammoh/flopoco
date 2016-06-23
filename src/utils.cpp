@@ -964,7 +964,7 @@ namespace flopoco{
 
 	mpz_class signedToBitVector(mpz_class x, int w){
 		// sanity checks
-		if (  (x > (mpz_class(1) << (w-1))) || (x <= -(mpz_class(1) << (w-1))) ){
+		if (  (x >= (mpz_class(1) << (w-1))) || (x < -(mpz_class(1) << (w-1))) ){
 			ostringstream error;
 			error << "signedToBitVector: input " << x << " out of range for two's complement on " << w << " bits";
 			throw error.str();
