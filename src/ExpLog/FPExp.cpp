@@ -1025,6 +1025,7 @@ namespace flopoco{
 			for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
 			{
 				previousTestState->changeValue((*itVector).first,(*itVector).second);
+				previousTestState->changeValue("n","50");
 			}
 		}
 
