@@ -1,19 +1,34 @@
-@
-flopoco FixRealKCM -4 0  0  -10   "log(2)"
-flopoco FixRealKCM -5 0  0  -10   "log(2)"
-flopoco FixRealKCM -6 0  0  -10   "log(2)"
-flopoco FixRealKCM -7 0  0  -10   "log(2)"
-flopoco FixRealKCM -8 0  0  -10   "log(2)"
-flopoco FixRealKCM -9 0  0  -17   "log(2)"
-flopoco FixRealKCM -10 0  0  -20   "log(2)"
-flopoco FixRealKCM -11 0  0  -42   "log(2)"
-flopoco FixRealKCM -12 0  0  -34   "log(2)"
-flopoco FixRealKCM -13 0  0  -17   "log(2)"
-flopoco FixRealKCM -14 0  0  -42   "log(2)"
-flopoco FixRealKCM -15 0  0  -20   "log(2)"
-flopoco FixRealKCM -16 0  0  -20   "log(2)"
-flopoco FixRealKCM -16 0  0  -20   "log(2)"
-flopoco FixRealKCM -16 0  0  -20   "4*log(2)"
-flopoco FixRealKCM -16 0  0  -20   "pi"
-
-flopoco -pipeline=no FixRealKCM -8 -1 0 -14 0.4 
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.01" signedInput=true 
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.02" signedInput=true 
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.04" signedInput=true 
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.08" signedInput=true 
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true 
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.32" signedInput=true 
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="log(2)"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-log(2)"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=0 lsbOut=0 constant="1"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=0 lsbOut=0 constant="2"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=0 lsbOut=0 constant="0.5"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=0 lsbOut=0 constant="-1"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=0 lsbOut=0 constant="-2"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=0 lsbOut=0 constant="-0.5"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="1"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="2"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="0.5"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-1"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-2"
+flopoco FixRealKCM signedInput=0 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-0.5"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="log(2)"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-log(2)"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=0 lsbOut=0 constant="1"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=0 lsbOut=0 constant="2"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=0 lsbOut=0 constant="0.5"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=0 lsbOut=0 constant="-1"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=0 lsbOut=0 constant="-2"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=0 lsbOut=0 constant="-0.5"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="1"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="2"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="0.5"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-1"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-2"
+flopoco FixRealKCM signedInput=1 msbIn=8 lsbIn=-2 lsbOut=-1 constant="-0.5"
