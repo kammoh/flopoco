@@ -124,13 +124,8 @@ namespace flopoco{
 	
 	
 
-	//operator incorporated into a global bit heap for use as part of a bigger operator
-	// It works in "dry run" mode: it computes g but does not generate any VHDL
-	// In this case, the flow is typically (see FixFIR)
-	//    1/ call the constructor below. It stops before the VHDL generation 
-	//    2/ have it report g using getGuardBits(). 
-	//    3/ the bigger operator computes the global g, builds the bit heap.
-	//    4/ It calls buildForBitHeap(bitHeap, g)
+
+
 	FixRealKCM::FixRealKCM(
 												 Operator* parentOp_, 
 												 string multiplicandX,
@@ -159,11 +154,6 @@ namespace flopoco{
 		
 	}
 					
-	
-
-	double FixRealKCM::getErrorInUlps() {
-		return errorInUlps;
-	}
 
 
 
@@ -182,7 +172,7 @@ namespace flopoco{
 
 		srcFileName="FixRealKCM";
 
-		setCopyrightString("Florent de Dinechin (2007-2016), 3IF Dev Team 2015");
+		setCopyrightString("Florent de Dinechin (2007-2016)");
 
 		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
@@ -363,10 +353,14 @@ namespace flopoco{
           there are methods for that.  
        The case -1 presents an additional problem: the sign bit is not always 1, 
 			    indeed there is one entry were the sign bit is 0: when input is 0.
-          A trick by Luc Forget: remove one ulp from the tabulated value, 
-          so it becomes  always negative. 
-          and to add this ulp to the constant vector of the bit heap.
-					The ulp removal can not underflow, since we have one more negative value than positive ones in the two's complement range*/
+					As usual there is a bit heap trick (found by Luc Forget): 
+          negate all the bits and add one ulp to the constant vector of the bit heap.
+					
+					For simplicity, in the current code we compute xi*absC (the abs. value of the constant)
+          then subtract this from the bitHeap.
+					The effect is exactly the same (hoping that the not gets merged in the table) 
+					and the C++ code is simpler.
+*/
 		for (int i=0; i<numberOfTables; i++) {
 			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] << "   tableOutputSign=" << tableOutputSign[i]  );
 		}
@@ -376,6 +370,14 @@ namespace flopoco{
 		REPORT(DETAILED,"errorInUlps=" << errorInUlps);
 	}
 
+
+
+
+		
+
+	double FixRealKCM::getErrorInUlps() {
+		return errorInUlps;
+	}
 
 
 	

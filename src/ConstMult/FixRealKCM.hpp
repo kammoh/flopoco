@@ -52,28 +52,31 @@ namespace flopoco{
 							 );
 
 		/**
-		 * @brief Incorporated version of KCM. 
-		 * @param parentOp : operator frow which the KCM is a subentity
-		 * @param multiplicandX : signal which will be KCM input (must be a fixed-point signal)
-		 * @param lsbOut : desired output precision i.e. output least 
-		 * 					significant bit has a weight of 2^lsbOut
-		 * @param constant : string that describes the constant with sollya
-		 * 					  syntax
-		 * @param targetUlpError : exiged error bound on result. Difference
-		 * 							between result and real value should be
-		 * 							lesser than targetUlpError * 2^lsbOut.
-		 * 							Value has to be in ]0.5 ; 1] (if 0.5 wanted,
-		 * 							please consider to create a one bit more
-		 * 							precise KCM with a targetUlpError of 1 and
-		 * 							truncate the result
-		 * @param g : if -1, do a dry run to compute g (for internal use only): g is computed but no vhdl is generated.
-     *            otherwise take g as it is given (do not compute it). Bit 0 of the bit heap has weight lsbOut-g, and the bit heap must be large enough.
-		 *
-		 *  /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
-		 * 	WARNING : nothing is added to the bitHeap when constant is set to
-		 * 	zero. Your bitHeap must have been fed with another signal despite of
-		 * 	what it will not produce an output signal (bitHeap problem)
-		 *  /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\ /!\
+		  @brief Incorporated version of KCM. 
+			@param parentOp : operator frow which the KCM is a subentity
+			@param multiplicandX : signal which will be KCM input (must be a fixed-point signal)
+			@param lsbOut : desired output precision i.e. output least 
+								significant bit has a weight of 2^lsbOut
+			@param constant : string that describes the constant with sollya
+									syntax
+			@param targetUlpError: target error bound on result, in ulps.
+					 The value of the ulp will ultimately be 2^-(lsbOut-g). Difference
+										between result and real value should be
+										lesser than targetUlpError * 2^lsbOut.
+										Value has to be in ]0.5 ; 1] 
+
+
+	Constructor for an operator incorporated into a global bit heap,
+	for use as part of a bigger operator.
+	It works in "dry run" mode: it computes g but does not generate any VHDL
+	In this case, the flow is typically (see FixFIR)
+	1/ call the constructor below. It stops before the VHDL generation 
+	2/ have it report its ulp error using getErrorInUlps
+	3/ the bigger operator accumulates these ulp errors, and computes	 the global g out of the sum
+	4/ It  builds the bit heap, then calls buildForBitHeap(bitHeap, g)
+
+	WARNING : nothing is added to the bitHeap when constant is set to 0.
+
 		 */
 		FixRealKCM(
 							 Operator* parentOp, 
