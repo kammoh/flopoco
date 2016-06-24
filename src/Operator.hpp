@@ -68,13 +68,14 @@ namespace flopoco {
 #define PLACEMENT 					0
 #define CONNECTIVITY				1
 
-
 /**
  * This is a top-level class representing an Operator.
  * This class is inherited by all classes which will output a VHDL entity.
  */
 class Operator
 {
+
+
 
 	static int uid;                  /**< The counter holding a unique id */
 

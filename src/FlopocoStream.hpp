@@ -25,6 +25,11 @@
 
 namespace flopoco{
 
+	//forward reference to Operator, in order to avoid cyclic references
+	class Operator;
+
+	//forward reference to FlopocoStream, in order to overload the << stream operator
+	class FlopocoStream;
 
 	/**
 	 * The FlopocoStream class.
@@ -37,28 +42,53 @@ namespace flopoco{
 	 * The assignment statements are appended with the name of the left-hand signal (??ID_Name??).
 	 */
 	class FlopocoStream{
+		public:
 
-		/**
-		 * Methods for overloading the output operator available on streams
-		 */
-		template <class paramType> friend FlopocoStream& operator <<(FlopocoStream& output, paramType c) {
+		template <class paramType>
+		friend FlopocoStream& operator <<(FlopocoStream& output, paramType c) {
 			output.vhdlCodeBuffer << c;
 			output.codeParsed = false;
 			return output;
 		}
 
-		friend FlopocoStream & operator<<(FlopocoStream& output, FlopocoStream fs) {
-			output.vhdlCodeBuffer << fs.str();
+		friend FlopocoStream& operator <<(FlopocoStream& output, char c) {
+			output.vhdlCodeBuffer << c;
 			output.codeParsed = false;
+			if(c == ';')
+				output.flush();
 			return output;
 		}
 
-		friend FlopocoStream& operator<<( FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
+		friend FlopocoStream& operator<<(FlopocoStream& output, std::string s) {
+			output.vhdlCodeBuffer << s;
+			output.codeParsed = false;
+			if(s.find(';') != s.npos)
+				output.flush();
+			return output;
+		}
+
+		friend FlopocoStream& operator<<(FlopocoStream& output, char const *s) {
+			output.vhdlCodeBuffer << s;
+			output.codeParsed = false;
+			string str(s);
+			if(str.find(';') != str.npos)
+				output.flush();
+			return output;
+		}
+
+		friend FlopocoStream& operator <<(FlopocoStream& output, FlopocoStream fs) {
+			output.vhdlCodeBuffer << fs.vhdlCode.str();
+			output.codeParsed = false;
+			if(fs.vhdlCode.str().find(';') != fs.vhdlCode.str().npos)
+				output.flush();
+			return output;
+		}
+
+		friend FlopocoStream& operator <<(FlopocoStream& output, UNUSED(ostream& (*f)(ostream& fs)) ){
 			output.vhdlCodeBuffer << std::endl;
 			output.codeParsed = false;
 			return output;
 		}
-
 
 		public:
 			/**
@@ -134,6 +164,8 @@ namespace flopoco{
 
 			bool isEmpty();
 
+			bool setParentOperator(Operator* parentOperator);
+
 			/**
 			 * The dependence table should contain pairs of the form (lhsName, RhsName),
 			 * where lhsName and rhsName are the names of the left-hand side and right-hand side
@@ -151,8 +183,9 @@ namespace flopoco{
 
 		protected:
 
-			bool disabledParsing;
+			Operator *parentOperator;
 			bool codeParsed;
+			bool disabledParsing;
 	};
 }
 #endif

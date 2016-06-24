@@ -28,6 +28,7 @@
 #include "utils.hpp"
 
 #include "FlopocoStream.hpp"
+#include "Operator.hpp"
 
 
 using namespace std;
@@ -43,6 +44,7 @@ namespace flopoco{
 		dependenceTable.clear();
 		disabledParsing = false;
 		codeParsed = false;
+		parentOperator = nullptr;
 	}
 
 
@@ -60,7 +62,7 @@ namespace flopoco{
 		vhdlCodeBuffer.str("");
 		dependenceTable.clear();
 		codeParsed = false;
-		return "";
+		return vhdlCode.str();
 	}
 
 
@@ -73,6 +75,7 @@ namespace flopoco{
 			//scan the code buffer and build the dependence table and annotate the code
 			bufferCode.str("");
 
+			//parse the code, if required
 			if(disabledParsing){
 				bufferCode << vhdlCodeBuffer.str();
 				codeParsed = true;
@@ -87,6 +90,11 @@ namespace flopoco{
 
 			//the newly processed code is appended to the existing one
 			vhdlCode << bufferCode.str();
+
+			//launch the scheduling, if required
+			if(!disabledParsing){
+				parentOperator->startScheduling();
+			}
 		}
 	}
 
@@ -150,6 +158,16 @@ namespace flopoco{
 
 	bool FlopocoStream::isEmpty(){
 		return (((vhdlCode.str()).length() == 0) && ((vhdlCodeBuffer.str()).length() == 0));
+	}
+
+
+	bool FlopocoStream::setParentOperator(Operator* parentOperator_){
+		if(parentOperator == nullptr){
+			parentOperator = parentOperator_;
+		}else{
+			throw "Error: parent operator for vhdl stream already set.";
+		}
+		return true;
 	}
 
 
