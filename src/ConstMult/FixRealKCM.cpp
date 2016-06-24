@@ -90,29 +90,23 @@ namespace flopoco{
 		if(constantIsPowerOfTwo)	{
 			// The code here is different that the one for the bit heap constructor:
 			// In the stand alone case we must compute full negation.
+			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
+			int rTempSize = parentOp->getSignalByName(rTempName)->width();
 
-			// Shift input from msbIn to msbOut
-			int extraBit = (negativeConstant?1:0); // bit added to msbOut if the constant was negative
-			int shift= msbOut-lsbOut-extraBit -msbIn+lsbIn;   // This is a shift left: negative means shift right
-			REPORT(DETAILED, "Shift left of " << shift << " bits");
-			// compute the product by the abs constant
-			vhdl << tab << declare("Rtmp", msbOut-lsbOut+1) << " <= ";
-			if(negativeConstant) // sign-extend x
-				vhdl << "X" << of(msbIn-lsbIn) << " & ";
-			// Still there are two cases: if lsbIn+shift >= lsbOut-g, pad. Otherwise, truncate.
-			if(shift>=0) {  // Shift left; pad
-				vhdl << "X & " << zg(lsbIn+shift - lsbOut);
-			}
-			else { // shift right; truncate
-				vhdl << "X " << range(msbIn, msbIn-(msbOut-lsbOut)+extraBit);
-			}
-			vhdl <<  ";" <<endl;
-			
-			if(negativeConstant) {
-				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - Rtmp;" << endl;
+			if(negativeConstant) { // In this case msbOut was incremented in init()
+				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - ";
+				if(signedInput) {
+					vhdl << "("
+							 <<  rTempName << of(rTempSize-1) << " & " // sign extension 
+							 <<  rTempName << range(rTempSize-1, g)
+							 << ");" << endl;
+				}
+				else{ // unsigned input
+					vhdl <<  rTempName << range(rTempSize-1, g) << ";" << endl;
+				}
 			}
 			else{		
-				vhdl << tab << "R <= Rtmp;" << endl;
+				vhdl << tab << "R <= "<< rTempName << range(msbOut-lsbOut+g, g) << ";" << endl;
 			}
 			return;
 		}
@@ -284,10 +278,11 @@ namespace flopoco{
 		// Finally, check if the constant is a power of two -- obvious optimization there
 		constantIsPowerOfTwo = (mpfr_cmp_ui_2exp(absC, 1, msbC) == 0);
 		if(constantIsPowerOfTwo) {
-
-			if(negativeConstant)
+			if(negativeConstant) {
 				msbOut++; // To cater for the asymmetry of fixed-point : -2^(msbIn-1) has no representable opposite otherwise
-
+				// We still have the original shift information in msbC
+			}
+			
 		
 			if(lsbIn+msbC<lsbOut) {   // The truncation case
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
@@ -436,23 +431,9 @@ namespace flopoco{
 		// We keep these two variables separated because it makes this two-step process more explicit than changing lsbOut.
 		
 		if(constantIsPowerOfTwo)	{
-			string rTempName = getName() + "_Rtemp"; // Should be unique in a bit heap if each KCM got a UID.
-			int rTempSize=msbOut-lsbOut+1+g;         // This msbOut may actually include an extra bit.
-			int extraBit = (negativeConstant?1:0); // bit added to msbOut if the constant was negative
-			int shift= msbOut-extraBit-lsbOut -msbIn+lsbIn - g;   // This is a shift left: negative means shift right. It takes g into account
-			REPORT(DETAILED, "Shift left of " << shift << " bits");
-			// compute the product by the abs constant
-			parentOp->vhdl << tab << parentOp->declare(rTempName, rTempSize) << " <= ";
-			if(negativeConstant) // sign-extend x
-				parentOp->vhdl << inputSignalName << of(msbIn-lsbIn) << " & ";
-			// Still there are two cases: if lsbIn+shift >= lsbOut-g, pad. Otherwise, truncate.
-			if(shift>=0) {  // Shift left; pad
-				parentOp->vhdl << inputSignalName << " & " << zg(lsbIn+shift - lsbOut+g);
-			}
-			else { // shift right; truncate
-				parentOp->vhdl << inputSignalName << range(msbIn, msbIn-(msbOut-lsbOut)+extraBit+g);
-			}
-			parentOp->vhdl <<  ";" <<endl;
+			// Create a signal that shifts it or truncates it into place
+			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
+			int rTempSize = parentOp->getSignalByName(rTempName)->width();
 
 			if(negativeConstant) {
 				bitHeap -> subtractSignedBitVector(0, rTempName, rTempSize);
@@ -464,12 +445,37 @@ namespace flopoco{
 					bitHeap -> addUnsignedBitVector(0, rTempName, rTempSize);
 			}
 			return true; // and that 's all folks.
-		}
+			}
 		// From now on we have a "normal" constant and we instantiate tables.
 		return false;
 	}
 
-
+	
+	// Just to factor out code.
+	/* This builds the input shifted WRT lsb-g
+	 but doesn't worry about adding or subtracting it,
+	 which depends wether we do a standalone or bit-heap   
+	*/
+	string FixRealKCM::createShiftedPowerOfTwo(string resultSignalName){
+		string rTempName = getName() + "_Rtemp"; // Should be unique in a bit heap if each KCM got a UID.
+		// Compute shift that must be applied to x to align it to lsbout-g.
+		// This is a shift left: negative means shift right.
+		int shift= lsbIn -(lsbOut-g)  + msbC ; 
+		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
+		REPORT(0,"msbC=" << msbC << "     Shift left of " << shift << " bits");
+		// compute the product by the abs constant
+		parentOp->vhdl << tab << parentOp->declare(rTempName, rTempSize) << " <= ";
+		// Still there are two cases: 
+		if(shift>=0) {  // Shift left; pad   THIS SEEMS TO WORK
+			parentOp->vhdl << inputSignalName << " & " << zg(shift);
+			// rtempsize= msbIn-lsbin+1   + shift  =   -lsbIn   + msbIn   +1   - (lsbOut-g -lsbIn +msbC)
+		}
+		else { // shift right; truncate
+			parentOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
+		}
+		parentOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
+		return rTempName;
+	}
 
 
 	void FixRealKCM::buildTablesForBitHeap() {

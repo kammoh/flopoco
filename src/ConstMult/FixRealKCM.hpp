@@ -138,6 +138,8 @@ namespace flopoco{
 		bool negativeConstant;
 		bool constantRoundsToZero;
 		bool constantIsPowerOfTwo;
+		int extraBitForNegativePowerOfTwo;
+;
 
 
 
@@ -157,6 +159,7 @@ namespace flopoco{
 	private:
 		bool specialCasesForBitHeap();
 		void buildTablesForBitHeap();
+		string createShiftedPowerOfTwo(string resultSignalName);
 
 	};
 
