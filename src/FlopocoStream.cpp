@@ -113,6 +113,7 @@ namespace flopoco{
 		lexer->lex();
 
 		//the temporary table is used to update the member of FlopocoStream
+		//	this also empties the lexer's dependence table
 		updateDependenceTable(lexer->dependenceTable);
 
 		//set the flag for code parsing and reset the vhdl code buffer
@@ -130,6 +131,7 @@ namespace flopoco{
 		for(iter = tmpDependenceTable.begin(); iter!=tmpDependenceTable.end();++iter){
 			dependenceTable.push_back(make_triplet(iter->first, iter->second, iter->third));
 		}
+		tmpDependenceTable.clear();
 	}
 
 
