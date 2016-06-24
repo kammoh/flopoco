@@ -127,7 +127,6 @@ namespace flopoco{
 		int lsbIn;
 		int msbOut;
 		int lsbOut;
-		int lsbInOrig; /**< currently always equal to lsbIn, but for really small constants, we could use fewer bits of the input */
 		string constant;
 		float targetUlpError;
 		bool addRoundBit; /**< If false, do not add the round bit to the bit heap: somebody else will */ 

@@ -13,6 +13,27 @@
  * 2008-2011.
  * All rights reserved.
  */
+/*
+
+Remaining bug:
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
+It is the limit case of removing one table altogether because it contributes nothng.
+I don't really understand
+
+Dépendances
+[ 15%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/FixFilters/FixIIR.o
+[ 16%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/UserInterface.o
+[ 17%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixAtan2ByCORDIC.o
+[ 17%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Complex/FixComplexKCM.o
+[ 18%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/FixFilters/FixSOPC.o
+[ 19%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/ConstMult/FPRealKCM.o
+[ 20%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/CordicSinCos.o
+[ 21%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixAtan2ByRecipMultAtan.o
+[ 22%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/ExpLog/FPExp.o
+[ 23%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixSinCos.o
+*/
+
+
 
 #include "../Operator.hpp"
 
@@ -55,8 +76,8 @@ namespace flopoco{
 		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
 		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
 		
-		addInput("X",  msbIn-lsbInOrig+1);
-		//		addFixInput("X", signedInput,  msbIn, lsbInOrig); // The world is not ready yet
+		addInput("X",  msbIn-lsbIn+1);
+		//		addFixInput("X", signedInput,  msbIn, lsbIn); // The world is not ready yet
 		inputSignalName = "X"; // for buildForBitHeap
 		addOutput("R", msbOut-lsbOut+1);
 
@@ -173,7 +194,7 @@ namespace flopoco{
 		srcFileName="FixRealKCM";
 
 		setCopyrightString("Florent de Dinechin (2007-2016)");
-
+		
 		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
     
@@ -257,13 +278,8 @@ namespace flopoco{
 		msbOut = msbC + msbIn;
 
 		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
-		// Some day we compute a TMD using continued fractions and we can ignore useless bits.
-		// Meanwhile we just print a warning
-		lsbInOrig=lsbIn;
-		if(lsbIn<lsbInUseful) { // some of the user-provided input bits would have no impact on the output
-			// lsbIn=lsbInUseful;   // therefore ignore them.
-			REPORT(DETAILED, "WARNING: lsbIn="<<lsbInOrig << " but I observe that bits of weight lower than " << lsbInUseful << " will have very little impact on the output.")  ;
-		}
+		// However this depends on how many guard bits we add...
+		// So the relevant test has been pushed to the table generation
 
 		// Finally, check if the constant is a power of two -- obvious optimization there
 		constantIsPowerOfTwo = (mpfr_cmp_ui_2exp(absC, 1, msbC) == 0);
@@ -273,7 +289,7 @@ namespace flopoco{
 				msbOut++; // To cater for the asymmetry of fixed-point : -2^(msbIn-1) has no representable opposite otherwise
 
 		
-			if(lsbInOrig+msbC<lsbOut) {   // The truncation case
+			if(lsbIn+msbC<lsbOut) {   // The truncation case
 				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
 				errorInUlps=1;
 			}
@@ -288,7 +304,7 @@ namespace flopoco{
 		}
 		
 		REPORT(DETAILED, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
-					 msbIn << "," << lsbIn << ")    lsbInOrig=" << lsbInOrig << 
+					 msbIn << "," << lsbIn << ")    lsbIn=" << lsbIn << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
 					 ")  signedOutput=" << signedOutput
 		);
@@ -462,38 +478,46 @@ namespace flopoco{
 			string sliceInName = join(getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.
 			string sliceOutName = join(getName() + "_T", i); // Should be unique in a bit heap if each KCM got a UID.
 			string instanceName = join(getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
-			
-			parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
-										 << inputSignalName << range(m[i]-lsbInOrig, l[i]-lsbInOrig) << ";" << endl;
-			FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
-			parentOp->addSubComponent(t);
-			parentOp->inPortMap (t , "X", sliceInName);
-			parentOp->outPortMap(t , "Y", sliceOutName);
-			parentOp->vhdl << parentOp->instance(t , instanceName);
 
-			int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
+			// Now that we have g we may compute if it has useful output bits
+			int tableOutSize = m[i] + msbC  - lsbOut + g +1;
+			if(tableOutSize<=0) {
+				REPORT(DETAILED, "Warning: Table " << i << " was contributing nothing to the bit heap and has been discarded")
+			}
+			else { // Build it and add its output to the bit heap
+				REPORT(0, "lsbIn=" << lsbIn);
+				parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
+											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << "; -- input address  m=" << m[i] << "  l=" << l[i]  << endl;
+				FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
+				parentOp->addSubComponent(t);
+				parentOp->inPortMap (t , "X", sliceInName);
+				parentOp->outPortMap(t , "Y", sliceOutName);
+				parentOp->vhdl << parentOp->instance(t , instanceName);
 
-			// Add these bits to the bit heap
-			switch(tableOutputSign[i]) {
-			case 0:
-				bitHeap -> addSignedBitVector(0, // weight
-																						sliceOutName, // name
-																						sliceOutWidth // size
-																						);
-				break;
-			case 1:
-				bitHeap -> addUnsignedBitVector(0, // weight
-																							sliceOutName, // name
-																							sliceOutWidth // size
-																							);
-				break;
-			case -1: // In this case the table simply stores x* absC 
-				bitHeap -> subtractUnsignedBitVector(0, // weight
-																										sliceOutName, // name
-																										sliceOutWidth // size
-																										);
-				break;
-			default: THROWERROR("unexpected value in tableOutputSign");
+				int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
+				
+				// Add these bits to the bit heap
+				switch(tableOutputSign[i]) {
+				case 0:
+					bitHeap -> addSignedBitVector(0, // weight
+																				sliceOutName, // name
+																				sliceOutWidth // size
+																				);
+					break;
+				case 1:
+					bitHeap -> addUnsignedBitVector(0, // weight
+																					sliceOutName, // name
+																					sliceOutWidth // size
+																					);
+					break;
+				case -1: // In this case the table simply stores x* absC 
+					bitHeap -> subtractUnsignedBitVector(0, // weight
+																							 sliceOutName, // name
+																							 sliceOutWidth // size
+																							 );
+					break;
+				default: THROWERROR("unexpected value in tableOutputSign");
+				}
 			}
 		}
 	}			
@@ -510,7 +534,7 @@ namespace flopoco{
 		// Get I/O values
 		mpz_class svX = tc->getInputValue("X");
 		bool negativeInput = false;
-		int wIn=msbIn-lsbInOrig+1;
+		int wIn=msbIn-lsbIn+1;
 		int wOut=msbOut-lsbOut+1;
 		
 		// get rid of two's complement
@@ -523,11 +547,11 @@ namespace flopoco{
 		
 		// Cast it to mpfr 
 		mpfr_t mpX; 
-		mpfr_init2(mpX, msbIn-lsbInOrig+2);	
+		mpfr_init2(mpX, msbIn-lsbIn+2);	
 		mpfr_set_z(mpX, svX.get_mpz_t(), GMP_RNDN); // should be exact
 		
 		// scale appropriately: multiply by 2^lsbIn
-		mpfr_mul_2si(mpX, mpX, lsbInOrig, GMP_RNDN); //Exact
+		mpfr_mul_2si(mpX, mpX, lsbIn, GMP_RNDN); //Exact
 		
 		// prepare the result
 		mpfr_t mpR;

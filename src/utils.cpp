@@ -899,9 +899,13 @@ namespace flopoco{
 	string range( int left, int right)
 	{
 		ostringstream o;
+#if 0 // I believe this is hiding a lot of bugs that we had rather detect
 		if (left>=right) o<<"("<<left<<" downto " << (right>0?right:0) << ")";
 		else             o<<"("<<(left>0?left:0)<<" to "     << right << ")";
-
+#else
+		if (left>=right) o<<"("<<left<<" downto " << right << ")";
+		else             o<<"("<<left<<" to "     << right << ")";
+#endif
 		return o.str();
 	}
 
