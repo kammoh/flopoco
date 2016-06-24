@@ -1832,8 +1832,8 @@ public:
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
 	//disabled during the overhaul
-	vector<Operator*>     subComponentList_;					/**< The list of instantiated sub-components */
-	//vector<Instance*>      instances_;                      /**< The list of instances (with the corresponding port maps) */
+	vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
+	//vector<Instance*>      instances_;                    /**< The list of instances (with the corresponding port maps) */
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;                         /**< The list of I/O signals of the operator */
 
@@ -1908,7 +1908,7 @@ private:
 
 	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
-	int		       hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
+	int		               hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 
 	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not */
@@ -1917,6 +1917,10 @@ private:
 
 	bool                   isUnique_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
 	bool                   uniquenessSet_;                  /**< Ensure single access to isUnique_ */
+
+	vector<Signal*>        signalsToSchedule;               /**< The list of signals that have been modified by the just-parsed VHDL instructions and from which the scheduler needs to be restarted */
+	vector<triplet<string, string, int>> unresolvedDependenceTable;   /**< The list of dependence relations which contain on either the lhs or rhs an (still) unknown name */
+
 };
 
 
