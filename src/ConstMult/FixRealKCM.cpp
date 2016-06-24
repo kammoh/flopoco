@@ -44,26 +44,13 @@ namespace flopoco{
 							lsbIn(lsbIn_),
 							lsbOut(lsbOut_),
 							constant(constant_),
-							targetUlpError(targetUlpError_)
+							targetUlpError(targetUlpError_),
+							addRoundBit(true)
 	{
-
 		init();		 // check special cases, computes number of tables and errorInUlps.
 
 		// Now we have everything to compute g
-		if(numberOfTables==2 && targetUlpError==1.0)
-			g=0; // specific case: two CR tables make up a faithful sum
-		else{
-			// Was:			g = ceil(log2(numberOfTables/((targetUlpError-0.5)*exp2(-lsbOut)))) -1 -lsbOut;
-			g=0;
-			double maxErrorWithGuardBits=errorInUlps;
-			double tableErrorBudget = targetUlpError-0.5 ; // 0.5 is for the final rounding
-			while (maxErrorWithGuardBits > tableErrorBudget) {
-				g++;
-				maxErrorWithGuardBits /= 2.0;
-			}
-		}
-			
-		REPORT(DEBUG, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
+		computeGuardBits();
 		
 		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
 		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
@@ -353,13 +340,59 @@ namespace flopoco{
 			l.push_back(tableInLSB);
 			numberOfTables++;			
 		}
+
+		// Are the table outputs signed? We compute this information here in order to avoid having constant bits added to the bit heap.
+		// The chunk input to tables of index i>0 is always an unsigned number, so their output will be constant, fixed by the sign of 
 		for (int i=0; i<numberOfTables; i++) {
-			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] );
+			int s;
+			if (i==0 && signedInput) {
+				// This is the only case when we can have a variable sign
+					s=0;
+			}
+			else { // chunk input is positive
+					if(negativeConstant)
+						s=-1;
+					else
+						s=1;
+			}
+			tableOutputSign.push_back(s);
+		}
+		/* How to use this information? 
+			 The case +1 is simple: don't tabulate the constant 0 sign, don't add it to the bit heap 
+			 The case 0 is usual: we have a two's complement number to add to the bit heap, 
+          there are methods for that.  
+       The case -1 presents an additional problem: the sign bit is not always 1, 
+			    indeed there is one entry were the sign bit is 0: when input is 0.
+          A trick by Luc Forget: remove one ulp from the tabulated value, 
+          so it becomes  always negative. 
+          and to add this ulp to the constant vector of the bit heap.
+					The ulp removal can not underflow, since we have one more negative value than positive ones in the two's complement range*/
+		for (int i=0; i<numberOfTables; i++) {
+			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] << "   tableOutputSign=" << tableOutputSign[i]  );
 		}
 
 		// Finally computing the error due to this setup. We express it as ulps at position lsbOut-g, whatever g will be
 		errorInUlps=0.5*numberOfTables;
 		REPORT(DETAILED,"errorInUlps=" << errorInUlps);
+	}
+
+
+
+	
+	void FixRealKCM::computeGuardBits(){
+		if(numberOfTables==2 && targetUlpError==1.0)
+			g=0; // specific case: two CR tables make up a faithful sum
+		else{
+			// Was:			g = ceil(log2(numberOfTables/((targetUlpError-0.5)*exp2(-lsbOut)))) -1 -lsbOut;
+			g=0;
+			double maxErrorWithGuardBits=errorInUlps;
+			double tableErrorBudget = targetUlpError-0.5 ; // 0.5 is for the final rounding
+			while (maxErrorWithGuardBits > tableErrorBudget) {
+				g++;
+				maxErrorWithGuardBits /= 2.0;
+			}
+		}
+		REPORT(DEBUG, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
 	}
 
 
@@ -435,18 +468,30 @@ namespace flopoco{
 			parentOp->inPortMap (t , "X", sliceInName);
 			parentOp->outPortMap(t , "Y", sliceOutName);
 			parentOp->vhdl << parentOp->instance(t , instanceName);
+
+			int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
+
 			// Add these bits to the bit heap
-			if(i==0 && signedOutput) {
+			switch(tableOutputSign[i]) {
+			case 0:
 				bitHeap -> addSignedBitVector(0, // weight
-																			sliceOutName, // name
-																			parentOp->getSignalByName(sliceOutName)->width() // size
-																			);
-			}
-			else {
+																						sliceOutName, // name
+																						sliceOutWidth // size
+																						);
+				break;
+			case 1:
 				bitHeap -> addUnsignedBitVector(0, // weight
-																				sliceOutName, // name
-																				parentOp->getSignalByName(sliceOutName)->width() // size
-																				);
+																							sliceOutName, // name
+																							sliceOutWidth // size
+																							);
+				break;
+			case -1: // In this case the table simply stores x* absC 
+				bitHeap -> subtractUnsignedBitVector(0, // weight
+																										sliceOutName, // name
+																										sliceOutWidth // size
+																										);
+				break;
+			default: THROWERROR("unexpected value in tableOutputSign");
 			}
 		}
 	}			
@@ -569,7 +614,7 @@ namespace flopoco{
 	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i):
 			Table(target,
 						mother->m[i] - mother->l[i]+1, // wIn
-						mother->m[i] + mother->msbC  - mother->lsbOut + mother->g +1, //wOut
+						mother->m[i] + mother->msbC  - mother->lsbOut + mother->g +1, //wOut TODO: the +1 could sometimes be removed
 						0, // minIn
 						-1, // maxIn
 						1), // logicTable 
@@ -581,7 +626,8 @@ namespace flopoco{
 		srcFileName="FixRealKCM";
 		name << mother->getName() << "_Table_" << index;
 		setName(name.str()); // This one not a setNameWithFreqAndUID
-		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team"); 
+		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team");
+		
 	}
   
 
@@ -589,89 +635,64 @@ namespace flopoco{
 
 	mpz_class FixRealKCMTable::function(int x0)
 	{
+		// This function returns a value that is signed.
 		int x;
-		bool negativeInput = false;
 		
 		// get rid of two's complement
 		x = x0;
 		//Only the MSB "digit" has a negative weight
-		if(mother->signedInput && (index==0))
-		{
-			if ( x0 > ((1<<(wIn-1))-1) )
-			{
+		if(mother->tableOutputSign[index]==0)	{ // only in this case interpret input as two's complement
+			if ( x0 > ((1<<(wIn-1))-1) )	{
 				x -= (1<<wIn);
-				negativeInput = true;
 			}
-		}
-		//		cout << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   ";
+		} // Now x is a signed number only if it was chunk 0 and its sign bit was set
+
+		//cout << "index=" << index << " x0=" << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   "  <<"  wout="<<wOut<< "   " ;
 
 		mpz_class result;
 		mpfr_t mpR, mpX;
 
 		mpfr_init2(mpR, 10*wOut);
 		mpfr_init2(mpX, 2*wIn); //To avoid mpfr bug if wIn = 1
+		                       
+		mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
+		// Scaling so that the input has its actual weight
+		mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
 
-		if(x == 0){
-			result = mpz_class(0);
-		}
-		else	{
-			mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
-			// Scaling so that the input has its actual weight
-			mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
-
-			//			double dx = mpfr_get_d(mpX, GMP_RNDN);
-			//			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
+		//						double dx = mpfr_get_d(mpX, GMP_RNDN);
+		//			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
 			
-			// do the mult in large precision
+		// do the mult in large precision
+		if(mother->tableOutputSign[index]==0)	
+			mpfr_mul(mpR, mpX, mother->mpC, GMP_RNDN);
+		else // multiply by the absolute value of the constant, the bitheap logic does the rest
 			mpfr_mul(mpR, mpX, mother->absC, GMP_RNDN);
 			
-			// Result is integer*C, which is more or less what we need: just scale it to an integer.
-			mpfr_mul_2si(
-					mpR, 
-					mpR,
-					-mother->lsbOut + mother->g,	
-					GMP_RNDN
-				); //Exact
+		// Result is integer*mpC, which is more or less what we need: just scale it to an integer.
+		mpfr_mul_2si( mpR, 
+									mpR,
+									-mother->lsbOut + mother->g,	
+									GMP_RNDN	); //Exact
 
-			//      double dr=mpfr_get_d(mpR, GMP_RNDN);
-			//			cout << "  dr=" << dr << "  ";
+		//			double dr=mpfr_get_d(mpR, GMP_RNDN);
+		//			cout << "  dr=" << dr << "  ";
 			
-			// Here is when we do the rounding
-			mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
+		// Here is when we do the rounding
+		mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
 
-			//Get the real sign
-			if(negativeInput != mother->negativeConstant && result != 0) {
-				if(result<0)
-					result +=(mpz_class(1) << wOut);
-			}
+		//cout << mother->tableOutputSign[index] << "  result0=" << result << "  ";
+
+		// sign management
+		if(mother->tableOutputSign[index]==0) {
+			// this is a two's complement number with a non-constant sign bit
+			// so we encode it as two's complement
+			if(result<0)
+				result +=(mpz_class(1) << wOut);				
 		}
 		
-		//			cout << "  sdr=" << result << "  ";
-
-		// // TODO F2D:  understand the following
-		// //Result is result -1 in order to avoid to waste a sign bit
-		// if(negativeSubproduct)
-		// {
-		// 	if(result == 0)
-		// 		result = (mpz_class(1) << wOut) - 1;
-		// 	else
-		// 		result -= 1;
-		// }
-
-		// //In case of global bitHeap, we need to invert msb for signedInput
-		// //last bit for fast sign extension.
-		// if((index==0) && mother->signedInput)	{
-		// 	mpz_class shiftedOne = mpz_class(1) << (wOut - 1);
-		// 	if( result < shiftedOne ) // MSB=0
-		// 		result += shiftedOne;  // set it to 1
-		// 	else
-		// 		result -= shiftedOne;  // set it to 0
-		// }
-
-		
-		//		cout << result << endl;
-			
-		if(mother->addRoundBit && (index==mother->numberOfTables-1) && (mother->g>0))
+		//cout  << result << "  " <<endl;
+		// Add the rounding bit to the table 0, because it will never be subtracted
+		if(mother->addRoundBit && (index==0) && (mother->g>0))
 			result += 1<<(mother->g-1);
 		return result;
 	}

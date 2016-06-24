@@ -180,7 +180,7 @@ namespace flopoco{
 			kcm.push_back(m);
 			double errorInUlps=m->getErrorInUlps();
 			maxAbsError += errorInUlps;
-			REPORT(DETAILED,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps)
+			REPORT(DETAILED,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps << " ulp(s)")
 		}
 
 		g = 0;

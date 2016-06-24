@@ -148,7 +148,9 @@ namespace flopoco{
 		int numberOfTables;
 		vector<int> m; /**< MSB of chunk i; m[0] == msbIn */
 		vector<int> l; /**< LSB of chunk i; l[numberOfTables-1] = lsbIn, or maybe >= lsbIn if not all the input bits are used due to a small constant */
+		vector<int> tableOutputSign; /**< +1: table is always positive. -1: table output is always negative. 0: table output is signed */
 
+		void computeGuardBits();
 
 	private:
 		bool specialCasesForBitHeap();
