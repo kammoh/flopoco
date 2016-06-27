@@ -359,11 +359,9 @@ namespace flopoco{
 		string n;
 
 		//check if this is the name of a delayed signal
-		if(name.find('^') != string::npos)
-		{
+		if(name.find('^') != string::npos){
 			n = name.substr(0, name.find('^'));
-		}else
-		{
+		}else{
 			n = name;
 		}
 
@@ -673,7 +671,7 @@ namespace flopoco{
 	}
 
 	void Operator::setPipelineDepth(int d) {
-		cerr << "WARNING: function setPipelineDepth() is deprecated" << endl;
+		cerr << "WARNING: function setPipelineDepth(int depth) is deprecated" << endl;
 
 		pipelineDepth_ = d;
 	}
@@ -757,39 +755,29 @@ namespace flopoco{
 
 
 	void Operator::setCycle(int cycle, bool report) {
-
 		REPORT(0,"WARNING: function setCycle() is deprecated and no longer has any effect!");
 	}
 
 	int Operator::getCurrentCycle(){
-		//disabled during the overhaul
-		/*
-		return currentCycle_;
-		*/
-
 		REPORT(0,"WARNING: function getCurrentCycle() is deprecated and no longer has any effect!");
 		return -1;
 	}
 
 	void Operator::nextCycle(bool report) {
-
 		REPORT(0, "WARNING: function nextCycle() is deprecated and no longer has any effect!");
 	}
 
 	void Operator::previousCycle(bool report) {
-
 		REPORT(0, "WARNING: function previousCycle() is deprecated and no longer has any effect!");
 	}
 
 
 	void Operator::setCycleFromSignal(string name, bool report) {
-
 		REPORT(0, "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!");
 	}
 
 
 	void Operator::setCycleFromSignal(string name, double criticalPath, bool report) {
-
 		REPORT(0, "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!");
 	}
 
@@ -801,13 +789,11 @@ namespace flopoco{
 
 			try {
 				s = getSignalByName(name);
-			}
-			catch(string &e) {
+			}catch(string &e) {
 				THROWERROR("): ERROR in getCycleFromSignal, " << endl << tab << e);
 			}
 
-			if(s->getCycle() < 0)
-			{
+			if(s->getCycle() < 0){
 				THROWERROR("Signal " << name << " doesn't have (yet?) a valid cycle" << endl);
 			}
 
@@ -1076,8 +1062,11 @@ namespace flopoco{
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, width, isbus);
-
+		// initialize the rest of its attributes
 		initNewSignal(s, criticalPathContribution, regType);
+
+		// add the signal on the list of signals from which to schedule
+		signalsToSchedule.push_back(s);
 
 		return name;
 	}
@@ -1106,6 +1095,9 @@ namespace flopoco{
 		s->setIsFP(false);
 		s->setIsIEEE(false);
 
+		// add the signal on the list of signals from which to schedule
+		signalsToSchedule.push_back(s);
+
 		return name;
 	}
 
@@ -1130,16 +1122,16 @@ namespace flopoco{
 
 		s->setIsFix(false);
 		//set the flag for a floating-point signal
-		if(ieeeFormat)
-		{
+		if(ieeeFormat){
 			s->setIsFP(false);
 			s->setIsIEEE(true);
-		}
-		else
-		{
+		}else{
 			s->setIsFP(true);
 			s->setIsIEEE(false);
 		}
+
+		// add the signal on the list of signals from which to schedule
+		signalsToSchedule.push_back(s);
 
 		return name;
 	}
@@ -1164,9 +1156,13 @@ namespace flopoco{
 
 		initNewSignal(s, criticalPathContribution, Signal::table);
 
+		// set all flag types to false
 		s->setIsFix(false);
 		s->setIsFP(false);
 		s->setIsIEEE(false);
+
+		// add the signal on the list of signals from which to schedule
+		signalsToSchedule.push_back(s);
 
 		return name;
 	}
