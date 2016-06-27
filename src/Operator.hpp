@@ -1831,9 +1831,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
-	//disabled during the overhaul
 	vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
-	//vector<Instance*>      instances_;                    /**< The list of instances (with the corresponding port maps) */
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;                         /**< The list of I/O signals of the operator */
 
@@ -1868,16 +1866,9 @@ protected:
 	string 				architectureName_;                  /**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_;                   /**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
 
-	//disabled during the overhaul
-	//map<string, map<string, string>>  portMaps_;          /**< Port maps for the instances of this operator */
 	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-	//disabled during the overhaul
-	//map<string, double>  outDelayMap;                       /**< Slack delays on the outputs */
-	//map<string, double>  inputDelayMap;                     /**< Slack delays on the inputs */
 	string               srcFileName;                       /**< Used to debug and report.  */
-	//disabled during the overhaul
-	//map<string, int>     declareTable;                      /**< Table containing the name and declaration cycle of the signal */
 	int                  myuid;                             /**< Unique id>*/
 	int                  cost;                              /**< The cost of the operator depending on different metrics */
 
@@ -1901,10 +1892,6 @@ private:
 	string                 headerComment_;                  /**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;                /**< Authors and years.  */
 	// TODO move the two following to outputVHDL
-
-	//disabled during the overhaul
-	//int                    currentCycle_;                 /**< The current cycle, when building a pipeline */
-	//double                 criticalPath_;               	/**< The current delay of the current pipeline stage */
 
 	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */

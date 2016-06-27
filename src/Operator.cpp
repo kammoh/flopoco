@@ -92,15 +92,7 @@ namespace flopoco{
 		hasClockEnable_             = false;
 		pipelineDepth_              = 0;
 
-		//disabled during the overhaul
-		/*
-		currentCycle_               = 0;
-		criticalPath_               = 0;
-		*/
-
 		needRecirculationSignal_    = false;
-		//disabled during the overhaul
-		//inputDelayMap               = inputDelays;
 		myuid                       = getNewUId();
 		architectureName_			= "arch";
 		indirectOperator_           = NULL;
@@ -112,6 +104,9 @@ namespace flopoco{
 
 		isUnique_ = true;
 		uniquenessSet_ = false;
+
+		signalsToSchedule.clear();
+		unresolvedDependenceTable.clear();
 
 
 		// Currently we set the pipeline and clock enable from the global target.
@@ -186,20 +181,6 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s;
-
-		//disabled during the overhaul
-		//declareTable[name] = s->getCycle();
-
-		//search the input delays and try to set the critical path
-		// of the input to the one specified in the inputDelays
-		//disabled during the overhaul
-		/*
-		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
-		if(foundSignal != inputDelayMap.end())
-		{
-			s->setCriticalPath(foundSignal->second);
-		}
-		*/
 	}
 
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
@@ -221,10 +202,6 @@ namespace flopoco{
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
-
-		//disabled in the old version
-		//	it intervenes with the pipelining mechanism
-		//declareTable[name] = s->getCycle();
 	}
 
 	void Operator::addOutput(const std::string name) {
@@ -255,20 +232,6 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
-
-		//disabled during the overhaul
-		//declareTable[name] = s->getCycle();
-
-		//search the input delays and try to set the critical path
-		// of the input to the one specified in the inputDelays
-		//disabled during the overhaul
-		/*
-		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
-		if(foundSignal != inputDelayMap.end())
-		{
-			s->setCriticalPath(foundSignal->second);
-		}
-		*/
 	}
 
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
@@ -311,20 +274,6 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
-
-		//disabled during the overhaul
-		//declareTable[name] = s->getCycle();
-
-		//search the input delays and try to set the critical path
-		// of the input to the one specified in the inputDelays
-		//disabled during the overhaul
-		/*
-		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
-		if(foundSignal != inputDelayMap.end())
-		{
-			s->setCriticalPath(foundSignal->second);
-		}
-		*/
 	}
 
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -346,9 +295,6 @@ namespace flopoco{
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
-
-		//disabled during the overhaul
-		//declareTable[name] = s->getCycle();
 	}
 
 
@@ -370,20 +316,6 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
-
-		//disabled during the overhaul
-		//declareTable[name] = s->getCycle();
-
-		//search the input delays and try to set the critical path
-		// of the input to the one specified in the inputDelays
-		//disabled during the overhaul
-		/*
-		map<string, double>::iterator foundSignal = inputDelayMap.find(name);
-		if(foundSignal != inputDelayMap.end())
-		{
-			s->setCriticalPath(foundSignal->second);
-		}
-		*/
 	}
 
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -405,14 +337,11 @@ namespace flopoco{
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
-
-		//disabled during the overhaul
-		//declareTable[name] = s->getCycle();
 	}
 
 
 
-	Signal * Operator::getSignalByName(string name) {
+	Signal* Operator::getSignalByName(string name) {
 		//search for the signal in the list of signals
 		if(signalMap_.find(name) == signalMap_.end()) {
 			//signal not found, throw an error
@@ -458,10 +387,6 @@ namespace flopoco{
 		}
 		return true;
 	}
-
-//	vector<Instance*> Operator::getInstances(){
-//		return instances_;
-//	};
 
 
 	void Operator::addHeaderComment(std::string comment){
@@ -832,22 +757,6 @@ namespace flopoco{
 
 
 	void Operator::setCycle(int cycle, bool report) {
-		//disabled during the overhaul
-		/*
-		criticalPath_ = 0;
-		// lexing part
-		vhdl.flush(currentCycle_);
-		if(isSequential()) {
-			currentCycle_=cycle;
-			vhdl.setCycle(currentCycle_);
-			if(report){
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl ;
-			}
-			// automatically update pipeline depth of the operator
-			if (currentCycle_ > pipelineDepth_)
-				pipelineDepth_ = currentCycle_;
-		}
-		*/
 
 		REPORT(0,"WARNING: function setCycle() is deprecated and no longer has any effect!");
 	}
@@ -863,105 +772,29 @@ namespace flopoco{
 	}
 
 	void Operator::nextCycle(bool report) {
-		/*
-		// lexing part
-		vhdl.flush(currentCycle_);
-
-		if(isSequential()) {
-
-			currentCycle_ ++;
-			vhdl.setCycle(currentCycle_);
-			if(report)
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
-
-			criticalPath_ = 0;
-			// automatically update pipeline depth of the operator
-			if (currentCycle_ > pipelineDepth_)
-				pipelineDepth_ = currentCycle_;
-		}
-		*/
 
 		REPORT(0, "WARNING: function nextCycle() is deprecated and no longer has any effect!");
 	}
 
 	void Operator::previousCycle(bool report) {
-		//disabled during the overhaul
-		/*
-		// lexing part
-		vhdl.flush(currentCycle_);
-
-		if(isSequential()) {
-
-			currentCycle_ --;
-			vhdl.setCycle(currentCycle_);
-			if(report)
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
-
-		}
-		*/
 
 		REPORT(0, "WARNING: function previousCycle() is deprecated and no longer has any effect!");
 	}
 
 
 	void Operator::setCycleFromSignal(string name, bool report) {
-		//disabled during the overhaul
-		/*
-		setCycleFromSignal(name, 0.0, report);
-		*/
 
 		REPORT(0, "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!");
 	}
 
 
 	void Operator::setCycleFromSignal(string name, double criticalPath, bool report) {
-		//disabled during the overhaul
-		/*
-		// lexing part
-		vhdl.flush(currentCycle_);
-
-
-		if(isSequential()) {
-			Signal* s;
-			try {
-				s=getSignalByName(name);
-			}
-			catch (string e2) {
-				ostringstream e;
-				e << srcFileName << " (" << uniqueName_ << "): ERROR in setCycleFromSignal, "; // just in case
-
-				e << endl << tab << e2;
-				throw e.str();
-			}
-
-			if( s->getCycle() < 0 ) {
-				ostringstream o;
-				o << "signal " << name<< " doesn't have (yet?) a valid cycle";
-				throw o.str();
-			}
-
-			currentCycle_ = s->getCycle();
-			criticalPath_ = criticalPath;
-			vhdl.setCycle(currentCycle_);
-
-			if(report)
-				vhdl << tab << "---------------- cycle " << currentCycle_ << "----------------" << endl ;
-			// automatically update pipeline depth of the operator
-			if (currentCycle_ > pipelineDepth_)
-				pipelineDepth_ = currentCycle_;
-		}
-		*/
 
 		REPORT(0, "WARNING: function setCycleFromSignal() is deprecated and no longer has any effect!");
 	}
 
 
 	int Operator::getCycleFromSignal(string name, bool report) {
-		//disabled during the overhaul
-		/*
-		// lexing part
-		vhdl.flush(currentCycle_);
-		*/
 
 		if(isSequential()) {
 			Signal* s;
@@ -1015,10 +848,6 @@ namespace flopoco{
 
 
 	bool Operator::syncCycleFromSignal(string name, bool report) {
-		//disabled during the overhaul
-		/*
-		return(syncCycleFromSignal(name, 0.0, report));
-		*/
 
 		REPORT(0, "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!");
 
@@ -1028,54 +857,6 @@ namespace flopoco{
 
 
 	bool Operator::syncCycleFromSignal(string name, double criticalPath, bool report) {
-		//disabled during the overhaul
-		/*
-		bool advanceCycle = false;
-
-		// lexing part
-		vhdl.flush(currentCycle_);
-		ostringstream e;
-		e << srcFileName << " (" << uniqueName_ << "): ERROR in syncCycleFromSignal, "; // just in case
-
-		if(isSequential()) {
-			Signal* s;
-			try {
-				s=getSignalByName(name);
-			}
-			catch (string e2) {
-				e << endl << tab << e2;
-				throw e.str();
-			}
-
-			if( s->getCycle() < 0 ) {
-				ostringstream o;
-				o << "signal " << name << " doesn't have (yet?) a valid cycle";
-				throw o.str();
-			}
-
-			if (s->getCycle() == currentCycle_){
-				advanceCycle = false;
-				if (criticalPath>criticalPath_)
-					criticalPath_=criticalPath ;
-			}
-
-			if (s->getCycle() > currentCycle_){
-				advanceCycle = true;
-				currentCycle_ = s->getCycle();
-				criticalPath_= criticalPath;
-				vhdl.setCycle(currentCycle_);
-			}
-
-			if(report && advanceCycle)
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl ;
-
-			// automatically update pipeline depth of the operator
-			if (currentCycle_ > pipelineDepth_)
-				pipelineDepth_ = currentCycle_;
-		}
-
-		return advanceCycle;
-		*/
 
 		REPORT(0, "WARNING: function syncCycleFromSignal() is deprecated and no longer has any effect!");
 		return false;
@@ -1233,11 +1014,6 @@ namespace flopoco{
 
 	double Operator::getCriticalPath()
 	{
-		//disabled during the overhaul
-		/*
-		return criticalPath_;
-		*/
-
 		REPORT(0, "WARNING: function getCriticalPath() is deprecated!");
 
 		return -1;
@@ -1245,21 +1021,11 @@ namespace flopoco{
 
 	void Operator::setCriticalPath(double delay)
 	{
-		//disabled during the overhaul
-		/*
-		criticalPath_=delay;
-		*/
-
 		REPORT(0, "WARNING: function setCriticalPath() is deprecated  and no longer has any effect!");
 	}
 
 	void Operator::addToCriticalPath(double delay)
 	{
-		//disabled during the overhaul
-		/*
-		criticalPath_ += delay;
-		*/
-
 		REPORT(0, "WARNING: function addToCriticalPath() is deprecated  and no longer has any effect!");
 	}
 
@@ -1268,41 +1034,6 @@ namespace flopoco{
 
 
 	bool Operator::manageCriticalPath(double delay, bool report){
-		//disabled during the overhaul
-		/*
-		if(isSequential()) {
-#if 0 // code up to version 3.0
-			if ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
-				nextCycle(report);
-				criticalPath_ = min(delay, 1.0/target_->frequency());
-				return true;
-			}
-			else{
-				criticalPath_ += delay;
-				return false;
-			}
-#else // May insert several register levels, experimental in 3.0
-			double totalDelay = criticalPath_ + delay;
-			criticalPath_ = totalDelay;  // will possibly be reset in the loop below
-			// cout << "total delay =" << totalDelay << endl;
-			while ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
-				// This code behaves as the previous as long as delay < 1/frequency
-				// if delay > 1/frequency, it may insert several pipeline levels.
-				// This is what we want to pipeline blockrams and DSPs up to the nominal frequency by just passing their overall delay.
-				nextCycle(); // this resets criticalPath. Therefore, if we entered the loop, CP=0 when we exit
-				totalDelay -= (1.0/target_->frequency()) + target_->ffDelay();
-				// cout << " after one nextCycle total delay =" << totalDelay << endl;
-			}
-					return true;
-#endif
-		}
-		else {
-			criticalPath_ += delay;
-			return false;
-		}
-		*/
-
-
 		REPORT(0, "WARNING: function manageCriticalPath() is deprecated  and no longer has any effect!");
 
 		return false;
@@ -1322,19 +1053,6 @@ namespace flopoco{
 
 		return signal->getCriticalPath();
 	}
-
-	/*
-	double Operator::getMaxInputDelays(map<string, double> inputDelays)
-	{
-		double maxInputDelay = 0;
-		map<string, double>::iterator iter;
-		for (iter = inputDelays.begin(); iter!=inputDelays.end();++iter)
-			if (iter->second > maxInputDelay)
-				maxInputDelay = iter->second;
-
-		return maxInputDelay;
-	}
-	*/
 
 	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType) {
 		return declare(0.0, name, width, isbus, regType);
@@ -1578,16 +1296,6 @@ namespace flopoco{
 				THROWERROR("ERROR in use(), " << endl << tab << e2 << endl);
 			}
 
-			//disabled during the overhaul
-			/*
-			if(s->getCycle() < 0) {
-				THROWERROR("signal " << name<< " doesn't have (yet?) a valid cycle" << endl);
-			}
-			if(s->getCycle() > this->getCurrentCycle()) {
-				THROWERROR("active cycle of signal " << name<< " is later than current cycle, cannot delay it" << endl);
-			}
-			*/
-
 			// update the lifeSpan of s
 			s->updateLifeSpan( this->getCurrentCycle() - s->getCycle() );
 			//return s->delayedName( currentCycle_ - s->getCycle() );
@@ -1812,13 +1520,6 @@ namespace flopoco{
 		}
 
 		o << tab << instanceName << ": " << op->getName();
-
-		//disabled during the overhaul
-		//TODO: is this information still relevant?
-		/*
-		if(op->isSequential())
-			o << "  -- maxInputDelay=" << getMaxInputDelays(op->ioList_);
-		*/
 		o << endl;
 		o << tab << tab << "port map ( ";
 
@@ -2309,9 +2010,6 @@ namespace flopoco{
 		}
 		// Get correct outputs
 		emulate(tc);
-
-		//		cout << tc->getInputVHDL();
-		//    cout << tc->getExpectedOutputVHDL();
 
 		// add to the test case list
 		return tc;
@@ -3538,9 +3236,6 @@ namespace flopoco{
 		if(op != NULL){
 			op->setuid(getuid()); //the selected implementation becomes this operator
 
-			//disabled during the overhaul
-			//setCycle(op->getPipelineDepth());
-
 			op->setName(getName());//accordingly set the name of the implementation
 
 			signalList_ = op->signalList_;
@@ -3642,7 +3337,6 @@ namespace flopoco{
 	//Completely replace "this" with a copy of another operator.
 	void  Operator::cloneOperator(Operator *op){
 		subComponentList_              = op->getSubComponentList();
-		//instances_                  = op->getInstances();
 		signalList_                 = op->getSignalList();
 		ioList_                     = op->getIOListV();
 
@@ -3650,28 +3344,14 @@ namespace flopoco{
 		uniqueName_                 = op->getUniqueName();
 		architectureName_           = op->getArchitectureName();
 		testCaseSignals_            = op->getTestCaseSignals();
-		//disabled during the overhaul
-		//portMap_ = op->getPortMap();
 		tmpInPortMap_               = op->tmpInPortMap_;
 		tmpOutPortMap_              = op->tmpOutPortMap_;
-		//disabled during the overhaul
-		//outDelayMap = map<string,double>(op->getOutDelayMap());
-		//inputDelayMap = op->getInputDelayMap();
-		//disabled during the overhaul
-		//vhdl.vhdlCodeBuffer << op->vhdl.vhdlCodeBuffer.str();
 		vhdl.vhdlCode.str(op->vhdl.vhdlCode.str());
 		vhdl.vhdlCodeBuffer.str(op->vhdl.vhdlCodeBuffer.str());
 
-		//vhdl.currentCycle_   = op->vhdl.currentCycle_;
-		//vhdl.useTable        = op->vhdl.useTable;
-
-//		vhdl.dependenceTable.clear();
-//		vhdl.dependenceTable.insert(vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.begin(), op->vhdl.dependenceTable.end());
 		vhdl.dependenceTable        = op->vhdl.dependenceTable;
 
 		srcFileName                 = op->getSrcFileName();
-		//disabled during the overhaul
-		//declareTable = op->getDeclareTable();
 		cost                        = op->getOperatorCost();
 		subComponentList_           = op->getSubComponentList();
 		stdLibType_                 = op->getStdLibType();
@@ -3692,9 +3372,6 @@ namespace flopoco{
 		commentedName_              = op->commentedName_;
 		headerComment_              = op->headerComment_;
 		copyrightString_            = op->getCopyrightString();
-		//disabled during the overhaul
-		//currentCycle_               = op->getCurrentCycle();
-		//criticalPath_               = op->getCriticalPath();
 		needRecirculationSignal_    = op->getNeedRecirculationSignal();
 		hasClockEnable_             = op->hasClockEnable();
 		indirectOperator_           = op->getIndirectOperator();
