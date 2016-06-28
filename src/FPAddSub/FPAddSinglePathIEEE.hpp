@@ -38,6 +38,9 @@ namespace flopoco{
 		void buildStandardTestCases(TestCaseList* tcl);
 		TestCase* buildRandomTestCase(int i);
 
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
+
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);

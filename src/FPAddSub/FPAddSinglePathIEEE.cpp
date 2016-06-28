@@ -342,7 +342,7 @@ namespace flopoco{
 		/*vhdl<<tab<<declare("excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;*/	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') else expRt;"<<endl; ///++++++++++++++++++++
 		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  ///++++++++++++++++++++
-																			<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or else fracR;"<<endl;
+																			<< "or exExpExc=\"1110\" or exExpExc=\"0101\" else fracR;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
 		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
 
@@ -515,7 +515,52 @@ namespace flopoco{
 		return tc;
 	}
 
-		OperatorPtr FPAddSinglePathIEEE::parseArguments(Target *target, vector<string> &args) {
+	void FPAddSinglePathIEEE::nextTestState(TestState * previousTestState)
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIterationIndex() == 0)
+		{
+			paramList.push_back(make_pair("wE","8"));
+			paramList.push_back(make_pair("wF","23"));
+			paramList.push_back(make_pair("n","100"));
+			
+			testStateList.push_back(paramList);
+			paramList.clear();
+			paramList.push_back(make_pair("wE","11"));
+			paramList.push_back(make_pair("wF","52"));
+			
+			testStateList.push_back(paramList);
+
+
+			for(int i = 5; i<53; i++)
+			{
+				int nbByteWE = 6+(i/10);
+				while(nbByteWE>i)
+				{
+					nbByteWE -= 2;
+				}
+				paramList.clear();
+				paramList.push_back(make_pair("wF",to_string(i)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+				
+				testStateList.push_back(paramList);
+			}
+
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int indexIteration = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
+	}
+
+	OperatorPtr FPAddSinglePathIEEE::parseArguments(Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
@@ -531,7 +576,8 @@ namespace flopoco{
 											 "wE(int): exponent size in bits; \
 wF(int): mantissa size in bits;",
 											 "",
-											 FPAddSinglePathIEEE::parseArguments
+											 FPAddSinglePathIEEE::parseArguments,
+											 FPAddSinglePathIEEE::nextTestState
 											 ) ;
 	}
 }
