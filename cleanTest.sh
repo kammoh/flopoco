@@ -1,8 +1,7 @@
 rm tests/tmp/*
 nbTests=$(grep -c flopoco tests/$1/report)
 nbErrors=$(grep -c ERROR tests/$1/report)
-nbSuccess=$(grep -c SUCCESS tests/$1/report)
-nbSuccess=$((nbSuccess))
+nbSuccess=$((nbTests-nbErrors))
 nbVHDL=$(grep -c "VHDL generated" tests/$1/report)
 rateError=$(((nbErrors*100)/nbTests))
 rateSuccess=$(((nbSuccess*100)/nbTests))
