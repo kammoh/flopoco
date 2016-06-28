@@ -30,26 +30,26 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 #include "IntAdderAlternative.hpp"
 #include "IntAdderShortLatency.hpp"
 
-using namespace std;
-namespace flopoco {
+  using namespace std;
+  namespace flopoco {
 
-	IntAdder::IntAdder ( Target* target, int wIn, map<string, double> inputDelays, int optimizeType, bool srl, int implementation):
-	Operator ( target, inputDelays), wIn_ ( wIn )  {
-		ostringstream name;
-		srcFileName="IntAdder";
-		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
+  	IntAdder::IntAdder ( Target* target, int wIn, map<string, double> inputDelays, int optimizeType, bool srl, int implementation):
+  	Operator ( target, inputDelays), wIn_ ( wIn )  {
+  		ostringstream name;
+  		srcFileName="IntAdder";
+  		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
 
-		name << "IntAdder_" << wIn_<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
+  		name << "IntAdder_" << wIn_<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
 
 		// Set up the IO signals
-		addInput ( "X"  , wIn_, true );
-		addInput ( "Y"  , wIn_, true );
-		addInput( "Cin");
-		addOutput ( "R"  , wIn_, 1 , true );
+  		addInput ( "X"  , wIn_, true );
+  		addInput ( "Y"  , wIn_, true );
+  		addInput( "Cin");
+  		addOutput ( "R"  , wIn_, 1 , true );
 
-		REPORT(DETAILED, "Implementing IntAdder " << wIn << " implementation="<<implementation);
+  		REPORT(DETAILED, "Implementing IntAdder " << wIn << " implementation="<<implementation);
 
-		Operator* intAdderInstantiation;
+  		Operator* intAdderInstantiation;
 
 		if (implementation == -1){ // we must explore
 			intAdderInstantiation = new IntAdderClassical(target, wIn, inputDelays, optimizeType, srl);
@@ -63,20 +63,20 @@ namespace flopoco {
 		}else{
 			switch (implementation){
 				case 0:
-					intAdderInstantiation = new IntAdderClassical(target, wIn, inputDelays, optimizeType, srl);
-					addImplementationList.push_back(intAdderInstantiation);
-					break;
+				intAdderInstantiation = new IntAdderClassical(target, wIn, inputDelays, optimizeType, srl);
+				addImplementationList.push_back(intAdderInstantiation);
+				break;
 				case 1:
-					intAdderInstantiation = new IntAdderAlternative(target, wIn, inputDelays, optimizeType, srl);
-					addImplementationList.push_back(intAdderInstantiation);
-					break;
+				intAdderInstantiation = new IntAdderAlternative(target, wIn, inputDelays, optimizeType, srl);
+				addImplementationList.push_back(intAdderInstantiation);
+				break;
 				case 2:
-					intAdderInstantiation = new IntAdderShortLatency(target, wIn, inputDelays, optimizeType, srl);
-					addImplementationList.push_back(intAdderInstantiation);
-					break;
+				intAdderInstantiation = new IntAdderShortLatency(target, wIn, inputDelays, optimizeType, srl);
+				addImplementationList.push_back(intAdderInstantiation);
+				break;
 				default:
-					intAdderInstantiation = new IntAdderClassical(target, wIn, inputDelays, optimizeType, srl);
-					addImplementationList.push_back(intAdderInstantiation);
+				intAdderInstantiation = new IntAdderClassical(target, wIn, inputDelays, optimizeType, srl);
+				addImplementationList.push_back(intAdderInstantiation);
 			}
 		}
 
@@ -88,10 +88,10 @@ namespace flopoco {
 				selectedVersion = j;
 			}
 
-		cloneOperator(addImplementationList[selectedVersion]);
-		changeName ( name.str() );
+			cloneOperator(addImplementationList[selectedVersion]);
+			changeName ( name.str() );
 
-		REPORT(DETAILED, "Selected implementation for IntAdder"<< wIn << " is "<<selectedVersion<<" with cost="<<currentCost);
+			REPORT(DETAILED, "Selected implementation for IntAdder"<< wIn << " is "<<selectedVersion<<" with cost="<<currentCost);
 
 //		//cleanup; clear the oplist of the components that will be unused, and the components used therein
 //		for (unsigned j=0; j< addImplementationList.size(); j++){
@@ -99,15 +99,15 @@ namespace flopoco {
 //			cleanup(&oplist, addImplementationList[j]);
 //		}
 //		REPORT(DEBUG, "Finished implementing the adder");
-	}
+		}
 
 
-	void IntAdder::updateParameters ( Target* target, int &alpha, int &beta, int &k )
-	{
+		void IntAdder::updateParameters ( Target* target, int &alpha, int &beta, int &k )
+		{
 		target->suggestSlackSubaddSize ( alpha , wIn_, target->ffDelay() + target->localWireDelay() ); /* chunk size */
-		if ( wIn_ == alpha )
+			if ( wIn_ == alpha )
 		{ /* addition requires one chunk */
-			beta = 0;
+				beta = 0;
 			k    = 1;
 		}
 		else
@@ -122,12 +122,12 @@ namespace flopoco {
 		int typeOfChunks = 1;
 		bool status = target->suggestSlackSubaddSize ( gamma , wIn_, getMaxInputDelays(inputDelays) ); // the first chunk size
 		if (!status){ /* well, it will not work in this case, we will have to register the inputs */
-			k     = -1;
-			alpha =  0;
-			beta  =  0;
-			gamma =  0;
-		}
-		else if (wIn_ - gamma > 0)
+		k     = -1;
+		alpha =  0;
+		beta  =  0;
+		gamma =  0;
+	}
+	else if (wIn_ - gamma > 0)
 		{ //more than 1 chunk
 			target->suggestSlackSubaddSize (alpha, wIn_-gamma, target->ffDelay() + target->localWireDelay());
 			if (wIn_ - gamma == alpha)
@@ -135,19 +135,19 @@ namespace flopoco {
 			else
 				typeOfChunks+=2; /* beta will have to be computed as well */
 
-			if (typeOfChunks == 3)
-				beta = ( (wIn_-gamma) % alpha == 0 ? alpha : ( wIn_-gamma ) % alpha );
-			else
-				beta = alpha;
+				if (typeOfChunks == 3)
+					beta = ( (wIn_-gamma) % alpha == 0 ? alpha : ( wIn_-gamma ) % alpha );
+				else
+					beta = alpha;
 
-			if ( typeOfChunks==2 )
-				k = 2;
+				if ( typeOfChunks==2 )
+					k = 2;
+				else
+					k = 2 + int ( ceil ( double ( wIn_ - beta - gamma ) / double ( alpha ) ) );
+			}
 			else
-				k = 2 + int ( ceil ( double ( wIn_ - beta - gamma ) / double ( alpha ) ) );
-		}
-		else
 		{ /* in thiis case there is only one chunk type: gamma */
-			alpha = 0;
+				alpha = 0;
 			beta  = 0;
 			k     = 1;
 		}
@@ -209,17 +209,58 @@ namespace flopoco {
 
 	void IntAdder::registerFactory(){
 		UserInterface::add("IntAdder", // name
-											 "Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
+			"Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
 											 "BasicInteger", // category
 											 "",
 											 "wIn(int): input size in bits;\
-                        arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency;\
-                        optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count;\
-                        SRL(bool)=true: optimize for shift registers",
+											 arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency;\
+											 optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count;\
+											 SRL(bool)=true: optimize for shift registers",
 											 "",
 											 IntAdder::parseArguments
 											 ) ;
 
+	}
+
+	IntAdder * IntAdder::newInstance(Operator * op, string inputSignal, string inputCst, string output, Target * target, int wIn, map<string, double> inputDelays, int optimizeType, bool srl, int implementation )
+	{
+		IntAdder * newIntAdder = new IntAdder(target, wIn, inputDelays, optimizeType, srl, implementation);
+
+		op->addSubComponent(newIntAdder);
+
+		vector<Signal*>::iterator itSignal;
+
+		for(itSignal = newIntAdder->ioList_.begin(); itSignal != newIntAdder->ioList_.end(); ++itSignal)
+		{
+			if((*itSignal)->type() == 0)
+			{
+				if(inputSignal.find((*itSignal)->getName()) != string::npos)
+				{
+					string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1, inputSignal.find(",") - (inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1 ));
+					inputSignal.erase(0, inputSignal.find(",") + 1 );
+					op->inPortMap(newIntAdder, (*itSignal)->getName(), signal);
+				}
+				else if(inputCst.find((*itSignal)->getName()) != string::npos)
+				{
+					string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1, inputCst.find(",") - (inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1));
+					inputCst.erase(0, inputCst.find(",") + 1 );
+					op->inPortMapCst(newIntAdder, (*itSignal)->getName(), signal);
+				}
+			}
+			else
+			{
+				if(output.find((*itSignal)->getName()) != string::npos)
+				{
+					string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1, output.find(",") - (output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1));
+					output.erase(0, output.find(",") + 1 );
+					op->outPortMap(newIntAdder, (*itSignal)->getName(), signal);
+				}
+			}
+			
+		}
+		op->vhdl << op->instance(newIntAdder, "roundingAdder");
+
+		return newIntAdder;
 	}
 
 //    void IntAdder::changeName(std::string operatorName){

@@ -296,16 +296,17 @@
 			if (syncCycleFromSignal("expFrac"))
 				setCriticalPath(cpexpFrac);
 
-			IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
-			addSubComponent(ra);
+		//IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
+		IntAdder *ra = IntAdder::newInstance(this, "X=expFrac,Cin=addToRoundBit,", "Y=" + zg(wE+2+wF+1,0) + ",", "R=RoundedExpFrac,", target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
+		//addSubComponent(ra);
 
-			inPortMap(ra,"X", "expFrac");
-			inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
-			inPortMap( ra, "Cin", "addToRoundBit");
-			outPortMap( ra, "R", "RoundedExpFrac");
-			vhdl << instance(ra, "roundingAdder");
-			setCycleFromSignal("RoundedExpFrac");
-			setCriticalPath(ra->getOutputDelay("R"));
+		//inPortMap(ra,"X", "expFrac");
+		//inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
+		//inPortMap( ra, "Cin", "addToRoundBit");
+		//outPortMap( ra, "R", "RoundedExpFrac");
+		//vhdl << instance(ra, "roundingAdder");
+		setCycleFromSignal("RoundedExpFrac");
+		setCriticalPath(ra->getOutputDelay("R"));
 
 		// 		vhdl<<tab<<declare("RoundedExpFrac",wE+2+wF+1)<<"<= expFrac + addToRoundBit;"<<endl;
 
