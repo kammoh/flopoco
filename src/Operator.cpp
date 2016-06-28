@@ -2501,30 +2501,30 @@ namespace flopoco{
 			int delay;
 			bool unknownLHSName = false, unknownRHSName = false;
 
-			try
-			{
+			try{
 			    lhs = getSignalByName(it->first);
-			}catch(string &e)
-			{
+			}catch(string &e){
 			    REPORT(INFO, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
 			    unknownLHSName = true;
 			}
 
-			try
-			{
+			try{
 			    rhs = getSignalByName(it->second);
-			}catch(string &e)
-			{
+			}catch(string &e){
 			    REPORT(INFO, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
 			    unknownRHSName = true;
 			}
 
 			delay = it->third;
 
+			//add the dependences to the corresponding signals, if they are both known
+			//	add a new entry to the unknownDependenceTable, if not
 			if(!unknownLHSName && !unknownRHSName)
 			{
-			  lhs->addPredecessor(rhs, delay);
-			  rhs->addSuccessor(lhs, delay);
+				lhs->addPredecessor(rhs, delay);
+				rhs->addSuccessor(lhs, delay);
+			}else{
+				triplet<string, string, int> newDep = make_triplet(it->first, it->second, it->third);
 			}
 		}
 
@@ -2533,6 +2533,9 @@ namespace flopoco{
 		{
 			subComponentList_[i]->extractSignalDependences();
 		}
+
+		//clear the current partial dependence table
+		vhdl.dependenceTable.clear();
 	}
 
 
