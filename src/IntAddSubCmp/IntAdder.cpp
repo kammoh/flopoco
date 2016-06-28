@@ -222,47 +222,6 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 
 	}
 
-	IntAdder * IntAdder::newInstance(Operator * op, string inputSignal, string inputCst, string output, Target * target, int wIn, map<string, double> inputDelays, int optimizeType, bool srl, int implementation )
-	{
-		IntAdder * newIntAdder = new IntAdder(target, wIn, inputDelays, optimizeType, srl, implementation);
-
-		op->addSubComponent(newIntAdder);
-
-		vector<Signal*>::iterator itSignal;
-
-		for(itSignal = newIntAdder->ioList_.begin(); itSignal != newIntAdder->ioList_.end(); ++itSignal)
-		{
-			if((*itSignal)->type() == 0)
-			{
-				if(inputSignal.find((*itSignal)->getName()) != string::npos)
-				{
-					string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1, inputSignal.find(",") - (inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1 ));
-					inputSignal.erase(0, inputSignal.find(",") + 1 );
-					op->inPortMap(newIntAdder, (*itSignal)->getName(), signal);
-				}
-				else if(inputCst.find((*itSignal)->getName()) != string::npos)
-				{
-					string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1, inputCst.find(",") - (inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1));
-					inputCst.erase(0, inputCst.find(",") + 1 );
-					op->inPortMapCst(newIntAdder, (*itSignal)->getName(), signal);
-				}
-			}
-			else
-			{
-				if(output.find((*itSignal)->getName()) != string::npos)
-				{
-					string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1, output.find(",") - (output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 1));
-					output.erase(0, output.find(",") + 1 );
-					op->outPortMap(newIntAdder, (*itSignal)->getName(), signal);
-				}
-			}
-			
-		}
-		op->vhdl << op->instance(newIntAdder, "roundingAdder");
-
-		return newIntAdder;
-	}
-
 //    void IntAdder::changeName(std::string operatorName){
 //		Operator::changeName(operatorName);
 //		addImplementationList[selectedVersion]->changeName(operatorName);

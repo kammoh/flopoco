@@ -34,9 +34,15 @@ namespace flopoco{
 		 ~FPAddSinglePath();
 
 
+<<<<<<< 41b6038f25cb73b59cd23a8e5b4c2bff68836921
 		 void emulate(TestCase * tc);
 		 void buildStandardTestCases(TestCaseList* tcl);
 		 TestCase* buildRandomTestCase(int i);
+=======
+		void emulate(TestCase * tc);
+		void buildStandardTestCases(TestCaseList* tcl);
+		TestCase* buildRandomTestCase(int i);
+>>>>>>> Not working yet
 
 		// User-interface stuff
 		/** Factory method */
@@ -60,7 +66,11 @@ namespace flopoco{
 		/** The dual subtractor for the close path */
 			IntDualSub *dualSubClose;
 		/** The fraction adder for the far path */
+<<<<<<< 41b6038f25cb73b59cd23a8e5b4c2bff68836921
 			IntAdder *fracAddFar;
+=======
+		OperatorPtr fracAddFar;
+>>>>>>> Not working yet
 		/** The adder that does the final rounding */
 			IntAdder *finalRoundAdd;
 		/** The right shifter for the far path */

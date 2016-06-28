@@ -60,8 +60,6 @@ namespace flopoco {
 
 		static void registerFactory();
 
-		static IntAdder * newInstance(Operator * op, string inputSignal, string inputCst, string output, Target * target, int wIn, map<string, double> inputDelays = emptyDelayMap, int optimizeType = SLICE, bool srl = true, int implementation = -1 );
-
 	protected:
 		/**
 		* Updates the parameters needed of architecture implementation: wIn is taken from class attributes

@@ -94,7 +94,8 @@
 			vhdl << tab << declare("addCmpOp1",wE+wF+2+1) << "<= " << zg(1,0) << " & excExpFracX;"<<endl;
 			vhdl << tab << declare("addCmpOp2",wE+wF+2+1) << "<= " << og(1,0) << " & not(excExpFracY);"<<endl;
 
-			IntAdder * cmpAdder = IntAdder::newInstance(this, "X=addCmpOp1,Y=addCmpOp2", "Cin='1'", "R=cmpRes", target, wE+wF+2+1);
+			OperatorPtr cmpAdder = UserInterface::newInstance(this, target, "IntAdder", "wIn=" + to_string(wE+wF+2+1), "cmpAdder", "X=>addCmpOp1,Y=>addCmpOp2", "Cin=>'1'", "R=>cmpRes");
+			//IntAdder * cmpAdder = IntAdder::newInstance(this, "X=>addCmpOp1,Y=>addCmpOp2", "Cin=>'1'", "R=>cmpRes", target, wE+wF+2+1);
 
 			//IntAdder *cmpAdder = new IntAdder(target, wE+wF+2+1);
 			//addSubComponent(cmpAdder);
@@ -228,7 +229,8 @@
 		vhdl<<tab<< declare("cInAddFar")           << " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
-		fracAddFar = IntAdder::newInstance(this, "X=fracXfar,Y=fracYfarXorOp,Cin=cInAddFar", "", "R=fracAddResult", target, wF+4, inDelayMap("X", getCriticalPath()));
+		fracAddFar = UserInterface::newInstance(this, target, "IntAdder", "wIn=" + to_string(wF+4), "fracAdder", "X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar", "", "R=>fracAddResult");
+		//fracAddFar = IntAdder::newInstance(this, "X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar", "", "R=>fracAddResult", target, wF+4, inDelayMap("X", getCriticalPath()));
 		//fracAddFar = new IntAdder(target,wF+4, inDelayMap("X", getCriticalPath()));
 		//addSubComponent(fracAddFar);
 		//inPortMap  (fracAddFar, "X", "fracXfar");
@@ -303,7 +305,8 @@
 				setCriticalPath(cpexpFrac);
 
 		//IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
-			IntAdder *ra = IntAdder::newInstance(this, "X=expFrac,Cin=addToRoundBit,", "Y=" + zg(wE+2+wF+1,0) + ",", "R=RoundedExpFrac,", target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
+		//IntAdder *ra = IntAdder::newInstance(this, "X=>expFrac,Cin=>addToRoundBit,", "Y=>" + zg(wE+2+wF+1,0) + ",", "R=>RoundedExpFrac,", target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
+			OperatorPtr ra = UserInterface::newInstance(this, target, "IntAdder", "wIn=" + to_string(wE+2+wF+1), "roundingAdder", "X=>expFrac,Cin=>addToRoundBit,", "Y=>" + zg(wE+2+wF+1,0) + ",", "R=>RoundedExpFrac,");
 		//addSubComponent(ra);
 
 		//inPortMap(ra,"X", "expFrac");
