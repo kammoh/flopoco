@@ -592,11 +592,14 @@ namespace flopoco
 		UserInterface::registerFactory(factory);
 	}
 
-	OperatorPtr newInstance(Operator * op, Target * target, string instanceOpName, string instanceOpParameters, string instanceName, string inputSignal, string inputCst, string output)
+	OperatorPtr UserInterface::newInstance(Operator * op, Target * target, string instanceOpName, string instanceOpParameters, string instanceName, string inputSignal, string inputCst, string output)
 	{
+
 		OperatorFactoryPtr instanceOpFactory = UserInterface::getFactoryByName(instanceOpName);
 
 		vector<string> parameters;
+
+		parameters.push_back(instanceOpName);
 
 		while(!instanceOpParameters.empty())
 		{
