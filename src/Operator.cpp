@@ -181,6 +181,9 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 	}
 
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
@@ -199,6 +202,9 @@ namespace flopoco{
 		numberOfOutputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
@@ -232,6 +238,9 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 	}
 
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
@@ -250,6 +259,9 @@ namespace flopoco{
 		numberOfOutputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 		  testCaseSignals_.push_back(s);
@@ -274,6 +286,9 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 	}
 
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -295,6 +310,9 @@ namespace flopoco{
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 	}
 
 
@@ -316,6 +334,9 @@ namespace flopoco{
 		numberOfInputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 	}
 
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -334,6 +355,9 @@ namespace flopoco{
 		numberOfOutputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//add the sinal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
@@ -870,133 +894,6 @@ namespace flopoco{
 		return s->getCriticalPath();
 	}
 
-	void Operator::resetPredecessors(Signal* targetSignal)
-	{
-		targetSignal->predecessors()->clear();
-	}
-
-	void Operator::addPredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles)
-	{
-		//check if the signal already exists, within the same instance
-		for(int i=0; (unsigned)i<targetSignal->predecessors()->size(); i++)
-		{
-			pair<Signal*, int> predecessorPair = *(targetSignal->predecessorPair(i));
-			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
-					&& (predecessorPair.first->getName() == predecessor->getName())
-					&& (predecessorPair.first->type() == predecessor->type())
-					&& (predecessorPair.second == delayCycles))
-			{
-				REPORT(FULL, "in addPredecessor(): trying to add an already existing signal "
-							 << predecessor->getName() << " to the predecessor list of " << targetSignal->getName() );
-				//nothing else to do
-				return;
-			}
-		}
-
-		//safe to insert a new signal in the predecessor list
-		pair<Signal*, int> newPredecessorPair = make_pair(predecessor, delayCycles);
-		targetSignal->predecessors()->push_back(newPredecessorPair);
-	}
-
-	void Operator::addPredecessors(Signal* targetSignal, vector<pair<Signal*, int>> predecessorList)
-	{
-		for(unsigned int i=0; i<predecessorList.size(); i++)
-			addPredecessor(targetSignal, predecessorList[i].first, predecessorList[i].second);
-	}
-
-	void Operator::removePredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles)
-	{
-		//only try to remove the predecessor if the signal
-		//	already exists, within the same instance and with the same delay
-		for(int i=0; (unsigned)i<targetSignal->predecessors()->size(); i++)
-		{
-			pair<Signal*, int> predecessorPair = *(targetSignal->predecessorPair(i));
-			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
-					&& (predecessorPair.first->getName() == predecessor->getName())
-					&& (predecessorPair.first->type() == predecessor->type())
-					&& (predecessorPair.second == delayCycles))
-			{
-				//delete the element from the list
-				targetSignal->predecessors()->erase(targetSignal->predecessors()->begin()+i);
-				return;
-			}
-		}
-
-		throw("ERROR in removePredecessor(): trying to remove a non-existing signal "
-				+ predecessor->getName() + " from the predecessor list");
-	}
-
-	void Operator::resetSuccessors(Signal* targetSignal)
-	{
-		targetSignal->successors()->clear();
-	}
-
-	void Operator::addSuccessor(Signal* targetSignal, Signal* successor, int delayCycles)
-	{
-		//check if the signal already exists, within the same instance
-		for(int i=0; (unsigned)i<targetSignal->successors()->size(); i++)
-		{
-			pair<Signal*, int> successorPair = *(targetSignal->successorPair(i));
-			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
-					&& (successorPair.first->getName() == successor->getName())
-					&& (successorPair.first->type() == successor->type())
-					&& (successorPair.second == delayCycles))
-			{
-				REPORT(FULL, "in addSuccessor(): trying to add an already existing signal "
-							 << successor->getName() << " to the succssor list of " << targetSignal->getName() );
-				//nothing else to do
-				return;
-			}
-		}
-
-		//safe to insert a new signal in the predecessor list
-		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
-		targetSignal->successors()->push_back(newSuccessorPair);
-	}
-
-	void Operator::addSuccessors(Signal* targetSignal, vector<pair<Signal*, int>> successorList)
-	{
-		for(unsigned int i=0; i<successorList.size(); i++)
-			addSuccessor(targetSignal, successorList[i].first, successorList[i].second);
-	}
-
-	void Operator::removeSuccessor(Signal* targetSignal, Signal* successor, int delayCycles)
-	{
-		//only try to remove the successor if the signal
-		//	already exists, within the same instance and with the same delay
-		for(int i=0; (unsigned)i<targetSignal->successors()->size(); i++)
-		{
-			pair<Signal*, int> successorPair = *(targetSignal->successorPair(i));
-			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
-					&& (successorPair.first->getName() == successor->getName())
-					&& (successorPair.first->type() == successor->type())
-					&& (successorPair.second == delayCycles))
-			{
-				//delete the element from the list
-				targetSignal->successors()->erase(targetSignal->successors()->begin()+i);
-				return;
-			}
-		}
-
-		throw("ERROR in removeSuccessor(): trying to remove a non-existing signal "
-				+ successor->getName() + " to the predecessor list");
-	}
-
-	void Operator::setSignalParentOp(Signal* signal, Operator* newParentOp)
-	{
-		//erase the signal from the operator's signal list and map
-		for(unsigned int i=0; i<(signal->parentOp()->getSignalList()).size(); i++)
-			if(signal->parentOp()->getSignalList()[i]->getName() == signal->getName())
-				signal->parentOp()->getSignalList().erase(signal->parentOp()->getSignalList().begin()+i);
-		signal->parentOp()->getSignalMap().erase(signal->getName());
-
-		//change the signal's parent operator
-		signal->setParentOp(newParentOp);
-
-		//add the signal to the new parent's signal list
-		signal->parentOp()->signalList_.push_back(signal);
-		signal->parentOp()->getSignalMap()[signal->getName()] = signal;
-	}
 
 	double Operator::getCriticalPath()
 	{
@@ -1184,8 +1081,8 @@ namespace flopoco{
 		s->setCriticalPathContribution(criticalPathContribution);
 
 		//initialize the signals predecessors and successors
-		resetPredecessors(s);
-		resetSuccessors(s);
+		s->resetPredecessors();
+		s->resetSuccessors();
 
 		//add the signal to signalMap and signalList
 		signalList_.push_back(s);
@@ -1473,8 +1370,8 @@ namespace flopoco{
 		s = new Signal(this, join(actualSignal, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
 
 		//initialize the signals predecessors and successors
-		resetPredecessors(s);
-		resetSuccessors(s);
+		s->resetPredecessors();
+		s->resetSuccessors();
 
 		//set the timing for the constant signal, at cycle 0, criticalPath 0, criticalPathContribution 0
 		s->setCycle(0);
@@ -1644,8 +1541,8 @@ namespace flopoco{
 		{
 			//add componentPortName as a successor of actualSignalName,
 			// and actualSignalName as a predecessor of componentPortName
-			addPredecessor(opCpy->getSignalByName(it->first), it->second, 0);
-			addSuccessor(it->second, opCpy->getSignalByName(it->first), 0);
+			opCpy->getSignalByName(it->first)->addPredecessor(it->second, 0);
+			it->second->addSuccessor(opCpy->getSignalByName(it->first), 0);
 
 			//input ports connected to constant signals do not need scheduling
 			if(it->second->type() == Signal::constant)
@@ -1662,8 +1559,8 @@ namespace flopoco{
 		{
 			//add componentPortName as a predecessor of actualSignalName,
 			// and actualSignalName as a successor of componentPortName
-			addSuccessor(opCpy->getSignalByName(it->first), it->second, 0);
-			addPredecessor(it->second, opCpy->getSignalByName(it->first), 0);
+			opCpy->getSignalByName(it->first)->addSuccessor(it->second, 0);
+			it->second->addPredecessor(opCpy->getSignalByName(it->first), 0);
 		}
 
 		//add the operator to the subcomponent list/map
@@ -2626,8 +2523,8 @@ namespace flopoco{
 
 			if(!unknownLHSName && !unknownRHSName)
 			{
-			  addPredecessor(lhs, rhs, delay);
-			  addSuccessor(rhs, lhs, delay);
+			  lhs->addPredecessor(rhs, delay);
+			  rhs->addSuccessor(lhs, delay);
 			}
 		}
 
@@ -3518,8 +3415,8 @@ namespace flopoco{
 				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
 			//replace the old list of predecessors with the new one
-			resetPredecessors(signalList_[i]);
-			addPredecessors(signalList_[i], newPredecessors);
+			signalList_[i]->resetPredecessors();
+			signalList_[i]->addPredecessors(newPredecessors);
 
 			//create the new list of successors for the signal currently treated
 			for(unsigned int j=0; j<originalSignal->successors()->size(); j++)
@@ -3541,8 +3438,8 @@ namespace flopoco{
 				newSuccessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
 			}
 			//replace the old list of predecessors with the new one
-			resetSuccessors(signalList_[i]);
-			addSuccessors(signalList_[i], newSuccessors);
+			signalList_[i]->resetSuccessors();
+			signalList_[i]->addSuccessors(newSuccessors);
 		}
 
 		//update the signal map
@@ -3594,12 +3491,12 @@ namespace flopoco{
 
 					if(currentIO->type() == Signal::in)
 					{
-						addPredecessor(currentIO, getSignalByName(tmpPair->first->getName()), tmpPair->second);
-						addSuccessor(getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+						currentIO->addPredecessor(getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						getSignalByName(tmpPair->first->getName())->addSuccessor(currentIO, tmpPair->second);
 					}else if(currentIO->type() == Signal::out)
 					{
-						addPredecessor(currentIO, currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
-						addSuccessor(currentOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+						currentIO->addPredecessor(currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						currentOp->getSignalByName(tmpPair->first->getName())->addSuccessor(currentIO, tmpPair->second);
 					}
 				}
 				//recreate the successor/predecessor (for the input/output) list
@@ -3609,12 +3506,12 @@ namespace flopoco{
 
 					if(currentIO->type() == Signal::in)
 					{
-						addSuccessor(currentIO, currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
-						addPredecessor(currentOp->getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+						currentIO->addSuccessor(currentOp->getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						currentOp->getSignalByName(tmpPair->first->getName())->addPredecessor(currentIO, tmpPair->second);
 					}else if(currentIO->type() == Signal::out)
 					{
-						addSuccessor(currentIO, getSignalByName(tmpPair->first->getName()), tmpPair->second);
-						addPredecessor(getSignalByName(tmpPair->first->getName()), currentIO, tmpPair->second);
+						currentIO->addSuccessor(getSignalByName(tmpPair->first->getName()), tmpPair->second);
+						getSignalByName(tmpPair->first->getName())->addPredecessor(currentIO, tmpPair->second);
 					}
 				}
 			}

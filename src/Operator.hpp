@@ -530,71 +530,7 @@ public:
 	 * where they are used.
 	 */
 
-	/**
-	 * Reset the list of predecessors of the signal targetSignal
-	 */
-	void resetPredecessors(Signal* targetSignal);
 
-	/**
-	 * Add a new predecessor for the signal targetSignal;
-	 * a predecessor is a signal that appears in the right-hand side of an assignment
-	 * that has this signal on the left-hand side.
-	 * @param predecessor a direct predecessor of the current signal
-	 * @param delayCycles the extra delay (in clock cycles) between the two signals
-	 * 		by default equal to zero
-	 */
-	void addPredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles = 0);
-
-	/**
-	 * Add new predecessors for the signal targetSignal;
-	 * @param predecessors a list of direct predecessors of the current signal
-	 */
-	void addPredecessors(Signal* targetSignal, vector<pair<Signal*, int>> predecessorList);
-
-	/**
-	 * Remove an existing predecessor of the signal targetSignal;
-	 * @param predecessor a direct predecessor of the current signal
-	 * @param delayCycles the extra delay (in clock cycles) between the two signals
-	 * 		by default equal to -1, meaning it is not taken into account
-	 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
-	 */
-	void removePredecessor(Signal* targetSignal, Signal* predecessor, int delayCycles = 0);
-
-	/**
-	 * Reset the list of successors of the signal targetSignal
-	 */
-	void resetSuccessors(Signal* targetSignal);
-
-	/**
-	 * Add a new successor of the signal targetSignal;
-	 * a successor is a signal that appears in the left-hand side of an assignment
-	 * that has this signal on the right-hand side.
-	 * @param successor a direct successor of the current signal
-	 * @param delayCycles the extra delay (in clock cycles) between the two signals
-	 * 		by default equal to zero
-	 * @return true if the signal could be added as a successor, false if it already existed
-	 */
-	void addSuccessor(Signal* targetSignal, Signal* successor, int delayCycles = 0);
-
-	/**
-	 * Add new successors for the signal targetSignal;
-	 * @param successors a list of direct successors of the current signal
-	 */
-	void addSuccessors(Signal* targetSignal, vector<pair<Signal*, int>> successorList);
-
-	/**
-	 * Remove an existing successor of the signal targetSignal;
-	 * @param successor a direct successor of the current signal
-	 * @param delayCycles the extra delay (in clock cycles) between the two signals
-	 * 		by default equal to -1, meaning it is not taken into account
-	 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
-	 */
-	void removeSuccessor(Signal* targetSignal, Signal* successor, int delayCycles = 0);
-
-	/**
-	 * Set the parent operator of signal
-	 */
-	void setSignalParentOp(Signal* signal, Operator* newParentOp);
 
 	/**
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
@@ -1875,6 +1811,7 @@ protected:
 
 private:
 	Target*                target_;                         /**< The target on which the operator will be deployed */
+	Operator*              parentOp_;                       /**< The parent operator (i.e. inside which this operator is a subcomponent) containing this operator */
 	int                    stdLibType_;                     /**< 0 will use the Synopsys ieee.std_logic_unsigned, -1 uses std_logic_signed, 1 uses ieee numeric_std  (preferred) */
 	int                    numberOfInputs_;                 /**< The number of inputs of the operator */
 	int                    numberOfOutputs_;                /**< The number of outputs of the operator */
