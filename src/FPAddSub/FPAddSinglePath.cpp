@@ -90,18 +90,23 @@
 			manageCriticalPath(target->localWireDelay() + target->adderDelay(wE)); //comparator delay implemented for now as adder
 			vhdl<< tab << declare("swap")       << " <= '0' when excExpFracX >= excExpFracY else '1';"<<endl;
 		}else{
-			IntAdder *cmpAdder = new IntAdder(target, wE+wF+2+1);
-			addSubComponent(cmpAdder);
 
 			vhdl << tab << declare("addCmpOp1",wE+wF+2+1) << "<= " << zg(1,0) << " & excExpFracX;"<<endl;
 			vhdl << tab << declare("addCmpOp2",wE+wF+2+1) << "<= " << og(1,0) << " & not(excExpFracY);"<<endl;
 
-			inPortMap(cmpAdder, "X", "addCmpOp1");
-			inPortMap(cmpAdder, "Y", "addCmpOp2");
-			inPortMapCst(cmpAdder, "Cin", "'1'");
-			outPortMap (cmpAdder, "R", "cmpRes");
+			IntAdder * cmpAdder = IntAdder::newInstance(this, "X=addCmpOp1,Y=addCmpOp2", "Cin='1'", "R=cmpRes", target, wE+wF+2+1);
 
-			vhdl << instance(cmpAdder, "cmpAdder") << endl;
+			//IntAdder *cmpAdder = new IntAdder(target, wE+wF+2+1);
+			//addSubComponent(cmpAdder);
+
+
+
+			//inPortMap(cmpAdder, "X", "addCmpOp1");
+			//inPortMap(cmpAdder, "Y", "addCmpOp2");
+			//inPortMapCst(cmpAdder, "Cin", "'1'");
+			//outPortMap (cmpAdder, "R", "cmpRes");
+
+			//vhdl << instance(cmpAdder, "cmpAdder") << endl;
 			syncCycleFromSignal("cmpRes");
 			setCriticalPath( cmpAdder->getOutputDelay("R") );
 			vhdl<< tab << declare("swap")       << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
@@ -223,13 +228,14 @@
 		vhdl<<tab<< declare("cInAddFar")           << " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
-		fracAddFar = new IntAdder(target,wF+4, inDelayMap("X", getCriticalPath()));
-		addSubComponent(fracAddFar);
-		inPortMap  (fracAddFar, "X", "fracXfar");
-		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
-		inPortMap  (fracAddFar, "Cin", "cInAddFar");
-		outPortMap (fracAddFar, "R","fracAddResult");
-		vhdl << instance(fracAddFar, "fracAdder");
+		fracAddFar = IntAdder::newInstance(this, "X=fracXfar,Y=fracYfarXorOp,Cin=cInAddFar", "", "R=fracAddResult", target, wF+4, inDelayMap("X", getCriticalPath()));
+		//fracAddFar = new IntAdder(target,wF+4, inDelayMap("X", getCriticalPath()));
+		//addSubComponent(fracAddFar);
+		//inPortMap  (fracAddFar, "X", "fracXfar");
+		//inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
+		//inPortMap  (fracAddFar, "Cin", "cInAddFar");
+		//outPortMap (fracAddFar, "R","fracAddResult");
+		//vhdl << instance(fracAddFar, "fracAdder");
 		syncCycleFromSignal("fracAddResult");
 		setCriticalPath(fracAddFar->getOutputDelay("R"));
 
@@ -297,7 +303,7 @@
 				setCriticalPath(cpexpFrac);
 
 		//IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
-		IntAdder *ra = IntAdder::newInstance(this, "X=expFrac,Cin=addToRoundBit,", "Y=" + zg(wE+2+wF+1,0) + ",", "R=RoundedExpFrac,", target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
+			IntAdder *ra = IntAdder::newInstance(this, "X=expFrac,Cin=addToRoundBit,", "Y=" + zg(wE+2+wF+1,0) + ",", "R=RoundedExpFrac,", target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
 		//addSubComponent(ra);
 
 		//inPortMap(ra,"X", "expFrac");
@@ -305,8 +311,8 @@
 		//inPortMap( ra, "Cin", "addToRoundBit");
 		//outPortMap( ra, "R", "RoundedExpFrac");
 		//vhdl << instance(ra, "roundingAdder");
-		setCycleFromSignal("RoundedExpFrac");
-		setCriticalPath(ra->getOutputDelay("R"));
+			setCycleFromSignal("RoundedExpFrac");
+			setCriticalPath(ra->getOutputDelay("R"));
 
 		// 		vhdl<<tab<<declare("RoundedExpFrac",wE+2+wF+1)<<"<= expFrac + addToRoundBit;"<<endl;
 
