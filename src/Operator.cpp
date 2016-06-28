@@ -1271,6 +1271,9 @@ namespace flopoco{
 		//check that the number of delay cycles is a positive integer
 		if(nbDelayCycles < 0)
 			THROWERROR("Error in delay(): trying to add a negative number of delay cycles:" << nbDelayCycles);
+		//check that the signal exists
+		if(!isSignalDeclared(signalName))
+			THROWERROR("Error in delay(): trying to delay a signal that does not exist:" << signalName);
 
 		result << signalName << "^" << nbDelayCycles;
 		return result.str();
@@ -1328,16 +1331,17 @@ namespace flopoco{
 		Signal *formal, *s;
 
 		// check if the signal already exists, when we're supposed to create a new signal
-		if(signalMap_.find(actualSignalName) !=  signalMap_.end() && newSignal) {
+		if(newSignal && (signalMap_.find(actualSignalName) !=  signalMap_.end())) {
 			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", "
 					<< "signal " << actualSignalName << " already exists");
 		}
 
+		//TODO: these checks should be done in addOutput
+		/*
 		//check if the port in the target operator exists, and return it if so
 		try {
 			formal = op->getSignalByName(componentPortName);
-		}
-		catch(string &e2) {
+		}catch(string &e2) {
 			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", " << e2);
 		}
 
@@ -1346,10 +1350,15 @@ namespace flopoco{
 			THROWERROR("signal " << componentPortName << " of component " << op->getName()
 					<< " doesn't seem to be an output port");
 		}
+		*/
 
 		//check if the signal connected to the port exists, and return it if so
 		//	or create it if it doesn't exist
+		s = nullptr;
 		if(newSignal){
+			//TODO: addOutput should create the new signal
+			//			and add it to the list of signals to be scheduled, if required
+			/*
 			s = new Signal(this, formal); 			// create a copy using the default copy constructor
 			s->setName(actualSignalName); 			// except for the name
 			s->setType(Signal::wire); 				// ... and the fact that we declare a wire
@@ -1364,6 +1373,7 @@ namespace flopoco{
 			// add the newly created signal to signalMap and signalList
 			signalList_.push_back(s);
 			signalMap_[s->getName()] = s;
+			*/
 		}else
 		{
 			try {
@@ -1376,6 +1386,11 @@ namespace flopoco{
 
 		// add the mapping to the output mapping list of Op
 		tmpOutPortMap_[componentPortName] = s;
+
+		//add the signal to the list of signals to be scheduled
+		//	if the signal already exists
+		if(s != nullptr)
+			signalsToSchedule.push_back(s);
 
 		//create the connections between the signals in instance()
 	}
@@ -1393,6 +1408,8 @@ namespace flopoco{
 			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
 		}
 
+		//TODO: all these checks should go to addInput, instead
+		/*
 		//check if the signal already exists
 		try{
 			formal = op->getSignalByName(componentPortName);
@@ -1406,10 +1423,12 @@ namespace flopoco{
 			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": signal " << componentPortName
 					<< " of component " << op->getName() << " doesn't seem to be an input port");
 		}
+		*/
 
 		// add the mapping to the input mapping list of Op
 		tmpInPortMap_[componentPortName] = s;
 
+		//TODO: change program logic: this should be done in addInput, instead
 		//create the connections between the signals in instance()
 	}
 
@@ -1422,6 +1441,8 @@ namespace flopoco{
 		double constValue;
 		sollya_obj_t node;
 
+		//TODO: all these checks should go to addInput, instead
+		/*
 		//check if the signal already exists
 		try {
 			formal = op->getSignalByName(componentPortName);
@@ -1435,6 +1456,7 @@ namespace flopoco{
 			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": signal " << componentPortName
 					<< " of component " << op->getName() << " doesn't seem to be an input port");
 		}
+		*/
 
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
@@ -1463,6 +1485,9 @@ namespace flopoco{
 		// add the newly created signal to signalMap and signalList
 		signalList_.push_back(s);
 		signalMap_[s->getName()] = s;
+
+		// add the signal to the list of signals to be scheduled
+		signalsToSchedule.push_back(s);
 
 		tmpInPortMap_[componentPortName] = s;
 	}
