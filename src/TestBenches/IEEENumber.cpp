@@ -35,6 +35,14 @@ namespace flopoco{
 		operator=(m);
 	}
 
+	IEEENumber::IEEENumber(int wE, int wF, mpz_class z)
+		: wE(wE), wF(wF)
+	{
+		if (wE > 30)
+			throw std::string("IEEENumber::IEEENumber: Using exponents larger than 30 bits is not supported.");
+		operator=(z);
+	}
+
 	IEEENumber::IEEENumber(int wE, int wF, SpecialValue v)	
 		: wE(wE), wF(wF)
 	{

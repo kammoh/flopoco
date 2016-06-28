@@ -325,6 +325,7 @@ src/Complex/FixComplexKCM
  src/FPAddSub/FPAdd
  src/FPAddSub/FPAddDualPath
  src/FPAddSub/FPAddSinglePath
+ src/FPAddSub/FPAddSinglePathIEEE
  src/FPAddSub/FPAdd3Input
  src/FPAddSub/FPAddSub
 

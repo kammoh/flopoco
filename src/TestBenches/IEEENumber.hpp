@@ -50,6 +50,14 @@ namespace flopoco{
 		IEEENumber(int wE, int wF, mpfr_t m);
 
 		/**
+		 * Constructs a new initialised IEEENumber.
+		 * @param wE the width of the exponent
+		 * @param wF the width of the significant
+		 * @param z the initial value, given as an mpz holding the bits of the Number.
+		 */
+		IEEENumber(int wE, int wF, mpz_class z);
+
+		/**
 		 * Retrieves the significant.
 		 * @return Returns an mpz_class, representing the
 		 * VHDL signal of the mantissa, without leading 1.
