@@ -625,24 +625,51 @@ namespace flopoco
 			{
 				if(inputSignal.find((*itSignal)->getName()) != string::npos)
 				{
-					string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, inputSignal.find(",") - (inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
-					inputSignal.erase(0, inputSignal.find(",") + 1 );
+					if(inputSignal.find(" ") != string::npos)
+					{
+						string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, inputSignal.find(" ") - (inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
+					inputSignal.erase(0, inputSignal.find(" ") + 1);
 					op->inPortMap(instance, (*itSignal)->getName(), signal);
+					}
+					else
+					{
+					string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
+					inputSignal.erase();
+					op->inPortMap(instance, (*itSignal)->getName(), signal);
+					}
 				}
 				else if(inputCst.find((*itSignal)->getName()) != string::npos)
 				{
-					string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, inputCst.find(",") - (inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
-					inputCst.erase(0, inputCst.find(",") + 1 );
+					if(inputCst.find(" ") != string::npos)
+					{
+						string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, inputCst.find(" ") - (inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
+					inputCst.erase(0, inputCst.find(" ") + 1);
 					op->inPortMapCst(instance, (*itSignal)->getName(), signal);
+					}
+					else
+					{
+					string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
+					inputCst.erase();
+					op->inPortMapCst(instance, (*itSignal)->getName(), signal);
+					}
 				}
 			}
 			else
 			{
 				if(output.find((*itSignal)->getName()) != string::npos)
 				{
-					string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, output.find(",") - (output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
-					output.erase(0, output.find(",") + 1 );
+					if(output.find(" ") != string::npos)
+					{
+						string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, output.find(" ") - (output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
+					output.erase(0, output.find(" ") + 1);
 					op->outPortMap(instance, (*itSignal)->getName(), signal);
+					}
+					else
+					{
+					string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
+					output.erase();
+					op->outPortMap(instance, (*itSignal)->getName(), signal);
+					}
 				}
 			}
 			
