@@ -61,63 +61,63 @@ namespace flopoco
 	}();
 	
 	const vector<string> UserInterface::known_fpgas = []()->vector<string>{
-				vector<string> v;
-				v.push_back("virtex4");
-				v.push_back("virtex5");
-				v.push_back("virtex6");
-				v.push_back("spartan3");
-				v.push_back("stratix2");
-				v.push_back("stratix3");
-				v.push_back("stratix4");
-				v.push_back("stratix5");
-				v.push_back("cyclone2");
-				v.push_back("cyclone3");
-				v.push_back("cyclone4");
-				v.push_back("cyclone5");
-				return v;
-			}();
+		vector<string> v;
+		v.push_back("virtex4");
+		v.push_back("virtex5");
+		v.push_back("virtex6");
+		v.push_back("spartan3");
+		v.push_back("stratix2");
+		v.push_back("stratix3");
+		v.push_back("stratix4");
+		v.push_back("stratix5");
+		v.push_back("cyclone2");
+		v.push_back("cyclone3");
+		v.push_back("cyclone4");
+		v.push_back("cyclone5");
+		return v;
+	}();
 
 	const vector<string> UserInterface::special_targets= []()->vector<string>{
-				vector<string> v;
-				v.push_back("BuildHTMLDoc");
-				v.push_back("BuildAutocomplete");
-				return v;
-			}();
+		vector<string> v;
+		v.push_back("BuildHTMLDoc");
+		v.push_back("BuildAutocomplete");
+		return v;
+	}();
 
 
 	// Currently used only in buildAutoComplete, see comment around UIOptions
 	const vector<option_t> UserInterface::options = []()->vector<option_t>{
-				vector<option_t> v;	
-				vector<string> values;
+		vector<option_t> v;	
+		vector<string> values;
 
 				// Boolean options
-				values.clear();
-				values.push_back(std::to_string(0));
-				values.push_back(std::to_string(1));
-				v.push_back(option_t("pipeline", values));
-				v.push_back(option_t("clockEnable", values));
-				v.push_back(option_t("plainVHDL", values));
-				v.push_back(option_t("generateFigures", values));
-				v.push_back(option_t("", values));
+		values.clear();
+		values.push_back(std::to_string(0));
+		values.push_back(std::to_string(1));
+		v.push_back(option_t("pipeline", values));
+		v.push_back(option_t("clockEnable", values));
+		v.push_back(option_t("plainVHDL", values));
+		v.push_back(option_t("generateFigures", values));
+		v.push_back(option_t("", values));
 
 				//free options, using an empty vector of values 
-				values.clear();
-				v.push_back(option_t("name", values));
-				v.push_back(option_t("outputFile", values));
-				v.push_back(option_t("hardMultThreshold", values));
-				v.push_back(option_t("frequency", values));
-				
+		values.clear();
+		v.push_back(option_t("name", values));
+		v.push_back(option_t("outputFile", values));
+		v.push_back(option_t("hardMultThreshold", values));
+		v.push_back(option_t("frequency", values));
+		
 				//verbosity level
-				values.clear();
-				for(unsigned int i = 0 ; i < 3 ; ++i) {
-					values.push_back(std::to_string(i));
-				}
-				v.push_back(option_t("verbose", values));
+		values.clear();
+		for(unsigned int i = 0 ; i < 3 ; ++i) {
+			values.push_back(std::to_string(i));
+		}
+		v.push_back(option_t("verbose", values));
 
 				//target option
-				v.push_back(option_t("target", known_fpgas));
-				return v;
-			}();		
+		v.push_back(option_t("target", known_fpgas));
+		return v;
+	}();		
 
 
 	
@@ -177,12 +177,12 @@ namespace flopoco
 		// We assume all the operators added to GlobalOpList are unpipelined.
 		for (auto i: globalOpList){
 			if( op->getName() == i->getName() ) {
-					alreadyPresent=true;
+				alreadyPresent=true;
 					// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
-				}
 			}
-			if(!alreadyPresent)
-				globalOpList.push_back(op);
+		}
+		if(!alreadyPresent)
+			globalOpList.push_back(op);
 	}
 
 
@@ -215,7 +215,7 @@ namespace flopoco
 				i->outputVHDL(file);
 
 			} catch (std::string s) {
-					cerr << "Exception while generating '" << i->getName() << "': " << s <<endl;
+				cerr << "Exception while generating '" << i->getName() << "': " << s <<endl;
 			}
 		}
 		oplist.back()->outputClock_xdc();
@@ -323,8 +323,8 @@ namespace flopoco
 		while(args.size() > 0 // there remains something to parse
 					&& args[0].find("=") !=string::npos) {// and it is an option
 			initialOptions.push_back(args[0]);
-			args.erase(args.begin());
-		}
+		args.erase(args.begin());
+	}
 		// Now there should be at least one operator specification
 		while(args.size() > 0) { // This loop is over the Operators that are passed on the command line
 			vector<string> opSpec;
@@ -333,26 +333,26 @@ namespace flopoco
 			while(args.size() > 0 // there remains something to parse
 						&& args[0].find("=") !=string::npos) {// and it is an option
 				opSpec.push_back(args[0]);
-				args.erase(args.begin());
-			}
-			operatorSpecs.push_back(opSpec);
+			args.erase(args.begin());
 		}
+		operatorSpecs.push_back(opSpec);
+	}
 	
 
 		// Now we have organized our input: do the parsing itself. All the sub-parsers erase the data they consume from the string vectors
-		try {
-			parseGenericOptions(initialOptions);
-			initialOptions.erase(initialOptions.begin());
-			if(initialOptions.size()>0){
-				ostringstream s;
-				s << "Don't know what to do with the following global option(s) :" <<endl ;
-				for (auto i : initialOptions)
-					s << "  "<<i<<" ";
-				s << endl;
-				throw s.str();
-			}
-			
-			for (auto opParams: operatorSpecs) {
+	try {
+		parseGenericOptions(initialOptions);
+		initialOptions.erase(initialOptions.begin());
+		if(initialOptions.size()>0){
+			ostringstream s;
+			s << "Don't know what to do with the following global option(s) :" <<endl ;
+			for (auto i : initialOptions)
+				s << "  "<<i<<" ";
+			s << endl;
+			throw s.str();
+		}
+		
+		for (auto opParams: operatorSpecs) {
 
 				string opName = opParams[0];  // operator Name
 				// remove the generic options
@@ -378,7 +378,7 @@ namespace flopoco
 				else if (targetFPGA=="cyclonev" || targetFPGA=="cyclone5") target=new CycloneV();
 				else {
 					throw("ERROR: unknown target: " + targetFPGA);
-					}
+				}
 				target->setPipelined(pipeline);
 				target->setClockEnable(clockEnable);
 				target->setFrequency(1e6*targetFrequencyMHz);
@@ -399,7 +399,7 @@ namespace flopoco
 					}
 					//cerr << "Adding operator " << op->getName() <<endl;
 					// globalOpList.push_back(op); // makes no difference
-				  addOperator(op);
+					addOperator(op);
 				}
 			}
 		}catch(std::string &s){
@@ -459,8 +459,8 @@ namespace flopoco
 
 
 	void UserInterface::throwMissingArgError(string opname, string key){
-				throw (opname +": argument " + key + " not provided, and there doesn't seem to be a default value."
-							 +"\n" +  getFactoryByName(opname) -> getFullDoc());
+		throw (opname +": argument " + key + " not provided, and there doesn't seem to be a default value."
+			+"\n" +  getFactoryByName(opname) -> getFullDoc());
 
 	}
 
@@ -492,7 +492,7 @@ namespace flopoco
 		else if(val=="0" || val=="no" || val=="false" || val=="No" || val=="False")
 			*variable= false;
 		else
-				throw (args[0] +": expected boolean for argument " + key + ", got " + val);
+			throw (args[0] +": expected boolean for argument " + key + ", got " + val);
 	}
 
 	void UserInterface::parseFloat(vector<string>& args, string key, double* variable, bool genericOption){
@@ -542,7 +542,7 @@ namespace flopoco
 				val = getFactoryByName(args[0])->getDefaultParamVal(key);
 				if (val=="")
 					throwMissingArgError(args[0], key);
- 			}
+			}
 		}
 		size_t end;
 		
@@ -553,7 +553,7 @@ namespace flopoco
 			*variable = intval;
 		else
 			throw (args[0] +": expecting strictly positive value for " + key + ", got " + val );
-	
+		
 	}
 
 
@@ -564,9 +564,9 @@ namespace flopoco
 				return; // do nothing
 			// key not given, use default value (except if it is an initial option)
 			if(args[0] != "$$initialOptions$$") {
-					val = getFactoryByName(args[0])->getDefaultParamVal(key);
-					if (val=="")
-						throwMissingArgError(args[0], key);
+				val = getFactoryByName(args[0])->getDefaultParamVal(key);
+				if (val=="")
+					throwMissingArgError(args[0], key);
 			}
 		}
 		size_t end;
@@ -582,12 +582,12 @@ namespace flopoco
 
 	void UserInterface::add( string name,
 													 string description, /**< for the HTML doc and the detailed help */ 
-													 string category,
-													 string seeAlso,
+		string category,
+		string seeAlso,
 													 string parameterList, /**< semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
 													 string extraHTMLDoc, /**< Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
-													 parser_func_t parser,
-													 nextTestState_func_t nextTestState	 ) {
+		parser_func_t parser,
+		nextTestState_func_t nextTestState	 ) {
 		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser, nextTestState));
 		UserInterface::registerFactory(factory);
 	}
@@ -608,9 +608,11 @@ namespace flopoco
 				parameters.push_back(instanceOpParameters.substr(0,instanceOpParameters.find(" ")));
 				instanceOpParameters.erase(0,instanceOpParameters.find(" ")+1);
 			}
-
-			parameters.push_back(instanceOpParameters);
-			instanceOpParameters.erase();
+			else
+			{
+				parameters.push_back(instanceOpParameters);
+				instanceOpParameters.erase();
+			}	
 		}
 
 		OperatorPtr instance = instanceOpFactory->parseArguments(target, parameters);
@@ -628,14 +630,14 @@ namespace flopoco
 					if(inputSignal.find(" ") != string::npos)
 					{
 						string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, inputSignal.find(" ") - (inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
-					inputSignal.erase(0, inputSignal.find(" ") + 1);
-					op->inPortMap(instance, (*itSignal)->getName(), signal);
+						inputSignal.erase(0, inputSignal.find(" ") + 1);
+						op->inPortMap(instance, (*itSignal)->getName(), signal);
 					}
 					else
 					{
-					string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
-					inputSignal.erase();
-					op->inPortMap(instance, (*itSignal)->getName(), signal);
+						string signal = inputSignal.substr(inputSignal.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
+						inputSignal.erase();
+						op->inPortMap(instance, (*itSignal)->getName(), signal);
 					}
 				}
 				else if(inputCst.find((*itSignal)->getName()) != string::npos)
@@ -643,14 +645,14 @@ namespace flopoco
 					if(inputCst.find(" ") != string::npos)
 					{
 						string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, inputCst.find(" ") - (inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
-					inputCst.erase(0, inputCst.find(" ") + 1);
-					op->inPortMapCst(instance, (*itSignal)->getName(), signal);
+						inputCst.erase(0, inputCst.find(" ") + 1);
+						op->inPortMapCst(instance, (*itSignal)->getName(), signal);
 					}
 					else
 					{
-					string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
-					inputCst.erase();
-					op->inPortMapCst(instance, (*itSignal)->getName(), signal);
+						string signal = inputCst.substr(inputCst.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
+						inputCst.erase();
+						op->inPortMapCst(instance, (*itSignal)->getName(), signal);
 					}
 				}
 			}
@@ -661,14 +663,14 @@ namespace flopoco
 					if(output.find(" ") != string::npos)
 					{
 						string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2, output.find(" ") - (output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2));
-					output.erase(0, output.find(" ") + 1);
-					op->outPortMap(instance, (*itSignal)->getName(), signal);
+						output.erase(0, output.find(" ") + 1);
+						op->outPortMap(instance, (*itSignal)->getName(), signal);
 					}
 					else
 					{
-					string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
-					output.erase();
-					op->outPortMap(instance, (*itSignal)->getName(), signal);
+						string signal = output.substr(output.find((*itSignal)->getName()) + (*itSignal)->getName().size() + 2);
+						output.erase();
+						op->outPortMap(instance, (*itSignal)->getName(), signal);
 					}
 				}
 			}
@@ -751,7 +753,7 @@ namespace flopoco
 			for(auto it: UserInterface::factoryList) {
 				OperatorFactoryPtr f =  it.second;
 				if(cat == f->m_category)
-				 file << f -> getHTMLDoc();
+					file << f -> getHTMLDoc();
 			}
 		}
 		file << "</body>" << endl;
@@ -770,17 +772,17 @@ namespace flopoco
 		file <<endl;
 		size_t indent_level = 0;
 		const auto tabber = [&file, &indent_level](string content){
-				for(size_t i = 0 ; i < indent_level; i++)
-				{
-					file << "\t";
-				}
-				file << content << endl;
-			};
+			for(size_t i = 0 ; i < indent_level; i++)
+			{
+				file << "\t";
+			}
+			file << content << endl;
+		};
 
 		string operatorList;
 		{
-		for(auto it: UserInterface::factoryList) {
-			OperatorFactoryPtr f =  it.second;
+			for(auto it: UserInterface::factoryList) {
+				OperatorFactoryPtr f =  it.second;
 
 				file << f->getOperatorFunctions();
 				file << endl;
@@ -794,8 +796,8 @@ namespace flopoco
 		{
 			vector<string>::const_iterator it;
 			for( it = special_targets.begin() ;
-				 it != special_targets.end() ;
-				 it++ )
+				it != special_targets.end() ;
+				it++ )
 			{
 
 				specialtargetList += *it;
@@ -1044,7 +1046,7 @@ namespace flopoco
 		cout << "Bash autocomplete successfully generated !!" << endl;
 		cout << "(this is in no case a warranty nor a guarantee that the script will work)" << endl;
 		cout << "In order to make it work, we recommend that you link this file in your ~/.bash_completion.d directory" << 
-			endl << "you might have to create the ~/.bash_completion.d directory" << endl << endl;
+		endl << "you might have to create the ~/.bash_completion.d directory" << endl << endl;
 		cout << "\t\tmv flopoco_autocomplete ~/.bash_completion.d/flopoco" << endl << endl;
 		cout << "and then add the following line to your .bashrc :"<< endl << endl;
 		cout << "\t\t. ~/.bash_completion.d/flopoco" << endl;
@@ -1075,8 +1077,8 @@ namespace flopoco
 		ostringstream s;
 		s << "<dl>"<<endl;
 		s << "<dt class=\"operatorname\">" <<  name() << "</dt>"<< endl
-			<< "<dd class=\"operatordescription\">"<< m_description << "</dd>" << endl
-			<< "<dd><em>Parameters:</em> <dl>" << endl;
+		<< "<dd class=\"operatordescription\">"<< m_description << "</dd>" << endl
+		<< "<dd><em>Parameters:</em> <dl>" << endl;
 		for (unsigned i=0; i<m_paramNames.size(); i++) {
 			string pname = m_paramNames[i];
 			if("" != m_paramDefault[pname])
@@ -1103,12 +1105,12 @@ namespace flopoco
 		stringstream buf;
 		size_t indent_level = 0;
 		const auto tabber = [&s, &indent_level](string content){
-				for(size_t i = 0 ; i < indent_level; i++)
-				{
-					s << "\t";
-				}
-				s << content << endl;
-			};
+			for(size_t i = 0 ; i < indent_level; i++)
+			{
+				s << "\t";
+			}
+			s << content << endl;
+		};
 
 		vector<string> mandatoryOptions;
 		vector<string> nonMandatoryOptions;
@@ -1120,7 +1122,7 @@ namespace flopoco
 				nonMandatoryOptions.push_back(optionName);
 			}
 		}
-	
+		
 		tabber("_mandatoryoptions_"+m_name+"()");
 		tabber("{");
 		indent_level++;
@@ -1171,15 +1173,15 @@ namespace flopoco
 	}
 
 	OperatorFactory::OperatorFactory(
-						 string name,
+		string name,
 						 string description, /* for the HTML doc and the detailed help */ 
-						 string category,
-						 string seeAlso,
+		string category,
+		string seeAlso,
 						 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */ 
 						 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */ 
-						 parser_func_t parser,
-						 nextTestState_func_t nextTestState )
-		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser), m_nextTestState(nextTestState)
+		parser_func_t parser,
+		nextTestState_func_t nextTestState )
+	: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser), m_nextTestState(nextTestState)
 	{
 		int start;
 		// Parse the parameter description

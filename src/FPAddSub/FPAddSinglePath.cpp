@@ -189,13 +189,16 @@
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building far path right shifter");
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right, inDelayMap("X",getCriticalPath()));
-		rightShifter->changeName(getName()+"_RightShifter");
-		addSubComponent(rightShifter);
-		inPortMap  (rightShifter, "X", "fracY");
-		inPortMap  (rightShifter, "S", "shiftVal");
-		outPortMap (rightShifter, "R","shiftedFracY");
-		vhdl << instance(rightShifter, "RightShifterComponent");
+
+		rightShifter = UserInterface::newInstance(this, target, "Shifter", "wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+3) + " dir=1", "RightShifterComponent", "X=>fracY S=>shiftVal", "", "R=>shiftedFracY");
+
+		//rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right, inDelayMap("X",getCriticalPath()));
+		//rightShifter->changeName(getName()+"_RightShifter");
+		//addSubComponent(rightShifter);
+		//inPortMap  (rightShifter, "X", "fracY");
+		//inPortMap  (rightShifter, "S", "shiftVal");
+		//outPortMap (rightShifter, "R","shiftedFracY");
+		//vhdl << instance(rightShifter, "RightShifterComponent");
 		syncCycleFromSignal("shiftedFracY");
 		setCriticalPath(rightShifter->getOutputDelay("R"));
 		nextCycle();         ////
@@ -254,13 +257,14 @@
 		//incremented exponent.
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
+		lzocs = (LZOCShifterSticky*) UserInterface::newInstance(this, target, "LZOCShifterSticky", "wIn=" + to_string(wF+5) + " wOut=" + to_string(wF+5) + " wCount=" + to_string(intlog2(wF+5)) + " computeSticky=false countType=0", "LZC_component", "I=>fracGRS", "", "Count=>nZerosNew O=>shiftedFrac");
 
-		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
-		addSubComponent(lzocs);
-		inPortMap  (lzocs, "I", "fracGRS");
-		outPortMap (lzocs, "Count","nZerosNew");
-		outPortMap (lzocs, "O","shiftedFrac");
-		vhdl << instance(lzocs, "LZC_component");
+		//lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
+		//addSubComponent(lzocs);
+		//inPortMap  (lzocs, "I", "fracGRS");
+		//outPortMap (lzocs, "Count","nZerosNew");
+		//outPortMap (lzocs, "O","shiftedFrac");
+		//vhdl << instance(lzocs, "LZC_component");
 		syncCycleFromSignal("shiftedFrac");
 		setCriticalPath(lzocs->getOutputDelay("O"));
 		// 		double cpnZerosNew = getCriticalPath();

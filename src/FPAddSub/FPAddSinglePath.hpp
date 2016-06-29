@@ -64,7 +64,7 @@ namespace flopoco{
 		/** The adder that does the final rounding */
 			IntAdder *finalRoundAdd;
 		/** The right shifter for the far path */
-			Shifter* rightShifter;
+			OperatorPtr rightShifter;
 
 			int sizeRightShift;
 
