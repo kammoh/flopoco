@@ -143,6 +143,8 @@ namespace flopoco{
 			width_ = originalSignal->width();
 			isBus_ = originalSignal->isBus();
 		}
+
+		//TODO: the copy constructor should also recreate the signal connections
 	}
 
 	Signal::Signal(Operator* newParentOp, Signal* originalSignal)
@@ -177,6 +179,8 @@ namespace flopoco{
 			width_ = originalSignal->width();
 			isBus_ = originalSignal->isBus();
 		}
+
+		//TODO: the copy constructor should also recreate the signal connections
 	}
 
 	Signal::~Signal(){}
