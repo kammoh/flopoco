@@ -1225,7 +1225,7 @@ namespace flopoco{
 	#endif
 
 	void Operator::outPortMap(Operator* op, string componentPortName, string actualSignalName, bool newSignal){
-		Signal *formal, *s;
+		Signal *s;
 
 		// check if the signal already exists, when we're supposed to create a new signal
 		if(newSignal && (signalMap_.find(actualSignalName) !=  signalMap_.end())) {
@@ -1233,44 +1233,12 @@ namespace flopoco{
 					<< "signal " << actualSignalName << " already exists");
 		}
 
-		//TODO: these checks should be done in addOutput
-		/*
-		//check if the port in the target operator exists, and return it if so
-		try {
-			formal = op->getSignalByName(componentPortName);
-		}catch(string &e2) {
-			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", " << e2);
-		}
-
-		//check if the output port of the instantiated operator is indeed of output port type
-		if(formal->type() != Signal::out){
-			THROWERROR("signal " << componentPortName << " of component " << op->getName()
-					<< " doesn't seem to be an output port");
-		}
-		*/
-
 		//check if the signal connected to the port exists, and return it if so
 		//	or create it if it doesn't exist
 		s = nullptr;
 		if(newSignal){
-			//TODO: addOutput should create the new signal
-			//			and add it to the list of signals to be scheduled, if required
-			/*
-			s = new Signal(this, formal); 			// create a copy using the default copy constructor
-			s->setName(actualSignalName); 			// except for the name
-			s->setType(Signal::wire); 				// ... and the fact that we declare a wire
-			s->setCycle(0);							// ... and the timing details
-			s->setCriticalPath(0.0);
-			s->setCriticalPathContribution(0.0);
-
-			//initialize the signals predecessors and successors
-			resetPredecessors(s);
-			resetSuccessors(s);
-
-			// add the newly created signal to signalMap and signalList
-			signalList_.push_back(s);
-			signalMap_[s->getName()] = s;
-			*/
+			//addOutput should create the new signal
+			//	and add it to the list of signals to be scheduled, if required
 		}else
 		{
 			try {
@@ -1288,13 +1256,11 @@ namespace flopoco{
 		//	if the signal already exists
 		if(s != nullptr)
 			signalsToSchedule.push_back(s);
-
-		//create the connections between the signals in instance()
 	}
 
 
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
-		Signal *formal, *s;
+		Signal *s;
 		std::string name;
 
 		//check if the signal already exists
@@ -1305,55 +1271,17 @@ namespace flopoco{
 			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
 		}
 
-		//TODO: all these checks should go to addInput, instead
-		/*
-		//check if the signal already exists
-		try{
-			formal = op->getSignalByName(componentPortName);
-		}
-		catch(string &e2) {
-			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
-		}
-
-		//check if the input port of the instantiated operator is indeed of input port type
-		if(formal->type() != Signal::in){
-			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": signal " << componentPortName
-					<< " of component " << op->getName() << " doesn't seem to be an input port");
-		}
-		*/
-
 		// add the mapping to the input mapping list of Op
 		tmpInPortMap_[componentPortName] = s;
-
-		//TODO: change program logic: this should be done in addInput, instead
-		//create the connections between the signals in instance()
 	}
 
 
 
 	void Operator::inPortMapCst(Operator* op, string componentPortName, string actualSignal){
-		Signal* formal;
 		Signal *s;
 		string name;
 		double constValue;
 		sollya_obj_t node;
-
-		//TODO: all these checks should go to addInput, instead
-		/*
-		//check if the signal already exists
-		try {
-			formal = op->getSignalByName(componentPortName);
-		}
-		catch (string &e2) {
-			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": " << e2);
-		}
-
-		//check if the input port of the instantiated operator is indeed of input port type
-		if(formal->type() != Signal::in){
-			THROWERROR("ERROR in inPortMapCst() for entity " << op->getName() << ": signal " << componentPortName
-					<< " of component " << op->getName() << " doesn't seem to be an input port");
-		}
-		*/
 
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
@@ -2130,7 +2058,7 @@ namespace flopoco{
 		while(nextPos !=  string::npos)
 		{
 			string lhsName, rhsName;
-			int auxPosition, auxPosition2;
+			size_t auxPosition, auxPosition2;
 			Signal *lhsSignal, *rhsSignal;
 
 			unknownLHSName = false;
@@ -2181,7 +2109,7 @@ namespace flopoco{
 				{
 					//parse a list of ??lhsName?? => $$rhsName$$
 					//	or ??lhsName?? => 'x' or ??lhsName?? => "xxxx"
-					int tmpCurrentPos, tmpNextPos;
+					size_t tmpCurrentPos, tmpNextPos;
 
 					//copy the code up to the port mappings
 					newStr << workStr.substr(auxPosition, workStr.find("?", auxPosition2)-auxPosition);
@@ -2249,7 +2177,7 @@ namespace flopoco{
 							    rhsSignal = getSignalByName(rhsName);
 
 							    //obtain the lhs signal, from the list of successors of the rhs signal
-							    for(int i=0; i<rhsSignal->successors()->size(); i++)
+							    for(size_t i=0; i<rhsSignal->successors()->size(); i++)
 							      if((rhsSignal->successor(i)->getName() == lhsName)
 								  //the lhs signal must be the input of a subcomponent
 								  && (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
@@ -2488,7 +2416,7 @@ namespace flopoco{
 
 		vhdl.setSecondLevelCode(newStr.str());
 
-		REPORT(DEBUG, "Finished second-level parsing for operator " << srcFileName);
+		REPORT(DEBUG, "Finished second-level parsing of VHDL code for operator " << srcFileName);
 	}
 
 
