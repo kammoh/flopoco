@@ -460,7 +460,7 @@ namespace flopoco
 	void UserInterface::schedule() {
 		//all that is left is to start the second code parse
 		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
-			UserInterface::globalOpList[i]->parseVHDL(2);
+			UserInterface::globalOpList[i]->parseVHDL();
 		}
 	}
 

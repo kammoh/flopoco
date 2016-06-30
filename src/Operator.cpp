@@ -3616,26 +3616,17 @@ namespace flopoco{
 	}
 
 
-	void Operator::parseVHDL(int parseType)
+	void Operator::parseVHDL()
 	{
-		if(parseType == 1)
-		{
-			//trigger the first code parse
-			//	call str(), which will trigger the necessary calls
-			REPORT(FULL, "  1st PARSING PASS");
-			getFlopocoVHDLStream()->str();
-		}else
-		{
-			//trigger the second parse
-			//	for sequential and combinatorial operators as well
-			REPORT(FULL, "  2nd PARSING PASS");
-			parse2();
-		}
+		//trigger the second parse
+		//	for sequential and combinatorial operators as well
+		REPORT(FULL, "  2nd VHDL CODE PARSING PASS");
+		parse2();
 
 		//trigger the first code parse for the operator's subcomponents
 		for(auto it: subComponentList_)
 		{
-			it->parseVHDL(parseType);
+			it->parseVHDL();
 		}
 	}
 

@@ -113,7 +113,7 @@ public:
 	 * @param parseType decide whether to perform the first, or the second parse
 	 * 		  1=first parse (default), 2=second parse
 	 */
-	void parseVHDL(int parseType = 1);
+	void parseVHDL();
 
 
 	/**
