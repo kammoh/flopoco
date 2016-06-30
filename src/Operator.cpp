@@ -2494,6 +2494,46 @@ namespace flopoco{
 
 	void Operator::extractSignalDependences()
 	{
+		//try to parse the unknown dependences first
+		for(vector<triplet<string, string, int>>::iterator it=unresolvedDependenceTable.begin(); it!=unresolvedDependenceTable.end(); it++)
+		{
+			Signal *lhs, *rhs;
+			int delay;
+			bool unknownLHSName = false, unknownRHSName = false;
+
+			try{
+				lhs = getSignalByName(it->first);
+			}catch(string &e){
+				REPORT(INFO, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
+				unknownLHSName = true;
+			}
+
+			try{
+				rhs = getSignalByName(it->second);
+			}catch(string &e){
+				REPORT(INFO, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
+				unknownRHSName = true;
+			}
+
+			delay = it->third;
+
+			//add the dependences to the corresponding signals
+			//	if they are both known:
+			//		erase the entry from the unresolvedDependenceTable
+			//		add the signals to the list of signals to be scheduled
+			if(!unknownLHSName && !unknownRHSName)
+			{
+				//add the dependences
+				lhs->addPredecessor(rhs, delay);
+				rhs->addSuccessor(lhs, delay);
+				//remove the current entry from the unresolved dependence table
+				unresolvedDependenceTable.erase(it);
+				//add the signals to the list of signals to be scheduled
+				signalsToSchedule.push_back(lhs);
+				signalsToSchedule.push_back(rhs);
+			}
+		}
+
 		//start parsing the dependence table, modifying the signals of each triplet
 		for(vector<triplet<string, string, int>>::iterator it=vhdl.dependenceTable.begin(); it!=vhdl.dependenceTable.end(); it++)
 		{
@@ -2518,13 +2558,14 @@ namespace flopoco{
 			delay = it->third;
 
 			//add the dependences to the corresponding signals, if they are both known
-			//	add a new entry to the unknownDependenceTable, if not
+			//	add a new entry to the unknownDependenceTable, if not add them to the list of unknown dependences
 			if(!unknownLHSName && !unknownRHSName)
 			{
 				lhs->addPredecessor(rhs, delay);
 				rhs->addSuccessor(lhs, delay);
 			}else{
 				triplet<string, string, int> newDep = make_triplet(it->first, it->second, it->third);
+				unresolvedDependenceTable.push_back(newDep);
 			}
 		}
 
@@ -2633,10 +2674,10 @@ namespace flopoco{
 			return;
 		}
 
-		//schedule each of the input signals
-		for(unsigned int i=0; i<ioList_.size(); i++)
+		//schedule each of the signals on the list of signals to be scheduled
+		for(unsigned int i=0; i<signalsToSchedule.size(); i++)
 		{
-			Signal *currentSignal = ioList_[i];
+			Signal *currentSignal = signalsToSchedule[i];
 
 			//schedule the current input signal
 			if(currentSignal->type() == Signal::in)
@@ -2644,9 +2685,9 @@ namespace flopoco{
 		}
 
 		//start the schedule on the children of the inputs
-		for(unsigned int i=0; i<ioList_.size(); i++)
+		for(unsigned int i=0; i<signalsToSchedule.size(); i++)
 		{
-			Signal *currentSignal = ioList_[i];
+			Signal *currentSignal = signalsToSchedule[i];
 
 			if(currentSignal->type() != Signal::in)
 				continue;
@@ -2655,7 +2696,7 @@ namespace flopoco{
 				scheduleSignal(currentSignal->successor(j));
 		}
 
-		// TODO Sched+BH: here check if all the outputs are scheduled, and return true/false accordingly
+		//mark the operator as scheduled only when all the outputs have been scheduled
 		bool scheduleComplete = true;
 
 		for(unsigned int i=0; i<ioList_.size(); i++)
