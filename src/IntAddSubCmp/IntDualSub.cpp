@@ -228,7 +228,8 @@ namespace flopoco{
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int opType;
-		UserInterface::parseStrictlyPositiveInt(args, "opType", &opType);
+		//Change from parseStrictlyPositiveInt to parseInt to allow 0 use in FPAddDualPath
+		UserInterface::parseInt(args, "opType", &opType);
 		return new IntDualSub(target, wIn, opType);
 	}
 

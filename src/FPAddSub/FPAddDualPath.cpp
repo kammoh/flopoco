@@ -35,101 +35,101 @@
 
 #include "FPAddDualPath.hpp"
 
-using namespace std;
+  using namespace std;
 
-namespace flopoco{
+  namespace flopoco{
 
 #define DEBUGVHDL 0
 
 
-	FPAddDualPath::FPAddDualPath(Target* target, int wE, int wF, bool sub) :
-		Operator(target), wE(wE), wF(wF),  sub(sub){
+  	FPAddDualPath::FPAddDualPath(Target* target, int wE, int wF, bool sub) :
+  	Operator(target), wE(wE), wF(wF),  sub(sub){
 
-		ostringstream name, synch, synch2;
+  		ostringstream name, synch, synch2;
 
-		srcFileName="FPAddDualPath";
+  		srcFileName="FPAddDualPath";
 
-		if(sub)
-			name<<"FPSub_";
-		else
-			name<<"FPAdd_";
-		name<<wE<<"_"<<wF;
-		setNameWithFreqAndUID(name.str());
+  		if(sub)
+  			name<<"FPSub_";
+  		else
+  			name<<"FPAdd_";
+  		name<<wE<<"_"<<wF;
+  		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008)");
+  		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008)");
 
-		sizeRightShift = intlog2(wF+3);
+  		sizeRightShift = intlog2(wF+3);
 
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		addFPInput ("X", wE, wF);
-		addFPInput ("Y", wE, wF);
-		addFPOutput("R", wE, wF);
+  		addFPInput ("X", wE, wF);
+  		addFPInput ("Y", wE, wF);
+  		addFPOutput("R", wE, wF);
 
 		//=========================================================================|
 		//                          Swap/Difference                                |
 		// ========================================================================|
 
-		vhdl<<"-- Exponent difference and swap  --"<<endl;
-		vhdl<<tab<<declare("inX",wE+wF+3) << " <= X;"<<endl;
-		vhdl<<tab<<declare("inY",wE+wF+3) << " <= Y;"<<endl;
+  		vhdl<<"-- Exponent difference and swap  --"<<endl;
+  		vhdl<<tab<<declare("inX",wE+wF+3) << " <= X;"<<endl;
+  		vhdl<<tab<<declare("inY",wE+wF+3) << " <= Y;"<<endl;
 
 		// signal which indicates whether or not the exception bits of X are greater or equal than/to the exception bits of Y
-		vhdl<<tab<<declare("exceptionXSuperiorY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") >= inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
+  		vhdl<<tab<<declare("exceptionXSuperiorY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") >= inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
 
 		// signal which indicates whether or not the exception bits of X are equal to the exception bits of Y
-		vhdl<<tab<<declare("exceptionXEqualY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") = inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
+  		vhdl<<tab<<declare("exceptionXEqualY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") = inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
 
 		// make the difference between the exponents of X and Y; expX - expY = expX + not(expY) + 1
 		// pad exponents with sign bit
-		vhdl<<tab<<declare("signedExponentX",wE+1) << " <= \"0\" & inX("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
-		vhdl<<tab<<declare("signedExponentY",wE+1) << " <= \"0\" & inY("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
-		vhdl<<tab<<declare("exponentDifferenceXY",wE+1) << " <= signedExponentX - signedExponentY ;"<<endl;
-		vhdl<<tab<<declare("exponentDifferenceYX",wE) << " <= signedExponentY("<<wE-1<<" downto 0) - signedExponentX("<<wE-1<<" downto 0);"<<endl;
+  		vhdl<<tab<<declare("signedExponentX",wE+1) << " <= \"0\" & inX("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
+  		vhdl<<tab<<declare("signedExponentY",wE+1) << " <= \"0\" & inY("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
+  		vhdl<<tab<<declare("exponentDifferenceXY",wE+1) << " <= signedExponentX - signedExponentY ;"<<endl;
+  		vhdl<<tab<<declare("exponentDifferenceYX",wE) << " <= signedExponentY("<<wE-1<<" downto 0) - signedExponentX("<<wE-1<<" downto 0);"<<endl;
 
 		// SWAP when: [excX=excY and expY>expX] or [excY>excX]
-		vhdl<<tab<<declare("swap") << " <= (exceptionXEqualY and exponentDifferenceXY("<<wE<<")) or (not(exceptionXSuperiorY));"<<endl;
+  		vhdl<<tab<<declare("swap") << " <= (exceptionXEqualY and exponentDifferenceXY("<<wE<<")) or (not(exceptionXSuperiorY));"<<endl;
 
 
-		string pmY="inY";
-		if ( sub ) {
-			vhdl << tab << declare("mY",wE+wF+3)   << " <= inY" << range(wE+wF+2,wE+wF+1) << " & not(inY"<<of(wE+wF)<<") & inY" << range(wE+wF-1,0) << ";"<<endl;
-			pmY = "mY";
-		}
+  		string pmY="inY";
+  		if ( sub ) {
+  			vhdl << tab << declare("mY",wE+wF+3)   << " <= inY" << range(wE+wF+2,wE+wF+1) << " & not(inY"<<of(wE+wF)<<") & inY" << range(wE+wF-1,0) << ";"<<endl;
+  			pmY = "mY";
+  		}
 
 		// depending on the value of swap, assign the corresponding values to the newX and newY signals
-		vhdl<<tab<<declare("newX",wE+wF+3) << " <= " << pmY << " when swap = '1' else inX;"<<endl;
-		vhdl<<tab<<declare("newY",wE+wF+3) << " <= inX when swap = '1' else " << pmY << ";"<<endl;
-		vhdl<<tab<<declare("exponentDifference",wE) << " <= " << "exponentDifferenceYX"
-			 << " when swap = '1' else exponentDifferenceXY("<<wE-1<<" downto 0);"<<endl;
+  		vhdl<<tab<<declare("newX",wE+wF+3) << " <= " << pmY << " when swap = '1' else inX;"<<endl;
+  		vhdl<<tab<<declare("newY",wE+wF+3) << " <= inX when swap = '1' else " << pmY << ";"<<endl;
+  		vhdl<<tab<<declare("exponentDifference",wE) << " <= " << "exponentDifferenceYX"
+  		<< " when swap = '1' else exponentDifferenceXY("<<wE-1<<" downto 0);"<<endl;
 
-		setCriticalPath(target->adderDelay(wE+1) +  target->lutDelay() + target->lutDelay());
+  		setCriticalPath(target->adderDelay(wE+1) +  target->lutDelay() + target->lutDelay());
 
 		// determine if the fractional part of Y was shifted out of the operation //
-		vhdl<<tab<<declare("shiftedOut") << " <= ";
-		if (wE>sizeRightShift){
-			manageCriticalPath(target->adderDelay(wE-sizeRightShift));
-			for (int i=wE-1;i>=sizeRightShift;i--)
-				if (i==sizeRightShift)
-					vhdl<< "exponentDifference("<<i<<")";
-				else
-					vhdl<< "exponentDifference("<<i<<") or ";
-			vhdl<<";"<<endl;
-		}
-		else
-			vhdl<<tab<<"'0';"<<endl;
+  		vhdl<<tab<<declare("shiftedOut") << " <= ";
+  		if (wE>sizeRightShift){
+  			manageCriticalPath(target->adderDelay(wE-sizeRightShift));
+  			for (int i=wE-1;i>=sizeRightShift;i--)
+  				if (i==sizeRightShift)
+  					vhdl<< "exponentDifference("<<i<<")";
+  				else
+  					vhdl<< "exponentDifference("<<i<<") or ";
+  				vhdl<<";"<<endl;
+  			}
+  			else
+  				vhdl<<tab<<"'0';"<<endl;
 
 		//shiftVal=the number of positions that fracY must be shifted to the right
-		vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " ;
-		if (wE>sizeRightShift) {
-			vhdl << "exponentDifference("<< sizeRightShift-1<<" downto 0)"
-				  << " when shiftedOut='0'"<<endl
-				  <<tab << tab << "    else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
-		}
-		else if (wE==sizeRightShift) {
-			vhdl<<tab<<"exponentDifference;" << endl ;
-		}
+  			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " ;
+  			if (wE>sizeRightShift) {
+  				vhdl << "exponentDifference("<< sizeRightShift-1<<" downto 0)"
+  				<< " when shiftedOut='0'"<<endl
+  				<<tab << tab << "    else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
+  			}
+  			else if (wE==sizeRightShift) {
+  				vhdl<<tab<<"exponentDifference;" << endl ;
+  			}
 		else 	{ //  wE< sizeRightShift
 			vhdl<<tab<<"CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & exponentDifference;" <<	endl;
 		}
@@ -147,7 +147,7 @@ namespace flopoco{
 
 		// sdExnXY is a concatenation of the exception bits of X and Y, after swap, so exnX > exnY
 		vhdl<<tab<<declare("sdExnXY",4) << " <= newX("<<wE+wF+2<<" downto "<<wE+wF+1<<") "
-			 << "& newY("<<wE+wF+2<<" downto "<<wE+wF+1<<");"<<endl;
+		<< "& newY("<<wE+wF+2<<" downto "<<wE+wF+1<<");"<<endl;
 		vhdl<<tab<<declare("pipeSignY") << " <= newY("<<wE+wF<<");"<<endl;
 
 		double cp_at_end_of_init = getCriticalPath();
@@ -173,7 +173,10 @@ namespace flopoco{
 
 		// instanciate the box that computes X-Y and Y-X. Note that it could take its inputs before the swap (TODO ?)
 		REPORT(DETAILED, "Building close path dual mantissa subtraction box");
-		dualSubClose = new 	IntDualSub(target, wF + 3, 0);
+
+		dualSubClose = (IntDualSub *) UserInterface::newInstance(this, target, "IntDualSub", "wIn=" + to_string(wF+3) + " opType=0", "DualSubO", "X=>fracXClose1 Y=>fracYClose1", "", "RxMy=>fracRClosexMy RyMx=>fracRCloseyMx");
+
+		/*dualSubClose = new 	IntDualSub(target, wF + 3, 0);
 		dualSubClose->changeName(getName()+"_DualSubClose");
 		addSubComponent(dualSubClose);
 
@@ -181,7 +184,7 @@ namespace flopoco{
 		inPortMap  (dualSubClose, "Y", "fracYClose1");
 		outPortMap (dualSubClose, "RxMy","fracRClosexMy");
 		outPortMap (dualSubClose, "RyMx","fracRCloseyMx");
-		vhdl << instance(dualSubClose, "DualSubO");
+		vhdl << instance(dualSubClose, "DualSubO");*/
 
 		syncCycleFromSignal("fracRCloseyMx", false);/////////////////////////////////////////////////////////////////
 
@@ -198,11 +201,14 @@ namespace flopoco{
 		vhdl<< tab << declare("resSign") << " <= '0' when selectClosePath='1' and fracRClose1 = ("<<wF+1<<" downto 0 => '0') else"<<endl;
 		// else sign(x) xor (close and sign(resclose))
 		vhdl<< tab << "          newX("<<wE+wF<<") xor (selectClosePath and "
-			 << "fracSignClose);"<<endl;
+		<< "fracSignClose);"<<endl;
 
 		// LZC + Shifting. The number of leading zeros are returned together with the shifted input
 		REPORT(DETAILED, "Building close path LZC + shifter");
-		lzocs = new LZOCShifterSticky(target, wF+2, wF+2, intlog2(wF+2), false, 0);
+
+		lzocs = (LZOCShifterSticky*) UserInterface::newInstance(this, target, "LZOCShifterSticky", "wIn=" + to_string(wF+2) + " wOut=" + to_string(wF+2) + " wCount=" + to_string(intlog2(wF+2)) + " computeSticky=false countType=0", "LZC_component", "I=>fracRClose1", "", "Count=>nZerosNew O=>shiftedFrac");
+
+		/*lzocs = new LZOCShifterSticky(target, wF+2, wF+2, intlog2(wF+2), false, 0);
 
 		lzocs->changeName(getName()+"_LZCShifter");
 		addSubComponent(lzocs);
@@ -210,7 +216,7 @@ namespace flopoco{
 		inPortMap  (lzocs, "I", "fracRClose1");
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFrac");
-		vhdl << instance(lzocs, "LZC_component");
+		vhdl << instance(lzocs, "LZC_component");*/
 
 		syncCycleFromSignal("shiftedFrac");/////////////////////////////////////////////////////////////////
 		// register the output
@@ -226,15 +232,15 @@ namespace flopoco{
 		vhdl<<tab<< declare("resultCloseIsZero0") << " <= '1' when nZerosNew"
 				<< " = CONV_STD_LOGIC_VECTOR(" << (1<< lzocs->getCountWidth())-1 // Should be wF+2 but this is a bug of LZOCShifterSticky: for all zeroes it returns this value
 				<< ", " << lzocs->getCountWidth()
-			 << ") else '0';" << endl;
+				<< ") else '0';" << endl;
 
 		// add two bits in order to absorb exceptions:
 		// the second 0 will become a 1 in case of overflow,
 		// the first 0 will become a 1 in case of underflow (negative biased exponent)
-		vhdl<<tab<< declare("exponentResultClose",wE+2) << " <= (\"00\" & "
-			 << "newX("<<wE+wF-1<<" downto "<<wF<<")) "
-			 <<"- (CONV_STD_LOGIC_VECTOR(0,"<<wE-lzocs->getCountWidth()+2<<") & nZerosNew);"
-			 <<endl;
+				vhdl<<tab<< declare("exponentResultClose",wE+2) << " <= (\"00\" & "
+				<< "newX("<<wE+wF-1<<" downto "<<wF<<")) "
+				<<"- (CONV_STD_LOGIC_VECTOR(0,"<<wE-lzocs->getCountWidth()+2<<") & nZerosNew);"
+				<<endl;
 
 
 		nextCycle();////////////////////////////////////////////////////////////////////////////////////
@@ -262,13 +268,16 @@ namespace flopoco{
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building far path right shifter");
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
+
+		rightShifter = (Shifter*) UserInterface::newInstance(this, target , "Shifter", "wIn="+to_string(wF+1)+" maxShift="+to_string(wF+3)+" dir=1", "RightShifterComponent", "X=>fracNewY S=>shiftVal", "", "R=>shiftedFracY");
+
+		/*rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
 		rightShifter->changeName(getName()+"_RightShifter");
 		addSubComponent(rightShifter);
 		inPortMap  (rightShifter, "X", "fracNewY");
 		inPortMap  (rightShifter, "S", "shiftVal");
 		outPortMap (rightShifter, "R","shiftedFracY");
-		vhdl << instance(rightShifter, "RightShifterComponent");
+		vhdl << instance(rightShifter, "RightShifterComponent");*/
 
 		syncCycleFromSignal("shiftedFracY", false);/////////////////////////////////////////////////////////////////
 		// register the output
@@ -295,14 +304,17 @@ namespace flopoco{
 
 		// perform carry in addition
 		REPORT(DETAILED, "Building far path adder");
-		fracAddFar = new IntAdder(target,wF+4);
+
+		fracAddFar = (IntAdder*) UserInterface::newInstance(this, target, "IntAdder", "wIn="+to_string(wF+4), "fracAdderFar", "X=>fracXfar Y=>fracYfarXorOp Cin=>cInAddFar", "", "R=>fracResultfar0");
+
+		/*fracAddFar = new IntAdder(target,wF+4);
 		fracAddFar->changeName(getName()+"_fracAddFar");
 		addSubComponent(fracAddFar);
 		inPortMap  (fracAddFar, "X", "fracXfar");
 		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
 		inPortMap  (fracAddFar, "Cin", "cInAddFar");
 		outPortMap (fracAddFar, "R","fracResultfar0");
-		vhdl << instance(fracAddFar, "fracAdderFar");
+		vhdl << instance(fracAddFar, "fracAdderFar");*/
 
 		syncCycleFromSignal("fracResultfar0");/////////////////////////////////////////////////////////////////
 		// register the output
@@ -350,7 +362,7 @@ namespace flopoco{
 
 		// End of normalization stage
 		vhdl<<tab<<declare("resultBeforeRoundFar",wE+1 + wF+1) << " <= "
-			 << "exponentResultFar1 & fracResultFar1;" << endl;
+		<< "exponentResultFar1 & fracResultFar1;" << endl;
 		vhdl<<tab<< declare("roundFar") << " <= roundFar1;" << endl;
 
 
@@ -378,7 +390,7 @@ namespace flopoco{
 
 		vhdl<<tab<< declare("zeroFromClose") << " <= syncClose and resultCloseIsZero;" <<endl;
 		double muxDelay= target->lutDelay() + target->localWireDelay() + target->ffDelay(); // estimated delay so far (one mux)
-				setCriticalPath(muxDelay);
+		setCriticalPath(muxDelay);
 		map<string, double> fraInputDelays;
 		fraInputDelays["X"] = muxDelay;
 		fraInputDelays["Y"] = 0;
@@ -388,17 +400,23 @@ namespace flopoco{
 
 		REPORT(DETAILED, "Building final round adder");
 		// finalRoundAdd will add the mantissa concatenated with exponent, two bits reserved for possible under/overflow
-		finalRoundAdd = new IntAdder(target, wE + wF + 2, fraInputDelays);
-		finalRoundAdd->changeName(getName()+"_finalRoundAdd");
-		addSubComponent(finalRoundAdd);
 
 		ostringstream zero;
 		zero<<"("<<1+wE+wF<<" downto 0 => '0') ";
+
+		// Warning : No use of fraInputDelays with this
+		finalRoundAdd = (IntAdder*) UserInterface::newInstance(this, target, "IntAdder", "wIn="+to_string(wE+wF+2), "finalRoundAdder", "X=>resultBeforeRound Cin=>round","Y=>"+zero.str(), "R=>resultRounded");
+
+		/*finalRoundAdd = new IntAdder(target, wE + wF + 2, fraInputDelays);
+		finalRoundAdd->changeName(getName()+"_finalRoundAdd");
+		addSubComponent(finalRoundAdd);
+
+
 		inPortMap   (finalRoundAdd, "X", "resultBeforeRound");
 		inPortMapCst(finalRoundAdd, "Y", zero.str() );
 		inPortMap   (finalRoundAdd, "Cin", "round");
 		outPortMap  (finalRoundAdd, "R","resultRounded");
-		vhdl << instance(finalRoundAdd, "finalRoundAdder");
+		vhdl << instance(finalRoundAdd, "finalRoundAdder");*/
 
 		if(finalRoundAdd->getPipelineDepth() == 0) {
 			manageCriticalPath(finalRoundAdd->getOutputDelay("R")); // may insert a nextCycle
@@ -621,11 +639,11 @@ namespace flopoco{
 
 	void FPAddDualPath::registerFactory(){
 		UserInterface::add("FPAddDualPath", // name
-											 "Floating-point adder with dual-path architecture. Trades a larger circuit size for a smaller latency.",
+			"Floating-point adder with dual-path architecture. Trades a larger circuit size for a smaller latency.",
 											 "BasicFloatingPoint", // categories
 											 "",
 											 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits;",
+											 wF(int): mantissa size in bits;",
 											 "",
 											 FPAddDualPath::parseArguments
 											 ) ;
