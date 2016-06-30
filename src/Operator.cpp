@@ -1591,12 +1591,12 @@ namespace flopoco{
 			//	and with the name of the global copy, not that of the local copy
 			string componentName = subComponentList_[i]->getName();
 
-			if(componentName.find("_cpy_") != string::npos)
+			if(componentName.find("_copy_") != string::npos)
 			{
 				//a global component; only the first copy should be output
 				bool isComponentOutput = false;
 
-				componentName = componentName.substr(0, componentName.find("_cpy_"));
+				componentName = componentName.substr(0, componentName.find("_copy_"));
 
 				for(unsigned int j=0; j<i; j++)
 					if(subComponentList_[j]->getName().find(componentName) != string::npos)
@@ -2533,8 +2533,8 @@ namespace flopoco{
 		string globalOperatorName = getName();
 
 		//this might be a copy of the global operator, so try to remove the suffix
-		if(globalOperatorName.find("_cpy_") != string::npos)
-			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
+		if(globalOperatorName.find("_copy_") != string::npos)
+			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_copy_"));
 
 		//look in the global operator list for the operator
 		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
@@ -2546,7 +2546,7 @@ namespace flopoco{
 
 		//if this is a global operator, and this is a copy, then just copy the schedule
 		//	of the global copy
-		if(isGlobalOperator && (getName().find("_cpy_") != string::npos))
+		if(isGlobalOperator && (getName().find("_copy_") != string::npos))
 		{
 			//check that all the inputs are at the same cycle
 			for(unsigned int i=0; i<ioList_.size(); i++)
@@ -2697,8 +2697,8 @@ namespace flopoco{
 			string globalOperatorName = getName();
 
 			//this might be a copy of the global operator, so try to remove the suffix
-			if(globalOperatorName.find("_cpy_") != string::npos)
-				globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_cpy_"));
+			if(globalOperatorName.find("_copy_") != string::npos)
+				globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_copy_"));
 
 			//look in the global operator list for the operator
 			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
@@ -2711,7 +2711,7 @@ namespace flopoco{
 			//if this is a global operator, and this is a copy, then
 			//	compute the maximum cycle of the inputs, and then synchronize
 			//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
-			if(isGlobalOperator && (getName().find("_cpy_") != string::npos))
+			if(isGlobalOperator && (getName().find("_copy_") != string::npos))
 			{
 				//all the other inputs of the parent operator of this signal have been scheduled
 				//	compute the maximum cycle of the inputs, and then synchronize
