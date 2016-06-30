@@ -458,19 +458,7 @@ namespace flopoco
 
 
 	void UserInterface::schedule() {
-		//start the first code parse
-		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
-			if(!UserInterface::globalOpList[i]->isOperatorImplemented())
-				UserInterface::globalOpList[i]->parseVHDL(1);
-		}
-
-		//schedule the signals
-		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
-			if(!UserInterface::globalOpList[i]->isOperatorImplemented())
-				UserInterface::globalOpList[i]->startScheduling();
-		}
-
-		//start the second code parse
+		//all that is left is to start the second code parse
 		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 			UserInterface::globalOpList[i]->parseVHDL(2);
 		}
