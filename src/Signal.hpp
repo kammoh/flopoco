@@ -277,6 +277,72 @@ class Operator;
 		pair<Signal*, int>* successorPair(int count);
 
 		/**
+		 * Reset the list of predecessors of the signal targetSignal
+		 */
+		void resetPredecessors();
+
+		/**
+		 * Add a new predecessor for the signal targetSignal;
+		 * a predecessor is a signal that appears in the right-hand side of an assignment
+		 * that has this signal on the left-hand side.
+		 * @param predecessor a direct predecessor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to zero
+		 */
+		void addPredecessor(Signal* predecessor, int delayCycles = 0);
+
+		/**
+		 * Add new predecessors for the signal targetSignal;
+		 * @param predecessors a list of direct predecessors of the current signal
+		 */
+		void addPredecessors(vector<pair<Signal*, int>> predecessorList);
+
+		/**
+		 * Remove an existing predecessor of the signal targetSignal;
+		 * @param predecessor a direct predecessor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to -1, meaning it is not taken into account
+		 * @return true if the signal could be removed from the predecessors, false if it doesn't exist as a predecessor
+		 */
+		void removePredecessor(Signal* predecessor, int delayCycles = 0);
+
+		/**
+		 * Reset the list of successors of the signal targetSignal
+		 */
+		void resetSuccessors();
+
+		/**
+		 * Add a new successor of the signal targetSignal;
+		 * a successor is a signal that appears in the left-hand side of an assignment
+		 * that has this signal on the right-hand side.
+		 * @param successor a direct successor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to zero
+		 * @return true if the signal could be added as a successor, false if it already existed
+		 */
+		void addSuccessor(Signal* successor, int delayCycles = 0);
+
+		/**
+		 * Add new successors for the signal targetSignal;
+		 * @param successors a list of direct successors of the current signal
+		 */
+		void addSuccessors(vector<pair<Signal*, int>> successorList);
+
+		/**
+		 * Remove an existing successor of the signal targetSignal;
+		 * @param successor a direct successor of the current signal
+		 * @param delayCycles the extra delay (in clock cycles) between the two signals
+		 * 		by default equal to -1, meaning it is not taken into account
+		 * @return true if the signal could be removed from the successors, false if it doesn't exist as a successor
+		 */
+		void removeSuccessor(Signal* successor, int delayCycles = 0);
+
+		/**
+		 * Set the parent operator of signal
+		 */
+		void setSignalParentOp(Operator* newParentOp);
+
+		/**
 		 * Outputs the VHDL code for declaring this signal. TODO should be obsoleted?
 		 */
 		std::string toVHDL();

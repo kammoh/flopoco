@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
+
 #include "Signal.hpp"
+#include "Operator.hpp"
 
 using namespace std;
 
@@ -277,6 +279,134 @@ namespace flopoco{
 			throw("Error in Signal::successorPair: trying to access an element at an index outside of bounds");
 
 		return &(successors_[count]);
+	}
+
+	void Signal::resetPredecessors()
+	{
+		predecessors_.clear();
+	}
+
+	void Signal::addPredecessor(Signal* predecessor, int delayCycles)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<predecessors_.size(); i++)
+		{
+			pair<Signal*, int> predecessorPair = *(this->predecessorPair(i));
+			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
+					&& (predecessorPair.first->getName() == predecessor->getName())
+					&& (predecessorPair.first->type() == predecessor->type())
+					&& (predecessorPair.second == delayCycles))
+			{
+				cerr << "in addPredecessor(): trying to add an already existing signal "
+							 << predecessor->getName() << " to the predecessor list of " << name_;
+				//nothing else to do
+				return;
+			}
+		}
+
+		//safe to insert a new signal in the predecessor list
+		pair<Signal*, int> newPredecessorPair = make_pair(predecessor, delayCycles);
+		predecessors_.push_back(newPredecessorPair);
+	}
+
+	void Signal::addPredecessors(vector<pair<Signal*, int>> predecessorList)
+	{
+		for(unsigned int i=0; i<predecessorList.size(); i++)
+			addPredecessor(predecessorList[i].first, predecessorList[i].second);
+	}
+
+	void Signal::removePredecessor(Signal* predecessor, int delayCycles)
+	{
+		//only try to remove the predecessor if the signal
+		//	already exists, within the same instance and with the same delay
+		for(int i=0; (unsigned)i<predecessors_.size(); i++)
+		{
+			pair<Signal*, int> predecessorPair = *(this->predecessorPair(i));
+			if((predecessorPair.first->parentOp()->getName() == predecessor->parentOp()->getName())
+					&& (predecessorPair.first->getName() == predecessor->getName())
+					&& (predecessorPair.first->type() == predecessor->type())
+					&& (predecessorPair.second == delayCycles))
+			{
+				//delete the element from the list
+				predecessors_.erase(predecessors_.begin()+i);
+				return;
+			}
+		}
+
+		throw("ERROR in removePredecessor(): trying to remove a non-existing signal "
+				+ predecessor->getName() + " from the predecessor list");
+	}
+
+	void Signal::resetSuccessors()
+	{
+		successors_.clear();
+	}
+
+	void Signal::addSuccessor(Signal* successor, int delayCycles)
+	{
+		//check if the signal already exists, within the same instance
+		for(int i=0; (unsigned)i<successors_.size(); i++)
+		{
+			pair<Signal*, int> successorPair = *(this->successorPair(i));
+			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
+					&& (successorPair.first->getName() == successor->getName())
+					&& (successorPair.first->type() == successor->type())
+					&& (successorPair.second == delayCycles))
+			{
+				cerr << "in addSuccessor(): trying to add an already existing signal "
+							 << successor->getName() << " to the successor list of " << name_;
+				//nothing else to do
+				return;
+			}
+		}
+
+		//safe to insert a new signal in the predecessor list
+		pair<Signal*, int> newSuccessorPair = make_pair(successor, delayCycles);
+		successors_.push_back(newSuccessorPair);
+	}
+
+	void Signal::addSuccessors(vector<pair<Signal*, int>> successorList)
+	{
+		for(unsigned int i=0; i<successorList.size(); i++)
+			addSuccessor(successorList[i].first, successorList[i].second);
+	}
+
+	void Signal::removeSuccessor(Signal* successor, int delayCycles)
+	{
+		//only try to remove the successor if the signal
+		//	already exists, within the same instance and with the same delay
+		for(int i=0; (unsigned)i<successors_.size(); i++)
+		{
+			pair<Signal*, int> successorPair = *(this->successorPair(i));
+			if((successorPair.first->parentOp()->getName() == successor->parentOp()->getName())
+					&& (successorPair.first->getName() == successor->getName())
+					&& (successorPair.first->type() == successor->type())
+					&& (successorPair.second == delayCycles))
+			{
+				//delete the element from the list
+				successors_.erase(successors_.begin()+i);
+				return;
+			}
+		}
+
+		throw("ERROR in removeSuccessor(): trying to remove a non-existing signal "
+				+ successor->getName() + " to the predecessor list");
+	}
+
+	void Signal::setSignalParentOp(Operator* newParentOp)
+	{
+		//erase the signal from the operator's signal list and map
+		for(unsigned int i=0; i<(parentOp_->getSignalList()).size(); i++)
+			if(parentOp_->getSignalList()[i]->getName() == name_)
+				parentOp_->getSignalList().erase(parentOp_->getSignalList().begin()+i);
+		parentOp_->getSignalMap().erase(name_);
+
+		//change the signal's parent operator
+		setParentOp(newParentOp);
+
+		//add the signal to the new parent's signal list
+		parentOp_->signalList_.push_back(this);
+		parentOp_->getSignalMap()[name_] = this;
 	}
 
 	string Signal::toVHDLType() {
