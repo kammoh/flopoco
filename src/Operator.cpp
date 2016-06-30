@@ -1344,8 +1344,7 @@ namespace flopoco{
 			{
 				iterStart = tmpInPortMap_.begin();
 				iterStop = tmpInPortMap_.end();
-			}else
-			{
+			}else{
 				iterStart = tmpOutPortMap_.begin();
 				iterStop = tmpOutPortMap_.end();
 			}
@@ -1370,7 +1369,8 @@ namespace flopoco{
 		o << tab << tab << "port map ( ";
 
 		// build vhdl and erase portMap_
-		if(op->isSequential()) {
+		if(op->isSequential())
+		{
 			o << "clk  => clk" << "," << endl
 			  << tab << tab << "           rst  => rst";
 			if (op->isRecirculatory()) {
@@ -1382,7 +1382,8 @@ namespace flopoco{
 		}
 
 		//build the code for the inputs
-		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++){
+		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
+		{
 			string rhsString;
 
 			if((it != tmpInPortMap_.begin()) || op->isSequential())
@@ -1402,7 +1403,8 @@ namespace flopoco{
 		}
 
 		//build the code for the outputs
-		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++){
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+		{
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
 				o << "," << endl <<  tab << tab << "           ";
 
@@ -1440,12 +1442,12 @@ namespace flopoco{
 			newOp->deepCloneOperator(op);
 
 			//set a new name for the copy of the operator
-			newOp->setName(newOp->getName() + "_cpy_" + vhdlize(getNewUId()));
+			newOp->setName(newOp->getName() + "_copy_" + vhdlize(getNewUId()));
 
-			//mark the subcomponent as not requiring to be implemented
+			//mark the subcomponent as already implemented
 			newOp->setIsOperatorImplemented(true);
 
-			//mark the subcomponent as drwan
+			//mark the subcomponent as drawn
 			newOp->setIsOperatorDrawn(true);
 
 			//save a reference
@@ -1463,8 +1465,11 @@ namespace flopoco{
 			opCpy = op;
 		}
 
+		//TODO: disabled for the new new pipeline
+		//		this should already have been done by addInput and addOutput
+		/*
 		//update the signals to take into account the input and output port maps
-		//update the inputs
+		//	update the inputs
 		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
 		{
 			//add componentPortName as a successor of actualSignalName,
@@ -1482,7 +1487,7 @@ namespace flopoco{
 			}
 		}
 
-		//update the outputs
+		//	update the outputs
 		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 		{
 			//add componentPortName as a predecessor of actualSignalName,
@@ -1490,6 +1495,7 @@ namespace flopoco{
 			opCpy->getSignalByName(it->first)->addSuccessor(it->second, 0);
 			it->second->addPredecessor(opCpy->getSignalByName(it->first), 0);
 		}
+		*/
 
 		//add the operator to the subcomponent list/map
 		subComponentList_.push_back(opCpy);
