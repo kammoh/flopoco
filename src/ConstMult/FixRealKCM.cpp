@@ -217,12 +217,8 @@ namespace flopoco{
 		mpfr_init2(absC, 10000);
 		sollya_lib_get_constant(mpC, node);
 
-		//if negative constant, then set negativeConstant and remake the constant positive
-		negativeConstant = false;
-		if(mpfr_cmp_si(mpC, 0) < 0)	{
-			//throw string("FixRealKCMBH: only positive constants are supported");
-			negativeConstant = true;
-		}
+		//if negative constant, then set negativeConstant
+		negativeConstant = ( mpfr_cmp_si(mpC, 0) < 0 ? true: false );
 
 		signedOutput = negativeConstant || signedInput;
 		mpfr_abs(absC, mpC, GMP_RNDN);
@@ -405,7 +401,7 @@ namespace flopoco{
 				maxErrorWithGuardBits /= 2.0;
 			}
 		}
-		REPORT(DEBUG, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
+		REPORT(DETAILED, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
 	}
 
 
@@ -491,7 +487,7 @@ namespace flopoco{
 				REPORT(DETAILED, "Warning: Table " << i << " was contributing nothing to the bit heap and has been discarded")
 			}
 			else { // Build it and add its output to the bit heap
-				REPORT(0, "lsbIn=" << lsbIn);
+				REPORT(DEBUG, "lsbIn=" << lsbIn);
 				parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
 											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << "; -- input address  m=" << m[i] << "  l=" << l[i]  << endl;
 				FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
@@ -521,6 +517,7 @@ namespace flopoco{
 																							 sliceOutName, // name
 																							 sliceOutWidth // size
 																							 );
+					
 					break;
 				default: THROWERROR("unexpected value in tableOutputSign");
 				}
@@ -610,11 +607,17 @@ namespace flopoco{
 			vector<string> constantList; // The list of constants we want to test
 			constantList.push_back("\"0\"");
 			constantList.push_back("\"0.125\"");
+			constantList.push_back("\"-0.125\"");
 			constantList.push_back("\"4\"");
+			constantList.push_back("\"-4\"");
 			constantList.push_back("\"log(2)\"");
 			constantList.push_back("-\"log(2)\"");
 			constantList.push_back("\"0.00001\"");
 			constantList.push_back("\"-0.00001\"");
+			constantList.push_back("\"0.0000001\"");
+			constantList.push_back("\"-0.0000001\"");
+			constantList.push_back("\"123456\"");
+			constantList.push_back("\"-123456\"");
 
 			for(int wIn=3; wIn<16; wIn+=4) { // test various input widths
 				for(int lsbIn=-1; lsbIn<2; lsbIn++) { // test various lsbIns
@@ -624,7 +627,7 @@ namespace flopoco{
 						string lsbOutStr = to_string(lsbOut);
 						for(int signedInput=0; signedInput<2; signedInput++) {
 							string signedInputStr = to_string(signedInput);
-							for(auto c:constantList) {
+							for(auto c:constantList) { // test various constants
 								paramList.push_back(make_pair("lsbIn",  lsbInStr));
 								paramList.push_back(make_pair("lsbOut", lsbOutStr));
 								paramList.push_back(make_pair("msbIn",  msbInStr));
@@ -778,9 +781,16 @@ namespace flopoco{
 		}
 		
 		//cout  << result << "  " <<endl;
-		// Add the rounding bit to the table 0, because it will never be subtracted
-		if(mother->addRoundBit && (index==0) && (mother->g>0))
-			result += 1<<(mother->g-1);
+
+		// Add the rounding bit to the table 0 if there are guard bits,
+		if(mother->addRoundBit && (index==0) && (mother->g>0)) {
+			int roundBit=1<<(mother->g-1);
+			// but beware: the table output may be subtracted (see buildTablesForBitHeap() )
+			if(mother-> tableOutputSign[0] >= 0) // This table will be added
+				result += roundBit;
+			else // This table will be subtracted
+				result -= roundBit;
+		}
 		return result;
 	}
 }
