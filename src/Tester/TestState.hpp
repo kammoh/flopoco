@@ -46,11 +46,15 @@ namespace flopoco
 
 		void setIterationIndex(int pIterationIndex);
 
+		void setTestBenchSize(int pTestBenchSize);
+
 		/**
 		* Get the index of the current iteration
 		* @return Index of the current iteration
 		*/
 		int getIterationIndex();
+
+		int getTestBenchSize();
 
 		/**
 		* Get the value of a parameter using its name
@@ -101,6 +105,8 @@ namespace flopoco
 		* Index of the current iteration
 		*/
 		int iterationIndex;
+
+		int testBenchSize;
 
 	};
 };

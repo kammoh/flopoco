@@ -57,7 +57,6 @@ namespace flopoco
 					{
 						currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
 					}
-					currentTestState->addParam("n","100");
 
 					opFact->nextTestStateGenerator(currentTestState);
 
@@ -74,13 +73,10 @@ namespace flopoco
 
 							for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
 							{
-								if(itMap->first=="n")
-								{
-									commandLineTestBench = " TestBench " + itMap->first + "=" + itMap->second;
-								}
-								else
-									commandLine += " " + itMap->first + "=" + itMap->second;
+								commandLine += " " + itMap->first + "=" + itMap->second;
 							}
+
+							commandLineTestBench = " TestBench n=" + to_string(currentTestState->getTestBenchSize());
 
 							system((commandLine + commandLineTestBench).c_str());
 							currentTestState->nextIteration();
@@ -169,7 +165,6 @@ namespace flopoco
 				{
 					currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
 				}
-				currentTestState->addParam("n","100");
 
 				opFact->nextTestStateGenerator(currentTestState);
 
@@ -186,13 +181,9 @@ namespace flopoco
 
 						for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
 						{
-							if(itMap->first=="n")
-							{
-								commandLineTestBench = " TestBench " + itMap->first + "=" + itMap->second;
-							}
-							else
-								commandLine += " " + itMap->first + "=" + itMap->second;
+							commandLine += " " + itMap->first + "=" + itMap->second;
 						}
+						commandLineTestBench = " TestBench n=" + to_string(currentTestState->getTestBenchSize());
 
 						system((commandLine + commandLineTestBench).c_str());						
 						currentTestState->nextIteration();

@@ -30,7 +30,6 @@ namespace flopoco{
 			{
 				paramList.push_back(make_pair("wE","8"));
 				paramList.push_back(make_pair("wF","23"));
-				paramList.push_back(make_pair("n","100"));
 				if(j==1)
 				{
 					paramList.push_back(make_pair("dualPath","true"));

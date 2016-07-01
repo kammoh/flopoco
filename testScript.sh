@@ -1,17 +1,18 @@
-cd tests/tmp
+cd TestResults/tmp
 echo "-------------------------------------------" >> ../$1/report
 echo "./flopoco $*" >> ../$1/report
+echo "./flopoco $*" >> ../$1/messages
 ../../flopoco $* > temp 2>&1
 if grep 'gtkwave' temp > /dev/null; then
 	echo -n 'VHDL generated | ' >> ../$1/report
 	ghdl=$(grep 'ghdl -a' temp)
-	if $ghdl >> ../$1/message 2>&1; then	
+	if $ghdl >> ../$1/messages 2>&1; then	
 		echo -n 'GHDL -a SUCCESS | ' >> ../$1/report
 	else
 		echo -n 'GHDL -a ERROR | ' >> ../$1/report
 	fi
 	ghdl=$(grep 'ghdl -e' temp)
-	if $ghdl >> ../$1/message 2>&1; then
+	if $ghdl >> ../$1/messages 2>&1; then
 		echo -n 'GHDL -e SUCCESS | ' >> ../$1/report
 	else
 		echo -n 'GHDL -e ERROR | ' >> ../$1/report
@@ -26,11 +27,11 @@ if grep 'gtkwave' temp > /dev/null; then
 			echo 'GHDL -r SUCCESS' >> ../$1/report
 		else
 			echo 'GHDL -r ERROR' >> ../$1/report
-			cat ghdl >> ../$1/message
+			cat ghdl >> ../$1/messages
 		fi
 	else
 		echo 'GHDL -r ERROR' >> ../$1/report
-		cat ghdl >> ../$1/message
+		cat ghdl >> ../$1/messages
 	fi
 else
 	echo 'VHDL not generated' >> ../$1/report

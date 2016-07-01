@@ -15,6 +15,7 @@ namespace flopoco
 		testParam.clear();
 		iterationNumber = 0;
 		iterationIndex = 0;
+		testBenchSize = 100;
 	}
 
 	void TestState::changeValue(string name, string value)
@@ -39,9 +40,19 @@ namespace flopoco
 		iterationIndex = pIterationIndex;
 	}
 
+	void TestState::setTestBenchSize(int pTestBenchSize)
+	{
+		testBenchSize = pTestBenchSize;
+	}
+
 	int TestState::getIterationIndex()
 	{
 		return iterationIndex;
+	}
+
+	int TestState::getTestBenchSize()
+	{
+		return testBenchSize;
 	}
 
 	string TestState::getValue(string name)
@@ -80,6 +91,7 @@ namespace flopoco
 	{
 		iterationIndex = 0;
 		iterationNumber = 0;
+		testBenchSize = 100;
 	}
 
 };
