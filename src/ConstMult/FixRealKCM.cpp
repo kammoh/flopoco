@@ -598,6 +598,60 @@ namespace flopoco{
 
 
 
+	void FixRealKCM::nextTestState(TestState * previousTestState)
+	{
+		// the static list of mandatory tests
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		
+		// is initialized here
+		if(previousTestState->getIterationIndex() == 0)		{
+			vector<string> constantList; // The list of constants we want to test
+			constantList.push_back("\"0\"");
+			constantList.push_back("\"0.125\"");
+			constantList.push_back("\"4\"");
+			constantList.push_back("\"log(2)\"");
+			constantList.push_back("-\"log(2)\"");
+			constantList.push_back("\"0.00001\"");
+			constantList.push_back("\"-0.00001\"");
+
+			for(int wIn=3; wIn<16; wIn+=4) { // test various input widths
+				for(int lsbIn=-1; lsbIn<2; lsbIn++) { // test various lsbIns
+					string lsbInStr = to_string(lsbIn);
+					string msbInStr = to_string(lsbIn+wIn);
+					for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
+						string lsbOutStr = to_string(lsbOut);
+						for(int signedInput=0; signedInput<2; signedInput++) {
+							string signedInputStr = to_string(signedInput);
+							for(auto c:constantList) {
+								paramList.push_back(make_pair("lsbIn",  lsbInStr));
+								paramList.push_back(make_pair("lsbOut", lsbOutStr));
+								paramList.push_back(make_pair("msbIn",  msbInStr));
+								paramList.push_back(make_pair("signedInput", signedInputStr));
+								paramList.push_back(make_pair("constant", c));
+								testStateList.push_back(paramList);
+								paramList.clear();
+							}
+						}
+					}
+				}
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		// Now actually change the state
+		vector<pair<string,string>>::iterator itVector;
+		int testIndex = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
+	}
+
+
+	
 
 	OperatorPtr FixRealKCM::parseArguments(Target* target, std::vector<std::string> &args)
 	{
@@ -636,7 +690,8 @@ namespace flopoco{
 				constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
 				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
 				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
-				FixRealKCM::parseArguments		
+				FixRealKCM::parseArguments,
+				FixRealKCM::nextTestState
 		);
 	}
 

@@ -194,7 +194,8 @@ namespace flopoco
 								commandLine += " " + itMap->first + "=" + itMap->second;
 						}
 
-						system((commandLine + commandLineTestBench).c_str());
+						cout << "./flopoco " + commandLineTestBench << endl;
+						system((commandLine + commandLineTestBench).c_str());						
 						currentTestState->nextIteration();
 						if(currentTestState->canIterate())
 							opFact->nextTestStateGenerator(currentTestState);

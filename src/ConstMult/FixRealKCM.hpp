@@ -118,6 +118,8 @@ namespace flopoco{
 				vector<string>& args
 			);
 
+		static void nextTestState(TestState * previousTestState);
+
 		static void registerFactory();
 		
 		Operator*	parentOp; 		/**< The operator which envelops this constant multiplier */
