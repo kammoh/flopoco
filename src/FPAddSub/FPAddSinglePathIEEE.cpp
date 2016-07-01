@@ -128,11 +128,12 @@ namespace flopoco{
 		vhdl << tab << declare("excY",2)  << "<= newY"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;*/	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vhdl << tab << declare("signX")   << "<= newX"<<of(wE+wF)<<";"<<endl;
 		vhdl << tab << declare("signY")   << "<= newY"<<of(wE+wF)<<";"<<endl;
-		vhdl << tab << declare("signXY", 2)   << "<= signX & signY;"<<endl;
+		//vhdl << tab << declare("signXY", 2)   << "<= signX & signY;"<<endl;
 		vhdl << tab << declare("EffSub") << " <= signX xor signY;"<<endl;
 		/*vhdl << tab << declare("sXsYExnXY",6) << " <= signX & signY & excX & excY;"<<endl;*/ 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vhdl << tab << declare("sXsYExpXY",2+2*wE)<<"<= signXY & expX & expY;"<<endl;  //++++++++++++++++++++++++++++++++
+		/*vhdl << tab << declare("sXsYExpXY",2+2*wE)<<"<= signXY & expX & expY;"<<endl;*/  //xxxxxxxxxxxxxxxxxxxxxxxxxxx
 		/*vhdl << tab << declare("sdExnXY",4) << " <= excX & excY;"<<endl;*/  	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		vhdl << tab << declare("ExpXY",2*wE)<<"<= expX & expY;"<<endl;
 		manageCriticalPath(target->localWireDelay()+ target->lutDelay());
 		vhdl << tab << declare("fracY",wF+1) << " <= "<< zg(wF+1)<<" when expY="<<zg(wE)<<" else ('1' & newY("<<wF-1<<" downto 0));"<<endl; 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		double cpfracY = getCriticalPath();
@@ -141,22 +142,26 @@ namespace flopoco{
 
 		//exception bits: need to be updated but for not FIXME
 		manageCriticalPath(target->localWireDelay()+2*target->lutDelay());
-		/*vhdl <<tab<<"with sXsYExnXY select "<<endl;																								//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vhdl <<tab<<declare("excRt",2) << " <= \"00\" when \"000000\"|\"010000\"|\"100000\"|\"110000\","<<endl
-				 <<tab<<tab<<"\"01\" when \"000101\"|\"010101\"|\"100101\"|\"110101\"|\"000100\"|\"010100\"|\"100100\"|\"110100\"|\"000001\"|\"010001\"|\"100001\"|\"110001\","<<endl
-				 <<tab<<tab<<"\"10\" when \"111010\"|\"001010\"|\"001000\"|\"011000\"|\"101000\"|\"111000\"|\"000010\"|\"010010\"|\"100010\"|\"110010\"|\"001001\"|\"011001\"|\"101001\"|\"111001\"|\"000110\"|\"010110\"|\"100110\"|\"110110\", "<<endl
-				 <<tab<<tab<<"\"11\" when others;"<<endl;*/
-		vhdl <<tab<<"with sXsYExpXY select "<<endl;																								//+++++++++++++++++++++++++++++++
+		/*vhdl <<tab<<"with sXsYExpXY select "<<endl;																								//xxxxxxxxxxxxxxxxxxxxxxxxxx
 		vhdl <<tab<<declare("excRtmp",2) << " <= \"00\" when \"00"<<zg(2*wE, 1) <<"|\"01"<<zg(2*wE, 1)<<"|\"10"<<zg(2*wE, 1)<<"|\"11"<<zg(2*wE, 1)<<","<<endl
 			 		<<tab<<tab<<"\"11\" when \"00"<<zg(wE, -2)<<og(wE, 1)<<"|\"01"<<zg(wE, -2)<<og(wE, 1)<<"|\"10"<<zg(wE, -2)<<og(wE, 1)<<"|\"11"<<zg(wE, -2)<<og(wE, 1)
-				 																		<<"|\"00"<<og(wE, -2)<<zg(wE, 1)<<"|\"01"<<og(wE, -2)<<zg(wE, 1)<<"|\"10"<<og(wE, -2)<<zg(wE, 1)<<"|\"11"<<og(wE, -2)<<zg(wE, 1)				 											
-				 																		<<"|\"00"<<og(2*wE, 1)<<"|\"01"<<og(2*wE, 1)<<"|\"10"<<og(2*wE, 1)<<"|\"11"<<og(2*wE, 1)<<","<<endl
+																<<"|\"00"<<og(wE, -2)<<zg(wE, 1)<<"|\"01"<<og(wE, -2)<<zg(wE, 1)<<"|\"10"<<og(wE, -2)<<zg(wE, 1)<<"|\"11"<<og(wE, -2)<<zg(wE, 1)				 											
+																<<"|\"00"<<og(2*wE, 1)<<"|\"01"<<og(2*wE, 1)<<"|\"10"<<og(2*wE, 1)<<"|\"11"<<og(2*wE, 1)<<","<<endl
 				 <<tab<<tab<<"\"01\" when others;"<<endl;		 
-		vhdl <<tab<<declare("excRt",2) << "<= \"10\" when excRtmp=\"11\" and newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"
-																									<<range(wF-1,0)<<"="<<zg(wF-1)<<" and (signXY=\"01\" or signXY=\"10\") else excRtmp;"<<endl;
+		vhdl <<tab<<declare("excRt",2) << "<= \"10\" when excRtmp=\"11\" and newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"				//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+																									<<range(wF-1,0)<<"="<<zg(wF-1)<<" and (signXY=\"01\" or signXY=\"10\") else excRtmp;"<<endl;*/
+		vhdl <<tab<<"with ExpXY select "<<endl;																								//xxxxxxxxxxxxxxxxxxxxxxxxxx
+		vhdl <<tab<<declare("excRtmp",2) << " <= \"00\" when "<<zg(2*wE)<<","<<endl
+			 		<<tab<<tab<<"\"10\" when "<<zg(wE, -1)<<og(wE, 1)<<"|"<<og(wE, -1)<<zg(wE, 1)<<"|"<<og(2*wE)<<","<<endl
+				 <<tab<<tab<<"\"01\" when others;"<<endl;
+		vhdl <<tab<<declare("excRtmp2",2) << "<= \"10\" when excRtmp=\"01\" and (expX="<<og(wE)<<" or expY="<<og(wE)<<") else excRtmp;"<<endl;
+	 	vhdl <<tab<<declare("excRt",2) << "<= \"11\" when excRtmp2=\"10\" and ((newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"				//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+																									<<range(wF-1,0)<<"="<<zg(wF)<<" and signX/=signY)"
+																									<< " or (newX"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expX="<<og(wE)<<")"
+																									<< " or (newY"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expY="<<og(wE)<<")) else excRtmp2;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl <<tab<<declare("signR") << "<= '0' when (sXsYExpXY=\"10"<<zg(2*wE,1)<<" or sXsYExpXY=\"01"<<zg(2*wE,1)<<") else signX;"<<endl; 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+		/*vhdl <<tab<<declare("signR") << "<= '0' when (sXsYExpXY=\"10"<<zg(2*wE,1)<<" or sXsYExpXY=\"01"<<zg(2*wE,1)<<") else signX;"<<endl;*/ 	//xxxxxxxxxxxxxxxxxxxxxxx
+		vhdl <<tab<<declare("signR") << "<= '0' when ExpXY="<<zg(2*wE)<<" and signX/=signY else signX;"<<endl;
 
 		setCycleFromSignal("swap");;
 		if ( getCycleFromSignal("eYmeX") == getCycleFromSignal("swap") )
@@ -340,16 +345,18 @@ namespace flopoco{
 				 <<tab<<tab<<og(wE)<<" when others;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
 		/*vhdl<<tab<<declare("excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;*/	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') else expRt;"<<endl; ///++++++++++++++++++++
-		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  ///++++++++++++++++++++
-																			<< "or exExpExc=\"1110\" or exExpExc=\"0101\" else fracR;"<<endl;
+		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl; ///++++++++++++++++++++
+		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt2="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  ///++++++++++++++++++++
+																			<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or exExpExc=\"0001\") else fracR;"<<endl;
+		vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt2="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  ///++++++++++++++++++++
+																			<< "and exExpExc/=\"1110\" and exExpExc/=\"0101\" and exExpExc/=\"0001\" else fracRt;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
-		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
+		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') or (fracRt2="<<og(wF)<<" and expRt2="<<og(wE)<<") else signR;"<<endl;
 
 
 
 		// assign result
-		vhdl<<tab<< declare("computedR",wE+wF+1) << " <= signR2 & expRt2 & fracRt;"<<endl;	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		vhdl<<tab<< declare("computedR",wE+wF+1) << " <= signR2 & expRt2 & fracRt2;"<<endl;	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vhdl << tab << "R <= computedR;"<<endl;
 
 		/*		manageCriticalPath(target->localWireDelay() +  target->lutDelay());
@@ -399,6 +406,30 @@ namespace flopoco{
 	void FPAddSinglePathIEEE::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", 3.4028235e38);
+		tc->addIEEEInput("Y", 3.4028235e38);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", 1.1754945e-38);
+		tc->addIEEEInput("Y", 1.1754945e-38);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", IEEENumber::NaN);
+		tc->addIEEEInput("Y", IEEENumber::NaN);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", IEEENumber::plusZero);
+		tc->addIEEEInput("Y", IEEENumber::minusZero);
+		emulate(tc);
+		tcl->add(tc);
+
 		// Regression tests
 		tc = new TestCase(this);
 		tc->addIEEEInput("X", 1.0);
@@ -445,6 +476,24 @@ namespace flopoco{
 		tc = new TestCase(this);
 		tc->addIEEEInput("X", 3.4028235e38);
 		tc->addIEEEInput("Y", 3.4028235e38);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", 1.1754945e-38);
+		tc->addIEEEInput("Y", 1.1754945e-38);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", IEEENumber::NaN);
+		tc->addIEEEInput("Y", IEEENumber::NaN);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", IEEENumber::plusZero);
+		tc->addIEEEInput("Y", IEEENumber::minusZero);
 		emulate(tc);
 		tcl->add(tc);
 
@@ -524,7 +573,7 @@ namespace flopoco{
 		{
 			paramList.push_back(make_pair("wE","8"));
 			paramList.push_back(make_pair("wF","23"));
-			paramList.push_back(make_pair("n","100"));
+			paramList.push_back(make_pair("n","250"));
 			
 			testStateList.push_back(paramList);
 			paramList.clear();

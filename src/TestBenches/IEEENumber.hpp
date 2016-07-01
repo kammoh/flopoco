@@ -19,11 +19,15 @@ namespace flopoco{
 
 		/** Several possible special values */
 		typedef enum {
-			plusInfty,     /**< A positive infinity with random non-zero exponent and fraction bits  */
-			minusInfty,    /**< A negative infinity with random non-zero exponent and fraction bits  */
-			plusZero,      /**< A positive zero */
-			minusZero,     /**< A negative zero  */
-			NaN            /**< Not A Number */
+			plusInfty,     			/**< A positive infinity with random non-zero exponent and fraction bits  */
+			minusInfty,    			/**< A negative infinity with random non-zero exponent and fraction bits  */
+			plusZero,      			/**< A positive zero */
+			minusZero,     			/**< A negative zero  */
+			NaN,           			/**< Not A Number */
+			smallestSubNormal,	/**< The smallest subnormal IEEENumber*/
+			greatestSubNormal,	/**< The greatest subnormal IEEENumber*/
+			smallestNormal,			/**< The smallest normal IEEENumber*/
+			greatestNormal			/**< The greatest normal IEEENumber*/
 		} SpecialValue;
 
 		/**
@@ -123,7 +127,6 @@ namespace flopoco{
 		 * Assigns a double.
 		 */
 		IEEENumber &operator=(double x);
-
 
 	private:
 		/** The width of the exponent */
