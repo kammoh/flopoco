@@ -118,7 +118,15 @@
 </dl></dd>
 </dl>
 <dl>
-<dt class="operatorname">FPAddSInglePath</dt>
+<dt class="operatorname">FPAddSinglePath</dt>
+<dd class="operatordescription">A floating-point adder with a new, more compact single-path architecture.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">FPAddSinglePathIEEE</dt>
 <dd class="operatordescription">A floating-point adder with a new, more compact single-path architecture.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
@@ -501,6 +509,15 @@
 <dt class="operatorname">Wrapper</dt>
 <dd class="operatordescription">Wraps the preceding operator between registers (for frequency testing).</dd>
 <dd><em>Parameters:</em> <dl>
+</dl></dd>
+</dl>
+<h3>Tester</h3>
+<dl>
+<dt class="operatorname">AutoTest</dt>
+<dd class="operatordescription">An tester for operators.</dd>
+<dd><em>Parameters:</em> <dl>
+<span class="optionalparam"> <dt> <code class="parametername">Operator</code>  (<code class="parametertype">string</code>)   (optional, default value is All)</dt><dd>name of the operator to test, All if we need to test all the operators</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">Dependences</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>test the operator's dependences</dd> </span>
 </dl></dd>
 </dl>
 <h3>Miscellaneous</h3>

@@ -55,6 +55,7 @@ namespace flopoco
 		v.push_back(make_pair("Conversions", "Conversions between number systems" ));
 		v.push_back(make_pair("FiltersEtc", "Filters and FFTs"));
 		v.push_back(make_pair("TestBenches", "Test Benches"));
+		v.push_back(make_pair("Tester", "Tester"));
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
 		return v;
 	}();
@@ -304,14 +305,6 @@ namespace flopoco
 		if(argc==2 && string(argv[1])=="BuildAutocomplete") {
 			buildAutocomplete();
 			exit(EXIT_SUCCESS);
-		}
-		if((argc==3 || argc==4 )&& string(argv[1])=="Test")
-		{
-			bool testDependences = false;
-			string opName = string(argv[2]);
-			if(argc==4 && string(argv[3])=="Dependences")
-				testDependences = true;
-			Tester tester(opName,testDependences);
 		}
 
 		// First convert for convenience the input arg list into

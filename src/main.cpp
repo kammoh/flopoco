@@ -35,6 +35,8 @@ int main(int argc, char* argv[] )
 {
 	try {
 
+		Tester::registerFactory();
+
 		Fix2FP::registerFactory();
 		FP2Fix::registerFactory();
 		InputIEEE::registerFactory();
