@@ -29,7 +29,7 @@ namespace flopoco
 			"A tester for operators.",
 			"Tester",
 			"", //seeAlso
-			"Operator(string)=All: name of the operator to test, All if we need to test all the operators;\
+			"Operator(string): name of the operator to test, All if we need to test all the operators;\
 			Dependences(bool)=false: test the operator's dependences;",
 			"",
 			Tester::parseArguments

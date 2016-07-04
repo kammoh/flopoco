@@ -22,7 +22,8 @@ namespace flopoco
 	{
 		map<string,string>::iterator it = testParam.find(name);
 
-		it->second = value;
+		if(it != testParam.end())
+			it->second = value;
 	}
 
 	void TestState::nextIteration()
