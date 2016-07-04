@@ -25,7 +25,7 @@ namespace flopoco{
 
 		if(previousTestState->getIterationIndex() == 0)
 		{
-
+			previousTestState->setTestBenchSize(100);
 			for(int j = 0; j<2; j++)
 			{
 				paramList.push_back(make_pair("wE","8"));

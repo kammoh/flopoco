@@ -14,7 +14,12 @@ namespace flopoco{
 
 	public:
 
+		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+
+		static void registerFactory();
+
 		Tester(string opName, bool testDependences = false);
+
 	};
 };
 #endif

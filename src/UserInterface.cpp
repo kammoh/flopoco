@@ -312,7 +312,6 @@ namespace flopoco
 			if(argc==4 && string(argv[3])=="Dependences")
 				testDependences = true;
 			Tester tester(opName,testDependences);
-			exit(EXIT_SUCCESS);
 		}
 
 		// First convert for convenience the input arg list into
