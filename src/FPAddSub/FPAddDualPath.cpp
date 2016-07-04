@@ -404,10 +404,10 @@
 		ostringstream zero;
 		zero<<"("<<1+wE+wF<<" downto 0 => '0') ";
 
-		// Warning : No use of fraInputDelays with this
-		finalRoundAdd = (IntAdder*) UserInterface::newInstance(this, target, "IntAdder", "wIn="+to_string(wE+wF+2), "finalRoundAdder", "X=>resultBeforeRound Cin=>round","Y=>"+zero.str(), "R=>resultRounded");
+		// Warning : No use of fraInputDelays with this, seems like it was important since the tests all fail
+		//finalRoundAdd = (IntAdder*) UserInterface::newInstance(this, target, "IntAdder", "wIn="+to_string(wE+wF+2), "finalRoundAdder", "X=>resultBeforeRound Cin=>round","Y=>"+zero.str(), "R=>resultRounded");
 
-		/*finalRoundAdd = new IntAdder(target, wE + wF + 2, fraInputDelays);
+		finalRoundAdd = new IntAdder(target, wE + wF + 2, fraInputDelays);
 		finalRoundAdd->changeName(getName()+"_finalRoundAdd");
 		addSubComponent(finalRoundAdd);
 
@@ -416,7 +416,7 @@
 		inPortMapCst(finalRoundAdd, "Y", zero.str() );
 		inPortMap   (finalRoundAdd, "Cin", "round");
 		outPortMap  (finalRoundAdd, "R","resultRounded");
-		vhdl << instance(finalRoundAdd, "finalRoundAdder");*/
+		vhdl << instance(finalRoundAdd, "finalRoundAdder");
 
 		if(finalRoundAdd->getPipelineDepth() == 0) {
 			manageCriticalPath(finalRoundAdd->getOutputDelay("R")); // may insert a nextCycle
