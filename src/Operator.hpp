@@ -1234,14 +1234,14 @@ public:
 	 * also trigger the scheduling of its children, if targetSignal has any.
 	 * @param targetSignal the signal to be scheduled
 	 */
-	void scheduleSignal(Signal *targetSignal);
+	void scheduleSignal(Signal *targetSignal, bool override = false);
 
 	/**
 	 * Set the timing of a signal.
 	 * Used also to share code between the different timing methods.
 	 * @param targetSignal the signal to be scheduled
 	 */
-	void setSignalTiming(Signal* targetSignal);
+	void setSignalTiming(Signal* targetSignal, bool override = false);
 
 
 	/**

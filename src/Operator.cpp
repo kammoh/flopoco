@@ -2663,7 +2663,7 @@ namespace flopoco{
 				if(ioList_[i]->type() == Signal::out)
 				{
 					for(unsigned int j=0; j<ioList_[i]->successors()->size(); j++)
-						scheduleSignal(ioList_[i]->successor(j));
+						scheduleSignal(ioList_[i]->successor(j), true);
 				}
 
 			return;
@@ -2675,37 +2675,30 @@ namespace flopoco{
 			Signal *currentSignal = signalsToSchedule[i];
 
 			//schedule the current signal
-			setSignalTiming(currentSignal);
+			setSignalTiming(currentSignal, true);
 		}
 
-		//start the schedule on the children of the inputs
+		//start the schedule on the children of the signals on the list of signals to be scheduled
 		for(unsigned int i=0; i<signalsToSchedule.size(); i++)
 		{
 			Signal *currentSignal = signalsToSchedule[i];
 
-			if(currentSignal->type() != Signal::in)
-				continue;
-
 			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
-				scheduleSignal(currentSignal->successor(j));
+				scheduleSignal(currentSignal->successor(j), true);
 		}
 
-		//mark the operator as scheduled only when all the outputs have been scheduled
-		bool scheduleComplete = true;
-
-		for(unsigned int i=0; i<ioList_.size(); i++)
-			if((ioList_[i]->type() == Signal::out) && (ioList_[i]->getHasBeenImplemented() == false))
-				scheduleComplete = false;
-		setIsOperatorScheduled(scheduleComplete);
+		//clear the list of signals to schedule
+		signalsToSchedule.clear();
 	}
 
 
 	
-	void Operator::scheduleSignal(Signal *targetSignal)
+	void Operator::scheduleSignal(Signal *targetSignal, bool override)
 	{
 		//TODO: add more checks here
+
 		//check if the signal has already been scheduled
-		if(targetSignal->getHasBeenImplemented() == true)
+		if((targetSignal->getHasBeenImplemented() == true) && (override == false))
 			//there is nothing else to be done
 			return;
 
@@ -2716,7 +2709,7 @@ namespace flopoco{
 				return;
 
 		//if the preconditions are satisfied, schedule the signal
-		setSignalTiming(targetSignal);
+		setSignalTiming(targetSignal, override);
 
 		//update the lifespan of targetSignal's predecessors
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
@@ -2815,18 +2808,19 @@ namespace flopoco{
 
 			//try to schedule the successors of the signal
 			for(unsigned int i=0; i<targetSignal->successors()->size(); i++)
-				scheduleSignal(targetSignal->successor(i));
+				scheduleSignal(targetSignal->successor(i), override);
 		}
 
 	}
 
-	void Operator::setSignalTiming(Signal* targetSignal)
+	void Operator::setSignalTiming(Signal* targetSignal, bool override)
 	{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
+
 		//check if the signal has already been scheduled
-		if(targetSignal->getHasBeenImplemented() == true)
+		if((targetSignal->getHasBeenImplemented() == true) && (override == false))
 			//there is nothing else to be done
 			return;
 
