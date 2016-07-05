@@ -15,20 +15,15 @@
  */
 /*
 
-Remaining bug:
+Remaining 1-ulp bug:
 flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
 It is the limit case of removing one table altogether because it contributes nothng.
 I don't really understand
 
 Dépendances
 [ 15%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/FixFilters/FixIIR.o
-[ 16%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/UserInterface.o
-[ 17%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixAtan2ByCORDIC.o
-[ 17%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Complex/FixComplexKCM.o
 [ 18%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/FixFilters/FixSOPC.o
-[ 19%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/ConstMult/FPRealKCM.o
 [ 20%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/CordicSinCos.o
-[ 21%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixAtan2ByRecipMultAtan.o
 [ 22%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/ExpLog/FPExp.o
 [ 23%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixSinCos.o
 */

@@ -5,23 +5,6 @@
 #include "../BitHeap/BitHeap.hpp"
 
 
-/*
-
-[ 11%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/FixFilters/FixSOPC.o
-[ 12%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/FixFilters/FixIIR.o
-[ 14%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Complex/FixComplexKCM.o
-[ 14%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixSinCos.o
-[ 15%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/CordicSinCos.o
-[ 15%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixAtan2ByCORDIC.o
-[ 16%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/Trigs/FixAtan2ByRecipMultAtan.o
-[ 17%] Building CXX object CMakeFiles/FloPoCoLib.dir/src/ExpLog/FPExp.o
-[ 18%] Linking CXX static library libFloPoCoLib.a
-[ 95%] Built target FloPoCoLib
-Scanning dependencies of target flopoco
-[ 96%] Building CXX object CMakeFiles/flopoco.dir/src/main.o
-[ 96%] Linking CXX executable flopoco
-
-*/
 
 namespace flopoco{
 

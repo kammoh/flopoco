@@ -8,7 +8,6 @@
 #include "FixAtan2ByCORDIC.hpp"
 #include "IntMult/IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
-#include "ConstMult/FixRealKCM.hpp"
 #include "ShiftersEtc/LZOC.hpp"
 #include "ShiftersEtc/Shifters.hpp"
 #include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
