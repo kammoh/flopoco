@@ -264,6 +264,15 @@ public:
 	void addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues=1);
 
 
+	/**
+	 * Connect a I/O signal that has just been created to the corresponding
+	 * signal in the parent operator.
+	 * @param ioSignal the newly created I/O
+	 * @param connectionName the name of the signal part of the parent operator that is connected to ioSignal
+	 */
+	void connectIOFromPortMap(Signal *ioSignal);
+
+
 
 	/**
 	 * Sets the copyright string: should be authors + year

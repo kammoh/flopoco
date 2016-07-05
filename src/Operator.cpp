@@ -372,6 +372,59 @@ namespace flopoco{
 	}
 
 
+	void Operator::connectIOFromPortMap(Signal *ioSignal)
+	{
+		Signal *connectionSignal = nullptr;
+		map<std::string, Signal*>::iterator itStart, itEnd;
+
+		//TODO: add ore checks here
+		//check that ioSignal is really an I/O signal
+		if((ioSignal->type() != Signal::in) || (ioSignal->type() != Signal::out))
+			//THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
+			THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
+
+		if(ioSignal->type() == Signal::in){
+			itStart = parentOp_->tmpInPortMap_.begin();
+			itEnd = parentOp_->tmpInPortMap_.end();
+		}else{
+			itStart = parentOp_->tmpOutPortMap_.begin();
+			itEnd = parentOp_->tmpOutPortMap_.end();
+		}
+
+		//check that ioSignal exists on the parent operator's port map
+		for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
+		{
+			if(it->first == ioSignal->getName()){
+				connectionSignal = it->second;
+				break;
+			}
+		}
+		//check if any match was found in the port mappings
+		if(connectionSignal == nullptr)
+			THROWERROR("Error: I/O port " << ioSignal->getName() << " of operator " << getName()
+					<< " is not connected to any signal of parent operator " << parentOp_->getName());
+		//saity check: verify that the signal that was found is actually part of the parent operator
+		try{
+			parentOp_->getSignalByName(connectionSignal->getName());
+		}catch(string &e){
+			THROWERROR("Error: signal " << connectionSignal->getName()
+					<< " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
+		}
+
+		//now we can connect the two signals
+		if(ioSignal->type() == Signal::in)
+		{
+			//this is an input signal
+			ioSignal->addPredecessor(connectionSignal, 0);
+			connectionSignal->addSuccessor(ioSignal, 0);
+		}else{
+			//this is an output signal
+			ioSignal->addSuccessor(connectionSignal, 0);
+			connectionSignal->addPredecessor(ioSignal, 0);
+		}
+	}
+
+
 
 	Signal* Operator::getSignalByName(string name) {
 		//search for the signal in the list of signals
