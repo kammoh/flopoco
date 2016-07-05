@@ -1,5 +1,6 @@
 cd TestResults/tmp
 echo "-------------------------------------------" >> ../$1/report
+echo "./flopoco $*"
 echo "./flopoco $*" >> ../$1/report
 echo "./flopoco $*" >> ../$1/messages
 ../../flopoco $* > temp 2>&1

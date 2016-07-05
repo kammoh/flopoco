@@ -925,7 +925,7 @@ namespace flopoco {
 	/**************************************************************************/
 	void IntMultiplier::buildHeapLogicOnly(int lsbX, int lsbY, int msbX, int msbY,int blockUid)
 	{
-		REPORT(DETAILED,"buildHeapLogicOnly called for " << lsbX << " " << lsbY << " " << msbX << " " << msbY);
+		REPORT(FULL,"buildHeapLogicOnly called for " << lsbX << " " << lsbY << " " << msbX << " " << msbY);
 		Target *target= parentOp->getTarget();
 
 		if(blockUid == -1)
@@ -1006,10 +1006,18 @@ namespace flopoco {
 				addToGlobalOpList(tSS);
 			}
 
+			REPORT(FULL, "Goodness gracious 1 CP=" << getCriticalPath());
 			setCycle(0); // TODO FIXME for the virtual multiplier case where inputs can arrive later
-			setCriticalPath(initialCP);
+			REPORT(FULL, "Goodness gracious 2 CP=" << getCriticalPath());
+
+			REPORT(FULL, "Goodness gracious 3" << getCriticalPath());
+
 			// SmallMultTable is built to cost this:
-			manageCriticalPath(  parentOp->getTarget()->localWireDelay(chunksX) + parentOp->getTarget()->lutDelay() ) ;
+			REPORT(FULL, "Goodness gracious4");
+			double delay=  parentOp->getTarget()->localWireDelay(chunksX) + parentOp->getTarget()->lutDelay();
+			REPORT(FULL, "Goodness gracious5 delay= "<< delay );
+			manageCriticalPath( delay) ;
+			REPORT(FULL, "Goodness gracious6");
 			for (int iy=0; iy<chunksY; iy++)
 			{
 				vhdl << tab << "-- Partial product row number " << iy << endl;
@@ -1031,7 +1039,7 @@ namespace flopoco {
 						else
 							t=tUU;
 					}
-
+					REPORT(FULL, "ix=" << ix << "  iy=" << iy);
 					//smallMultTable needed only if it is on the left of the truncation line
 					// was if(dx*(ix+1)+dy*(iy+1)+lsbX+lsbY-padX-padY > wFullP-wOut-g)
 					if(dx*(ix+1)+dy*(iy+1)+lsbX+lsbY-padX-padY + lsbWeightInBitHeap > 0)

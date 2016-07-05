@@ -990,7 +990,9 @@ namespace flopoco{
 			return new FPExp(target, wE, wF, k, d, g);
 		}
 
-		void FPExp::nextTestState(TestState * previousTestState)
+
+
+	void FPExp::nextTestState(TestState * previousTestState)
 		{
 
 			static vector<vector<pair<string,string>>> testStateList;

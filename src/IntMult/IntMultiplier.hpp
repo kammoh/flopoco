@@ -213,7 +213,6 @@ namespace flopoco {
 		int wOut;                       /**< size of the output, to be used only in the standalone constructor and emulate.  */
 		int lsbWeightInBitHeap;       	/**< the weight in the bit heap of the lsb of the multiplier result ; equals g for standalone multipliers */
 		int lsbFullMultWeightInBitheap;	/**< the weight in the bit heap of the full multiplication result (used for truncated multiplications)  */
-		double initialCP;    			/**< the initial delay, getMaxInputDelays ( inputDelays_ ).*/
 
 	private:
 		void initialize();     			/**< initialization stuff common to both constructors*/
