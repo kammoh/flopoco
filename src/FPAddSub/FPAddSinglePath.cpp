@@ -94,7 +94,7 @@
 			vhdl << tab << declare("addCmpOp1",wE+wF+2+1) << "<= " << zg(1,0) << " & excExpFracX;"<<endl;
 			vhdl << tab << declare("addCmpOp2",wE+wF+2+1) << "<= " << og(1,0) << " & not(excExpFracY);"<<endl;
 
-			OperatorPtr cmpAdder = UserInterface::newInstance(this, target, "IntAdder", "wIn=" + to_string(wE+wF+2+1), "cmpAdder", "X=>addCmpOp1 Y=>addCmpOp2", "Cin=>'1'", "R=>cmpRes");
+			OperatorPtr cmpAdder = newInstance("IntAdder", "cmpAdder", "wIn=" + to_string(wE+wF+2+1), "X=>addCmpOp1 Y=>addCmpOp2 R=>cmpRes", "Cin=>'1'");
 			//IntAdder * cmpAdder = IntAdder::newInstance(this, "X=>addCmpOp1,Y=>addCmpOp2", "Cin=>'1'", "R=>cmpRes", target, wE+wF+2+1);
 
 			//IntAdder *cmpAdder = new IntAdder(target, wE+wF+2+1);
@@ -190,7 +190,7 @@
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building far path right shifter");
 
-		rightShifter = UserInterface::newInstance(this, target, "Shifter", "wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+3) + " dir=1", "RightShifterComponent", "X=>fracY S=>shiftVal", "", "R=>shiftedFracY");
+		rightShifter = newInstance("Shifter", "RightShifterComponent", "wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+3) + " dir=1", "X=>fracY S=>shiftVal R=>shiftedFracY");
 
 		//rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right, inDelayMap("X",getCriticalPath()));
 		//rightShifter->changeName(getName()+"_RightShifter");
@@ -232,7 +232,7 @@
 		vhdl<<tab<< declare("cInAddFar")           << " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
-		fracAddFar = UserInterface::newInstance(this, target, "IntAdder", "wIn=" + to_string(wF+4), "fracAdder", "X=>fracXfar Y=>fracYfarXorOp Cin=>cInAddFar", "", "R=>fracAddResult");
+		fracAddFar = newInstance("IntAdder", "fracAdder", "wIn=" + to_string(wF+4), "X=>fracXfar Y=>fracYfarXorOp Cin=>cInAddFar R=>fracAddResult");
 		//fracAddFar = IntAdder::newInstance(this, "X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar", "", "R=>fracAddResult", target, wF+4, inDelayMap("X", getCriticalPath()));
 		//fracAddFar = new IntAdder(target,wF+4, inDelayMap("X", getCriticalPath()));
 		//addSubComponent(fracAddFar);
@@ -257,7 +257,7 @@
 		//incremented exponent.
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
-		lzocs = (LZOCShifterSticky*) UserInterface::newInstance(this, target, "LZOCShifterSticky", "wIn=" + to_string(wF+5) + " wOut=" + to_string(wF+5) + " wCount=" + to_string(intlog2(wF+5)) + " computeSticky=false countType=0", "LZC_component", "I=>fracGRS", "", "Count=>nZerosNew O=>shiftedFrac");
+		lzocs = (LZOCShifterSticky*) newInstance("LZOCShifterSticky", "LZC_component", "wIn=" + to_string(wF+5) + " wOut=" + to_string(wF+5) + " wCount=" + to_string(intlog2(wF+5)) + " computeSticky=false countType=0", "I=>fracGRS Count=>nZerosNew O=>shiftedFrac");
 
 		//lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
 		//addSubComponent(lzocs);
@@ -310,7 +310,7 @@
 
 		//IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
 		//IntAdder *ra = IntAdder::newInstance(this, "X=>expFrac,Cin=>addToRoundBit,", "Y=>" + zg(wE+2+wF+1,0) + ",", "R=>RoundedExpFrac,", target, wE+2+wF+1, inDelayMap("X", getCriticalPath() ) );
-			OperatorPtr ra = UserInterface::newInstance(this, target, "IntAdder", "wIn=" + to_string(wE+2+wF+1), "roundingAdder", "X=>expFrac Cin=>addToRoundBit", "Y=>" + zg(wE+2+wF+1,0), "R=>RoundedExpFrac");
+			OperatorPtr ra = newInstance("IntAdder", "roundingAdder", "wIn=" + to_string(wE+2+wF+1), "X=>expFrac Cin=>addToRoundBit R=>RoundedExpFrac", "Y=>" + zg(wE+2+wF+1,0));
 		//addSubComponent(ra);
 
 		//inPortMap(ra,"X", "expFrac");

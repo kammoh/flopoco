@@ -87,6 +87,8 @@ public:
 	/** Retrieve a sub-operator by its name, NULL if not found */
 	OperatorPtr getSubComponent(string name);
 
+	OperatorPtr newInstance(string instanceOpName, string instanceName, string instanceOpParameters, string signals, string signalsCst = "");
+
 	
 	/** Operator Constructor.
 	 * Creates an operator instance with an instantiated target for deployment.

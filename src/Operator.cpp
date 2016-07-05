@@ -24,7 +24,7 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 #include <boost/random/uniform_int.hpp>
 
 
-namespace flopoco{
+  namespace flopoco{
 
 
 	// global variables used through most of FloPoCo,
@@ -111,6 +111,92 @@ namespace flopoco{
 		}
 		return NULL;
 	}
+
+	OperatorPtr Operator::newInstance(string instanceOpName, string instanceName, string instanceOpParameters, string signals, string signalsCst)
+	{
+		OperatorFactoryPtr instanceOpFactory = UserInterface::getFactoryByName(instanceOpName);
+
+		vector<string> parameters;
+
+		parameters.push_back(instanceOpName);
+
+		while(!instanceOpParameters.empty())
+		{
+			if(instanceOpParameters.find(" ") != string::npos)
+			{
+				parameters.push_back(instanceOpParameters.substr(0,instanceOpParameters.find(" ")));
+				instanceOpParameters.erase(0,instanceOpParameters.find(" ")+1);
+			}
+			else
+			{
+				parameters.push_back(instanceOpParameters);
+				instanceOpParameters.erase();
+			}	
+		}
+
+		OperatorPtr instance = instanceOpFactory->parseArguments(target_, parameters);
+
+		addSubComponent(instance);
+
+		vector<Signal*>::iterator itSignal;
+
+		string signal;
+
+		for(itSignal = instance->ioList_.begin(); itSignal != instance->ioList_.end(); ++itSignal)
+		{
+
+			string request = (*itSignal)->getName() + "=>";
+
+			if((*itSignal)->type() == 0)
+			{
+				if(signals.find(request) != string::npos)
+				{
+					if(signals.find(" ", signals.find(request)) != string::npos)
+					{
+						signal = signals.substr(signals.find(request) + request.size(), signals.find(" ", signals.find(request)) - (signals.find(request) + request.size()));
+					}
+					else
+					{
+						signal = signals.substr(signals.find(request) + request.size());
+					}
+					inPortMap(instance, (*itSignal)->getName(), signal);
+				}
+				else if(signalsCst.find(request) != string::npos)
+				{
+					if(signalsCst.find(" ", signalsCst.find(request)) != string::npos)
+					{
+						signal = signalsCst.substr(signalsCst.find(request) + request.size(), signalsCst.find(" ", signalsCst.find(request)) - (signalsCst.find(request) + request.size()));
+					}
+					else
+					{
+						signal = signalsCst.substr(signalsCst.find(request) + request.size());
+						
+					}
+					inPortMapCst(instance, (*itSignal)->getName(), signal);
+				}
+			}
+			else
+			{
+				if(signals.find(request) != string::npos)
+				{
+					if(signals.find(" ", signals.find(request)) != string::npos)
+					{
+						signal = signals.substr(signals.find(request) + request.size(), signals.find(" ", signals.find(request)) - (signals.find(request) + request.size()));
+					}
+					else
+					{
+						signal = signals.substr(signals.find(request) + request.size());
+					}
+					outPortMap(instance, (*itSignal)->getName(), signal);
+				}
+			}
+			
+		}
+		this->vhdl << this->instance(instance, instanceName);
+
+		return instance;
+	}
+
 
 
 
@@ -517,15 +603,15 @@ namespace flopoco{
 
 	void Operator::stdLibs(std::ostream& o){
 		o << "library ieee;"<<endl
-		  << "use ieee.std_logic_1164.all;"<<endl;
+		<< "use ieee.std_logic_1164.all;"<<endl;
 
 		if(stdLibType_==0){
 			o << "use ieee.std_logic_arith.all;"<<endl
-			  << "use ieee.std_logic_unsigned.all;"<<endl;
+			<< "use ieee.std_logic_unsigned.all;"<<endl;
 		}
 		if(stdLibType_==-1){
 			o << "use ieee.std_logic_arith.all;"<<endl
-			  << "use ieee.std_logic_signed.all;"<<endl;
+			<< "use ieee.std_logic_signed.all;"<<endl;
 		}
 		if(stdLibType_==1){
 			o << "use ieee.numeric_std.all;"<<endl;
@@ -533,16 +619,16 @@ namespace flopoco{
 		// ???
 		if(stdLibType_==2){
 			o << "use ieee.numeric_std.all;"<<endl
-			  << "use ieee.std_logic_signed.all;"<<endl;
+			<< "use ieee.std_logic_signed.all;"<<endl;
 		}
 		if(stdLibType_==3){
 			o << "use ieee.numeric_std.all;"<<endl
-			  << "use ieee.std_logic_unsigned.all;"<<endl;
+			<< "use ieee.std_logic_unsigned.all;"<<endl;
 		}
 
 		o << "library std;" << endl
-		  << "use std.textio.all;"<< endl
-		  << "library work;"<<endl<< endl;
+		<< "use std.textio.all;"<< endl
+		<< "library work;"<<endl<< endl;
 	};
 
 
@@ -596,89 +682,89 @@ namespace flopoco{
 				for (auto i: getSubComponents())
 					i->outputFinalReport(s,level+1);
 
-			ostringstream tabs, ctabs;
-			for (int i=0;i<level-1;i++){
-				tabs << "|" << tab;
-				ctabs << "|" << tab;
-			}
+				ostringstream tabs, ctabs;
+				for (int i=0;i<level-1;i++){
+					tabs << "|" << tab;
+					ctabs << "|" << tab;
+				}
 
-			if (level>0){
-				tabs << "|" << "---";
-				ctabs << "|" << tab;
-			}
+				if (level>0){
+					tabs << "|" << "---";
+					ctabs << "|" << tab;
+				}
 
-			s << tabs.str() << "Entity " << uniqueName_ << endl;
-			if(this->getPipelineDepth()!=0)
-				s << ctabs.str() << tab << "Pipeline depth = " << getPipelineDepth() << endl;
-			else
-				s << ctabs.str() << tab << "Not pipelined"<< endl;
+				s << tabs.str() << "Entity " << uniqueName_ << endl;
+				if(this->getPipelineDepth()!=0)
+					s << ctabs.str() << tab << "Pipeline depth = " << getPipelineDepth() << endl;
+				else
+					s << ctabs.str() << tab << "Not pipelined"<< endl;
+			}
 		}
-	}
 
 
-	void Operator::setCycle(int cycle, bool report) {
-		criticalPath_ = 0;
-		// lexing part
-		vhdl.flush(currentCycle_);
-		if(isSequential()) {
-			currentCycle_=cycle;
-			vhdl.setCycle(currentCycle_);
-			if(report){
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl ;
-			}
-			// automatically update pipeline depth of the operator
-			if (currentCycle_ > pipelineDepth_)
-				pipelineDepth_ = currentCycle_;
-		}
-	}
-
-	int Operator::getCurrentCycle(){
-		return currentCycle_;
-	}
-
-	void Operator::nextCycle(bool report) {
-		// lexing part
-		vhdl.flush(currentCycle_);
-
-		if(isSequential()) {
-
-			currentCycle_ ++;
-			vhdl.setCycle(currentCycle_);
-			if(report)
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
-
+		void Operator::setCycle(int cycle, bool report) {
 			criticalPath_ = 0;
+		// lexing part
+			vhdl.flush(currentCycle_);
+			if(isSequential()) {
+				currentCycle_=cycle;
+				vhdl.setCycle(currentCycle_);
+				if(report){
+					vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl ;
+				}
 			// automatically update pipeline depth of the operator
-			if (currentCycle_ > pipelineDepth_)
-				pipelineDepth_ = currentCycle_;
+				if (currentCycle_ > pipelineDepth_)
+					pipelineDepth_ = currentCycle_;
+			}
 		}
-	}
 
-	void Operator::previousCycle(bool report) {
-		// lexing part
-		vhdl.flush(currentCycle_);
-
-		if(isSequential()) {
-
-			currentCycle_ --;
-			vhdl.setCycle(currentCycle_);
-			if(report)
-				vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
-
+		int Operator::getCurrentCycle(){
+			return currentCycle_;
 		}
-	}
 
-
-	void Operator::setCycleFromSignal(string name, bool report) {
-		setCycleFromSignal(name, 0.0, report);
-	}
-
-
-	void Operator::setCycleFromSignal(string name, double criticalPath, bool report) {
+		void Operator::nextCycle(bool report) {
 		// lexing part
-		vhdl.flush(currentCycle_);
+			vhdl.flush(currentCycle_);
 
-		ostringstream e;
+			if(isSequential()) {
+
+				currentCycle_ ++;
+				vhdl.setCycle(currentCycle_);
+				if(report)
+					vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
+
+				criticalPath_ = 0;
+			// automatically update pipeline depth of the operator
+				if (currentCycle_ > pipelineDepth_)
+					pipelineDepth_ = currentCycle_;
+			}
+		}
+
+		void Operator::previousCycle(bool report) {
+		// lexing part
+			vhdl.flush(currentCycle_);
+
+			if(isSequential()) {
+
+				currentCycle_ --;
+				vhdl.setCycle(currentCycle_);
+				if(report)
+					vhdl << tab << "----------------Synchro barrier, entering cycle " << currentCycle_ << "----------------" << endl;
+
+			}
+		}
+
+
+		void Operator::setCycleFromSignal(string name, bool report) {
+			setCycleFromSignal(name, 0.0, report);
+		}
+
+
+		void Operator::setCycleFromSignal(string name, double criticalPath, bool report) {
+		// lexing part
+			vhdl.flush(currentCycle_);
+
+			ostringstream e;
 		e << srcFileName << " (" << uniqueName_ << "): ERROR in setCycleFromSignal, "; // just in case
 
 		if(isSequential()) {
@@ -839,7 +925,7 @@ namespace flopoco{
 
 
 	bool Operator::manageCriticalPath(double delay, bool report){
-				if(isSequential()) {
+		if(isSequential()) {
 #if 0 // code up to version 3.0
 					if ( target_->ffDelay() + (totalDelay) > (1.0/target_->frequency())){
 						nextCycle(report); //TODO Warning
@@ -861,15 +947,15 @@ namespace flopoco{
 							nextCycle(); // this resets criticalPath. Therefore, if we entered the loop, CP=0 when we exit
 							totalDelay -= (1.0/target_->frequency()) + target_->ffDelay();
 							// cout << " after one nextCycle total delay =" << totalDelay << endl;
-					}
-					return true;
+						}
+						return true;
 #endif
+					}
+					else {
+						criticalPath_ += delay;
+						return false;
+					}
 				}
-				else {
-					criticalPath_ += delay;
-					return false;
-				}
-	}
 
 
 	double Operator::getOutputDelay(string s) {return outDelayMap[s];}  // TODO add checks
@@ -944,23 +1030,23 @@ namespace flopoco{
 			May zero-extend, sign-extend, or truncate.
 			Warns at high debug levels when truncating. Warns at all levels when truncating MSBs.
 	 */
-	void  Operator::resizeFixPoint(string lhsName, string rhsName, const int MSB, const int LSB, const int indentLevel){
-		Signal* rhsSignal=getSignalByName(rhsName);
-		bool isSigned = rhsSignal->isFixSigned();
-		int oldMSB = rhsSignal->MSB();
-		int oldLSB = rhsSignal->LSB();
-		REPORT(DEBUG, "Resizing signal " << rhsName << " from (" << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")");
+			void  Operator::resizeFixPoint(string lhsName, string rhsName, const int MSB, const int LSB, const int indentLevel){
+				Signal* rhsSignal=getSignalByName(rhsName);
+				bool isSigned = rhsSignal->isFixSigned();
+				int oldMSB = rhsSignal->MSB();
+				int oldLSB = rhsSignal->LSB();
+				REPORT(DEBUG, "Resizing signal " << rhsName << " from (" << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")");
 
-		for (int i=0; i<indentLevel; i++)
-			vhdl << tab;
-		vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB) << " <= ";
+				for (int i=0; i<indentLevel; i++)
+					vhdl << tab;
+				vhdl << declareFixPoint(lhsName, isSigned, MSB, LSB) << " <= ";
 
 		// Cases (old is input, new is output)
 	//            1            2W             3W        4         5E         6 E
 		// Old:      ooooooo   oooooooo      oooooooooo    oooo     ooo               ooo
 		// New:  nnnnnnnn        nnnnnnnn     nnnnnn      nnnnnnn       nnnn      nnn
 
-		bool paddLeft, paddRight;
+				bool paddLeft, paddRight;
 		int m,l, paddLeftSize, paddRightSize, oldSize; 	// eventually we take the slice m downto l of the input bit vector
 
 		paddLeft      = MSB>oldMSB;
@@ -1063,7 +1149,7 @@ namespace flopoco{
 			//return s->delayedName( currentCycle_ - s->getCycle() );
 			return s->delayedName( delay );
 		}else
-			return name;
+		return name;
 	}
 
 	#endif
@@ -1244,10 +1330,10 @@ namespace flopoco{
 				//cout << "its = " << (*it).second << "  " << endl;
 				rhs = getDelayedSignalByName((*it).second);
 				if (rhs->isFix() && !outputSignal){
-						rhsString = std_logic_vector((*it).second);
-					}
+					rhsString = std_logic_vector((*it).second);
+				}
 				else {
-						rhsString = (*it).second;
+					rhsString = (*it).second;
 				}
 
 			}
@@ -1457,103 +1543,103 @@ namespace flopoco{
 						for(int j=1; j <= s->getLifeSpan(); j++)
 							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 					}
-			}
-			for(unsigned int i=0; i<ioList_.size(); i++) {
-				Signal *s = ioList_[i];
-				if(s->getLifeSpan() >0) {
-					for(int j=1; j <= s->getLifeSpan(); j++)
-						o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 				}
-			}
-			if (isRecirculatory() || hasClockEnable())
-				o << tab << tab << tab << tab << "end if;" << endl;
-			o << tab << tab << tab << "end if;\n";
-			o << tab << tab << "end process;\n";
-
-			// then registers with asynchronous reset
-			if (hasRegistersWithAsyncReset_) {
-				o << tab << "process(clk, rst)" << endl;
-				o << tab << tab << "begin" << endl;
-				o << tab << tab << tab << "if rst = '1' then" << endl;
-				for(unsigned int i=0; i<signalList_.size(); i++) {
-					Signal *s = signalList_[i];
-					if (s->type() == Signal::registeredWithAsyncReset)
-						if(s->getLifeSpan() >0) {
-							for(int j=1; j <= s->getLifeSpan(); j++){
-								if ( (s->width()>1) || (s->isBus()))
-									o << tab << tab <<tab << tab << s->delayedName(j) << " <=  (others => '0');" << endl;
-								else
-									o << tab <<tab << tab << tab << s->delayedName(j) << " <=  '0';" << endl;
-							}
-						}
-				}
-				o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
-				if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
-				else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-				for(unsigned int i=0; i<signalList_.size(); i++) {
-					Signal *s = signalList_[i];
-					if (s->type() == Signal::registeredWithAsyncReset)
-						if(s->getLifeSpan() >0) {
-							for(int j=1; j <= s->getLifeSpan(); j++)
-								o << recTab << tab <<tab << tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
-						}
-				}
-			if (isRecirculatory() || hasClockEnable())
-				o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << "end if;" << endl;
-				o << tab << tab <<"end process;" << endl;
-			}
-
-			// then registers with synchronous reset
-			if (hasRegistersWithSyncReset_) {
-				o << tab << "process(clk, rst)" << endl;
-				o << tab << tab << "begin" << endl;
-				o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-				o << tab << tab << tab << tab << "if rst = '1' then" << endl;
-				for(unsigned int i=0; i<signalList_.size(); i++) {
-					Signal *s = signalList_[i];
-					if (s->type() == Signal::registeredWithSyncReset)
-						if(s->getLifeSpan() >0) {
-							for(int j=1; j <= s->getLifeSpan(); j++){
-								if ( (s->width()>1) || (s->isBus()))
-									o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  (others => '0');" << endl;
-								else
-									o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  '0';" << endl;
-							}
-						}
-				}
-				o << tab << tab << tab << tab << "else" << endl;
-				if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
-				else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-				for(unsigned int i=0; i<signalList_.size(); i++) {
-					Signal *s = signalList_[i];
-					if (s->type() == Signal::registeredWithSyncReset)
-						if(s->getLifeSpan() >0) {
-							for(int j=1; j <= s->getLifeSpan(); j++)
-								o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
-						}
+				for(unsigned int i=0; i<ioList_.size(); i++) {
+					Signal *s = ioList_[i];
+					if(s->getLifeSpan() >0) {
+						for(int j=1; j <= s->getLifeSpan(); j++)
+							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+					}
 				}
 				if (isRecirculatory() || hasClockEnable())
 					o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << "end process;" << endl;
-			}
-		}
-		return o.str();
-	}
+				o << tab << tab << tab << "end if;\n";
+				o << tab << tab << "end process;\n";
+
+			// then registers with asynchronous reset
+				if (hasRegistersWithAsyncReset_) {
+					o << tab << "process(clk, rst)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if rst = '1' then" << endl;
+					for(unsigned int i=0; i<signalList_.size(); i++) {
+						Signal *s = signalList_[i];
+						if (s->type() == Signal::registeredWithAsyncReset)
+							if(s->getLifeSpan() >0) {
+								for(int j=1; j <= s->getLifeSpan(); j++){
+									if ( (s->width()>1) || (s->isBus()))
+										o << tab << tab <<tab << tab << s->delayedName(j) << " <=  (others => '0');" << endl;
+									else
+										o << tab <<tab << tab << tab << s->delayedName(j) << " <=  '0';" << endl;
+								}
+							}
+						}
+						o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
+						if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
+						else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+						for(unsigned int i=0; i<signalList_.size(); i++) {
+							Signal *s = signalList_[i];
+							if (s->type() == Signal::registeredWithAsyncReset)
+								if(s->getLifeSpan() >0) {
+									for(int j=1; j <= s->getLifeSpan(); j++)
+										o << recTab << tab <<tab << tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+								}
+							}
+							if (isRecirculatory() || hasClockEnable())
+								o << tab << tab << tab << tab << "end if;" << endl;
+							o << tab << tab << tab << "end if;" << endl;
+							o << tab << tab <<"end process;" << endl;
+						}
+
+			// then registers with synchronous reset
+						if (hasRegistersWithSyncReset_) {
+							o << tab << "process(clk, rst)" << endl;
+							o << tab << tab << "begin" << endl;
+							o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
+							o << tab << tab << tab << tab << "if rst = '1' then" << endl;
+							for(unsigned int i=0; i<signalList_.size(); i++) {
+								Signal *s = signalList_[i];
+								if (s->type() == Signal::registeredWithSyncReset)
+									if(s->getLifeSpan() >0) {
+										for(int j=1; j <= s->getLifeSpan(); j++){
+											if ( (s->width()>1) || (s->isBus()))
+												o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  (others => '0');" << endl;
+											else
+												o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  '0';" << endl;
+										}
+									}
+								}
+								o << tab << tab << tab << tab << "else" << endl;
+								if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
+								else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+								for(unsigned int i=0; i<signalList_.size(); i++) {
+									Signal *s = signalList_[i];
+									if (s->type() == Signal::registeredWithSyncReset)
+										if(s->getLifeSpan() >0) {
+											for(int j=1; j <= s->getLifeSpan(); j++)
+												o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+										}
+									}
+									if (isRecirculatory() || hasClockEnable())
+										o << tab << tab << tab << tab << "end if;" << endl;
+									o << tab << tab << tab << tab << "end if;" << endl;
+									o << tab << tab << tab << "end if;" << endl;
+									o << tab << tab << "end process;" << endl;
+								}
+							}
+							return o.str();
+						}
 
 
-	void Operator::outputClock_xdc(){
-		ofstream file; 
-		file.open("/tmp/clock.xdc", ios::out);
-		file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
-		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency())
+						void Operator::outputClock_xdc(){
+							ofstream file; 
+							file.open("/tmp/clock.xdc", ios::out);
+							file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
+							file << "create_clock -name clk -period "  << (1.0e9/target_->frequency())
 			// << "  [get_ports clk]"
-				 << endl;
-		for(auto i: ioList_) {
-			if(i->type()==Signal::in)
-				file << "set_input_delay ";
+							<< endl;
+							for(auto i: ioList_) {
+								if(i->type()==Signal::in)
+									file << "set_input_delay ";
 			else // should be output
 				file << "set_output_delay ";
 			file <<	"-clock clk 0 [get_ports " << i->getName() << "]" << endl;
@@ -1742,7 +1828,7 @@ namespace flopoco{
 			signalList_ = op->signalList_;
 			subComponents_ = op->subComponents_;
 			ioList_ = op->ioList_;
-		 }
+		}
 	}
 
 	void Operator::cleanup(vector<Operator*> *ol, Operator* op){
@@ -1843,7 +1929,7 @@ namespace flopoco{
 		string align = "--";
 		// - 2 for the two spaces
 		for (unsigned i = 2; i < (lineLength - 2- comment.size()) / 2; i++) align += "-";
-		vhdl << align << " " << comment << " " << align << endl;
+			vhdl << align << " " << comment << " " << align << endl;
 	}
 
 

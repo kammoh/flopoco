@@ -114,8 +114,6 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
 		/** generates the code for operators in globalOpList, and all their subcomponents */
 				static void outputVHDLToFile(ofstream& file);
-
-				static OperatorPtr newInstance(Operator * op, Target * target, string instanceOpName, string instanceOpParameters, string instanceName, string inputSignal, string inputCst, string output);
 				
 
 
