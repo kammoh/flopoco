@@ -77,6 +77,7 @@ int main(int argc, char* argv[] )
 		BasicPolyApprox::registerFactory();
 		PiecewisePolyApprox::registerFactory();
 		FixRealKCM::registerFactory();
+		FixComplexKCM::registerFactory();
 		TestBench::registerFactory();
 		Wrapper::registerFactory();
 		FPAdd::registerFactory();

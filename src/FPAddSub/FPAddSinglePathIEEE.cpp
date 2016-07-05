@@ -390,6 +390,8 @@
 					else
 						mpfr_add(r, x, y, GMP_RNDN);
 
+					//double d=mpfr_get_d(r, GMP_RNDN);
+					//cout << "R=" << d << endl;
 		// Set outputs
 					IEEENumber  ieeer(wE, wF, r);
 					mpz_class svR = ieeer.getSignalValue();
