@@ -186,6 +186,14 @@ namespace flopoco{
 		signalsToSchedule.push_back(s);
 	}
 
+	void Operator::addInput(const std::string name) {
+		addInput(name, 1, false);
+	}
+
+	void Operator::addInput(const char* name) {
+		addInput(name, 1, false);
+	}
+
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {

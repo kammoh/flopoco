@@ -161,13 +161,9 @@ public:
 	 * 	Adds a signal of type Signal::in to the the I/O signal list.
 	 * @param name  the name of the signal
 	 */
-	void addInput  (const std::string name) {
-		addInput (name, 1, false);
-	}
+	void addInput  (const std::string name);
 
-	void addInput (const char* name) {
-		addInput (name, 1, false);
-	}
+	void addInput (const char* name);
 
 	/**
 	 * Adds  signal to the operator.
