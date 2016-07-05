@@ -174,7 +174,7 @@ namespace flopoco{
 																		 lsbIn[i],
 																		 lsbOut,   // output LSB weight we want -- this is tentative
 																		 coeff[i], // pass the string unmodified
-																		 false,    //  computeRounding -- TODO minor optim here
+																		 i==0,    //   the first KCM adds the round bit
 																		 targetUlpError
 																		 );
 			kcm.push_back(m);
@@ -203,13 +203,8 @@ namespace flopoco{
 				kcm[i]->addToBitHeap(bitHeap, g);
 			}
 
-#if 0 // TODO FIXME
-			//add rounding bit if necessary
-			if(addFinalRoundBit)
-				//only add the round bit if there were roundings performed
-				if(g+guardBitsKCM > 0)
-					bitHeap->addConstantOneBit(g+guardBitsKCM-1);
-#endif
+			// The rounding bit is incorporated into the KCMs
+
 			//compress the bitheap
 			bitHeap -> generateCompressorVHDL();
 
