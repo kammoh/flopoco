@@ -1005,19 +1005,11 @@ namespace flopoco {
 				tSS = new SmallMultTable( target, dx, dy, dx+dy, false, true, true );
 				addToGlobalOpList(tSS);
 			}
-
-			REPORT(FULL, "Goodness gracious 1 CP=" << getCriticalPath());
 			setCycle(0); // TODO FIXME for the virtual multiplier case where inputs can arrive later
-			REPORT(FULL, "Goodness gracious 2 CP=" << getCriticalPath());
-
-			REPORT(FULL, "Goodness gracious 3" << getCriticalPath());
 
 			// SmallMultTable is built to cost this:
-			REPORT(FULL, "Goodness gracious4");
 			double delay=  parentOp->getTarget()->localWireDelay(chunksX) + parentOp->getTarget()->lutDelay();
-			REPORT(FULL, "Goodness gracious5 delay= "<< delay );
 			manageCriticalPath( delay) ;
-			REPORT(FULL, "Goodness gracious6");
 			for (int iy=0; iy<chunksY; iy++)
 			{
 				vhdl << tab << "-- Partial product row number " << iy << endl;
