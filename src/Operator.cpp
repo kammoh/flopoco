@@ -182,6 +182,9 @@ namespace flopoco{
 		//add the signal to the global signal list
 		signalMap_[name] = s;
 
+		//connect the input signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
+
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
 	}
@@ -210,6 +213,9 @@ namespace flopoco{
 		numberOfOutputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//connect the output signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
 
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
@@ -244,6 +250,10 @@ namespace flopoco{
 		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
 		numberOfInputs_ ++;
+
+		//connect the input signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
+
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
 
@@ -265,10 +275,14 @@ namespace flopoco{
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
 		numberOfOutputs_ ++;
+
+		//connect the output signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
+
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
 
-		//add the sinal to the list of signals to be scheduled
+		//add the signal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
@@ -295,6 +309,9 @@ namespace flopoco{
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
 
+		//connect the input signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
+
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
 	}
@@ -315,6 +332,9 @@ namespace flopoco{
 		numberOfOutputs_ ++;
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
+
+		//connect the output signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
 			testCaseSignals_.push_back(s);
@@ -343,6 +363,9 @@ namespace flopoco{
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
 
+		//connect the input signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
+
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
 	}
@@ -364,6 +387,9 @@ namespace flopoco{
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
 
+		//connect the output signal just created, if this is a subcomponent
+		connectIOFromPortMap(s);
+
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
 
@@ -378,6 +404,9 @@ namespace flopoco{
 		map<std::string, Signal*>::iterator itStart, itEnd;
 
 		//TODO: add ore checks here
+		//if this is a global operator, then there is nothing to be done
+		if(parentOp_ == nullptr)
+			return;
 		//check that ioSignal is really an I/O signal
 		if((ioSignal->type() != Signal::in) || (ioSignal->type() != Signal::out))
 			//THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
