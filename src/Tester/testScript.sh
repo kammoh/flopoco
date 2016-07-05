@@ -35,4 +35,5 @@ if grep 'gtkwave' temp > /dev/null; then
 	fi
 else
 	echo 'VHDL not generated' >> ../$1/report
+	cat temp >> ../$1/messages
 fi
