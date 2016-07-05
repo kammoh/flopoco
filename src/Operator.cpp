@@ -1555,38 +1555,6 @@ namespace flopoco{
 			opCpy = op;
 		}
 
-		//TODO: disabled for the new new pipeline
-		//		this should already have been done by addInput and addOutput
-		/*
-		//update the signals to take into account the input and output port maps
-		//	update the inputs
-		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
-		{
-			//add componentPortName as a successor of actualSignalName,
-			// and actualSignalName as a predecessor of componentPortName
-			opCpy->getSignalByName(it->first)->addPredecessor(it->second, 0);
-			it->second->addSuccessor(opCpy->getSignalByName(it->first), 0);
-
-			//input ports connected to constant signals do not need scheduling
-			if(it->second->type() == Signal::constant)
-			{
-				opCpy->getSignalByName(it->first)->setCycle(0);
-				opCpy->getSignalByName(it->first)->setCriticalPath(0.0);
-				opCpy->getSignalByName(it->first)->setCriticalPathContribution(0.0);
-				opCpy->getSignalByName(it->first)->setHasBeenImplemented(true);
-			}
-		}
-
-		//	update the outputs
-		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
-		{
-			//add componentPortName as a predecessor of actualSignalName,
-			// and actualSignalName as a successor of componentPortName
-			opCpy->getSignalByName(it->first)->addSuccessor(it->second, 0);
-			it->second->addPredecessor(opCpy->getSignalByName(it->first), 0);
-		}
-		*/
-
 		//add the operator to the subcomponent list/map
 		subComponentList_.push_back(opCpy);
 
