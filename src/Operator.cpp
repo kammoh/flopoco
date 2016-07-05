@@ -2518,6 +2518,9 @@ namespace flopoco{
 				//add the dependences
 				lhs->addPredecessor(rhs, delay);
 				rhs->addSuccessor(lhs, delay);
+				//mark the signals as needing to be scheduled (possibly again)
+				lhs->setHasBeenImplemented(false);
+				rhs->setHasBeenImplemented(false);
 				//remove the current entry from the unresolved dependence table
 				unresolvedDependenceTable.erase(it);
 				//add the signals to the list of signals to be scheduled
@@ -2671,9 +2674,8 @@ namespace flopoco{
 		{
 			Signal *currentSignal = signalsToSchedule[i];
 
-			//schedule the current input signal
-			if(currentSignal->type() == Signal::in)
-				setSignalTiming(currentSignal);
+			//schedule the current signal
+			setSignalTiming(currentSignal);
 		}
 
 		//start the schedule on the children of the inputs
