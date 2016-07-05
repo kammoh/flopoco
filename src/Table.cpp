@@ -139,8 +139,10 @@ namespace flopoco{
 	// We have to define this method because the constructor of Table cannot use the (pure virtual) function()
 	// If the table has internal pipeline registers, they must be managed manually here and it is a pain
 
-	//this version is currently disabled because it doesn't allow for tables implemented as BRAMs
-	/*
+
+#if 1
+	// At some point this comment was written:
+	// this version is currently disabled because it doesn't allow for tables implemented as BRAMs
 	void Table::outputVHDL(std::ostream& o, std::string name) {
 
 		licence(o);
@@ -179,9 +181,9 @@ namespace flopoco{
 
 		endArchitecture(o);
 	}
-	*/
 
-	//old version -- just for testing
+#else 	//old version, xilinx-specific and  -- just for testing. Doesn't work for FPExp 11 52
+
 	void Table::outputVHDL(std::ostream& o, std::string name)
 	{
 		licence(o);
@@ -277,8 +279,14 @@ namespace flopoco{
 			beginArchitecture(o);
 
 			if (maxIn-minIn <= 256 && wOut>36){
-				o << "Z0 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '1' & X;"<<endl;
-				o << "Z1 <= " << zg(8-wIn) << (wIn>7 ? " &" : "") << " '0' & X;"<<endl;
+				o << "Z0 <= " ;
+				if(wIn<8)
+					o <<  zg(8-wIn) <<  " & ";
+				o << " '1' & X;"<<endl;
+				o << "Z1 <= ";
+				if(wIn<8)
+					o << zg(8-wIn) <<  " & ";
+				o << " '0' & X;"<<endl;
 			}
 
 			if(isSequential()){
@@ -304,7 +312,7 @@ namespace flopoco{
 
 		endArchitecture(o);
 	}
-
+#endif
 
 	int Table::size_in_LUTs() {
 		return wOut*int(intpow2(wIn-getTarget()->lutInputs()));
