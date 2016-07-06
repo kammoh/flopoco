@@ -265,7 +265,7 @@ namespace flopoco{
 				d=2; 
 				k=9;
 
-				if (wF<30){
+				if (wF<32){
 					d=1;
 					k=9;
 				}
