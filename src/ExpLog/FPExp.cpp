@@ -293,8 +293,8 @@ namespace flopoco{
 			sizeExpZmZm1 = wF+g - 2*k +1;
 			sizeExpZm1 = sizeZ+1; // 
 			sizeMultIn = sizeZ; // sacrificing accuracy where it costs
+			REPORT(DETAILED, "k=" << k << " d=" << d);
 			REPORT(DETAILED, "g=" << g);
-			REPORT(DETAILED, "k=" << k);
 			REPORT(DETAILED, "sizeY=" << sizeY);		
 			REPORT(DETAILED, "sizeExpY=" << sizeExpY);		
 			REPORT(DETAILED, "sizeZ=" << sizeZ);
@@ -1038,7 +1038,7 @@ namespace flopoco{
 			"", // seeAlso
 			"wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits;  \
-			d(int)=0: degree of the polynomial; \
+			d(int)=0: degree of the polynomial. 0 choses a sensible default.; \
 			k(int)=0: input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.;\
 			g(int)=-1: number of guard bits",
 			"Parameter d and k control the DSP/RamBlock tradeoff. In both cases, a value of 0 choses a sensible default. Parameter g is mostly for internal use.<br> For all the details, see <a href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this article</a>.",
