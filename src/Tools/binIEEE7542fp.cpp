@@ -194,7 +194,59 @@ int main(int argc, char* argv[] )
     break;
     
     case 2: // Subnormal case
-      cout<< "Cas sous-normal";
+    {
+      mpfr_t sig, one, two;
+      mpfr_init2(one, 2);
+      mpfr_set_d(one, 1.0, GMP_RNDN);
+      mpfr_init2(two, 2);
+      mpfr_set_d(two, 2.0, GMP_RNDN);
+
+      mpfr_init2(sig, wF+1);
+      mpfr_set_d(sig, 0.0, GMP_RNDN); // this will be the implicit zero
+
+      p=x+1+wE;//----------------------------------------------------------------------------------//
+      for (int i=0; i< wF; i++) {
+        mpfr_mul(sig, sig, two, GMP_RNDN);
+        if (*p=='1') {
+          mpfr_add(sig, sig, one, GMP_RNDN);
+        }
+        p++;
+      }
+
+      // set sign
+      if(x[0]=='1')
+        mpfr_neg(sig, sig, GMP_RNDN);
+
+      // bring back between 1 and 2: multiply by 2^-wF
+      mpfr_mul_2si (sig, sig, -(wF-1), GMP_RNDN);
+
+      // exponent
+      int exp=0;
+      p=x+1;
+      for (int i=0; i< wE; i++) {
+        exp = exp<<1;
+        if (*p=='1') {
+          exp+=1;
+        }
+        p++;
+      }
+      // subtract bias
+      exp -= ((1<<(wE-1)) -1);
+
+      // scale sig according to exp
+      mpfr_mul_2si (sig, sig, exp, GMP_RNDN);
+
+      // output on enough bits
+      mpfr_out_str (0, // std out
+        10, // base
+        0, // enough digits so that number may be read back
+        sig, 
+        GMP_RNDN);
+
+      mpfr_clear(one);
+      mpfr_clear(two);
+      mpfr_clear(sig);
+    }
     break;
     
     case 3: // Infinity case

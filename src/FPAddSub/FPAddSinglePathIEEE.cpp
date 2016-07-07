@@ -124,44 +124,32 @@
 		//break down the signals
 		vhdl << tab << declare("expX",wE) << "<= newX"<<range(wE+wF-1,wF)<<";"<<endl;
 		vhdl << tab << declare("expY",wE) << "<= newY"<<range(wE+wF-1,wF)<<";"<<endl;
-		/*vhdl << tab << declare("excX",2)  << "<= newX"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vhdl << tab << declare("excY",2)  << "<= newY"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;*/	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vhdl << tab << declare("signX")   << "<= newX"<<of(wE+wF)<<";"<<endl;
 		vhdl << tab << declare("signY")   << "<= newY"<<of(wE+wF)<<";"<<endl;
-		//vhdl << tab << declare("signXY", 2)   << "<= signX & signY;"<<endl;
 		vhdl << tab << declare("EffSub") << " <= signX xor signY;"<<endl;
-		/*vhdl << tab << declare("sXsYExnXY",6) << " <= signX & signY & excX & excY;"<<endl;*/ 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		/*vhdl << tab << declare("sXsYExpXY",2+2*wE)<<"<= signXY & expX & expY;"<<endl;*/  //xxxxxxxxxxxxxxxxxxxxxxxxxxx
-		/*vhdl << tab << declare("sdExnXY",4) << " <= excX & excY;"<<endl;*/  	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vhdl << tab << declare("ExpXY",2*wE)<<"<= expX & expY;"<<endl;
 		manageCriticalPath(target->localWireDelay()+ target->lutDelay());
-		vhdl << tab << declare("fracY",wF+1) << " <= "<< zg(wF+1)<<" when expY="<<zg(wE)<<" else ('1' & newY("<<wF-1<<" downto 0));"<<endl; 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	 	vhdl <<tab<<declare("subNormX") << "<= '1' when expX="<<zg(wE)<<" and newX"<<range(wF-1,0)<<"/="<<zg(wF)<<" else '0';"<<endl;
+	 	vhdl <<tab<<declare("subNormY") << "<= '1' when expY="<<zg(wE)<<" and newY"<<range(wF-1,0)<<"/="<<zg(wF)<<" else '0';"<<endl;
+
+		vhdl << tab << declare("fracY",wF+1) << " <= "<< zg(wF+1)<<" when expY="<<zg(wE)<<" and subNormY='0' else (not(subNormY) & newY("<<wF-1<<" downto 0));"<<endl; 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		double cpfracY = getCriticalPath();
 
 
 
 		//exception bits: need to be updated but for not FIXME
 		manageCriticalPath(target->localWireDelay()+2*target->lutDelay());
-		/*vhdl <<tab<<"with sXsYExpXY select "<<endl;																								//xxxxxxxxxxxxxxxxxxxxxxxxxx
-		vhdl <<tab<<declare("excRtmp",2) << " <= \"00\" when \"00"<<zg(2*wE, 1) <<"|\"01"<<zg(2*wE, 1)<<"|\"10"<<zg(2*wE, 1)<<"|\"11"<<zg(2*wE, 1)<<","<<endl
-			 		<<tab<<tab<<"\"11\" when \"00"<<zg(wE, -2)<<og(wE, 1)<<"|\"01"<<zg(wE, -2)<<og(wE, 1)<<"|\"10"<<zg(wE, -2)<<og(wE, 1)<<"|\"11"<<zg(wE, -2)<<og(wE, 1)
-																<<"|\"00"<<og(wE, -2)<<zg(wE, 1)<<"|\"01"<<og(wE, -2)<<zg(wE, 1)<<"|\"10"<<og(wE, -2)<<zg(wE, 1)<<"|\"11"<<og(wE, -2)<<zg(wE, 1)				 											
-																<<"|\"00"<<og(2*wE, 1)<<"|\"01"<<og(2*wE, 1)<<"|\"10"<<og(2*wE, 1)<<"|\"11"<<og(2*wE, 1)<<","<<endl
-				 <<tab<<tab<<"\"01\" when others;"<<endl;		 
-		vhdl <<tab<<declare("excRt",2) << "<= \"10\" when excRtmp=\"11\" and newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"				//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-																									<<range(wF-1,0)<<"="<<zg(wF-1)<<" and (signXY=\"01\" or signXY=\"10\") else excRtmp;"<<endl;*/
-		vhdl <<tab<<"with ExpXY select "<<endl;																								//xxxxxxxxxxxxxxxxxxxxxxxxxx
+		vhdl <<tab<<"with ExpXY select "<<endl;
 		vhdl <<tab<<declare("excRtmp",2) << " <= \"00\" when "<<zg(2*wE)<<","<<endl
 		<<tab<<tab<<"\"10\" when "<<zg(wE, -1)<<og(wE, 1)<<"|"<<og(wE, -1)<<zg(wE, 1)<<"|"<<og(2*wE)<<","<<endl
 		<<tab<<tab<<"\"01\" when others;"<<endl;
 		vhdl <<tab<<declare("excRtmp2",2) << "<= \"10\" when excRtmp=\"01\" and (expX="<<og(wE)<<" or expY="<<og(wE)<<") else excRtmp;"<<endl;
-	 	vhdl <<tab<<declare("excRt",2) << "<= \"11\" when excRtmp2=\"10\" and ((newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"				//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-	 	<<range(wF-1,0)<<"="<<zg(wF)<<" and signX/=signY)"
-	 	<< " or (newX"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expX="<<og(wE)<<")"
-	 	<< " or (newY"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expY="<<og(wE)<<")) else excRtmp2;"<<endl;
+	 	vhdl <<tab<<declare("excRt",2) << "<= \"11\" when excRtmp2=\"10\" and ((newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"
+																									 	<<range(wF-1,0)<<"="<<zg(wF)<<" and signX/=signY)"
+																									 	<< " or (newX"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expX="<<og(wE)<<")"
+																									 	<< " or (newY"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expY="<<og(wE)<<")) else excRtmp2;"<<endl;
 	 	manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		/*vhdl <<tab<<declare("signR") << "<= '0' when (sXsYExpXY=\"10"<<zg(2*wE,1)<<" or sXsYExpXY=\"01"<<zg(2*wE,1)<<") else signX;"<<endl;*/ 	//xxxxxxxxxxxxxxxxxxxxxxx
-	 	vhdl <<tab<<declare("signR") << "<= '0' when ExpXY="<<zg(2*wE)<<" and signX/=signY else signX;"<<endl;
+		vhdl <<tab<<declare("signR") << "<= '0' when ExpXY="<<zg(2*wE)<<" and signX/=signY else signX;"<<endl;
 
 	 	setCycleFromSignal("swap");;
 	 	if ( getCycleFromSignal("eYmeX") == getCycleFromSignal("swap") )
@@ -228,7 +216,8 @@
 		vhdl<<tab<< declare("EffSubVector", wF+4) << " <= ("<<wF+3<<" downto 0 => EffSub);"<<endl;
 		vhdl<<tab<< declare("fracYfarXorOp", wF+4) << " <= fracYfar xor EffSubVector;"<<endl;
 		//pad fraction of X [overflow][inplicit 1][fracX][guard bits]
-		vhdl<<tab<< declare("fracXfar", wF+4)      << " <= \"01\" & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
+
+		vhdl<<tab<< declare("fracXfar", wF+4)      << " <= '0' & not(subNormX) & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
 
 		if (getCycleFromSignal("sticky")==getCycleFromSignal("fracXfar"))
 			setCriticalPath( max (cpsticky, getCriticalPath()) );
@@ -332,23 +321,17 @@
 			vhdl << tab << declare("expR",wE) <<" <= RoundedExpFrac"<<range(wF+wE,wF+1)<<";"<<endl;
 
 			manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;   	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		/*vhdl << tab << "with (exExpExc) select "<<endl;                        	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vhdl << tab << declare("excRt2",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
-				 <<tab<<tab<<"\"01\" when \"0001\","<<endl
-				 <<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
-				 <<tab<<tab<<"\"11\" when others;"<<endl;*/
-		vhdl << tab << "with (exExpExc) select "<<endl;                        	//+++++++++++++++++++++++++++++++++++
+		vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
+		vhdl << tab << "with (exExpExc) select "<<endl;
 		vhdl << tab << declare("expRt",wE) << "<= "<<zg(wE)<<" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
 		<<tab<<tab<<"expR when \"0001\","<<endl
 		<<tab<<tab<<og(wE)<<" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
 		<<tab<<tab<<og(wE)<<" when others;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		/*vhdl<<tab<<declare("excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;*/	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl; ///++++++++++++++++++++
-		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt2="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  ///++++++++++++++++++++
+		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl; 
+		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt2="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  
 		<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or exExpExc=\"0001\") else fracR;"<<endl;
-		vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt2="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  ///++++++++++++++++++++
+		vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt2="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  
 		<< "and exExpExc/=\"1110\" and exExpExc/=\"0101\" and exExpExc/=\"0001\" else fracRt;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
 		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') or (fracRt2="<<og(wF)<<" and expRt2="<<og(wE)<<") else signR;"<<endl;
@@ -409,8 +392,21 @@
 					TestCase *tc;
 
 					tc = new TestCase(this);
-					tc->addIEEEInput("X", 3.4028235e38);
-					tc->addIEEEInput("Y", 3.4028235e38);
+					tc->addIEEEInput("X", IEEENumber::plusZero);
+					tc->addIEEEInput("Y", 2.8e-45);
+					emulate(tc);
+					tcl->add(tc);
+
+					
+					tc = new TestCase(this);
+					tc->addIEEEInput("X", 2.4E-44);
+					tc->addIEEEInput("Y", 2.8e-45);
+					emulate(tc);
+					tcl->add(tc);
+
+					tc = new TestCase(this);
+					tc->addIEEEInput("X", IEEENumber::greatestNormal);
+					tc->addIEEEInput("Y", IEEENumber::greatestNormal);
 					emulate(tc);
 					tcl->add(tc);
 
@@ -469,33 +465,9 @@
 					emulate(tc);
 					tcl->add(tc);
 
-					tc = new TestCase(this);
+					 tc = new TestCase(this);
 					tc->addIEEEInput("X", -4.375e1);
 					tc->addIEEEInput("Y", 4.375e1);
-					emulate(tc);
-					tcl->add(tc);
-
-					tc = new TestCase(this);
-					tc->addIEEEInput("X", 3.4028235e38);
-					tc->addIEEEInput("Y", 3.4028235e38);
-					emulate(tc);
-					tcl->add(tc);
-
-					tc = new TestCase(this);
-					tc->addIEEEInput("X", 1.1754945e-38);
-					tc->addIEEEInput("Y", 1.1754945e-38);
-					emulate(tc);
-					tcl->add(tc);
-
-					tc = new TestCase(this);
-					tc->addIEEEInput("X", IEEENumber::NaN);
-					tc->addIEEEInput("Y", IEEENumber::NaN);
-					emulate(tc);
-					tcl->add(tc);
-
-					tc = new TestCase(this);
-					tc->addIEEEInput("X", IEEENumber::plusZero);
-					tc->addIEEEInput("Y", IEEENumber::minusZero);
 					emulate(tc);
 					tcl->add(tc);
 
@@ -503,49 +475,51 @@
 
 
 
-				TestCase* FPAddSinglePathIEEE::buildRandomTestCase(int i){
+		TestCase* FPAddSinglePathIEEE::buildRandomTestCase(int i){
 
-					TestCase *tc;
-					mpz_class x,y;
-					mpz_class normalExn = mpz_class(1)<<(wE+wF-1);
-					mpz_class negative  = mpz_class(1)<<(wE+wF-2);
+			TestCase *tc;
+			mpz_class x,y;
+			mpz_class negative  = mpz_class(1)<<(wE+wF);
 
-					tc = new TestCase(this);
+			tc = new TestCase(this);
 		/* Fill inputs */
 		if ((i & 7) == 0) {// cancellation, same exponent
 			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			x  = getLargeRandom(wF) + (e << wF);
+			y  = getLargeRandom(wF) + (e << wF) + negative;
 		}
 		else if ((i & 7) == 1) {// cancellation, exp diff=1
 			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			e++; // may rarely lead to an overflow, who cares
-			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			x  = getLargeRandom(wF) + (e << wF);
+			if(e < (mpz_class(1)<<(wE)-1))
+				e++; // may rarely lead to an overflow, who cares
+			y  = getLargeRandom(wF) + (e << wF) + negative;
 		}
 		else if ((i & 7) == 2) {// cancellation, exp diff=1
 			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			x  = getLargeRandom(wF) + (e << wF) + negative;
 			e++; // may rarely lead to an overflow, who cares
-			y  = getLargeRandom(wF) + (e << wF) + normalExn;
+			y  = getLargeRandom(wF) + (e << wF);
 		}
 		else if ((i & 7) == 3) {// alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			x  = getLargeRandom(wF) + (e << wF) + negative;
 			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow, who cares
-			y  = getLargeRandom(wF) + (e << wF) + normalExn;
+			y  = getLargeRandom(wF) + (e << wF);
 		}
 		else if ((i & 7) == 4) {// subtraction, alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
+			x  = getLargeRandom(wF) + (e << wF);
 			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
-			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			if(e > (mpz_class(1)<<(wE)-1))
+				e = (mpz_class(1)<<(wE)-1);
+			y  = getLargeRandom(wF) + (e << wF) + negative;
 		}
 		else if ((i & 7) == 5 || (i & 7) == 6) {// addition, alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
+			x  = getLargeRandom(wF) + (e << wF);
 			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
-			y  = getLargeRandom(wF) + (e << wF) + normalExn;
+			y  = getLargeRandom(wF) + (e << wF);
 		}
 		else{ //fully random
 			x = getLargeRandom(wE+wF+1);
@@ -574,35 +548,73 @@
 		if(previousTestState->getIterationIndex() == 0)
 		{
 
-			previousTestState->setTestBenchSize(100);
-
-			paramList.push_back(make_pair("wE","8"));
-			paramList.push_back(make_pair("wF","23"));
-			
-			testStateList.push_back(paramList);
-			paramList.clear();
-			paramList.push_back(make_pair("wE","11"));
-			paramList.push_back(make_pair("wF","52"));
-			
-			testStateList.push_back(paramList);
-
-
-			for(int i = 5; i<53; i++)
-			{
-				int nbByteWE = 6+(i/10);
-				while(nbByteWE>i)
-				{
-					nbByteWE -= 2;
-				}
-				paramList.clear();
-				paramList.push_back(make_pair("wF",to_string(i)));
-				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-				
+			previousTestState->setTestBenchSize(250);
+			// for(int j = 0; j<2; j++)
+			// {
+				paramList.push_back(make_pair("wE","5"));
+				paramList.push_back(make_pair("wF","10"));
+				// if(j==1)
+				// {
+				// 	paramList.push_back(make_pair("sub","true"));
+				// }			
 				testStateList.push_back(paramList);
-			}
 
+				paramList.clear();
+				paramList.push_back(make_pair("wE","8"));
+				paramList.push_back(make_pair("wF","23"));
+				// if(j==1)
+				// {
+				// 	paramList.push_back(make_pair("sub","true"));
+				// }				
+				testStateList.push_back(paramList);
+
+				paramList.clear();
+				paramList.push_back(make_pair("wE","11"));
+				paramList.push_back(make_pair("wF","52"));
+				// if(j==1)
+				// {
+				// 	paramList.push_back(make_pair("sub","true"));
+				// }				
+				testStateList.push_back(paramList);
+
+				paramList.clear();
+				paramList.push_back(make_pair("wE","15"));
+				paramList.push_back(make_pair("wF","112"));
+				// if(j==1)
+				// {
+				// 	paramList.push_back(make_pair("sub","true"));
+				// }				
+				testStateList.push_back(paramList);
+
+				paramList.clear();
+				paramList.push_back(make_pair("wE","19"));
+				paramList.push_back(make_pair("wF","236"));
+				// if(j==1)
+				// {
+				// 	paramList.push_back(make_pair("sub","true"));
+				// }				
+				testStateList.push_back(paramList);
+
+
+				/*for(int i = 5; i<53; i++)
+				{
+					int nbByteWE = 6+(i/10);
+					while(nbByteWE>i)
+					{
+						nbByteWE -= 2;
+					}
+					paramList.clear();
+					paramList.push_back(make_pair("wF",to_string(i)));
+					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+					if(j==1)
+					{
+						paramList.push_back(make_pair("sub","true"));
+					}
+					testStateList.push_back(paramList);
+				}*/
+			}
 			previousTestState->setIterationNumber(testStateList.size());
-		}
+		// }
 
 		vector<pair<string,string>>::iterator itVector;
 		int indexIteration = previousTestState->getIterationIndex();

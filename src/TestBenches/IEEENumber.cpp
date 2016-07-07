@@ -261,7 +261,7 @@ namespace flopoco{
 			exponent = exp;
 
 			/* Handle overflow */
-			if (exponent >= (1<<wE))
+			if (exponent >= (1<<wE)-1)
 				{
 					exponent = (1<<wE) -1;
 					mantissa = 0;

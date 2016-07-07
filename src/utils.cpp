@@ -268,7 +268,7 @@ namespace flopoco{
 		// add exponent bias
 		biased_exponent = exponent + (mpz_class(1)<<(wE-1)) - 1;
 
-		if ( biased_exponent<0 )  {
+		if ( biased_exponent < 0)  {
 			cerr << "IEEE754fp2bin warning: underflow, flushing to zero"<<endl;
 			s << sign;
 			for(int i=0; i<wE+wF; i++)
@@ -280,6 +280,7 @@ namespace flopoco{
 			return s.str();
 		}
 
+		
 		if (biased_exponent >= (mpz_class(1)<<wE) )  {
 			cerr << "IEEE754fp2bin warning: overflow, returning infinity"<<endl;
 			s <<sign;
@@ -301,11 +302,9 @@ namespace flopoco{
 		s << unsignedBinary(biased_exponent, wE);
 		
 		// significand
-		if(wF!=64) // if precision != double-extended
-			mpfr_sub(mpx, mpx, one, GMP_RNDN);
+		mpfr_sub(mpx, mpx, one, GMP_RNDN);
 		for (int i=0; i<wF; i++) {
-			if(!(wF==64 && i==0))
-				mpfr_mul(mpx, mpx, two, GMP_RNDN);
+			mpfr_mul(mpx, mpx, two, GMP_RNDN);
 			if(mpfr_greaterequal_p(mpx, one)) {
 				s << "1";
 				mpfr_sub(mpx, mpx, one, GMP_RNDN);

@@ -26,3 +26,4 @@ PiecewisePoly*.cache
 work-obj93.cf
 test.input
 *.vcd
+TestResults/
