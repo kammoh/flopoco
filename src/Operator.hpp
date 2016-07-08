@@ -23,7 +23,6 @@
 #include "utils.hpp"
 #include "Tools/ResourceEstimationHelper.hpp"
 #include "Tools/FloorplanningHelper.hpp"
-#include "TestState.hpp"
 
 using namespace std;
 
@@ -1306,19 +1305,6 @@ public:
 	 */
 	void deepCloneOperator(Operator *op);
 
-	/**
-	 * Method returning a random number depending on a fixed limit, the mean and
-	 * the standard deviation
-	 **/
-	static float pickRandomNum ( float limit = 0, int fp = 8, int sp = 4 );
-
-	/**
-	 * Once the valid TestState parameters is created with pickRandomNum, this method checks
-	 * if parameters already exist or no for the operator selected opName
-	 * Tests are realized with the multimap testMemory
-	 **/
-	static bool checkExistence ( TestState parameters, string opName );
-
 
 	/**
 	 * Get the value of isOperatorImplemented
@@ -1796,7 +1782,6 @@ public:
 	FloorplanningHelper*		flpHelper;                  /**< Tools for floorplanning */
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
-	static multimap < string, TestState > testMemory;       /**< multimap which will be used to test if the selected operator already had been tested */
 protected:
 	string              uniqueName_;                        /**< By default, a name derived from the operator class and the parameters */
 	string 				architectureName_;                  /**< Name of the operator architecture */

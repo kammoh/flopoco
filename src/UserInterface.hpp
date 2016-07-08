@@ -16,6 +16,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 #define UserInterface_hpp
 
 #include "Operator.hpp"
+#include "Tester/TestState.hpp"
 #include <memory>
 
 // Operator Factory, based on the one by David Thomas, with a bit of clean up.
@@ -24,6 +25,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 namespace flopoco
 {
 
+	typedef void (*nextTestState_func_t)(TestState *);
 	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function to a function taking as parameters Target* etc., and returning an OperatorPtr
 	class OperatorFactory;
 	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
@@ -62,14 +64,16 @@ namespace flopoco
 
 		/**a helper factory function. For the parameter documentation, see the OperatorFactory constructor */
 		static void add(
-				string name,
-				string description,
-				string category,
-				string seeAlso,
-				string parameterList,
-				string extraHTMLDoc,
-				parser_func_t parser	);
-
+										string name,
+										string description,
+										string category,
+										string seeAlso,
+										string parameterList,
+										string extraHTMLDoc,
+										parser_func_t parser,
+										nextTestState_func_t nextTestState = nullptr
+										);
+		
 		static unsigned getFactoryCount();
 		static OperatorFactoryPtr getFactoryByIndex(unsigned i);
 		static OperatorFactoryPtr getFactoryByName(string operatorName);
@@ -173,6 +177,7 @@ namespace flopoco
 		map<string,string> m_paramDefault; /* If equal to "", this parameter is mandatory (no default). Otherwise, default value (as a string, to be parsed) */
 		string m_extraHTMLDoc;
 		parser_func_t m_parser;
+		nextTestState_func_t m_nextTestState;
 
 	public:
 
@@ -191,7 +196,8 @@ namespace flopoco
 						 string seeAlso,
 						 string parameters,
 						 string extraHTMLDoc,
-						 parser_func_t parser	);
+						 parser_func_t parser,
+						 nextTestState_func_t nextState		);
 
 		virtual const string &name() const // You can see in this prototype that it was not written by Florent
 		{ return m_name; }
@@ -218,7 +224,14 @@ namespace flopoco
 			return m_parser(target, args);
 		}
 
-
+		virtual void nextTestStateGenerator(TestState* previousTestState)
+		{
+			if(m_nextTestState != nullptr)
+				{
+					
+					m_nextTestState(previousTestState);
+				}
+		}
 	};
 }; // namespace flopoco
 

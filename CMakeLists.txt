@@ -200,7 +200,6 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/Signal
  src/utils
  src/FlopocoStream
- src/TestState
  VHDLLexer # generated from .l
  
  src/Instance
@@ -232,12 +231,16 @@ ADD_LIBRARY(FloPoCoLib STATIC
  #src/Targets/CycloneIV 
  #src/Targets/CycloneV 
 
+# Tester ------------------------------------------------------------
+src/Tester/Tester
+src/Tester/TestState
 # TestBench-related -------------------------------------------------
  src/TestBenches/TestCase
  src/TestBenches/FPNumber
  src/TestBenches/IEEENumber
  src/TestBenches/Wrapper
  src/TestBenches/TestBench 
+
 
 
 # Bit heap  ------------------------------------------------
