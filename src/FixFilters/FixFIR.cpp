@@ -29,7 +29,7 @@ namespace flopoco {
 
 		ostringstream name;
 		name << "FixFIR_uid" << getNewUId();
-		setNameWithFreq( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		buildVHDL();
 	};
@@ -205,7 +205,10 @@ namespace flopoco {
 				input.push_back( substr );
 			}
 
-		return new FixFIR(target, lsbInOut, input, rescale);
+		OperatorPtr tmpOp = new FixFIR(target, lsbInOut, input, rescale);
+
+		return tmpOp;
+		//return new FixFIR(target, lsbInOut, input, rescale);
 	}
 
 	void FixFIR::registerFactory(){

@@ -6,6 +6,9 @@
 #include "ConstMult/FixRealKCM.hpp"
 #include "FixComplexKCM.hpp"
 
+// TODO bug when signedInput=false, not sure it is in the operator or in emulate.
+// Let's investigate only if there is a customer...
+// Meanwhile the option signedInput is forced to true
 
 using namespace std;
 namespace flopoco {
@@ -28,7 +31,7 @@ namespace flopoco {
 			vhdlize(constant_im) << "_" << ((signedInput) ? "" : "un") <<
 			"signed" ;
 
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		
 		// Copyright 
 		setCopyrightString("3IF 2015 dev team (2015)");
@@ -36,8 +39,8 @@ namespace flopoco {
 		input_width = 1 + msb_in - lsb_in;
 		
 		// declaring inputs
-		addInput ("ReIN" , input_width);
-		addInput ("ImIN" , input_width);
+		addInput ("ReIn" , input_width);
+		addInput ("ImIn" , input_width);
 
 		//Computing constants for testBench and in order to know constant width
 		sollya_obj_t nodeIm, nodeRe;	
@@ -130,9 +133,6 @@ namespace flopoco {
 			constant_im(constant_im)
 	{
 		init();
-		//For final rounding precision
-		int guard_bits = 1;
-		double targetUlpError = 1.0;
 
 		// declaring output
 		addOutput("ReOut", outputre_width);
@@ -147,121 +147,45 @@ namespace flopoco {
 		}
 		else
 		{
-			int kcmImGuardBits = FixRealKCM::neededGuardBits(
-					target,
-					input_width,
-					targetUlpError,
-					constant_im,
-					lsb_in,
-					lsb_out - guard_bits
-				);
 
-			int kcmMImGuardBits = FixRealKCM::neededGuardBits(
-					target,
-					input_width,
-					targetUlpError,
-					"-1*" + constant_im,
-					lsb_in,
-					lsb_out - guard_bits
-				);
-
-			int kcmReGuardBits = FixRealKCM::neededGuardBits(
-					target,
-					input_width,
-					targetUlpError,
-					constant_re,
-					lsb_in,
-					lsb_out - guard_bits
-				);
-
-			// basic message
-			REPORT(INFO,"Declaration of FixComplexKCM\n");
-
-			int guardBits_re = max(kcmReGuardBits, kcmMImGuardBits);
-			int guardBits_im = max(kcmReGuardBits, kcmImGuardBits);
+			FixRealKCM* kcmInReConstRe = new FixRealKCM( this, "ReIn", signedInput, msb_in, lsb_in, lsb_out, constant_re,true  );
+			FixRealKCM* kcmInReConstIm = new FixRealKCM( this, "ReIn", signedInput, msb_in, lsb_in, lsb_out, constant_im,false );
+			FixRealKCM* kcmInImConstRe = new FixRealKCM( this, "ImIn", signedInput, msb_in, lsb_in, lsb_out, constant_re,true  );
+			FixRealKCM* kcmInImConstIm = new FixRealKCM( this, "ImIn", signedInput, msb_in, lsb_in, lsb_out, "-("+constant_im+")", false );
+			
+			double errorInUlpsRe = kcmInReConstRe->getErrorInUlps() + kcmInImConstIm->getErrorInUlps();
+			double errorInUlpsIm = kcmInReConstIm->getErrorInUlps() + kcmInImConstRe->getErrorInUlps();
+			int guardBits_re = intlog2(errorInUlpsRe);
+			int guardBits_im = intlog2(errorInUlpsIm);
 
 			BitHeap* bitheapRe = new BitHeap(
 					this,
-					guardBits_re + outputre_width + guard_bits
+					 outputre_width + guardBits_re
 				);
 			BitHeap* bitheapIm = new BitHeap(
 					this, 
-					guardBits_im + outputim_width + guard_bits
+					outputim_width + guardBits_im 
 				);
 
-			//Add 1/2 ulp
-			bitheapIm->addConstantOneBit(0);
-			bitheapRe->addConstantOneBit(0);
 
-			//---- Real part computation ------------------------------------------
-			new FixRealKCM(
-					this,
-					target,
-					getSignalByName("ReIN"),
-					signedInput,
-					msb_in,
-					lsb_in,
-					lsb_out - guard_bits,
-					constant_re,
-					bitheapRe,
-					lsb_out - guardBits_re - guard_bits 
-				);
+			kcmInReConstRe->addToBitHeap(bitheapRe, guardBits_re);
+			kcmInImConstIm->addToBitHeap(bitheapRe, guardBits_re);
+			kcmInReConstIm->addToBitHeap(bitheapIm, guardBits_im);
+			kcmInImConstRe->addToBitHeap(bitheapIm, guardBits_im);
 
-			new FixRealKCM(
-					this, 
-					target, 
-					getSignalByName("ImIN"),
-					signedInput,
-					msb_in,
-					lsb_in,
-					lsb_out - guard_bits,
-					"-1 * " + constant_im,
-					bitheapRe,
-					lsb_out - guard_bits - guardBits_re
-				);
-
-			//--- Imaginary part computation --------------------------------------
-
-			new FixRealKCM(
-					this,
-					target,
-					getSignalByName("ImIN"),
-					signedInput,
-					msb_in,
-					lsb_in,
-					lsb_out - guard_bits,
-					constant_re,
-					bitheapIm,
-					lsb_out - guard_bits - guardBits_im
-				);
-
-			new FixRealKCM(
-					this, 
-					target, 
-					getSignalByName("ReIN"),
-					signedInput,
-					msb_in,
-					lsb_in,
-					lsb_out - guard_bits,
-					constant_im,
-					bitheapIm,
-					lsb_out - guard_bits - guardBits_im
-				);
-
-			//BitHeap management
 			bitheapIm->generateCompressorVHDL();
 			bitheapRe->generateCompressorVHDL();
 
 			vhdl << "ImOut" << " <= " << 
 				bitheapIm->getSumName(
-						outputim_width+guardBits_im+guard_bits -1,
-						guardBits_im+guard_bits
+						outputim_width+guardBits_im -1,
+						guardBits_im
 					) << ";" << endl;
 
 			vhdl << "ReOut" << " <= " << 
 				bitheapRe->getSumName(
-						outputre_width + guardBits_re + guard_bits - 1,
-						guardBits_re+guard_bits
+						outputre_width + guardBits_re - 1,
+						guardBits_re
 					) << ";" << endl;
 		}
 
@@ -272,11 +196,15 @@ namespace flopoco {
 		mpfr_clears(mpfr_constant_im, mpfr_constant_re, NULL);
 	}
 	
+
+
+
+
 	void FixComplexKCM::emulate(TestCase * tc) {
 
 		/* first we are going to format the entries */
-		mpz_class reIn = tc->getInputValue("ReIN");
-		mpz_class imIn = tc->getInputValue("ImIN");
+		mpz_class reIn = tc->getInputValue("ReIn");
+		mpz_class imIn = tc->getInputValue("ImIn");
 
 
 		/* Sign handling */
@@ -421,6 +349,7 @@ namespace flopoco {
 			reDown = 0;
 		}
 
+		//		cout << reUp << " " << reDown << " " << imUp << " " << imDown << endl;
 		//Add expected results to corresponding outputs
 		tc->addExpectedOutput("ReOut", reUp);	
 		tc->addExpectedOutput("ReOut", reDown);	
@@ -452,44 +381,87 @@ namespace flopoco {
 		}
 
 		tc = new TestCase(this);		
-		tc->addInput("ReIN", 0);
-		tc->addInput("ImIN", 0);
+		tc->addInput("ReIn", 0);
+		tc->addInput("ImIn", 0);
 		emulate(tc);
 		tcl->add(tc);
 		
 		tc = new TestCase(this);		
-		tc->addInput("ReIN", one);
-		tc->addInput("ImIN", 0);
+		tc->addInput("ReIn", one);
+		tc->addInput("ImIn", 0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);		
-		tc->addInput("ReIN", 0);
-		tc->addInput("ImIN", one);
+		tc->addInput("ReIn", 0);
+		tc->addInput("ImIn", one);
 		emulate(tc);
 		tcl->add(tc);
 		
 		tc = new TestCase(this);		
-		tc->addInput("ReIN", one);
-		tc->addInput("ImIN", one);
+		tc->addInput("ReIn", one);
+		tc->addInput("ImIn", one);
 		emulate(tc);
 		tcl->add(tc);
 
 		if(signedInput)
 		{
 			tc = new TestCase(this);		
-			tc->addInput("ReIN", -1 * one);
-			tc->addInput("ImIN", -1 * one);
+			tc->addInput("ReIn", -1 * one);
+			tc->addInput("ImIn", -1 * one);
 			emulate(tc);
 			tcl->add(tc);
 		}
-
+#if 0
 		tc = new TestCase(this);		
-		tc->addInput("ReIN", 2 * one);
-		tc->addInput("ImIN", 0);
+		tc->addInput("ReIn", 2 * one);
+		tc->addInput("ImIn", 0);
 		emulate(tc);
 		tcl->add(tc);
-
+#endif
 	}
+
+	OperatorPtr FixComplexKCM::parseArguments(Target* target, std::vector<std::string> &args)
+	{
+		int lsbIn, lsbOut, msbIn;
+		//		bool signedInput;
+		string constantIm, constantRe;
+		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		UserInterface::parseString(args, "constantIm", &constantIm);
+		UserInterface::parseString(args, "constantRe", &constantRe);
+		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		UserInterface::parseInt(args, "msbIn", &msbIn);
+		// UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		return new FixComplexKCM(
+				target, 
+				true, //signedInput,
+				msbIn,
+				lsbIn,
+				lsbOut,
+				constantRe, 
+				constantIm
+			);
+	}
+
+	void FixComplexKCM::registerFactory()
+	{
+		UserInterface::add(
+				"FixComplexKCM",
+				"Table-based complex multiplier. Inputs are two's complement. Output size is computed",
+				"ConstMultDiv",
+				"",
+				//				"signedInput(bool)=true: 0=unsigned, 1=signed;
+				"msbIn(int): weight associated to most significant bit (including sign bit);\
+				lsbIn(int): weight associated to least significant bit;\
+				lsbOut(int): weight associated to output least significant bit; \
+				constantRe(string): real part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
+				constantIm(string): imaginary part of the constant, given as a Sollya expression, e.g \"log(2)\"; ",
+				"",
+				FixComplexKCM::parseArguments
+		);
+	}
+
+
+
 }//namespace
 

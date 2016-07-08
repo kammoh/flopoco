@@ -27,12 +27,8 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "CordicSinCos_" << (reducedIterations==1?"reducedIterations":"") << wIn_ << "_" << wOut_;
-		if(target->isPipelined())
-			name  <<"_f" << target->frequencyMHz();
-		else 
-			name << "_comb";
-		name << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
+
 
 		if(wIn<12){
 			REPORT(INFO, "wIn is small, are you sure you don't want to tabulate this operator in a ROM?");
@@ -270,7 +266,8 @@ namespace flopoco{
 		
 			nextCycle();
 			//multiply X by Pi
-			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0, inDelayMap("X",getCriticalPath()) ); 
+			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0 ); 
+			addSubComponent(piMultiplier);
 			
 			vhdl << tab << declare("FinalZ", sizeZ+1) << " <= " << join("D", stage)<< " & " << join("Z", stage) << ";" << endl;
 			inPortMap(piMultiplier, "X", "FinalZ");
@@ -291,6 +288,7 @@ namespace flopoco{
 			
 			//multiply with the angle X to obtain the actual values for sine and cosine
 			IntMultiplier* zmultiplier = new IntMultiplier(target, sizeZ, sizeZ, true); // signed
+			addSubComponent(zmultiplier);
 			
 			inPortMap(zmultiplier, "X", "CosTrunc");
 			inPortMap(zmultiplier, "Y", "PiZ");

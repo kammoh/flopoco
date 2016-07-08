@@ -50,7 +50,7 @@ FixSinCos::SinCosTable::SinCosTable(Target* target_, int wIn_, int lsbOut_, int 
 	name << "SinCosTable_" << wIn << "_2x" << lsbOut;
 	if (g>0) 
 		name << "p" << g;
-	setName(name.str());
+	setNameWithFreqAndUID(name.str());
 	//	outDelayMap["Y"]=target->RMADelay();
 }
 
@@ -153,7 +153,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// definition of the name of the operator
 	ostringstream name;
 	name << "FixSinCos_" << w;
-	setNameWithFreq(name.str());
+	setNameWithFreqAndUID(name.str());
 
 	setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
 
@@ -379,13 +379,13 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 		int wZ=w-wA+g; // see alignment below. Actually w-2-wA+2  (-2 because Q&O bits, +2 because mult by Pi)
 
 		pi_mult = new FixRealKCM (target,
-									false,    // signedInput
-									-2-wA-1,  // msbIn
-									-w-g,     // lsbIn
-									-w-g ,    // lsbOut
-									"pi",     // constant
-									1.0,      // targetUlpError
-									pi_mult_inputDelays);
+															false,    // signedInput
+															-2-wA-1,  // msbIn
+															-w-g,     // lsbIn
+															-w-g ,    // lsbOut
+															"pi",     // constant
+															1.0);      // targetUlpError
+		addSubComponent (pi_mult);
 		inPortMap (pi_mult, "X", "Y_red");
 		outPortMap (pi_mult, "R", "Z");
 		int wZz=getSignalByName("Z")->width();
@@ -492,6 +492,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			// we have no truncated squarer as of now
 			/*IntSquarer *sqr_z;
 				sqr_z = new IntSquarer (target, wZ);
+				addSubComponent (sqr_z);
 				inPortMap (sqr_z, "X", "Z");
 				outPortMap (sqr_z, "R", "Z2o2_ext");
 				vhdl << instance (sqr_z, "sqr_z");
@@ -507,6 +508,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			vhdl << tab << "-- First truncate the inputs of the multiplier to the precision of the output" << endl;
 			vhdl << tab << declare("Z_truncToZ2", wZ2o2) << " <= Z" << range(wZ-1, wZ-wZ2o2) << ";" << endl;
 			sqr_z = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false,  sqr_z_inputDelays);
+			addSubComponent (sqr_z);
 			inPortMap (sqr_z, "Y", "Z_truncToZ2");
 			inPortMap (sqr_z, "X", "Z_truncToZ2");
 			outPortMap (sqr_z, "R", "Z2o2");
@@ -531,6 +533,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 																						-3,  //  msbOut
 																						-wZ3o6-2); // lsbOut
 				z3o6Table -> changeName(getName() + "_Z3o6Table");
+				addSubComponent (z3o6Table);
 				inPortMap (z3o6Table, "X", "Z_truncToZ3o6");
 				outPortMap (z3o6Table, "Y", "Z3o6");
 				vhdl << instance (z3o6Table, "z3o6Table");
@@ -550,6 +553,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 																				-wA-1, // msbOut_ = 0,
 																				-w-g, // lsbout
 																				false);
+				addSubComponent (fsp);
 				inPortMap (fsp, "X", "Z");
 				outPortMap(fsp, "R", "SinZ");
 				vhdl << instance (fsp, "ZminusZ3o6");
@@ -592,6 +596,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			vhdl << tab << declare("CosPiA_truncToZ2o2", wZ2o2) << " <= CosPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
 			IntMultiplier *c_out_2;
 			c_out_2 = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false);
+			addSubComponent (c_out_2);
 			inPortMap (c_out_2, "X", "Z2o2");
 			inPortMap (c_out_2, "Y", "CosPiA_truncToZ2o2");
 			outPortMap (c_out_2, "R", "Z2o2CosPiA");
@@ -621,6 +626,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			IntMultiplier *c_out_3;
 			
 			c_out_3 = new IntMultiplier (target, wZ, wZ, wZ, false);
+			addSubComponent (c_out_3);
 			inPortMap (c_out_3, "Y", "SinPiA_truncToZ");
 			inPortMap (c_out_3, "X", "SinZ");
 			outPortMap (c_out_3, "R", "SinZSinPiA");
@@ -756,6 +762,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			vhdl << tab << declare("SinPiA_truncToZ2o2", wZ2o2) << " <= SinPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
 			IntMultiplier *s_out_2;
 			s_out_2 = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false);
+			addSubComponent (s_out_2);
 			inPortMap (s_out_2, "X", "Z2o2");
 			inPortMap (s_out_2, "Y", "SinPiA_truncToZ2o2");
 			outPortMap (s_out_2, "R", "Z2o2SinPiA");
@@ -774,6 +781,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			
 			IntMultiplier *s_out_3;
 			s_out_3 = new IntMultiplier (target, wZ, wZ, wZ, false);
+			addSubComponent (s_out_3);
 			inPortMap (s_out_3, "X", "SinZ");
 			inPortMap (s_out_3, "Y", "CosPiA_truncToSinZ");
 			outPortMap (s_out_3, "R", "SinZCosPiA");

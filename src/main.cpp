@@ -87,7 +87,7 @@ int main(int argc, char* argv[] )
 		// FixFunctionByMultipartiteTable::registerFactory();
 		// BasicPolyApprox::registerFactory();
 		// PiecewisePolyApprox::registerFactory();
-		// FixRealKCM::registerFactory();
+	  FixRealKCM::registerFactory();
 		TestBench::registerFactory();
 		Wrapper::registerFactory();
 		FPAdd::registerFactory();
