@@ -109,8 +109,6 @@ namespace flopoco{
 
 		buildTablesForBitHeap(); // does everything up to bit heap compression
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-
 		//compress the bitheap and produce the result
 		bitHeap->generateCompressorVHDL();
 

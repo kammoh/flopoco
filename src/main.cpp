@@ -98,7 +98,7 @@ int main(int argc, char* argv[] )
 		// FPMult::registerFactory();
 		// //FPMultKaratsuba::registerFactory();
 		// FPSquare::registerFactory();
-		// FPDiv::registerFactory();
+		FPDiv::registerFactory();
 		// FPDiv::NbBitsMinRegisterFactory();
 		// FPSqrt::registerFactory();
 
