@@ -416,7 +416,7 @@ namespace flopoco{
 		return tc;
 	}
 
-		OperatorPtr FPAddSinglePath::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPAddSinglePath::parseArguments(Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;

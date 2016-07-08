@@ -2523,9 +2523,6 @@ namespace flopoco{
 				rhs->setHasBeenImplemented(false);
 				//remove the current entry from the unresolved dependence table
 				unresolvedDependenceTable.erase(it);
-				//add the signals to the list of signals to be scheduled
-				signalsToSchedule.push_back(lhs);
-				signalsToSchedule.push_back(rhs);
 			}
 		}
 
@@ -2558,6 +2555,9 @@ namespace flopoco{
 			{
 				lhs->addPredecessor(rhs, delay);
 				rhs->addSuccessor(lhs, delay);
+				//add the signals to the list of signals to be scheduled
+				signalsToSchedule.push_back(lhs);
+				signalsToSchedule.push_back(rhs);
 			}else{
 				triplet<string, string, int> newDep = make_triplet(it->first, it->second, it->third);
 				unresolvedDependenceTable.push_back(newDep);

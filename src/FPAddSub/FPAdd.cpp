@@ -5,7 +5,7 @@
 using namespace std;
 namespace flopoco{
 
-		OperatorPtr FPAdd::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPAdd::parseArguments(Target *target, vector<string> &args) {
 		int wE, wF;
 		bool sub, dualPath;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
