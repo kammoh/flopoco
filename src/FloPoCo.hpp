@@ -145,8 +145,9 @@
 #include "Trigs/FixAtan2ByBivariateApprox.hpp"
 #include "Trigs/Fix2DNorm.hpp"
 // #include "Trigs/FixSinOrCos.hpp"  Replug when poly eval fixed
-#include "ExpLog/IterativeLog.hpp"
 #include "ExpLog/FPExp.hpp"
+#include "ExpLog/FPLog.hpp"
+#include "ExpLog/FPLogIterative.hpp"
 #include "ExpLog/FPPow.hpp"
 
 

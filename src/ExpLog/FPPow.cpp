@@ -17,7 +17,7 @@
 #include <sstream>
 #include <math.h>	// for NaN
 #include "FPPow.hpp"
-#include "IterativeLog.hpp"
+#include "FPLogIterative.hpp"
 #include "FPExp.hpp"
 #include "ShiftersEtc/LZOC.hpp"
 #include "FPMultSquare/FPMult.hpp"
@@ -77,7 +77,7 @@ namespace flopoco{
 		: Operator(target), wE(wE), wF(wF), type(type)
 	{
 
-		setCopyrightString("F. de Dinechin, C. Klein  (2008)");
+		setCopyrightString("F. de Dinechin (2008)");
 		srcFileName="FPPow";
 
 		ostringstream o;
@@ -298,7 +298,7 @@ namespace flopoco{
 		// For the input to the log, take |X| as the case X<0 is managed separately
 		vhdl << tab << declare("logIn", 3+wE + logwF) << " <= flagsX & \"0\" & expFieldX & fracX & " << rangeAssign(logwF-wF-1, 0, "'0'") << " ;" << endl;
 
-		IterativeLog* log = new IterativeLog(target,  wE,  logwF, logTableSize );
+		FPLogIterative* log = new FPLogIterative(target,  wE,  logwF, logTableSize );
 		addSubComponent(log);
 		inPortMap(log, "X", "logIn");
 		outPortMap(log, "R", "lnX");
@@ -612,7 +612,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		int inTableSize;
 		UserInterface::parseStrictlyPositiveInt(args, "inTableSize", &inTableSize);
-		return new IterativeLog(target, wE, wF, inTableSize);
+		return new FPPow(target, wE, wF, inTableSize);
 	}
 
 	void FPPow::registerFactory(){
@@ -622,10 +622,11 @@ namespace flopoco{
 											 "",
 											 "wE(int): exponent size in bits for both inputs; \
 wF(int): mantissa size in bits for both inputs; \
-logSizeTable(int)=0: The table size for the log in bits; \
-expTableSize(int)=0: The table size for the exponent in bit; \
+logSizeTable(int)=0: The table size input for the log in bits; \
+type(int)=0: type of power function (0 pow - 1 powr. See IEEE754-2008); \
+expTableSize(int)=0: The table size input for the exponent in bit; \
 expDegree(int)=0:",
-											 "",
+											 "For all the details, see <a href=\"bib/flopoco.html#DinechinEtAl-2013-power\">this article",
 											 FPPow::parseArguments
 											 ) ;
 

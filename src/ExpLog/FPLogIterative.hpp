@@ -1,5 +1,5 @@
-#ifndef __ITERATIVELOG_HPP
-#define __ITERATIVELOG_HPP
+#ifndef __FPLOGITERATIVE_HPP
+#define __FPLOGITERATIVE_HPP
 #include <vector>
 #include <sstream>
 
@@ -14,7 +14,7 @@ namespace flopoco{
 
 #define MAXRRSTAGES 2000 // 4000 bits of accuracy should be enough for anybody
 
-	class IterativeLog : public Operator
+	class FPLogIterative : public Operator
 	{
 	protected:
 
@@ -37,7 +37,7 @@ namespace flopoco{
 		class FirstLogTable : public Table
 		{
 		public:
-			FirstLogTable(Target *target, int p1, int w1,  FirstInvTable* fit, IterativeLog* op_);
+			FirstLogTable(Target *target, int p1, int w1,  FirstInvTable* fit, FPLogIterative* op_);
 			~FirstLogTable();
 			FirstInvTable* fit;
 			mpz_class function(int x);
@@ -46,7 +46,7 @@ namespace flopoco{
 			mpz_class double2output(double x);
 			double output2double(mpz_class x);
 		private:
-			IterativeLog* op;
+			FPLogIterative* op;
 		};
 
 		class OtherLogTable : public Table
@@ -70,15 +70,18 @@ namespace flopoco{
 
 
 	public:
-		IterativeLog(Target* target, int wE, int wF, int inTableSize=0, map<string, double> inputDelays = emptyDelayMap);
-		~IterativeLog();
+		FPLogIterative(Target* target, int wE, int wF, int inTableSize=0, map<string, double> inputDelays = emptyDelayMap);
+		~FPLogIterative();
 
 		//		Overloading the virtual functions of Operator
 		void emulate(TestCase * tc);
 		void buildStandardTestCases(TestCaseList* tcl);
 		/**Overloading the function of Operator with a function that tests only positive FP numbers (full range)*/
 		TestCase* buildRandomTestCase(int i);
-		// User-interface stuff
+
+
+		static	void nextTestState(TestState * previousTestState);
+
 		/** Factory method */
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 		static void registerFactory();
@@ -116,7 +119,7 @@ namespace flopoco{
 
 		int sfinal; // equal to s[stages+1]
 
-		int pfinal;  // equal to s[stages+1]
+		int pfinal;  // equal to p[stages+1]
 
 		// The guard bits
 		int gLog;

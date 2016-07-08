@@ -389,7 +389,8 @@ src/Tools/Point
 
 # Exp, Log and Power
 src/ExpLog/FPExp
-src/ExpLog/IterativeLog
+src/ExpLog/FPLog
+src/ExpLog/FPLogIterative
 src/ExpLog/FPPow
 
 # If you want to add your operator, feel free

@@ -20,7 +20,7 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>	// for NaN
-#include "IterativeLog.hpp"
+#include "FPLogIterative.hpp"
 #include "TestBenches/FPNumber.hpp"
 #include "utils.hpp"
 #include "IntMult/IntSquarer.hpp"
@@ -35,7 +35,7 @@ namespace flopoco{
 
 
 
-	IterativeLog::FirstInvTable::FirstInvTable(Target* target, int wIn, int wOut) :
+	FPLogIterative::FirstInvTable::FirstInvTable(Target* target, int wIn, int wOut) :
 		Table(target, wIn, wOut)
 	{
 		ostringstream name;
@@ -44,18 +44,18 @@ namespace flopoco{
 
 	}
 
-	IterativeLog::FirstInvTable::~FirstInvTable() {}
+	FPLogIterative::FirstInvTable::~FirstInvTable() {}
 
 
-	int    IterativeLog::FirstInvTable::double2input(double x){
+	int    FPLogIterative::FirstInvTable::double2input(double x){
 		int result;
-		cerr << "??? IterativeLog::FirstInvTable::double2input not yet implemented ";
+		cerr << "??? FPLogIterative::FirstInvTable::double2input not yet implemented ";
 		exit(1);
 		return result;
 	}
 
 
-	double IterativeLog::FirstInvTable::input2double(int x) {
+	double FPLogIterative::FirstInvTable::input2double(int x) {
 		double y;
 		if(x>>(wIn-1)) //MSB of input
 			y= ((double)(x+(1<<wIn))) //      11xxxx (binary)
@@ -66,19 +66,19 @@ namespace flopoco{
 		return(y);
 	}
 
-	mpz_class IterativeLog::FirstInvTable::double2output(double x){
+	mpz_class FPLogIterative::FirstInvTable::double2output(double x){
 		mpz_class result;
 		result =  mpz_class(floor(x*((double)(1<<(wOut-1)))));
 		return result;
 	}
 
-	double IterativeLog::FirstInvTable::output2double(mpz_class x) {
+	double FPLogIterative::FirstInvTable::output2double(mpz_class x) {
 		double y=((double)x.get_si()) /  ((double)(1<<(wOut-1)));
 		return(y);
 	}
 
 
-	mpz_class IterativeLog::FirstInvTable::function(int x)
+	mpz_class FPLogIterative::FirstInvTable::function(int x)
 	{
 		double d;
 		mpz_class r;
@@ -92,7 +92,7 @@ namespace flopoco{
 
 
 #if 0
-	int IterativeLog::FirstInvTable::check_accuracy(int wF) {
+	int FPLogIterative::FirstInvTable::check_accuracy(int wF) {
 		int i;
 		mpz_class j;
 		double x1,x2,y,e1,e2;
@@ -140,7 +140,7 @@ namespace flopoco{
 
 
 
-	IterativeLog::FirstLogTable::FirstLogTable(Target *target, int wIn, int wOut, FirstInvTable* fit, IterativeLog* op_) :
+	FPLogIterative::FirstLogTable::FirstLogTable(Target *target, int wIn, int wOut, FirstInvTable* fit, FPLogIterative* op_) :
 		Table(target, wIn, wOut), fit(fit), op(op_)
 	{
 		ostringstream name;
@@ -150,31 +150,31 @@ namespace flopoco{
 		minIn = 0;
 		maxIn = (1<<wIn) -1;
 		if (wIn!=fit->wIn) {
-			cerr<< "IterativeLog::FirstLogTable::FirstLogTable should use same wIn as FirstInvTable"<<endl;
+			cerr<< "FPLogIterative::FirstLogTable::FirstLogTable should use same wIn as FirstInvTable"<<endl;
 			exit(1);
 		}
 	}
 
-	IterativeLog::FirstLogTable::~FirstLogTable() {}
+	FPLogIterative::FirstLogTable::~FirstLogTable() {}
 
 
-	int    IterativeLog::FirstLogTable::double2input(double x){
+	int    FPLogIterative::FirstLogTable::double2input(double x){
 		int result;
-		cerr << "??? IterativeLog::FirstLogTable::double2input not yet implemented ";
+		cerr << "??? FPLogIterative::FirstLogTable::double2input not yet implemented ";
 		exit(1);
 		//   result = (int) floor(x*((double)(1<<(wIn-1))));
 		//   if( result < minIn || result > maxIn) {
-		//     cerr << "??? IterativeLog::FirstLogTable::double2input:  Input "<< result <<" out of range ["<<minIn<<","<<maxIn<<"]";
+		//     cerr << "??? FPLogIterative::FirstLogTable::double2input:  Input "<< result <<" out of range ["<<minIn<<","<<maxIn<<"]";
 		//     exit(1);
 		//  }
 		return result;
 	}
 
-	double IterativeLog::FirstLogTable::input2double(int x) {
+	double FPLogIterative::FirstLogTable::input2double(int x) {
 		return(fit->input2double(x));
 	}
 
-	mpz_class    IterativeLog::FirstLogTable::double2output(double y){
+	mpz_class    FPLogIterative::FirstLogTable::double2output(double y){
 		//Here y is between -0.5 and 0.5 strictly, whatever wIn.  Therefore
 		//we multiply y by 2 before storing it, so the table actually holds
 		//2*log(1/m)
@@ -188,14 +188,14 @@ namespace flopoco{
 
 	}
 
-	double IterativeLog::FirstLogTable::output2double(mpz_class x) {
-		cerr<<" IterativeLog::FirstLogTable::output2double TODO"; exit(1);
+	double FPLogIterative::FirstLogTable::output2double(mpz_class x) {
+		cerr<<" FPLogIterative::FirstLogTable::output2double TODO"; exit(1);
 		//  double y=((double)x) /  ((double)(1<<(wOut-1)));
 		//return(y);
 	}
 
 
-	mpz_class IterativeLog::FirstLogTable::function(int x)
+	mpz_class FPLogIterative::FirstLogTable::function(int x)
 	{
 		mpz_class result;
 		double apprinv;
@@ -242,7 +242,7 @@ namespace flopoco{
 	 // -log(1-x) where x < 2^-p and x on a+1 bits.
 	 // the log is then smaller than 2^-p+1
 	 //  outputPrecision is the weight of the last bit in the real domain
-	 IterativeLog::OtherLogTable::OtherLogTable(Target* target, int wIn, int outputPrecision, int which, int ai, int pi) :
+	 FPLogIterative::OtherLogTable::OtherLogTable(Target* target, int wIn, int outputPrecision, int which, int ai, int pi) :
 		 Table(target, wIn, outputPrecision, 0, -1, 1),  which(which), ai(ai), pi(pi)
 		// TODO this forces a logic-based table
 
@@ -252,18 +252,18 @@ namespace flopoco{
 		 setNameWithFreqAndUID(name.str());
 	 }
 
-	 IterativeLog::OtherLogTable::~OtherLogTable() {}
+	 FPLogIterative::OtherLogTable::~OtherLogTable() {}
 
 
-	 int    IterativeLog::OtherLogTable::double2input(double x){
+	 int    FPLogIterative::OtherLogTable::double2input(double x){
 		 int result;
-		 cerr << "??? IterativeLog::OtherLogTable::double2input not yet implemented ";
+		 cerr << "??? FPLogIterative::OtherLogTable::double2input not yet implemented ";
 		 exit(1);
 		 return result;
 	 }
 
 
-	 double IterativeLog::OtherLogTable::input2double(int x) {
+	 double FPLogIterative::OtherLogTable::input2double(int x) {
 		 double d;
 		 // function uses log1p, so we prepare d for that
 		 // computation in double is exact as long as we don't want a quad
@@ -287,21 +287,21 @@ namespace flopoco{
 
 
 
-	 mpz_class    IterativeLog::OtherLogTable::double2output(double y){
+	 mpz_class    FPLogIterative::OtherLogTable::double2output(double y){
 		 mpz_class z;
 		 z = (mpz_class) (  y *  ((double)(((int64_t)1)<< outputPrecision)) );
 		 // TODO fix for more than 64-bit
 		 //  z = (mpz_class(1)<< outputPrecision)  (  y *  ((double)(((int64_t)1)) );
 		 if (0 != z>>wOut) {
-			 cerr<<"IterativeLog::OtherLogTable::double2output: output does not fit output format"<<endl;
+			 cerr<<"FPLogIterative::OtherLogTable::double2output: output does not fit output format"<<endl;
 		 }
 		 return z;
 	 }
 
 
 
-	 double IterativeLog::OtherLogTable::output2double(mpz_class x) {
-		 cerr<<" IterativeLog::OtherLogTable::output2double TODO"; exit(1);
+	 double FPLogIterative::OtherLogTable::output2double(mpz_class x) {
+		 cerr<<" FPLogIterative::OtherLogTable::output2double TODO"; exit(1);
 		 //double y=((long double)x) /  ((long double)(1<<outputPrecision));
 		 //return(y);
 	 }
@@ -310,7 +310,7 @@ namespace flopoco{
 
 
 
-	 mpz_class IterativeLog::OtherLogTable::function(int x) {
+	 mpz_class FPLogIterative::OtherLogTable::function(int x) {
 		 mpz_class result;
 		 double apprinv;
 		 mpfr_t i,l;
@@ -348,7 +348,7 @@ namespace flopoco{
 
 
 
-	IterativeLog::IterativeLog(Target* target,
+	FPLogIterative::FPLogIterative(Target* target,
 	             int wE, int wF,
 	             int inTableSize,
                map<string, double> inputDelays)
@@ -358,9 +358,9 @@ namespace flopoco{
 		setCopyrightString("F. de Dinechin, C. Klein  (2008-2011)");
 
 		ostringstream o;
-		srcFileName = "IterativeLog";
+		srcFileName = "FPLogIterative";
 
-		o << "IterativeLog_" << wE << "_" << wF << "_" << inTableSize << "_";
+		o << "FPLogIterative_" << wE << "_" << wF << "_" << inTableSize;
 		setNameWithFreqAndUID(o.str());
 
 		addFPInput("X", wE, wF);
@@ -425,9 +425,9 @@ namespace flopoco{
 		gLog=max(4, intlog2(3+0.5+0.5+3*stages));
 
 		if(UserInterface::verbose>=2) {
-			cerr << "> IterativeLog\t Initial parameters:" << endl;
+			cerr << "> FPLogIterative\t Initial parameters:" << endl;
 			for(i=0; i<=stages; i++) {
-				cerr << "> IterativeLog\t";
+				cerr << "> FPLogIterative\t";
 				cerr<<"\tp"<<i<<"=" << p[i];
 				cerr<<"\ta"<<i<<"=" << a[i];
 				cerr <<endl;
@@ -438,7 +438,7 @@ namespace flopoco{
 		int extraBits = pfinal - ((wF+gLog-2)>>1);
 		int extraBitsperstage =  floor(((double)extraBits) / ((double)(stages+1)));
 		if(UserInterface::verbose)
-			cerr << "> IterativeLog\t before optimization:  pfinal=" << pfinal << "--- extraBits=" << extraBits << "---extraBitsperstage=" << extraBitsperstage << endl;
+			cerr << "> FPLogIterative\t before optimization:  pfinal=" << pfinal << "--- extraBits=" << extraBits << "---extraBitsperstage=" << extraBitsperstage << endl;
 		if(bitsPerStage>6) {
 			for (i=0; i<= stages; i++)
 				a[i] -= extraBitsperstage;
@@ -473,16 +473,16 @@ namespace flopoco{
 		extraBits = pfinal -  ((wF+gLog-2)>>1);
 
 		if(UserInterface::verbose>=2)
-			cerr << "> IterativeLog\t after optimization:   pfinal=" << pfinal << "--- extraBits=" << extraBits << endl;
+			cerr << "> FPLogIterative\t after optimization:   pfinal=" << pfinal << "--- extraBits=" << extraBits << endl;
 
 
 		if(UserInterface::verbose)
-			cerr << "> IterativeLog"<<tab<<"Guard bits: " << gLog << endl;
+			cerr << "> FPLogIterative"<<tab<<"Guard bits: " << gLog << endl;
 
 
 		target_prec = wF + pfinal +gLog;
 		if(UserInterface::verbose==2)
-			cerr << "> IterativeLog"<<tab<<"Target precision: " << target_prec << endl;
+			cerr << "> FPLogIterative"<<tab<<"Target precision: " << target_prec << endl;
 
 		s[0] = wF+2;
 		psize[0] = s[0] + a[0]+1;
@@ -530,17 +530,17 @@ namespace flopoco{
 
 
 		if(UserInterface::verbose)
-			cerr<<"> IterativeLog\t needs 1+"<<stages<<" range reduction stages"<<endl;
+			cerr<<"> FPLogIterative\t needs 1+"<<stages<<" range reduction stages"<<endl;
 		if(UserInterface::verbose>=2) {
 			for(i=0; i<=stages; i++) {
-				cerr << "> IterativeLog\t";
+				cerr << "> FPLogIterative\t";
 				cerr<<"\tp"<<i<<"=" << p[i];
 				cerr<<"\ta"<<i<<"=" << a[i];
 				cerr<<"\ts"<<i<<"=" << s[i];
 				cerr<<"\tpsize"<<i<<"=" << psize[i];
 				cerr <<endl;
 			}
-			cerr << "> IterativeLog\t\tsfinal=" << sfinal << "\tpfinal=" << pfinal << endl;
+			cerr << "> FPLogIterative\t\tsfinal=" << sfinal << "\tpfinal=" << pfinal << endl;
 
 		}
 
@@ -694,7 +694,7 @@ namespace flopoco{
 			setCriticalPath( pi->getOutputDelay("R") );
 
 #else
-			if(UserInterface::verbose) cerr << "> IterativeLog: unpipelined multiplier for P"<<i<<", implemented as * in VHDL" << endl;
+			if(UserInterface::verbose) cerr << "> FPLogIterative: unpipelined multiplier for P"<<i<<", implemented as * in VHDL" << endl;
 			nextCycle();//
 			vhdl << tab << declare(join("P",i),  psize[i] + a[i]) << " <= " << join("A",i) << "*" << join("ZM",i) << ";" << endl;
 			nextCycle();
@@ -1144,7 +1144,7 @@ namespace flopoco{
 		outDelayMap["R"]=getCriticalPath();
 	}
 
-	IterativeLog::~IterativeLog()
+	FPLogIterative::~FPLogIterative()
 	{
 #if 0 // probably to be performed on oplist
 		delete lzoc;
@@ -1155,7 +1155,7 @@ namespace flopoco{
 #endif
 	}
 
-	void IterativeLog::emulate(TestCase * tc)
+	void FPLogIterative::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
 		mpz_class svX = tc->getInputValue("X");
@@ -1190,7 +1190,7 @@ namespace flopoco{
 	// TEST FUNCTIONS
 
 
-	void IterativeLog::buildStandardTestCases(TestCaseList* tcl){
+	void FPLogIterative::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 		mpz_class x;
 
@@ -1221,7 +1221,7 @@ namespace flopoco{
 	// with special treatment for exponents 0 and -1,
 	// and for the range reduction worst case.
 
-	TestCase* IterativeLog::buildRandomTestCase(int i){
+	TestCase* FPLogIterative::buildRandomTestCase(int i){
 
 		TestCase *tc;
 		mpz_class a;
@@ -1251,18 +1251,61 @@ namespace flopoco{
 		return tc;
 	}
 
-		OperatorPtr IterativeLog::parseArguments(Target *target, vector<string> &args) {
+		OperatorPtr FPLogIterative::parseArguments(Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		int inTableSize;
 		UserInterface::parsePositiveInt(args, "inTableSize", &inTableSize);
-		return new IterativeLog(target, wE, wF, inTableSize);
+		return new FPLogIterative(target, wE, wF, inTableSize);
 	}
 
-	void IterativeLog::registerFactory(){
-		UserInterface::add("FPLog", // name
+
+
+
+	void FPLogIterative::nextTestState(TestState * previousTestState)
+		{
+			static vector<vector<pair<string,string>>> testStateList;
+			vector<pair<string,string>> paramList;
+			
+			if(previousTestState->getIterationIndex() == 0)
+			{
+				paramList.push_back(make_pair("wE","8"));
+				paramList.push_back(make_pair("wF","23"));
+				testStateList.push_back(paramList);
+				paramList.clear();
+				paramList.push_back(make_pair("wE","11"));
+				paramList.push_back(make_pair("wF","52"));
+				testStateList.push_back(paramList);
+
+
+				for(int i = 5; i<53; i++)
+				{
+					int nbByteWE = 6+(i/10);
+					paramList.clear();
+					paramList.push_back(make_pair("wF",to_string(i)));
+					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+					testStateList.push_back(paramList);
+				}
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+
+
+			vector<pair<string,string>>::iterator itVector;
+			int indexIteration = previousTestState->getIterationIndex();
+
+			for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+			{
+				previousTestState->changeValue((*itVector).first,(*itVector).second);
+				previousTestState->changeValue("n","50");
+			}
+		}
+
+	
+	
+	void FPLogIterative::registerFactory(){
+		UserInterface::add("FPLogIterative", // name
 											 "Floating-point logarithm using an iterative method.",
 											 "ElementaryFunctions", // categories
 											 "",
@@ -1270,7 +1313,8 @@ namespace flopoco{
                         wF(int): mantissa size in bits; \
                         inTableSize(int)=0: The input size to the tables, in bits, between 6 and 16. 0 choses a a sensible value",
 											 "For details on the technique used, see <a href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research report</a>.",
-											 IterativeLog::parseArguments
+											 FPLogIterative::parseArguments,
+											 FPLogIterative::nextTestState
 											 ) ;
 
 	}

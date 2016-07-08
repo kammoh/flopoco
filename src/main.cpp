@@ -98,7 +98,8 @@ int main(int argc, char* argv[] )
 		FPDotProduct::registerFactory();
 		
 		FPExp::registerFactory();
-		IterativeLog::registerFactory();
+		FPLog::registerFactory();
+		FPLogIterative::registerFactory();
 		FPPow::registerFactory();
 		FixSinCos::registerFactory();
 		CordicSinCos::registerFactory();
