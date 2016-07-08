@@ -310,6 +310,10 @@ namespace flopoco
 		return factoryList.size();
 	}
 
+	OperatorFactoryPtr UserInterface::getFactoryByIndex(unsigned i)
+	{
+		return UserInterface::factoryList[i].second;
+	}
 
 	OperatorFactoryPtr UserInterface::getFactoryByName(string operatorName)	{
 		std::transform(operatorName.begin(), operatorName.end(), operatorName.begin(), ::tolower);
