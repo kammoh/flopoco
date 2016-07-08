@@ -251,10 +251,14 @@
 		//incremented exponent.
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
+		//ajout d'un 1 pour eviter le decalage pour les sous normaux
+		/*++*/vhdl << tab << declare("noDecalageSubN",wF+5) << "<= (fracGRS"<<of(wF+4)<<" & '1' & fracGRS"<<range(wF+2,0)<<") when (eXmeY="<<zg(wE+1)<<" and expX/="<<og(wE)<<" and subNormX='1') else fracGRS;"<<endl;
+
 
 		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
 		addSubComponent(lzocs);
-		inPortMap  (lzocs, "I", "fracGRS");
+		// inPortMap  (lzocs, "I", "fracGRS");
+		/*++*/inPortMap  (lzocs, "I", "noDecalageSubN");
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFrac");
 		vhdl << instance(lzocs, "LZC_component");
@@ -321,25 +325,29 @@
 			vhdl << tab << declare("expR",wE) <<" <= RoundedExpFrac"<<range(wF+wE,wF+1)<<";"<<endl;
 
 			manageCriticalPath(target->localWireDelay() + target->lutDelay());
-			vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
-			vhdl << tab << "with (exExpExc) select "<<endl;
-			vhdl << tab << declare("expRt",wE) << "<= "<<zg(wE)<<" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
-			<<tab<<tab<<"expR when \"0001\","<<endl
-			<<tab<<tab<<og(wE)<<" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
-			<<tab<<tab<<og(wE)<<" when others;"<<endl;
-			manageCriticalPath(target->localWireDelay() + target->lutDelay());
-			vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl; 
-			vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt2="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  
-			<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or exExpExc=\"0001\") else fracR;"<<endl;
-			vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt2="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  
-			<< "and exExpExc/=\"1110\" and exExpExc/=\"0101\" and exExpExc/=\"0001\" else fracRt;"<<endl;
+
+		vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
+		vhdl << tab << "with (exExpExc) select "<<endl;
+		vhdl << tab << declare("expRt",wE) << "<= "<<zg(wE)<<" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
+		<<tab<<tab<<"expR when \"0001\","<<endl
+		<<tab<<tab<<og(wE)<<" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
+		<<tab<<tab<<og(wE)<<" when others;"<<endl;
+		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl;
+		//propagation de la retenue lors de la somme de deux sous normaux qui donne un normal
+		/*++*/vhdl<<tab<<declare("expRt3",wE) << " <= expRt2 + '1' when subNormX='1' and subNormY='1' and expRt2="<<zg(wE)<<" and "/*nZerosNew="<<og(wE+2-lzocs->getCountWidth()-1,-1)<<"0\"*/<<"fracAddResult"<<of(wF+2)<<"='1' else expRt2;"<<endl;
+		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt3="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  
+		<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or exExpExc=\"0001\") else fracR;"<<endl;
+		vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt3="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  
+		<< "and exExpExc/=\"1110\" and exExpExc/=\"0101\" and exExpExc/=\"0001\" else fracRt;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
-			vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') or (fracRt2="<<og(wF)<<" and expRt2="<<og(wE)<<") else signR;"<<endl;
+		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') or (fracRt2="<<og(wF)<<" and expRt3="<<og(wE)<<") else signR;"<<endl;
+
 
 
 
 		// assign result
-		vhdl<<tab<< declare("computedR",wE+wF+1) << " <= signR2 & expRt2 & fracRt2;"<<endl;	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		vhdl<<tab<< declare("computedR",wE+wF+1) << " <= signR2 & expRt3 & fracRt2;"<<endl;	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		vhdl << tab << "R <= computedR;"<<endl;
 
 		/*		manageCriticalPath(target->localWireDelay() +  target->lutDelay());
@@ -399,8 +407,20 @@
 
 					
 					tc = new TestCase(this);
-					tc->addIEEEInput("X", 2.4E-44);
+					tc->addIEEEInput("X", 2.4e-44);
 					tc->addIEEEInput("Y", 2.8e-45);
+					emulate(tc);
+					tcl->add(tc);
+					
+					tc = new TestCase(this);
+					tc->addIEEEInput("X", 1.469368e-39);
+					tc->addIEEEInput("Y", 4.5e-44);
+					emulate(tc);
+					tcl->add(tc);
+
+					tc = new TestCase(this);
+					tc->addIEEEInput("X", IEEENumber::greatestSubNormal);
+					tc->addIEEEInput("Y", IEEENumber::greatestSubNormal);
 					emulate(tc);
 					tcl->add(tc);
 
