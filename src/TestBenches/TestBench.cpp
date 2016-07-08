@@ -236,7 +236,7 @@ namespace flopoco{
 		// vhdl << tab << tab << tab << "wait for "<< op_->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 		for(Signal* s: outputSignalVector){
 			vhdl << tab << tab << tab << "read(inline, possibilityNumber);" << endl;
-			vhdl << tab << tab << tab << "localErrorCounter := 0;" << endl;
+			vhdl << tab << tab << tab << "localErrorCounter := 0; -- 0 means error" << endl;
 			vhdl << tab << tab << tab << "read(inline,tmpChar);" << endl; // we consume the character after output list
 			vhdl << tab << tab << tab << "expected_size_"<< s->getName() << " := inline'Length;"<< endl; // the remainder is the vector of expected outputs: remember how long it is
 			vhdl << tab << tab << tab << "expected_"<< s->getName() << " := inline.all & (expected_size_"<< s->getName() << "+1 to 1000 => ' ');"<< endl; // because we have to pad it to 1000 chars
@@ -259,7 +259,9 @@ namespace flopoco{
 			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for " 
 					 << s->getName() << ": \" & lf & ";
 			vhdl << "\"  expected value: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;  
+			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
+			
+			vhdl << tab << tab << tab << tab << tab << "errorCounter := errorCounter + 1; -- incrementing global error counter" << endl;
 			vhdl << tab << tab << tab << tab << "end if;" << endl;
 
 			vhdl << tab << tab << tab << "else" << endl;
