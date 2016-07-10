@@ -6,10 +6,8 @@
 
 #include "BitHeap/BitHeap.hpp"
 
-/*  All flopoco operators and utility functions are declared within
-  the flopoco namespace.
-	You have to use flopoco:: or using namespace flopoco in order to access these
-  functions.
+
+/*
 */
 
 namespace flopoco{

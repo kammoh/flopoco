@@ -97,17 +97,16 @@ namespace flopoco{
 		setNameWithFreqAndUID(name.str()); 
 	
 		setCopyrightString("Matei Istoan, Louis Besème, Florent de Dinechin (2013-2015)");
+
+
+		//reporting on the command line
+		REPORT(DETAILED, "FixSOPC  lsbOut=" << lsbOut << "   g=" << g) ;
+		for (int i=0; i< n; i++)
+			REPORT(DETAILED, "i=" << i << "  coeff=" << coeff[i] << "  msbIn=" << msbIn[i] << "  lsbIn=" << lsbIn[i]);
+
 		
 		for (int i=0; i< n; i++)
 			addInput(join("X",i), msbIn[i]-lsbIn[i]+1);
-
-
-		//reporting on the filter
-		ostringstream clist;
-		clist << coeff[0];
-		for (int i=0; i< n; i++)
-			clist << " : " << coeff[i];
-		REPORT(INFO, "FixSOPC  lsbOut=" << lsbOut <<  " coeff=\"" << clist.str() << "\"" ) ;
 		
 		for (int i=0; i< n; i++) {
 			// parse the coeffs from the string, with Sollya parsing
