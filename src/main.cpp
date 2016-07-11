@@ -36,6 +36,8 @@ int main(int argc, char* argv[] )
 {
 	try {
 
+		Tester::registerFactory();
+
 		// Florent has commented out all the operators for now.
 		// Uncomment them only to bring them up to the new framework.
 
@@ -85,7 +87,7 @@ int main(int argc, char* argv[] )
 		// FixFunctionByMultipartiteTable::registerFactory();
 		// BasicPolyApprox::registerFactory();
 		// PiecewisePolyApprox::registerFactory();
-		// FixRealKCM::registerFactory();
+	  FixRealKCM::registerFactory();
 		TestBench::registerFactory();
 		Wrapper::registerFactory();
 		FPAdd::registerFactory();
@@ -96,7 +98,7 @@ int main(int argc, char* argv[] )
 		// FPMult::registerFactory();
 		// //FPMultKaratsuba::registerFactory();
 		// FPSquare::registerFactory();
-		// FPDiv::registerFactory();
+		FPDiv::registerFactory();
 		// FPDiv::NbBitsMinRegisterFactory();
 		// FPSqrt::registerFactory();
 

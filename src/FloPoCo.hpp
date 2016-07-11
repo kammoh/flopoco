@@ -163,6 +163,8 @@
 #include "Conversions/InputIEEE.hpp"
 #include "Conversions/OutputIEEE.hpp"
 
+// Tester
+#include "Tester/Tester.hpp"
 
 
 /* misc ------------------------------------------------------ */

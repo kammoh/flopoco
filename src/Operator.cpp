@@ -77,7 +77,6 @@ namespace flopoco{
 	// global variables used through most of FloPoCo,
 	// to be encapsulated in something, someday?
 	int Operator::uid = 0; 										//init of the uid static member of Operator
-	multimap < string, TestState > Operator::testMemory;		//init the multimap
 	int verbose=0;
 
 	Operator::Operator(Target* target, map<string, double> inputDelays){
@@ -3664,76 +3663,6 @@ namespace flopoco{
 	}
 #endif
 
-
-	// FIXME: get rid of this somewhere else
-	float Operator::pickRandomNum ( float limit, int fp, int sp )
-	{
-		static boost::mt19937 rng;
-		float element;
-		const float  limitMax = 112.0;
-		string distribution = "gauss";
-
-		// the rng need to be "re-seed" in order to provide different number otherwise it will always give the same
-		static unsigned int seed = 0;
-		rng.seed ( ( ++seed + time ( NULL ) ) );
-
-		if ( distribution == "gauss" ){
-			if ( limit == 0 ){
-				// fp represent the mean and sp the standard deviation
-				boost::normal_distribution<> nd ( fp, sp );
-				boost::variate_generator < boost::mt19937&, boost::normal_distribution<> > var_nor ( rng, nd );
-				do{
-					element = fabs ( var_nor () );
-				}while( element > limitMax );
-			}
-			else{
-				boost::normal_distribution<> nd ( fp, 3 * sp);
-				boost::variate_generator < boost::mt19937&, boost::normal_distribution<> > var_nor ( rng, nd );
-				do{
-					element = fabs ( var_nor () );
-				}while ( element >= limit || element > limitMax );
-			}
-		}
-		if ( distribution == "uniform" ){
-			if ( fp > sp){
-				int temp = fp;
-				fp = sp;
-				sp = temp;
-			}
-			boost::uniform_int<> ud ( fp, sp );
-			boost::variate_generator < boost::mt19937&, boost::uniform_int<> > var_uni ( rng, ud );
-			element = var_uni ();
-		}
-		return element;
-	}
-
-
-	bool Operator::checkExistence ( TestState parameters, string opName ){
-		if ( !testMemory.empty () ){
-			multimap < string, TestState >::key_compare memoryComp = testMemory.key_comp ();
-			multimap < string, TestState >::iterator it = testMemory.begin ();
-			while ( it != testMemory.end () && memoryComp ( ( *it ).first, opName ) ){
-				it++;
-			}
-
-			// boolean indicating that we are still analysing TestState on the same operator
-			bool firstEqual = true;
-			for(; it != testMemory.end () && firstEqual ; it++ ){
-				bool exist = false;
-				TestState  memoryVect = ( *it ).second;
-				if ( opName.compare ( ( * ( it ) ).first ) != 0 ){
-					firstEqual = false;
-				}
-				else{
-					exist = parameters.equality ( &memoryVect );
-					if ( exist ){
-						return exist;
-					}
-				}
-			}
-		}
-		return false;
-	}
 
 	void Operator::setHasDelay1Feedbacks(){
 		hasDelay1Feedbacks_=true;

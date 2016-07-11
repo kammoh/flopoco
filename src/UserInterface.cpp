@@ -58,6 +58,7 @@ namespace flopoco
 		v.push_back(make_pair("Conversions", "Conversions between number systems" ));
 		v.push_back(make_pair("FiltersEtc", "Filters and FFTs"));
 		v.push_back(make_pair("TestBenches", "Test Benches"));
+		v.push_back(make_pair("AutoTest", "AutoTest"));
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
 		return v;
 	}();
@@ -98,6 +99,7 @@ namespace flopoco
 				values.push_back(std::to_string(0));
 				values.push_back(std::to_string(1));
 				v.push_back(option_t("pipeline", values));
+				v.push_back(option_t("clockEnable", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
 				v.push_back(option_t("useHardMults", values));
@@ -152,17 +154,18 @@ namespace flopoco
 
 	void UserInterface::parseGenericOptions(vector<string> &args) {
 		parseString(args, "name", &entityName, true); // not sticky: will be used, and reset, after the operator parser
-		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
-		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
 		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
+		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
+		parseBoolean(args, "pipeline", &pipeline, true );
+		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
+		parseBoolean(args, "plainVHDL", &plainVHDL, true);
+		parseBoolean(args, "clockEnable", &clockEnable, true);
 		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
 		parseBoolean(args, "useHardMult", &useHardMult, true);
-		parseBoolean(args, "plainVHDL", &plainVHDL, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
 		parseBoolean(args, "floorplanning", &floorplanning, true);
 		parseBoolean(args, "reDebug", &reDebug, true );
-		parseBoolean(args, "pipeline", &pipeline, true );
 		parseString(args, "dependencyGraph", &depGraphDrawing, true);
 		//	parseBoolean(args, "", &  );
 	}
@@ -307,6 +310,10 @@ namespace flopoco
 		return factoryList.size();
 	}
 
+	OperatorFactoryPtr UserInterface::getFactoryByIndex(unsigned i)
+	{
+		return UserInterface::factoryList[i].second;
+	}
 
 	OperatorFactoryPtr UserInterface::getFactoryByName(string operatorName)	{
 		std::transform(operatorName.begin(), operatorName.end(), operatorName.begin(), ::tolower);
@@ -425,6 +432,7 @@ namespace flopoco
 					throw("ERROR: unknown target: " + targetFPGA);
 				}
 				target->setPipelined(pipeline);
+				target->setClockEnable(clockEnable);
 				target->setFrequency(1e6*targetFrequencyMHz);
 				target->setUseHardMultipliers(useHardMult);
 				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
@@ -650,8 +658,9 @@ namespace flopoco
 													 string seeAlso,
 													 string parameterList, /**< semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
 													 string extraHTMLDoc, /**< Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
-													 parser_func_t parser	 ) {
-		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser));
+													 parser_func_t parser,
+													 nextTestState_func_t nextTestState) {
+		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser,  nextTestState));
 		UserInterface::registerFactory(factory);
 	}
 
@@ -1154,8 +1163,10 @@ namespace flopoco
 						 string seeAlso,
 						 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
 						 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
-						 parser_func_t parser  )
-		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser)
+						 parser_func_t parser ,
+						 nextTestState_func_t nextTestState )
+		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser), m_nextTestState(nextTestState)
+
 	{
 		int start;
 		// Parse the parameter description

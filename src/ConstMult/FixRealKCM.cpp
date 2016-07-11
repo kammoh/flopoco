@@ -1,17 +1,28 @@
+// TODO: repair FixSOPC, FixIIR, FixComplexKCM
 /*
  * A faithful multiplier by a real constant, using a variation of the KCM method
  *
  * This file is part of the FloPoCo project developed by the Arenaire
  * team at Ecole Normale Superieure de Lyon
- *
+ * 
  * Authors : Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr
  * 			 3IF-Dev-Team-2015
  *
  * Initial software.
- * Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
+ * Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 
  * 2008-2011.
  * All rights reserved.
+ */
+/*
+
+Remaining 1-ulp bug:
+flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
+It is the limit case of removing one table altogether because it contributes nothng.
+I don't really understand
+
 */
+
+
 
 #include "../Operator.hpp"
 
@@ -30,606 +41,479 @@ using namespace std;
 
 namespace flopoco{
 
+
+
+
+	
+	//standalone operator
+	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
+							Operator(target),
+							parentOp(this),
+							signedInput(signedInput_),
+							msbIn(msbIn_),
+							lsbIn(lsbIn_),
+							lsbOut(lsbOut_),
+							constant(constant_),
+							targetUlpError(targetUlpError_),
+							addRoundBit(true)
+	{
+		init();		 // check special cases, computes number of tables and errorInUlps.
+
+		// Now we have everything to compute g
+		computeGuardBits();
+		
+		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
+		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
+		
+		addInput("X",  msbIn-lsbIn+1);
+		//		addFixInput("X", signedInput,  msbIn, lsbIn); // The world is not ready yet
+		inputSignalName = "X"; // for buildForBitHeap
+		addOutput("R", msbOut-lsbOut+1);
+
+		// Special cases
+		if(constantRoundsToZero)	{
+			vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << ";" << endl;
+			return;
+		}
+
+		if(constantIsPowerOfTwo)	{
+			// The code here is different that the one for the bit heap constructor:
+			// In the stand alone case we must compute full negation.
+			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
+			int rTempSize = parentOp->getSignalByName(rTempName)->width();
+
+			if(negativeConstant) { // In this case msbOut was incremented in init()
+				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - ";
+				if(signedInput) {
+					vhdl << "("
+							 <<  rTempName << of(rTempSize-1) << " & " // sign extension 
+							 <<  rTempName << range(rTempSize-1, g)
+							 << ");" << endl;
+				}
+				else{ // unsigned input
+					vhdl <<  rTempName << range(rTempSize-1, g) << ";" << endl;
+				}
+			}
+			else{		
+				vhdl << tab << "R <= "<< rTempName << range(msbOut-lsbOut+g, g) << ";" << endl;
+			}
+			return;
+		}
+
+
+		// From now we have stuff to do.
+		//create the bitheap
+		//		int bitheaplsb = lsbOut - g;
+		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
+		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
+
+		buildTablesForBitHeap(); // does everything up to bit heap compression
+
+		//compress the bitheap and produce the result
+		bitHeap->generateCompressorVHDL();
+
+		//manage the critical path
+		syncCycleFromSignal(bitHeap->getSumName());
+
+		// Retrieve the bits we want from the bit heap
+		vhdl << declare("OutRes",msbOut-lsbOut+1+g) << " <= " << 
+			bitHeap->getSumName() << range(msbOut-lsbOut+g, 0) << ";" << endl; // This range is useful in case there was an overflow?
+
+		vhdl << tab << "R <= OutRes" << range(msbOut-lsbOut+g, g) << ";" << endl;
+	}
+	
+	
+
+
+
+	FixRealKCM::FixRealKCM(
+												 Operator* parentOp_, 
+												 string multiplicandX,
+												 bool signedInput_,
+												 int msbIn_,
+												 int lsbIn_,
+												 int lsbOut_, 
+												 string constant_,
+												 bool addRoundBit_,
+												 double targetUlpError_
+												 ):
+		Operator(parentOp_->getTarget()),
+		parentOp(parentOp_),
+		signedInput(signedInput_),
+		msbIn(msbIn_),
+		lsbIn(lsbIn_),
+		lsbOut(lsbOut_),
+		constant(constant_),
+		targetUlpError(targetUlpError_),
+		addRoundBit(addRoundBit_), // will be set by buildForBitHeap()
+		bitHeap(NULL),
+		inputSignalName(multiplicandX)
+	{
+		
+		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is. 
+		
+	}
+					
+
+
+
+
+
+
+
 	/**
-	* @brief init : all operator initialisation stuff goes here
+	* @brief init : all operator initialization stuff goes here
 	*/
+	// Init computes the table splitting, because it is independent of g.
+	// It may take suboptimal decisions if lsbOut is later enlarged with guard bits. 
 	void FixRealKCM::init()
 	{
-		useNumericStd();
+		//useNumericStd();
 
 		srcFileName="FixRealKCM";
 
-		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team 2015");
-
-		if(lsbIn>msbIn)
+		setCopyrightString("Florent de Dinechin (2007-2016)");
+		
+		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
-
-		if(targetUlpError>1.0)
+    
+		if(targetUlpError > 1.0)
 			THROWERROR("FixRealKCM: Error, targetUlpError="<<
 					targetUlpError<<">1.0. Should be in ]0.5 ; 1].");
-		//Error on final rounding is er <= 2^{lsbout - 1} = 1/2 ulp so
+		//Error on final rounding is er <= 2^{lsbout - 1} = 1/2 ulp so 
 		//it's impossible to reach 0.5 ulp of precision if cste is real
-		if(targetUlpError <= 0.5)
+		if(targetUlpError <= 0.5) 
 			THROWERROR("FixRealKCM: Error, targetUlpError="<<
 					targetUlpError<<"<0.5. Should be in ]0.5 ; 1]");
-
+		
 		// Convert the input string into a sollya evaluation tree
 		sollya_obj_t node;
-		node = sollya_lib_parse_string(constant.c_str());
+		node = sollya_lib_parse_string(constant.c_str());	
 		/* If  parse error throw an exception */
 		if (sollya_lib_obj_is_error(node))
-			{
+		{
 				ostringstream error;
-				error << srcFileName << ": Unable to parse string "<<
+				error << srcFileName << ": Unable to parse string "<< 
 					constant << " as a numeric constant" <<endl;
 				throw error.str();
-			}
+		}
 
 		mpfr_init2(mpC, 10000);
 		mpfr_init2(absC, 10000);
 		sollya_lib_get_constant(mpC, node);
 
-		//if negative constant, then set negativeConstant and remake the
-		//constant positive
-		negativeConstant = false;
-		if(mpfr_cmp_si(mpC, 0) < 0)
-		{
-			//throw string("FixRealKCMBH: only positive constants are supported");
-			negativeConstant = true;
-		}
+		//if negative constant, then set negativeConstant
+		negativeConstant = ( mpfr_cmp_si(mpC, 0) < 0 ? true: false );
 
+		signedOutput = negativeConstant || signedInput;
 		mpfr_abs(absC, mpC, GMP_RNDN);
 
 		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
 
 		// build the name
-		ostringstream name;
-		name <<"FixRealKCM_" << vhdlize(lsbIn)  << "_" << vhdlize(msbIn) <<
-			"_" << vhdlize(lsbOut) << "_" << vhdlize(constant)  <<
-			(signedInput  ?"_signed" : "_unsigned");
-		setName(name.str());
+		ostringstream name; 
+		name <<"FixRealKCM_"  << vhdlize(msbIn)
+				 << "_"  << vhdlize(lsbIn)
+				 <<	"_" << vhdlize(lsbOut)
+				 << "_" << vhdlize(constant)
+				 << (signedInput  ?"_signed" : "_unsigned");
+		setNameWithFreqAndUID(name.str());
 
+		//compute the logarithm only of the constants
 		mpfr_t log2C;
 		mpfr_init2(log2C, 100); // should be enough for anybody
 		mpfr_log2(log2C, absC, GMP_RNDN);
 		msbC = mpfr_get_si(log2C, GMP_RNDU);
 		mpfr_clears(log2C, NULL);
 
-		msbOut = msbC + msbIn;
-		if(!signedInput && negativeConstant)
-		{
-			msbOut++; //Result would be signed
+		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
+		constantRoundsToZero = false;
+		if(mpfr_zero_p(mpC) != 0){
+			constantRoundsToZero = true;
+			msbOut=lsbOut; // let us return a result on one bit, why not.
+			errorInUlps=0;
+			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+			return;
+		}
+		
+		// A few sanity checks related to the magnitude of the constant
+		// A bit of weight l is sent to position l+msbC+1 at most. For this to be useful we want l+msbC+1 > lsbOut.  
+		int lsbInUseful = lsbOut -1 - msbC -1; // Second -1 for the rounding;  input bits with lower weights than lsbInUseful have at most rounding inpact on the output
+
+		if(msbIn<lsbInUseful){
+			constantRoundsToZero = true;
+			msbOut=lsbOut; // let us return a result on one bit, why not.
+			errorInUlps=0.5;// TODO this is an overestimation
+			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
+			return;
 		}
 
-		wOut = msbOut - lsbOut +1;
+		
+		// Now we can discuss MSBs
+		msbOut = msbC + msbIn;
 
-		REPORT(DEBUG, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<<
-				msbIn << "," << lsbIn << ")   wIn=" << wIn <<
+		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
+		// However this depends on how many guard bits we add...
+		// So the relevant test has been pushed to the table generation
+
+		// Finally, check if the constant is a power of two -- obvious optimization there
+		constantIsPowerOfTwo = (mpfr_cmp_ui_2exp(absC, 1, msbC) == 0);
+		if(constantIsPowerOfTwo) {
+			if(negativeConstant) {
+				msbOut++; // To cater for the asymmetry of fixed-point : -2^(msbIn-1) has no representable opposite otherwise
+				// We still have the original shift information in msbC
+			}
+			
+		
+			if(lsbIn+msbC<lsbOut) {   // The truncation case
+				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
+				errorInUlps=1;
+			}
+
+			
+			else { // The padding case
+				// The stand alone constructor computes a full subtraction. The Bitheap one adds negated bits, and a constant one that completes the subtraction.
+				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
+				errorInUlps=0;
+			}
+			return; // init stops here.
+		}
+		
+		REPORT(DETAILED, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
+					 msbIn << "," << lsbIn << ")    lsbIn=" << lsbIn << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
-				")   wOut=" << wOut
-			);
+					 ")  signedOutput=" << signedOutput
+		);
 
-		g = neededGuardBits(
-				getTarget(),
-				wIn,
-				targetUlpError,
-				constant,
-				lsbIn,
-				lsbOut
-			);
+		// Compute the splitting of the input bits.
+		// Ordering: Table 0 is the one that inputs the MSBs of the input 
+		// Let us call l the native LUT size (discounting the MUXes internal to logic clusters that enable to assemble them as larger LUTs).
+		// Asymptotically (for large wIn), it is better to split the input in l-bit slices than (l+1)-bit slices, even if we have these muxes for free:
+		// costs (in LUTs) are roundUp(wIn/l) versus 2*roundUp(wIn/(l+1))
+		// Exception: when one of the tables is a 1-bit one, having it as a separate table will cost one LUT and one addition more,
+		// whereas integrating it in the previous table costs one more LUT and one more MUX (the latter being for free) 
+		// Fact: the tables which inputs MSBs have larger outputs, hence cost more.
+		// Therefore, the table that will have this double LUT cost should be the rightmost one.
+
+		
+		int optimalTableInputWidth = getTarget()->lutInputs();
+		//		int wIn = msbIn-lsbIn+1;
+
+		// first do something naive, then we'll optimize it.
+		numberOfTables=0;
+		int tableInMSB= msbIn; 
+		int tableInLSB = msbIn-(optimalTableInputWidth-1);
+		while (tableInLSB>lsbIn) {
+			m.push_back(tableInMSB);
+			l.push_back(tableInLSB);
+			tableInMSB -= optimalTableInputWidth ;
+			tableInLSB -= optimalTableInputWidth ;
+			numberOfTables++;
+		}
+		tableInLSB=lsbIn;
+		
+		// For the last table we just check if is not of size 1
+		if(tableInLSB==tableInMSB && numberOfTables>0) {
+			// better enlarge the previous table
+			l[numberOfTables-1] --;
+		}
+		else { // last table is normal
+			m.push_back(tableInMSB);
+			l.push_back(tableInLSB);
+			numberOfTables++;			
+		}
+
+		// Are the table outputs signed? We compute this information here in order to avoid having constant bits added to the bit heap.
+		// The chunk input to tables of index i>0 is always an unsigned number, so their output will be constant, fixed by the sign of 
+		for (int i=0; i<numberOfTables; i++) {
+			int s;
+			if (i==0 && signedInput) {
+				// This is the only case when we can have a variable sign
+					s=0;
+			}
+			else { // chunk input is positive
+					if(negativeConstant)
+						s=-1;
+					else
+						s=1;
+			}
+			tableOutputSign.push_back(s);
+		}
+		/* How to use this information? 
+			 The case +1 is simple: don't tabulate the constant 0 sign, don't add it to the bit heap 
+			 The case 0 is usual: we have a two's complement number to add to the bit heap, 
+          there are methods for that.  
+       The case -1 presents an additional problem: the sign bit is not always 1, 
+			    indeed there is one entry were the sign bit is 0: when input is 0.
+					As usual there is a bit heap trick (found by Luc Forget): 
+          negate all the bits and add one ulp to the constant vector of the bit heap.
+					
+					For simplicity, in the current code we compute xi*absC (the abs. value of the constant)
+          then subtract this from the bitHeap.
+					The effect is exactly the same (hoping that the not gets merged in the table) 
+					and the C++ code is simpler.
+*/
+		for (int i=0; i<numberOfTables; i++) {
+			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] << "   tableOutputSign=" << tableOutputSign[i]  );
+		}
+
+		// Finally computing the error due to this setup. We express it as ulps at position lsbOut-g, whatever g will be
+		errorInUlps=0.5*numberOfTables;
+		REPORT(DETAILED,"errorInUlps=" << errorInUlps);
 	}
 
 
-	bool FixRealKCM::handleSpecialConstant(Operator* op, string inputName)
-		{
-		if(mpfr_cmp_ui_2exp(absC, 1, msbC) == 0)
-		{
-			REPORT(DEBUG, "Constant is a power of two. "
-					"Simple shift will be used instead of tables");
 
-			int shiffterWidth = msbC + msbIn - lsbOut + 1;
-			int copyLength = min(wIn, shiffterWidth) - 1;
-			int shifStart = shiffterWidth - 1;
-			int shifStop = shifStart - copyLength;
 
-			op->setCycleFromSignal(inputName);
-			op->vhdl << tab <<
-				op->declare(join("kcm_", getuid(), "_shiffter"), shiffterWidth)<<
-				range(shifStart, shifStop) << " <= " <<
-				inputName << range(wIn - 1, wIn - 1 - copyLength) << ";" << endl;
-			if(wIn < shiffterWidth)
-			{
-				op->vhdl << tab << join("kcm_", getuid(), "_shiffter") <<
-					range (shiffterWidth - wIn - 1 , 0) << " <= " <<
-					zg(shiffterWidth - wIn, 0) << ";" << endl;
-			}
+		
 
-			if(signedInput)
-			{
-			if(negativeConstant)
-			{
-					bitHeap->subtractSignedBitVector(
-							lsbOut - bitheaplsb,
-							join("kcm_", getuid(), "_shiffter"),
-							shiffterWidth
-						);
-			}
-			else
-			{
-					bitHeap->addSignedBitVector(
-							lsbOut - bitheaplsb,
-							join("kcm_", getuid(), "_shiffter"),
-							shiffterWidth
-						);
+	double FixRealKCM::getErrorInUlps() {
+		return errorInUlps;
+	}
+
+
+	
+	void FixRealKCM::computeGuardBits(){
+		if(numberOfTables==2 && targetUlpError==1.0)
+			g=0; // specific case: two CR tables make up a faithful sum
+		else{
+			// Was:			g = ceil(log2(numberOfTables/((targetUlpError-0.5)*exp2(-lsbOut)))) -1 -lsbOut;
+			g=0;
+			double maxErrorWithGuardBits=errorInUlps;
+			double tableErrorBudget = targetUlpError-0.5 ; // 0.5 is for the final rounding
+			while (maxErrorWithGuardBits > tableErrorBudget) {
+				g++;
+				maxErrorWithGuardBits /= 2.0;
 			}
 		}
-		else
-		{
-				if(negativeConstant)
-				{
-					bitHeap->subtractUnsignedBitVector(
-							lsbOut - bitheaplsb,
-							join("kcm_", getuid(), "_shiffter"),
-							shiffterWidth
-						);
-				}
-				else
-				{
-					bitHeap->addUnsignedBitVector(
-							lsbOut - bitheaplsb,
-							join("kcm_", getuid(), "_shiffter"),
-							shiffterWidth
-						);
-				}
-			}
+		REPORT(DETAILED, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
+	}
+
+
+	void FixRealKCM::addToBitHeap(BitHeap* bitHeap_, int g_) {
+		bitHeap=bitHeap_;
+		g=g_;
+
+		bool special=specialCasesForBitHeap();
+		if(!special)
+			buildTablesForBitHeap();
+	}
+
+
+	bool FixRealKCM::specialCasesForBitHeap() {
+	// Special cases
+		if(constantRoundsToZero)		{
+			// do nothing
 			return true;
 		}
+
+		// In all the following it should be clear that lsbOut is the initial lsb asked by the larger operator.
+		// Some g was computed and we actually compute/tabulate to lsbOut -g
+		// We keep these two variables separated because it makes this two-step process more explicit than changing lsbOut.
+		
+		if(constantIsPowerOfTwo)	{
+			// Create a signal that shifts it or truncates it into place
+			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
+			int rTempSize = parentOp->getSignalByName(rTempName)->width();
+
+			if(negativeConstant) {
+				bitHeap -> subtractSignedBitVector(0, rTempName, rTempSize);
+			}
+			else{
+				if(signedInput)
+					bitHeap -> addSignedBitVector(0, rTempName, rTempSize);
+				else // !negativeConstant and !signedInput
+					bitHeap -> addUnsignedBitVector(0, rTempName, rTempSize);
+			}
+			return true; // and that 's all folks.
+			}
+		// From now on we have a "normal" constant and we instantiate tables.
 		return false;
 	}
 
-	int FixRealKCM::guardBitsFromTableNumber(
-			int nbOfTables,
-			double targetUlpError
-		)
-	{
-		int guardBits;
-		if(targetUlpError > 1.0 || targetUlpError <= 0.5)
-		{
-			cerr << "WARNING : Target ulp error should be in ]0.5 ; 1]. " <<
-					"Value provided : " << targetUlpError <<
-					"Will be considered as 1.0. Please, considere this"
-					" warning as a bug.";
-			targetUlpError = 1.0;
+	
+	// Just to factor out code.
+	/* This builds the input shifted WRT lsb-g
+	 but doesn't worry about adding or subtracting it,
+	 which depends wether we do a standalone or bit-heap   
+	*/
+	string FixRealKCM::createShiftedPowerOfTwo(string resultSignalName){
+		string rTempName = getName() + "_Rtemp"; // Should be unique in a bit heap if each KCM got a UID.
+		// Compute shift that must be applied to x to align it to lsbout-g.
+		// This is a shift left: negative means shift right.
+		int shift= lsbIn -(lsbOut-g)  + msbC ; 
+		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
+		REPORT(0,"msbC=" << msbC << "     Shift left of " << shift << " bits");
+		// compute the product by the abs constant
+		parentOp->vhdl << tab << parentOp->declare(rTempName, rTempSize) << " <= ";
+		// Still there are two cases: 
+		if(shift>=0) {  // Shift left; pad   THIS SEEMS TO WORK
+			parentOp->vhdl << inputSignalName << " & " << zg(shift);
+			// rtempsize= msbIn-lsbin+1   + shift  =   -lsbIn   + msbIn   +1   - (lsbOut-g -lsbIn +msbC)
 		}
-
-		if((nbOfTables <= 2 && targetUlpError==1.0) || nbOfTables == 1)
-		{
-			// specific case: two CR table make up a faithful sum
-			guardBits = 0;
+		else { // shift right; truncate
+			parentOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
 		}
-			else
-		{
-			guardBits = ceil(log2((double)nbOfTables/(2*targetUlpError - 1)));
-		}
-
-		return guardBits;
-	}
-
-	int FixRealKCM::computeTablesNumber(
-			Target* target,
-			int wIn,
-			int msbC,
-			int lsbIn,
-			int lsbOut,
-			double targetUlpError,
-			int** disize_target
-		)
-	{
-		int oldWIn = wIn;
-		/** will be target->lutInputs() or target->lutInputs()-1  */
-		int optimalTableInputWidth = target->lutInputs()-1;
-		int* diSize = nullptr;
-		int nbOfTables, guardBits;
-		int wOut = wIn + lsbIn + msbC - lsbOut;
-		int newWIn = wOut + msbC + 1;
-		int newGuardBits = 0;
-
-		if(wIn <= newWIn)
-		{
-			int nbTablesEntieres = wIn / optimalTableInputWidth;
-			int remainingBits = wIn % optimalTableInputWidth;
-			nbOfTables = nbTablesEntieres;
-
-			if(remainingBits != 0)
-			{
-				int guardBits_extendedTable =
-					guardBitsFromTableNumber(nbTablesEntieres, targetUlpError);
-				int guardBits_extraTable =
-					guardBitsFromTableNumber(nbTablesEntieres + 1, targetUlpError);
-
-				//TODO : compute more accurately costs and compare them
-				if	(	guardBits_extraTable == guardBits_extendedTable )
-				{
-					nbOfTables++;
-					diSize = new int[nbOfTables];
-					for(int i = 0 ; i + 1 < nbOfTables ; diSize[i++] = optimalTableInputWidth );
-					diSize[nbOfTables - 1] = remainingBits;
-				}
-				else
-				{
-					diSize = new int[nbOfTables];
-					diSize[0] = remainingBits + optimalTableInputWidth;
-					for(int i = 1 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-				}
-			}
-			else
-			{
-				diSize = new int[nbOfTables];
-				for(int i = 0 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-				}
-
-		}
-		else {
-			cerr << "Input precision higher than required. Trying to optimize" << endl;
-			//The loop is here to prevent neglictible input bits from being
-			//tabulated.
-			do {
-				if(diSize != nullptr) {
-					delete diSize;
-					diSize = nullptr;
-				}
-				wIn = newWIn;
-				guardBits = newGuardBits;
-
-				int nbTablesEntieres = wIn / optimalTableInputWidth;
-				int remainingBits = wIn % optimalTableInputWidth;
-				nbOfTables = nbTablesEntieres;
-
-				if (remainingBits != 0) {
-					int guardBits_extendedTable =
-						guardBitsFromTableNumber(nbTablesEntieres, targetUlpError);
-					int guardBits_extraTable =
-						guardBitsFromTableNumber(nbTablesEntieres + 1, targetUlpError);
-
-					//TODO : compute more accurately costs and compare them
-					if	(	guardBits_extraTable == guardBits_extendedTable ) {
-						nbOfTables++;
-						diSize = new int[nbOfTables];
-						for(int i = 0 ; i + 1 < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-						diSize[nbOfTables - 1] = remainingBits;
-					} else {
-						diSize = new int[nbOfTables];
-						diSize[0] = remainingBits + optimalTableInputWidth;
-						for(int i = 1 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth );
-					}
-				} else {
-					diSize = new int[nbOfTables];
-					for(int i = 0 ; i < nbOfTables ; diSize[i++] = optimalTableInputWidth);
-			}
-
-				newGuardBits = guardBitsFromTableNumber(nbOfTables, targetUlpError);
-				newWIn = wIn + newGuardBits - guardBits;
-			}while(newWIn > wIn && wIn <= oldWIn && newWIn <= oldWIn);
-		}
-
-		if(disize_target != nullptr)
-			{
-			*disize_target = diSize;
-			}
-			else
-			{
-			delete[] diSize;
-			}
-		return nbOfTables;
-			}
-
-
-	void FixRealKCM::connectTablesToBitHeap(
-				FixRealKCMTable** t,
-				int* doSize,
-				int nbOfTables,
-				Operator* op
-			)
-				{
-		Target* target = getTarget();
-
-					for(int i=0; i<nbOfTables; i++)
-					{
-			REPORT(DEBUG, "Adding bits for table " << i)
-						//manage the critical path
-			op->setCycleFromSignal(join("d", i, "_kcmMult_", getuid()));
-			op->manageCriticalPath(target->lutDelay());
-
-			op->inPortMap (t[i] , "X", join("d",i, "_kcmMult_", getuid()));
-			op->outPortMap(t[i] , "Y", join("pp",i, "_kcmMult_", getuid()));
-			op->vhdl << op->instance(t[i] , join("KCMTable_",i, "_kcmMult_", getuid()));
-
-						//manage the critical path
-			op->syncCycleFromSignal(join("pp",i,"_kcmMult_", getuid()));
-
-			int bitheapSize = bitHeap->getMaxWeight()-bitHeap->getMinWeight();
-						//add the bits to the bit heap
-			int offset = lsbOut-g-bitheaplsb;
-			int w;
-			for(w=0; w < doSize[i]; w++)
-						{
-							stringstream s;
-
-							//manage the critical path
-							manageCriticalPath(target->lutDelay());
-
-				s << join("pp",i, "_kcmMult_", getuid()) << of(w);
-				bitHeap->addBit(w+offset, s.str());
-
-			} // w = table.msb + 1
-
-			//Negative subproduct sign extension :
-			//As fast sign extension was enabled, we only need to add
-			//1 to each weight from table.msb to wOut - 1
-			if(t[i]->negativeSubproduct)
-			{
-				REPORT(DEBUG, "Negative subproduct sign extension for table "<<i);
-				for(; w < bitheapSize ; w++)
-						{
-								bitHeap->addConstantOneBit(w);
-					}
-				bitHeap->addConstantOneBit(0);
-				}
-			else if (i == nbOfTables - 1 && signedInput)
-				{
-				REPORT(DEBUG, "Sign extension for signed input msb table");
-				for(w-- ; w < bitheapSize ; w++)
-					{
-					bitHeap->addConstantOneBit(w);
-					}
-					}
-
-
-					}
-
-		if(g > 0)
-						{
-			REPORT(INFO, "Adding one half ulp to transform truncation into"
-					" faithful rounding");
-			bitHeap->addConstantOneBit(lsbOut-bitheaplsb-1);
-						}
-					}
-
-
-
-	//standalone operator
-	FixRealKCM::FixRealKCM(
-				Target* target,
-				bool signedInput_,
-				int msbIn_,
-				int lsbIn_,
-				int lsbOut_,
-				string constant_,
-				double targetUlpError_,
-				map<string, double> inputDelays
-			):Operator(target, inputDelays),
-			signedInput(signedInput_),
-			msbIn(msbIn_),
-			lsbIn(lsbIn_),
-			wIn(msbIn_-lsbIn_+1),
-			lsbOut(lsbOut_),
-			constant(constant_),
-			targetUlpError(targetUlpError_)
-	{
-		init();
-		bitheaplsb = lsbOut - g;
-		addInput("X", wIn);
-		addOutput("R", wOut);
-
-		//Zero constant
-		if(mpfr_zero_p(mpC) != 0)
-			{
-			vhdl << tab << "R" << range(wOut - 1, 0) << " <= " << zg(wOut, 0) <<
-				";" << endl;
-		} else { //NonZero constant
-
-			//create the bitheap
-			bitHeap = new BitHeap(this, wOut+g);
-
-			if(!handleSpecialConstant(this))
-			{
-				int* diSize;
-				int nbOfTables = computeTablesNumber(
-						target,
-						wIn,
-						msbC,
-						lsbIn,
-						lsbOut,
-						targetUlpError,
-						&diSize
-						);
-
-				REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables." <<
-						g << "guards bits are used.");
-				//manage the critical path
-
-				setCriticalPath(getMaxInputDelays(inputDelays));
-
-				int* doSize;
-
-				setCriticalPath(getMaxInputDelays(inputDelays));
-				manageCriticalPath(target->localWireDelay() + target->lutDelay());
-
-				FixRealKCMTable** t = createTables(
-						diSize,
-						nbOfTables,
-						&doSize,
-						this
-						);
-
-				connectTablesToBitHeap(t, doSize, nbOfTables, this);
-
-				delete[] diSize;
-				}
-
-			//compress the bitheap and produce the result
-			bitHeap->generateCompressorVHDL();
-
-			//manage the critical path
-			syncCycleFromSignal(bitHeap->getSumName());
-
-			//because of final add in bit heap, add one more bit to the result
-			vhdl << declare("OutRes", wOut+g) << " <= " <<
-				bitHeap->getSumName() << range(wOut+g-1, 0) << ";" << endl;
-
-			vhdl << tab << "R <= OutRes" << range(wOut+g-1, g) << ";" << endl;
-		}
+		parentOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
+		return rTempName;
 	}
 
 
-	//operator incorporated into a global compression
-	//	for use as part of a bigger operator
-	FixRealKCM::FixRealKCM(
-			Operator* parentOp,
-			Target* target,
-			Signal* multiplicandX,
-			bool signedInput_,
-			int msbIn_,
-			int lsbIn_,
-			int lsbOut_,
-			string constant_,
-			BitHeap* bitHeap_,
-			int bitheapLsb,
-			double targetUlpError_,
-			map<string, double> inputDelays
-		):
-			Operator(target, inputDelays),
-			signedInput(signedInput_),
-			msbIn(msbIn_),
-			lsbIn(lsbIn_),
-			wIn(msbIn_-lsbIn_+1),
-			lsbOut(lsbOut_),
-			constant(constant_),
-			targetUlpError(targetUlpError_),
-			bitHeap(bitHeap_),
-			bitheaplsb(bitheapLsb)
-	{
+	void FixRealKCM::buildTablesForBitHeap() {
 
-		init();
+		for(int i=0; i<numberOfTables; i++) {
+			string sliceInName = join(getName() + "_A", i); // Should be unique in a bit heap if each KCM got a UID.
+			string sliceOutName = join(getName() + "_T", i); // Should be unique in a bit heap if each KCM got a UID.
+			string instanceName = join(getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
 
-		//If constant is not zero or a power of two, then create tables and
-		//branc them to bitHeap
-		if	(	mpfr_zero_p(mpC) == 0 &&
-				!handleSpecialConstant(parentOp, multiplicandX->getName())
-			)
-	{
-		// First set up all the sizes
-			int *diSize;
-			int nbOfTables = computeTablesNumber(
-					target,
-					wIn,
-					msbC,
-					lsbIn,
-					lsbOut,
-					targetUlpError,
-					&diSize
-				);
-
-		REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables");
-
-
-			int* doSize;
-
-			FixRealKCMTable** t = createTables(
-					diSize,
-					nbOfTables,
-					&doSize,
-					parentOp,
-					multiplicandX->getName()
-					);
-
-			connectTablesToBitHeap(t, doSize, nbOfTables, parentOp);
-
-			delete[] diSize;
+			// Now that we have g we may compute if it has useful output bits
+			int tableOutSize = m[i] + msbC  - lsbOut + g +1;
+			if(tableOutSize<=0) {
+				REPORT(DETAILED, "Warning: Table " << i << " was contributing nothing to the bit heap and has been discarded")
 			}
+			else { // Build it and add its output to the bit heap
+				REPORT(DEBUG, "lsbIn=" << lsbIn);
+				parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
+											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << "; -- input address  m=" << m[i] << "  l=" << l[i]  << endl;
+				FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
+				parentOp->addSubComponent(t);
+				parentOp->inPortMap (t , "X", sliceInName);
+				parentOp->outPortMap(t , "Y", sliceOutName);
+				parentOp->vhdl << parentOp->instance(t , instanceName);
 
+				int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
+				
+				// Add these bits to the bit heap
+				switch(tableOutputSign[i]) {
+				case 0:
+					bitHeap -> addSignedBitVector(0, // weight
+																				sliceOutName, // name
+																				sliceOutWidth // size
+																				);
+					break;
+				case 1:
+					bitHeap -> addUnsignedBitVector(0, // weight
+																					sliceOutName, // name
+																					sliceOutWidth // size
+																					);
+					break;
+				case -1: // In this case the table simply stores x* absC 
+					bitHeap -> subtractUnsignedBitVector(0, // weight
+																							 sliceOutName, // name
+																							 sliceOutWidth // size
+																							 );
+					
+					break;
+				default: THROWERROR("unexpected value in tableOutputSign");
+				}
 			}
-
-	FixRealKCMTable** FixRealKCM::createTables(
-			int* diSize,
-			int nbOfTables,
-			int** doSize_target,
-			Operator* op,
-			string inputSignalName
-		)
-		{
-		Target* target = getTarget();
-		FixRealKCMTable** t = new FixRealKCMTable*[nbOfTables];
-		int* doSize = new int[17*42];
-
-		//Useful bit entry width (we doesn't care of too precise bits)
-		int effectiveWin;
-		int i;
-		for(effectiveWin = i = 0; i < nbOfTables ; effectiveWin += diSize[i++]);
-
-		//first split the input X into digits having lutWidth bits -> this
-		//is as generic as it gets :)
-		bool last = true;
-		//Will be current table lsb weight
-		int highBit = msbIn + 1;
-		int offset = wIn;
-		//out width of current table
-		int tableDo = wOut+g;
-
-			for (int i=nbOfTables-1; i>=0; i--)
-			{
-				// The last table has to have wOut+g  bits.
-				// The previous one wOut+g-lastLutWidth
-			// the previous one wOut+g-anteLastLutWidth-lastlutWidth etc
-
-			op-> vhdl << tab <<
-				op->declare(join("d",i,"_kcmMult_", getuid()), diSize[i]) <<
-				" <= " <<
-				inputSignalName << range(offset - 1, offset - diSize[i]) <<
-				";" << endl;
+		}
+	}			
 
 
-			highBit -= diSize[i];
-			offset -= diSize[i];
 
-			// already updated
-			t[i] = new FixRealKCMTable(
-					target,
-					this,
-					i,
-					highBit,
-					diSize[i],
-					tableDo,
-					negativeConstant && (!last || !signedInput),
-					last
-				);
-
-			doSize[i] = tableDo;
-			REPORT(DEBUG, "Table i=" << i << ", input size=" <<
-					diSize[i] << ", output size=" << doSize[i] <<
-					", weight= " << highBit);
-
-			op->useSoftRAM(t[i]);
-			op->addSubComponent(t[i]);
-
-			tableDo -= diSize[i];
-			last = false;
-			}
-
-
-		if(doSize_target != nullptr)
-					{
-			*doSize_target = doSize;
-					}
-					else
-				{
-			delete[] doSize;
-	}
-
-		return t;
-
-	}
-
+	
+	// TODO manage correctly rounded cases, at least the powers of two
 	// To have MPFR work in fix point, we perform the multiplication in very
 	// large precision using RN, and the RU and RD are done only when converting
 	// to an int at the end.
@@ -638,53 +522,52 @@ namespace flopoco{
 		// Get I/O values
 		mpz_class svX = tc->getInputValue("X");
 		bool negativeInput = false;
-
+		int wIn=msbIn-lsbIn+1;
+		int wOut=msbOut-lsbOut+1;
+		
 		// get rid of two's complement
-		if(signedInput)
-		{
-			if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )
-			{
-				svX = (mpz_class(1)<<wIn) - svX;
+		if(signedInput)	{
+			if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )	 {
+				svX -= (mpz_class(1)<<wIn);
 				negativeInput = true;
 			}
 		}
-
-		// Cast it to mpfr
-		mpfr_t mpX;
-		mpfr_init2(mpX, msbIn-lsbIn+2);
+		
+		// Cast it to mpfr 
+		mpfr_t mpX; 
+		mpfr_init2(mpX, msbIn-lsbIn+2);	
 		mpfr_set_z(mpX, svX.get_mpz_t(), GMP_RNDN); // should be exact
-
+		
 		// scale appropriately: multiply by 2^lsbIn
 		mpfr_mul_2si(mpX, mpX, lsbIn, GMP_RNDN); //Exact
-
+		
 		// prepare the result
 		mpfr_t mpR;
 		mpfr_init2(mpR, 10*wOut);
-
+		
 		// do the multiplication
-		mpfr_mul(mpR, mpX, absC, GMP_RNDN);
-
+		mpfr_mul(mpR, mpX, mpC, GMP_RNDN);
+		
 		// scale back to an integer
 		mpfr_mul_2si(mpR, mpR, -lsbOut, GMP_RNDN); //Exact
 		mpz_class svRu, svRd;
-
+		
 		mpfr_get_z(svRd.get_mpz_t(), mpR, GMP_RNDD);
 		mpfr_get_z(svRu.get_mpz_t(), mpR, GMP_RNDU);
 
-		if(negativeInput != negativeConstant)
-		{
-			svRd = (mpz_class(1) << wOut) - svRd;
-			svRu = (mpz_class(1) << wOut) - svRu;
-	}
+		//		cout << " emulate x="<< svX <<"  before=" << svRd;
+ 		if(negativeInput != negativeConstant)		{
+			svRd += (mpz_class(1) << wOut);
+			svRu += (mpz_class(1) << wOut);
+		}
+		//		cout << " emulate after=" << svRd << endl;
 
 		//Border cases
-		if(svRd > (mpz_class(1) << wOut) - 1 )
-	{
+		if(svRd > (mpz_class(1) << wOut) - 1 )		{
 			svRd = 0;
 		}
 
-		if(svRu > (mpz_class(1) << wOut) - 1 )
-		{
+		if(svRu > (mpz_class(1) << wOut) - 1 )		{
 			svRu = 0;
 		}
 
@@ -695,64 +578,70 @@ namespace flopoco{
 		mpfr_clears(mpX, mpR, NULL);
 	}
 
-	int FixRealKCM::neededGuardBits(
-			Target* target,
-			int wIn,
-			double targetUlpError,
-			string constant,
-			int lsbIn,
-			int lsbOut
-		)
+
+
+	void FixRealKCM::nextTestState(TestState * previousTestState)
 	{
-		// Convert the input string into a sollya evaluation tree
-		sollya_obj_t node;
-		node = sollya_lib_parse_string(constant.c_str());
-		/* If  parse error throw an exception */
-		if (sollya_lib_obj_is_error(node))
-		{
-				ostringstream error;
-				error << " neededGuardBits : Unable to parse string "<<
-					constant << " as a numeric constant" <<endl;
-				throw error.str();
+		// the static list of mandatory tests
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		
+		// is initialized here
+		if(previousTestState->getIterationIndex() == 0)		{
+			vector<string> constantList; // The list of constants we want to test
+			constantList.push_back("\"0\"");
+			constantList.push_back("\"0.125\"");
+			constantList.push_back("\"-0.125\"");
+			constantList.push_back("\"4\"");
+			constantList.push_back("\"-4\"");
+			constantList.push_back("\"log(2)\"");
+			constantList.push_back("-\"log(2)\"");
+			constantList.push_back("\"0.00001\"");
+			constantList.push_back("\"-0.00001\"");
+			constantList.push_back("\"0.0000001\"");
+			constantList.push_back("\"-0.0000001\"");
+			constantList.push_back("\"123456\"");
+			constantList.push_back("\"-123456\"");
+
+			for(int wIn=3; wIn<16; wIn+=4) { // test various input widths
+				for(int lsbIn=-1; lsbIn<2; lsbIn++) { // test various lsbIns
+					string lsbInStr = to_string(lsbIn);
+					string msbInStr = to_string(lsbIn+wIn);
+					for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
+						string lsbOutStr = to_string(lsbOut);
+						for(int signedInput=0; signedInput<2; signedInput++) {
+							string signedInputStr = to_string(signedInput);
+							for(auto c:constantList) { // test various constants
+								paramList.push_back(make_pair("lsbIn",  lsbInStr));
+								paramList.push_back(make_pair("lsbOut", lsbOutStr));
+								paramList.push_back(make_pair("msbIn",  msbInStr));
+								paramList.push_back(make_pair("signedInput", signedInputStr));
+								paramList.push_back(make_pair("constant", c));
+								testStateList.push_back(paramList);
+								paramList.clear();
+							}
+						}
+					}
+				}
+			}
+			previousTestState->setIterationNumber(testStateList.size());
 		}
 
-		mpfr_t mpC, absC;
+		// Now actually change the state
+		vector<pair<string,string>>::iterator itVector;
+		int testIndex = previousTestState->getIterationIndex();
 
-		mpfr_init2(mpC, 10000);
-		mpfr_init2(absC, 10000);
-		sollya_lib_get_constant(mpC, node);
-
-		mpfr_abs(absC, mpC, GMP_RNDN);
-
-		mpfr_t log2C;
-		mpfr_init2(log2C, 100); // should be enough for anybody
-		mpfr_log2(log2C, absC, GMP_RNDN);
-		int msbC = mpfr_get_si(log2C, GMP_RNDU);
-
-		//Special cases : constant is 0 or a power of two
-		if(mpfr_cmp_ui_2exp(absC, 1, msbC) == 0 || mpfr_zero_p(mpC) != 0)
+		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)
 		{
-			mpfr_clears(log2C, absC, mpC, NULL);
-			return 0;
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
 		}
-		mpfr_clears(log2C, absC, mpC, NULL);
-
-		int nbOfTables = computeTablesNumber(
-				target,
-				wIn,
-				msbC,
-				lsbIn,
-				lsbOut,
-				targetUlpError,
-				nullptr
-			);
-		return guardBitsFromTableNumber(nbOfTables, targetUlpError);
 	}
 
-	OperatorPtr FixRealKCM::parseArguments(
-			Target* target,
-			std::vector<std::string> &args
-		)
+
+	
+
+	OperatorPtr FixRealKCM::parseArguments(Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
 		bool signedInput;
@@ -763,14 +652,14 @@ namespace flopoco{
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "msbIn", &msbIn);
 		UserInterface::parseBoolean(args, "signedInput", &signedInput);
-		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);
+		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealKCM(
-				target,
+				target, 
 				signedInput,
 				msbIn,
 				lsbIn,
 				lsbOut,
-				constant,
+				constant, 
 				targetUlpError
 			);
 	}
@@ -783,125 +672,110 @@ namespace flopoco{
 				"ConstMultDiv",
 				"",
 				"signedInput(bool): 0=unsigned, 1=signed; \
-         msbIn(int): weight associated to most significant bit (including sign bit);\
-         lsbIn(int): weight associated to least significant bit;\
-         lsbOut(int): weight associated to output least significant bit; \
-         constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
-         targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
+				msbIn(int): weight associated to most significant bit (including sign bit);\
+				lsbIn(int): weight associated to least significant bit;\
+				lsbOut(int): weight associated to output least significant bit; \
+				constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
+				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
 				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
-				FixRealKCM::parseArguments
-			);
+				FixRealKCM::parseArguments,
+				FixRealKCM::nextTestState
+		);
 	}
 
 	/************************** The FixRealKCMTable class ********************/
 
 
-	FixRealKCMTable::FixRealKCMTable(
-			Target* target,
-			FixRealKCM* mother,
-			int i,
-			int weight,
-			int wIn,
-			int wOut,
-			bool negativeSubproduct,
-			bool last,
-			int pipeline
-		):
-			Table(target, wIn, wOut, 0, -1, pipeline),
-			mother(mother),
+	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i):
+			Table(target,
+						mother->m[i] - mother->l[i]+1, // wIn
+						mother->m[i] + mother->msbC  - mother->lsbOut + mother->g +1, //wOut TODO: the +1 could sometimes be removed
+						0, // minIn
+						-1, // maxIn
+						1), // logicTable 
+			mother(mother), 
 			index(i),
-			weight(weight),
-			negativeSubproduct(negativeSubproduct),
-			last(last)
+			lsbInWeight(mother->l[i])
 	{
-		ostringstream name;
+		ostringstream name; 
 		srcFileName="FixRealKCM";
-		name << mother->getName() << "_Table_"<<index;
-		setName(name.str());
+		name << mother->getName() << "_Table_" << index;
+		setName(name.str()); // This one not a setNameWithFreqAndUID
 		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team");
+		
 	}
+  
+
+
 
 	mpz_class FixRealKCMTable::function(int x0)
 	{
-			int x;
-		bool negativeInput = false;
+		// This function returns a value that is signed.
+		int x;
+		
+		// get rid of two's complement
+		x = x0;
+		//Only the MSB "digit" has a negative weight
+		if(mother->tableOutputSign[index]==0)	{ // only in this case interpret input as two's complement
+			if ( x0 > ((1<<(wIn-1))-1) )	{
+				x -= (1<<wIn);
+			}
+		} // Now x is a signed number only if it was chunk 0 and its sign bit was set
 
-			// get rid of two's complement
-			x = x0;
-		//Only the last "digit" has a negative weight
-		if(mother->signedInput && last)
-			{
-				if ( x0 > ((1<<(wIn-1))-1) )
-			{
-				x = (1<<wIn) - x;
-				negativeInput = true;
-			}
-			}
+		//cout << "index=" << index << " x0=" << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   "  <<"  wout="<<wOut<< "   " ;
 
 		mpz_class result;
 		mpfr_t mpR, mpX;
 
 		mpfr_init2(mpR, 10*wOut);
 		mpfr_init2(mpX, 2*wIn); //To avoid mpfr bug if wIn = 1
+		                       
+		mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
+		// Scaling so that the input has its actual weight
+		mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
 
-		if(x == 0)
-		{
-			result = mpz_class(0);
-		}
-		else
-		{
-			mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
-			//Getting real weight
-			mpfr_mul_2si(mpX, mpX, weight, GMP_RNDN); //Exact
-
-
-			// do the mult in large precision
+		//						double dx = mpfr_get_d(mpX, GMP_RNDN);
+		//			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
+			
+		// do the mult in large precision
+		if(mother->tableOutputSign[index]==0)	
+			mpfr_mul(mpR, mpX, mother->mpC, GMP_RNDN);
+		else // multiply by the absolute value of the constant, the bitheap logic does the rest
 			mpfr_mul(mpR, mpX, mother->absC, GMP_RNDN);
+			
+		// Result is integer*mpC, which is more or less what we need: just scale it to an integer.
+		mpfr_mul_2si( mpR, 
+									mpR,
+									-mother->lsbOut + mother->g,	
+									GMP_RNDN	); //Exact
 
-			// Result is integer*C, which is more or less what we need: just
-			// scale to add g bits.
-			mpfr_mul_2si(
-					mpR,
-					mpR,
-					-mother->lsbOut + mother->g,
-					GMP_RNDN
-				); //Exact
+		//			double dr=mpfr_get_d(mpR, GMP_RNDN);
+		//			cout << "  dr=" << dr << "  ";
+			
+		// Here is when we do the rounding
+		mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
 
-			// Here is when we do the rounding
-			mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
+		//cout << mother->tableOutputSign[index] << "  result0=" << result << "  ";
 
-			//Get the real sign
-			if(negativeInput != mother->negativeConstant && result != 0)
-			{
-				result = (mpz_class(1) << wOut) - result;
-			}
+		// sign management
+		if(mother->tableOutputSign[index]==0) {
+			// this is a two's complement number with a non-constant sign bit
+			// so we encode it as two's complement
+			if(result<0)
+				result +=(mpz_class(1) << wOut);				
 		}
+		
+		//cout  << result << "  " <<endl;
 
-		//Result is result -1 in order to avoid to waste a sign bit
-		if(negativeSubproduct)
-		{
-			if(result == 0)
-				result = (mpz_class(1) << wOut) - 1;
-			else
-				result -= 1;
+		// Add the rounding bit to the table 0 if there are guard bits,
+		if(mother->addRoundBit && (index==0) && (mother->g>0)) {
+			int roundBit=1<<(mother->g-1);
+			// but beware: the table output may be subtracted (see buildTablesForBitHeap() )
+			if(mother-> tableOutputSign[0] >= 0) // This table will be added
+				result += roundBit;
+			else // This table will be subtracted
+				result -= roundBit;
 		}
-
-		//In case of global bitHeap, we need to invert msb for signedInput
-		//last bit for fast sign extension.
-		if(last && mother->signedInput)
-		{
-			mpz_class shiffter = mpz_class(1) << (wOut - 1);
-			if(result < shiffter )
-			{
-				result += shiffter;
-			}
-			else
-			{
-				result -= shiffter;
-		}
-	}
-
-
 		return result;
 	}
 }

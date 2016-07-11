@@ -229,7 +229,8 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(4),"addToRoundBit")
 				<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
 
-
+#if 1
+		
 		IntAdder *ra = new IntAdder(target, wE+2+wF+1);
 
 		inPortMap(ra,"X", "expFrac");
@@ -237,7 +238,12 @@ namespace flopoco{
 		inPortMap( ra, "Cin", "addToRoundBit");
 		outPortMap( ra, "R", "RoundedExpFrac");
 		vhdl << instance(ra, "roundingAdder");
-
+#else
+		vhdl << tab  << declare("zeros", ...)  zg(wE+2+wF+1,0);
+		
+		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;cin=>addToRoundBit","RoundedExpFrac" );
+#endif
+		
 		addComment("possible update to exception bits");
 		vhdl << tab << declare("upExc",2)<<" <= RoundedExpFrac"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
 		vhdl << tab << declare("fracR",wF)<<" <= RoundedExpFrac"<<range(wF,1)<<";"<<endl;
