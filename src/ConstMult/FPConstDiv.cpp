@@ -38,35 +38,30 @@ namespace flopoco{
 		Operator(target), 
 		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), wFOut(wFOut_), d(d_), dExp(dExp_), alpha(alpha_)
 	{
+		setCopyrightString("Florent de Dinechin (2007-2011)");
+		srcFileName="FPConstDiv";
+
 		if(wEOut==0)
 			wEOut=wEIn;
 		if(wFOut==0)
 			wFOut=wFIn;
-		srcFileName="FPConstDiv";
+
 		ostringstream name;
 		name <<"FPConstDiv_"<<wEIn<<"_"<<wFIn<<"_"<<wEOut<<"_"<<wFOut<<"_"<<d<<"_";
 		if(dExp>=0)
-			name<<dExp<<"_";
+			name<<dExp;
 		else
-			name<<"M"<<-dExp<<"_";
-		if(target->isPipelined()) 
-			name << target->frequencyMHz() ;
-		else
-			name << "comb";
-		uniqueName_ = name.str();
-		
-		uniqueName_=name.str();
+			name<<"M"<<-dExp;
+
+		setNameWithFreqAndUID(name.str());
+
 
 		if(wEIn<3 || wEOut <3){
-			ostringstream error;
-			error << srcFileName << " (" << uniqueName_ << "): exponent size must be at least 3" <<endl;
-			throw error.str();
+			THROWERROR("exponent size must be at least 3, got wEIn=" << wEIn << " wEOut=" << wEOut);
 		}
 
 		if(d==0) {
-			ostringstream o;
-			o << srcFileName << " (" << uniqueName_ << "): ERROR in FPConstDiv, division by 0";
-			throw o.str();
+			THROWERROR("Division by 0");
 		}
 
 			// Constant normalization
@@ -92,7 +87,6 @@ namespace flopoco{
 		addFPInput("X", wEIn, wFIn);
 		addFPOutput("R", wEOut, wFOut);
 
-		setCopyrightString("Florent de Dinechin (2007-2011)");
 
 		int gamma = intlog2(d);
 		int s = gamma-1;
@@ -151,7 +145,7 @@ namespace flopoco{
 			vhdl << tab << declare("divIn1", intDivSize) << " <= x_sig & '0' & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
 			vhdl << tab << declare("divIn", intDivSize) << " <= divIn1 when mltd='1' else divIn0;" << endl;
 			
-			icd = new IntConstDiv(target, intDivSize, d,   alpha, false, inDelayMap("X",target->localWireDelay()+getCriticalPath()));
+			icd = new IntConstDiv(target, intDivSize, d,   alpha, 0, false, inDelayMap("X",target->localWireDelay()+getCriticalPath()));
 			addSubComponent(icd);
 			
 			inPortMap  (icd, "X", "divIn");

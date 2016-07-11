@@ -56,8 +56,8 @@ namespace flopoco{
 
 
 
-	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_,  bool remainderOnly_, map<string, double> inputDelays)
-		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), remainderOnly(remainderOnly_)
+	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool remainderOnly_, map<string, double> inputDelays)
+		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), remainderOnly(remainderOnly_)
 	{
 		setCopyrightString("F. de Dinechin (2011)");
 		srcFileName="IntConstDiv";
@@ -83,12 +83,9 @@ namespace flopoco{
 			o << "IntConstRem_";
 		else
 			o << "IntConstDiv_";
-		o << d << "_" << wIn << "_"  << alpha << "_" ;
-		if(target->isPipelined())
-				o << target->frequencyMHz() ;
-		else
-			o << "comb";
-		uniqueName_ = o.str();
+		o << d << "_" << wIn << "_"  << alpha ;
+
+		setNameWithFreqAndUID(o.str());
 
 		qSize = wIn - intlog2(d) +1;
 

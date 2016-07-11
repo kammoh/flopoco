@@ -46,8 +46,10 @@ namespace flopoco{
 		* @param d The divisor.
 		* @param n The size of the input X.
 		* @param alpha The size of the chunk, or, use radix 2^alpha
+		* @param architecture Architecture used, can be 0 for o(n) area, o(n) time, or 1 for o(n.log(n)) area, o(log(n)) time
+		* @param remainderOnly As the name suggests
 		*/
-		IntConstDiv(Target* target, int wIn, int d, int alpha=-1, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
+		IntConstDiv(Target* target, int wIn, int d, int alpha=-1, int architecture=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
 
 		~IntConstDiv();
 
@@ -74,6 +76,7 @@ namespace flopoco{
 		int d; /**<  Divisor*/
 		int wIn;  /**<  Size in bits of the input X */
 		int alpha; /**< Size of the chunk (should be between 1 and 16)*/
+		int architecture; /** 0 for the linear architecture. 1 for the log(n) architecture */
 		bool remainderOnly; /**< if true, only the remainder will be computed. If false, quotient will be computed */
 		int gamma;  /**< Size in bits of a remainder; gamma=ceil(log2(d-1)) */
 		int qSize;   /**< Size in bits of the quotient output */
