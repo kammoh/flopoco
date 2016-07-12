@@ -272,6 +272,12 @@ public:
 	void connectIOFromPortMap(Signal *ioSignal);
 
 
+	/**
+	 * Reconnect the input and output ports of the operator to signals in the parent operator.
+	 * The scheduling must consequently be restarted.
+	 */
+	void reconnectIOPorts();
+
 
 	/**
 	 * Sets the copyright string: should be authors + year
@@ -362,6 +368,18 @@ public:
 	 * Produces a new unique identifier
 	 */
 	static int getNewUId();
+
+
+
+	/**
+	 * Set the parent operator of this operator
+	 */
+	OperatorPtr setParentOperator(OperatorPtr parentOp);
+
+	/**
+	 * Get the parent operator of this operator
+	 */
+	OperatorPtr setParentOperator();
 
 
 
@@ -544,9 +562,11 @@ public:
 	 * 				 as std_logic_vector when true (optional, default false)
 	 * @param regType: the registring type of this signal. See also the Signal 
 	 * 				   Class for more info
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire);
+	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
@@ -556,18 +576,22 @@ public:
 	 * @param isbus: a signal of width 1 is declared as std_logic when false, as std_logic_vector when true (optional, default false)
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(double criticalPathContribution, string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire);
+	string declare(double criticalPathContribution, string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
 	 * @param name is the name of the signal
 	 * @param isbus: if true, declares the signal as std_logic_vector; else declares the signal as std_logic
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(string name, Signal::SignalType regType = Signal::wire);
+	string declare(string name, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
@@ -576,9 +600,11 @@ public:
 	 * @param isbus: if true, declares the signal as std_logic_vector; else declares the signal as std_logic
 	 * @param regType: the registring type of this signal. See also the Signal Class for mor info
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(double criticalPathContribution, string name, Signal::SignalType regType = Signal::wire);
+	string declare(double criticalPathContribution, string name, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
 
 
 	/**
@@ -588,9 +614,11 @@ public:
 	 * @param MSB the weight of the MSB of the signal
 	 * @param LSB the weight of the LSB of the signal
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire);
+	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a fixed-point signal on the Left Hand Side of a VHDL assignment
@@ -600,9 +628,11 @@ public:
 	 * @param LSB the weight of the LSB of the signal
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire);
+	string declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
 
 
 	/**
@@ -611,9 +641,11 @@ public:
 	 * @param wE the weight of the exponent of the signal
 	 * @param wF the weight of the mantisa of the signal
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false);
+	string declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false, bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a floating-point signal on the Left Hand Side of a VHDL assignment
@@ -622,18 +654,22 @@ public:
 	 * @param wF the weight of the mantisa of the signal
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false);
+	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false, bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
 	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareTable(string name, int width, std::string tableAttributes = "");
+	string declareTable(string name, int width, std::string tableAttributes = "", bool incompleteDeclaration = false);
 
 	/**
 	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
@@ -641,9 +677,11 @@ public:
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
 	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes = "");
+	string declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes = "", bool incompleteDeclaration = false);
 
 
 	/**
@@ -652,8 +690,10 @@ public:
 	 * @param s the newly declared signal
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
+	 * @param incomplete declaration: whether only part of the signal parameters are specified,
+	 * 									and the rest are specified later
 	 */
-	void initNewSignal(Signal *s, double criticalPathContribution, Signal::SignalType regType);
+	void initNewSignal(Signal *s, double criticalPathContribution, Signal::SignalType regType, bool incompleteDeclaration = false);
 
 	/**
 	 * Resizes a fixed-point signal and assigns it to a new declared signal.

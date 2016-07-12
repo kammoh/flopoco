@@ -33,7 +33,10 @@ namespace flopoco{
 	TestBench::TestBench(Target* target, Operator* op, int n, bool fromFile):
 		Operator(target), op_(op), n_(n), fromFile_(fromFile)
 	{
-		// This allows the op under test to know how long it is beeing tested.
+		//set the parent operator to this operator
+		op->setParentOperator(this);
+
+		// This allows the op under test to know how long it is being tested.
 		// useful only for testing the long acc, but who knows.
 		op->numberOfTests = n;
 
@@ -45,7 +48,7 @@ namespace flopoco{
 		// initialization of flopoco random generator
 		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
 		//        maybe best to be placed in main.cpp ?
-                FloPoCoRandomState::init(n);
+		FloPoCoRandomState::init(n);
 		// Generate the standard and random test cases for this operator
 		op-> buildStandardTestCases(&tcl_);
                 // initialization of randomstate generator with the seed base on the number of
@@ -75,6 +78,11 @@ namespace flopoco{
 		if (op_->hasClockEnable()) {
 			vhdl << tab << declare("ce") << " <= '1';" << endl;
 		}
+
+		//the port mappings have changed, so they must be updated
+		//	so must the schedule of the signal
+		op->reconnectIOPorts();
+
 		// The VHDL for the instance
 		vhdl << instance(op, "test");
 

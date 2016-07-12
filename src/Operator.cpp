@@ -216,7 +216,7 @@ namespace flopoco{
 		//connect the output signal just created, if this is a subcomponent
 		connectIOFromPortMap(s);
 
-		//add the sinal to the list of signals to be scheduled
+		//add the signal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
 
 		for(int i=0; i<numberOfPossibleOutputValues; i++)
@@ -402,15 +402,16 @@ namespace flopoco{
 		Signal *connectionSignal = nullptr;
 		map<std::string, Signal*>::iterator itStart, itEnd;
 
-		//TODO: add ore checks here
+		//TODO: add more checks here
 		//if this is a global operator, then there is nothing to be done
 		if(parentOp_ == nullptr)
 			return;
 		//check that ioSignal is really an I/O signal
-		if((ioSignal->type() != Signal::in) || (ioSignal->type() != Signal::out))
+		if((ioSignal->type() != Signal::in) && (ioSignal->type() != Signal::out))
 			//THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
 			THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
 
+		//select the iterators according to the signal type
 		if(ioSignal->type() == Signal::in){
 			itStart = parentOp_->tmpInPortMap_.begin();
 			itEnd = parentOp_->tmpInPortMap_.end();
@@ -431,7 +432,7 @@ namespace flopoco{
 		if(connectionSignal == nullptr)
 			THROWERROR("Error: I/O port " << ioSignal->getName() << " of operator " << getName()
 					<< " is not connected to any signal of parent operator " << parentOp_->getName());
-		//saity check: verify that the signal that was found is actually part of the parent operator
+		//sanity check: verify that the signal that was found is actually part of the parent operator
 		try{
 			parentOp_->getSignalByName(connectionSignal->getName());
 		}catch(string &e){
@@ -450,6 +451,29 @@ namespace flopoco{
 			ioSignal->addSuccessor(connectionSignal, 0);
 			connectionSignal->addPredecessor(ioSignal, 0);
 		}
+
+		//if the port was to a signal automatically created,
+		//	then copy the details of the port to the respective signal
+		if(connectionSignal->getIncompleteDeclaration() == true)
+		{
+			connectionSignal->copySignalParameters(ioSignal);
+			connectionSignal->setIncompleteDeclaration(false);
+		}
+	}
+
+
+	void Operator::reconnectIOPorts()
+	{
+		//connect the inputs and outputs of the operator to the corresponding
+		//	signals in the parent operator
+		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
+			connectIOFromPortMap(*it);
+		//seeing as the IO ports' connections have changed, the schedule should be restarted
+		//	add the IO ports to the list of signals to be scheduled
+		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
+			signalsToSchedule.push_back(*it);
+		//	now start the scheduling
+		startScheduling();
 	}
 
 
@@ -558,6 +582,18 @@ namespace flopoco{
 	int Operator::getNewUId(){
 		Operator::uid++;
 		return Operator::uid;
+	}
+
+	OperatorPtr Operator::setParentOperator(OperatorPtr parentOp){
+		if(parentOp_ != nullptr)
+			THROWERROR("Error: parent operator already set for operator " << getName());
+		parentOp_ = parentOp;
+
+		return parentOp_;
+	}
+
+	OperatorPtr Operator::setParentOperator(){
+		return parentOp_;
 	}
 
 	int Operator::getIOListSize() const{
@@ -1026,19 +1062,19 @@ namespace flopoco{
 		return signal->getCriticalPath();
 	}
 
-	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType) {
-		return declare(0.0, name, width, isbus, regType);
+	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType, bool incompleteDeclaration) {
+		return declare(0.0, name, width, isbus, regType, incompleteDeclaration);
 	}
 
-	string Operator::declare(string name, Signal::SignalType regType) {
-		return declare(0.0, name, 1, false, regType);
+	string Operator::declare(string name, Signal::SignalType regType, bool incompleteDeclaration) {
+		return declare(0.0, name, 1, false, regType, incompleteDeclaration);
 	}
 
-	string Operator::declare(double criticalPathContribution, string name, Signal::SignalType regType) {
-		return declare(criticalPathContribution, name, 1, false, regType);
+	string Operator::declare(double criticalPathContribution, string name, Signal::SignalType regType, bool incompleteDeclaration) {
+		return declare(criticalPathContribution, name, 1, false, regType, incompleteDeclaration);
 	}
 
-	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType) {
+	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType, bool incompleteDeclaration) {
 		Signal* s;
 
 		// check the signal doesn't already exist
@@ -1049,7 +1085,7 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, width, isbus);
 		// initialize the rest of its attributes
-		initNewSignal(s, criticalPathContribution, regType);
+		initNewSignal(s, criticalPathContribution, regType, incompleteDeclaration);
 
 		// add the signal on the list of signals from which to schedule
 		signalsToSchedule.push_back(s);
@@ -1058,12 +1094,12 @@ namespace flopoco{
 	}
 
 
-	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
-		return declareFixPoint(0.0, name, isSigned, MSB, LSB, regType);
+	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, bool incompleteDeclaration){
+		return declareFixPoint(0.0, name, isSigned, MSB, LSB, regType, incompleteDeclaration);
 	}
 
 
-	string Operator::declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
+	string Operator::declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, bool incompleteDeclaration){
 		Signal* s;
 
 		// check the signals doesn't already exist
@@ -1074,7 +1110,7 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, isSigned, MSB, LSB);
 
-		initNewSignal(s, criticalPathContribution, regType);
+		initNewSignal(s, criticalPathContribution, regType, incompleteDeclaration);
 
 		//set the flag for a fixed-point signal
 		s->setIsFix(true);
@@ -1088,12 +1124,12 @@ namespace flopoco{
 	}
 
 
-	string Operator::declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat){
-		return declareFloatingPoint(0.0, name, wE, wF, regType, ieeeFormat);
+	string Operator::declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat, bool incompleteDeclaration){
+		return declareFloatingPoint(0.0, name, wE, wF, regType, ieeeFormat, incompleteDeclaration);
 	}
 
 
-	string Operator::declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat){
+	string Operator::declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat, bool incompleteDeclaration){
 		Signal* s;
 
 		// check the signals doesn't already exist
@@ -1104,7 +1140,7 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, wE, wF, ieeeFormat);
 
-		initNewSignal(s, criticalPathContribution, regType);
+		initNewSignal(s, criticalPathContribution, regType, incompleteDeclaration);
 
 		s->setIsFix(false);
 		//set the flag for a floating-point signal
@@ -1123,12 +1159,12 @@ namespace flopoco{
 	}
 
 
-	std::string Operator::declareTable(string name, int width, std::string tableAttributes)
+	std::string Operator::declareTable(string name, int width, std::string tableAttributes, bool incompleteDeclaration)
 	{
-		return declareTable(0.0, name, width, tableAttributes);
+		return declareTable(0.0, name, width, tableAttributes, incompleteDeclaration);
 	}
 
-	std::string Operator::declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes)
+	std::string Operator::declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes, bool incompleteDeclaration)
 	{
 		Signal* s;
 
@@ -1140,7 +1176,7 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, Signal::table, width, tableAttributes);
 
-		initNewSignal(s, criticalPathContribution, Signal::table);
+		initNewSignal(s, criticalPathContribution, Signal::table, incompleteDeclaration);
 
 		// set all flag types to false
 		s->setIsFix(false);
@@ -1154,7 +1190,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType)
+	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType, bool incompleteDeclaration)
 	{
 		//set, if needed, the global parameters used for generating the registers
 		if((regType==Signal::registeredWithoutReset) || (regType==Signal::registeredWithZeroInitialiser))
@@ -1168,6 +1204,9 @@ namespace flopoco{
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
 		s->setCriticalPathContribution(criticalPathContribution);
+
+		//whether this is an incomplete signal declaration
+		s->setIncompleteDeclaration(incompleteDeclaration);
 
 		//initialize the signals predecessors and successors
 		s->resetPredecessors();
@@ -1326,8 +1365,14 @@ namespace flopoco{
 		//	or create it if it doesn't exist
 		s = nullptr;
 		if(newSignal){
-			//addOutput should create the new signal
-			//	and add it to the list of signals to be scheduled, if required
+			//create the new signal
+			//	this will be an incomplete signal, as we cannot know the exact details of the signal yet
+			//	the rest of the information will be completed by addOutput, which has the rest of the required information
+			//	and add it to the list of signals to be scheduled
+			declare(actualSignalName, -1, false);
+			getSignalByName(actualSignalName)->setIncompleteDeclaration(true);
+			signalsToSchedule.push_back(getSignalByName(actualSignalName));
+			s = getSignalByName(actualSignalName);
 		}else
 		{
 			try {
@@ -1494,6 +1539,19 @@ namespace flopoco{
 		//build the code for the outputs
 		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 		{
+			//the signal connected to the output might be an incompletely declared signal,
+			//	so its information must be completed and it must be properly connected now
+			if(it->second->getIncompleteDeclaration() == true)
+			{
+				//copy the details from the output port
+				it->second->copySignalParameters(getSignalByName(it->first));
+				//mark the signal as completely declared
+				it->second->setIncompleteDeclaration(false);
+				//connect the port to the corresponding signal
+				it->second->addPredecessor(getSignalByName(it->first));
+				getSignalByName(it->first)->addSuccessor(it->second);
+			}
+
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
 				o << "," << endl <<  tab << tab << "           ";
 

@@ -52,7 +52,7 @@ namespace flopoco{
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
 		parentOp_(parentOp), name_(name), type_(type), width_(width), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
-		hasBeenScheduled_(false), hasBeenDrawn_(false),
+		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
 		isSigned_(false), isBus_(isBus) {
@@ -62,7 +62,7 @@ namespace flopoco{
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue) :
 		parentOp_(parentOp), name_(name), type_(type), constValue_(constValue), tableAttributes_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
-		hasBeenScheduled_(false), hasBeenDrawn_(false),
+		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
 		isBus_(false)
@@ -76,7 +76,7 @@ namespace flopoco{
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const int width, const std::string tableValue) :
 		parentOp_(parentOp), name_(name), type_(type), width_(width), constValue_(0.0), tableAttributes_(tableValue), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
-		hasBeenScheduled_(false), hasBeenDrawn_(false),
+		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
 		isSigned_(false), isBus_(false)
@@ -88,7 +88,7 @@ namespace flopoco{
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) :
 		parentOp_(parentOp), name_(name), type_(type), width_(MSB-LSB+1), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
-		hasBeenScheduled_(false), hasBeenDrawn_(false),
+		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(true),  isIEEE_(false),
 		wE_(0), wF_(0), MSB_(MSB), LSB_(LSB),
 		isSigned_(isSigned), isBus_(true)
@@ -99,7 +99,7 @@ namespace flopoco{
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) :
 		parentOp_(parentOp), name_(name), type_(type), width_(wE+wF+3), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
-		hasBeenScheduled_(false), hasBeenDrawn_(false),
+		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(true), isFix_(false), isIEEE_(false),
 		wE_(wE), wF_(wF), MSB_(0), LSB_(0),
 		isSigned_(false), isBus_(false)
@@ -116,6 +116,36 @@ namespace flopoco{
 		parentOp_ = originalSignal->parentOp_;
 		name_ = originalSignal->getName();
 		type_ = originalSignal->type();
+
+		copySignalParameters(originalSignal);
+	}
+
+	Signal::Signal(Operator* newParentOp, Signal* originalSignal)
+	{
+		parentOp_ = newParentOp;
+		name_ = originalSignal->getName();
+		type_ = originalSignal->type();
+
+		copySignalParameters(originalSignal);
+	}
+
+	Signal::~Signal(){}
+
+	void	Signal::promoteToFix(const bool isSigned, const int MSB, const int LSB){
+		if(MSB - LSB +1 != width_){
+			std::ostringstream o;
+			o << "Error in Signal::promoteToFix(" <<  getName() << "): width doesn't match";
+			throw o.str();
+		}
+		isFix_ = true;
+		MSB_   = MSB;
+		LSB_   = LSB;
+		isSigned_ = isSigned;
+	}
+
+
+	void Signal::copySignalParameters(Signal *originalSignal)
+	{
 		lifeSpan_ = 0;
 		constValue_ = originalSignal->constValue_;
 		tableAttributes_ = originalSignal->tableAttributes();
@@ -125,6 +155,7 @@ namespace flopoco{
 		criticalPath_ = originalSignal->getCriticalPath();
 		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
 		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
+		incompleteDeclaration_ = originalSignal->getIncompleteDeclaration();
 		hasBeenScheduled_ = false;
 		hasBeenDrawn_ = false;
 
@@ -143,54 +174,6 @@ namespace flopoco{
 			width_ = originalSignal->width();
 			isBus_ = originalSignal->isBus();
 		}
-	}
-
-	Signal::Signal(Operator* newParentOp, Signal* originalSignal)
-	{
-		parentOp_ = newParentOp;
-		name_ = originalSignal->getName();
-		type_ = originalSignal->type();
-		lifeSpan_ = originalSignal->lifeSpan_;
-		constValue_ = originalSignal->constValue_;
-		tableAttributes_ = originalSignal->tableAttributes();
-		isFix_ = originalSignal->isFix();
-		isFP_ = originalSignal->isFP();
-		cycle_ = originalSignal->getCycle();
-		criticalPath_ = originalSignal->getCriticalPath();
-		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
-		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
-		hasBeenScheduled_ = false;
-		hasBeenDrawn_ = false;
-
-		if(originalSignal->isFix())
-		{
-			isSigned_ = originalSignal->isSigned();
-			MSB_ = originalSignal->MSB();
-			LSB_ = originalSignal->LSB();
-		}else if(originalSignal->isFP())
-		{
-			wE_ = originalSignal->wE();
-			wF_ = originalSignal->wF();
-			isIEEE_ = originalSignal->isIEEE_;
-		}else
-		{
-			width_ = originalSignal->width();
-			isBus_ = originalSignal->isBus();
-		}
-	}
-
-	Signal::~Signal(){}
-
-	void	Signal::promoteToFix(const bool isSigned, const int MSB, const int LSB){
-		if(MSB - LSB +1 != width_){
-			std::ostringstream o;
-			o << "Error in Signal::promoteToFix(" <<  getName() << "): width doesn't match";
-			throw o.str();
-		}
-		isFix_ = true;
-		MSB_   = MSB;
-		LSB_   = LSB;
-		isSigned_ = isSigned;
 	}
 
 
@@ -524,6 +507,15 @@ namespace flopoco{
 
 	void Signal::setCriticalPathContribution(double contribution){
 		criticalPathContribution_ = contribution;
+	}
+
+
+	bool Signal::getIncompleteDeclaration(){
+		return incompleteDeclaration_;
+	}
+
+	void Signal::setIncompleteDeclaration(bool newVal){
+		incompleteDeclaration_ = newVal;
 	}
 
 

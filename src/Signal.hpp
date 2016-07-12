@@ -121,6 +121,13 @@ class Operator;
 
 
 		/**
+		 * Copy the signal parameters to the current signal, from the signal given as parameter
+		 * 	except for the name and the parent operator
+		 */
+		void copySignalParameters(Signal *originalSignal);
+
+
+		/**
 		 * When a signal was automatically created as a std_logic_vector, this enables to declare it as Fix
 		 */
 		void promoteToFix(const bool isSigned, const int MSB, const int LSB);
@@ -416,12 +423,22 @@ class Operator;
 		void setCriticalPathContribution(double contribution);
 
 		/**
+		 * Returns the value of incompleteDeclaration
+		 */
+		bool getIncompleteDeclaration();
+
+		/**
+		 * Sets the value of incompleteDeclaration
+		 */
+		void setIncompleteDeclaration(bool newVal);
+
+		/**
 		 * Return the value of hasBeenImplemented
 		 */
 		bool getHasBeenImplemented();
 
 		/**
-		 * Set the new value of hasBeen Implemented
+		 * Set the new value of hasBeenImplemented
 		 */
 		void setHasBeenImplemented(bool newVal);
 
@@ -473,38 +490,40 @@ class Operator;
 		static std::string getDotNodeColor(int index);
 
 	private:
-		Operator*     parentOp_;           /**< The operator which contains this signal */
-		std::string   name_;               /**< The name of the signal */
-		SignalType    type_;               /**< The type of the signal, see SignalType */
-		int           width_;              /**< The width of the signal */
+		Operator*     parentOp_;                       /**< The operator which contains this signal */
+		std::string   name_;                           /**< The name of the signal */
+		SignalType    type_;                           /**< The type of the signal, see SignalType */
+		int           width_;                          /**< The width of the signal */
 
-		double       constValue_;          /**< The value of the constant, for a constant signal */
+		double       constValue_;                      /**< The value of the constant, for a constant signal */
 
-		std::string   tableAttributes_;    /**< The values that will be used to fill the table, when implemented as a hard RAM block, or other attributes needed when declaring the table */
+		std::string   tableAttributes_;                /**< The values that will be used to fill the table, when implemented as a hard RAM block, or other attributes needed when declaring the table */
 
-		int           numberOfPossibleValues_; /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
+		int           numberOfPossibleValues_;         /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
 
-		int           lifeSpan_;           /**< The max delay that will be applied to this signal; */
+		int           lifeSpan_;                       /**< The max delay that will be applied to this signal; */
 		std::vector<pair<Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
 		std::vector<pair<Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The second value in the pair contains the (possible) delay on the edge */
-		int           cycle_;              /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
-		double        criticalPath_;       /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
-		double        criticalPathContribution_; /**< the delay that the signal adds to the critical path */
+		int           cycle_;                          /**< the cycle at which this signal is active in a pipelined operator. 0 means synchronized with the inputs */
+		double        criticalPath_;                   /**< the critical path within a cycle, or from the inputs if the operator is not pipelined */
+		double        criticalPathContribution_;       /**< the delay that the signal adds to the critical path */
 
-		bool          hasBeenScheduled_;    /**< Has the signal already been scheduled? */
-		bool          hasBeenDrawn_;    /**< Has the signal already been drawn? */
+		bool          incompleteDeclaration_;          /**< some signals are only partially declared first (like those generated automatically by outPortMap) and need to be completed later on in the constructor */
 
-		bool          isFP_;               /**< If the signal is of the FloPoCo floating-point type */
-		bool          isFix_;              /**< If the signal is of the FloPoCo fixed-point type */
-		bool          isIEEE_;             /**< If the signal is of the IEEE floating-point type */
-		int           wE_;                 /**< The width of the exponent. Used for FP signals */
-		int           wF_;                 /**< The width of the fraction. Used for FP signals */
-		int           MSB_;                /**< MSB. Used for fixed-point signals */
-		int           LSB_;                /**< LSB. Used for fixed-point signals */
-		bool          isSigned_;           /**< true if this a signed fixed-point signals, false otherwise */
-		bool          isBus_;              /**< True is the signal is a bus (std_logic_vector)*/
+		bool          hasBeenScheduled_;               /**< Has the signal already been scheduled? */
+		bool          hasBeenDrawn_;                   /**< Has the signal already been drawn? */
 
-		static const vector<string> dotNodeColors;
+		bool          isFP_;                           /**< If the signal is of the FloPoCo floating-point type */
+		bool          isFix_;                          /**< If the signal is of the FloPoCo fixed-point type */
+		bool          isIEEE_;                         /**< If the signal is of the IEEE floating-point type */
+		int           wE_;                             /**< The width of the exponent. Used for FP signals */
+		int           wF_;                             /**< The width of the fraction. Used for FP signals */
+		int           MSB_;                            /**< MSB. Used for fixed-point signals */
+		int           LSB_;                            /**< LSB. Used for fixed-point signals */
+		bool          isSigned_;                       /**< true if this a signed fixed-point signals, false otherwise */
+		bool          isBus_;                          /**< True is the signal is a bus (std_logic_vector)*/
+
+		static const vector<string> dotNodeColors;     /**< the possible colors used for the dot diagrams */
 	};
 
 }
