@@ -452,12 +452,13 @@ namespace flopoco{
 			connectionSignal->addPredecessor(ioSignal, 0);
 		}
 
-		//if the port was to a signal automatically created,
+		//if the port was connected to a signal automatically created,
 		//	then copy the details of the port to the respective signal
 		if(connectionSignal->getIncompleteDeclaration() == true)
 		{
 			connectionSignal->copySignalParameters(ioSignal);
 			connectionSignal->setIncompleteDeclaration(false);
+			connectionSignal->setCriticalPathContribution(0.0);
 		}
 	}
 
@@ -1554,6 +1555,8 @@ namespace flopoco{
 				//connect the port to the corresponding signal
 				it->second->addPredecessor(getSignalByName(it->first));
 				getSignalByName(it->first)->addSuccessor(it->second);
+				//the new signal doesn't add anything to the critical path
+				it->second->setCriticalPathContribution(0.0);
 			}
 
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
