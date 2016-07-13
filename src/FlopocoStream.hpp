@@ -67,6 +67,15 @@ namespace flopoco{
 			return output;
 		}
 
+		friend FlopocoStream& operator<<(FlopocoStream& output, char *s) {
+			output.vhdlCodeBuffer << s;
+			output.codeParsed = false;
+			string str(s);
+			if(str.find(';') != str.npos)
+				output.flush();
+			return output;
+		}
+
 		friend FlopocoStream& operator<<(FlopocoStream& output, char const *s) {
 			output.vhdlCodeBuffer << s;
 			output.codeParsed = false;

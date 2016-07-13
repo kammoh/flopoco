@@ -433,7 +433,10 @@ namespace flopoco
 				}
 				target->setPipelined(pipeline);
 				target->setClockEnable(clockEnable);
-				target->setFrequency(1e6*targetFrequencyMHz);
+				if(pipeline)
+					target->setFrequency(1e6*targetFrequencyMHz);
+				else
+					target->setFrequency(1e6*0.0001);
 				target->setUseHardMultipliers(useHardMult);
 				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
 				target->setPlainVHDL(plainVHDL);

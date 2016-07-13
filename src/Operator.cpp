@@ -801,12 +801,16 @@ namespace flopoco{
 
 	void Operator::setSequential() {
 		isSequential_=true;
+		//TODO: for now, the vhdl code parsing is enabled for all operators
+		//vhdl.disableParsing(false);
 		vhdl.disableParsing(false);
 	}
 
 	void Operator::setCombinatorial() {
 		isSequential_=false;
-		vhdl.disableParsing(true);
+		//TODO: for now, the vhdl code parsing is enabled for all operators
+		//vhdl.disableParsing(true);
+		vhdl.disableParsing(false);
 	}
 
 	void Operator::setRecirculationSignal() {
@@ -2532,6 +2536,10 @@ namespace flopoco{
 			}
 		}
 
+		//the remaining code might contain identifiers that were marked
+		//	with ??; these must also be removed
+		//if(nextPos == string::npos) && (oldStr.find )
+
 		//copy the remaining code to the vhdl code buffer
 		newStr << oldStr.substr(currentPos, oldStr.size()-currentPos);
 
@@ -2946,13 +2954,12 @@ namespace flopoco{
 				totalDelay = 0.0;
 			targetSignal->setCycle(maxCycle);
 
-#define ASSUME_RETIMING 0 // we leave a bit of the critical path to this signal
+#define ASSUME_RETIMING 1 // we leave a bit of the critical path to this signal
 #if ASSUME_RETIMING
 			targetSignal->setCriticalPath(totalDelay);
 #else //ASSUME_NO_RETIMING
-			targetSignal->setCriticalPath(targetSignal->getCriticalPathContribution());			
+			targetSignal->setCriticalPath(targetSignal->getCriticalPathContribution());
 #endif
-			
 			
 		}else
 		{
