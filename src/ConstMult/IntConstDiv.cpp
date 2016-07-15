@@ -53,10 +53,9 @@ namespace flopoco{
 
 
 	
-	// This table is full of zeroes but we don't care too much
-	IntConstDiv::CBLKTable::CBLKTable(Target* target, int d, int alpha, int gamma, int level):
+	IntConstDiv::CBLKTable::CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho):
 		// Sizes below assume alpha>=gamma
-		Table(target, (level==0? alpha: 2*gamma), (level==0? alpha+gamma: (1<<level)*alpha+gamma), 0, -1, 1), d(d), alpha(alpha), gamma(gamma), level(level) {
+		Table(target, (level==0? alpha: 2*gamma), (level==0? rho+gamma: (1<<level)*alpha-alpha+rho+gamma), 0, -1, 1), level(level), d(d), alpha(alpha), gamma(gamma), rho(rho) {
 				ostringstream name;
 				srcFileName="IntConstDiv::CLBKTable";
 				name <<"CLBKTable_" << d << "_" << alpha << "_l" << level ;
@@ -95,6 +94,13 @@ namespace flopoco{
 		srcFileName="IntConstDiv";
 
 		gamma = intlog2(d-1);
+		qSize = intlog2(  ((1<<wIn)-1)/d  );
+		rho = intlog2(  ((1<<alpha)-1)/d  );
+		REPORT(DEBUG, "gamma=" << gamma << " qSize=" << qSize << " rho=" << rho);
+
+		if(gamma>4) {
+			REPORT(LIST, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
+		}
 		if(alpha==-1){
 			if(architecture==0) {
 				alpha = target->lutInputs()-gamma;
@@ -105,7 +111,11 @@ namespace flopoco{
 				}
 			}
 			else {
-				alpha=4; // TODO
+#if 0 // DEBUG IN HEXA
+				alpha=4;
+#else
+				alpha = target->lutInputs();
+#endif				
 			}
 		}
 		REPORT(INFO, "alpha="<<alpha);
@@ -124,21 +134,21 @@ namespace flopoco{
 
 		setNameWithFreqAndUID(o.str());
 
-		qSize = wIn - intlog2(d) +1;
-
 
 		addInput("X", wIn);
+
 
 		if(!remainderOnly)
 			addOutput("Q", qSize);
 		addOutput("R", gamma);
 
-		int k = wIn/alpha;
-		int rem = wIn-k*alpha;
-		if (rem!=0) k++;
+		int nbDigitsIn = wIn/alpha;
+		int inPadBits = wIn-nbDigitsIn*alpha;
+		if (inPadBits!=0) nbDigitsIn++;
 
-		REPORT(INFO, "Architecture splits the input in k=" << k  <<  " chunks."   );
-		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  k=" << k  <<  "  qSize=" << qSize );
+		
+		REPORT(INFO, "Architecture splits the input in nbDigitsIn=" << nbDigitsIn  <<  " chunks."   );
+		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  nbDigitsIn=" << nbDigitsIn  <<  "  qSize=" << qSize );
 
 		if(architecture==0) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
@@ -149,20 +159,20 @@ namespace flopoco{
 			double tableDelay=table->getOutputDelay("Y");
 			
 			string ri, xi, ini, outi, qi;
-			ri = join("r", k);
+			ri = join("r", nbDigitsIn);
 			vhdl << tab << declare(ri, gamma) << " <= " << zg(gamma, 0) << ";" << endl;
 
 			setCriticalPath( getMaxInputDelays(inputDelays) );
 
 
-			for (int i=k-1; i>=0; i--) {
+			for (int i=nbDigitsIn-1; i>=0; i--) {
 
 				manageCriticalPath(tableDelay);
 
 				//			cerr << i << endl;
 				xi = join("x", i);
-				if(i==k-1 && rem!=0) // at the MSB, pad with 0es
-					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-rem, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
+				if(i==nbDigitsIn-1 && inPadBits!=0) // at the MSB, pad with 0es
+					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-inPadBits, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
 				else // normal case
 					vhdl << tab << declare(xi, alpha, true) << " <= " << "X" << range((i+1)*alpha-1, i*alpha) << ";" << endl;
 				ini = join("in", i);
@@ -181,8 +191,8 @@ namespace flopoco{
 
 
 			if(!remainderOnly) { // build the quotient output
-				vhdl << tab << declare("tempQ", k*alpha) << " <= " ;
-				for (unsigned int i=k-1; i>=1; i--)
+				vhdl << tab << declare("tempQ", nbDigitsIn*alpha) << " <= " ;
+				for (unsigned int i=nbDigitsIn-1; i>=1; i--)
 					vhdl << "q" << i << " & ";
 				vhdl << "q0 ;" << endl;
 				vhdl << tab << "Q <= tempQ" << range(qSize-1, 0)  << ";" << endl;
@@ -196,23 +206,24 @@ namespace flopoco{
 
 		else if (architecture==1){
 			//////////////////////////////////////// Logarithmic architecture //////////////////////////////////:
-
-			int levels = intlog2(k);
+			// The management of the tree is quite intricate when everything is not a power of two.
+			
+			// The number of levels is computed out of the number of digits of the _input_
+			int levels = intlog2(2*nbDigitsIn-1); 
 			REPORT(INFO, "levels=" << levels);
 			CBLKTable* table;
 			string ri, xi, ini, outi, qi, qs, r;
 
 			// level 0
-			table = new CBLKTable(target, d, alpha, gamma,0);
+			table = new CBLKTable(target, 0, d, alpha, gamma, rho);
 			useSoftRAM(table);
 			addSubComponent(table);
-			double tableDelay=table->getOutputDelay("Y");
+			//			double tableDelay=table->getOutputDelay("Y");
 			
-			for (int i=0; i<k; i++) {
-				//			cerr << i << endl;
+			for (int i=0; i<nbDigitsIn; i++) {
 				xi = join("x", i);
-				if(i==k-1 && rem!=0) // at the MSB, pad with 0es
-					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-rem, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
+				if(i==nbDigitsIn-1 && inPadBits!=0) // at the MSB, pad with 0es
+					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-inPadBits, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
 				else // normal case
 					vhdl << tab << declare(xi, alpha, true) << " <= " << "X" << range((i+1)*alpha-1, i*alpha) << ";" << endl;
 				outi = join("out", i);
@@ -222,47 +233,79 @@ namespace flopoco{
 				vhdl << instance(table, join("table",i));
 				ri = join("r_l0_", i);
 				qi = join("qs_l0_", i);
-				vhdl << tab << declare(qi, alpha, true) << " <= " << outi << range(alpha+gamma-1, gamma) << ";" << endl;
+				// The qi out of the table are on rho bits, and we want to pad them to alpha bits
+				int qiSize;
+				if(i<nbDigitsIn-1) {
+						qiSize = alpha;
+						vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
+					}
+					else {
+						qiSize = qSize - (nbDigitsIn-1)*alpha;
+						if(qiSize>=rho)
+							vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
+						else
+							vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
+					} 
 				vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl;
 			}
 
-
+			bool previousLevelOdd = ((nbDigitsIn&1)==1);
 			// The following levels
 			for (int level=1; level<levels; level++){
-				REPORT(INFO, "level=" << level);
-				table = new CBLKTable(target, d, alpha, gamma, level);
+				int levelSize = nbDigitsIn/(1<<level); // how many sub-quotients we have in this level
+				if (nbDigitsIn%((1<<level)) !=0 )
+					levelSize++;
+				REPORT(INFO, "level=" << level << "  levelSize=" << levelSize);
+				table = new CBLKTable(target, level, d, alpha, gamma, rho);
 				useSoftRAM(table);
 				addSubComponent(table);
-				int levelSize = k/(1<<level);
-				int padSize=0;
-				if(k%(1<<level) !=0) {
-					levelSize++;
-					padSize = levelSize*((1<<level)) -k;
-				}
 				for(int i=0; i<levelSize; i++) {
-					REPORT(INFO, "level=" << level << "  i=" << i)
 					string tableNumber = "l" + to_string(level) + "_" + to_string(i);
 					string tableName = "table_" + tableNumber;
 					string in = "in_" + tableNumber;
 					string out = "out_" + tableNumber;
 				  r = "r_"+ tableNumber;
 					string q = "q_"+ tableNumber;
+					if(i==levelSize-1 && previousLevelOdd) 
+						vhdl << tab << declare(in, 2*gamma) << " <= " << zg(gamma) << " & r_l" << level-1 << "_" << 2*i  << ";"  << endl;
+					else
+						vhdl << tab << declare(in, 2*gamma) << " <= " << "r_l" << level-1 << "_" << 2*i+1 << " & r_l" << level-1 << "_" << 2*i  << ";"  << endl;
 
-					vhdl << tab << declare(in, 2*gamma) << " <= " << "r_l" << level-1 << "_" << 2*i+1 << " & r_l" << level-1 << "_" << 2*i  << ";"  << endl;
-					
+						
 					outPortMap(table, "Y", out);
 					inPortMap(table, "X", in);
 					vhdl << instance(table, "table_"+ tableNumber);
-					
+
 					vhdl << tab << declare(r, gamma) << " <= " << out << range (gamma-1, 0) << ";"  << endl;
-					vhdl << tab << declare(q, (1<<level)*alpha) << " <= " << out << range ((1<<level)*alpha+gamma-1, gamma) << ";"  << endl;
+
+					int subQSize; // The size, in bits, of the part of Q we are building
+					if (i<levelSize-1) {
+						subQSize = (1<<level)*alpha;
+						vhdl << tab << declare(q, subQSize) << " <= " << zg(subQSize - (table->wOut-gamma)) << " & " << out << range (table->wOut-1, gamma) << ";"  << endl;
+					}
+					else { // leftmost chunk
+						subQSize = qSize-(levelSize-1)*(1<<level)*alpha;
+						vhdl << tab << declare(q, subQSize) << " <= " ;
+						if(subQSize >= (table->wOut-gamma))
+							vhdl << zg(subQSize - (table->wOut-gamma)) << " & " << out << range (table->wOut-1, gamma) << ";"  << endl;
+						else
+							vhdl << out << range (subQSize+gamma-1, gamma) << ";"  << endl;
+							
+					}
+					REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  wOut=" << table->wOut << " gamma=" << gamma );
+
 					
 					qs = "qs_"+ tableNumber;
 					string qsl =  "qs_l" + to_string(level-1) + "_" + to_string(2*i+1);
 					string qsr =  "qs_l" + to_string(level-1) + "_" + to_string(2*i);
-					vhdl << tab << declare(qs, (1<<level)*alpha) << " <= " << q + " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+					vhdl << tab << declare(qs, subQSize) << " <= " ;
+					if((i==levelSize-1) && (subQSize <= (1<<(level-1))*alpha) )
+						vhdl << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
+					else
+						vhdl << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+						
 					}
-
+				previousLevelOdd = ((levelSize&1)==1);
 				
 			}
 
@@ -305,9 +348,42 @@ namespace flopoco{
 
 
 
+	void IntConstDiv::nextTestState(TestState * previousTestState)
+	{
+		// the static list of mandatory tests
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+		
+		// is initialized here
+		if(previousTestState->getIterationIndex() == 0)		{
+
+			for(int wIn=8; wIn<17; wIn+=1) { // test various input widths
+				for(int d=3; d<=17; d+=2) { // test various divisors
+					for(int arch=1; arch <2; arch++) { // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
+						paramList.push_back(make_pair("wIn", to_string(wIn) ));	
+						paramList.push_back(make_pair("d", to_string(d) ));	
+						paramList.push_back(make_pair("arch", to_string(arch) ));	
+						testStateList.push_back(paramList);
+						paramList.clear();
+					}
+				}
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		// Now actually change the state
+		vector<pair<string,string>>::iterator itVector;
+		int testIndex = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
+	}
+
 
 	
-	OperatorPtr IntConstDiv::parseArgumentsDiv(Target *target, vector<string> &args) {
+	OperatorPtr IntConstDiv::parseArguments(Target *target, vector<string> &args) {
 		int wIn, d, arch, alpha;
 		bool remainderOnly;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
@@ -329,7 +405,8 @@ namespace flopoco{
                         remainderOnly(bool)=false: if true, the architecture doesn't output the quotient; \
                         alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
 											 "This operator is described in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>.",
-											 IntConstDiv::parseArgumentsDiv
+											 IntConstDiv::parseArguments,
+											 IntConstDiv::nextTestState
 											 ) ;
 	}
 

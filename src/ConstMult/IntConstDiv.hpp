@@ -43,11 +43,12 @@ namespace flopoco{
 		/** @brief This table is the CBLK table of the Arith23 paper by Ugurdag et al */
 		class CBLKTable: public Table {
 		public:
+			int level; /**< input will be a group of 2^level alpha-bit digits*/
 			int d;
 			int alpha;
 			int gamma;
-			int level; /**< input will be a group of 2^level alpha-bit digits*/
-			CBLKTable(Target* target, int d, int alpha, int gamma, int level);
+			int rho;
+			CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho);
 			mpz_class function(int x);
 		};
 
@@ -71,9 +72,10 @@ namespace flopoco{
 		void emulate(TestCase * tc);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArgumentsDiv(Target *target , vector<string> &args);
-		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArgumentsRem(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+
+		/** The method that defines the autotest */
+		static void nextTestState(TestState * previousTestState);
 
 		/** Factory register method */ 
 		static void registerFactory();
@@ -92,6 +94,7 @@ namespace flopoco{
 		bool remainderOnly; /**< if true, only the remainder will be computed. If false, quotient will be computed */
 		int gamma;  /**< Size in bits of a remainder; gamma=ceil(log2(d-1)) */
 		int qSize;   /**< Size in bits of the quotient output */
+		int rho;    /**< Size in bits of the quotient of one digit */
 
 	};
 
