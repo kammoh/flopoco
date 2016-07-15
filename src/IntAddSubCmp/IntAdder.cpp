@@ -26,14 +26,20 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 #include "utils.hpp"
 #include "IntAdder.hpp"
 
-// #include "IntAdderClassical.hpp"
-//#include "IntAdderAlternative.hpp"
-//#include "IntAdderShortLatency.hpp"
+//#include "Attic/IntAdderClassical.hpp"
+//#include "Attic/IntAdderAlternative.hpp"
+//#include "Attic/IntAdderShortLatency.hpp"
 
 using namespace std;
 namespace flopoco {
 
 	IntAdder::IntAdder ( Target* target, int wIn_, int optimizeType, bool srl, int implementation):
+		IntAdder(nullptr, target, wIn_, optimizeType, srl, implementation)
+	{
+
+	}
+
+	IntAdder::IntAdder ( OperatorPtr parentOp, Target* target, int wIn_, int optimizeType, bool srl, int implementation):
 		Operator ( target), wIn ( wIn_ )
 	{
 		srcFileName="IntAdder";
@@ -41,6 +47,9 @@ namespace flopoco {
 		ostringstream name;
 		name << "IntAdder_" << wIn;
 		setNameWithFreqAndUID(name.str());
+		double targetPeriod, totalPeriod;
+
+		setParentOperator(parentOp);
 													
 		// Set up the IO signals
 		addInput  ("X"  , wIn, true);
@@ -48,10 +57,87 @@ namespace flopoco {
 		addInput  ("Cin");
 		addOutput ("R"  , wIn, 1 , true);
 
-		vhdl << tab << " R <= X + Y + Cin;" << endl;
-		REPORT(INFO, "Adder " << name.str() << " adding delay " << getTarget()->adderDelay(wIn+1));
-		getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn+1));
+		startScheduling();
 
+		targetPeriod = 1.0/target->frequency();
+		totalPeriod = max(max(getSignalByName("X")->getCriticalPath(), getSignalByName("Y")->getCriticalPath()),
+			getSignalByName("Cin")->getCriticalPath()) + target->adderDelay(wIn+1);
+
+		if(totalPeriod <= targetPeriod)
+		{
+			vhdl << tab << " R <= X + Y + Cin;" << endl;
+			REPORT(INFO, "Adder " << name.str() << " adding delay " << target->adderDelay(wIn+1));
+			getSignalByName("R")->setCriticalPathContribution(target->adderDelay(wIn+1));
+		}else
+		{
+			int maxAdderSize = getMaxAdderSizeForFreq(false);
+			int chunks = wIn/maxAdderSize, lastChunkSize = 0;
+
+			if(chunks*maxAdderSize < wIn)
+			{
+				chunks++;
+				lastChunkSize = wIn - (chunks-1)*maxAdderSize;
+			}
+
+			for(int i=0; i<chunks; i++)
+			{
+				if(i == 0)
+				{
+					vhdl << tab << declare("Cin_chunk_0") << " <= Cin;" << endl;
+				}else
+				{
+					vhdl << tab << declare(0.0, join("Cin_chunk_", i)) << " <= R_chunk_" << i-1
+							<<	of(maxAdderSize) << ";" << endl;
+				}
+
+				if((i == chunks-1) && (lastChunkSize != maxAdderSize))
+				{
+					vhdl << tab << declare(0.0, join("X_chunk_", i), lastChunkSize+1) << " <= '0' & X"
+							<<	range(lastChunkSize-1+i*maxAdderSize, i*maxAdderSize) << ";" << endl;
+					vhdl << tab << declare(0.0, join("Y_chunk_", i), lastChunkSize+1) << " <= '0' & Y"
+							<<	range(lastChunkSize-1+i*maxAdderSize, i*maxAdderSize) << ";" << endl;
+					vhdl << tab << declare(target->adderDelay(lastChunkSize+1), join("R_chunk_", i), lastChunkSize+1) << " <= X_chunk_" << i
+							<<	" + Y_chunk_" << i << " + Cin_chunk_" << i << ";" << endl;
+				}else
+				{
+					vhdl << tab << declare(0.0, join("X_chunk_", i), maxAdderSize+1) << " <= '0' & X"
+							<<	range((i+1)*maxAdderSize-1, i*maxAdderSize) << ";" << endl;
+					vhdl << tab << declare(0.0, join("Y_chunk_", i), maxAdderSize+1) << " <= '0' & Y"
+							<<	range((i+1)*maxAdderSize-1, i*maxAdderSize) << ";" << endl;
+					vhdl << tab << declare(target->adderDelay(maxAdderSize+1), join("R_chunk_", i), maxAdderSize+1) << " <= X_chunk_" << i
+							<<	" + Y_chunk_" << i << " + Cin_chunk_" << i << ";" << endl;
+				}
+
+				vhdl << endl;
+			}
+
+			vhdl << tab << "R <=";
+			for(int i=chunks-1; i>=0; i--)
+			{
+				vhdl << (i==(chunks-1)?" ":" & ") << "R_chunk_" << i;
+				if((i == chunks-1) && (lastChunkSize != maxAdderSize))
+					vhdl << range(lastChunkSize-1, 0);
+				else
+					vhdl << range(maxAdderSize-1, 0);
+			}
+			vhdl << ";" << endl;
+		}
+
+
+	}
+
+
+	int IntAdder::getMaxAdderSizeForFreq(bool hasFF)
+	{
+		int count = 1;
+		double targetPeriod = 1.0/getTarget()->frequency();
+
+		while(getTarget()->adderDelay(count)+(hasFF?getTarget()->ffDelay():0) < targetPeriod)
+			count++;
+		if(getTarget()->adderDelay(count)+(hasFF?getTarget()->ffDelay():0) > targetPeriod)
+			count--;
+
+		return count;
 	}
 
 
@@ -91,16 +177,16 @@ namespace flopoco {
 
 	void IntAdder::registerFactory(){
 		UserInterface::add("IntAdder", // name
-											 "Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
-											 "BasicInteger", // category
-											 "",
-											 "wIn(int): input size in bits;\
-							          arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency; \
-							          optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count; \
-							          SRL(bool)=true: optimize for shift registers",
-											 "",
-											 IntAdder::parseArguments
-											 );
+							 "Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
+							 "BasicInteger", // category
+							 "",
+							 "wIn(int): input size in bits;\
+					  arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency; \
+					  optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count; \
+					  SRL(bool)=true: optimize for shift registers",
+							 "",
+							 IntAdder::parseArguments
+							 );
 		
 	}
 

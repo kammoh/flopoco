@@ -33,6 +33,20 @@ namespace flopoco {
 		IntAdder ( Target* target, int wIn, int optimizeType = SLICE, bool srl = true, int implementation = -1 );
 
 		/**
+		 * The IntAdder constructor
+		 * @param[in] parentOp         the parent operator of this component
+		 * @param[in] target           the target device
+		 * @param[in] wIn              the with of the inputs and output
+		 * @param[in] inputDelays      the delays for each input
+		 * @param[in] optimizeType     the type optimization we want for our adder.
+		 *            0: optimize for logic (LUT/ALUT)
+		 *            1: optimize register count
+		 *            2: optimize slice/ALM count
+		 * @param[in] srl              optimize for use of shift registers
+		 **/
+		IntAdder ( OperatorPtr parentOp, Target* target, int wIn, int optimizeType = SLICE, bool srl = true, int implementation = -1 );
+
+		/**
 		 *  Destructor
 		 */
 		~IntAdder();
@@ -42,6 +56,11 @@ namespace flopoco {
 		 * @param[in] tc               a list of test-cases
 		 */
 		void emulate ( TestCase* tc );
+
+		/**
+		 * get the maximum adder size for a given target frequency
+		 */
+		int getMaxAdderSizeForFreq(bool hasFF=false);
 
 		// User-interface stuff
 		/** Factory method */
