@@ -94,9 +94,6 @@ namespace flopoco{
 		srcFileName="IntConstDiv";
 
 		gamma = intlog2(d-1);
-		qSize = intlog2(  ((1<<wIn)-1)/d  );
-		rho = intlog2(  ((1<<alpha)-1)/d  );
-		REPORT(DEBUG, "gamma=" << gamma << " qSize=" << qSize << " rho=" << rho);
 
 		if(gamma>4) {
 			REPORT(LIST, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
@@ -118,7 +115,11 @@ namespace flopoco{
 #endif				
 			}
 		}
+		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
+		rho = intlog2(  ((mpz_class(1)<<alpha)-1)/d  );
+
 		REPORT(INFO, "alpha="<<alpha);
+		REPORT(DEBUG, "gamma=" << gamma << " qSize=" << qSize << " rho=" << rho);
 
 		if((d&1)==0)
 			REPORT(LIST, "WARNING, d=" << d << " is even, this is suspiscious. Might work nevertheless, but surely suboptimal.")
@@ -203,7 +204,8 @@ namespace flopoco{
 
 
 
-
+		// Bug on  ./flopoco IntConstDiv alpha=6 arch=1 d=3 remainderOnly=false wIn=31 TestBench n=1000
+		// because qisize=0 below. The input is split into 6 chunks but Q fits on 30 bits and needs 5 chunks only
 		else if (architecture==1){
 			//////////////////////////////////////// Logarithmic architecture //////////////////////////////////:
 			// The management of the tree is quite intricate when everything is not a power of two.
@@ -219,7 +221,6 @@ namespace flopoco{
 			useSoftRAM(table);
 			addSubComponent(table);
 			//			double tableDelay=table->getOutputDelay("Y");
-			
 			for (int i=0; i<nbDigitsIn; i++) {
 				xi = join("x", i);
 				if(i==nbDigitsIn-1 && inPadBits!=0) // at the MSB, pad with 0es
@@ -241,6 +242,7 @@ namespace flopoco{
 					}
 					else {
 						qiSize = qSize - (nbDigitsIn-1)*alpha;
+						REPORT(INFO, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
 						if(qiSize>=rho)
 							vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
 						else
@@ -340,7 +342,7 @@ namespace flopoco{
 		mpz_class X = tc->getInputValue("X");
 		/* Compute correct value */
 		mpz_class Q = X/d;
-		mpz_class R = X-Q*d;
+		mpz_class R = X%d;
 		if(!remainderOnly)
 			tc->addExpectedOutput("Q", Q);
 		tc->addExpectedOutput("R", R);
