@@ -55,7 +55,7 @@ namespace flopoco{
 	
 	IntConstDiv::CBLKTable::CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho):
 		// Sizes below assume alpha>=gamma
-		Table(target, (level==0? alpha: 2*gamma), (level==0? rho+gamma: (1<<level)*alpha-alpha+rho+gamma), 0, -1, 1), level(level), d(d), alpha(alpha), gamma(gamma), rho(rho) {
+		Table(target, (level==0? alpha: 2*gamma), (level==0? rho+gamma: (1<<(level-1))*alpha+gamma), 0, -1, 1), level(level), d(d), alpha(alpha), gamma(gamma), rho(rho) {
 				ostringstream name;
 				srcFileName="IntConstDiv::CLBKTable";
 				name <<"CLBKTable_" << d << "_" << alpha << "_l" << level ;
