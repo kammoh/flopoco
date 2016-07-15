@@ -35,7 +35,19 @@ namespace flopoco{
 			int d;
 			int alpha;
 			int gamma;
-			EuclideanDivTable(Target* target, int d_, int alpha_, int gamma_);
+			EuclideanDivTable(Target* target, int d, int alpha, int gamma);
+			mpz_class function(int x);
+		};
+
+
+		/** @brief This table is the CBLK table of the Arith23 paper by Ugurdag et al */
+		class CBLKTable: public Table {
+		public:
+			int d;
+			int alpha;
+			int gamma;
+			int level; /**< input will be a group of 2^level alpha-bit digits*/
+			CBLKTable(Target* target, int d, int alpha, int gamma, int level);
 			mpz_class function(int x);
 		};
 
