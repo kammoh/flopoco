@@ -1375,7 +1375,6 @@ namespace flopoco{
 			//	and add it to the list of signals to be scheduled
 			declare(actualSignalName, -1, false);
 			getSignalByName(actualSignalName)->setIncompleteDeclaration(true);
-			signalsToSchedule.push_back(getSignalByName(actualSignalName));
 			s = getSignalByName(actualSignalName);
 		}else
 		{
@@ -1466,6 +1465,14 @@ namespace flopoco{
 		//disable the drawing for this subcomponent
 		//	if needed, the drawing procedures will re-enable it
 		op->setIsOperatorDrawn(true);
+
+		//check that the operator being instantiated has the parent operator set to this operator
+		//	if not, then set it and restart the scheduling for the subcomponent
+		if(op->parentOp_ == nullptr)
+		{
+			op->parentOp_ = this;
+			op->reconnectIOPorts();
+		}
 
 		// TODO add more checks here
 
