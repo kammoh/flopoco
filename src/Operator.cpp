@@ -1362,8 +1362,7 @@ namespace flopoco{
 
 		// check if the signal already exists, when we're supposed to create a new signal
 		if(newSignal && (signalMap_.find(actualSignalName) !=  signalMap_.end())) {
-			THROWERROR("ERROR in outPortMap() for entity " << op->getName()  << ", "
-					<< "signal " << actualSignalName << " already exists");
+			THROWERROR("ERROR in outPortMap(): signal " << actualSignalName << " already exists");
 		}
 
 		//check if the signal connected to the port exists, and return it if so
@@ -1384,7 +1383,7 @@ namespace flopoco{
 				s = getSignalByName(actualSignalName);
 			}
 			catch(string &e2) {
-				THROWERROR("ERROR in outPortMap() for entity " << getName()  << ", " << e2);
+				THROWERROR("ERROR in outPortMap(): " << e2);
 			}
 		}
 
@@ -1407,7 +1406,7 @@ namespace flopoco{
 			s = getSignalByName(actualSignalName);
 		}
 		catch(string &e2) {
-			THROWERROR("ERROR in inPortMap() for entity " << op->getName() << ": " << e2);
+			THROWERROR("ERROR in inPortMap(): " << e2);
 		}
 
 		// add the mapping to the input mapping list of Op
@@ -1549,12 +1548,12 @@ namespace flopoco{
 			if(it->second->getIncompleteDeclaration() == true)
 			{
 				//copy the details from the output port
-				it->second->copySignalParameters(getSignalByName(it->first));
+				it->second->copySignalParameters(op->getSignalByName(it->first));
 				//mark the signal as completely declared
 				it->second->setIncompleteDeclaration(false);
 				//connect the port to the corresponding signal
-				it->second->addPredecessor(getSignalByName(it->first));
-				getSignalByName(it->first)->addSuccessor(it->second);
+				it->second->addPredecessor(op->getSignalByName(it->first));
+				op->getSignalByName(it->first)->addSuccessor(it->second);
 				//the new signal doesn't add anything to the critical path
 				it->second->setCriticalPathContribution(0.0);
 			}
