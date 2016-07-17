@@ -190,6 +190,13 @@ label					  ({identifier}{space_character}*":")
 "<=" { 
 	(*yyextra->os) << yytext;
 	
+	//check for possible errors in the VHDL code
+	//	to be in this case, the ';' was probably omitted
+	if(yyextra->lexingMode == LexerContext::signalAssignment)
+	{
+		throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
+	}
+	
 	if(yyextra->lexingMode == LexerContext::unset)
 	{
 		yyextra->lexingMode = LexerContext::signalAssignment;
@@ -226,6 +233,8 @@ label					  ({identifier}{space_character}*":")
 	yyextra->extraRhsNames.clear();
 	yyextra->lexingMode = LexerContext::unset;
 	yyextra->lhsName = "";
+	
+	yyextra->isLhsSet = false;
 	
 	(*yyextra->os) << yytext;
 }
@@ -295,6 +304,12 @@ label					  ({identifier}{space_character}*":")
 		{
 			yyextra->lhsName = yytext;
 		}
+		
+		if(yyextra->isLhsSet == true)
+		{
+			throw("Error: something went wrong during the first parsing of the VHDL code!");
+		}
+		yyextra->isLhsSet = true;
 	}else if(yyextra->lexingMode == LexerContext::signalAssignment)
 	{
 		// this is the right hand side of the assignment
@@ -337,6 +352,12 @@ label					  ({identifier}{space_character}*":")
 		(*yyextra->os) << "??" << yytext << "??";
 		
 		yyextra->lhsName = yytext;
+		
+		if(yyextra->isLhsSet == true)
+		{
+			throw("Error: something went wrong during the first parsing of the VHDL code!");
+		}
+		yyextra->isLhsSet = true;
 		
 		//switch the parsing mode to the next stage, selectedSignalAssignment3
         yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
