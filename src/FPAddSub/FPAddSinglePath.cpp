@@ -77,13 +77,18 @@ namespace flopoco{
 
 		vhdl << tab << declare("addCmpOp1",wE+wF+3) << " <= '0'  & excExpFracX;"<<endl;
 		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
-		IntAdder *cmpAdder = new IntAdder(target, wE+wF+3);
+
+		IntAdder *cmpAdder = nullptr;
+
 		inPortMap(cmpAdder, "X", "addCmpOp1");
 		inPortMap(cmpAdder, "Y", "addCmpOp2");
 		inPortMapCst(cmpAdder, "Cin", "'1'");
 		outPortMap (cmpAdder, "R", "cmpRes");
 
+		cmpAdder = new IntAdder(target, wE+wF+3);
+
 		vhdl << instance(cmpAdder, "cmpAdder") << endl;
+
 		vhdl<< tab << declare(target->localWireDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 
 		addComment("exponent difference");
@@ -124,7 +129,7 @@ namespace flopoco{
 		vhdl << tab << declare("sdExnXY",4) << " <= excX & excY;"<<endl;
 
 		vhdl << tab << declare(target->logicDelay(2),
-													 "fracY",wF+1) << " <= "<< zg(wF+1)<<" when excY=\"00\" else ('1' & newY("<<wF-1<<" downto 0));"<<endl;
+				"fracY",wF+1) << " <= "<< zg(wF+1)<<" when excY=\"00\" else ('1' & newY("<<wF-1<<" downto 0));"<<endl;
 
 		addComment("Exception management logic");
 		vhdl <<tab<<"with sXsYExnXY select "<<endl;
@@ -157,11 +162,15 @@ namespace flopoco{
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building right shifter");
-		Shifter* rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
-		rightShifter->changeName(getName()+"_RightShifter");
+		Shifter* rightShifter = nullptr;
+
 		inPortMap  (rightShifter, "X", "fracY");
 		inPortMap  (rightShifter, "S", "shiftVal");
-		outPortMap (rightShifter, "R","shiftedFracY");
+		outPortMap (rightShifter, "R", "shiftedFracY");
+
+		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
+		rightShifter->changeName(getName()+"_RightShifter");
+
 		vhdl << instance(rightShifter, "RightShifterComponent");
 
 #if 0 // vivado compiles it very expensively
@@ -186,21 +195,29 @@ namespace flopoco{
 				<< " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
-		IntAdder* fracAddFar = new IntAdder(target,wF+4);
+		IntAdder* fracAddFar = nullptr;
+
 		inPortMap  (fracAddFar, "X", "fracXfar");
 		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
 		inPortMap  (fracAddFar, "Cin", "cInAddFar");
 		outPortMap (fracAddFar, "R","fracAddResult");
+
+		fracAddFar = new IntAdder(target,wF+4);
+
 		vhdl << instance(fracAddFar, "fracAdder");
 
 		//shift in place
 		vhdl << tab << declare("fracGRS",wF+5) << "<= fracAddResult & sticky; "<<endl;
 
 
-		LZOCShifterSticky* lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0);
+		LZOCShifterSticky* lzocs = nullptr;
+
 		inPortMap  (lzocs, "I", "fracGRS");
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFrac");
+
+		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0);
+
 		vhdl << instance(lzocs, "LZC_component");
 
 		//need to decide how much to add to the exponent
@@ -231,12 +248,15 @@ namespace flopoco{
 
 #if 1
 		
-		IntAdder *ra = new IntAdder(target, wE+2+wF+1);
+		IntAdder *ra = nullptr;
 
 		inPortMap(ra,"X", "expFrac");
 		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
 		inPortMap( ra, "Cin", "addToRoundBit");
 		outPortMap( ra, "R", "RoundedExpFrac");
+
+		ra = new IntAdder(target, wE+2+wF+1);
+
 		vhdl << instance(ra, "roundingAdder");
 #else
 		vhdl << tab  << declare("zeros", ...)  zg(wE+2+wF+1,0);
