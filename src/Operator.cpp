@@ -2624,8 +2624,21 @@ namespace flopoco{
 				lhs->addPredecessor(rhs, delay);
 				rhs->addSuccessor(lhs, delay);
 				//add the signals to the list of signals to be scheduled
-				signalsToSchedule.push_back(lhs);
-				signalsToSchedule.push_back(rhs);
+				//	if they don't already exist on the list
+				bool lhsPresent = false, rhsPresent = false;
+
+				for(size_t i=0; i<signalsToSchedule.size(); i++)
+				{
+					if(signalsToSchedule[i]->getName() == lhs->getName())
+						lhsPresent = true;
+					if(signalsToSchedule[i]->getName() == rhs->getName())
+						rhsPresent = true;
+				}
+
+				if(!lhsPresent)
+					signalsToSchedule.push_back(lhs);
+				if(!rhsPresent)
+					signalsToSchedule.push_back(rhs);
 			}else{
 				triplet<string, string, int> newDep = make_triplet(it->first, it->second, it->third);
 				unresolvedDependenceTable.push_back(newDep);
