@@ -61,12 +61,6 @@ FIND_LIBRARY(MPFI_LIB
 	HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
 	DOC "Directory of the MPFI library")
 
-FIND_LIBRARY(PYTHON_LIB
-	NAMES libpython2.7.so
-	HINTS "/usr/lib/x86_64-linux-gnu"
-	DOC "Directory of the Python library"
-)
-
 
 # Detect Sollya's presence
 FIND_LIBRARY( SOLLYA_LIB sollya )
@@ -77,11 +71,6 @@ ELSE (SOLLYA_LIB)
 	MESSAGE(FATAL_ERROR "Sollya not found")
 ENDIF (SOLLYA_LIB)
 
-IF ( PYTHON_LIB )
-	MESSAGE ( STATUS "Found Python : ${PYTHON_LIB}" )
-ELSE ( PYTHON_LIB )
-	MESSAGE ( FATAL_ERROR "Could not find PYTHON_LIB" )
-ENDIF ( PYTHON_LIB )
 
 IF (MPFR_H AND MPFR_LIB)
     SET(MPFR_FOUND TRUE)
@@ -96,7 +85,7 @@ ENDIF (MPFR_FOUND)
 
 FIND_PATH(WCPG_H
 	  wcpg.h
-	  DOC "Path of wcpg.h, the include file for GNU MPFR library"
+	  DOC "Path of wcpg.h, the include file for LIP6's WCPG computation"
 		)
 
 FIND_LIBRARY(WCPG_LIB
@@ -408,13 +397,6 @@ TARGET_LINK_LIBRARIES(
   ${SOLLYA_LIB}
 	)
 ENDIF (SOLLYA_LIB)
-
-IF (PYTHON_LIB)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib
-  ${PYTHON_LIB}
-  )
-ENDIF (PYTHON_LIB)
 
 IF (WCPG_FOUND)
 TARGET_LINK_LIBRARIES(
