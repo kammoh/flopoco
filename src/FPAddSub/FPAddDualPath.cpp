@@ -174,7 +174,7 @@
 		// instanciate the box that computes X-Y and Y-X. Note that it could take its inputs before the swap (TODO ?)
 		REPORT(DETAILED, "Building close path dual mantissa subtraction box");
 
-		dualSubClose = (IntDualSub *) newInstance("IntDualSub", "DualSubO", "wIn=" + to_string(wF+3) + " opType=0", "X=>fracXClose1 Y=>fracYClose1 RxMy=>fracRClosexMy RyMx=>fracRCloseyMx");
+		dualSubClose = (IntDualSub *) newInstance("IntDualSub", "DualSubO", "wIn=" + to_string(wF+3) + " opType=0", "X=>fracXClose1;Y=>fracYClose1;RxMy=>fracRClosexMy;RyMx=>fracRCloseyMx");
 
 		/*dualSubClose = new 	IntDualSub(target, wF + 3, 0);
 		dualSubClose->changeName(getName()+"_DualSubClose");
@@ -206,7 +206,7 @@
 		// LZC + Shifting. The number of leading zeros are returned together with the shifted input
 		REPORT(DETAILED, "Building close path LZC + shifter");
 
-		lzocs = (LZOCShifterSticky*) newInstance("LZOCShifterSticky", "LZC_component", "wIn=" + to_string(wF+2) + " wOut=" + to_string(wF+2) + " wCount=" + to_string(intlog2(wF+2)) + " computeSticky=false countType=0", "I=>fracRClose1 Count=>nZerosNew O=>shiftedFrac");
+		lzocs = (LZOCShifterSticky*) newInstance("LZOCShifterSticky", "LZC_component", "wIn=" + to_string(wF+2) + " wOut=" + to_string(wF+2) + " wCount=" + to_string(intlog2(wF+2)) + " computeSticky=false countType=0", "I=>fracRClose1;Count=>nZerosNew;O=>shiftedFrac");
 
 		/*lzocs = new LZOCShifterSticky(target, wF+2, wF+2, intlog2(wF+2), false, 0);
 
@@ -269,7 +269,7 @@
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building far path right shifter");
 
-		rightShifter = (Shifter*) newInstance("Shifter", "RightShifterComponent", "wIn="+to_string(wF+1)+" maxShift="+to_string(wF+3)+" dir=1", "X=>fracNewY S=>shiftVal R=>shiftedFracY");
+		rightShifter = (Shifter*) newInstance("Shifter", "RightShifterComponent", "wIn="+to_string(wF+1)+" maxShift="+to_string(wF+3)+" dir=1", "X=>fracNewY;S=>shiftVal;R=>shiftedFracY");
 
 		/*rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
 		rightShifter->changeName(getName()+"_RightShifter");
@@ -305,7 +305,7 @@
 		// perform carry in addition
 		REPORT(DETAILED, "Building far path adder");
 
-		fracAddFar = (IntAdder*) newInstance("IntAdder", "fracAdderFar", "wIn="+to_string(wF+4), "X=>fracXfar Y=>fracYfarXorOp Cin=>cInAddFar R=>fracResultfar0");
+		fracAddFar = (IntAdder*) newInstance("IntAdder", "fracAdderFar", "wIn="+to_string(wF+4), "X=>fracXfar;Y=>fracYfarXorOp;Cin=>cInAddFar;R=>fracResultfar0");
 
 		/*fracAddFar = new IntAdder(target,wF+4);
 		fracAddFar->changeName(getName()+"_fracAddFar");

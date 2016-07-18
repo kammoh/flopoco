@@ -151,9 +151,9 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 			{
 				if(signals.find(request) != string::npos)
 				{
-					if(signals.find(" ", signals.find(request)) != string::npos)
+					if(signals.find(";", signals.find(request)) != string::npos)
 					{
-						signal = signals.substr(signals.find(request) + request.size(), signals.find(" ", signals.find(request)) - (signals.find(request) + request.size()));
+						signal = signals.substr(signals.find(request) + request.size(), signals.find(";", signals.find(request)) - (signals.find(request) + request.size()));
 					}
 					else
 					{
@@ -163,9 +163,9 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 				}
 				else if(signalsCst.find(request) != string::npos)
 				{
-					if(signalsCst.find(" ", signalsCst.find(request)) != string::npos)
+					if(signalsCst.find(";", signalsCst.find(request)) != string::npos)
 					{
-						signal = signalsCst.substr(signalsCst.find(request) + request.size(), signalsCst.find(" ", signalsCst.find(request)) - (signalsCst.find(request) + request.size()));
+						signal = signalsCst.substr(signalsCst.find(request) + request.size(), signalsCst.find(";", signalsCst.find(request)) - (signalsCst.find(request) + request.size()));
 					}
 					else
 					{
@@ -179,9 +179,9 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 			{
 				if(signals.find(request) != string::npos)
 				{
-					if(signals.find(" ", signals.find(request)) != string::npos)
+					if(signals.find(";", signals.find(request)) != string::npos)
 					{
-						signal = signals.substr(signals.find(request) + request.size(), signals.find(" ", signals.find(request)) - (signals.find(request) + request.size()));
+						signal = signals.substr(signals.find(request) + request.size(), signals.find(";", signals.find(request)) - (signals.find(request) + request.size()));
 					}
 					else
 					{
