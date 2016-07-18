@@ -351,7 +351,7 @@ namespace flopoco{
 
 	// please fill me with regression tests or corner case tests
 	void FixSOPC::buildStandardTestCases(TestCaseList * tcl) {
-
+		// TODO add the inputs that entail the max of the outputs 
 #if 0
 		TestCase *tc;
 		// first few cases to check emulate()
