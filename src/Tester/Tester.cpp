@@ -67,7 +67,7 @@ namespace flopoco
 					testedOperator.insert(opFact->name());
 			}
 
-				// Test the first important TestState for each Operator before testing all the TestStates
+			/*	// Test the first important TestState for each Operator before testing all the TestStates
 			for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 			{
 				system(("src/Tester/initOpTest.sh " + (*itOperator)).c_str());
@@ -118,7 +118,7 @@ namespace flopoco
 				currentTestState->clean();
 			}
 
-			currentTestState->setIterationIndex(importantTestStateNumber + 1 );
+			currentTestState->setIterationIndex(importantTestStateNumber + 1 );*/
 		}
 		else
 		{
