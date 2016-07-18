@@ -175,7 +175,7 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 					inPortMapCst(instance, (*itSignal)->getName(), signal);
 				}
 			}
-			else
+			else if((*itSignal)->type() == 1)
 			{
 				if(signals.find(request) != string::npos)
 				{
