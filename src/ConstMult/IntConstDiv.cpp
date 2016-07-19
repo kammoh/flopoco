@@ -143,13 +143,18 @@ namespace flopoco{
 			addOutput("Q", qSize);
 		addOutput("R", gamma);
 
-		int nbDigitsIn = wIn/alpha;
-		int inPadBits = wIn-nbDigitsIn*alpha;
-		if (inPadBits!=0) nbDigitsIn++;
+		int xDigits = wIn/alpha;
+		int xPadBits = wIn%alpha;
+		if (xPadBits!=0)
+			xDigits++;
+		
+		int qDigits = qSize/alpha;
+		if ( (qSize%alpha) !=0)
+			qDigits++;
 
 		
-		REPORT(INFO, "Architecture splits the input in nbDigitsIn=" << nbDigitsIn  <<  " chunks."   );
-		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  nbDigitsIn=" << nbDigitsIn  <<  "  qSize=" << qSize );
+		REPORT(INFO, "Architecture splits the input in xDigits=" << xDigits  <<  " chunks."   );
+		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  xDigits=" << xDigits  <<  "  qSize=" << qSize );
 
 		if(architecture==0) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
@@ -160,20 +165,20 @@ namespace flopoco{
 			double tableDelay=table->getOutputDelay("Y");
 			
 			string ri, xi, ini, outi, qi;
-			ri = join("r", nbDigitsIn);
+			ri = join("r", xDigits);
 			vhdl << tab << declare(ri, gamma) << " <= " << zg(gamma, 0) << ";" << endl;
 
 			setCriticalPath( getMaxInputDelays(inputDelays) );
 
 
-			for (int i=nbDigitsIn-1; i>=0; i--) {
+			for (int i=xDigits-1; i>=0; i--) {
 
 				manageCriticalPath(tableDelay);
 
 				//			cerr << i << endl;
 				xi = join("x", i);
-				if(i==nbDigitsIn-1 && inPadBits!=0) // at the MSB, pad with 0es
-					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-inPadBits, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
+				if(i==xDigits-1 && xPadBits!=0) // at the MSB, pad with 0es
+					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-xPadBits, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
 				else // normal case
 					vhdl << tab << declare(xi, alpha, true) << " <= " << "X" << range((i+1)*alpha-1, i*alpha) << ";" << endl;
 				ini = join("in", i);
@@ -192,8 +197,8 @@ namespace flopoco{
 
 
 			if(!remainderOnly) { // build the quotient output
-				vhdl << tab << declare("tempQ", nbDigitsIn*alpha) << " <= " ;
-				for (unsigned int i=nbDigitsIn-1; i>=1; i--)
+				vhdl << tab << declare("tempQ", xDigits*alpha) << " <= " ;
+				for (unsigned int i=xDigits-1; i>=1; i--)
 					vhdl << "q" << i << " & ";
 				vhdl << "q0 ;" << endl;
 				vhdl << tab << "Q <= tempQ" << range(qSize-1, 0)  << ";" << endl;
@@ -211,7 +216,7 @@ namespace flopoco{
 			// The management of the tree is quite intricate when everything is not a power of two.
 			
 			// The number of levels is computed out of the number of digits of the _input_
-			int levels = intlog2(2*nbDigitsIn-1); 
+			int levels = intlog2(2*xDigits-1); 
 			REPORT(INFO, "levels=" << levels);
 			CBLKTable* table;
 			string ri, xi, ini, outi, qi, qs, r;
@@ -221,10 +226,10 @@ namespace flopoco{
 			useSoftRAM(table);
 			addSubComponent(table);
 			//			double tableDelay=table->getOutputDelay("Y");
-			for (int i=0; i<nbDigitsIn; i++) {
+			for (int i=0; i<xDigits; i++) {
 				xi = join("x", i);
-				if(i==nbDigitsIn-1 && inPadBits!=0) // at the MSB, pad with 0es
-					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-inPadBits, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
+				if(i==xDigits-1 && xPadBits!=0) // at the MSB, pad with 0es
+					vhdl << tab << declare(xi, alpha, true) << " <= " << zg(alpha-xPadBits, 0) <<  " & X" << range(wIn-1, i*alpha) << ";" << endl;
 				else // normal case
 					vhdl << tab << declare(xi, alpha, true) << " <= " << "X" << range((i+1)*alpha-1, i*alpha) << ";" << endl;
 				outi = join("out", i);
@@ -236,88 +241,99 @@ namespace flopoco{
 				qi = join("qs_l0_", i);
 				// The qi out of the table are on rho bits, and we want to pad them to alpha bits
 				int qiSize;
-				if(i<nbDigitsIn-1) {
+				if(i<xDigits-1) {
 						qiSize = alpha;
 						vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
 					}
 					else {
-						qiSize = qSize - (nbDigitsIn-1)*alpha;
+						qiSize = qSize - (xDigits-1)*alpha;
 						REPORT(INFO, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
-						if(qiSize>=rho)
-							vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
-						else
-							vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
-					} 
+						if(qiSize>0) {
+							if(qiSize>=rho)
+								vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
+							else
+								vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
+						} // else: do nothing
+					}
 				vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl;
 			}
 
-			bool previousLevelOdd = ((nbDigitsIn&1)==1);
+			bool previousLevelOdd = ((xDigits&1)==1);
 			// The following levels
 			for (int level=1; level<levels; level++){
-				int levelSize = nbDigitsIn/(1<<level); // how many sub-quotients we have in this level
-				if (nbDigitsIn%((1<<level)) !=0 )
-					levelSize++;
-				REPORT(INFO, "level=" << level << "  levelSize=" << levelSize);
+				int rLevelSize = xDigits/(1<<level); // how many parts with remainder bits we have in this level
+				if (xDigits%((1<<level)) !=0 )
+					rLevelSize++;
+				int qLevelSize = qDigits/(1<<level); // how many sub-quotients we have in this level
+				if (qDigits%((1<<level)) !=0 )
+					qLevelSize++;
+				REPORT(INFO, "level=" << level << "  rLevelSize=" << rLevelSize << "  qLevelSize=" << qLevelSize);
 				table = new CBLKTable(target, level, d, alpha, gamma, rho);
 				useSoftRAM(table);
 				addSubComponent(table);
-				for(int i=0; i<levelSize; i++) {
+				for(int i=0; i<rLevelSize; i++) {
 					string tableNumber = "l" + to_string(level) + "_" + to_string(i);
 					string tableName = "table_" + tableNumber;
 					string in = "in_" + tableNumber;
 					string out = "out_" + tableNumber;
 				  r = "r_"+ tableNumber;
 					string q = "q_"+ tableNumber;
-					if(i==levelSize-1 && previousLevelOdd) 
+					string qsl =  "qs_l" + to_string(level-1) + "_" + to_string(2*i+1);
+					string qsr =  "qs_l" + to_string(level-1) + "_" + to_string(2*i);
+					qs = "qs_"+ tableNumber; // not declared here because we need it to exit the loop
+
+					if(i==rLevelSize-1 && previousLevelOdd) 
 						vhdl << tab << declare(in, 2*gamma) << " <= " << zg(gamma) << " & r_l" << level-1 << "_" << 2*i  << ";"  << endl;
 					else
 						vhdl << tab << declare(in, 2*gamma) << " <= " << "r_l" << level-1 << "_" << 2*i+1 << " & r_l" << level-1 << "_" << 2*i  << ";"  << endl;
 
-						
 					outPortMap(table, "Y", out);
 					inPortMap(table, "X", in);
 					vhdl << instance(table, "table_"+ tableNumber);
 
+					/////////// The remainder
 					vhdl << tab << declare(r, gamma) << " <= " << out << range (gamma-1, 0) << ";"  << endl;
 
+					/////////// The quotient bits
 					int subQSize; // The size, in bits, of the part of Q we are building
-					if (i<levelSize-1) {
+					if (i<qLevelSize-1) { // The simple chunks where we just assemble a full binary tree
 						subQSize = (1<<level)*alpha;
+						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " gamma=" << gamma );
 						vhdl << tab << declare(q, subQSize) << " <= " << zg(subQSize - (table->wOut-gamma)) << " & " << out << range (table->wOut-1, gamma) << ";"  << endl;
+						// TODO simplify the content of the zg above
+						vhdl << tab << declare(qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
 					}
-					else { // leftmost chunk
-						subQSize = qSize-(levelSize-1)*(1<<level)*alpha;
+					else if (i==qLevelSize-1){ // because i can reach qLevelSize when rlevelSize=qLevelSize+1, but then we have nothing to do
+						// Lefttmost chunk
+						subQSize = qSize-(qLevelSize-1)*(1<<level)*alpha;
+						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " gamma=" << gamma  << "  (leftmost)");
+
 						vhdl << tab << declare(q, subQSize) << " <= " ;
 						if(subQSize >= (table->wOut-gamma))
 							vhdl << zg(subQSize - (table->wOut-gamma)) << " & " << out << range (table->wOut-1, gamma) << ";"  << endl;
 						else
 							vhdl << out << range (subQSize+gamma-1, gamma) << ";"  << endl;
-							
-					}
-					REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  wOut=" << table->wOut << " gamma=" << gamma );
+						if( (subQSize <= (1<<(level-1))*alpha) ) {
+							vhdl << tab << declare(qs, subQSize) << " <= " << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
+						}
+						else {
+							vhdl << tab << declare(qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+						}
 
-					
-					qs = "qs_"+ tableNumber;
-					string qsl =  "qs_l" + to_string(level-1) + "_" + to_string(2*i+1);
-					string qsr =  "qs_l" + to_string(level-1) + "_" + to_string(2*i);
-					vhdl << tab << declare(qs, subQSize) << " <= " ;
-					if((i==levelSize-1) && (subQSize <= (1<<(level-1))*alpha) )
-						vhdl << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
-					else
-						vhdl << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
 						
 					}
-				previousLevelOdd = ((levelSize&1)==1);
+				} // for i
+				previousLevelOdd = ((rLevelSize&1)==1);
 				
-			}
-
+			} // for level
+			
 			if(!remainderOnly) { // build the quotient output
-				vhdl << tab << "Q <= " << qs  << range(qSize-1, 0) << ";" << endl;
+					vhdl << tab << "Q <= " << qs  << range(qSize-1, 0) << ";" << endl;
 			}
-
+			
 			vhdl << tab << "R <= " << r << ";" << endl;
 
-
+			
 		}
 
 		
