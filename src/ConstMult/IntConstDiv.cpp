@@ -241,20 +241,18 @@ namespace flopoco{
 				qi = join("qs_l0_", i);
 				// The qi out of the table are on rho bits, and we want to pad them to alpha bits
 				int qiSize;
-				if(i<xDigits-1) {
+				if(i<qDigits-1) {
 						qiSize = alpha;
 						vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
 					}
-					else {
-						qiSize = qSize - (xDigits-1)*alpha;
+				else if(i==qDigits-1)  {
+						qiSize = qSize - (qDigits-1)*alpha;
 						REPORT(INFO, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
-						if(qiSize>0) {
-							if(qiSize>=rho)
-								vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
-							else
-								vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
-						} // else: do nothing
-					}
+						if(qiSize>=rho)
+							vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
+						else
+							vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
+				}
 				vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl;
 			}
 
@@ -307,7 +305,7 @@ namespace flopoco{
 						// Lefttmost chunk
 						subQSize = qSize-(qLevelSize-1)*(1<<level)*alpha;
 						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " gamma=" << gamma  << "  (leftmost)");
-
+						
 						vhdl << tab << declare(q, subQSize) << " <= " ;
 						if(subQSize >= (table->wOut-gamma))
 							vhdl << zg(subQSize - (table->wOut-gamma)) << " & " << out << range (table->wOut-1, gamma) << ";"  << endl;
@@ -370,17 +368,24 @@ namespace flopoco{
 	{
 		// the static list of mandatory tests
 		static vector<vector<pair<string,string>>> testStateList;
+		static vector<int> testBenchSize;
 		vector<pair<string,string>> paramList;
 		
-		// is initialized here
+		// is initialized here. It could also be built on the fly
 		if(previousTestState->getIterationIndex() == 0)		{
 
-			for(int wIn=8; wIn<17; wIn+=1) { // test various input widths
+			for(int wIn=8; wIn<10; wIn+=1) { // test various input widths
 				for(int d=3; d<=17; d+=2) { // test various divisors
-					for(int arch=1; arch <2; arch++) { // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
+					for(int arch=0; arch <2; arch++) { // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
 						paramList.push_back(make_pair("wIn", to_string(wIn) ));	
 						paramList.push_back(make_pair("d", to_string(d) ));	
-						paramList.push_back(make_pair("arch", to_string(arch) ));	
+						paramList.push_back(make_pair("arch", to_string(arch) ));
+						if(wIn<16) // we can afford an exhaustive test
+						// testBenchSize.push_back(-2); // TODO VICTOR replace the following by this line and it won't work
+							testBenchSize.push_back(10000); 
+						else
+							testBenchSize.push_back(1000);
+							
 						testStateList.push_back(paramList);
 						paramList.clear();
 					}
@@ -389,14 +394,15 @@ namespace flopoco{
 			previousTestState->setIterationNumber(testStateList.size());
 		}
 
-		// Now actually change the state
+		// Now actually change the state. The following should be a method of Tester.
 		vector<pair<string,string>>::iterator itVector;
 		int testIndex = previousTestState->getIterationIndex();
 
-		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)
-		{
+		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)		{
 			previousTestState->changeValue((*itVector).first,(*itVector).second);
 		}
+		previousTestState->setTestBenchSize(testBenchSize[testIndex]);
+		
 	}
 
 
