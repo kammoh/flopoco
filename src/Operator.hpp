@@ -769,6 +769,29 @@ public:
 
 
 	/**
+	 * Create a new instance of an operator inside the current containing operator
+	 * @patam opName the type of operator being instantiated
+	 * @param instanceName the name of the instance being created (label compulsory in VHDL)
+	 * @parameters the parameters given to the constructor of the instance's operator
+	 * @param inPortMaps the port mappings for the inputs
+	 * @param outPortMaps the port mappings for the outputs
+	 * @param inPortMapsCst the constant port mappings for the inputs, if there are any
+	 */
+	OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
+
+
+	/**
+	 * Parse a string containing port mappings for a new instance of an operator
+	 * and add the corresponding port mappings to the parent operator.
+	 * The port mappings are of the form "poarName:connectedSignalName:..."
+	 * @param instance the operator to which the port mappings are performed
+	 * @portMappings a list of port-connected signal
+	 * @param portTypes the type of port being added (0=input, 1=constant inputs, 2=output)
+	 */
+	void parsePortMappings(OperatorPtr instance, string portMappings, int portTypes);
+
+
+	/**
 	 * Adds attributes to the generated VHDL so that the tools use embedded RAM blocks for an instance
 	 * @param t a pointer to this instance
 	 */

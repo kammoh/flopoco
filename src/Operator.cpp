@@ -1644,6 +1644,89 @@ namespace flopoco{
 	}
 
 
+	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)
+	{
+		OperatorFactoryPtr instanceOpFactory = UserInterface::getFactoryByName(opName);
+		OperatorPtr instance = nullptr;
+		vector<string> parametersVector;
+		vector<Signal*>::iterator itSignal;
+		string portName, signalName, mapping;
+
+		//parse the parameters
+		parametersVector.push_back(opName);
+		while(!parameters.empty())
+		{
+			if(parameters.find(" ") != string::npos){
+				parametersVector.push_back(parameters.substr(0,parameters.find(" ")));
+				parameters.erase(0,parameters.find(" ")+1);
+			}else{
+				parametersVector.push_back(parameters);
+				parameters.erase();
+			}
+		}
+
+		//parse the input port mappings
+		parsePortMappings(instance, inPortMaps, 0);
+		//parse the constant input port mappings, if there are any
+		parsePortMappings(instance, inPortMapsCst, 1);
+		//parse the input port mappings
+		parsePortMappings(instance, outPortMaps, 2);
+
+		//create the operator
+		instance = instanceOpFactory->parseArguments(target_, parametersVector);
+
+		//create the instance
+		vhdl << this->instance(instance, instanceName);
+
+		return instance;
+	}
+
+
+	void Operator::parsePortMappings(OperatorPtr instance, string portMappings, int portTypes)
+	{
+		string portName, signalName, mapping;
+		size_t currentPos = 0;
+
+		mapping = "";
+		if(portMappings.find(':') != string::npos){
+			mapping = portMappings.substr(currentPos, portMappings.find(':', currentPos));
+			currentPos = portMappings.find(':') + 1;
+		}else{
+			mapping = portMappings;
+			currentPos = 0;
+		}
+		while((currentPos != portMappings.size()) && (mapping != ""))
+		{
+			size_t sepPos = mapping.find("=>");
+
+			if((sepPos == string::npos) && (mapping != ""))
+				THROWERROR("Error: in parsePortMappings: the input port mappings are not specified correctly: " << portMappings);
+			portName = mapping.substr(0, sepPos);
+			signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
+			if(portTypes == 0)
+				inPortMap(instance, portName, signalName);
+			else if(portTypes == 1)
+				inPortMapCst(instance, portName, signalName);
+			else
+				outPortMap(instance, portName, signalName);
+
+			if(portMappings.find(':') != string::npos){
+				mapping = portMappings.substr(currentPos, portMappings.find(':', currentPos));
+				currentPos = portMappings.find(':') + 1;
+			}else{
+				if(currentPos != portMappings.size())
+				{
+					mapping = portMappings.substr(currentPos, portMappings.size()-currentPos);
+					currentPos = portMappings.size();
+				}else{
+					mapping = "";
+					currentPos = portMappings.size();
+				}
+			}
+		}
+	}
+
+
 
 	string Operator::buildVHDLSignalDeclarations() {
 		ostringstream o;
