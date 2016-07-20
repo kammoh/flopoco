@@ -23,7 +23,7 @@ namespace flopoco{
 		static vector<vector<pair<string,string>>> testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(previousTestState->getIterationIndex() == 0)
+		if(previousTestState->getIndex() == 0)
 		{
 			previousTestState->setTestBenchSize(100);
 			for(int j = 0; j<2; j++)
@@ -62,13 +62,13 @@ namespace flopoco{
 					testStateList.push_back(paramList);
 				}
 			}
-			previousTestState->setIterationNumber(testStateList.size());
+			previousTestState->setTestsNumber(testStateList.size());
 		}
 
 		vector<pair<string,string>>::iterator itVector;
-		int indexIteration = previousTestState->getIterationIndex();
+		int index = previousTestState->getIndex();
 
-		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
 		{
 			previousTestState->changeValue((*itVector).first,(*itVector).second);
 		}

@@ -194,7 +194,7 @@ namespace flopoco
 				// Is the TestState is unchanged, meaning the NextState method is not implemented
 			if(!currentTestState->isUnchanged())
 			{
-				while(currentTestState->canIterate())
+				while(currentTestState->canTest())
 				{
 						// Get the next state and create the flopoco command corresponding
 					commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
@@ -209,8 +209,8 @@ namespace flopoco
 					commandLineTestBench = " TestBench n=" + to_string(currentTestState->getTestBenchSize());
 
 					system((commandLine + commandLineTestBench).c_str());						
-					currentTestState->nextIteration();
-					if(currentTestState->canIterate())
+					currentTestState->nextTest();
+					if(currentTestState->canTest())
 						opFact->nextTestStateGenerator(currentTestState);
 				}
 

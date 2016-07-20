@@ -372,7 +372,7 @@ namespace flopoco{
 		vector<pair<string,string>> paramList;
 		
 		// is initialized here. It could also be built on the fly
-		if(previousTestState->getIterationIndex() == 0)		{
+		if(previousTestState->getIndex() == 0)		{
 
 			for(int wIn=8; wIn<10; wIn+=1) { // test various input widths
 				for(int d=3; d<=17; d+=2) { // test various divisors
@@ -391,12 +391,12 @@ namespace flopoco{
 					}
 				}
 			}
-			previousTestState->setIterationNumber(testStateList.size());
+			previousTestState->setTestsNumber(testStateList.size());
 		}
 
 		// Now actually change the state. The following should be a method of Tester.
 		vector<pair<string,string>>::iterator itVector;
-		int testIndex = previousTestState->getIterationIndex();
+		int testIndex = previousTestState->getIndex();
 
 		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)		{
 			previousTestState->changeValue((*itVector).first,(*itVector).second);

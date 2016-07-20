@@ -592,7 +592,7 @@ namespace flopoco{
 
 		
 		// is initialized here
-		if(previousTestState->getIterationIndex() == 0)		{
+		if(previousTestState->getIndex() == 0)		{
 			vector<string> constantList; // The list of constants we want to test
 			constantList.push_back("\"0\"");
 			constantList.push_back("\"0.125\"");
@@ -629,12 +629,12 @@ namespace flopoco{
 					}
 				}
 			}
-			previousTestState->setIterationNumber(testStateList.size());
+			previousTestState->setTestsNumber(testStateList.size());
 		}
 
 		// Now actually change the state
 		vector<pair<string,string>>::iterator itVector;
-		int testIndex = previousTestState->getIterationIndex();
+		int testIndex = previousTestState->getIndex();
 
 		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)
 		{
