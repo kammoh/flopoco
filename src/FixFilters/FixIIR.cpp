@@ -4,7 +4,10 @@
 #include "gmp.h"
 #include "mpfr.h"
 #if HAVE_WCPG
-#include "wcpg.h"
+extern "C"
+{
+	#include "wcpg.h"
+}
 #endif
 
 #include "FixIIR.hpp"
@@ -83,7 +86,7 @@ namespace flopoco {
 
 			REPORT(INFO, "computing worst-case peak gain");
 
-#if 0
+#if 1
 			if (!WCPG_tf(&H, coeffb_d, coeffa_d, n, m))
 				THROWERROR("Could not compute WCPG");
 			REPORT(INFO, "Worst-case peak gain is H=" << H);
