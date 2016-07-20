@@ -217,9 +217,37 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 											 optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count;\
 											 SRL(bool)=true: optimize for shift registers",
 											 "",
-											 IntAdder::parseArguments
+											 IntAdder::parseArguments,
+											 IntAdder::nextTestState
 											 ) ;
 
+	}
+
+	void IntAdder::nextTestState(TestState * previousTestState)
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIterationIndex() == 0)
+		{
+			previousTestState->setTestBenchSize(1000);
+
+				for(int i = 4; i<65; i++)
+				{
+					paramList.clear();
+					paramList.push_back(make_pair("wIn",to_string(i)));
+					testStateList.push_back(paramList);
+				}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int indexIteration = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
 	}
 
 //    void IntAdder::changeName(std::string operatorName){

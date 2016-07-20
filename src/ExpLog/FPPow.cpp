@@ -25,69 +25,69 @@
 #include "utils.hpp"
 
 
-using namespace std;
+  using namespace std;
 
 
-namespace flopoco{
+  namespace flopoco{
 
 
-	void FPPow::compute_error(mpfr_t & r, mpfr_t &epsE, mpfr_t& epsM, mpfr_t& epsL ) {
-		mpfr_t r1, one;
-		mpfr_init2(r1, 1000);
-		mpfr_init2(one, 16);
-		mpfr_set_d(one,  1.0, GMP_RNDN);
-		mpfr_add(r1,one, epsE, GMP_RNDN);
+  	void FPPow::compute_error(mpfr_t & r, mpfr_t &epsE, mpfr_t& epsM, mpfr_t& epsL ) {
+  		mpfr_t r1, one;
+  		mpfr_init2(r1, 1000);
+  		mpfr_init2(one, 16);
+  		mpfr_set_d(one,  1.0, GMP_RNDN);
+  		mpfr_add(r1,one, epsE, GMP_RNDN);
 		// r1 is (1+epsE)
 
-		mpfr_init2(r, 1000);
-		mpfr_set(r, epsL, GMP_RNDN);
-		mpfr_mul(r,r, epsM, GMP_RNDN);
-		mpfr_add(r,r, epsM, GMP_RNDN);
-		mpfr_add(r,r, epsL, GMP_RNDN);
-		mpfr_add(r,r, one, GMP_RNDN);
+  		mpfr_init2(r, 1000);
+  		mpfr_set(r, epsL, GMP_RNDN);
+  		mpfr_mul(r,r, epsM, GMP_RNDN);
+  		mpfr_add(r,r, epsM, GMP_RNDN);
+  		mpfr_add(r,r, epsL, GMP_RNDN);
+  		mpfr_add(r,r, one, GMP_RNDN);
 		// here r is 1 + epsM + epsL + epxMexpL
 
 		// multiply it by max ( y ln(x) )
 
-		FPNumber fpMaxFloat = FPNumber(wE, wF, FPNumber::largestPositive);
-		mpfr_t maxExpIn;
-		mpfr_init2(maxExpIn, 1000);
-		fpMaxFloat.getMPFR(maxExpIn);
-		mpfr_log(maxExpIn, maxExpIn, GMP_RNDU);
-		mpfr_mul(r,r,maxExpIn, GMP_RNDN);
-		if(UserInterface::verbose) mpfr_out_str (stderr, 10, 30, maxExpIn, GMP_RNDN); cerr << " ";
+  		FPNumber fpMaxFloat = FPNumber(wE, wF, FPNumber::largestPositive);
+  		mpfr_t maxExpIn;
+  		mpfr_init2(maxExpIn, 1000);
+  		fpMaxFloat.getMPFR(maxExpIn);
+  		mpfr_log(maxExpIn, maxExpIn, GMP_RNDU);
+  		mpfr_mul(r,r,maxExpIn, GMP_RNDN);
+  		if(UserInterface::verbose) mpfr_out_str (stderr, 10, 30, maxExpIn, GMP_RNDN); cerr << " ";
 
 		// then take the exp
-		mpfr_exp(r,r, GMP_RNDN);
+  		mpfr_exp(r,r, GMP_RNDN);
 
 		// and that's it.
-		mpfr_mul(r,r,r1, GMP_RNDN);
+  		mpfr_mul(r,r,r1, GMP_RNDN);
 
 
-		mpfr_clears(r1, one, NULL);
+  		mpfr_clears(r1, one, NULL);
 
-	}
-
-
-
+  	}
 
 
 
-	FPPow::FPPow(Target* target, int wE, int wF, int type, int logTableSize, int expTableSize, int expDegree)
-		: Operator(target), wE(wE), wF(wF), type(type)
-	{
 
-		setCopyrightString("F. de Dinechin (2008)");
-		srcFileName="FPPow";
 
-		ostringstream o;
 
-		o << (type?"FPPowr_":"FPPow_") << wE << "_" << wF << "_";
+  	FPPow::FPPow(Target* target, int wE, int wF, int type, int logTableSize, int expTableSize, int expDegree)
+  	: Operator(target), wE(wE), wF(wF), type(type)
+  	{
 
-		setNameWithFreqAndUID(o.str());
+  		setCopyrightString("F. de Dinechin (2008)");
+  		srcFileName="FPPow";
 
-		addFPInput("X", wE, wF);
-		addFPInput("Y", wE, wF);
+  		ostringstream o;
+
+  		o << (type?"FPPowr_":"FPPow_") << wE << "_" << wF << "_";
+
+  		setNameWithFreqAndUID(o.str());
+
+  		addFPInput("X", wE, wF);
+  		addFPInput("Y", wE, wF);
 		addFPOutput("R", wE, wF, 1); // 2 because faithfully rounded
 
 		addConstant("wE", "positive", wE);
@@ -197,23 +197,23 @@ namespace flopoco{
 
 			// TODO case -inf^integer not managed?
 			vhdl << tab  << declare("RisInfSpecialCase") << "  <= " << endl
-			     << tab << tab << "   (zeroX  and  (oddIntY or evenIntY)  and signY)  -- (+/- 0) ^ (negative int y)"<<endl
-			     << tab << tab << "or (zeroX and infY and signY)                      -- (+/- 0) ^ (-inf)"  << endl
-			     << tab << tab << "or (absXgtOneAndNormal   and  infY  and not signY) -- (|x|>1) ^ (+inf)"  << endl
-			     << tab << tab << "or (absXltOneAndNormal   and  infY  and signY)     -- (|x|<1) ^ (-inf)" << endl
-			     << tab << tab << "or (infX and  normalY  and not signY) ;            -- (inf) ^ (y>0)" << endl;
+			<< tab << tab << "   (zeroX  and  (oddIntY or evenIntY)  and signY)  -- (+/- 0) ^ (negative int y)"<<endl
+			<< tab << tab << "or (zeroX and infY and signY)                      -- (+/- 0) ^ (-inf)"  << endl
+			<< tab << tab << "or (absXgtOneAndNormal   and  infY  and not signY) -- (|x|>1) ^ (+inf)"  << endl
+			<< tab << tab << "or (absXltOneAndNormal   and  infY  and signY)     -- (|x|<1) ^ (-inf)" << endl
+			<< tab << tab << "or (infX and  normalY  and not signY) ;            -- (inf) ^ (y>0)" << endl;
 
 			vhdl << tab  << declare("RisZeroSpecialCase") << " <= " << endl
-			     << tab << tab << "   (zeroX and  (oddIntY or evenIntY)  and not signY)  -- (+/- 0) ^ (positive int y)"<<endl
-			     << tab << tab << "or (zeroX and  infY  and not signY)                   -- (+/- 0) ^ (+inf)"<<endl
-			     << tab << tab << "or (absXltOneAndNormal   and  infY  and not signY)    -- (|x|<1) ^ (+inf)"<<endl
-			     << tab << tab << "or (absXgtOneAndNormal   and  infY  and signY)        -- (|x|>1) ^ (-inf)" << endl
-			     << tab << tab << "or (infX and  normalY  and signY) ;                   -- (inf) ^ (y<0)" << endl;
+			<< tab << tab << "   (zeroX and  (oddIntY or evenIntY)  and not signY)  -- (+/- 0) ^ (positive int y)"<<endl
+			<< tab << tab << "or (zeroX and  infY  and not signY)                   -- (+/- 0) ^ (+inf)"<<endl
+			<< tab << tab << "or (absXltOneAndNormal   and  infY  and not signY)    -- (|x|<1) ^ (+inf)"<<endl
+			<< tab << tab << "or (absXgtOneAndNormal   and  infY  and signY)        -- (|x|>1) ^ (-inf)" << endl
+			<< tab << tab << "or (infX and  normalY  and signY) ;                   -- (inf) ^ (y<0)" << endl;
 
 			vhdl << tab  << declare("RisOne") << " <= " << endl
-			     << tab << tab << "   zeroY                                          -- x^0 = 1 without exception"<<endl
-			     << tab << tab << "or (XisOneAndNormal and signX and infY)           -- (-1) ^ (-/-inf)"<<endl
-			     << tab << tab << "or (XisOneAndNormal  and not signX);              -- (+1) ^ (whatever)" << endl ;
+			<< tab << tab << "   zeroY                                          -- x^0 = 1 without exception"<<endl
+			<< tab << tab << "or (XisOneAndNormal and signX and infY)           -- (-1) ^ (-/-inf)"<<endl
+			<< tab << tab << "or (XisOneAndNormal  and not signX);              -- (+1) ^ (whatever)" << endl ;
 
 			vhdl << tab  << declare("RisNaN") << " <= (s_nan_in and not zeroY) or (normalX and signX and notIntNormalY);"<<endl;
 
@@ -223,27 +223,27 @@ namespace flopoco{
 
 			vhdl<<"-- Powr Exceptions  --"<<endl;
 			vhdl << tab  << declare("RisInfSpecialCase") << "  <= " << endl
-			     << tab << tab << "   (zeroX  and  normalY and signY)                 -- (+/- 0) ^  (negative finite y)"<<endl
-			     << tab << tab << "or (zeroX and infY and signY)                      -- (+/- 0) ^ (-inf)"  << endl
-			     << tab << tab << "or (absXgtOneAndNormal   and  infY  and not signY) -- (|x|>1) ^ (+inf)"  << endl
-			     << tab << tab << "or (absXltOneAndNormal   and  infY  and signY)     -- (|x|<1) ^ (-inf)" << endl
-			     << tab << tab << "or (infX and  normalY  and not signY) ;            -- (inf) ^ (y>0)" << endl;
+			<< tab << tab << "   (zeroX  and  normalY and signY)                 -- (+/- 0) ^  (negative finite y)"<<endl
+			<< tab << tab << "or (zeroX and infY and signY)                      -- (+/- 0) ^ (-inf)"  << endl
+			<< tab << tab << "or (absXgtOneAndNormal   and  infY  and not signY) -- (|x|>1) ^ (+inf)"  << endl
+			<< tab << tab << "or (absXltOneAndNormal   and  infY  and signY)     -- (|x|<1) ^ (-inf)" << endl
+			<< tab << tab << "or (infX and  normalY  and not signY) ;            -- (inf) ^ (y>0)" << endl;
 
 			vhdl << tab  << declare("RisZeroSpecialCase") << " <= " << endl
-			     << tab << tab << "   (zeroX and  normalY and not signY)  -- (+/- 0) ^ (positive int y)"<<endl
-			     << tab << tab << "or (zeroX and  infY  and not signY)                   -- (+/- 0) ^ (+inf)"<<endl
-			     << tab << tab << "or (absXltOneAndNormal   and  infY  and not signY)    -- (|x|<1) ^ (+inf)"<<endl
-			     << tab << tab << "or (absXgtOneAndNormal   and  infY  and signY);        -- (|x|>1) ^ (-inf)" << endl;
+			<< tab << tab << "   (zeroX and  normalY and not signY)  -- (+/- 0) ^ (positive int y)"<<endl
+			<< tab << tab << "or (zeroX and  infY  and not signY)                   -- (+/- 0) ^ (+inf)"<<endl
+			<< tab << tab << "or (absXltOneAndNormal   and  infY  and not signY)    -- (|x|<1) ^ (+inf)"<<endl
+			<< tab << tab << "or (absXgtOneAndNormal   and  infY  and signY);        -- (|x|>1) ^ (-inf)" << endl;
 
 			vhdl << tab  << declare("RisOne") << " <= " << endl
-			     << tab << tab << "   (normalX and (not signX)   and zeroY)                           -- x^0 = 1 if 0<x<+inf"<<endl
-			     << tab << tab << "or (XisOneAndNormal  and (not signX) and normalY and (not signY)); -- (+1) ^ (whatever)" << endl ;
+			<< tab << tab << "   (normalX and (not signX)   and zeroY)                           -- x^0 = 1 if 0<x<+inf"<<endl
+			<< tab << tab << "or (XisOneAndNormal  and (not signX) and normalY and (not signY)); -- (+1) ^ (whatever)" << endl ;
 
 			vhdl << tab  << declare("RisNaN") << " <= s_nan_in"<<endl
-			     << tab << tab << "or (signX and not zeroX)        -- (x<0) ^ whatever"<<endl
-			     << tab << tab << "or (XisOneAndNormal and infY)   -- (1) ^ (+/-inf)"<<endl
-			     << tab << tab << "or (zeroX and zeroY)            -- (+/- 0) ^ (+/- 0)"<<endl
-			     << tab << tab << "or (infX and zeroY);    -- (x<0) ^ whatever"<<endl;
+			<< tab << tab << "or (signX and not zeroX)        -- (x<0) ^ whatever"<<endl
+			<< tab << tab << "or (XisOneAndNormal and infY)   -- (1) ^ (+/-inf)"<<endl
+			<< tab << tab << "or (zeroX and zeroY)            -- (+/- 0) ^ (+/- 0)"<<endl
+			<< tab << tab << "or (infX and zeroY);    -- (x<0) ^ whatever"<<endl;
 
 			vhdl << tab  << declare("signR") << " <= '0';" << endl;
 
@@ -351,13 +351,13 @@ namespace flopoco{
 
 
 		vhdl << tab  << declare("flagR", 2) << " <= " << endl
-		     << tab  << tab << "     \"11\" when RisNaN='1'" << endl
-		     << tab  << tab << "else \"00\" when RisZero='1'" << endl
-		     << tab  << tab << "else \"10\" when RisInf='1'" << endl
-		     << tab  << tab << "else \"01\";" << endl;
+		<< tab  << tab << "     \"11\" when RisNaN='1'" << endl
+		<< tab  << tab << "else \"00\" when RisZero='1'" << endl
+		<< tab  << tab << "else \"10\" when RisInf='1'" << endl
+		<< tab  << tab << "else \"01\";" << endl;
 
 		vhdl << tab << declare("R_expfrac", wE+wF) << " <= CONV_STD_LOGIC_VECTOR("<< (1<<(wE-1))-1<<","<<wE<<") &  CONV_STD_LOGIC_VECTOR(0, "<< wF << ") when RisOne='1'"
-		     << endl << tab << tab << " else E" << range(wE+wF-1, 0) << ";" << endl;
+		<< endl << tab << tab << " else E" << range(wE+wF-1, 0) << ";" << endl;
 		vhdl << tab << "R <= flagR & signR & R_expfrac;" << endl;
 
 
@@ -617,19 +617,53 @@ namespace flopoco{
 
 	void FPPow::registerFactory(){
 		UserInterface::add("FPPow", // name
-											 "A floating-point power function.",
+			"A floating-point power function.",
 											 "ElementaryFunctions", // categories
 											 "",
 											 "wE(int): exponent size in bits for both inputs; \
-wF(int): mantissa size in bits for both inputs; \
-logSizeTable(int)=0: The table size input for the log in bits; \
-type(int)=0: type of power function (0 pow - 1 powr. See IEEE754-2008); \
-expTableSize(int)=0: The table size input for the exponent in bit; \
-expDegree(int)=0:",
+											 wF(int): mantissa size in bits for both inputs; \
+											 logSizeTable(int)=0: The table size input for the log in bits; \
+											 type(int)=0: type of power function (0 pow - 1 powr. See IEEE754-2008); \
+											 expTableSize(int)=0: The table size input for the exponent in bit; \
+											 expDegree(int)=0:",
 											 "For all the details, see <a href=\"bib/flopoco.html#DinechinEtAl-2013-power\">this article",
-											 FPPow::parseArguments
+											 FPPow::parseArguments,
+											 FPPow::nextTestState
 											 ) ;
 
+	}
+
+	void FPPow::nextTestState(TestState * previousTestState)
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIterationIndex() == 0)
+		{
+			previousTestState->setTestBenchSize(1000);
+
+			for(int i = 5; i<53; i++)
+			{
+				int nbByteWE = 6+(i/10);
+				while(nbByteWE>i)
+				{
+					nbByteWE -= 2;
+				}
+				paramList.clear();
+				paramList.push_back(make_pair("wF",to_string(i)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+				testStateList.push_back(paramList);
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int indexIteration = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
 	}
 
 

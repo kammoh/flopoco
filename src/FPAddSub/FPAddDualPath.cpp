@@ -645,8 +645,42 @@
 											 "wE(int): exponent size in bits; \
 											 wF(int): mantissa size in bits;",
 											 "",
-											 FPAddDualPath::parseArguments
+											 FPAddDualPath::parseArguments,
+											 FPAddDualPath::nextTestState
 											 ) ;
 
+	}
+
+	void FPAddDualPath::nextTestState(TestState * previousTestState)
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIterationIndex() == 0)
+		{
+			previousTestState->setTestBenchSize(1000);
+
+			for(int i = 5; i<53; i++)
+			{
+				int nbByteWE = 6+(i/10);
+				while(nbByteWE>i)
+				{
+					nbByteWE -= 2;
+				}
+				paramList.clear();
+				paramList.push_back(make_pair("wF",to_string(i)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+				testStateList.push_back(paramList);
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int indexIteration = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
 	}
 }

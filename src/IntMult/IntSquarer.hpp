@@ -45,6 +45,9 @@ namespace flopoco{
 		/** Factory register method */ 
 		static void registerFactory();
 
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
+
 	protected:
 		int wIn_;                         /**< the width for X, Y and R*/
 

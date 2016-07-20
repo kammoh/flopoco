@@ -31,6 +31,9 @@ namespace flopoco{
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 		static void registerFactory();
 
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
+
 		int wE, wF;
 
 		int type;      /**< 0: pow; 1: powr */

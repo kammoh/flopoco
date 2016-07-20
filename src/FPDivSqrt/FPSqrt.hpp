@@ -46,6 +46,9 @@ namespace flopoco{
 
 		static void registerFactory();
 
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
+
 
 	private:
 		/** The width of the exponent for the input X */

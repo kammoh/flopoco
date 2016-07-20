@@ -33,28 +33,28 @@
 #include "FPDiv.hpp"
 #include "SelFunctionTable.hpp"
 
-using namespace std;
+  using namespace std;
 
-namespace flopoco{
+  namespace flopoco{
 
 #define DEBUGVHDL 0
 
 
-	FPDiv::FPDiv(Target* target, int wE, int wF, int radix) :
-		Operator(target), wE(wE), wF(wF) {
+  	FPDiv::FPDiv(Target* target, int wE, int wF, int radix) :
+  	Operator(target), wE(wE), wF(wF) {
 
-		int i;
-		ostringstream name;
-		setCopyrightString("Maxime Christ, Florent de Dinechin (2015)");
+  		int i;
+  		ostringstream name;
+  		setCopyrightString("Maxime Christ, Florent de Dinechin (2015)");
 
-		srcFileName="FPDiv";
-		name<<"FPDiv_"<<wE<<"_"<<wF;
-		setNameWithFreqAndUID(name.str());
+  		srcFileName="FPDiv";
+  		name<<"FPDiv_"<<wE<<"_"<<wF;
+  		setNameWithFreqAndUID(name.str());
 
-		if(radix !=0  && radix!=4 && radix !=8) {
-			THROWERROR("Got radix = " << radix << ". Only possible choices for radix are 0, 4 or 8" );
-		}
-		
+  		if(radix !=0  && radix!=4 && radix !=8) {
+  			THROWERROR("Got radix = " << radix << ". Only possible choices for radix are 0, 4 or 8" );
+  		}
+
 		if(radix==0){ // 0 means "let FloPoCo choose"
 			if( (target->lutInputs() <= 4) || (!target->isPipelined()))
 				radix=4;
@@ -64,7 +64,7 @@ namespace flopoco{
 		}
 
 
-	 
+
 		if(radix==8)
 		{
 			int extraBit = 0;
@@ -228,7 +228,7 @@ namespace flopoco{
 			vhdl << tab << tab << "        fR(" << wF+3 << " downto 0)          when others;" << endl;
 
 			vhdl << tab << declare("expR1", wE+2) << " <= expR0"
-				 << " + (\"000\" & (" << wE-2 << " downto 1 => '1') & fR(" << wF+4 << ")); -- add back bias" << endl;
+			<< " + (\"000\" & (" << wE-2 << " downto 1 => '1') & fR(" << wF+4 << ")); -- add back bias" << endl;
 
 
 			vhdl << tab << declare("round") << " <= fRn1(2) and (fRn1(0) or fRn1(1) or fRn1(3)); -- fRn1(0) is the sticky bit" << endl;
@@ -236,9 +236,9 @@ namespace flopoco{
 			nextCycle();///////////////////////////////////////////////////////////////////////
 			vhdl << tab << "-- final rounding" <<endl;
 			vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
-				 << "expR1 & fRn1(" << wF+2 << " downto 3) ;" << endl;
+			<< "expR1 & fRn1(" << wF+2 << " downto 3) ;" << endl;
 			vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
-				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
+			<< "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
 			vhdl << tab <<  declare("exnR", 2) << " <=      \"00\"  when expfracR(" << wE+wF+1 << ") = '1'   -- underflow" <<endl;
 			vhdl << tab << "        else \"10\"  when  expfracR(" << wE+wF+1 << " downto " << wE+wF << ") =  \"01\" -- overflow" <<endl;
 			vhdl << tab << "        else \"01\";      -- 00, normal case" <<endl;
@@ -249,8 +249,8 @@ namespace flopoco{
 			vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
 			vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
 			vhdl << tab << "R <= exnRfinal & sR & "
-				 << "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
-			}
+			<< "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
+		}
 
 
 		else ////////////////////////// Radix 4 version  ////////////////////////
@@ -328,12 +328,12 @@ namespace flopoco{
 						wi-1full = wi-qi*D
 					*	left shifting wi-1full to obtain wi-1, next partial remainder to work on
 				*/
-				if(alpha==3)
-					vhdl << tab << declare(seli.str(),5) << " <= " << wi.str() << range( wF+2, wF-1) << " & fY" << of(wF-1)  << ";" << endl;
+					if(alpha==3)
+						vhdl << tab << declare(seli.str(),5) << " <= " << wi.str() << range( wF+2, wF-1) << " & fY" << of(wF-1)  << ";" << endl;
 				else // alpha==2
 					vhdl << tab << declare(seli.str(),9) << " <= " << wi.str() << range( wF+2, wF-3) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					//vhdl << tab << declare(seli.str(),10) << " <= " << wi.str() << range( wF+2, wF-4) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
-					
+
 				inPortMap (table , "X", seli.str());
 				outPortMap(table , "Y", qi.str());
 				vhdl << instance(table , tInstance.str());
@@ -437,7 +437,7 @@ namespace flopoco{
 			vhdl << tab << tab << "        fR(" << wF+1 << " downto 0)                    when others;" << endl;
 
 			vhdl << tab << declare("expR1", wE+2) << " <= expR0"
-				  << " + (\"000\" & (" << wE-2 << " downto 1 => '1') & fR(" << wF+3 << ")); -- add back bias" << endl;
+			<< " + (\"000\" & (" << wE-2 << " downto 1 => '1') & fR(" << wF+3 << ")); -- add back bias" << endl;
 
 
 
@@ -446,9 +446,9 @@ namespace flopoco{
 			nextCycle();///////////////////////////////////////////////////////////////////////
 			vhdl << tab << "-- final rounding" <<endl;
 			vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
-				 << "expR1 & fRn1(" << wF+1 << " downto 2) ;" << endl;
+			<< "expR1 & fRn1(" << wF+1 << " downto 2) ;" << endl;
 			vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
-				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
+			<< "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
 			vhdl << tab <<  declare("exnR", 2) << " <=      \"00\"  when expfracR(" << wE+wF+1 << ") = '1'   -- underflow" <<endl;
 			vhdl << tab << "        else \"10\"  when  expfracR(" << wE+wF+1 << " downto " << wE+wF << ") =  \"01\" -- overflow" <<endl;
 			vhdl << tab << "        else \"01\";      -- 00, normal case" <<endl;
@@ -459,7 +459,7 @@ namespace flopoco{
 			vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
 			vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
 			vhdl << tab << "R <= exnRfinal & sR & "
-				 << "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
+			<< "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
 		}
 	}
 
@@ -833,17 +833,52 @@ namespace flopoco{
 
 	void FPDiv::registerFactory(){
 		UserInterface::add("FPDiv", // name
-											 "A correctly rounded floating-point division.",
+			"A correctly rounded floating-point division.",
 											 "BasicFloatingPoint", // categories
 											 "http://www.cs.ucla.edu/digital_arithmetic/files/ch5.pdf",
 											 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits; \
-radix(int)=0: Can be 0, 4 or 8. Default 0 means: let FloPoCo choose between 4 and 8. In your context, the other choice may have a better area/speed trade-offs;",
-											"The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-10,10], and a bit of prescaling.",
-											FPDiv::parseArguments
+											 wF(int): mantissa size in bits; \
+											 radix(int)=0: Can be 0, 4 or 8. Default 0 means: let FloPoCo choose between 4 and 8. In your context, the other choice may have a better area/speed trade-offs;",
+											 "The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-10,10], and a bit of prescaling.",
+											 FPDiv::parseArguments,
+											 FPDiv::nextTestState
 											 ) ;
 
 	}
+
+	void FPDiv::nextTestState(TestState * previousTestState)
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIterationIndex() == 0)
+		{
+			previousTestState->setTestBenchSize(1000);
+
+			for(int i = 5; i<53; i++)
+			{
+				int nbByteWE = 6+(i/10);
+				while(nbByteWE>i)
+				{
+					nbByteWE -= 2;
+				}
+				paramList.clear();
+				paramList.push_back(make_pair("wF",to_string(i)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+				testStateList.push_back(paramList);
+			}
+			previousTestState->setIterationNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int indexIteration = previousTestState->getIterationIndex();
+
+		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
+	}
+	
 
 
 	OperatorPtr FPDiv::NbBitsMinParseArguments(Target *target, vector<string> &args) {
@@ -856,11 +891,11 @@ radix(int)=0: Can be 0, 4 or 8. Default 0 means: let FloPoCo choose between 4 an
 
 	void FPDiv::NbBitsMinRegisterFactory(){
 		UserInterface::add("NbBitsMin", // name
-											 "A tool for FPDiv to compute where to truncate both partial remainder and divider.",
+			"A tool for FPDiv to compute where to truncate both partial remainder and divider.",
 											 "Miscellaneous", // categories
 											 "",
 											 "radix(int): It has to be 2^n; \
-digitSet(int): the range you allow for each digit [-digitSet, digitSet]",
+											 digitSet(int): the range you allow for each digit [-digitSet, digitSet]",
 											 "",
 											 FPDiv::NbBitsMinParseArguments
 											 ) ;
