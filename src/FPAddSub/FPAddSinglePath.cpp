@@ -78,16 +78,17 @@ namespace flopoco{
 		vhdl << tab << declare("addCmpOp1",wE+wF+3) << " <= '0'  & excExpFracX;"<<endl;
 		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
 
-		IntAdder *cmpAdder = nullptr;
+//		IntAdder *cmpAdder = nullptr;
+		IntAdder *cmpAdder = (IntAdder*)newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1:Y=>addCmpOp2", "R=>cmpRes", "Cin=>'1'");
 
-		inPortMap(cmpAdder, "X", "addCmpOp1");
-		inPortMap(cmpAdder, "Y", "addCmpOp2");
-		inPortMapCst(cmpAdder, "Cin", "'1'");
-		outPortMap (cmpAdder, "R", "cmpRes");
-
-		cmpAdder = new IntAdder(target, wE+wF+3);
-
-		vhdl << instance(cmpAdder, "cmpAdder") << endl;
+//		inPortMap(cmpAdder, "X", "addCmpOp1");
+//		inPortMap(cmpAdder, "Y", "addCmpOp2");
+//		inPortMapCst(cmpAdder, "Cin", "'1'");
+//		outPortMap (cmpAdder, "R", "cmpRes");
+//
+//		cmpAdder = new IntAdder(target, wE+wF+3);
+//
+//		vhdl << instance(cmpAdder, "cmpAdder") << endl;
 
 		vhdl<< tab << declare(target->localWireDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 

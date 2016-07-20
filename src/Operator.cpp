@@ -1657,7 +1657,7 @@ namespace flopoco{
 		while(!parameters.empty())
 		{
 			if(parameters.find(" ") != string::npos){
-				parametersVector.push_back(parameters.substr(0,parameters.find(" ")));
+				parametersVector.push_back(parameters.substr(0,parameters.find(":")));
 				parameters.erase(0,parameters.find(" ")+1);
 			}else{
 				parametersVector.push_back(parameters);
@@ -1695,7 +1695,7 @@ namespace flopoco{
 			mapping = portMappings;
 			currentPos = 0;
 		}
-		while((currentPos != portMappings.size()) && (mapping != ""))
+		while(!((currentPos == portMappings.size()) && (mapping == "")))
 		{
 			size_t sepPos = mapping.find("=>");
 
@@ -1710,11 +1710,11 @@ namespace flopoco{
 			else
 				outPortMap(instance, portName, signalName);
 
-			if(portMappings.find(':') != string::npos){
+			if(portMappings.find(':', currentPos) != string::npos){
 				mapping = portMappings.substr(currentPos, portMappings.find(':', currentPos));
 				currentPos = portMappings.find(':') + 1;
 			}else{
-				if(currentPos != portMappings.size())
+				if((currentPos != portMappings.size()) && (mapping != portMappings))
 				{
 					mapping = portMappings.substr(currentPos, portMappings.size()-currentPos);
 					currentPos = portMappings.size();
