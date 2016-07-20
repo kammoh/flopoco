@@ -773,9 +773,13 @@ public:
 	 * @patam opName the type of operator being instantiated
 	 * @param instanceName the name of the instance being created (label compulsory in VHDL)
 	 * @parameters the parameters given to the constructor of the instance's operator
+	 * 				specified as a string containing 'paramName=paramValue' separated ':'
 	 * @param inPortMaps the port mappings for the inputs
+	 * 				specified as a string containing 'portName:signalName' separated by ':'
 	 * @param outPortMaps the port mappings for the outputs
+	 * 				specified as a string containing 'portName:signalName' separated by ':'
 	 * @param inPortMapsCst the constant port mappings for the inputs, if there are any
+	 * 				specified as a string containing 'portName:signalName' separated by ':'
 	 */
 	OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
