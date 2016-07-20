@@ -1,5 +1,5 @@
 #include "UserInterface.hpp"
-#include "Tester/Tester.hpp"
+#include "AutoTest/AutoTest.hpp"
 #include "FloPoCo.hpp"
 #include <algorithm>
 #include <iostream>
@@ -55,7 +55,7 @@ namespace flopoco
 		v.push_back(make_pair("Conversions", "Conversions between number systems" ));
 		v.push_back(make_pair("FiltersEtc", "Filters and FFTs"));
 		v.push_back(make_pair("TestBenches", "Test Benches"));
-		v.push_back(make_pair("Tester", "Tester"));
+		v.push_back(make_pair("AutoTest", "AutoTest"));
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
 		return v;
 	}();

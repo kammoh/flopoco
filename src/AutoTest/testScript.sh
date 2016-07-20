@@ -23,12 +23,24 @@ if grep 'gtkwave' temp > /dev/null; then
 	$ghdl > ghdl 2>&1
 	nbError=$(grep -c error ghdl)
 	normalNbError=1
+	successNoError=false
+	successError=false
 	if grep '0 error(s) encoutered' ghdl > /dev/null; then
-		if [ $nbError -eq $normalNbError ]; then
-			echo 'GHDL -r SUCCESS' >> ../$1/report
+		successError=true
+	fi
+	if grep "simulation stopped by --stop-time" ghdl > /dev/null; then
+		successNoError=true
+	fi
+	if $successError == true || $successNoError == true; then
+		if $successError == true; then
+			if [ $nbError -eq $normalNbError ]; then
+				echo 'GHDL -r SUCCESS' >> ../$1/report
+			else
+				echo 'GHDL -r ERROR' >> ../$1/report
+				cat ghdl >> ../$1/messages
+			fi
 		else
-			echo 'GHDL -r ERROR' >> ../$1/report
-			cat ghdl >> ../$1/messages
+			echo 'GHDL -r SUCCESS' >> ../$1/report
 		fi
 	else
 		echo 'GHDL -r ERROR' >> ../$1/report

@@ -1,4 +1,4 @@
-#include "Tester.hpp"
+#include "AutoTest.hpp"
 #include "TestState.hpp"
 #include "UserInterface.hpp"
 
@@ -11,34 +11,34 @@
 namespace flopoco
 {
 
-	OperatorPtr Tester::parseArguments(Target *target , vector<string> &args)
+	OperatorPtr AutoTest::parseArguments(Target *target , vector<string> &args)
 	{
 		string opName;
 		bool testDependences;
 		UserInterface::parseBoolean(args, "Dependences", &testDependences);
 		UserInterface::parseString(args, "Operator", &opName);
 
-		Tester tester(opName,testDependences);
+		AutoTest AutoTest(opName,testDependences);
 
 		return nullptr;
 	}
 
-	void Tester::registerFactory()
+	void AutoTest::registerFactory()
 	{
 		UserInterface::add("AutoTest", // name
 			"A tester for operators.",
-			"Tester",
+			"AutoTest",
 			"", //seeAlso
 			"Operator(string): name of the operator to test, All if we need to test all the operators;\
 			Dependences(bool)=false: test the operator's dependences;",
 			"",
-			Tester::parseArguments
+			AutoTest::parseArguments
 			) ;
 	}
 
-	Tester::Tester(string opName, bool testDependences)
+	AutoTest::AutoTest(string opName, bool testDependences)
 	{
-		system("src/Tester/initTests.sh");
+		system("src/AutoTest/initTests.sh");
 
 		OperatorFactoryPtr opFact;	
 		TestState * currentTestState = new TestState();
@@ -70,7 +70,7 @@ namespace flopoco
 			/*	// Test the first important TestState for each Operator before testing all the TestStates
 			for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 			{
-				system(("src/Tester/initOpTest.sh " + (*itOperator)).c_str());
+				system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
 				cout << "Testing first tests for Operator : " << (*itOperator) << endl;
 				opFact = UserInterface::getFactoryByName(*itOperator);
 				paramNames = opFact->param_names();
@@ -89,7 +89,7 @@ namespace flopoco
 					while(currentTestState->getIterationIndex()<importantTestStateNumber)
 					{
 							// Get the next state and create the flopoco command corresponding
-						commandLine = "src/Tester/testScript.sh " + (*itOperator);
+						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
 
 						// Get the map containing the parameters
 						testStateParam = currentTestState->getMap();
@@ -108,7 +108,7 @@ namespace flopoco
 					}
 
 						// Clean all temporary file
-					system(("src/Tester/cleanTest.sh " + (*itOperator)).c_str());
+					system(("src/AutoTest/cleanTest.sh " + (*itOperator)).c_str());
 				}
 				else
 				{
@@ -178,7 +178,7 @@ namespace flopoco
 			// For each tested Operator, we run a number of tests defined by the Operator		
 		for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 		{
-			system(("src/Tester/initOpTest.sh " + (*itOperator)).c_str());
+			system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
 			cout << "Testing Operator : " << (*itOperator) << endl;
 			opFact = UserInterface::getFactoryByName(*itOperator);
 			paramNames = opFact->param_names();
@@ -197,7 +197,7 @@ namespace flopoco
 				while(currentTestState->canIterate())
 				{
 						// Get the next state and create the flopoco command corresponding
-					commandLine = "src/Tester/testScript.sh " + (*itOperator);
+					commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
 
 						// Get the map containing the parameters
 					testStateParam = currentTestState->getMap();
@@ -215,7 +215,7 @@ namespace flopoco
 				}
 
 					// Clean all temporary file
-				system(("src/Tester/cleanTest.sh " + (*itOperator)).c_str());
+				system(("src/AutoTest/cleanTest.sh " + (*itOperator)).c_str());
 			}
 			else
 			{

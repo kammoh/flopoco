@@ -1,5 +1,5 @@
-#ifndef Tester_hpp
-#define Tester_hpp
+#ifndef AutoTest_hpp
+#define AutoTest_hpp
 
 #include <stdio.h>
 #include <string>
@@ -9,7 +9,7 @@ using namespace std;
 
 namespace flopoco{
 
-	class Tester
+	class AutoTest
 	{
 
 	public:
@@ -18,7 +18,7 @@ namespace flopoco{
 
 		static void registerFactory();
 
-		Tester(string opName, bool testDependences = false);
+		AutoTest(string opName, bool testDependences = false);
 
 	};
 };

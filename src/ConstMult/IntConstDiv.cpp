@@ -381,8 +381,8 @@ namespace flopoco{
 						paramList.push_back(make_pair("d", to_string(d) ));	
 						paramList.push_back(make_pair("arch", to_string(arch) ));
 						if(wIn<16) // we can afford an exhaustive test
-						// testBenchSize.push_back(-2); // TODO VICTOR replace the following by this line and it won't work
-							testBenchSize.push_back(10000); 
+						 	testBenchSize.push_back(-2); // TODO VICTOR replace the following by this line and it won't work
+							// testBenchSize.push_back(10000); 
 						else
 							testBenchSize.push_back(1000);
 							

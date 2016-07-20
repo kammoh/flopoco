@@ -35,7 +35,7 @@ int main(int argc, char* argv[] )
 {
 	try {
 
-		Tester::registerFactory();
+		AutoTest::registerFactory();
 
 		Fix2FP::registerFactory();
 		FP2Fix::registerFactory();
