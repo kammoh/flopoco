@@ -23,16 +23,28 @@ if grep 'gtkwave' temp > /dev/null; then
 	$ghdl > ghdl 2>&1
 	nbError=$(grep -c error ghdl)
 	normalNbError=1
-	if grep '0 error(s) encoutered' ghdl > /dev/null; then
-		if [ $nbError -eq $normalNbError ]; then
-			echo 'GHDL -r SUCCESS' >> ../$1/report
+	successNoError=false
+	successError=true
+	if grep 'error(s) encoutered' ghdl > /dev/null; then
+		successError=false
+	fi
+	if grep "simulation stopped by --stop-time" ghdl > /dev/null; then
+		successNoError=true
+	fi
+	if $successError && $successNoError; then
+		echo 'GHDL -r SUCCESS' >> ../$1/report
+	else
+		if ! $successError; then
+			if [ $nbError -eq $normalNbError ]; then
+				echo 'GHDL -r SUCCESS' >> ../$1/report
+			else
+				echo 'GHDL -r ERROR number' >> ../$1/report
+				cat ghdl >> ../$1/messages
+			fi
 		else
-			echo 'GHDL -r ERROR' >> ../$1/report
+			echo 'GHDL -r ERROR else' >> ../$1/report
 			cat ghdl >> ../$1/messages
 		fi
-	else
-		echo 'GHDL -r ERROR' >> ../$1/report
-		cat ghdl >> ../$1/messages
 	fi
 else
 	echo 'VHDL not generated' >> ../$1/report

@@ -13,8 +13,8 @@ namespace flopoco
 	void TestState::clean()
 	{
 		testParam.clear();
-		iterationNumber = 0;
-		iterationIndex = 0;
+		testsNumber = 0;
+		index = 0;
 		testBenchSize = 100;
 	}
 
@@ -26,19 +26,19 @@ namespace flopoco
 			it->second = value;
 	}
 
-	void TestState::nextIteration()
+	void TestState::nextTest()
 	{
-		iterationIndex++;
+		index++;
 	}
 
-	void TestState::setIterationNumber(int pIterationNumber)
+	void TestState::setTestsNumber(int pTestsNumber)
 	{
-		iterationNumber = pIterationNumber;
+		testsNumber = pTestsNumber;
 	}
 
-	void TestState::setIterationIndex(int pIterationIndex)
+	void TestState::setIndex(int pIndex)
 	{
-		iterationIndex = pIterationIndex;
+		index = pIndex;
 	}
 
 	void TestState::setTestBenchSize(int pTestBenchSize)
@@ -46,9 +46,9 @@ namespace flopoco
 		testBenchSize = pTestBenchSize;
 	}
 
-	int TestState::getIterationIndex()
+	int TestState::getIndex()
 	{
-		return iterationIndex;
+		return index;
 	}
 
 	int TestState::getTestBenchSize()
@@ -66,9 +66,9 @@ namespace flopoco
 		return testParam;
 	}
 
-	bool TestState::canIterate()
+	bool TestState::canTest()
 	{
-		return (iterationIndex<iterationNumber);
+		return (index<testsNumber);
 	}
 
 	bool TestState::isUnchanged()
@@ -79,7 +79,7 @@ namespace flopoco
 
 		for(itMap = testParam.begin(); itMap != testParam.end(); ++itMap)
 		{
-			if(itMap->second != "" && iterationNumber != 0)
+			if(itMap->second != "" && testsNumber != 0)
 			{
 				unchanged = false;
 			}
@@ -90,8 +90,8 @@ namespace flopoco
 
 	TestState::TestState()
 	{
-		iterationIndex = 0;
-		iterationNumber = 0;
+		index = 0;
+		testsNumber = 0;
 		testBenchSize = 100;
 	}
 

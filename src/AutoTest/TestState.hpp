@@ -36,15 +36,15 @@ namespace flopoco
 		/**
 		* Increment the iteration index
 		*/
-		void nextIteration();
+		void nextTest();
 
 		/**
 		* Set the number of iteration
 		* @param pIterationNumber Number of iteration
 		*/
-		void setIterationNumber(int pIterationNumber);
+		void setTestsNumber(int pTestsNumber);
 
-		void setIterationIndex(int pIterationIndex);
+		void setIndex(int pIndex);
 
 		void setTestBenchSize(int pTestBenchSize);
 
@@ -52,7 +52,7 @@ namespace flopoco
 		* Get the index of the current iteration
 		* @return Index of the current iteration
 		*/
-		int getIterationIndex();
+		int getIndex();
 
 		int getTestBenchSize();
 
@@ -74,7 +74,7 @@ namespace flopoco
 		* Check if it is possible to iterate
 		* @return true or false
 		*/
-		bool canIterate();
+		bool canTest();
 
 		/**
 		* Check if the TestState's parameters are all unspecified
@@ -99,12 +99,12 @@ namespace flopoco
 		/**
 		* Number of iteration for this Operator
 		*/
-		int iterationNumber;
+		int testsNumber;
 
 		/**
 		* Index of the current iteration
 		*/
-		int iterationIndex;
+		int index;
 
 		int testBenchSize;
 

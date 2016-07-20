@@ -16,7 +16,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 #define UserInterface_hpp
 
 #include "Operator.hpp"
-#include "Tester/TestState.hpp"
+#include "AutoTest/TestState.hpp"
 #include <memory>
 
 // Operator Factory, based on the one by David Thomas, with a bit of clean up.
