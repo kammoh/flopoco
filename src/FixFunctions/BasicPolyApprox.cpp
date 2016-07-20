@@ -165,44 +165,9 @@ targetAcc(real): the target approximation errror of the polynomial WRT the funct
 signedIn(bool)=true: defines the input range : [0,1) if false, and [-1,1) otherwise;\
 g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 											 "",
-											 BasicPolyApprox::parseArguments,
-											 BasicPolyApprox::nextTestState
+											 BasicPolyApprox::parseArguments
 											 ) ;
 	}
-
-	void BasicPolyApprox::nextTestState(TestState * previousTestState)
-	{
-		static vector<vector<pair<string,string>>> testStateList;
-		vector<pair<string,string>> paramList;
-		string accuracy = "0.";
-
-		if(previousTestState->getIterationIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
-
-				for(int i = 1; i<4; i++)
-				{
-					paramList.clear();
-					paramList.push_back(make_pair("targetAcc",accuracy + "1"));
-					paramList.push_back(make_pair("f","\"exp(x*x)\""));
-					testStateList.push_back(paramList);
-
-					accuracy = accuracy + "0";
-				}
-			previousTestState->setIterationNumber(testStateList.size());
-		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int indexIteration = previousTestState->getIterationIndex();
-
-		for(itVector = testStateList[indexIteration].begin(); itVector != testStateList[indexIteration].end(); ++itVector)
-		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
-	}
-
-
-
 
 	void BasicPolyApprox::buildApproxFromTargetAccuracy(double targetAccuracy, int addGuardBits)
 	{

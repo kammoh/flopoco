@@ -1262,18 +1262,19 @@
 	}
 
 	void FPLogIterative::nextTestState(TestState * previousTestState)
-			static vector<vector<pair<string,string>>> testStateList;
-			vector<pair<string,string>> paramList;
-			
-			if(previousTestState->getIndex() == 0)
-			{
-				paramList.push_back(make_pair("wE","8"));
-				paramList.push_back(make_pair("wF","23"));
-				testStateList.push_back(paramList);
-				paramList.clear();
-				paramList.push_back(make_pair("wE","11"));
-				paramList.push_back(make_pair("wF","52"));
-				testStateList.push_back(paramList);
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIndex() == 0)
+		{
+			paramList.push_back(make_pair("wE","8"));
+			paramList.push_back(make_pair("wF","23"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+			paramList.push_back(make_pair("wE","11"));
+			paramList.push_back(make_pair("wF","52"));
+			testStateList.push_back(paramList);
 
 			previousTestState->setTestBenchSize(1000);
 
@@ -1299,9 +1300,11 @@
 				previousTestState->changeValue((*itVector).first,(*itVector).second);
 				previousTestState->changeValue("n","50");
 			}
+		}
 	}
 
-	void FPLogIterative::registerFactory(){
+
+		void FPLogIterative::registerFactory(){
 		UserInterface::add("FPLogIterative", // name
 			"Floating-point logarithm using an iterative method.",
 											 "ElementaryFunctions", // categories
@@ -1317,3 +1320,4 @@
 	}
 
 }
+
