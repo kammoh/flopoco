@@ -26,7 +26,7 @@ namespace flopoco{
 
 	public:
 		/** @brief Constructor ; you must use bitheap in case of negative coefficient*/
-		FixSIF(Target* target);
+		FixSIF(Target* target, string paramFileName);
 
 		/** @brief Destructor */
 		~FixSIF();
@@ -47,6 +47,8 @@ namespace flopoco{
 		static void registerFactory();
 
 	private:
+		string paramFileName;        /**< the name of the file containing the parameters for the SIF */
+
 		int n_u;                     /**< the size of the u vector (the number of inputs) */
 		int n_t;                     /**< the size of the t vector (the number of temporary variables) */
 		int n_x;                     /**< the size of the x vector (the number of states) */
