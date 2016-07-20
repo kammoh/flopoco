@@ -1261,9 +1261,6 @@
 		return new FPLogIterative(target, wE, wF, inTableSize);
 	}
 
-
-
-
 	void FPLogIterative::nextTestState(TestState * previousTestState)
 			static vector<vector<pair<string,string>>> testStateList;
 			vector<pair<string,string>> paramList;
@@ -1304,8 +1301,6 @@
 			}
 	}
 
-	
-	
 	void FPLogIterative::registerFactory(){
 		UserInterface::add("FPLogIterative", // name
 			"Floating-point logarithm using an iterative method.",
