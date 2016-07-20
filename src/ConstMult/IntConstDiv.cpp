@@ -428,7 +428,7 @@ namespace flopoco{
                         arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time; \
                         remainderOnly(bool)=false: if true, the architecture doesn't output the quotient; \
                         alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
-											 "This operator is described in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>.",
+											 "This operator is described, for arch=0, in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>, and for arch=1, in <a href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>.",
 											 IntConstDiv::parseArguments,
 											 IntConstDiv::nextTestState
 											 ) ;
