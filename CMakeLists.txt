@@ -259,6 +259,8 @@ src/Conversions/Fix2FP
  src/FixFilters/FixFIR
  src/FixFilters/FixHalfSine
  src/FixFilters/FixIIR
+ 
+ src/FixFilters/FixSIF
 
 
 # pipelined Integer addition -------------------------------------------------

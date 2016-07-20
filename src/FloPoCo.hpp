@@ -60,6 +60,8 @@
 #include "FixFilters/FixHalfSine.hpp"
 #include "FixFilters/FixIIR.hpp"
 
+#include "FixFilters/FixSIF.hpp"
+
 #include "ShiftReg.hpp"
 
 /* regular pipelined integer adder/ adder+subtracter --------- */
