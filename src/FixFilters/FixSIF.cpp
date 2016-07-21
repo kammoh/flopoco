@@ -17,7 +17,6 @@ namespace flopoco {
 		name << "FixSIF";
 		setNameWithFreqAndUID( name.str() );
 
-		//TODO: initialize all the parameters of the constructor from the file given as parameter
 		parseCoeffFile();
 
 		//create the u signals
@@ -27,14 +26,16 @@ namespace flopoco {
 		for(int i=0; i<n_t; i++)
 			declare(join("T_", i), (m_t[i]-l_t[i]+1));
 		//create the x signals
-		setCycle(0, true);
+		setCycle(0, false);
 		for(int i=0; i<n_x; i++){
-			setCycle(0, true);
-			declare(join("X_", i, "_next"), (m_x[i]-l_x[i]+1));
-			setCycle(1, true);
-			declare(join("X_", i), (m_x[i]-l_x[i]+1));
+			setCycle(0, false);
+			declare(join("X_", i, "_next"), (m_x[i]-l_x[i]+1), true, Signal::registeredWithSyncReset);
+			//create a temporary signal for X
+			declare(join("X_", i, "_int"), (m_x[i]-l_x[i]+1), true, Signal::registeredWithSyncReset);
+			setCycle(1, false);
+			declare(join("X_", i), (m_x[i]-l_x[i]+1), true, Signal::registeredWithSyncReset);
 		}
-		setCycle(0, true);
+		setCycle(0, false);
 		//create the y signals
 		for(int i=0; i<n_y; i++)
 			addOutput(join("Y_", i), (m_y[i]-l_y[i]+1));
@@ -47,13 +48,13 @@ namespace flopoco {
 
 		//add the msbs and lsbs of the t signals
 		msbVector.insert(msbVector.end(), m_t.begin(), m_t.end());
-		lsbVector.insert(msbVector.end(), l_t.begin(), l_t.end());
+		lsbVector.insert(lsbVector.end(), l_t.begin(), l_t.end());
 		//add the msbs and lsbs of the x signals
 		msbVector.insert(msbVector.end(), m_x.begin(), m_x.end());
-		lsbVector.insert(msbVector.end(), l_x.begin(), l_x.end());
+		lsbVector.insert(lsbVector.end(), l_x.begin(), l_x.end());
 		//add the msbs and lsbs of the u signals
 		msbVector.insert(msbVector.end(), m_u.begin(), m_u.end());
-		lsbVector.insert(msbVector.end(), l_u.begin(), l_u.end());
+		lsbVector.insert(lsbVector.end(), l_u.begin(), l_u.end());
 
 		//create the SOPCs computing the T signals
 		addComment("---------------  SOPCs for the T signals  ---------------");
@@ -91,14 +92,15 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
 			}
-			outPortMap(fixSOPC, "R", join("X_", i, "_next"));
+			outPortMap(fixSOPC, "R", join("X_", i, "_next"), false);
 			vhdl << tab << instance(fixSOPC, join("fixSOPC_X_", i)) << endl;
 
+			vhdl << tab << "X_" << i << "_int <= X_" << i << ";" << endl;
 			setCycle(1, true);
 			vhdl << tab << "X_" << i << " <= X_" << i << "_next;" << endl;
 			setCycle(0, true);
@@ -145,22 +147,37 @@ namespace flopoco {
 		if(file.is_open())
 		{
 			//read n_u
-			getline(file, line);
-			n_u = stoi(line);
+			if(getline(file, line).rdstate() != ios::goodbit){
+				THROWERROR("Error: parseCoeffFile: error while reading the value of n_u");
+			}else{
+				n_u = stoi(line);
+			}
 			//read n_t
-			getline(file, line);
-			n_t = stoi(line);
+			if(getline(file, line).rdstate() != ios::goodbit){
+				THROWERROR("Error: parseCoeffFile: error while reading the value of n_t");
+			}else{
+				n_t = stoi(line);
+			}
 			//read n_x
-			getline(file, line);
-			n_x = stoi(line);
+			if(getline(file, line).rdstate() != ios::goodbit){
+				THROWERROR("Error: parseCoeffFile: error while reading the value of n_x");
+			}else{
+				n_x = stoi(line);
+			}
 			//read n_y
-			getline(file, line);
-			n_y = stoi(line);
+			if(getline(file, line).rdstate() != ios::goodbit){
+				THROWERROR("Error: parseCoeffFile: error while reading the value of n_y");
+			}else{
+				n_y = stoi(line);
+			}
 			//read the msb and lsb vector for u
 			for(int i=0; i<n_u; i++)
 			{
 				//read a line of the matrix
-				getline(file, line);
+				if(getline(file, line).rdstate() != ios::goodbit){
+					THROWERROR("Error: parseCoeffFile: error while reading the " <<
+							"values of the msb and lsb of u index " << i);
+				}
 				//extract the msb and lsb
 				m_u.push_back(stoi(line.substr(0, line.find(' '))));
 				l_u.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
@@ -169,7 +186,10 @@ namespace flopoco {
 			for(int i=0; i<n_t; i++)
 			{
 				//read a line of the matrix
-				getline(file, line);
+				if(getline(file, line).rdstate() != ios::goodbit){
+					THROWERROR("Error: parseCoeffFile: error while reading the " <<
+							"values of the msb and lsb of t index " << i);
+				}
 				//extract the msb and lsb
 				m_t.push_back(stoi(line.substr(0, line.find(' '))));
 				l_t.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
@@ -178,7 +198,10 @@ namespace flopoco {
 			for(int i=0; i<n_x; i++)
 			{
 				//read a line of the matrix
-				getline(file, line);
+				if(getline(file, line).rdstate() != ios::goodbit){
+					THROWERROR("Error: parseCoeffFile: error while reading the " <<
+							"values of the msb and lsb of x index " << i);
+				}
 				//extract the msb and lsb
 				m_x.push_back(stoi(line.substr(0, line.find(' '))));
 				l_x.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
@@ -187,7 +210,10 @@ namespace flopoco {
 			for(int i=0; i<n_y; i++)
 			{
 				//read a line of the matrix
-				getline(file, line);
+				if(getline(file, line).rdstate() != ios::goodbit){
+					THROWERROR("Error: parseCoeffFile: error while reading the " <<
+							"values of the msb and lsb of y index " << i);
+				}
 				//extract the msb and lsb
 				m_y.push_back(stoi(line.substr(0, line.find(' '))));
 				l_y.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
@@ -196,7 +222,10 @@ namespace flopoco {
 			for(int i=0; i<n_t+n_x+n_y; i++)
 			{
 				//read a line of the matrix
-				getline(file, line);
+				if(getline(file, line).rdstate() != ios::goodbit){
+					THROWERROR("Error: parseCoeffFile: error while reading the " <<
+							"values of the Z matrix index " << i);
+				}
 				//split it to a vector of strigs
 				vector<string> matLine;
 				stringstream ss(line);
@@ -210,7 +239,7 @@ namespace flopoco {
 
 			file.close();
 		}else{
-			THROWERROR("Error: FixSIF: unable to open the parameter file!");
+			THROWERROR("Error: FixSIF: unable to open the parameter file " << paramFileName << "!");
 		}
 	}
 
