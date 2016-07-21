@@ -74,12 +74,12 @@ namespace flopoco {
 			//connect the output
 			outPortMap(fixSOPC, "R", join("T_", i), false);
 			//create the instance
-			vhdl << instance(fixSOPC, join("fixSOPC_T_", i)) << endl;
+			vhdl << tab << instance(fixSOPC, join("fixSOPC_T_", i)) << endl;
 		}
 		addComment("---------------------------------------------------------");
 
 		//create the SOPCs computing the X signals
-		addComment("---------------  SOPCs for the T signals  ---------------");
+		addComment("---------------  SOPCs for the X signals  ---------------");
 		for(int i=0; i<n_x; i++){
 			addComment(join("creating the sum of products for X_", i));
 			//create the SOPC specific to this t
@@ -90,18 +90,22 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_next"));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
 			}
-			outPortMap(fixSOPC, "R", join("X_", i), false);
-			vhdl << instance(fixSOPC, join("fixSOPC_X_", i)) << endl;
+			outPortMap(fixSOPC, "R", join("X_", i, "_next"));
+			vhdl << tab << instance(fixSOPC, join("fixSOPC_X_", i)) << endl;
+
+			setCycle(1, true);
+			vhdl << tab << "X_" << i << " <= X_" << i << "_next;" << endl;
+			setCycle(0), true;
 		}
 		addComment("---------------------------------------------------------");
 
 		//create the SOPCs computing the X signals
-		addComment("---------------  SOPCs for the T signals  ---------------");
+		addComment("---------------  SOPCs for the Y signals  ---------------");
 		for(int i=0; i<n_y; i++){
 			addComment(join("creating the sum of products for Y_", i));
 			//create the SOPC specific to this t
@@ -118,7 +122,7 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
 			}
 			outPortMap(fixSOPC, "R", join("Y_", i), false);
-			vhdl << instance(fixSOPC, join("fixSOPC_Y_", i)) << endl;
+			vhdl << tab << instance(fixSOPC, join("fixSOPC_Y_", i)) << endl;
 		}
 		addComment("---------------------------------------------------------");
 
@@ -143,7 +147,7 @@ namespace flopoco {
 
 	OperatorPtr FixSIF::parseArguments(Target *target, vector<string> &args) {
 		string paramFile;
-		UserInterface::parseString(args, "coeffa", &paramFile);
+		UserInterface::parseString(args, "paramFileName", &paramFile);
 
 		return new FixSIF(target, paramFile);
 	}
