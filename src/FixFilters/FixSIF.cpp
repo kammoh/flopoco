@@ -19,6 +19,10 @@ namespace flopoco {
 
 		parseCoeffFile();
 
+		//deactivate parsing
+		setCombinatorial();
+		target->setPipelined(false);
+
 		//create the u signals
 		for(int i=0; i<n_u; i++)
 			addInput(join("U_", i), (m_u[i]-l_u[i]+1));
@@ -26,16 +30,20 @@ namespace flopoco {
 		for(int i=0; i<n_t; i++)
 			declare(join("T_", i), (m_t[i]-l_t[i]+1));
 		//create the x signals
+		//activate parsing
+		setSequential();
 		setCycle(0, false);
 		for(int i=0; i<n_x; i++){
 			setCycle(0, false);
-			declare(join("X_", i, "_next"), (m_x[i]-l_x[i]+1), true, Signal::registeredWithSyncReset);
+			declare(join("X_", i, "_next"), (m_x[i]-l_x[i]+1), true, Signal::registeredWithAsyncReset);
 			//create a temporary signal for X
-			declare(join("X_", i, "_int"), (m_x[i]-l_x[i]+1), true, Signal::registeredWithSyncReset);
+			declare(join("X_", i, "_int"), (m_x[i]-l_x[i]+1));
 			setCycle(1, false);
-			declare(join("X_", i), (m_x[i]-l_x[i]+1), true, Signal::registeredWithSyncReset);
+			declare(join("X_", i), (m_x[i]-l_x[i]+1));
 		}
 		setCycle(0, false);
+		//deactivate parsing
+		setCombinatorial();
 		//create the y signals
 		for(int i=0; i<n_y; i++)
 			addOutput(join("Y_", i), (m_y[i]-l_y[i]+1));
@@ -57,11 +65,13 @@ namespace flopoco {
 		lsbVector.insert(lsbVector.end(), l_u.begin(), l_u.end());
 
 		//create the SOPCs computing the T signals
+		vhdl << endl;
 		addComment("---------------  SOPCs for the T signals  ---------------");
 		for(int i=0; i<n_t; i++){
 			addComment(join("creating the sum of products for T_", i));
 			//create the SOPC specific to this t
 			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_t[i], l_t[i], Z[i], -1); // -1 means: faithful
+			fixSOPC->setCombinatorial();
 			addSubComponent(fixSOPC);
 			//connect the inputs of the SOPC
 			for(int j=0; j<n_t; j++) {
@@ -76,16 +86,19 @@ namespace flopoco {
 			//connect the output
 			outPortMap(fixSOPC, "R", join("T_", i), false);
 			//create the instance
-			vhdl << tab << instance(fixSOPC, join("fixSOPC_T_", i)) << endl;
+			vhdl << instance(fixSOPC, join("fixSOPC_T_", i)) << endl;
 		}
 		addComment("---------------------------------------------------------");
+		vhdl << endl;
 
 		//create the SOPCs computing the X signals
+		vhdl << endl;
 		addComment("---------------  SOPCs for the X signals  ---------------");
 		for(int i=0; i<n_x; i++){
 			addComment(join("creating the sum of products for X_", i));
 			//create the SOPC specific to this t
 			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_x[i], l_x[i], Z[n_t+i], -1); // -1 means: faithful
+			fixSOPC->setCombinatorial();
 			addSubComponent(fixSOPC);
 			//connect the inputs of the SOPC
 			for(int j=0; j<n_t; j++) {
@@ -98,21 +111,29 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
 			}
 			outPortMap(fixSOPC, "R", join("X_", i, "_next"), false);
-			vhdl << tab << instance(fixSOPC, join("fixSOPC_X_", i)) << endl;
+			vhdl << instance(fixSOPC, join("fixSOPC_X_", i)) << endl;
 
+			//activate parsing
+			setSequential();
 			vhdl << tab << "X_" << i << "_int <= X_" << i << ";" << endl;
 			setCycle(1, true);
 			vhdl << tab << "X_" << i << " <= X_" << i << "_next;" << endl;
 			setCycle(0, true);
+			//deactivate parsing
+			setCombinatorial();
+			vhdl << endl;
 		}
 		addComment("---------------------------------------------------------");
+		vhdl << endl;
 
 		//create the SOPCs computing the X signals
+		vhdl << endl;
 		addComment("---------------  SOPCs for the Y signals  ---------------");
 		for(int i=0; i<n_y; i++){
 			addComment(join("creating the sum of products for Y_", i));
 			//create the SOPC specific to this t
 			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_x[i], l_x[i], Z[n_t+n_x+i], -1); // -1 means: faithful
+			fixSOPC->setCombinatorial();
 			addSubComponent(fixSOPC);
 			//connect the inputs of the SOPC
 			for(int j=0; j<n_t; j++) {
@@ -125,9 +146,15 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
 			}
 			outPortMap(fixSOPC, "R", join("Y_", i), false);
-			vhdl << tab << instance(fixSOPC, join("fixSOPC_Y_", i)) << endl;
+			vhdl << instance(fixSOPC, join("fixSOPC_Y_", i)) << endl;
 		}
 		addComment("---------------------------------------------------------");
+		vhdl << endl;
+
+
+		//activate parsing
+		setSequential();
+		target->setPipelined(true);
 
 	};
 
