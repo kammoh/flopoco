@@ -26,62 +26,62 @@
 
 #include "FPAddSub.hpp"
 
-using namespace std;
+  using namespace std;
 
 //TODO +- inf for exponent => update exception
 
-namespace flopoco{
+  namespace flopoco{
 
 #define DEBUGVHDL 0
 
 
-FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR, map<string, double> inputDelays) :
-		Operator(target), wEX(wEX), wFX(wFX), wEY(wEY), wFY(wFY), wER(wER), wFR(wFR) {
+  	FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR, map<string, double> inputDelays) :
+  	Operator(target), wEX(wEX), wFX(wFX), wEY(wEY), wFY(wFY), wER(wER), wFR(wFR) {
 
-		srcFileName="FPAddSub";
+  		srcFileName="FPAddSub";
 
 		//parameter set up. For now all wEX=wEY=wER and the same holds for fractions
-		wF = wFX;
-		wE = wEX;
+  		wF = wFX;
+  		wE = wEX;
 
-		ostringstream name;
-		name<<"FPAddSub_"<<wE<<"_"<<wF;
-		setNameWithFreqAndUID(name.str());
+  		ostringstream name;
+  		name<<"FPAddSub_"<<wE<<"_"<<wF;
+  		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Matei Istoan, Florent de Dinechin (2012)");
+  		setCopyrightString("Matei Istoan, Florent de Dinechin (2012)");
 
-		sizeRightShift = intlog2(wF+3);
+  		sizeRightShift = intlog2(wF+3);
 
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wEX bits (Exponent) + wFX bits(Fraction) */
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		addFPInput ("X", wE, wF);
-		addFPInput ("Y", wE, wF);
-		addFPOutput("Radd", wE, wF);
-		addFPOutput("Rsub", wE, wF);
+  		addFPInput ("X", wE, wF);
+  		addFPInput ("Y", wE, wF);
+  		addFPOutput("Radd", wE, wF);
+  		addFPOutput("Rsub", wE, wF);
 
 		//=========================================================================|
 		//                          Swap/Difference                                |
 		// ========================================================================|
-		vhdl<<"-- Exponent difference and swap  --"<<endl;
+  		vhdl<<"-- Exponent difference and swap  --"<<endl;
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay(wE+wF+2) + target->lutDelay());
+  		setCriticalPath(getMaxInputDelays(inputDelays));
+  		manageCriticalPath(target->localWireDelay(wE+wF+2) + target->lutDelay());
 
-		vhdl << tab << declare("excExpFracX",2+wE+wF) << " <= X"<<range(wE+wF+2, wE+wF+1) << " & X"<<range(wE+wF-1, 0)<<";"<<endl;
-		vhdl << tab << declare("excExpFracY",2+wE+wF) << " <= Y"<<range(wE+wF+2, wE+wF+1) << " & Y"<<range(wE+wF-1, 0)<<";"<<endl;
+  		vhdl << tab << declare("excExpFracX",2+wE+wF) << " <= X"<<range(wE+wF+2, wE+wF+1) << " & X"<<range(wE+wF-1, 0)<<";"<<endl;
+  		vhdl << tab << declare("excExpFracY",2+wE+wF) << " <= Y"<<range(wE+wF+2, wE+wF+1) << " & Y"<<range(wE+wF-1, 0)<<";"<<endl;
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay(wE+1) + target->adderDelay(wE+1));
+  		setCriticalPath(getMaxInputDelays(inputDelays));
+  		manageCriticalPath(target->localWireDelay(wE+1) + target->adderDelay(wE+1));
 
-		vhdl<< tab << declare("eXmeY",wE+1) << " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
-		vhdl<< tab << declare("eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
+  		vhdl<< tab << declare("eXmeY",wE+1) << " <= (\"0\" & X"<<range(wE+wF-1,wF)<<") - (\"0\" & Y"<<range(wE+wF-1,wF)<<");"<<endl;
+  		vhdl<< tab << declare("eYmeX",wE+1) << " <= (\"0\" & Y"<<range(wE+wF-1,wF)<<") - (\"0\" & X"<<range(wE+wF-1,wF)<<");"<<endl;
 
-		double cpeXmeY = getCriticalPath();
+  		double cpeXmeY = getCriticalPath();
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
+  		setCriticalPath(getMaxInputDelays(inputDelays));
 
-		if (wF < 30){
+  		if (wF < 30){
 			manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+wF+2)); //comparator delay implemented for now as adder
 			vhdl<< tab << declare("swap")       << " <= '0' when excExpFracX >= excExpFracY else '1';"<<endl;
 		}else{
@@ -170,7 +170,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 			manageCriticalPath(target->localWireDelay(sizeRightShift) + target->lutDelay());
 
 			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0)"
-				<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wFX+3<<","<<sizeRightShift<<");" << endl;
+			<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wFX+3<<","<<sizeRightShift<<");" << endl;
 		}
 		else if (wE==sizeRightShift) {
 			vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= expDiff;" << endl ;
@@ -230,149 +230,149 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 		else
 			if (syncCycleFromSignal("sticky"))
 				setCriticalPath(cpsticky);
-		manageCriticalPath(target->localWireDelay(wF+5)+ target->lutDelay());
+			manageCriticalPath(target->localWireDelay(wF+5)+ target->lutDelay());
 
-		vhdl << tab << declare("cInFracAdderSub") << " <= not sticky;" << endl;
+			vhdl << tab << declare("cInFracAdderSub") << " <= not sticky;" << endl;
 
 		//mantisa addition
-		fracAdder = new IntAdder(target,wF+4, inDelayMap("Y", getCriticalPath()));
-		addSubComponent(fracAdder);
-		inPortMap  (fracAdder, "X", "fracX");
-		inPortMap  (fracAdder, "Y", "fracYAdd");
-		inPortMapCst  (fracAdder, "Cin", "\'0\'");
-		outPortMap (fracAdder, "R","fracAdderResultAdd");
-		vhdl << instance(fracAdder, "fracAdderAdd");
+			fracAdder = new IntAdder(target,wF+4, inDelayMap("Y", getCriticalPath()));
+			addSubComponent(fracAdder);
+			inPortMap  (fracAdder, "X", "fracX");
+			inPortMap  (fracAdder, "Y", "fracYAdd");
+			inPortMapCst  (fracAdder, "Cin", "\'0\'");
+			outPortMap (fracAdder, "R","fracAdderResultAdd");
+			vhdl << instance(fracAdder, "fracAdderAdd");
 
 		//mantisa subtraction
-		inPortMap  (fracAdder, "X", "fracX");
-		inPortMap  (fracAdder, "Y", "fracYSub");
-		inPortMap  (fracAdder, "Cin", "cInFracAdderSub");
-		outPortMap (fracAdder, "R","fracAdderResultSub");
-		vhdl << instance(fracAdder, "fracAdderSub");
+			inPortMap  (fracAdder, "X", "fracX");
+			inPortMap  (fracAdder, "Y", "fracYSub");
+			inPortMap  (fracAdder, "Cin", "cInFracAdderSub");
+			outPortMap (fracAdder, "R","fracAdderResultSub");
+			vhdl << instance(fracAdder, "fracAdderSub");
 
-		setCycleFromSignal("fracAdderResultSub");
-		syncCycleFromSignal("fracAdderResultAdd");
-		setCriticalPath(fracAdder->getOutputDelay("R"));
+			setCycleFromSignal("fracAdderResultSub");
+			syncCycleFromSignal("fracAdderResultAdd");
+			setCriticalPath(fracAdder->getOutputDelay("R"));
 
-		if (getCycleFromSignal("sticky")==(getCycleFromSignal("fracAdderResultSub")>getCycleFromSignal("fracAdderResultAdd")?getCycleFromSignal("fracAdderResultSub"):getCycleFromSignal("fracAdderResultAdd")))
-			setCriticalPath(max(cpsticky, getCriticalPath()));
-		else{
-			if (syncCycleFromSignal("sticky"))
-				setCriticalPath(cpsticky);
-		}
+			if (getCycleFromSignal("sticky")==(getCycleFromSignal("fracAdderResultSub")>getCycleFromSignal("fracAdderResultAdd")?getCycleFromSignal("fracAdderResultSub"):getCycleFromSignal("fracAdderResultAdd")))
+				setCriticalPath(max(cpsticky, getCriticalPath()));
+			else{
+				if (syncCycleFromSignal("sticky"))
+					setCriticalPath(cpsticky);
+			}
 
 		//incremented exponent.
-		manageCriticalPath(target->localWireDelay(wF+2)+ target->adderDelay(wE+2));
+			manageCriticalPath(target->localWireDelay(wF+2)+ target->adderDelay(wE+2));
 
-		vhdl << tab << declare("extendedExp",wE+2) << "<= \"00\" & expX;"<<endl;
-		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
+			vhdl << tab << declare("extendedExp",wE+2) << "<= \"00\" & expX;"<<endl;
+			vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
-		syncCycleFromSignal("extendedExpInc");
-		double cpextendedExp = getCriticalPath();
+			syncCycleFromSignal("extendedExpInc");
+			double cpextendedExp = getCriticalPath();
 
 
 
 
 		//path for subtraction-------------------------------------------------------------------
 		//shift in place
-		manageCriticalPath(target->localWireDelay(wF+5)+ target->lutDelay());
+			manageCriticalPath(target->localWireDelay(wF+5)+ target->lutDelay());
 
-		vhdl << tab << declare("fracGRSSub",wF+5) << "<= fracAdderResultSub & sticky; "<<endl;
+			vhdl << tab << declare("fracGRSSub",wF+5) << "<= fracAdderResultSub & sticky; "<<endl;
 
 
-		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
-		addSubComponent(lzocs);
-		inPortMap  (lzocs, "I", "fracGRSSub");
-		outPortMap (lzocs, "Count","nZerosNew");
-		outPortMap (lzocs, "O","shiftedFracSub");
-		vhdl << instance(lzocs, "LZC_component");
+			lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0, inDelayMap("I",getCriticalPath()));
+			addSubComponent(lzocs);
+			inPortMap  (lzocs, "I", "fracGRSSub");
+			outPortMap (lzocs, "Count","nZerosNew");
+			outPortMap (lzocs, "O","shiftedFracSub");
+			vhdl << instance(lzocs, "LZC_component");
 
-		syncCycleFromSignal("shiftedFracSub");
-		setCriticalPath(lzocs->getOutputDelay("O"));
-		double cpshiftedFrac = getCriticalPath();
+			syncCycleFromSignal("shiftedFracSub");
+			setCriticalPath(lzocs->getOutputDelay("O"));
+			double cpshiftedFrac = getCriticalPath();
 
 		//update exponent
-		manageCriticalPath(target->localWireDelay(wF+2)+ target->adderDelay(wE+2) + target->lutDelay());
+			manageCriticalPath(target->localWireDelay(wF+2)+ target->adderDelay(wE+2) + target->lutDelay());
 
-		vhdl << tab << declare("updatedExpSub",wE+2) << " <= extendedExpInc - (" << zg(wE+2-lzocs->getCountWidth(),0) <<" & nZerosNew);"<<endl;
-		vhdl << tab << declare("eqdiffsign")<< " <= '1' when nZerosNew="<<og(lzocs->getCountWidth(),0)<<" else '0';"<<endl;
+			vhdl << tab << declare("updatedExpSub",wE+2) << " <= extendedExpInc - (" << zg(wE+2-lzocs->getCountWidth(),0) <<" & nZerosNew);"<<endl;
+			vhdl << tab << declare("eqdiffsign")<< " <= '1' when nZerosNew="<<og(lzocs->getCountWidth(),0)<<" else '0';"<<endl;
 
-		setCycleFromSignal("shiftedFracSub");
+			setCycleFromSignal("shiftedFracSub");
 
 		//concatenate exponent with fraction to absorb the possible carry out
-		manageCriticalPath(target->localWireDelay(wE+wF+3) + target->lutDelay());
+			manageCriticalPath(target->localWireDelay(wE+wF+3) + target->lutDelay());
 
-		vhdl<<tab<<declare("expFracSub",wE+2+wF+1)<<"<= updatedExpSub & shiftedFracSub"<<range(wF+3,3)<<";"<<endl;
-		double cpexpFrac = getCriticalPath();
+			vhdl<<tab<<declare("expFracSub",wE+2+wF+1)<<"<= updatedExpSub & shiftedFracSub"<<range(wF+3,3)<<";"<<endl;
+			double cpexpFrac = getCriticalPath();
 
 		//at least in parallel with previous 2 statements
-		setCycleFromSignal("shiftedFracSub");
-		setCriticalPath(cpshiftedFrac);
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			setCycleFromSignal("shiftedFracSub");
+			setCriticalPath(cpshiftedFrac);
+			manageCriticalPath(target->localWireDelay() + target->lutDelay());
 
-		vhdl<<tab<<declare("stkSub")<<"<= shiftedFracSub"<<of(1)<<" or shiftedFracSub"<<of(0)<<";"<<endl;
-		vhdl<<tab<<declare("rndSub")<<"<= shiftedFracSub"<<of(2)<<";"<<endl;
-		vhdl<<tab<<declare("grdSub")<<"<= shiftedFracSub"<<of(3)<<";"<<endl;
-		vhdl<<tab<<declare("lsbSub")<<"<= shiftedFracSub"<<of(4)<<";"<<endl;
+			vhdl<<tab<<declare("stkSub")<<"<= shiftedFracSub"<<of(1)<<" or shiftedFracSub"<<of(0)<<";"<<endl;
+			vhdl<<tab<<declare("rndSub")<<"<= shiftedFracSub"<<of(2)<<";"<<endl;
+			vhdl<<tab<<declare("grdSub")<<"<= shiftedFracSub"<<of(3)<<";"<<endl;
+			vhdl<<tab<<declare("lsbSub")<<"<= shiftedFracSub"<<of(4)<<";"<<endl;
 
-		setCycleFromSignal("shiftedFracSub");
-		setCriticalPath(cpshiftedFrac);
+			setCycleFromSignal("shiftedFracSub");
+			setCriticalPath(cpshiftedFrac);
 
 		//decide what to add to the guard bit
-		manageCriticalPath(target->localWireDelay() + 3*target->lutDelay());
+			manageCriticalPath(target->localWireDelay() + 3*target->lutDelay());
 
-		vhdl<<tab<<declare("addToRoundBitSub")<<"<= '0' when (lsbSub='0' and grdSub='1' and rndSub='0' and stkSub='0')  else '1';"<<endl;
+			vhdl<<tab<<declare("addToRoundBitSub")<<"<= '0' when (lsbSub='0' and grdSub='1' and rndSub='0' and stkSub='0')  else '1';"<<endl;
 
 		//round
 
-		if (getCycleFromSignal("expFracSub") == getCycleFromSignal("addToRoundBitSub"))
-			setCriticalPath(max(cpexpFrac, getCriticalPath()));
-		else
-			if (syncCycleFromSignal("expFracSub"))
-				setCriticalPath(cpexpFrac);
+			if (getCycleFromSignal("expFracSub") == getCycleFromSignal("addToRoundBitSub"))
+				setCriticalPath(max(cpexpFrac, getCriticalPath()));
+			else
+				if (syncCycleFromSignal("expFracSub"))
+					setCriticalPath(cpexpFrac);
 
-		IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath()));
-		addSubComponent(ra);
+				IntAdder *ra = new IntAdder(target, wE+2+wF+1, inDelayMap("X", getCriticalPath()));
+				addSubComponent(ra);
 
-		inPortMap(ra,"X", "expFracSub");
-		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
-		inPortMap( ra, "Cin", "addToRoundBitSub");
-		outPortMap( ra, "R", "RoundedExpFracSub");
-		vhdl << instance(ra, "roundingAdderSub");
+				inPortMap(ra,"X", "expFracSub");
+				inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
+				inPortMap( ra, "Cin", "addToRoundBitSub");
+				outPortMap( ra, "R", "RoundedExpFracSub");
+				vhdl << instance(ra, "roundingAdderSub");
 
-		syncCycleFromSignal("RoundedExpFracSub");
-		setCriticalPath(ra->getOutputDelay("R"));
+				syncCycleFromSignal("RoundedExpFracSub");
+				setCriticalPath(ra->getOutputDelay("R"));
 
 		//possible update to exception bits
-		manageCriticalPath(target->localWireDelay(wE>wF?wE:wF) + target->lutDelay());
+				manageCriticalPath(target->localWireDelay(wE>wF?wE:wF) + target->lutDelay());
 
-		vhdl << tab << declare("upExcSub",2)<<" <= RoundedExpFracSub"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
-		vhdl << tab << declare("fracRSub",wF)<<" <= RoundedExpFracSub"<<range(wF,1)<<";"<<endl;
-		vhdl << tab << declare("expRSub",wE) <<" <= RoundedExpFracSub"<<range(wF+wE,wF+1)<<";"<<endl;
+				vhdl << tab << declare("upExcSub",2)<<" <= RoundedExpFracSub"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
+				vhdl << tab << declare("fracRSub",wF)<<" <= RoundedExpFracSub"<<range(wF,1)<<";"<<endl;
+				vhdl << tab << declare("expRSub",wE) <<" <= RoundedExpFracSub"<<range(wF+wE,wF+1)<<";"<<endl;
 
-		vhdl << tab << declare("excRtEffSub", 2) <<" <= excRtRAdd when (diffSigns=\'1\') else excRtRSub;"<<endl;
+				vhdl << tab << declare("excRtEffSub", 2) <<" <= excRtRAdd when (diffSigns=\'1\') else excRtRSub;"<<endl;
 
-		manageCriticalPath(target->localWireDelay(2) + 2*target->lutDelay());
+				manageCriticalPath(target->localWireDelay(2) + 2*target->lutDelay());
 
-		vhdl << tab << declare("exExpExcSub",4) << " <= upExcSub & excRtEffSub;"<<endl;
-		vhdl << tab << "with (exExpExcSub) select "<<endl;
-		vhdl << tab << declare("excRt2Sub",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
-		<<tab<<tab<<"\"01\" when \"0001\","<<endl
-		<<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"0101\","<<endl
-		<<tab<<tab<<"\"11\" when others;"<<endl;
+				vhdl << tab << declare("exExpExcSub",4) << " <= upExcSub & excRtEffSub;"<<endl;
+				vhdl << tab << "with (exExpExcSub) select "<<endl;
+				vhdl << tab << declare("excRt2Sub",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
+				<<tab<<tab<<"\"01\" when \"0001\","<<endl
+				<<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"0101\","<<endl
+				<<tab<<tab<<"\"11\" when others;"<<endl;
 
-		syncCycleFromSignal("excRt2Sub");
-		manageCriticalPath(target->localWireDelay(2) + target->lutDelay());
+				syncCycleFromSignal("excRt2Sub");
+				manageCriticalPath(target->localWireDelay(2) + target->lutDelay());
 
-		vhdl<<tab<<declare("excRSub",2) << " <= \"00\" when (eqdiffsign='1') else excRt2Sub;"<<endl;
+				vhdl<<tab<<declare("excRSub",2) << " <= \"00\" when (eqdiffsign='1') else excRt2Sub;"<<endl;
 
 		// assign result
-		manageCriticalPath(target->localWireDelay(wE+wF) + target->lutDelay());
+				manageCriticalPath(target->localWireDelay(wE+wF) + target->lutDelay());
 
-		vhdl<<tab<< declare("computedRSub",wE+wF) << " <= expRSub & fracRSub;"<<endl;
-		vhdl << tab << "Rsub <= excRSub & signRSub & computedRSub when (diffSigns=\'0\') else excRAdd & signRSub & computedRAdd;"<<endl;
+				vhdl<<tab<< declare("computedRSub",wE+wF) << " <= expRSub & fracRSub;"<<endl;
+				vhdl << tab << "Rsub <= excRSub & signRSub & computedRSub when (diffSigns=\'0\') else excRAdd & signRSub & computedRAdd;"<<endl;
 
-		double cpSub = getCriticalPath();
+				double cpSub = getCriticalPath();
 		//-------------------------------------------------------------------------------------
 
 
@@ -385,193 +385,193 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 
 		//path for addition-----------------------------------------------------------------
 		//shift in place
-		setCriticalPath(cpextendedExp);
-		setCycleFromSignal("extendedExp");
+				setCriticalPath(cpextendedExp);
+				setCycleFromSignal("extendedExp");
 
-		manageCriticalPath(target->localWireDelay(wF+5)+ target->lutDelay());
+				manageCriticalPath(target->localWireDelay(wF+5)+ target->lutDelay());
 
-		vhdl << tab << declare("fracGRSAdd",wF+5) << "<= fracAdderResultAdd & sticky; "<<endl;
+				vhdl << tab << declare("fracGRSAdd",wF+5) << "<= fracAdderResultAdd & sticky; "<<endl;
 
-		syncCycleFromSignal("extendedExpInc");
+				syncCycleFromSignal("extendedExpInc");
 
-		vhdl << tab << declare("updatedFracAdd",wF+1) << " <= fracGRSAdd" << range(wF+3, 3) << " when (fracAdderResultAdd(" << wF+3 << ")=\'1\') else fracGRSAdd"<< range(wF+2, 2) <<";" << endl;
+				vhdl << tab << declare("updatedFracAdd",wF+1) << " <= fracGRSAdd" << range(wF+3, 3) << " when (fracAdderResultAdd(" << wF+3 << ")=\'1\') else fracGRSAdd"<< range(wF+2, 2) <<";" << endl;
 
 		//update exponent
-		manageCriticalPath(target->localWireDelay(wE+2) + target->lutDelay());
+				manageCriticalPath(target->localWireDelay(wE+2) + target->lutDelay());
 
-		vhdl << tab << declare("updatedExpAdd",wE+2) << " <= extendedExpInc when (fracAdderResultAdd(" << wF+3 << ")=\'1\') else extendedExp;"<<endl;
+				vhdl << tab << declare("updatedExpAdd",wE+2) << " <= extendedExpInc when (fracAdderResultAdd(" << wF+3 << ")=\'1\') else extendedExp;"<<endl;
 
 		//concatenate exponent with fraction to absorb the possible carry out
-		manageCriticalPath(target->localWireDelay(wE+wF+3) + target->lutDelay());
+				manageCriticalPath(target->localWireDelay(wE+wF+3) + target->lutDelay());
 
-		vhdl<<tab<<declare("expFracAdd",wE+2+wF+1)<<"<= updatedExpAdd & updatedFracAdd;"<<endl;
-		cpexpFrac = getCriticalPath();
+				vhdl<<tab<<declare("expFracAdd",wE+2+wF+1)<<"<= updatedExpAdd & updatedFracAdd;"<<endl;
+				cpexpFrac = getCriticalPath();
 
 
 		//at least in parallel with previous 2 statements
-		setCycleFromSignal("fracGRSAdd");
-		setCriticalPath(cpshiftedFrac);
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+				setCycleFromSignal("fracGRSAdd");
+				setCriticalPath(cpshiftedFrac);
+				manageCriticalPath(target->localWireDelay() + target->lutDelay());
 
-		vhdl<<tab<<declare("stkAdd")<<"<= fracGRSAdd"<<of(1)<<" or fracGRSAdd"<<of(0)<<";"<<endl;
-		vhdl<<tab<<declare("rndAdd")<<"<= fracGRSAdd"<<of(2)<<";"<<endl;
-		vhdl<<tab<<declare("grdAdd")<<"<= fracGRSAdd"<<of(3)<<";"<<endl;
-		vhdl<<tab<<declare("lsbAdd")<<"<= fracGRSAdd"<<of(4)<<";"<<endl;
+				vhdl<<tab<<declare("stkAdd")<<"<= fracGRSAdd"<<of(1)<<" or fracGRSAdd"<<of(0)<<";"<<endl;
+				vhdl<<tab<<declare("rndAdd")<<"<= fracGRSAdd"<<of(2)<<";"<<endl;
+				vhdl<<tab<<declare("grdAdd")<<"<= fracGRSAdd"<<of(3)<<";"<<endl;
+				vhdl<<tab<<declare("lsbAdd")<<"<= fracGRSAdd"<<of(4)<<";"<<endl;
 
 		//decide what to add to the guard bit
-		manageCriticalPath(target->localWireDelay() + 2*target->lutDelay());
+				manageCriticalPath(target->localWireDelay() + 2*target->lutDelay());
 
-		vhdl<<tab<<declare("addToRoundBitAdd")<<"<= (grdAdd and rndAdd) or (grdAdd and (not rndAdd) and lsbAdd) or ((not grdAdd) and rndAdd and stkAdd) or (grdAdd and (not rndAdd) and stkAdd);"<<endl;
+				vhdl<<tab<<declare("addToRoundBitAdd")<<"<= (grdAdd and rndAdd) or (grdAdd and (not rndAdd) and lsbAdd) or ((not grdAdd) and rndAdd and stkAdd) or (grdAdd and (not rndAdd) and stkAdd);"<<endl;
 
 		//round
 
-		if (getCycleFromSignal("expFracAdd") == getCycleFromSignal("addToRoundBitAdd"))
-			setCriticalPath(max(cpexpFrac, getCriticalPath()));
-		else
-			if (syncCycleFromSignal("expFracAdd"))
-				setCriticalPath(cpexpFrac);
+				if (getCycleFromSignal("expFracAdd") == getCycleFromSignal("addToRoundBitAdd"))
+					setCriticalPath(max(cpexpFrac, getCriticalPath()));
+				else
+					if (syncCycleFromSignal("expFracAdd"))
+						setCriticalPath(cpexpFrac);
 
-		inPortMap(ra,"X", "expFracAdd");
-		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
-		inPortMap( ra, "Cin", "addToRoundBitAdd");
-		outPortMap( ra, "R", "RoundedExpFracAdd");
-		vhdl << instance(ra, "roundingAdderAdd");
+					inPortMap(ra,"X", "expFracAdd");
+					inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
+					inPortMap( ra, "Cin", "addToRoundBitAdd");
+					outPortMap( ra, "R", "RoundedExpFracAdd");
+					vhdl << instance(ra, "roundingAdderAdd");
 
-		setCycleFromSignal("RoundedExpFracAdd");
-		setCriticalPath(ra->getOutputDelay("R"));
+					setCycleFromSignal("RoundedExpFracAdd");
+					setCriticalPath(ra->getOutputDelay("R"));
 
 		//possible update to exception bits
 
-		manageCriticalPath(target->localWireDelay(wE>wF?wE:wF));
+					manageCriticalPath(target->localWireDelay(wE>wF?wE:wF));
 
-		vhdl << tab << declare("upExcAdd",2)<<" <= RoundedExpFracAdd"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
-		vhdl << tab << declare("fracRAdd",wF)<<" <= RoundedExpFracAdd"<<range(wF,1)<<";"<<endl;
-		vhdl << tab << declare("expRAdd",wE) <<" <= RoundedExpFracAdd"<<range(wF+wE,wF+1)<<";"<<endl;
+					vhdl << tab << declare("upExcAdd",2)<<" <= RoundedExpFracAdd"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
+					vhdl << tab << declare("fracRAdd",wF)<<" <= RoundedExpFracAdd"<<range(wF,1)<<";"<<endl;
+					vhdl << tab << declare("expRAdd",wE) <<" <= RoundedExpFracAdd"<<range(wF+wE,wF+1)<<";"<<endl;
 
-		manageCriticalPath(target->localWireDelay(4) + 3*target->lutDelay());
+					manageCriticalPath(target->localWireDelay(4) + 3*target->lutDelay());
 
-		vhdl << tab << declare("excRtEffAdd", 2) <<" <= excRtRAdd when (diffSigns=\'0\') else excRtRSub;"<<endl;
+					vhdl << tab << declare("excRtEffAdd", 2) <<" <= excRtRAdd when (diffSigns=\'0\') else excRtRSub;"<<endl;
 
-		vhdl << tab << declare("exExpExcAdd",4) << " <= upExcAdd & excRtEffAdd;"<<endl;
-		vhdl << tab << "with (exExpExcAdd) select "<<endl;
-		vhdl << tab << declare("excRt2Add",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\","<<endl
-		<<tab<<tab<<"\"01\" when \"0001\","<<endl
-		<<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"0101\","<<endl
-		<<tab<<tab<<"\"11\" when others;"<<endl;
+					vhdl << tab << declare("exExpExcAdd",4) << " <= upExcAdd & excRtEffAdd;"<<endl;
+					vhdl << tab << "with (exExpExcAdd) select "<<endl;
+					vhdl << tab << declare("excRt2Add",2) << "<= \"00\" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\","<<endl
+					<<tab<<tab<<"\"01\" when \"0001\","<<endl
+					<<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"0101\","<<endl
+					<<tab<<tab<<"\"11\" when others;"<<endl;
 
-		syncCycleFromSignal("excRt2Add");
-		manageCriticalPath(target->localWireDelay(wE+wF+3) + target->lutDelay());
+					syncCycleFromSignal("excRt2Add");
+					manageCriticalPath(target->localWireDelay(wE+wF+3) + target->lutDelay());
 
-		vhdl<<tab<<declare("excRAdd",2) << " <=  excRt2Add;"<<endl;
+					vhdl<<tab<<declare("excRAdd",2) << " <=  excRt2Add;"<<endl;
 
 		// assign result
-		vhdl<<tab<< declare("computedRAdd",wE+wF) << " <= expRAdd & fracRAdd;"<<endl;
-		vhdl << tab << "Radd <= excRAdd & signRAdd & computedRAdd when (diffSigns=\'0\') else excRSub & signRAdd & computedRSub;"<<endl;
+					vhdl<<tab<< declare("computedRAdd",wE+wF) << " <= expRAdd & fracRAdd;"<<endl;
+					vhdl << tab << "Radd <= excRAdd & signRAdd & computedRAdd when (diffSigns=\'0\') else excRSub & signRAdd & computedRSub;"<<endl;
 
-		double cpAdd = getCriticalPath();
+					double cpAdd = getCriticalPath();
 		//--------------------------------------------------------------------------------------
 
-		if (getCycleFromSignal("computedRAdd") == getCycleFromSignal("computedRSub"))
-			setCriticalPath(max(cpAdd, cpSub));
-		else
-			if (syncCycleFromSignal("computedRSub"))
-				setCriticalPath(cpSub);
+					if (getCycleFromSignal("computedRAdd") == getCycleFromSignal("computedRSub"))
+						setCriticalPath(max(cpAdd, cpSub));
+					else
+						if (syncCycleFromSignal("computedRSub"))
+							setCriticalPath(cpSub);
 
-	}
+					}
 
-	FPAddSub::~FPAddSub() {
-	}
+					FPAddSub::~FPAddSub() {
+					}
 
 
-	void FPAddSub::emulate(TestCase * tc)
-	{
+					void FPAddSub::emulate(TestCase * tc)
+					{
 		/* Get I/O values */
-		mpz_class svX = tc->getInputValue("X");
-		mpz_class svY = tc->getInputValue("Y");
+						mpz_class svX = tc->getInputValue("X");
+						mpz_class svY = tc->getInputValue("Y");
 
 		/* Compute correct value */
-		FPNumber fpx(wEX, wFX), fpy(wEY, wFY);
-		fpx = svX;
-		fpy = svY;
-		mpfr_t x, y, radd, rsub;
-		mpfr_init2(x, 1+wFX);
-		mpfr_init2(y, 1+wFY);
-		mpfr_init2(radd, 1+wFR);
-		mpfr_init2(rsub, 1+wFR);
-		fpx.getMPFR(x);
-		fpy.getMPFR(y);
-		mpfr_add(radd, x, y, GMP_RNDN);
-		mpfr_sub(rsub, x, y, GMP_RNDN);
+						FPNumber fpx(wEX, wFX), fpy(wEY, wFY);
+						fpx = svX;
+						fpy = svY;
+						mpfr_t x, y, radd, rsub;
+						mpfr_init2(x, 1+wFX);
+						mpfr_init2(y, 1+wFY);
+						mpfr_init2(radd, 1+wFR);
+						mpfr_init2(rsub, 1+wFR);
+						fpx.getMPFR(x);
+						fpy.getMPFR(y);
+						mpfr_add(radd, x, y, GMP_RNDN);
+						mpfr_sub(rsub, x, y, GMP_RNDN);
 
 		// Set outputs
-		FPNumber  fpradd(wER, wFR, radd);
-		mpz_class svRadd = fpradd.getSignalValue();
-		tc->addExpectedOutput("Radd", svRadd);
+						FPNumber  fpradd(wER, wFR, radd);
+						mpz_class svRadd = fpradd.getSignalValue();
+						tc->addExpectedOutput("Radd", svRadd);
 
-		FPNumber  fprsub(wER, wFR, rsub);
-		mpz_class svRsub = fprsub.getSignalValue();
-		tc->addExpectedOutput("Rsub", svRsub);
+						FPNumber  fprsub(wER, wFR, rsub);
+						mpz_class svRsub = fprsub.getSignalValue();
+						tc->addExpectedOutput("Rsub", svRsub);
 
 		// clean up
-		mpfr_clears(x, y, radd, rsub, NULL);
-	}
+						mpfr_clears(x, y, radd, rsub, NULL);
+					}
 
 
 
 
 
-	void FPAddSub::buildStandardTestCases(TestCaseList* tcl){
-		TestCase *tc;
+					void FPAddSub::buildStandardTestCases(TestCaseList* tcl){
+						TestCase *tc;
 
 		// Regression tests
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
+						tc = new TestCase(this);
+						tc->addFPInput("X", 1.0);
+						tc->addFPInput("Y", -1.0);
+						emulate(tc);
+						tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::plusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
+						tc = new TestCase(this);
+						tc->addFPInput("X", 1.0);
+						tc->addFPInput("Y", FPNumber::plusDirtyZero);
+						emulate(tc);
+						tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
+						tc = new TestCase(this);
+						tc->addFPInput("X", 1.0);
+						tc->addFPInput("Y", FPNumber::minusDirtyZero);
+						emulate(tc);
+						tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
+						tc = new TestCase(this);
+						tc->addFPInput("X", FPNumber::plusInfty);
+						tc->addFPInput("Y", FPNumber::minusInfty);
+						emulate(tc);
+						tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
+						tc = new TestCase(this);
+						tc->addFPInput("X", FPNumber::plusInfty);
+						tc->addFPInput("Y", FPNumber::plusInfty);
+						emulate(tc);
+						tcl->add(tc);
 
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
+						tc = new TestCase(this);
+						tc->addFPInput("X", FPNumber::minusInfty);
+						tc->addFPInput("Y", FPNumber::minusInfty);
+						emulate(tc);
+						tcl->add(tc);
 
-	}
+					}
 
 
 
-	TestCase* FPAddSub::buildRandomTestCase(int i){
+					TestCase* FPAddSub::buildRandomTestCase(int i){
 
-		TestCase *tc;
-		mpz_class x,y;
-		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
-		mpz_class negative  = mpz_class(1)<<(wE+wF);
+						TestCase *tc;
+						mpz_class x,y;
+						mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
+						mpz_class negative  = mpz_class(1)<<(wE+wF);
 
-		tc = new TestCase(this);
+						tc = new TestCase(this);
 		/* Fill inputs */
 		if ((i & 7) == 0) {// cancellation, same exponent
 			mpz_class e = getLargeRandom(wE);
@@ -637,14 +637,48 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 
 	void FPAddSub::registerFactory(){
 		UserInterface::add("FPAddSub", // name
-											 "A fused floating-point adder and subtracter, computes both a+b and a-b.",
+			"A fused floating-point adder and subtracter, computes both a+b and a-b.",
 											 "BasicFloatingPoint", // categories
 											 "",
 											 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits;",
+											 wF(int): mantissa size in bits;",
 											 "",
-											 FPAddSub::parseArguments
+											 FPAddSub::parseArguments,
+											 FPAddSub::nextTestState
 											 ) ;
 
+	}
+
+	void FPAddSub::nextTestState(TestState * previousTestState)
+	{
+		static vector<vector<pair<string,string>>> testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(previousTestState->getIndex() == 0)
+		{
+			previousTestState->setTestBenchSize(1000);
+
+			for(int i = 5; i<53; i++)
+			{
+				int nbByteWE = 6+(i/10);
+				while(nbByteWE>i)
+				{
+					nbByteWE -= 2;
+				}
+				paramList.clear();
+				paramList.push_back(make_pair("wF",to_string(i)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+				testStateList.push_back(paramList);
+			}
+			previousTestState->setTestsNumber(testStateList.size());
+		}
+
+		vector<pair<string,string>>::iterator itVector;
+		int index = previousTestState->getIndex();
+
+		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+		{
+			previousTestState->changeValue((*itVector).first,(*itVector).second);
+		}
 	}
 }

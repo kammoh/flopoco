@@ -18,6 +18,9 @@ extern "C"
 #include "FixSOPC.hpp"
 
 
+/* Test with 
+./flopoco FixIIR coeffb="1:2:3" coeffa="1/2:1/3" lsbIn=-12 lsbOut=-12
+*/
 
 using namespace std;
 
@@ -34,9 +37,9 @@ namespace flopoco {
 		ostringstream name;
 		name << "FixIIR";
 		setNameWithFreqAndUID( name.str() );
-
+		
 		m = coeffa.size();
-		n = coeffb.size();
+		n = coeffb.size();  
 
 		addInput("X", 1-lsbIn, true);
 
@@ -78,13 +81,12 @@ namespace flopoco {
 		}
 
 
-		REPORT(INFO, "H=" << H);
 		
 		// TODO here compute H if it is not provided
 		if(H==0) {
 #if HAVE_WCPG
 
-			REPORT(INFO, "computing worst-case peak gain");
+			REPORT(INFO, "H not provided: computing worst-case peak gain");
 
 #if 1
 			if (!WCPG_tf(&H, coeffb_d, coeffa_d, n, m))
@@ -95,6 +97,9 @@ namespace flopoco {
 #else 
 			THROWERROR("WCPG was not found (see cmake output), cannot compute worst-case peak gain H. Either provide H, or compile FloPoCo with WCPG");
 #endif
+		}
+		else {
+			REPORT(INFO, "H=" << H);
 		}
 		
 		// guard bits for a faithful result
@@ -133,7 +138,7 @@ namespace flopoco {
 		ShiftReg *outputShiftReg = new ShiftReg(getTarget(), 1-lsbOutSOPC, m);
 		addSubComponent(outputShiftReg);
 		inPortMap(outputShiftReg, "X", "YinternalLoopback");
-		for(int i = 0; i<n; i++) {
+		for(int i = 0; i<m; i++) {
 			outPortMap(outputShiftReg, join("Xd", i), join("Y", i));
 		}
 		vhdl << instance(outputShiftReg, "outputShiftReg");

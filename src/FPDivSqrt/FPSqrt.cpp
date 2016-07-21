@@ -30,38 +30,38 @@
 #include "Operator.hpp"
 #include "FPSqrt.hpp"
 
-using namespace std;
+  using namespace std;
 
-namespace flopoco{
+  namespace flopoco{
 
 #define DEBUGVHDL 0
 	//#define LESS_DSPS
 
-	FPSqrt::FPSqrt(Target* target, int wE, int wF) :
-		Operator(target), wE(wE), wF(wF) {
+  	FPSqrt::FPSqrt(Target* target, int wE, int wF) :
+  	Operator(target), wE(wE), wF(wF) {
 
-		ostringstream name;
+  		ostringstream name;
 
-		name<<"FPSqrt_"<<wE<<"_"<<wF;
+  		name<<"FPSqrt_"<<wE<<"_"<<wF;
 
-		uniqueName_ = name.str();
+  		uniqueName_ = name.str();
 
 		// -------- Parameter set up -----------------
 
-		addFPInput ("X", wE, wF);
-		addFPOutput("R", wE, wF);
+  		addFPInput ("X", wE, wF);
+  		addFPOutput("R", wE, wF);
 
 
 		// Digit-recurrence implementation recycled from FPLibrary
 		//cout << "   DDDD" <<  target->adderDelay(10) << "  " <<  target->localWireDelay() << "  " << target->lutDelay();
-		vhdl << tab << declare("fracX", wF) << " <= X" << range(wF-1, 0) << "; -- fraction"  << endl;
-		vhdl << tab << declare("eRn0", wE) << " <= \"0\" & X" << range(wE+wF-1, wF+1) << "; -- exponent" << endl;
-		vhdl << tab << declare("xsX", 3) << " <= X"<< range(wE+wF+2, wE+wF) << "; -- exception and sign" << endl;
+  		vhdl << tab << declare("fracX", wF) << " <= X" << range(wF-1, 0) << "; -- fraction"  << endl;
+  		vhdl << tab << declare("eRn0", wE) << " <= \"0\" & X" << range(wE+wF-1, wF+1) << "; -- exponent" << endl;
+  		vhdl << tab << declare("xsX", 3) << " <= X"<< range(wE+wF+2, wE+wF) << "; -- exception and sign" << endl;
 
-		vhdl << tab << declare("eRn1", wE) << " <= eRn0 + (\"00\" & " << rangeAssign(wE-3, 0, "'1'") << ") + X(" << wF << ");" << endl;
+  		vhdl << tab << declare("eRn1", wE) << " <= eRn0 + (\"00\" & " << rangeAssign(wE-3, 0, "'1'") << ") + X(" << wF << ");" << endl;
 
-		vhdl << tab << declare(join("w",wF+3), wF+4) << " <= \"111\" & fracX & \"0\" when X(" << wF << ") = '0' else" << endl
-		     << tab << "       \"1101\" & fracX;" << endl;
+  		vhdl << tab << declare(join("w",wF+3), wF+4) << " <= \"111\" & fracX & \"0\" when X(" << wF << ") = '0' else" << endl
+  		<< tab << "       \"1101\" & fracX;" << endl;
 		//		vhdl << tab << declare(join("d",wF+3)) << " <= '0';" << endl;
 		//		vhdl << tab << declare(join("s",wF+3)) << " <= '1';" << endl;
 
@@ -83,36 +83,36 @@ namespace flopoco{
 		  vhdl << tab << declare(xi,wF+5) << " <= " << wip << " & \"0\";" << endl;
 		  vhdl << tab << declare(ds,step+3) << " <=  \"0\" & ";
 		  if (step>1)
-		    vhdl 	<< sip << " & ";
+		  	vhdl 	<< sip << " & ";
 		  vhdl << " (not " << di << ") & " << di << " & \"1\";" << endl;
 		  vhdl << tab << declare(xh,step+3) << " <= " << xi << range(wF+4, wF+2-step) << ";" << endl;
 		  vhdl << tab << "with " << di << " select" << endl
-		       << tab << tab <<  declare(wh, step+3) << " <= " << xh << " - " << ds << " when '0'," << endl
-		       << tab << tab << "      " << xh << " + " << ds << " when others;" << endl;
+		  << tab << tab <<  declare(wh, step+3) << " <= " << xh << " - " << ds << " when '0'," << endl
+		  << tab << tab << "      " << xh << " + " << ds << " when others;" << endl;
 		  vhdl << tab << declare(wi, wF+4) << " <= " << wh << range(step+1,0);
 		  if(step <= wF+1)
-		    vhdl << " & " << xi << range(wF+1-step, 0) << ";" << endl;
+		  	vhdl << " & " << xi << range(wF+1-step, 0) << ";" << endl;
 		  else
-		    vhdl << ";" << endl;
+		  	vhdl << ";" << endl;
 		  vhdl << tab << declare(si, step) << " <= ";
 		  if(step==1)
-		    vhdl << "\"\" & (not " << di << ") ;"<< endl;
+		  	vhdl << "\"\" & (not " << di << ") ;"<< endl;
 		  else
 		    vhdl << sip /*<< range(step-1,1)*/ << " & not " << di << ";"<< endl;
 
 		  // Pipeline management
-		  double stageDelay= target->adderDelay(step) + target->localWireDelay() + 2*target->lutDelay();
+		  	double stageDelay= target->adderDelay(step) + target->localWireDelay() + 2*target->lutDelay();
 		  delay += stageDelay;
 		  if (UserInterface::verbose>=2) {
-		    cout << "estimated delay for stage "<< step << " is " << stageDelay << "s" << endl;
-		    cout << "   cumulated delay would be " << delay << "s,   target is " << 1/target->frequency()<< endl;
+		  	cout << "estimated delay for stage "<< step << " is " << stageDelay << "s" << endl;
+		  	cout << "   cumulated delay would be " << delay << "s,   target is " << 1/target->frequency()<< endl;
 		  }
 		  if(delay > 1/target->frequency()) {
 		    // insert a pipeline register and reset the cumulated delay
-		    nextCycle();
-		    delay= target->ffDelay() + stageDelay;
-		    if (UserInterface::verbose>=2)
-		      cout << "----inserted a register level" << endl;
+		  	nextCycle();
+		  	delay= target->ffDelay() + stageDelay;
+		  	if (UserInterface::verbose>=2)
+		  		cout << "----inserted a register level" << endl;
 		  }
 		}
 		vhdl << tab << declare("d0") << " <= w1(" << wF+3 << ") ;" << endl;
@@ -121,8 +121,8 @@ namespace flopoco{
 		// end of component FPSqrt_Sqrt in fplibrary
 		vhdl << tab << "-- normalisation of the result, removing leading 1" << endl;
 		vhdl << tab <<  "with fR(" << wF+3 << ") select" << endl
-		     << tab << tab << declare("fRn1", wF+2) << " <= fR" << range(wF+2, 2) << " & (fR(1) or fR(0)) when '1'," << endl
-		     << tab << tab << "        fR" <<range(wF+1, 0) << "                    when others;" << endl;
+		<< tab << tab << declare("fRn1", wF+2) << " <= fR" << range(wF+2, 2) << " & (fR(1) or fR(0)) when '1'," << endl
+		<< tab << tab << "        fR" <<range(wF+1, 0) << "                    when others;" << endl;
 		vhdl << tab << declare("round") << " <= fRn1(1) and (fRn1(2) or fRn1(0)) ; -- round  and (lsb or sticky) : that's RN, tie to even" << endl;
 
 		nextCycle();
@@ -132,43 +132,43 @@ namespace flopoco{
 
 		vhdl << tab << "-- sign and exception processing" << endl;
 		vhdl << tab <<  "with xsX select" << endl
-		     << tab << tab << declare("xsR", 3) << " <= \"010\"  when \"010\",  -- normal case" << endl
-		     << tab << tab <<  "       \"100\"  when \"100\",  -- +infty" << endl
-		     << tab << tab <<  "       \"000\"  when \"000\",  -- +0" << endl
-		     << tab << tab <<  "       \"001\"  when \"001\",  -- the infamous sqrt(-0)=-0" << endl
-		     << tab << tab <<  "       \"110\"  when others; -- return NaN" << endl;
+		<< tab << tab << declare("xsR", 3) << " <= \"010\"  when \"010\",  -- normal case" << endl
+		<< tab << tab <<  "       \"100\"  when \"100\",  -- +infty" << endl
+		<< tab << tab <<  "       \"000\"  when \"000\",  -- +0" << endl
+		<< tab << tab <<  "       \"001\"  when \"001\",  -- the infamous sqrt(-0)=-0" << endl
+		<< tab << tab <<  "       \"110\"  when others; -- return NaN" << endl;
 
 		vhdl << tab << "R <= xsR & Rn2; " << endl;
 	}
 
-  FPSqrt::~FPSqrt() {
-  }
+	FPSqrt::~FPSqrt() {
+	}
 
 
 
 
 
 
-		void FPSqrt::emulate(TestCase * tc)
-		{
+	void FPSqrt::emulate(TestCase * tc)
+	{
 			/* Get I/O values */
-			mpz_class svX = tc->getInputValue("X");
+		mpz_class svX = tc->getInputValue("X");
 
 			/* Compute correct value */
-			FPNumber fpx(wE, wF);
-			fpx = svX;
-			mpfr_t x, r;
-			mpfr_init2(x, 1+wF);
-			mpfr_init2(r, 1+wF);
-			fpx.getMPFR(x);
+		FPNumber fpx(wE, wF);
+		fpx = svX;
+		mpfr_t x, r;
+		mpfr_init2(x, 1+wF);
+		mpfr_init2(r, 1+wF);
+		fpx.getMPFR(x);
 
-			if(correctRounding) {
-				mpfr_sqrt(r, x, GMP_RNDN);
-				FPNumber  fpr(wE, wF, r);
+		if(correctRounding) {
+			mpfr_sqrt(r, x, GMP_RNDN);
+			FPNumber  fpr(wE, wF, r);
 				/* Set outputs */
-				mpz_class svr= fpr.getSignalValue();
-				tc->addExpectedOutput("R", svr);
-			}
+			mpz_class svr= fpr.getSignalValue();
+			tc->addExpectedOutput("R", svr);
+		}
 			else { // faithful rounding
 				mpfr_sqrt(r, x, GMP_RNDU);
 				FPNumber  fpru(wE, wF, r);
@@ -219,14 +219,49 @@ namespace flopoco{
 
 		void FPSqrt::registerFactory(){
 			UserInterface::add("FPSqrt", // name
-												 "A correctly rounded floating-point square root function.",
+				"A correctly rounded floating-point square root function.",
 												 "BasicFloatingPoint", // categories
 												 "",
 												 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits",
+												 wF(int): mantissa size in bits",
 												 "",
-												 FPSqrt::parseArguments
+												 FPSqrt::parseArguments,
+												 FPSqrt::nextTestState
 												 ) ;
 
 		}
+
+		void FPSqrt::nextTestState(TestState * previousTestState)
+		{
+			static vector<vector<pair<string,string>>> testStateList;
+			vector<pair<string,string>> paramList;
+
+			if(previousTestState->getIndex() == 0)
+			{
+				previousTestState->setTestBenchSize(1000);
+
+				for(int i = 5; i<53; i++)
+				{
+					int nbByteWE = 6+(i/10);
+					while(nbByteWE>i)
+					{
+						nbByteWE -= 2;
+					}
+					paramList.clear();
+					paramList.push_back(make_pair("wF",to_string(i)));
+					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+					testStateList.push_back(paramList);
+				}
+				previousTestState->setTestsNumber(testStateList.size());
+			}
+
+			vector<pair<string,string>>::iterator itVector;
+			int index = previousTestState->getIndex();
+
+			for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+			{
+				previousTestState->changeValue((*itVector).first,(*itVector).second);
+			}
+		}
 	}
+	

@@ -60,6 +60,9 @@ namespace flopoco {
 
 		static void registerFactory();
 
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
+
 	protected:
 		/**
 		* Updates the parameters needed of architecture implementation: wIn is taken from class attributes

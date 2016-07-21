@@ -169,9 +169,6 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 											 ) ;
 	}
 
-
-
-
 	void BasicPolyApprox::buildApproxFromTargetAccuracy(double targetAccuracy, int addGuardBits)
 	{
 		// a few constant objects

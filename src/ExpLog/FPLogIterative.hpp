@@ -79,12 +79,12 @@ namespace flopoco{
 		/**Overloading the function of Operator with a function that tests only positive FP numbers (full range)*/
 		TestCase* buildRandomTestCase(int i);
 
-
-		static	void nextTestState(TestState * previousTestState);
-
 		/** Factory method */
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 		static void registerFactory();
+
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
 
 		int wE, wF;
 

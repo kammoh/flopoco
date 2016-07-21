@@ -43,6 +43,9 @@ namespace flopoco{
 		static OperatorPtr parseArguments(Target *target, vector<string> &args);
 		static void registerFactory();
 
+		/** Create the next TestState based on the previous TestState */
+		static void nextTestState(TestState * previousTestState);
+
 	private:
 		static void plotPDDiagram(int delta, int t, int radix, int digitSet);
 		static bool checkDistrib(int delta, int t, int radix, int digitSet);

@@ -15,7 +15,7 @@ namespace flopoco
 		testParam.clear();
 		testsNumber = 0;
 		index = 0;
-		testBenchSize = 100;
+		testBenchSize = 1000;
 	}
 
 	void TestState::changeValue(string name, string value)
@@ -92,7 +92,7 @@ namespace flopoco
 	{
 		index = 0;
 		testsNumber = 0;
-		testBenchSize = 100;
+		testBenchSize = 1000;
 	}
 
 };
