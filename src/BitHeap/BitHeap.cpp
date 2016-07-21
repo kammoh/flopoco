@@ -1444,7 +1444,20 @@ namespace flopoco
 			{
 					if(i < possibleCompressors.size())
 					{
-						op->addToGlobalOpList(possibleCompressors[i]);
+						//look for the compressor on the global operator list
+						//	if it isn't already present, then add it
+						bool compressorPresent = false;
+
+						for(size_t j=0; j<UserInterface::globalOpList.size(); j++)
+							if(UserInterface::globalOpList[j]->getName() == possibleCompressors[i]->getName()){
+								compressorPresent = true;
+								break;
+							}
+
+						if(!compressorPresent)
+							op->addToGlobalOpList(possibleCompressors[i]);
+						else
+							op->addVirtualSubComponent(possibleCompressors[i]);
 					}
 					else
 						usedCompressors[i] = false;
