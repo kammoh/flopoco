@@ -60,6 +60,7 @@ namespace flopoco{
 
 	private:
 		string paramFileName;        /**< the name of the file containing the parameters for the SIF */
+		string testsFileName;        /**< the name of the file containing the predefined tests for the SIF */
 
 		int n_u;                     /**< the size of the u vector (the number of inputs) */
 		int n_t;                     /**< the size of the t vector (the number of temporary variables) */

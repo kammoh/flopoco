@@ -274,10 +274,74 @@ namespace flopoco {
 
 
 	void FixSIF::emulate(TestCase * tc){
-
+		THROWERROR("Error: emulate has not yet been implemented for the SIF operator. " <<
+				"For now, there is only support for pre-generated tests.");
 	};
 
-	void FixSIF::buildStandardTestCases(TestCaseList* tcl){};
+	void FixSIF::buildStandardTestCases(TestCaseList* tcl){
+		int nbTests = 0;
+
+		if(testsFileName == ""){
+			THROWERROR("Error: no test file has been specified");
+		}else{
+			ifstream file(paramFileName);
+			string line, tempStr;
+
+			if(file.is_open())
+			{
+				//read the number of tests in the file
+				if(getline(file, line).rdstate() != ios::goodbit){
+					THROWERROR("Error: parseCoeffFile: error while reading the value of n_x");
+				}else{
+					nbTests = stoi(line);
+				}
+				for(int i=0; i<nbTests; i++)
+				{
+					vector<string> testInputVector;
+					vector<mpfr_t*> testInputsMpfr;
+					vector<string> testOutputVector;
+					vector<mpfr_t*> testOutputsMpfr;
+
+					//read the inputs
+					if(getline(file, line).rdstate() != ios::goodbit){
+						THROWERROR("Error: buildStandardTestCases: error while reading the values of the inputs from the tests file");
+					}
+					//split the line into a vector of values
+					for(int j=0; j<n_u; j++)
+					{
+						//split it to a vector of strigs
+						stringstream ss(line);
+
+						while(ss >> tempStr)
+						{
+							testInputVector.push_back(tempStr);
+						}
+					}
+					//parse the inputs with Sollya
+					for(int j=0; j<n_u; j++)
+					{
+						// parse the coeffs from the string, with Sollya parsing
+						sollya_obj_t node;
+						mpfr_t tmpMpfr;
+
+						node = sollya_lib_parse_string(testInputVector[j].c_str());
+						// If conversion did not succeed (i.e. parse error)
+						if(node == 0)
+							THROWERROR(srcFileName << ": Unable to parse string " << testInputVector[j] << " as a numeric constant");
+
+						mpfr_init2(tmpMpfr, 10000);
+						sollya_lib_get_constant(tmpMpfr, node);
+						sollya_lib_clear_obj(node);
+						testInputsMpfr.push_back(&tmpMpfr);
+					}
+				}
+			}else{
+				THROWERROR("Error: failed to open the tests file " << testsFileName);
+			}
+		}
+
+
+	};
 
 
 
