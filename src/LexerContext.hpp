@@ -38,6 +38,8 @@ public:
 
 	LexMode lexingMode;
 
+	bool isLhsSet;
+
 public:
 	LexerContext(istream* is = &cin, ostream* os = &cout) {
 		init_scanner();
@@ -49,6 +51,8 @@ public:
 		extraRhsNames.clear();
 		dependenceTable.clear();
 		lexingMode = LexMode::unset;
+
+		isLhsSet = false;
 	}
 
 	//these methods are generated in VHDLLexer.cpp 
