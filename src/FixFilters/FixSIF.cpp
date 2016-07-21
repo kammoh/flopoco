@@ -127,8 +127,6 @@ namespace flopoco {
 		}
 		addComment("---------------------------------------------------------");
 
-
-
 	};
 
 
@@ -224,6 +222,8 @@ namespace flopoco {
 	};
 
 	void FixSIF::buildStandardTestCases(TestCaseList* tcl){};
+
+
 
 	OperatorPtr FixSIF::parseArguments(Target *target, vector<string> &args) {
 		string paramFile;
