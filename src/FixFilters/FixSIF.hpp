@@ -2,7 +2,10 @@
 #define FIXSIF_HPP
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "gmp.h"
 #include "mpfr.h"
@@ -25,11 +28,20 @@ namespace flopoco{
 	class FixSIF : public Operator {
 
 	public:
-		/** @brief Constructor ; you must use bitheap in case of negative coefficient*/
+		/**
+		 * Constructor of the FixSIF
+		 */
 		FixSIF(Target* target, string paramFileName);
 
-		/** @brief Destructor */
+		/**
+		 * Destructor of the FixSIF
+		 */
 		~FixSIF();
+
+		/**
+		 * Parse the file containing the parameters for the SIF
+		 */
+		void parseCoeffFile();
 
 		// Below all the functions needed to test the operator
 		/**

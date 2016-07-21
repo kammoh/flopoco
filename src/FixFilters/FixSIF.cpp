@@ -18,6 +18,7 @@ namespace flopoco {
 		setNameWithFreqAndUID( name.str() );
 
 		//TODO: initialize all the parameters of the constructor from the file given as parameter
+		parseCoeffFile();
 
 		//create the u signals
 		for(int i=0; i<n_u; i++)
@@ -100,7 +101,7 @@ namespace flopoco {
 
 			setCycle(1, true);
 			vhdl << tab << "X_" << i << " <= X_" << i << "_next;" << endl;
-			setCycle(0), true;
+			setCycle(0, true);
 		}
 		addComment("---------------------------------------------------------");
 
@@ -135,6 +136,85 @@ namespace flopoco {
 	FixSIF::~FixSIF(){
 
 	};
+
+
+
+	void FixSIF::parseCoeffFile()
+	{
+		ifstream file(paramFileName);
+		string line, tempStr;
+
+		if(file.is_open())
+		{
+			//read n_u
+			getline(file, line);
+			n_u = stoi(line);
+			//read n_t
+			getline(file, line);
+			n_t = stoi(line);
+			//read n_x
+			getline(file, line);
+			n_x = stoi(line);
+			//read n_y
+			getline(file, line);
+			n_y = stoi(line);
+			//read the msb and lsb vector for u
+			for(int i=0; i<n_u; i++)
+			{
+				//read a line of the matrix
+				getline(file, line);
+				//extract the msb and lsb
+				m_u.push_back(stoi(line.substr(0, line.find(' '))));
+				l_u.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
+			}
+			//read the msb and lsb vector for t
+			for(int i=0; i<n_t; i++)
+			{
+				//read a line of the matrix
+				getline(file, line);
+				//extract the msb and lsb
+				m_t.push_back(stoi(line.substr(0, line.find(' '))));
+				l_t.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
+			}
+			//read the msb and lsb vector for x
+			for(int i=0; i<n_x; i++)
+			{
+				//read a line of the matrix
+				getline(file, line);
+				//extract the msb and lsb
+				m_x.push_back(stoi(line.substr(0, line.find(' '))));
+				l_x.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
+			}
+			//read the msb and lsb vector for y
+			for(int i=0; i<n_y; i++)
+			{
+				//read a line of the matrix
+				getline(file, line);
+				//extract the msb and lsb
+				m_y.push_back(stoi(line.substr(0, line.find(' '))));
+				l_y.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
+			}
+			//read the matrix Z
+			for(int i=0; i<n_t+n_x+n_y; i++)
+			{
+				//read a line of the matrix
+				getline(file, line);
+				//split it to a vector of strigs
+				vector<string> matLine;
+				stringstream ss(line);
+
+				while(ss >> tempStr)
+				{
+					matLine.push_back(tempStr);
+				}
+				Z.push_back(matLine);
+			}
+
+			file.close();
+		}else{
+			THROWERROR("Error: FixSIF: unable to open the parameter file!");
+		}
+	}
 
 
 
