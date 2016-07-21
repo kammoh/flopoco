@@ -1,0 +1,114 @@
+User Guide :
+
+Requirements: 
+
+	- node.js >= 0.10
+	- git client >= 1.9
+
+Create and go into a directory for NCI. Or do :
+
+	mkdir ~/nci && cd ~/nci
+
+Install all required packages from npm : 
+
+	npm install nci nci-classic-ui nci-mail-notification nci-projects-reloader nci-rest-api-server nci-scheduler nci-static-server nci-yaml-reader leveldown forever
+
+Create data and projects dirs :
+
+	mkdir data data/projects
+
+Configure Server :
+
+	create data/preload.json (to apply yaml reader for server config):
+
+		{
+		    "plugins": ["nci-yaml-reader"]
+		}
+
+	create server config data/config.yaml:
+
+		plugins:
+		    - nci-projects-reloader
+		    - nci-static-server
+		    - nci-rest-api-server
+		    - nci-mail-notification
+		    - nci-scheduler
+		    #ui better be last plugin
+		    - nci-classic-ui
+
+		nodes:
+		    - type: local
+		      #allow maximum 3 parallel builds
+		      maxExecutorsCount: 3
+
+		http:
+		    host: 127.0.0.1
+		    port: 3000
+		    url: http://127.0.0.1:3000
+
+		    static:
+		        #this settings will be consumed by static server plugin 
+		        locations:
+		            #serve static for ui plugin
+		            - url: /favicon.ico
+		              root: node_modules/nci-classic-ui/static/
+		            - url: !!js/regexp ^/(js|css|fonts|images)/
+		              root: node_modules/nci-classic-ui/static/
+		            #serve project workspaces via http, remove lines
+		            #below if don`t need/want that
+		            - url: !!js/regexp ^/projects/(\w|-)+/workspace/
+		              root: data/
+
+		storage:
+		    #use leveldown as db backend
+		    backend: leveldown
+
+
+		notify:
+		    #configure account for sending notifications
+		    #this settings will be consumed by mail notification plugin
+		    mail:
+		        host: smtp.gmail.com
+		        port: 587
+		        auth:
+		            user: your_sender_login@gmail.com
+		            pass: your_sender_password
+
+Configure Project :
+
+	Create project dir first:
+
+		mkdir data/projects/flopoco
+
+	Then create project config data/projects/flopoco/config.yaml:
+
+		scm:
+		    type: git
+		    repository: https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git
+		    rev: master
+
+		buildEvery:
+		    #build project every 120 minutes
+		    time: "0 */120 * * * *"
+		    withScmChangesOnly: false
+
+		#notify when build fails or build status changes (according to previous status)
+		notify:
+		    on:
+		        - error
+		        - change
+		    to:
+		        mail:
+		            - your_mail@example.com
+
+		steps:
+		    - name: test
+		      cmd: cmake . && make && ./flopoco AutoTest Operator=All 
+
+Start the server:
+
+	node_modules/.bin/forever start -l `pwd`/app.log -a node_modules/.bin/nci
+		OR
+	node_modules/.bin/nci
+
+Explore web interface by navigate to http://127.0.0.1:3000 in browser
