@@ -93,11 +93,14 @@ namespace flopoco {
 
 			REPORT(INFO, "H not provided: computing worst-case peak gain");
 
-#if 1
 			if (!WCPG_tf(&H, coeffb_d, coeffa_d, n, m))
 				THROWERROR("Could not compute WCPG");
 			REPORT(INFO, "Worst-case peak gain is H=" << H);
-#endif
+
+			double one_d[1] = {1.0}; 
+			if (!WCPG_tf(&Heps, one_d, coeffa_d, n, m))
+				THROWERROR("Could not compute WCPG");
+			REPORT(INFO, "Error amplification worst-case peak gain is Heps=" << Heps);
 			
 #else 
 			THROWERROR("WCPG was not found (see cmake output), cannot compute worst-case peak gain H. Either provide H, or compile FloPoCo with WCPG");
@@ -108,9 +111,9 @@ namespace flopoco {
 		}
 		
 		// guard bits for a faithful result
-		g= intlog2(2*H*(n+m)); // see the paper
+		g= intlog2(2*Heps*(n+m)); // see the paper
 		int lsbExt = lsbOut-g;
-		msbOut = ceil(log2(H)); 
+		msbOut = ceil(log2(H)); // see the paper
 		REPORT(INFO, "g=" << g << " so we ask for a SOPC faithful to lsbExt=" << lsbExt);
 		REPORT(INFO, "msbOut=" << msbOut);
 
@@ -261,13 +264,19 @@ namespace flopoco {
 		int wO = msbOut-lsbOut+1;
 		mpz_class rdz, ruz;
 		mpfr_get_z (rdz.get_mpz_t(), s, GMP_RNDD); 					// there can be a real rounding here
+#if 1 // to unplug the conversion that fails to see if it diverges further
 		rdz=signedToBitVector(rdz, wO);
 		tc->addExpectedOutput ("R", rdz);
 
 		mpfr_get_z (ruz.get_mpz_t(), s, GMP_RNDU); 					// there can be a real rounding here
 		ruz=signedToBitVector(ruz, wO);
 		tc->addExpectedOutput ("R", ruz);
-
+#endif
+#if 1 // debug: with this we observe if the simulation diverges
+		double d =  mpfr_get_d(s, GMP_RNDD);
+		cout << "log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
+#endif
+		
 		mpfr_clears (x, t, s, NULL);
 
 	};
