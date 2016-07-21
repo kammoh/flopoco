@@ -81,7 +81,7 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_next"));
 			}
 			for(int j=0; j<n_u; j++) {
-				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
+				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
 			}
 			//connect the output
 			outPortMap(fixSOPC, "R", join("T_", i), false);
@@ -96,7 +96,7 @@ namespace flopoco {
 		addComment("---------------  SOPCs for the X signals  ---------------");
 		for(int i=0; i<n_x; i++){
 			addComment(join("creating the sum of products for X_", i));
-			//create the SOPC specific to this t
+			//create the SOPC specific to this x
 			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_x[i], l_x[i], Z[n_t+i], -1); // -1 means: faithful
 			fixSOPC->setCombinatorial();
 			addSubComponent(fixSOPC);
@@ -108,7 +108,7 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
 			}
 			for(int j=0; j<n_u; j++) {
-				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
+				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
 			}
 			outPortMap(fixSOPC, "R", join("X_", i, "_next"), false);
 			vhdl << instance(fixSOPC, join("fixSOPC_X_", i)) << endl;
@@ -131,8 +131,8 @@ namespace flopoco {
 		addComment("---------------  SOPCs for the Y signals  ---------------");
 		for(int i=0; i<n_y; i++){
 			addComment(join("creating the sum of products for Y_", i));
-			//create the SOPC specific to this t
-			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_x[i], l_x[i], Z[n_t+n_x+i], -1); // -1 means: faithful
+			//create the SOPC specific to this y
+			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_y[i], l_y[i], Z[n_t+n_x+i], -1); // -1 means: faithful
 			fixSOPC->setCombinatorial();
 			addSubComponent(fixSOPC);
 			//connect the inputs of the SOPC
@@ -143,7 +143,7 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_next"));
 			}
 			for(int j=0; j<n_u; j++) {
-				inPortMap(fixSOPC, join("X",n_t+n_u+j), join("U_", j));
+				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
 			}
 			outPortMap(fixSOPC, "R", join("Y_", i), false);
 			vhdl << instance(fixSOPC, join("fixSOPC_Y_", i)) << endl;
