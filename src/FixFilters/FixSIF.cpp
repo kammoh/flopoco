@@ -233,12 +233,13 @@ namespace flopoco {
 	}
 
 
+
 	void FixSIF::registerFactory(){
 		UserInterface::add("FixSIF", // name
 				"A fix-point SIF implementation.",
 				"FiltersEtc", // categories
 				"",
-				"",
+				"paramFileName(string): the name of the file containing the parameters for the SIF",
 				"",
 				FixSIF::parseArguments
 		) ;
