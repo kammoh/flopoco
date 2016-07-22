@@ -252,7 +252,7 @@ namespace flopoco {
 		}
 		mpfr_set(yHistory[(currentIndex  +0)%(m+2)], s, GMP_RNDN);
 
-#if 1 // debugging the emulate
+#if 0 // debugging the emulate
 		cout << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
 		cout << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
 		for (int i=0; i< n; i++)		{
