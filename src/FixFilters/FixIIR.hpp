@@ -39,8 +39,8 @@ namespace flopoco{
 		vector<string> coeffa;			/**< the a_i coefficients as strings */
 		double H;						/**< Worst case peak gain of this filter */
 		double Heps;						/**< Worst case peak gain of the error filter */
-		int n;							/**< number of taps on the numerator */
-		int m;							/**< number of taps on the denominator */
+		uint32_t n;							/**< number of taps on the numerator */
+		uint32_t m;							/**< number of taps on the denominator */
 		int g;							/**< number of guard bits used for the IIR -- more are used inside the SOPC */
 
 	private:
@@ -53,7 +53,7 @@ namespace flopoco{
 		double* coeffb_d;           /**< version of coeffb as C-style arrays of double, because WCPG needs it this way */
 		double* coeffa_d;           /**< version of coeffa as C-style arrays of double, because WCPG needs it this way */
 
-		uint32_t currentIndex;       // used for round-robin access to the history 
+		uint64_t currentIndex;       // used for round-robin access to the history 
 
 
 	};
