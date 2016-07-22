@@ -17,6 +17,7 @@ namespace flopoco {
 		name << "FixSIF";
 		setNameWithFreqAndUID( name.str() );
 
+		//parse the coefficients for the SIF from the parameter file
 		parseCoeffFile();
 
 		//deactivate parsing
@@ -453,7 +454,7 @@ namespace flopoco {
 				"A fix-point SIF implementation.",
 				"FiltersEtc", // categories
 				"",
-				"paramFileName(string): the name of the file containing the parameters for the SIF\
+				"paramFileName(string): the name of the file containing the parameters for the SIF;\
 				testsFileName(string)=\"\": the name of the file containing the tests for the SIF",
 				"",
 				FixSIF::parseArguments
