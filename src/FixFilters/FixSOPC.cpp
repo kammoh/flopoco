@@ -150,6 +150,9 @@ namespace flopoco{
 			REPORT(INFO, "Computed msbOut=" << msbOut);
 			mpfr_clears(sumAbsCoeff, absCoeff, NULL);
 		}
+		else {
+			REPORT(INFO, "Provided msbOut=" << msbOut);
+		}
 
 		addOutput("R", msbOut-lsbOut+1);
 

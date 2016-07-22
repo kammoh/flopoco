@@ -53,7 +53,7 @@ namespace flopoco{
 		double* coeffb_d;           /**< version of coeffb as C-style arrays of double, because WCPG needs it this way */
 		double* coeffa_d;           /**< version of coeffa as C-style arrays of double, because WCPG needs it this way */
 
-		int currentIndex;       // used for round-robin access to the history 
+		uint32_t currentIndex;       // used for round-robin access to the history 
 
 
 	};

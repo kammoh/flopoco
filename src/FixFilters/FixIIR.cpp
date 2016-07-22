@@ -19,19 +19,23 @@ extern "C"
 
 
 /* Test with 
-./flopoco FixIIR coeffb="1:2:3" coeffa="1/2:1/3" lsbIn=-12 lsbOut=-12
+./flopoco FixIIR coeffb="1:2" coeffa="1/2:1/4" lsbIn=-12 lsbOut=-12   TestBench n=1000
+
 
 The example with poles close to 1:
 ./flopoco generateFigures=1 FixIIR coeffb="0x1.89ff611d6f472p-13:-0x1.2778afe6e1ac0p-11:0x1.89f1af73859fap-12:0x1.89f1af73859fap-12:-0x1.2778afe6e1ac0p-11:0x1.89ff611d6f472p-13" coeffa="-0x1.3f4f52485fe49p+2:0x1.3e9f8e35c8ca8p+3:-0x1.3df0b27610157p+3:0x1.3d42bdb9d2329p+2:-0x1.fa89178710a2bp-1" lsbIn=-12 lsbOut=-12 TestBench n=100
-
 Remarque: H prend du temps à calculer sur cet exemple.
+
+A small butterworth where the emulate diverges
+ ./flopoco generateFigures=1 FixIIR coeffb="0x1.7bdf4656ab602p-9:0x1.1ce774c100882p-7:0x1.1ce774c100882p-7:0x1.7bdf4656ab602p-9" coeffa="-0x1.2fe25628eb285p+1:0x1.edea40cd1955ep+0:-0x1.106c2ec3d0af8p-1" lsbIn=-12 lsbOut=-12 TestBench n=100
+
 */
 
 using namespace std;
 
 namespace flopoco {
 
-	FixIIR::FixIIR(Target* target, int lsbIn_, int lsbOut_,  vector<string> coeffb_, vector<string> coeffa_, double H_) :
+	FixIIR::FixIIR(Target* target, int lsbIn_, int lsbOut_,  vector<string> coeffb_, vector<string> coeffa_, double H_, double Heps_) :
 		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeffb(coeffb_), coeffa(coeffa_), H(H_)
 	{
 		srcFileName="FixIIR";
@@ -55,7 +59,7 @@ namespace flopoco {
 		coeffa_mp = (mpfr_t*) malloc(m * sizeof(mpfr_t));
 		coeffb_mp = (mpfr_t*) malloc(n * sizeof(mpfr_t));
 		xHistory  = (mpfr_t*) malloc(n * sizeof(mpfr_t));
-		yHistory  = (mpfr_t*) malloc((m+1) * sizeof(mpfr_t)); // We need to memorize the m previous y, and the current output
+		yHistory  = (mpfr_t*) malloc((m+2) * sizeof(mpfr_t)); // We need to memorize the m previous y, and the current output. Plus one because it helps debugging
 
 
 		for (int i=0; i< n; i++)		{
@@ -88,7 +92,7 @@ namespace flopoco {
 
 		
 		// TODO here compute H if it is not provided
-		if(H==0) {
+		if(H==0 && Heps==0) {
 #if HAVE_WCPG
 
 			REPORT(INFO, "H not provided: computing worst-case peak gain");
@@ -122,7 +126,7 @@ namespace flopoco {
 		hugePrec = 10*(1+msbOut+-lsbOut+g);
 		currentIndex=0;
 
-		for (int i = 0; i<m+1; i++)
+		for (int i = 0; i<m+2; i++)
 		{
 			mpfr_init2 (yHistory[i], hugePrec);
 			mpfr_set_d(yHistory[i], 0.0, GMP_RNDN);
@@ -218,7 +222,7 @@ namespace flopoco {
 
 
 
-	
+
 	void FixIIR::emulate(TestCase * tc){
 
 		mpz_class sx;
@@ -238,18 +242,33 @@ namespace flopoco {
 
 		// TODO CHECK HERE
 		for (int i=0; i< n; i++)		{
-			mpfr_mul(t, xHistory[(currentIndex+n-i)%n], coeffb_mp[i], GMP_RNDN); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
+			mpfr_mul(t, xHistory[(currentIndex+i)%n], coeffb_mp[i], GMP_RNDN); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
 			mpfr_add(s, s, t, GMP_RNDN); 							// same comment as above
 		}
 
 		for (int i=0; i<m; i++)		{
-			mpfr_mul(t, yHistory[(currentIndex+1 +m+1 -i)%(m+1)], coeffa_mp[i], GMP_RNDN); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
+			mpfr_mul(t, yHistory[(currentIndex +i+1)%(m+2)], coeffa_mp[i], GMP_RNDN); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
 			mpfr_sub(s, s, t, GMP_RNDN); 							// same comment as above
 		}
-		mpfr_set(yHistory[(currentIndex+m)%(m+1)], s, GMP_RNDN);
+		mpfr_set(yHistory[(currentIndex  +0)%(m+2)], s, GMP_RNDN);
 
+#if 1 // debugging the emulate
+		cout << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
+		cout << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
+		for (int i=0; i< n; i++)		{
+			cout << "  x" << i<< "c" << i<<  "=" <<
+				mpfr_get_d(xHistory[(currentIndex+i)%n],GMP_RNDN) << "*" << mpfr_get_d(coeffb_mp[i],GMP_RNDN);
+		}
+		cout << "  // ";
+		for (int i=0; i<m; i++) {
+			cout <<"  ya" << i+1 << "=" <<
+				mpfr_get_d(yHistory[(currentIndex +i+1)%(m+2)],GMP_RNDN) << "*" << mpfr_get_d(coeffa_mp[i],GMP_RNDN);
+		}
+		cout << endl;
+		  
+#endif
 
-		currentIndex++;
+		currentIndex--;
 
 		//		coeff		  1 2 3
 		//    yh      y 0 0 0 
@@ -272,7 +291,7 @@ namespace flopoco {
 		ruz=signedToBitVector(ruz, wO);
 		tc->addExpectedOutput ("R", ruz);
 #endif
-#if 1 // debug: with this we observe if the simulation diverges
+#if 0 // debug: with this we observe if the simulation diverges
 		double d =  mpfr_get_d(s, GMP_RNDD);
 		cout << "log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
 #endif
@@ -281,17 +300,41 @@ namespace flopoco {
 
 	};
 
+
+
+	
 	void FixIIR::buildStandardTestCases(TestCaseList* tcl){
-		// First fill with a few zeroes, then a few ones
+		// First fill with a few ones, then a few zeroes
+		TestCase *tc;
+
+		
+		for (int i=0; i<3; i++) {
+			tc = new TestCase(this);
+			tc->addInput("X", mpz_class(1)<<(-lsbIn-1)); // 0.5
+			emulate(tc);
+			tcl->add(tc);
+		}
+		
+		for (int i=0; i<3; i++) {
+			tc = new TestCase(this);
+			tc->addInput("X", mpz_class(0)); // 0
+			emulate(tc);
+			tcl->add(tc);
+		}		
+
 	};
 
+
+	
 	OperatorPtr FixIIR::parseArguments(Target *target, vector<string> &args) {
 		int lsbIn;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		double h;
-		UserInterface::parseFloat(args, "h", &h);
+		UserInterface::parseFloat(args, "H", &h);
+		double heps;
+		UserInterface::parseFloat(args, "Heps", &heps);
 		vector<string> inputa;
 		string in;
 		UserInterface::parseString(args, "coeffa", &in);
@@ -312,7 +355,7 @@ namespace flopoco {
 				inputb.push_back( substr );
 			}
 		
-		return new FixIIR(target, lsbIn, lsbOut, inputb, inputa, h);
+		return new FixIIR(target, lsbIn, lsbOut, inputb, inputa, h, heps);
 	}
 
 
@@ -323,7 +366,8 @@ namespace flopoco {
 											 "",
 											 "lsbIn(int): input most significant bit;\
                         lsbOut(int): output least significant bit;\
-                        h(real)=0: worst-case peak gain: provide it only if WCPG is not installed;\
+                        H(real)=0: worst-case peak gain. if 0, it will be computed by the WCPG library;\
+                        Heps(real)=0: worst-case peak gain of the feedback loop. if 0, it will be computed by the WCPG library;\
                         coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
                         coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\"",
 											 "",
