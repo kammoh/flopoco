@@ -226,42 +226,40 @@
 												 wF(int): mantissa size in bits",
 												 "",
 												 FPSqrt::parseArguments,
-												 FPSqrt::nextTestState
+												 FPSqrt::unitTest
 												 ) ;
 
 		}
 
-		void FPSqrt::nextTestState(TestState * previousTestState)
-		{
-			static vector<vector<pair<string,string>>> testStateList;
-			vector<pair<string,string>> paramList;
+		TestList FPSqrt::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-			if(previousTestState->getIndex() == 0)
-			{
-				previousTestState->setTestBenchSize(1000);
-
-				for(int i = 5; i<53; i++)
+			for(int wF=5; wF<53; wF+=1) // test various input widths
+			{ 
+				int nbByteWE = 6+(wF/10);
+				while(nbByteWE>wF)
 				{
-					int nbByteWE = 6+(i/10);
-					while(nbByteWE>i)
-					{
-						nbByteWE -= 2;
-					}
-					paramList.clear();
-					paramList.push_back(make_pair("wF",to_string(i)));
-					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-					testStateList.push_back(paramList);
+					nbByteWE -= 2;
 				}
-				previousTestState->setTestsNumber(testStateList.size());
-			}
 
-			vector<pair<string,string>>::iterator itVector;
-			int index = previousTestState->getIndex();
-
-			for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
-			{
-				previousTestState->changeValue((*itVector).first,(*itVector).second);
+				paramList.push_back(make_pair("wF",to_string(wF)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+				testStateList.push_back(paramList);
+				paramList.clear();
 			}
 		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
+}
 	

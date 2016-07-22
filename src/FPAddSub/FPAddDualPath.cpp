@@ -646,41 +646,39 @@
 											 wF(int): mantissa size in bits;",
 											 "",
 											 FPAddDualPath::parseArguments,
-											 FPAddDualPath::nextTestState
+											 FPAddDualPath::unitTest
 											 ) ;
 
 	}
 
-	void FPAddDualPath::nextTestState(TestState * previousTestState)
+	TestList FPAddDualPath::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
-
-			for(int i = 5; i<53; i++)
-			{
-				int nbByteWE = 6+(i/10);
-				while(nbByteWE>i)
+			for(int wF=5; wF<53; wF+=1) // test various input widths
+			{ 
+				int nbByteWE = 6+(wF/10);
+				while(nbByteWE>wF)
 				{
 					nbByteWE -= 2;
 				}
-				paramList.clear();
-				paramList.push_back(make_pair("wF",to_string(i)));
+
+				paramList.push_back(make_pair("wF",to_string(wF)));
 				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
 				testStateList.push_back(paramList);
+				paramList.clear();
 			}
-			previousTestState->setTestsNumber(testStateList.size());
 		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+		else     
 		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 }

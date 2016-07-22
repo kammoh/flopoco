@@ -22,47 +22,47 @@
 #include "IntConstDiv.hpp"
 
 
-using namespace std;
+  using namespace std;
 
 
-namespace flopoco{
+  namespace flopoco{
 
 
 	// The classical table for the linear architecture
-	
-	IntConstDiv::EuclideanDivTable::EuclideanDivTable(Target* target, int d_, int alpha_, int gamma_) :
-		Table(target, alpha_+gamma_, alpha_+gamma_, 0, -1, 1), d(d_), alpha(alpha_), gamma(gamma_) {
-				ostringstream name;
-				srcFileName="IntConstDiv::EuclideanDivTable";
-				name <<"EuclideanDivTable_" << d << "_" << alpha ;
-				setNameWithFreqAndUID(name.str());
-	};
 
-	mpz_class IntConstDiv::EuclideanDivTable::function(int x){
+  	IntConstDiv::EuclideanDivTable::EuclideanDivTable(Target* target, int d_, int alpha_, int gamma_) :
+  	Table(target, alpha_+gamma_, alpha_+gamma_, 0, -1, 1), d(d_), alpha(alpha_), gamma(gamma_) {
+  		ostringstream name;
+  		srcFileName="IntConstDiv::EuclideanDivTable";
+  		name <<"EuclideanDivTable_" << d << "_" << alpha ;
+  		setNameWithFreqAndUID(name.str());
+  	};
+
+  	mpz_class IntConstDiv::EuclideanDivTable::function(int x){
 		// machine integer arithmetic should be safe here
-		if (x<0 || x>=(1<<(alpha+gamma))){
-			ostringstream e;
-			e << "ERROR in IntConstDiv::EuclideanDivTable::function, argument out of range" <<endl;
-			throw e.str();
-		}
+  		if (x<0 || x>=(1<<(alpha+gamma))){
+  			ostringstream e;
+  			e << "ERROR in IntConstDiv::EuclideanDivTable::function, argument out of range" <<endl;
+  			throw e.str();
+  		}
 
-		int q = x/d;
-		int r = x%d;
-		return mpz_class((q<<gamma) + r);
-	};
+  		int q = x/d;
+  		int r = x%d;
+  		return mpz_class((q<<gamma) + r);
+  	};
 
 
-	
-	IntConstDiv::CBLKTable::CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho):
+
+  	IntConstDiv::CBLKTable::CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho):
 		// Sizes below assume alpha>=gamma
-		Table(target, (level==0? alpha: 2*gamma), (level==0? rho+gamma: (1<<(level-1))*alpha+gamma), 0, -1, 1), level(level), d(d), alpha(alpha), gamma(gamma), rho(rho) {
-				ostringstream name;
-				srcFileName="IntConstDiv::CLBKTable";
-				name <<"CLBKTable_" << d << "_" << alpha << "_l" << level ;
-				setNameWithFreqAndUID(name.str());
-	}
-	
-	mpz_class IntConstDiv::CBLKTable::function(int x){
+  	Table(target, (level==0? alpha: 2*gamma), (level==0? rho+gamma: (1<<(level-1))*alpha+gamma), 0, -1, 1), level(level), d(d), alpha(alpha), gamma(gamma), rho(rho) {
+  		ostringstream name;
+  		srcFileName="IntConstDiv::CLBKTable";
+  		name <<"CLBKTable_" << d << "_" << alpha << "_l" << level ;
+  		setNameWithFreqAndUID(name.str());
+  	}
+
+  	mpz_class IntConstDiv::CBLKTable::function(int x){
 		if(level==0){ // the input is one radix-2^alpha digit 
 			mpz_class r = x % d;
 			mpz_class q = x / d;
@@ -88,7 +88,7 @@ namespace flopoco{
 
 
 	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool remainderOnly_, map<string, double> inputDelays)
-		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), remainderOnly(remainderOnly_)
+	: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), remainderOnly(remainderOnly_)
 	{
 		setCopyrightString("F. de Dinechin (2011)");
 		srcFileName="IntConstDiv";
@@ -242,16 +242,16 @@ namespace flopoco{
 				// The qi out of the table are on rho bits, and we want to pad them to alpha bits
 				int qiSize;
 				if(i<qDigits-1) {
-						qiSize = alpha;
-						vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
-					}
+					qiSize = alpha;
+					vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
+				}
 				else if(i==qDigits-1)  {
-						qiSize = qSize - (qDigits-1)*alpha;
-						REPORT(INFO, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
-						if(qiSize>=rho)
-							vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
-						else
-							vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
+					qiSize = qSize - (qDigits-1)*alpha;
+					REPORT(INFO, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
+					if(qiSize>=rho)
+						vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+gamma-1, gamma) << ");" << endl;
+					else
+						vhdl << tab << declare(qi, qiSize, true) << " <= " << outi << range(qiSize+gamma-1, gamma) << ";" << endl;
 				}
 				vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl;
 			}
@@ -274,7 +274,7 @@ namespace flopoco{
 					string tableName = "table_" + tableNumber;
 					string in = "in_" + tableNumber;
 					string out = "out_" + tableNumber;
-				  r = "r_"+ tableNumber;
+					r = "r_"+ tableNumber;
 					string q = "q_"+ tableNumber;
 					string qsl =  "qs_l" + to_string(level-1) + "_" + to_string(2*i+1);
 					string qsr =  "qs_l" + to_string(level-1) + "_" + to_string(2*i);
@@ -326,7 +326,7 @@ namespace flopoco{
 			} // for level
 			
 			if(!remainderOnly) { // build the quotient output
-					vhdl << tab << "Q <= " << qs  << range(qSize-1, 0) << ";" << endl;
+				vhdl << tab << "Q <= " << qs  << range(qSize-1, 0) << ";" << endl;
 			}
 			
 			vhdl << tab << "R <= " << r << ";" << endl;
@@ -364,49 +364,41 @@ namespace flopoco{
 
 
 
-	void IntConstDiv::nextTestState(TestState * previousTestState)
+	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
+	TestList IntConstDiv::unitTest(int index)
 	{
 		// the static list of mandatory tests
-		static vector<vector<pair<string,string>>> testStateList;
-		static vector<int> testBenchSize;
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		// is initialized here. It could also be built on the fly
-		if(previousTestState->getIndex() == 0)		{
+		if(index==-1) // The unit tests
+		{ 
 
-			for(int wIn=8; wIn<10; wIn+=1) { // test various input widths
-				for(int d=3; d<=17; d+=2) { // test various divisors
-					for(int arch=0; arch <2; arch++) { // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
+			for(int wIn=8; wIn<10; wIn+=1) 
+			{ // test various input widths
+				for(int d=3; d<=17; d+=2) 
+				{ // test various divisors
+					for(int arch=0; arch <2; arch++) 
+					{ // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
 						paramList.push_back(make_pair("wIn", to_string(wIn) ));	
 						paramList.push_back(make_pair("d", to_string(d) ));	
 						paramList.push_back(make_pair("arch", to_string(arch) ));
-						if(wIn<16) // we can afford an exhaustive test
-						 	testBenchSize.push_back(-2); // TODO VICTOR replace the following by this line and it won't work
-							// testBenchSize.push_back(10000); 
-						else
-							testBenchSize.push_back(1000);
-							
 						testStateList.push_back(paramList);
 						paramList.clear();
 					}
 				}
 			}
-			previousTestState->setTestsNumber(testStateList.size());
 		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
 
-		// Now actually change the state. The following should be a method of Tester.
-		vector<pair<string,string>>::iterator itVector;
-		int testIndex = previousTestState->getIndex();
-
-		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
-		previousTestState->setTestBenchSize(testBenchSize[testIndex]);
-		
+		return testStateList;
 	}
 
 
-	
+
 	OperatorPtr IntConstDiv::parseArguments(Target *target, vector<string> &args) {
 		int wIn, d, arch, alpha;
 		bool remainderOnly;
@@ -420,17 +412,17 @@ namespace flopoco{
 
 	void IntConstDiv::registerFactory(){
 		UserInterface::add("IntConstDiv", // name
-											 "Integer divider by a small constant.",
-											 "ConstMultDiv",
+			"Integer divider by a small constant.",
+			"ConstMultDiv",
 											 "", // seeAlso
 											 "wIn(int): input size in bits; \
-                        d(int): small integer to divide by;  \
-                        arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time; \
-                        remainderOnly(bool)=false: if true, the architecture doesn't output the quotient; \
-                        alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
+											 d(int): small integer to divide by;  \
+											 arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time; \
+											 remainderOnly(bool)=false: if true, the architecture doesn't output the quotient; \
+											 alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
 											 "This operator is described, for arch=0, in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>, and for arch=1, in <a href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>.",
 											 IntConstDiv::parseArguments,
-											 IntConstDiv::nextTestState
+											 IntConstDiv::unitTest
 											 ) ;
 	}
 

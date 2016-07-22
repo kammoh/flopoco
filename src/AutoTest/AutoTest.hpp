@@ -20,6 +20,10 @@ namespace flopoco{
 
 		AutoTest(string opName, bool testDependences = false);
 
+	private:
+
+		string defaultTestBenchSize(map<string,string> * unitTestParam);
+
 	};
 };
 #endif

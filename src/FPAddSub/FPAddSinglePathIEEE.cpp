@@ -129,8 +129,8 @@
 		vhdl << tab << declare("EffSub") << " <= signX xor signY;"<<endl;
 		vhdl << tab << declare("ExpXY",2*wE)<<"<= expX & expY;"<<endl;
 		manageCriticalPath(target->localWireDelay()+ target->lutDelay());
-	 	vhdl <<tab<<declare("subNormX") << "<= '1' when expX="<<zg(wE)<<" and newX"<<range(wF-1,0)<<"/="<<zg(wF)<<" else '0';"<<endl;
-	 	vhdl <<tab<<declare("subNormY") << "<= '1' when expY="<<zg(wE)<<" and newY"<<range(wF-1,0)<<"/="<<zg(wF)<<" else '0';"<<endl;
+		vhdl <<tab<<declare("subNormX") << "<= '1' when expX="<<zg(wE)<<" and newX"<<range(wF-1,0)<<"/="<<zg(wF)<<" else '0';"<<endl;
+		vhdl <<tab<<declare("subNormY") << "<= '1' when expY="<<zg(wE)<<" and newY"<<range(wF-1,0)<<"/="<<zg(wF)<<" else '0';"<<endl;
 
 		vhdl << tab << declare("fracY",wF+1) << " <= "<< zg(wF+1)<<" when expY="<<zg(wE)<<" and subNormY='0' else (not(subNormY) & newY("<<wF-1<<" downto 0));"<<endl; 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		double cpfracY = getCriticalPath();
@@ -144,20 +144,20 @@
 		<<tab<<tab<<"\"10\" when "<<zg(wE, -1)<<og(wE, 1)<<"|"<<og(wE, -1)<<zg(wE, 1)<<"|"<<og(2*wE)<<","<<endl
 		<<tab<<tab<<"\"01\" when others;"<<endl;
 		vhdl <<tab<<declare("excRtmp2",2) << "<= \"10\" when excRtmp=\"01\" and (expX="<<og(wE)<<" or expY="<<og(wE)<<") else excRtmp;"<<endl;
-	 	vhdl <<tab<<declare("excRt",2) << "<= \"11\" when excRtmp2=\"10\" and ((newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"
-																									 	<<range(wF-1,0)<<"="<<zg(wF)<<" and signX/=signY)"
-																									 	<< " or (newX"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expX="<<og(wE)<<")"
-																									 	<< " or (newY"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expY="<<og(wE)<<")) else excRtmp2;"<<endl;
-	 	manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		vhdl <<tab<<declare("excRt",2) << "<= \"11\" when excRtmp2=\"10\" and ((newX"<<range(wF-1, 0)<<"="<<zg(wF)<<" and newY"
+		<<range(wF-1,0)<<"="<<zg(wF)<<" and signX/=signY)"
+		<< " or (newX"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expX="<<og(wE)<<")"
+		<< " or (newY"<<range(wF-1, 0)<<"/="<<zg(wF)<<" and expY="<<og(wE)<<")) else excRtmp2;"<<endl;
+		manageCriticalPath(target->localWireDelay() + target->lutDelay());
 		vhdl <<tab<<declare("signR") << "<= '0' when ExpXY="<<zg(2*wE)<<" and signX/=signY else signX;"<<endl;
 
-	 	setCycleFromSignal("swap");;
-	 	if ( getCycleFromSignal("eYmeX") == getCycleFromSignal("swap") )
-	 		setCriticalPath(max(cpeXmeY, cpswap));
-	 	else{
-	 		if (syncCycleFromSignal("eYmeX"))
-	 			setCriticalPath(cpeXmeY);
-	 	}
+		setCycleFromSignal("swap");;
+		if ( getCycleFromSignal("eYmeX") == getCycleFromSignal("swap") )
+			setCriticalPath(max(cpeXmeY, cpswap));
+		else{
+			if (syncCycleFromSignal("eYmeX"))
+				setCriticalPath(cpeXmeY);
+		}
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());//multiplexer
 		vhdl<<tab<<declare("expDiff",wE+1) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wE+1));
@@ -321,20 +321,20 @@
 			vhdl << tab << declare("expR",wE) <<" <= RoundedExpFrac"<<range(wF+wE,wF+1)<<";"<<endl;
 
 			manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
-		vhdl << tab << "with (exExpExc) select "<<endl;
-		vhdl << tab << declare("expRt",wE) << "<= "<<zg(wE)<<" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
-		<<tab<<tab<<"expR when \"0001\","<<endl
-		<<tab<<tab<<og(wE)<<" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
-		<<tab<<tab<<og(wE)<<" when others;"<<endl;
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
-		vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl; 
-		vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt2="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  
-		<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or exExpExc=\"0001\") else fracR;"<<endl;
-		vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt2="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  
-		<< "and exExpExc/=\"1110\" and exExpExc/=\"0101\" and exExpExc/=\"0001\" else fracRt;"<<endl;
+			vhdl << tab << declare("exExpExc",4) << " <= upExc & excRt;"<<endl;
+			vhdl << tab << "with (exExpExc) select "<<endl;
+			vhdl << tab << declare("expRt",wE) << "<= "<<zg(wE)<<" when \"0000\"|\"0100\"|\"1000\"|\"1100\"|\"1001\"|\"1101\","<<endl
+			<<tab<<tab<<"expR when \"0001\","<<endl
+			<<tab<<tab<<og(wE)<<" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
+			<<tab<<tab<<og(wE)<<" when others;"<<endl;
+			manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			vhdl<<tab<<declare("expRt2",wE) << " <= "<<zg(wE)<<" when (eqdiffsign='1' and EffSub='1') and expRt/="<<og(wE)<<" else expRt;"<<endl; 
+			vhdl<<tab<<declare("fracRt", wF) << " <= "<<zg(wF)<<" when expRt2="<<og(wE)<<" and (exExpExc=\"0010\" or exExpExc=\"0110\" or exExpExc=\"1010\" "  
+			<< "or exExpExc=\"1110\" or exExpExc=\"0101\" or exExpExc=\"0001\") else fracR;"<<endl;
+			vhdl<<tab<<declare("fracRt2", wF) << " <= "<<og(wF)<<" when expRt2="<<og(wE)<<" and exExpExc/=\"0010\" and exExpExc/=\"0110\" and exExpExc/=\"1010\" "  
+			<< "and exExpExc/=\"1110\" and exExpExc/=\"0101\" and exExpExc/=\"0001\" else fracRt;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
-		vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') or (fracRt2="<<og(wF)<<" and expRt2="<<og(wE)<<") else signR;"<<endl;
+			vhdl<<tab<<declare("signR2") << " <= '0' when (eqdiffsign='1' and EffSub='1') or (fracRt2="<<og(wF)<<" and expRt2="<<og(wE)<<") else signR;"<<endl;
 
 
 
@@ -465,7 +465,7 @@
 					emulate(tc);
 					tcl->add(tc);
 
-					 tc = new TestCase(this);
+					tc = new TestCase(this);
 					tc->addIEEEInput("X", -4.375e1);
 					tc->addIEEEInput("Y", 4.375e1);
 					emulate(tc);
@@ -475,13 +475,13 @@
 
 
 
-		TestCase* FPAddSinglePathIEEE::buildRandomTestCase(int i){
+				TestCase* FPAddSinglePathIEEE::buildRandomTestCase(int i){
 
-			TestCase *tc;
-			mpz_class x,y;
-			mpz_class negative  = mpz_class(1)<<(wE+wF);
+					TestCase *tc;
+					mpz_class x,y;
+					mpz_class negative  = mpz_class(1)<<(wE+wF);
 
-			tc = new TestCase(this);
+					tc = new TestCase(this);
 		/* Fill inputs */
 		if ((i & 7) == 0) {// cancellation, same exponent
 			mpz_class e = getLargeRandom(wE);
@@ -540,100 +540,56 @@
 		return tc;
 	}
 
-	void FPAddSinglePathIEEE::nextTestState(TestState * previousTestState)
+	TestList FPAddSinglePathIEEE::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
+			paramList.push_back(make_pair("wE","5"));
+			paramList.push_back(make_pair("wF","10"));		
+			testStateList.push_back(paramList);
 
-			previousTestState->setTestBenchSize(250);
-			// for(int j = 0; j<2; j++)
-			// {
-				paramList.push_back(make_pair("wE","5"));
-				paramList.push_back(make_pair("wF","10"));
-				// if(j==1)
-				// {
-				// 	paramList.push_back(make_pair("sub","true"));
-				// }			
-				testStateList.push_back(paramList);
+			paramList.clear();
+			paramList.push_back(make_pair("wE","8"));
+			paramList.push_back(make_pair("wF","23"));			
+			testStateList.push_back(paramList);
 
-				paramList.clear();
-				paramList.push_back(make_pair("wE","8"));
-				paramList.push_back(make_pair("wF","23"));
-				// if(j==1)
-				// {
-				// 	paramList.push_back(make_pair("sub","true"));
-				// }				
-				testStateList.push_back(paramList);
+			paramList.clear();
+			paramList.push_back(make_pair("wE","11"));
+			paramList.push_back(make_pair("wF","52"));	
+			testStateList.push_back(paramList);
 
-				paramList.clear();
-				paramList.push_back(make_pair("wE","11"));
-				paramList.push_back(make_pair("wF","52"));
-				// if(j==1)
-				// {
-				// 	paramList.push_back(make_pair("sub","true"));
-				// }				
-				testStateList.push_back(paramList);
+			paramList.clear();
+			paramList.push_back(make_pair("wE","15"));
+			paramList.push_back(make_pair("wF","112"));			
+			testStateList.push_back(paramList);
 
-				paramList.clear();
-				paramList.push_back(make_pair("wE","15"));
-				paramList.push_back(make_pair("wF","112"));
-				// if(j==1)
-				// {
-				// 	paramList.push_back(make_pair("sub","true"));
-				// }				
-				testStateList.push_back(paramList);
-
-				paramList.clear();
-				paramList.push_back(make_pair("wE","19"));
-				paramList.push_back(make_pair("wF","236"));
-				// if(j==1)
-				// {
-				// 	paramList.push_back(make_pair("sub","true"));
-				// }				
-				testStateList.push_back(paramList);
-
-
-				/*for(int i = 5; i<53; i++)
-				{
-					int nbByteWE = 6+(i/10);
-					while(nbByteWE>i)
-					{
-						nbByteWE -= 2;
-					}
-					paramList.clear();
-					paramList.push_back(make_pair("wF",to_string(i)));
-					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-					if(j==1)
-					{
-						paramList.push_back(make_pair("sub","true"));
-					}
-					testStateList.push_back(paramList);
-				}*/
-			}
-			previousTestState->setTestsNumber(testStateList.size());
-		// }
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
-		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
+			paramList.clear();
+			paramList.push_back(make_pair("wE","19"));
+			paramList.push_back(make_pair("wF","236"));			
+			testStateList.push_back(paramList);
 		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 
-	OperatorPtr FPAddSinglePathIEEE::parseArguments(Target *target, vector<string> &args) {
-		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
-		int wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		return new FPAddSinglePathIEEE(target, wE, wF);
-	}
+			OperatorPtr FPAddSinglePathIEEE::parseArguments(Target *target, vector<string> &args) {
+				int wE;
+				UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+				int wF;
+				UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+				return new FPAddSinglePathIEEE(target, wE, wF);
+			}
 
-	void FPAddSinglePathIEEE::registerFactory(){
+			void FPAddSinglePathIEEE::registerFactory(){
 		UserInterface::add("FPAddSinglePathIEEE", // name
 			"A floating-point adder with a new, more compact single-path architecture.",
 											 "BasicFloatingPoint", // categories
@@ -642,7 +598,7 @@
 											 wF(int): mantissa size in bits;",
 											 "",
 											 FPAddSinglePathIEEE::parseArguments,
-											 FPAddSinglePathIEEE::nextTestState
+											 FPAddSinglePathIEEE::unitTest
 											 ) ;
 	}
 }

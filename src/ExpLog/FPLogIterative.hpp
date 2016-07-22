@@ -83,8 +83,7 @@ namespace flopoco{
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 		static void registerFactory();
 
-		/** Create the next TestState based on the previous TestState */
-		static void nextTestState(TestState * previousTestState);
+		static TestList unitTest(int index);
 
 		int wE, wF;
 

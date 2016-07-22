@@ -1,6 +1,5 @@
 #include "AutoTest.hpp"
-#include "TestState.hpp"
-#include "UserInterface.hpp"
+#include "../UserInterface.hpp"
 
 #include <vector>
 #include <map>
@@ -41,22 +40,47 @@ namespace flopoco
 		system("src/AutoTest/initTests.sh");
 
 		OperatorFactoryPtr opFact;	
-		TestState * currentTestState = new TestState();
 		string commandLine;
 		string commandLineTestBench;
 		set<string> testedOperator;
 		set<string>::iterator itOperator;
 		vector<string> paramNames;
 		vector<string>::iterator itParam;
-		map<string,string> testStateParam;
+		map<string,string> unitTestParam;
 		map<string,string>::iterator itMap;
+		TestList unitTestList;
+		TestList::iterator itUnitTestList;
+		vector<pair<string,string>>::iterator itUnitTest;
+		bool doUnitTest = false;
+		bool doRandomTest = false;
+		bool allOpTest = false;
+		bool testsDone = false;
 
-			// Test all the operators ?
 		if(opName == "All")
 		{
+			doUnitTest = true;
+			doRandomTest = true;
+			allOpTest = true;
+		}
+		else if(opName == "AllUnitTest")
+		{
+			doUnitTest = true;
+			allOpTest = true;
+		}
+		else if(opName == "AllRandomTest")
+		{
+			doRandomTest = true;
+			allOpTest = true;
+		}
+		else
+		{
+			doUnitTest = true;
+			doRandomTest = true;
+		}
 
-			int importantTestStateNumber = 5;
-
+		// Select the Operator(s) to test
+		if(allOpTest)
+		{
 				// We get the operators' names to add them in the testedOperator set
 			unsigned nbFactory = UserInterface::getFactoryCount();
 
@@ -66,59 +90,6 @@ namespace flopoco
 				if(opFact->name() != "AutoTest")
 					testedOperator.insert(opFact->name());
 			}
-
-			/*	// Test the first important TestState for each Operator before testing all the TestStates
-			for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
-			{
-				system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
-				cout << "Testing first tests for Operator : " << (*itOperator) << endl;
-				opFact = UserInterface::getFactoryByName(*itOperator);
-				paramNames = opFact->param_names();
-
-				// Fetch all parameters and default values for readability
-				for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
-				{
-					currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
-				}
-
-				opFact->nextTestStateGenerator(currentTestState);
-
-				// Is the TestState is unchanged, meaning the NextState method is not implemented
-				if(!currentTestState->isUnchanged())
-				{
-					while(currentTestState->getIterationIndex()<importantTestStateNumber)
-					{
-							// Get the next state and create the flopoco command corresponding
-						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
-
-						// Get the map containing the parameters
-						testStateParam = currentTestState->getMap();
-
-						for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
-						{
-							commandLine += " " + itMap->first + "=" + itMap->second;
-						}
-
-						commandLineTestBench = " TestBench n=" + to_string(currentTestState->getTestBenchSize());
-
-						system((commandLine + commandLineTestBench).c_str());
-						currentTestState->nextIteration();
-						if(currentTestState->canIterate())
-							opFact->nextTestStateGenerator(currentTestState);
-					}
-
-						// Clean all temporary file
-					system(("src/AutoTest/cleanTest.sh " + (*itOperator)).c_str());
-				}
-				else
-				{
-					cout << "No nextTestState method defined" << endl;
-				}
-
-				currentTestState->clean();
-			}
-
-			currentTestState->setIterationIndex(importantTestStateNumber + 1 );*/
 		}
 		else
 		{
@@ -175,57 +146,190 @@ namespace flopoco
 			}
 		}
 
-			// For each tested Operator, we run a number of tests defined by the Operator		
+
+
+		// For each tested Operator, we run a number of tests defined in the Operator's unitTest method
 		for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
 		{
+			testsDone = false;
 			system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
-			cout << "Testing Operator : " << (*itOperator) << endl;
 			opFact = UserInterface::getFactoryByName(*itOperator);
-			paramNames = opFact->param_names();
 
-				// Fetch all parameters and default values for readability
-			for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
+			// First we run the unitTest for each tested Operator
+			if(doUnitTest)
 			{
-				currentTestState->addParam(*itParam,opFact->getDefaultParamVal(*itParam));
+
+				unitTestList.clear();
+				unitTestList = opFact->unitTestGenerator(-1);
+
+				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
+				if(unitTestList.size() != 0 )
+				{
+					testsDone = true;
+					//For every Test
+					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
+					{
+						// Create the flopoco command corresponding to the test
+						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
+						commandLineTestBench = "";
+
+						unitTestParam.clear();
+
+									// Fetch all parameters and default values for readability
+						paramNames = opFact->param_names();
+						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
+						{
+							string defaultValue = opFact->getDefaultParamVal((*itParam));
+							unitTestParam.insert(make_pair((*itParam),defaultValue));
+						}
+
+						// For every Param
+						for(itUnitTest = (*itUnitTestList).begin(); itUnitTest != (*itUnitTestList).end(); ++itUnitTest)
+						{
+							itMap = unitTestParam.find((*itUnitTest).first);
+
+							if( itMap != unitTestParam.end())
+							{
+								itMap->second = (*itUnitTest).second;
+							}
+							else if ((*itUnitTest).first == "TestBench n=")
+							{
+								commandLineTestBench = " TestBench n=" + (*itUnitTest).second;
+							}
+							else
+							{
+								unitTestParam.insert(make_pair((*itUnitTest).first,(*itUnitTest).second));
+							}
+						}
+
+						if(commandLineTestBench == "")
+						{
+							//TODO
+							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
+						}
+
+						for(itMap = unitTestParam.begin(); itMap != unitTestParam.end(); itMap++)
+						{
+							commandLine += " " + itMap->first + "=" + itMap->second;
+						}
+
+						system((commandLine + commandLineTestBench).c_str());	
+
+					}
+				}
+				else
+				{
+					cout << "No unitTest method defined" << endl;
+				}
 			}
 
-			opFact->nextTestStateGenerator(currentTestState);
-
-				// Is the TestState is unchanged, meaning the NextState method is not implemented
-			if(!currentTestState->isUnchanged())
+			// Then we run random Tests for each tested Operator
+			if(doRandomTest)
 			{
-				while(currentTestState->canTest())
+
+				unitTestList.clear();
+				unitTestParam.clear();
+				unitTestList = opFact->unitTestGenerator(0);
+
+				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
+				if(unitTestList.size() != 0 )
 				{
-						// Get the next state and create the flopoco command corresponding
-					commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
-
-						// Get the map containing the parameters
-					testStateParam = currentTestState->getMap();
-
-					for(itMap = testStateParam.begin(); itMap != testStateParam.end(); itMap++)
+					testsDone = true;
+					//For every Test
+					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
 					{
-						commandLine += " " + itMap->first + "=" + itMap->second;
+						// Create the flopoco command corresponding to the test
+						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
+						commandLineTestBench = "";
+
+						unitTestParam.clear();
+
+									// Fetch all parameters and default values for readability
+						paramNames = opFact->param_names();
+						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
+						{
+							string defaultValue = opFact->getDefaultParamVal((*itParam));
+							unitTestParam.insert(make_pair((*itParam),defaultValue));
+						}
+
+						// For every Param
+						for(itUnitTest = (*itUnitTestList).begin(); itUnitTest != (*itUnitTestList).end(); ++itUnitTest)
+						{
+							itMap = unitTestParam.find((*itUnitTest).first);
+
+							if( itMap != unitTestParam.end())
+							{
+								itMap->second = (*itUnitTest).second;
+							}
+							else if ((*itUnitTest).first == "TestBench n=")
+							{
+								commandLineTestBench = " TestBench n=" + (*itUnitTest).second;
+							}
+							else
+							{
+								unitTestParam.insert(make_pair((*itUnitTest).first,(*itUnitTest).second));
+							}
+						}
+
+						if(commandLineTestBench == "")
+						{
+							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
+						}
+
+						for(itMap = unitTestParam.begin(); itMap != unitTestParam.end(); itMap++)
+						{
+							commandLine += " " + itMap->first + "=" + itMap->second;
+						}
+
+						system((commandLine + commandLineTestBench).c_str());	
+
 					}
-					commandLineTestBench = " TestBench n=" + to_string(currentTestState->getTestBenchSize());
-
-					system((commandLine + commandLineTestBench).c_str());						
-					currentTestState->nextTest();
-					if(currentTestState->canTest())
-						opFact->nextTestStateGenerator(currentTestState);
 				}
+				else
+				{
+					cout << "No unitTest method defined" << endl;
+				}
+			}
 
-					// Clean all temporary file
+			if(testsDone)
+			{
+			// Clean all temporary file
 				system(("src/AutoTest/cleanTest.sh " + (*itOperator)).c_str());
 			}
-			else
-			{
-				cout << "No nextTestState method defined" << endl;
-			}
-
-			currentTestState->clean();
 		}
+
 		cout << "Tests are finished" << endl;
-		delete currentTestState;
-		exit(EXIT_SUCCESS);
+		exit(EXIT_SUCCESS);		
+	}
+
+	string AutoTest::defaultTestBenchSize(map<string,string> * unitTestParam)
+	{
+		string testBench = " TestBench n=";
+		int bitsSum = 0;
+
+		map<string,string>::iterator itParam;
+
+		for(itParam = unitTestParam->begin(); itParam != unitTestParam->end(); ++itParam)
+		{
+			if(itParam->first.substr(0,1) == "w")
+			{
+				bitsSum += stoi(itParam->second);
+			}
+			if(itParam->first.find("In") != string::npos)
+			{
+				bitsSum += stoi(itParam->second);
+			}
+		}
+
+		if(bitsSum >= 8)
+		{
+			testBench += "1000";
+		}
+		else
+		{
+			testBench += "-2";
+		}
+
+		return testBench;
 	}
 };

@@ -219,7 +219,6 @@ ADD_LIBRARY(FloPoCoLib STATIC
 
 # AutoTest ------------------------------------------------------------
 src/AutoTest/AutoTest
-src/AutoTest/TestState
 
 # TestBench-related -------------------------------------------------
  src/TestBenches/TestCase

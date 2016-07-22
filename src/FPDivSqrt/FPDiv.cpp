@@ -841,42 +841,40 @@
 											 radix(int)=0: Can be 0, 4 or 8. Default 0 means: let FloPoCo choose between 4 and 8. In your context, the other choice may have a better area/speed trade-offs;",
 											 "The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-10,10], and a bit of prescaling.",
 											 FPDiv::parseArguments,
-											 FPDiv::nextTestState
+											 FPDiv::unitTest
 											 ) ;
 
 	}
 
-	void FPDiv::nextTestState(TestState * previousTestState)
+	TestList FPDiv::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
-
-			for(int i = 5; i<53; i++)
-			{
-				int nbByteWE = 6+(i/10);
-				while(nbByteWE>i)
+			for(int wF=5; wF<53; wF+=1) // test various input widths
+			{ 
+				int nbByteWE = 6+(wF/10);
+				while(nbByteWE>wF)
 				{
 					nbByteWE -= 2;
 				}
-				paramList.clear();
-				paramList.push_back(make_pair("wF",to_string(i)));
+
+				paramList.push_back(make_pair("wF",to_string(wF)));
 				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
 				testStateList.push_back(paramList);
+				paramList.clear();
 			}
-			previousTestState->setTestsNumber(testStateList.size());
 		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+		else     
 		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 	
 

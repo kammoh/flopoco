@@ -242,40 +242,36 @@
 											 opType(int): 1=compute X-Y and X+Y, 2=compute X-Y and Y-X;",
 											 "",
 											 IntDualSub::parseArguments,
-											 IntDualSub::nextTestState
+											 IntDualSub::unitTest
 											 ) ;
 
 	}
 
-	void IntDualSub::nextTestState(TestState * previousTestState)
+	TestList IntDualSub::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) // The unit tests
+		{ 
 
-		if(previousTestState->getIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
-
-			for(int i = 4; i<65; i++)
-			{
-
-				for(int j = 1; j<3; j++)
+			for(int wIn=4; wIn<65; wIn+=1) // test various input widths
+			{ 
+				for(int opType = 1; opType < 3; opType++)
 				{
-					paramList.clear();
-					paramList.push_back(make_pair("opType",to_string(j)));
-					paramList.push_back(make_pair("wIn",to_string(i)));
+					paramList.push_back(make_pair("wIn", to_string(wIn) ));
+					paramList.push_back(make_pair("opType", to_string(opType) ));
 					testStateList.push_back(paramList);
+					paramList.clear();
 				}
 			}
-			previousTestState->setTestsNumber(testStateList.size());
 		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+		else     
 		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 }

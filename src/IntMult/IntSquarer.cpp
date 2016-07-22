@@ -308,36 +308,33 @@
 											 "wIn(int): size of input in bits", // This string will be parsed
 											 "", // no particular extra doc needed
 											 IntSquarer::parseArguments,
-											 IntSquarer::nextTestState
+											 IntSquarer::unitTest
 											 ) ;
 	}
 
-	void IntSquarer::nextTestState(TestState * previousTestState)
-	{
-		static vector<vector<pair<string,string>>> testStateList;
-		vector<pair<string,string>> paramList;
+	TestList IntSquarer::unitTest(int index)
+  {
+    // the static list of mandatory tests
+    TestList testStateList;
+    vector<pair<string,string>> paramList;
+    
+    if(index==-1) 
+    { // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
+      for(int wIn=4; wIn<65; wIn+=1) 
+      { // test various input widths
+        paramList.push_back(make_pair("wIn", to_string(wIn) )); 
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+    }
+    else     
+    {
+        // finite number of random test computed out of index
+    } 
 
-			for(int i = 4; i<65; i++)
-			{
-				paramList.clear();
-				paramList.push_back(make_pair("wIn",to_string(i)));
-				testStateList.push_back(paramList);
-			}
-			previousTestState->setTestsNumber(testStateList.size());
-		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
-		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
-	}
+    return testStateList;
+  }
 
 
 }

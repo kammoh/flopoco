@@ -18,60 +18,42 @@ namespace flopoco{
 			return new FPAddSinglePath(target, wE, wF, sub);
 	}
 
-	void FPAdd::nextTestState(TestState * previousTestState)
+	TestList FPAdd::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
-			for(int j = 0; j<2; j++)
+			for(int wF=5; wF<53; wF+=1) // test various input widths
 			{
-				paramList.push_back(make_pair("wE","8"));
-				paramList.push_back(make_pair("wF","23"));
-				if(j==1)
+				for(int dualPath = 0; dualPath <2; dualPath++)
 				{
-					paramList.push_back(make_pair("dualPath","true"));
-				}
-				testStateList.push_back(paramList);
-				paramList.clear();
-				paramList.push_back(make_pair("wE","11"));
-				paramList.push_back(make_pair("wF","52"));
-				if(j==1)
-				{
-					paramList.push_back(make_pair("dualPath","true"));
-				}
-				testStateList.push_back(paramList);
-
-
-				for(int i = 5; i<53; i++)
-				{
-					int nbByteWE = 6+(i/10);
-					while(nbByteWE>i)
+					int nbByteWE = 6+(wF/10);
+					while(nbByteWE>wF)
 					{
 						nbByteWE -= 2;
 					}
-					paramList.clear();
-					paramList.push_back(make_pair("wF",to_string(i)));
+
+					paramList.push_back(make_pair("wF",to_string(wF)));
 					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-					if(j==1)
-					{
+					if(dualPath == 1)
 						paramList.push_back(make_pair("dualPath","true"));
-					}
+					else
+						paramList.push_back(make_pair("dualPath","false"));
 					testStateList.push_back(paramList);
+					paramList.clear();
 				}
 			}
-			previousTestState->setTestsNumber(testStateList.size());
 		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+		else     
 		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 
 	void FPAdd::registerFactory(){
@@ -85,7 +67,7 @@ namespace flopoco{
 			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;",
 			"Single-path is lower hardware, longer latency than dual-path.<br> The difference between single-path and dual-path is well explained in textbooks such as Ercegovac and Lang's <em>Digital Arithmetic</em>, or Muller et al's <em>Handbook of floating-point arithmetic.</em>",
 			FPAdd::parseArguments,
-			FPAdd::nextTestState
+			FPAdd::unitTest
 			) ;
 	}
 }

@@ -16,7 +16,6 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 #define UserInterface_hpp
 
 #include "Operator.hpp"
-#include "AutoTest/TestState.hpp"
 #include <memory>
 
 // Operator Factory, based on the one by David Thomas, with a bit of clean up.
@@ -24,7 +23,8 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
   namespace flopoco
   {
-  	typedef void (*nextTestState_func_t)(TestState *);
+  	typedef vector<vector<pair<string,string>>> TestList;
+  	typedef TestList (*unitTest_func_t)(int);
   	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	
   	class OperatorFactory;
   	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
@@ -80,7 +80,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 			string parameterList, 
 			string extraHTMLDoc,  
 			parser_func_t parser,
-			nextTestState_func_t nextTestState = nullptr	);
+			unitTest_func_t unitTest = nullptr	);
 		
 		static unsigned getFactoryCount();
 		static OperatorFactoryPtr getFactoryByIndex(unsigned i);
@@ -176,7 +176,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 		map<string,string> m_paramDefault; /* If equal to "", this parameter is mandatory (no default). Otherwise, default value (as a string, to be parsed) */
 		string m_extraHTMLDoc; 
 		parser_func_t m_parser;
-		nextTestState_func_t m_nextTestState;
+		unitTest_func_t m_unitTest;
 
 	public:
 		
@@ -196,7 +196,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 					string parameters,  
 					string extraHTMLDoc,  
 					parser_func_t parser,
-					nextTestState_func_t nextState	);
+					unitTest_func_t unitTest	);
 
 		virtual const string &name() const // You can see in this prototype that it was not written by Florent
 		{ return m_name; } 
@@ -223,13 +223,18 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 				return m_parser(target, args);
 			}
 
-			virtual void nextTestStateGenerator(TestState* previousTestState)
+			virtual TestList unitTestGenerator(int index)
 			{
-				if(m_nextTestState != nullptr)
+
+				TestList testList;
+
+				if(m_unitTest != nullptr)
 				{
 
-					m_nextTestState(previousTestState);
+					testList = m_unitTest(index);
 				}
+
+				return testList;
 			}
 
 

@@ -992,46 +992,38 @@ namespace flopoco{
 
 
 
-	void FPExp::nextTestState(TestState * previousTestState)
+		TestList FPExp::unitTest(int index)
 		{
-
-			static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+			TestList testStateList;
 			vector<pair<string,string>> paramList;
 			
-			if(previousTestState->getIndex() == 0)
-			{
-				paramList.push_back(make_pair("wE","8"));
-				paramList.push_back(make_pair("wF","23"));
+			if(index==-1) 
+		{ // The unit tests
+
+			for(int wF=5; wF<53; wF+=1) // test various input widths
+			{ 
+				int nbByteWE = 6+(wF/10);
+				while(nbByteWE>wF)
+				{
+					nbByteWE -= 2;
+				}
+
+				paramList.push_back(make_pair("wF",to_string(wF)));
+				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
 				testStateList.push_back(paramList);
 				paramList.clear();
-				paramList.push_back(make_pair("wE","11"));
-				paramList.push_back(make_pair("wF","52"));
-				testStateList.push_back(paramList);
-
-
-				for(int i = 5; i<53; i++)
-				{
-					int nbByteWE = 6+(i/10);
-					paramList.clear();
-					paramList.push_back(make_pair("wF",to_string(i)));
-					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-					testStateList.push_back(paramList);
-				}
-			}
-			previousTestState->setTestsNumber(testStateList.size());
-
-
-			vector<pair<string,string>>::iterator itVector;
-			int index = previousTestState->getIndex();
-
-			for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
-			{
-				previousTestState->changeValue((*itVector).first,(*itVector).second);
-				previousTestState->changeValue("n","50");
 			}
 		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
 
-		void FPExp::registerFactory(){
+		return testStateList;
+	}
+
+	void FPExp::registerFactory(){
 		UserInterface::add("FPExp", // name
 			"A faithful floating-point exponential function.",
 			"ElementaryFunctions",
@@ -1043,7 +1035,7 @@ namespace flopoco{
 			g(int)=-1: number of guard bits",
 			"Parameter d and k control the DSP/RamBlock tradeoff. In both cases, a value of 0 choses a sensible default. Parameter g is mostly for internal use.<br> For all the details, see <a href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this article</a>.",
 			FPExp::parseArguments,
-			FPExp::nextTestState
+			FPExp::unitTest
 			) ;
 		
 	}

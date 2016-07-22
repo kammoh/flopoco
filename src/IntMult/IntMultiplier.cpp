@@ -2095,36 +2095,33 @@
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.", // This string will be parsed
 											 "", // no particular extra doc needed
 											 IntMultiplier::parseArguments,
-											 IntMultiplier::nextTestState
+											 IntMultiplier::unitTest
 											 ) ;
 	}
 
-	void IntMultiplier::nextTestState(TestState * previousTestState)
+	TestList IntMultiplier::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
-			previousTestState->setTestBenchSize(1000);
-
-			for(int i = 4; i<65; i++)
-			{
-					paramList.clear();
-					paramList.push_back(make_pair("wX",to_string(i)));
-					paramList.push_back(make_pair("wY",to_string(i)));
-					testStateList.push_back(paramList);
+			for(int i=4; i<65; i+=1) 
+			{ // test various input widths
+				paramList.push_back(make_pair("wX",to_string(i)));
+				paramList.push_back(make_pair("wY",to_string(i)));	
+				testStateList.push_back(paramList);
+				paramList.clear();
 			}
-			previousTestState->setTestsNumber(testStateList.size());
 		}
-
-		vector<pair<string,string>>::iterator itVector;
-		int index = previousTestState->getIndex();
-
-		for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
+		else     
 		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 
 	

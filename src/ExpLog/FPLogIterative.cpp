@@ -1261,46 +1261,35 @@
 		return new FPLogIterative(target, wE, wF, inTableSize);
 	}
 
-	void FPLogIterative::nextTestState(TestState * previousTestState)
+	TestList FPLogIterative::unitTest(int index)
 	{
-		static vector<vector<pair<string,string>>> testStateList;
+		// the static list of mandatory tests
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
 
-		if(previousTestState->getIndex() == 0)
-		{
-			paramList.push_back(make_pair("wE","8"));
-			paramList.push_back(make_pair("wF","23"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-			paramList.push_back(make_pair("wE","11"));
-			paramList.push_back(make_pair("wF","52"));
-			testStateList.push_back(paramList);
-
-			previousTestState->setTestBenchSize(1000);
-
-			for(int i = 5; i<53; i++)
-			{
-				int nbByteWE = 6+(i/10);
-				while(nbByteWE>i)
+			for(int wF=5; wF<53; wF+=1) // test various input widths
+			{ 
+				int nbByteWE = 6+(wF/10);
+				while(nbByteWE>wF)
 				{
 					nbByteWE -= 2;
 				}
-				paramList.clear();
-				paramList.push_back(make_pair("wF",to_string(i)));
+
+				paramList.push_back(make_pair("wF",to_string(wF)));
 				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
 				testStateList.push_back(paramList);
-			}
-			previousTestState->setTestsNumber(testStateList.size());
-
-			vector<pair<string,string>>::iterator itVector;
-			int index = previousTestState->getIndex();
-
-			for(itVector = testStateList[index].begin(); itVector != testStateList[index].end(); ++itVector)
-			{
-				previousTestState->changeValue((*itVector).first,(*itVector).second);
-				previousTestState->changeValue("n","50");
+				paramList.clear();
 			}
 		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
 
 
@@ -1314,7 +1303,7 @@
 											 inTableSize(int)=0: The input size to the tables, in bits, between 6 and 16. 0 choses a a sensible value",
 											 "For details on the technique used, see <a href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research report</a>.",
 											 FPLogIterative::parseArguments,
-											 FPLogIterative::nextTestState
+											 FPLogIterative::unitTest
 											 ) ;
 
 	}
