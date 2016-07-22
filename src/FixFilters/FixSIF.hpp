@@ -31,7 +31,7 @@ namespace flopoco{
 		/**
 		 * Constructor of the FixSIF
 		 */
-		FixSIF(Target* target, string paramFileName);
+		FixSIF(Target* target, string paramFileName, string testsFileName);
 
 		/**
 		 * Destructor of the FixSIF

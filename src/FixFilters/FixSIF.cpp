@@ -6,8 +6,8 @@ using namespace std;
 
 namespace flopoco {
 
-	FixSIF::FixSIF(Target* target, string paramFileName_) :
-		Operator(target), paramFileName(paramFileName_)
+	FixSIF::FixSIF(Target* target, string paramFileName_, string testsFileName_) :
+		Operator(target), paramFileName(paramFileName_), testsFileName(testsFileName_)
 	{
 		srcFileName="FixSIF";
 		setCopyrightString ("Anastasia Volkova, Matei Istoan (2016)");
@@ -284,7 +284,7 @@ namespace flopoco {
 		if(testsFileName == ""){
 			THROWERROR("Error: no test file has been specified");
 		}else{
-			ifstream file(paramFileName);
+			ifstream file(testsFileName);
 			string line, tempStr;
 
 			if(file.is_open())
@@ -298,10 +298,12 @@ namespace flopoco {
 				for(int i=0; i<nbTests; i++)
 				{
 					vector<string> testInputVector;
-					vector<mpfr_t*> testInputsMpfr;
+					mpfr_t* testInputsMpfr;
 					vector<string> testOutputVector;
-					vector<mpfr_t*> testOutputsMpfr;
+					mpfr_t* testOutputsMpfr;
 
+					testInputsMpfr = (mpfr_t*)malloc(n_u*sizeof(mpfr_t));
+					testOutputsMpfr = (mpfr_t*)malloc(n_u*sizeof(mpfr_t));
 					//read the inputs
 					if(getline(file, line).rdstate() != ios::goodbit){
 						THROWERROR("Error: buildStandardTestCases: error while reading the values of the inputs from the tests file");
@@ -322,17 +324,15 @@ namespace flopoco {
 					{
 						// parse the coeffs from the string, with Sollya parsing
 						sollya_obj_t node;
-						mpfr_t tmpMpfr;
 
 						node = sollya_lib_parse_string(testInputVector[j].c_str());
 						// If conversion did not succeed (i.e. parse error)
 						if(node == 0)
 							THROWERROR(srcFileName << ": Unable to parse string " << testInputVector[j] << " as a numeric constant");
 
-						mpfr_init2(tmpMpfr, 10000);
-						sollya_lib_get_constant(tmpMpfr, node);
+						mpfr_init2(testInputsMpfr[j], 10000);
+						sollya_lib_get_constant(testInputsMpfr[j], node);
 						sollya_lib_clear_obj(node);
-						testInputsMpfr.push_back(&tmpMpfr);
 					}
 
 					//read the outputs
@@ -355,17 +355,15 @@ namespace flopoco {
 					{
 						// parse the coeffs from the string, with Sollya parsing
 						sollya_obj_t node;
-						mpfr_t tmpMpfr;
 
 						node = sollya_lib_parse_string(testOutputVector[j].c_str());
 						// If conversion did not succeed (i.e. parse error)
 						if(node == 0)
 							THROWERROR(srcFileName << ": Unable to parse string " << testOutputVector[j] << " as a numeric constant");
 
-						mpfr_init2(tmpMpfr, 10000);
-						sollya_lib_get_constant(tmpMpfr, node);
+						mpfr_init2(testOutputsMpfr[j], 10000);
+						sollya_lib_get_constant(testOutputsMpfr[j], node);
 						sollya_lib_clear_obj(node);
-						testOutputsMpfr.push_back(&tmpMpfr);
 					}
 
 					//create the test
@@ -381,7 +379,7 @@ namespace flopoco {
 						//create a temporary variable
 						mpfr_init2(tmpMpfr, 10000);
 						//initialize the variable to the value of the current input
-						mpfr_set(tmpMpfr, *testInputsMpfr[j], GMP_RNDN);
+						mpfr_set(tmpMpfr, testInputsMpfr[j], GMP_RNDN);
 						//convert the variable to an integer
 						mpfr_mul_2si(tmpMpfr, tmpMpfr, -l_u[j], GMP_RNDN);
 						//convert the mpfr to an mpz
@@ -398,7 +396,7 @@ namespace flopoco {
 						//create a temporary variable
 						mpfr_init2(tmpMpfr, 10000);
 						//initialize the variable to the value of the current input
-						mpfr_set(tmpMpfr, *testOutputsMpfr[j], GMP_RNDN);
+						mpfr_set(tmpMpfr, testOutputsMpfr[j], GMP_RNDN);
 						//convert the variable to an integer
 						mpfr_mul_2si(tmpMpfr, tmpMpfr, -l_y[j], GMP_RNDN);
 						//convert the mpfr to an mpz
@@ -413,7 +411,18 @@ namespace flopoco {
 					}
 					//add the test
 					tcl->add(tc);
+
+					//mpfr cleanup
+					for(int j=0; j<n_u; j++){
+						mpfr_clear(testInputsMpfr[j]);
+					}
+					for(int j=0; j<n_y; j++){
+						mpfr_clear(testOutputsMpfr[j]);
+					}
+					free(testInputsMpfr);
+					free(testOutputsMpfr);
 				}
+				file.close();
 			}else{
 				THROWERROR("Error: failed to open the tests file " << testsFileName);
 			}
@@ -427,8 +436,10 @@ namespace flopoco {
 	OperatorPtr FixSIF::parseArguments(Target *target, vector<string> &args) {
 		string paramFile;
 		UserInterface::parseString(args, "paramFileName", &paramFile);
+		string testsFile;
+		UserInterface::parseString(args, "testsFileName", &testsFile);
 
-		return new FixSIF(target, paramFile);
+		return new FixSIF(target, paramFile, testsFile);
 	}
 
 
@@ -438,7 +449,8 @@ namespace flopoco {
 				"A fix-point SIF implementation.",
 				"FiltersEtc", // categories
 				"",
-				"paramFileName(string): the name of the file containing the parameters for the SIF",
+				"paramFileName(string): the name of the file containing the parameters for the SIF\
+				testsFileName(string)=\"\": the name of the file containing the tests for the SIF",
 				"",
 				FixSIF::parseArguments
 		) ;
