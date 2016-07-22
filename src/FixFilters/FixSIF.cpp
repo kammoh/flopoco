@@ -78,7 +78,7 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_next"));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
@@ -140,7 +140,7 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_next"));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
@@ -155,6 +155,10 @@ namespace flopoco {
 		//activate parsing
 		setSequential();
 		target->setPipelined(true);
+
+		//set the operator as having only one cycle
+		setCycle(0);
+		setPipelineDepth(0);
 
 	};
 
