@@ -309,7 +309,7 @@ namespace flopoco {
 					//split the line into a vector of values
 					for(int j=0; j<n_u; j++)
 					{
-						//split it to a vector of strigs
+						//split it to a vector of strings
 						stringstream ss(line);
 
 						while(ss >> tempStr)
@@ -334,6 +334,85 @@ namespace flopoco {
 						sollya_lib_clear_obj(node);
 						testInputsMpfr.push_back(&tmpMpfr);
 					}
+
+					//read the outputs
+					if(getline(file, line).rdstate() != ios::goodbit){
+						THROWERROR("Error: buildStandardTestCases: error while reading the values of the outputs from the tests file");
+					}
+					//split the line into a vector of values
+					for(int j=0; j<n_y; j++)
+					{
+						//split it to a vector of strings
+						stringstream ss(line);
+
+						while(ss >> tempStr)
+						{
+							testOutputVector.push_back(tempStr);
+						}
+					}
+					//parse the outputs with Sollya
+					for(int j=0; j<n_y; j++)
+					{
+						// parse the coeffs from the string, with Sollya parsing
+						sollya_obj_t node;
+						mpfr_t tmpMpfr;
+
+						node = sollya_lib_parse_string(testOutputVector[j].c_str());
+						// If conversion did not succeed (i.e. parse error)
+						if(node == 0)
+							THROWERROR(srcFileName << ": Unable to parse string " << testOutputVector[j] << " as a numeric constant");
+
+						mpfr_init2(tmpMpfr, 10000);
+						sollya_lib_get_constant(tmpMpfr, node);
+						sollya_lib_clear_obj(node);
+						testOutputsMpfr.push_back(&tmpMpfr);
+					}
+
+					//create the test
+					TestCase *tc;
+
+					//create the test case
+					tc = new TestCase(this);
+					//create the inputs
+					for(int j=0; j<n_u; j++){
+						mpfr_t tmpMpfr;
+						mpz_class tmpMpz;
+
+						//create a temporary variable
+						mpfr_init2(tmpMpfr, 10000);
+						//initialize the variable to the value of the current input
+						mpfr_set(tmpMpfr, *testInputsMpfr[j], GMP_RNDN);
+						//convert the variable to an integer
+						mpfr_mul_2si(tmpMpfr, tmpMpfr, -l_u[j], GMP_RNDN);
+						//convert the mpfr to an mpz
+						mpfr_get_z (tmpMpz.get_mpz_t(), tmpMpfr, GMP_RNDN);
+						tmpMpz = signedToBitVector(tmpMpz, 1+m_u[j]-l_u[j]);
+
+						tc->addInput(join("U_", j), tmpMpz);
+					}
+					//create the outputs
+					for(int j=0; j<n_y; j++){
+						mpfr_t tmpMpfr;
+						mpz_class tmpMpz_u, tmpMpz_d;
+
+						//create a temporary variable
+						mpfr_init2(tmpMpfr, 10000);
+						//initialize the variable to the value of the current input
+						mpfr_set(tmpMpfr, *testOutputsMpfr[j], GMP_RNDN);
+						//convert the variable to an integer
+						mpfr_mul_2si(tmpMpfr, tmpMpfr, -l_y[j], GMP_RNDN);
+						//convert the mpfr to an mpz
+						//	rounded up and down
+						mpfr_get_z (tmpMpz_u.get_mpz_t(), tmpMpfr, GMP_RNDU);
+						tmpMpz_u = signedToBitVector(tmpMpz_u, 1+m_y[j]-l_y[j]);
+						mpfr_get_z (tmpMpz_d.get_mpz_t(), tmpMpfr, GMP_RNDD);
+						tmpMpz_d = signedToBitVector(tmpMpz_d, 1+m_y[j]-l_y[j]);
+
+						tc->addExpectedOutput(join("Y_", j), tmpMpz_u);
+						tc->addExpectedOutput(join("Y_", j), tmpMpz_d);
+					}
+					//add the test
+					tcl->add(tc);
 				}
 			}else{
 				THROWERROR("Error: failed to open the tests file " << testsFileName);
