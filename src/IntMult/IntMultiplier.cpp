@@ -2191,13 +2191,12 @@
 				}
 			}
 		}
-	}
-	else     
-	{
+		else     
+		{
 				// finite number of random test computed out of index
-	}	
-	return testStateList;
-}
+		}	
+		return testStateList;
+	}
 
 
 }
