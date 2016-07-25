@@ -465,6 +465,12 @@ namespace flopoco{
 
 	void Operator::reconnectIOPorts()
 	{
+		//schedule the parent operator, if it hasn't already been done
+		if(parentOp_ == nullptr){
+			THROWERROR("Error: reconnectIOPorts: trying to connect a subcomponent to an empty parent operator");
+		}else{
+			parentOp_->startScheduling();
+		}
 		//connect the inputs and outputs of the operator to the corresponding
 		//	signals in the parent operator
 		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
@@ -1481,6 +1487,7 @@ namespace flopoco{
 		{
 			Signal *signal = op->getIOListSignal(i);
 			bool isSignalMapped = false;
+			bool isPredScheduled = false;
 			map<string, Signal*>::iterator iterStart, iterStop;
 
 			//set the start and stop values for the iterators, for either the input,
@@ -1498,15 +1505,27 @@ namespace flopoco{
 			{
 				if(it->first == signal->getName())
 				{
+					//mark the signal as connected
 					isSignalMapped = true;
+					//check if the signal connected to the port has been scheduled
+					isPredScheduled = it->second->getHasBeenImplemented();
 					break;
 				}
 			}
 
+			//if the port is not connected to a signal in the parent operator,
+			//	then we cannot continue
 			if(!isSignalMapped)
 				THROWERROR("ERROR in instance() while trying to create a new instance of "
 						<< op->getName() << " called " << instanceName << ": input/output "
 						<< signal->getName() << " is not mapped to anything" << endl);
+			//if the signal to which the port is connected is not yet scheduled,
+			//	then we cannot continue
+			if(!isPredScheduled)
+				THROWERROR("ERROR in instance() while trying to create a new instance of "
+						<< op->getName() << " called " << instanceName << ": input/output "
+						<< signal->getName() << " is connected to a signal not yet scheduled."
+						<< " Cannot continue as the architecture might depend on its timing." << endl);
 		}
 
 		o << tab << instanceName << ": " << op->getName();
