@@ -2108,21 +2108,96 @@
 		if(index==-1) 
 		{ // The unit tests
 
-			for(int i=4; i<65; i+=1) 
-			{ // test various input widths
-				paramList.push_back(make_pair("wX",to_string(i)));
-				paramList.push_back(make_pair("wY",to_string(i)));	
-				testStateList.push_back(paramList);
-				paramList.clear();
+			for(int target = 0; target < 2; target ++)
+			{
+				for(int pipeline = 0; pipeline < 2; pipeline++)
+				{
+					for(float threshold = 0; threshold <= 1.4; threshold= threshold + 0.7)
+					{
+						for(int wXwYwOut = 9; wXwYwOut < 58; wXwYwOut= wXwYwOut + 2)
+						{
+							if(target == 0)
+							{
+								paramList.push_back(make_pair("target","Stratix2"));
+							}
+							else
+							{
+								paramList.push_back(make_pair("targert","Vixtex6"));
+							}
+
+							if(pipeline == 0)
+							{
+								paramList.push_back(make_pair("pipeline","false"));
+							}
+							else
+							{
+								paramList.push_back(make_pair("pipeline","true"));
+							}
+
+							if(threshold >= 1)
+							{
+								paramList.push_back(make_pair("hardMultThreshold","1"));
+							}
+							else
+							{
+								paramList.push_back(make_pair("hardMultThreshold",to_string(threshold)));
+							}
+
+							paramList.push_back(make_pair("wX",to_string(wXwYwOut)));
+							paramList.push_back(make_pair("wY",to_string(wXwYwOut)));
+							paramList.push_back(make_pair("wOut",to_string(wXwYwOut)));
+							testStateList.push_back(paramList);
+							paramList.clear();
+						}
+
+						for(int wX = 4; wX < 57; wX= wX + 2)
+						{
+							for(int wY = 4; wY < 17; wY++)
+							{
+								if(target == 0)
+								{
+									paramList.push_back(make_pair("target","Stratix2"));
+								}
+								else
+								{
+									paramList.push_back(make_pair("target","Vixtex6"));
+								}
+
+								if(pipeline == 0)
+								{
+									paramList.push_back(make_pair("pipeline","false"));
+								}
+								else
+								{
+									paramList.push_back(make_pair("pipeline","true"));
+								}
+
+								if(threshold >= 1)
+								{
+									paramList.push_back(make_pair("hardMultThreshold","1"));
+								}
+								else
+								{
+									paramList.push_back(make_pair("hardMultThreshold",to_string(threshold)));
+								}
+
+								paramList.push_back(make_pair("wX",to_string(wX)));
+								paramList.push_back(make_pair("wY",to_string(wY)));
+								testStateList.push_back(paramList);
+								paramList.clear();
+							}
+						}
+					}
+				}
 			}
 		}
-		else     
-		{
-				// finite number of random test computed out of index
-		}	
-
-		return testStateList;
 	}
+	else     
+	{
+				// finite number of random test computed out of index
+	}	
+	return testStateList;
+}
 
-	
+
 }
