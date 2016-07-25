@@ -2160,7 +2160,7 @@
 								}
 								else
 								{
-									paramList.push_back(make_pair("target","Vixtex6"));
+									paramList.push_back(make_pair("target","Virtex6"));
 								}
 
 								if(pipeline == 0)
