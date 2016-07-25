@@ -196,8 +196,15 @@ namespace flopoco {
 		setSequential();
 		getTarget()->setPipelined(true);
 		setCycle(0);
+
+		//The final rounding must be computed with an addition, no escaping it
+
+		vhdl << tab << declare("Yrounded", msbOut-lsbOut+2) <<  " <= (Yinternal" << range(msbOut-lsbOut+g, g-1) << ")  +  (" << zg(msbOut-lsbOut+1)  << " & \"1\" );" << endl;
+
 		addOutput("R", msbOut - lsbOut + 1,   true);
-		vhdl << "R <= Yinternal" << range(msbOut-lsbOut+g, g) << ";" << endl;
+		vhdl << "R <= Yrounded" << range(msbOut-lsbOut+1, 1) << ";" << endl;
+
+
 
 	};
 
