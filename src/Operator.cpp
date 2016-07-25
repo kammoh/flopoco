@@ -1300,7 +1300,7 @@ namespace flopoco{
 	}
 
 
-	string Operator::delay(string signalName, int nbDelayCycles)
+	string Operator::delay(string signalName, int nbDelayCycles, SignalDelayType delayType)
 	{
 		ostringstream result;
 
@@ -1309,9 +1309,12 @@ namespace flopoco{
 			THROWERROR("Error in delay(): trying to add a negative number of delay cycles:" << nbDelayCycles);
 		//check that the signal exists
 		if(!isSignalDeclared(signalName))
-			THROWERROR("Error in delay(): trying to delay a signal that does not exist:" << signalName);
+			THROWERROR("Error in delay(): trying to delay a signal that does not yet exist:" << signalName);
 
-		result << signalName << "^" << nbDelayCycles;
+		if(delayType == SignalDelayType::pipeline)
+			result << signalName << "^" << nbDelayCycles;
+		else
+			result << signalName << "^^" << nbDelayCycles;
 		return result.str();
 	}
 
@@ -2291,7 +2294,7 @@ namespace flopoco{
 		oldStr = vhdl.str();
 
 		//iterate through the old code, one statement at the time
-		// code that doesn't need to be modified: it goes directly to the new vhdl code buffer
+		// code that doesn't need to be modified: goes directly to the new vhdl code buffer
 		// code that needs to be modified: ?? should be removed from lhs_name, $$ should be removed from rhs_name,
 		//		delays of the type rhs_name_dxxx should be added for the right-hand side signals
 		bool isSelectedAssignment = (oldStr.find('?') > oldStr.find('$'));
@@ -3022,7 +3025,9 @@ namespace flopoco{
 		//initialize the maximum cycle and critical path of the predecessors
 		if(targetSignal->predecessors()->size() != 0)
 		{
-			maxCycle = targetSignal->predecessor(0)->getCycle() + targetSignal->predecessorPair(0)->second;
+			//if the delay is negative, it means this is a functional delay,
+			//	so we can ignore it for the pipeline computations
+			maxCycle = targetSignal->predecessor(0)->getCycle() + max(0, targetSignal->predecessorPair(0)->second);
 			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
 		}
 
@@ -3030,7 +3035,9 @@ namespace flopoco{
 		for(unsigned int i=1; i<targetSignal->predecessors()->size(); i++)
 		{
 			Signal* currentPred = targetSignal->predecessor(i);
-			int currentPredCycleDelay = targetSignal->predecessorPair(i)->second;
+			//if the delay is negative, it means this is a functional delay,
+			//	so we can ignore it for the pipeline computations
+			int currentPredCycleDelay = max(0, targetSignal->predecessorPair(i)->second);
 
 			//constant signals are not taken into account
 			if(currentPred->type() == Signal::constant)
@@ -3333,7 +3340,7 @@ namespace flopoco{
 	      stream << tabs << nodeName << "__" << node->parentOp()->getName() << " -> "
 		   << nodeParentName << "__" << node->successor(i)->parentOp()->getName() << " [";
 	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
-	      stream << " label=" << node->successorPair(i)->second;
+	      stream << " label=" << max(0, node->successorPair(i)->second);
 	      stream << " ];\n";
 	  }
 
@@ -3357,7 +3364,7 @@ namespace flopoco{
 				<< sinkNodeName << "__" << (sink!=NULL ? sink->parentOp()->getName() : this->getName()) << " [";
 		stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
 		if((source != NULL) && (sink != NULL))
-			stream << " label=" << sink->getCycle()-source->getCycle();
+			stream << " label=" << max(0, sink->getCycle()-source->getCycle());
 		stream << " ];\n";
 
 		return stream.str();

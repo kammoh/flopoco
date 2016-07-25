@@ -38,7 +38,8 @@ namespace flopoco{
 	 * are marked (ID_Name becomes $$ID_Name$$, if it is a signal on the
 	 * right-hand side of an assignment, ??ID_Name??, if it is on the left-hand side)
 	 * for the second pass.
-	 * The signals with delays are marked as well (ID_Name becomes ID_Name^nb_cycles).
+	 * The signals with delays are marked as well (ID_Name becomes ID_Name^nb_cycles (pipeline delay)
+	 * or ID_Name^nb_cycles (functional delay)).
 	 * The assignment statements are appended with the name of the left-hand signal (??ID_Name??).
 	 */
 	class FlopocoStream{

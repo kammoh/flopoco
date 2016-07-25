@@ -81,6 +81,14 @@ class Operator
 public:
 
 	/**
+	 * The possible types signal delays
+	 */
+	typedef enum {
+		pipeline,           /**< the inserted register is a pipeline delay */
+		functional,         /**< the inserted register is a functional delay */
+	} SignalDelayType;
+
+	/**
 	 * Add a sub-operator to this operator
 	 */
 	void addSubComponent(Operator* op);
@@ -708,14 +716,16 @@ public:
 
 	/**
 	 * Delay a signal for a given amount of of cycles.
-	 * The name of the signal will be temporarily modified to signal_name^nbDelayCycles,
-	 * until the second parsing stage.
-	 * The use of the '^' symbol should be kept coherent with the notation in
-	 * FlopocoStream
+	 * The inserted register can either be functional (e.g. the z^(-1) function used in signal processing),
+	 * or a pipeline register (e.g. the registers inserted in a circuit while pipelining).
+	 * The name of the signal will be temporarily modified until the second parsing stage
+	 * to signal_name^nbDelayCycles, for pipeline delays, or signal_name^^nbDelayCycles
+	 * The use of the '^' symbol should be kept coherent with the notation in FlopocoStream.
 	 * @param signalName the signal to delay
-	 * @param nbDelayCycles the number of cycles the signal will be delayed
+	 * @param nbDelayCycles the number of cycles the signal will be delayed, by default 1
+	 * @param delayType the type of delay inserted (pipeline or functional), by default pipeline
 	 */
-	string delay(string signalName, int nbDelayCycles = 1);
+	string delay(string signalName, int nbDelayCycles = 1, SignalDelayType delayType = SignalDelayType::pipeline);
 
 
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)

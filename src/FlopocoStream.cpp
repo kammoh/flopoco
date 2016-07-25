@@ -191,12 +191,18 @@ namespace flopoco{
 			}
 			//search for dependence edges where the right-hand side can be
 			//	a delayed signal. Delayed signals are of the form
-			//	ID_Name^cycle_delays
+			//	ID_Name^cycle_delays (pipeline register) or ID_Name^^cycle_delays (functional register)
 			//the signal name must be extracted and when a new edge is added,
 			//	it should be added with the corresponding delay
-			if(rhsName.find("^") != string::npos)
+			//the delay is stored a positive for the pipeline delay and negative for the functional delays
+			if(rhsName.find("^^") != string::npos)
 			{
-				//this is a delayed signal
+				//this is a delayed signal with a functional register
+				newRhsName = rhsName.substr(0, rhsName.find("^^"));
+				rhsDelay = -(int)strtol((rhsName.substr(rhsName.find("^^")+2, string::npos)).c_str(), NULL, 10);
+			}else if(rhsName.find("^") != string::npos)
+			{
+				//this is a delayed signal with a pipeline delay
 				newRhsName = rhsName.substr(0, rhsName.find("^"));
 				rhsDelay = (int)strtol((rhsName.substr(rhsName.find("^")+1, string::npos)).c_str(), NULL, 10);
 			}else
