@@ -1409,6 +1409,12 @@ namespace flopoco{
 		//check if the signal already exists
 		try{
 			s = getSignalByName(actualSignalName);
+			//check that port can be scheduled
+			if(s->getHasBeenImplemented() == false){
+				THROWERROR("ERROR in inPortMap() while trying to connect an input: "
+					<< componentPortName << " is to be connected to a signal not yet scheduled:"
+					<< s->getName() << ". Cannot continue as the architecture might depend on its timing." << endl);
+			}
 		}
 		catch(string &e2) {
 			THROWERROR("ERROR in inPortMap(): " << e2);
