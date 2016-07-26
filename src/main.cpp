@@ -50,6 +50,8 @@ int main(int argc, char* argv[] )
 		LZOC::registerFactory();
 		LZOCShifterSticky::registerFactory();
 
+		ShiftReg::registerFactory();
+
 		IntAdder::registerFactory();
 		
 #if 0 // Plug them back some day
