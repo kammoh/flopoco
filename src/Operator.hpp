@@ -1286,6 +1286,14 @@ public:
 
 
 	/**
+	 * Return the functional delay, in cycles, between two signals.
+	 * @param rhsSignal the signal on the right-hand side of the assignment
+	 * @param lhsSignal the signal on the left-hand side of the assignment
+	 */
+	int getFunctionalDelay(Signal *rhsSignal, Signal *lhsSignal);
+
+
+	/**
 	 * Extract the timing dependences between signals.
 	 * The raw data is stored in the vhdl FlopocoStream object, in the form of
 	 * triplets, storing ("lhs_signal_name", "rhs_signal_name", delay).

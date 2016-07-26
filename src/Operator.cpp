@@ -186,6 +186,10 @@ namespace flopoco{
 
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
+
+		//start the scheduling, as some of the signals declared
+		//	hereafter might depend on this input's timing
+		startScheduling();
 	}
 
 	void Operator::addInput(const std::string name) {
@@ -258,6 +262,10 @@ namespace flopoco{
 
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
+
+		//start the scheduling, as some of the signals declared
+		//	hereafter might depend on this input's timing
+		startScheduling();
 	}
 
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
@@ -313,6 +321,10 @@ namespace flopoco{
 
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
+
+		//start the scheduling, as some of the signals declared
+		//	hereafter might depend on this input's timing
+		startScheduling();
 	}
 
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -367,6 +379,10 @@ namespace flopoco{
 
 		//add the sinal to the list of signals to be scheduled
 		signalsToSchedule.push_back(s);
+
+		//start the scheduling, as some of the signals declared
+		//	hereafter might depend on this input's timing
+		startScheduling();
 	}
 
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -2442,8 +2458,9 @@ namespace flopoco{
 							}
 
 							newStr << rhsName;
-							if(getTarget()->isPipelined() && !unknownLHSName && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
-							  newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
+							if(getTarget()->isPipelined() && !unknownLHSName
+									&& (lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal) > 0))
+							  newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal));
 						} else
 						{
 							//this signal is clk, rst or a constant
@@ -2539,8 +2556,9 @@ namespace flopoco{
 
 				//output the rhs signal name
 				newStr << rhsName;
-				if(getTarget()->isPipelined() && !unknownLHSName  && !unknownRHSName && (lhsSignal->getCycle()-rhsSignal->getCycle() > 0))
-					newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle());
+				if(getTarget()->isPipelined() && !unknownLHSName  && !unknownRHSName
+						&& (lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal) > 0))
+					newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal));
 
 				//copy the code up until the lhs signal name
 				tmpCurrentPos = tmpNextPos+2;
@@ -2630,7 +2648,7 @@ namespace flopoco{
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
 				if(!unknownLHSName && !unknownRHSName)
-				  cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle();
+				  cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal);
 				newStr << rhsName;
 				if(getTarget()->isPipelined() && !unknownLHSName && !unknownRHSName && (cycleDelay>0))
 					newStr << "_d" << vhdlize(cycleDelay);
@@ -2666,6 +2684,32 @@ namespace flopoco{
 		vhdl.setSecondLevelCode(newStr.str());
 
 		REPORT(DEBUG, "Finished second-level parsing of VHDL code for operator " << srcFileName);
+	}
+
+
+	int Operator::getFunctionalDelay(Signal *rhsSignal, Signal *lhsSignal)
+	{
+		bool isLhsPredecessor = false;
+
+		for(size_t i=0; i<lhsSignal->predecessors()->size(); i++)
+		{
+			pair<Signal*, int> newPair = *lhsSignal->predecessorPair(i);
+
+			if(newPair.first->getName() == rhsSignal->getName())
+			{
+				isLhsPredecessor = true;
+
+				if(newPair.second < 0)
+					return (-1)*newPair.second;
+				else
+					return 0;
+			}
+		}
+
+		if(isLhsPredecessor == false)
+			THROWERROR("Error in getFunctionalDelay: trying to obtain the functional delay between signal "
+					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
+		return 0;
 	}
 
 
@@ -2916,7 +2960,12 @@ namespace flopoco{
 			if((targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName()) &&
 					(targetSignal->predecessor(i)->type() == Signal::out))
 				continue;
-			targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
+			if(targetSignal->predecessorPair(i)->second >= 0)
+				targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle()
+						- targetSignal->predecessor(i)->getCycle());
+			else
+				targetSignal->predecessor(i)->updateLifeSpan(targetSignal->getCycle()+abs(targetSignal->predecessorPair(i)->second)
+						- targetSignal->predecessor(i)->getCycle());
 		}
 
 		//check if this is an input signal for a sub-component

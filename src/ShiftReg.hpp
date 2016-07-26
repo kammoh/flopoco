@@ -16,6 +16,7 @@ namespace flopoco{
 			/* Destructor */
 			~ShiftReg();
 
+
 			// Below all the functions needed to test the operator
 			/* the emulate function is used to simulate in software the operator
 			  in order to compare this result with those outputed by the vhdl opertator */
@@ -23,6 +24,13 @@ namespace flopoco{
 
 			/* function used to create Standard testCase defined by the developper */
 			void buildStandardTestCases(TestCaseList* tcl);
+
+
+			/** Factory method that parses arguments and calls the constructor */
+			static OperatorPtr parseArguments(Target *target , vector<string> &args);
+
+			/** Factory register method */
+			static void registerFactory();
 
 	  	private:
 			int w; // input and output size
