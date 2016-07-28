@@ -137,7 +137,7 @@ namespace flopoco{
 
 			// now sumAbsCoeff is the max value that the SOPC can take.
 			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU); // just to make the following loop easier
-			REPORT(INFO, "sumAbs=" << sumAbs);
+			REPORT(DETAILED, "sumAbs=" << sumAbs);
 			msbOut=1;
 			while(sumAbs>=2.0){
 				sumAbs*=0.5;
@@ -192,7 +192,7 @@ namespace flopoco{
 			maxErrorWithGuardBits /= 2.0;
 		}
 		sumSize += g;
-		REPORT(DETAILED,"Overall error is " << maxAbsError  << " ulps, which we will manage by adding " << g << " guard bits to the bit heap" );
+		REPORT(INFO,"Overall error is " << maxAbsError  << " ulps, which we will manage by adding " << g << " guard bits to the bit heap" );
 		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize << " bits.");
 		
 		if(!getTarget()->plainVHDL())
