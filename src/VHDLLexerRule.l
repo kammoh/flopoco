@@ -82,6 +82,7 @@ base_specifier            (B|b|O|o|X|x)
 
 identifier                ({letter}(_?{letter_or_digit})*)
 delayed_identifier        ({identifier}\^({digit})+)
+delayed_identifier2       ({identifier}\^^({digit})+)
 label					  ({identifier}{space_character}*":")
 
 
@@ -284,6 +285,7 @@ label					  ({identifier}{space_character}*":")
 
 {identifier} |
 {delayed_identifier} |
+{delayed_identifier2} |
 "("({space_character})*{identifier}(({space_character})*","({space_character})*{identifier})*({space_character})*")" {
 	//identified either "signal_name" or "(signal_name, signal_name...)"
 	//this can be either the left or the right hand side

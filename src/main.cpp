@@ -38,6 +38,8 @@ int main(int argc, char* argv[] )
 
 		Tester::registerFactory();
 
+		Compressor::registerFactory();
+
 		// Florent has commented out all the operators for now.
 		// Uncomment them only to bring them up to the new framework.
 
