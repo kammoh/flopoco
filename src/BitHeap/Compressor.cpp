@@ -50,7 +50,7 @@ namespace flopoco{
 		//create the output
 		addOutput("R", wOut);
 
-		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl;
+		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
 		vhdl << tab << "with X select R <= " << endl;
 
 		vector<vector<mpz_class>> values(1<<wOut);
