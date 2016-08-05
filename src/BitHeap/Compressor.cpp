@@ -13,6 +13,9 @@ namespace flopoco{
 		ostringstream name;
 		stringstream nm, xs;
 
+		//compressors are supposed to be combinatorial
+		setCombinatorial();
+
 		//remove the zero columns at the lsb
 		while(heights[0] == 0)
 		{
@@ -21,6 +24,7 @@ namespace flopoco{
 
 		name << "Compressor_";
 
+		//compute the size of the input and of the output
 		for(int i=heights.size()-1; i>=0; i--)
 		{
 			wIn    += heights[i];
@@ -33,6 +37,8 @@ namespace flopoco{
 		name << "_" << wOut;
 		setName(name.str());
 
+		//create the inputs
+		//	and the internal signal which concatenates all the inputs
 		for(int i=heights.size()-1; i>=0; i--)
 		{
 			addInput(join("X",i), heights[i]);
@@ -41,25 +47,27 @@ namespace flopoco{
 			if(i != 0)
 				xs << "& ";
 		}
-
+		//create the output
 		addOutput("R", wOut);
 
 		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl;
 		vhdl << tab << "with X select R <= " << endl;
 
 		vector<vector<mpz_class>> values(1<<wOut);
-
+		//create the compressor
 		for(mpz_class i=0; i<(1 << wIn); i++)
 		{
 			mpz_class ppcnt = 0;
 			mpz_class ii = i;
 
+			//compute the compression result for the current input
 			for(unsigned j=0; j<heights.size(); j++)
 			{
 				ppcnt += popcnt( ii - ((ii>>heights[j]) << heights[j]) ) << j;
 				ii = ii >> heights[j];
 			}
 
+			//output the line, if not in compact mode
 			if(!compactView)
 			{
 				vhdl << tab << tab << "\"" << unsignedBinary(ppcnt, wOut) << "\" when \""
@@ -69,6 +77,7 @@ namespace flopoco{
 			}
 		}
 
+		//print the compressor, if in compact mode
 		if(compactView)
 		{
 			for(unsigned i=0; i<values.size(); i++)
@@ -81,7 +90,7 @@ namespace flopoco{
 					{
 						vhdl << " | \"" << unsignedBinary(mpz_class(values[i][j]), wIn) << "\"";
 					}
-					vhdl << ";" << endl;
+					vhdl << "," << endl;
 				}
 			}
 		}
