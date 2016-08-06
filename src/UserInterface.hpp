@@ -23,8 +23,6 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
   namespace flopoco
   {
-  	typedef vector<vector<pair<string,string>>> TestList;
-  	typedef TestList (*unitTest_func_t)(int);
   	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	
   	class OperatorFactory;
   	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
