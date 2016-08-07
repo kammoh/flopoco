@@ -21,13 +21,14 @@
 
 #include "IntConstDiv.hpp"
 
+#define OLDTABLEINTERFACE 0 // 0 for master, 1 for newPipelineFramework
 
   using namespace std;
 
 
   namespace flopoco{
 
-#if 0 // deprecated overloading of Table method
+#if OLDTABLEINTERFACE // deprecated overloading of Table method
 
 		// The classical table for the linear architecture
 
@@ -199,7 +200,7 @@
 		if(architecture==0) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
-#if 0 // deprecated overloading of Table method
+#if OLDTABLEINTERFACE // deprecated overloading of Table method
 			EuclideanDivTable* table;
 			table = new EuclideanDivTable(target, d, alpha, gamma);
 			useSoftRAM(table);
@@ -265,7 +266,7 @@
 
 			/// First level table
 			
-#if 0 // deprecated overloading of Table method
+#if OLDTABLEINTERFACE // deprecated overloading of Table method
 			CBLKTable* table;
 
 			// level 0
@@ -321,7 +322,7 @@
 				REPORT(INFO, "level=" << level << "  rLevelSize=" << rLevelSize << "  qLevelSize=" << qLevelSize);
 
 
-#if 0 // deprecated overloading of Table method
+#if OLDTABLEINTERFACE // deprecated overloading of Table method
 				table = new CBLKTable(target, level, d, alpha, gamma, rho);
 				useSoftRAM(table);
 
