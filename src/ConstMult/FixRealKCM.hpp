@@ -119,7 +119,7 @@ namespace flopoco{
 				vector<string>& args
 			);
 
-		static void nextTestState(TestState * previousTestState);
+		static TestList unitTest(int index);
 
 		static void registerFactory();
 		

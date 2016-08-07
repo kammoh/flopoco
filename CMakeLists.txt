@@ -231,9 +231,9 @@ ADD_LIBRARY(FloPoCoLib STATIC
  #src/Targets/CycloneIV 
  #src/Targets/CycloneV 
 
-# Tester ------------------------------------------------------------
-src/Tester/Tester
-src/Tester/TestState
+# AutoTest ------------------------------------------------------------
+src/AutoTest/AutoTest
+
 # TestBench-related -------------------------------------------------
  src/TestBenches/TestCase
  src/TestBenches/FPNumber

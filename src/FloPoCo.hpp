@@ -165,8 +165,9 @@
 #include "Conversions/InputIEEE.hpp"
 #include "Conversions/OutputIEEE.hpp"
 
-// Tester
-#include "Tester/Tester.hpp"
+// AutoTest
+#include "AutoTest/AutoTest.hpp"
+
 
 
 /* misc ------------------------------------------------------ */

@@ -36,7 +36,7 @@ int main(int argc, char* argv[] )
 {
 	try {
 
-		Tester::registerFactory();
+		AutoTest::registerFactory();
 
 		//		Compressor::registerFactory();
 
@@ -83,7 +83,7 @@ int main(int argc, char* argv[] )
 
 		// FPConstMult::registerFactory();
 		// FPRealKCM::registerFactory();
-		// IntConstDiv::registerFactory();
+		 IntConstDiv::registerFactory();
 		// FPConstDiv::registerFactory();
 		// FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();
