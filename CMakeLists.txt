@@ -247,6 +247,9 @@ src/Tester/TestState
  src/BitHeap/BitHeap
  src/BitHeap/WeightedBit
  src/BitHeap/Plotter
+ 
+ src/BitHeap/Compressor
+ src/BitHeap/Bit
 
 
 #--------------------------------------------------------------------

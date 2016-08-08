@@ -54,6 +54,7 @@
 #include "TestBenches/TestBench.hpp"
 
 #include "BitHeap/Compressor.hpp"
+#include "BitHeap/Compressor.hpp"
 
 /* shifters + lzoc ------------------------------------------- */
 #include "ShiftersEtc/Shifters.hpp"
