@@ -580,15 +580,18 @@ namespace flopoco{
 
 
 
-	void FixRealKCM::nextTestState(TestState * previousTestState)
+
+
+	
+	TestList FixRealKCM::unitTest(int index)
 	{
 		// the static list of mandatory tests
-		static vector<vector<pair<string,string>>> testStateList;
+		TestList testStateList;
 		vector<pair<string,string>> paramList;
-
 		
-		// is initialized here
-		if(previousTestState->getIterationIndex() == 0)		{
+		if(index==-1) 
+		{ // The unit tests
+
 			vector<string> constantList; // The list of constants we want to test
 			constantList.push_back("\"0\"");
 			constantList.push_back("\"0.125\"");
@@ -625,21 +628,14 @@ namespace flopoco{
 					}
 				}
 			}
-			previousTestState->setIterationNumber(testStateList.size());
 		}
-
-		// Now actually change the state
-		vector<pair<string,string>>::iterator itVector;
-		int testIndex = previousTestState->getIterationIndex();
-
-		for(itVector = testStateList[testIndex].begin(); itVector != testStateList[testIndex].end(); ++itVector)
+		else     
 		{
-			previousTestState->changeValue((*itVector).first,(*itVector).second);
-		}
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
 	}
-
-
-	
 
 	OperatorPtr FixRealKCM::parseArguments(Target* target, std::vector<std::string> &args)
 	{
@@ -679,10 +675,11 @@ namespace flopoco{
 				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
 				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
 				FixRealKCM::parseArguments,
-				FixRealKCM::nextTestState
+				FixRealKCM::unitTest
 		);
 	}
 
+	
 	/************************** The FixRealKCMTable class ********************/
 
 

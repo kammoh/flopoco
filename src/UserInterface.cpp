@@ -1,4 +1,5 @@
 #include "UserInterface.hpp"
+#include "AutoTest/AutoTest.hpp"
 #include "FloPoCo.hpp"
 #include <algorithm>
 #include <iostream>
@@ -662,8 +663,8 @@ namespace flopoco
 													 string parameterList, /**< semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
 													 string extraHTMLDoc, /**< Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
 													 parser_func_t parser,
-													 nextTestState_func_t nextTestState) {
-		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser,  nextTestState));
+													 unitTest_func_t unitTest	 ) {
+		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser, unitTest));
 		UserInterface::registerFactory(factory);
 	}
 
@@ -1160,16 +1161,15 @@ namespace flopoco
 	}
 
 	OperatorFactory::OperatorFactory(
-						 string name,
-						 string description, /* for the HTML doc and the detailed help */
-						 string category,
-						 string seeAlso,
-						 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
-						 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
-						 parser_func_t parser ,
-						 nextTestState_func_t nextTestState )
-		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser), m_nextTestState(nextTestState)
-
+																	 string name,
+																	 string description, /* for the HTML doc and the detailed help */
+																	 string category,
+																	 string seeAlso,
+																	 string parameters, /*  semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
+																	 string extraHTMLDoc, /* Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
+																	 parser_func_t parser ,
+																	 unitTest_func_t unitTest )
+		: m_name(name), m_description(description), m_category(category), m_seeAlso(seeAlso), m_extraHTMLDoc(extraHTMLDoc), m_parser(parser), m_unitTest(unitTest)
 	{
 		int start;
 		// Parse the parameter description
@@ -1231,6 +1231,20 @@ namespace flopoco
 
 	const vector<string>& OperatorFactory::param_names(void) const{
 		return m_paramNames;
+	}
+	
+
+	OperatorPtr OperatorFactory::parseArguments(Target* target, vector<string> &args	)	{
+		return m_parser(target, args);
+	}
+	
+		
+	TestList OperatorFactory::unitTestGenerator(int index)	{
+		TestList testList;
+		if(m_unitTest != nullptr)				{
+			testList = m_unitTest(index);
+		}
+		return testList;
 	}
 
 }; // flopoco

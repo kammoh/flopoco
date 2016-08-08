@@ -36,9 +36,9 @@ int main(int argc, char* argv[] )
 {
 	try {
 
-		Tester::registerFactory();
+		AutoTest::registerFactory();
 
-		Compressor::registerFactory();
+		//		Compressor::registerFactory();
 
 		// Florent has commented out all the operators for now.
 		// Uncomment them only to bring them up to the new framework.
@@ -83,7 +83,7 @@ int main(int argc, char* argv[] )
 
 		// FPConstMult::registerFactory();
 		// FPRealKCM::registerFactory();
-		// IntConstDiv::registerFactory();
+		 IntConstDiv::registerFactory();
 		// FPConstDiv::registerFactory();
 		// FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();

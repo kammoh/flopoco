@@ -4,14 +4,14 @@
 #include "FPAddSinglePath.hpp"
 #include "FPAddDualPath.hpp"
 
+
 namespace flopoco{
 	class FPAdd {
 	public:
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 
-		/** Create the next TestState based on the previous TestState */
-		static void nextTestState(TestState * previousTestState);
+		static TestList unitTest(int index);
 
 		/** Factory register method */ 
 		static void registerFactory();
