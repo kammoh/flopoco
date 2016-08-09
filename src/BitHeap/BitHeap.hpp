@@ -232,6 +232,10 @@ namespace flopoco{
 		void setSignedIO(bool s);
 
 		bool getSignedIO();
+
+		/** @brief return a fresh uid for a bit of weight w*/
+		int newUid(unsigned w);
+
 	protected:
 
 
@@ -282,11 +286,6 @@ namespace flopoco{
 
 		/** @brief return the current height a column (bits not yet compressed) */
 		unsigned currentHeight(unsigned w);
-
-		/** @brief return a fresh uid for a bit of weight w*/
-		int newUid(unsigned w);
-
-
 
 
 		/** @brief counts the bits not processed yet in wb */

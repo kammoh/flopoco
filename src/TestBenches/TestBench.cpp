@@ -65,6 +65,7 @@ namespace flopoco{
 				outPortMap (op, s->getName(), s->getName());
 			if(s->type() == Signal::in) {
 				declare(s->getName(), s->width(), s->isBus());
+				startScheduling();
 				inPortMap (op, s->getName(), s->getName());
 			}
 		}

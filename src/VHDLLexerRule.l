@@ -392,6 +392,10 @@ label					  ({identifier}{space_character}*":")
 	}else if(yyextra->lexingMode == LexerContext::process)
 	{
 		(*yyextra->os) << yytext;
+	}else if(yyextra->lexingMode == LexerContext::comment)
+	{
+		//this is a comment, so just output the input
+		(*yyextra->os) << yytext;
 	}else
 	{
 		(*yyextra->os) << yytext;
@@ -404,8 +408,17 @@ label					  ({identifier}{space_character}*":")
 }
  
 
-[ \t\n] {
+[ \t] {
 	(*yyextra->os) << yytext;
+}
+
+[\n] {
+	(*yyextra->os) << yytext;
+	
+	if(yyextra->lexingMode == LexerContext::comment)
+	{
+		yyextra->lexingMode = LexerContext::unset;
+	}
 }
 
 \&|\'|\(|\)|"**"|\*|\+|\-|\:|">="|\<|\>|=|\/=|"<>"|\||!|\.|\/ { 
@@ -440,9 +453,11 @@ label					  ({identifier}{space_character}*":")
 	(*yyextra->os) << yytext;
 }
 
-\-\-.*$ {
+(\-\-.*) {
 	// this is  comment
 	(*yyextra->os) << yytext;
+	
+	yyextra->lexingMode = LexerContext::comment;
 }
 
 (.) {

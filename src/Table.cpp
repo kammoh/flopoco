@@ -110,11 +110,12 @@ namespace flopoco{
 
 
 
-	Table::Table(Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) :
+	Table::Table(Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
 		Operator(target_),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";
+		setNameWithFreqAndUID(_name);
 
 		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
@@ -158,7 +159,8 @@ namespace flopoco{
 			wOut = intlog2(maxValue);
 		}
 
-		setNameWithFreq(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
+		if(_name == "")
+			setNameWithFreq(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
 
 		// Set up the IO signals
 		addInput("X", wIn, true);
@@ -285,7 +287,7 @@ namespace flopoco{
 			values_.push_back( (tmpMPZ*tmpMPZ+mpz_class(random())) % (mpz_class(1)<<wOut_) );
 		}
 
-		return new Table(target, values_, wIn_, wOut_, logicTable_);
+		return new Table(target, values_, wIn_, wOut_, "", logicTable_);
 	}
 
 	//FOR TEST PURPOSES ONLY

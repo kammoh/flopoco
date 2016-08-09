@@ -22,7 +22,8 @@ public:
 		instance,
 		instance2,
 		process,
-		caseStatement
+		caseStatement,
+		comment
 	} LexMode;
 
 	void* scanner;

@@ -2830,7 +2830,7 @@ namespace flopoco
 		//----------------------------------------------------------------------
 
 
-		REPORT(DEBUG,"start compressing maxHeight=" << maxWeight);
+		REPORT(DEBUG,"start compressing maxHeight=" << getMaxHeight());
 
 		/*
 		 * Try to use only optimal compressors. When going through the columns,

@@ -1645,6 +1645,53 @@ namespace flopoco{
 			//	this should also connect the inputs/outputs of the new operator to the right signals
 			newOp->deepCloneOperator(op);
 
+			//reconnect the inputs/outputs to the corresponding external signals
+			newOp->reconnectIOPorts();
+
+			//reconnect the inputs/outputs to the corresponding internal signals
+			for(unsigned int i=0; i<newOp->ioList_.size(); i++)
+			{
+				vector<pair<Signal*, int>> newPredecessors, newSuccessors;
+				Signal *originalSignal = op->getSignalByName(newOp->ioList_[i]->getName());
+
+				//create the new list of predecessors for the signal currently processed
+				//	only connect to internal signals
+				for(unsigned int j=0; j<originalSignal->predecessors()->size(); j++)
+				{
+					pair<Signal*, int> tmpPair = *(originalSignal->predecessorPair(j));
+
+					//only connect to internal signals
+					if(tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName())
+						continue;
+
+					//signals connected only to constants are already scheduled
+					if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
+					{
+						signalList_[i]->setCycle(0);
+						signalList_[i]->setCriticalPath(0.0);
+						signalList_[i]->setCriticalPathContribution(0.0);
+						signalList_[i]->setHasBeenImplemented(true);
+					}
+
+					newOp->ioList_[i]->addPredecessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
+					newOp->getSignalByName(tmpPair.first->getName())->addSuccessor(newOp->ioList_[i], tmpPair.second);
+				}
+
+				//create the new list of successors for the signal currently processed
+				//	only connect to internal signals
+				for(unsigned int j=0; j<originalSignal->successors()->size(); j++)
+				{
+					pair<Signal*, int> tmpPair = *(originalSignal->successorPair(j));
+
+					//only connect to internal signals
+					if(tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName())
+						continue;
+
+					newOp->ioList_[i]->addSuccessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
+					newOp->getSignalByName(tmpPair.first->getName())->addPredecessor(newOp->ioList_[i], tmpPair.second);
+				}
+			}
+
 			//set a new name for the copy of the operator
 			newOp->setName(newOp->getName() + "_copy_" + vhdlize(getNewUId()));
 
@@ -2427,6 +2474,9 @@ namespace flopoco{
 						}
 						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
+						rhsSignal = NULL;
+						lhsSignal = NULL;
+
 						//copy rhsName to the new vhdl buffer
 						//	annotate it if necessary
 						if((lhsName != "clk") && (lhsName != "rst") && !(singleQuoteSep || doubleQuoteSep))
@@ -2438,14 +2488,29 @@ namespace flopoco{
 							    rhsSignal = getSignalByName(rhsName);
 
 							    //obtain the lhs signal, from the list of successors of the rhs signal
+							    //	if lhs is an input
+							    //if lhs is an output, look on the predecessors list
 							    for(size_t i=0; i<rhsSignal->successors()->size(); i++)
-							      if((rhsSignal->successor(i)->getName() == lhsName)
-								  //the lhs signal must be the input of a subcomponent
-								  && (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
-								{
-								  lhsSignal = rhsSignal->successor(i);
-								  break;
-								}
+							    	if((rhsSignal->successor(i)->getName() == lhsName)
+							    			//the lhs signal must be the input of a subcomponent
+							    			&& (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
+							    	{
+							    		lhsSignal = rhsSignal->successor(i);
+							    		break;
+							    	}
+							    //if the first lookup did not succeed, then lhs is an output,
+							    //	so look for it in the predecessor list of rhs
+							    if(lhsSignal == NULL)
+							    {
+							    	for(size_t i=0; i<rhsSignal->predecessors()->size(); i++)
+							    		if((rhsSignal->predecessor(i)->getName() == lhsName)
+							    				//the lhs signal must be the input of a subcomponent
+							    				&& (rhsSignal->parentOp()->getName() != rhsSignal->predecessor(i)->parentOp()->getName()))
+							    		{
+							    			lhsSignal = rhsSignal->predecessor(i);
+							    			break;
+							    		}
+							    }
 							}catch(string &e)
 							{
 							    //this might be an undeclared rhs name
@@ -2458,9 +2523,15 @@ namespace flopoco{
 							}
 
 							newStr << rhsName;
-							if(getTarget()->isPipelined() && !unknownLHSName
-									&& (lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal) > 0))
-							  newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal));
+							//output signals do not need to be delayed
+							if(lhsSignal->type() != Signal::out)
+							{
+								if(getTarget()->isPipelined() && !unknownLHSName
+										&& (lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal) > 0))
+								{
+								  newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal));
+								}
+							}
 						} else
 						{
 							//this signal is clk, rst or a constant
@@ -3536,9 +3607,11 @@ namespace flopoco{
 
 	//Completely replace "this" with a copy of another operator.
 	void  Operator::cloneOperator(Operator *op){
-		subComponentList_              = op->getSubComponentList();
+		subComponentList_           = op->getSubComponentList();
 		signalList_                 = op->getSignalList();
 		ioList_                     = op->getIOListV();
+
+		parentOp_                   = op->parentOp_;
 
 		target_                     = op->getTarget();
 		uniqueName_                 = op->getUniqueName();
@@ -3591,7 +3664,7 @@ namespace flopoco{
 
 
 	void  Operator::deepCloneOperator(Operator *op){
-		//start by coning the operator
+		//start by cloning the operator
 		cloneOperator(op);
 
 		//create deep copies of the signals, sub-components, instances etc.
