@@ -29,6 +29,10 @@ namespace flopoco{
 	{
 	public:
 
+#define INTCONSTDIV_OLDTABLEINTERFACE 1 // 0 for master, 1 for newPipelineFramework
+
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
+
 		/** @brief This table inputs a number X on alpha + gammma bits, and computes its Euclidean division by d: X=dQ+R, which it returns as the bit string Q & R */
 		class EuclideanDivTable: public Table {
 		public:
@@ -51,8 +55,12 @@ namespace flopoco{
 			CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho);
 			mpz_class function(int x);
 		};
+#else
+		vector<mpz_class>  euclideanDivTable(int d, int alpha, int gamma);
+		vector<mpz_class>  firstLevelCBLKTable(int d, int alpha, int gamma);
+		vector<mpz_class>  otherLevelCBLKTable(int level, int d, int alpha, int gamma, int rho );
 
-
+#endif // deprecated overloading of Table method
 
 
 		/** @brief The constructor

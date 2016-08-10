@@ -27,8 +27,9 @@
 
   namespace flopoco{
 
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 
-	// The classical table for the linear architecture
+		// The classical table for the linear architecture
 
   	IntConstDiv::EuclideanDivTable::EuclideanDivTable(Target* target, int d_, int alpha_, int gamma_) :
   	Table(target, alpha_+gamma_, alpha_+gamma_, 0, -1, 1), d(d_), alpha(alpha_), gamma(gamma_) {
@@ -78,8 +79,47 @@
 			return (q<<gamma) + r;
 		}
 	}
+		
+#else
 
-	
+		vector<mpz_class>  IntConstDiv::euclideanDivTable(int d, int alpha, int gamma) { 		// machine integer arithmetic should be safe here
+			vector<mpz_class>  result;
+			for (int x=0; x<(1<<(alpha+gamma)); x++){
+					int q = x/d;
+					int r = x%d;
+					result.push_back(mpz_class( (q<<gamma) + r) );
+			}
+			return result;
+		}
+		
+		vector<mpz_class>  IntConstDiv::firstLevelCBLKTable( int d, int alpha, int gamma ) {
+			vector<mpz_class>  result;
+			for (int x=0; x<(1<<alpha); x++) {
+				mpz_class r = x % d;
+				mpz_class q = x / d;
+				result.push_back( (q<<gamma) + r ) ;
+			}
+			return result;
+		}
+		
+		vector<mpz_class>  IntConstDiv::otherLevelCBLKTable(int level, int d, int alpha, int gamma, int rho ) {
+			/* input will be a group of 2^level alpha-bit digits*/
+			vector<mpz_class>  result;
+			for (int x=0; x<(1<<(2*gamma)); x++) {
+				// the input consists of two remainders
+				int r0 = x & ((1<<gamma)-1);
+				int r1 = x >> gamma;
+				mpz_class y = mpz_class(r0) + (mpz_class(r1) << alpha*((1<<(level-1))) );
+				mpz_class r = y % d;
+				mpz_class q = y / d;
+				result.push_back( (q<<gamma) + r ) ;
+			}
+			return result;
+		}		
+#endif // deprecated overloading of Table method
+
+
+		
 	int IntConstDiv::quotientSize() {return qSize; };
 
 	int IntConstDiv::remainderSize() {return gamma; };
@@ -158,23 +198,24 @@
 
 		if(architecture==0) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
+
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 			EuclideanDivTable* table;
 			table = new EuclideanDivTable(target, d, alpha, gamma);
 			useSoftRAM(table);
 			addSubComponent(table);
 			double tableDelay=table->getOutputDelay("Y");
-			
+#else // new Table interface
+			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, gamma);
+			Table* table = new Table(target, tableContent, alpha+gamma, alpha+gamma );
+			table->setShared();
+			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
+			#endif // deprecated overloading of Table method
 			string ri, xi, ini, outi, qi;
 			ri = join("r", xDigits);
 			vhdl << tab << declare(ri, gamma) << " <= " << zg(gamma, 0) << ";" << endl;
 
-			setCriticalPath( getMaxInputDelays(inputDelays) );
-
-
 			for (int i=xDigits-1; i>=0; i--) {
-
-				manageCriticalPath(tableDelay);
-
 				//			cerr << i << endl;
 				xi = join("x", i);
 				if(i==xDigits-1 && xPadBits!=0) // at the MSB, pad with 0es
@@ -218,12 +259,24 @@
 			// The number of levels is computed out of the number of digits of the _input_
 			int levels = intlog2(2*xDigits-1); 
 			REPORT(INFO, "levels=" << levels);
-			CBLKTable* table;
 			string ri, xi, ini, outi, qi, qs, r;
+
+
+
+			/// First level table
+			
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
+			CBLKTable* table;
 
 			// level 0
 			table = new CBLKTable(target, 0, d, alpha, gamma, rho);
 			useSoftRAM(table);
+#else  // deprecated overloading of Table method
+			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, gamma);
+			Table* table = new Table(target, tableContent, alpha, rho+gamma);
+			table->setShared();
+			table->setNameWithFreqAndUID("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
+#endif  // deprecated overloading of Table method
 			addSubComponent(table);
 			//			double tableDelay=table->getOutputDelay("Y");
 			for (int i=0; i<xDigits; i++) {
@@ -266,8 +319,20 @@
 				if (qDigits%((1<<level)) !=0 )
 					qLevelSize++;
 				REPORT(INFO, "level=" << level << "  rLevelSize=" << rLevelSize << "  qLevelSize=" << qLevelSize);
+
+
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 				table = new CBLKTable(target, level, d, alpha, gamma, rho);
 				useSoftRAM(table);
+
+#else  // deprecated overloading of Table method
+				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, gamma, rho);
+				Table* table = new Table(target, tableContent,
+																 2*gamma, /* wIn*/
+																 (1<<(level-1))*alpha+gamma /*wOut*/  );
+				table->setShared();
+				table->setNameWithFreqAndUID("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
+#endif
 				addSubComponent(table);
 				for(int i=0; i<rLevelSize; i++) {
 					string tableNumber = "l" + to_string(level) + "_" + to_string(i);
@@ -299,7 +364,11 @@
 						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " gamma=" << gamma );
 						vhdl << tab << declare(q, subQSize) << " <= " << zg(subQSize - (table->wOut-gamma)) << " & " << out << range (table->wOut-1, gamma) << ";"  << endl;
 						// TODO simplify the content of the zg above
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 						vhdl << tab << declare(qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+#else
+						vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+#endif
 					}
 					else if (i==qLevelSize-1){ // because i can reach qLevelSize when rlevelSize=qLevelSize+1, but then we have nothing to do
 						// Lefttmost chunk
@@ -312,10 +381,18 @@
 						else
 							vhdl << out << range (subQSize+gamma-1, gamma) << ";"  << endl;
 						if( (subQSize <= (1<<(level-1))*alpha) ) {
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 							vhdl << tab << declare(qs, subQSize) << " <= " << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
+#else
+							vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
+#endif
 						}
 						else {
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 							vhdl << tab << declare(qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+#else
+							vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
+#endif
 						}
 
 						

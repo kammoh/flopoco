@@ -582,6 +582,7 @@ namespace flopoco{
 		mpfr_clears(mpX, mpR, NULL);
 	}
 
+
 	TestList FixRealKCM::unitTest(int index)
 	{
 		// the static list of mandatory tests
@@ -678,6 +679,7 @@ namespace flopoco{
 		);
 	}
 
+	
 	/************************** The FixRealKCMTable class ********************/
 
 

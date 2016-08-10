@@ -23,7 +23,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
   namespace flopoco
   {
-  	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	
+  	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	 	//this defines parser_func_t as a pointer to a function to a function taking as parameters Target* etc., and returning an OperatorPtr
   	class OperatorFactory;
   	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
 
@@ -148,7 +148,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 				static bool   floorplanning;
 				static bool   reDebug;
 				static bool   flpDebug;
-		static vector<pair<string,OperatorFactoryPtr>> factoryList; // used to be a map, but I dont want them listed in alphabetical order
+		static vector<pair<string,OperatorFactoryPtr>> factoryList; // used to be a map, but I don't want them listed in alphabetical order
 		static const vector<pair<string,string>> categories;
 
 		static const vector<string> known_fpgas;
@@ -216,24 +216,11 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 			factory to check the types and whether there are enough.
 			\param consumed On exit, the factory indicates how many of the arguments are used up.
 		*/
-			virtual OperatorPtr parseArguments(Target* target, vector<string> &args	)
-			{
-				return m_parser(target, args);
-			}
-
-			virtual TestList unitTestGenerator(int index)
-			{
-
-				TestList testList;
-
-				if(m_unitTest != nullptr)
-				{
-
-					testList = m_unitTest(index);
-				}
-
-				return testList;
-			}
+		virtual OperatorPtr parseArguments(Target* target, vector<string> &args	);
+		
+		/*! Generate a list of arg-value pairs out of the index value
+		*/
+		virtual TestList unitTestGenerator(int index);
 
 
 		};
