@@ -1294,6 +1294,20 @@ public:
 	 */
 	int getFunctionalDelay(Signal *rhsSignal, Signal *lhsSignal);
 
+	/**
+	 * Return the pipeline delay, in cycles, between two signals.
+	 * @param rhsSignal the signal on the right-hand side of the assignment
+	 * @param lhsSignal the signal on the left-hand side of the assignment
+	 */
+	int getPipelineDelay(Signal *rhsSignal, Signal *lhsSignal);
+
+	/**
+	 * Return the delay (pipeline or functional), in cycles, between two signals.
+	 * @param rhsSignal the signal on the right-hand side of the assignment
+	 * @param lhsSignal the signal on the left-hand side of the assignment
+	 */
+	int getDelay(Signal *rhsSignal, Signal *lhsSignal);
+
 
 	/**
 	 * Extract the timing dependences between signals.

@@ -2784,6 +2784,56 @@ namespace flopoco{
 	}
 
 
+	int Operator::getPipelineDelay(Signal *rhsSignal, Signal *lhsSignal)
+	{
+		bool isLhsPredecessor = false;
+
+		for(size_t i=0; i<lhsSignal->predecessors()->size(); i++)
+		{
+			pair<Signal*, int> newPair = *lhsSignal->predecessorPair(i);
+
+			if(newPair.first->getName() == rhsSignal->getName())
+			{
+				isLhsPredecessor = true;
+
+				if(newPair.second > 0)
+					return newPair.second;
+				else
+					return 0;
+			}
+		}
+
+		if(isLhsPredecessor == false)
+			THROWERROR("Error in getPipelineDelay: trying to obtain the pipeline delay between signal "
+					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
+		return 0;
+	}
+
+
+	int Operator::getDelay(Signal *rhsSignal, Signal *lhsSignal)
+	{
+		bool isLhsPredecessor = false;
+
+		for(size_t i=0; i<lhsSignal->predecessors()->size(); i++)
+		{
+			pair<Signal*, int> newPair = *lhsSignal->predecessorPair(i);
+
+			if(newPair.first->getName() == rhsSignal->getName())
+			{
+				isLhsPredecessor = true;
+
+				if(newPair.second < 0)
+					return (-1)*newPair.second;
+			}
+		}
+
+		if(isLhsPredecessor == false)
+			THROWERROR("Error in getDelay: trying to obtain the delay between signal "
+					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
+		return 0;
+	}
+
+
 	void Operator::extractSignalDependences()
 	{
 		//try to parse the unknown dependences first
@@ -3113,7 +3163,9 @@ namespace flopoco{
 							if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
 									(inputSignal->predecessor(i)->type() == Signal::out))
 								continue;
-							inputSignal->predecessor(i)->updateLifeSpan(inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
+							inputSignal->predecessor(i)->updateLifeSpan(
+									inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle()
+									+ getDelay(inputSignal->predecessor(i), inputSignal));
 						}
 					}
 			}
@@ -3222,6 +3274,18 @@ namespace flopoco{
 		{
 			targetSignal->setCycle(maxCycle);
 			targetSignal->setCriticalPath( maxCriticalPath + targetSignal->getCriticalPathContribution());
+		}
+
+		//update the lifespan of inputSignal's predecessors
+		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
+		{
+			//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+			if((targetSignal->parentOp()->getName() != targetSignal->predecessor(i)->parentOp()->getName()) &&
+					(targetSignal->predecessor(i)->type() == Signal::out))
+				continue;
+			targetSignal->predecessor(i)->updateLifeSpan(
+					targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle()
+					+ getDelay(targetSignal->predecessor(i), targetSignal));
 		}
 
 		targetSignal->setHasBeenImplemented(true);

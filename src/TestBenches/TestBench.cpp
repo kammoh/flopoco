@@ -43,7 +43,8 @@ namespace flopoco{
 		srcFileName="TestBench";
 		setName("TestBench_" + op_->getName());
 
-		setCombinatorial(); // this is a combinatorial operator
+		//this part might actually need to be parsed
+//		setCombinatorial(); // this is a combinatorial operator
 
 		// initialization of flopoco random generator
 		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
@@ -57,16 +58,51 @@ namespace flopoco{
 
 
 		// The instance
-		//  portmap inputs and outputs
-		string idext;
+		//  portmap for the inputs
 		for(int i=0; i < op->getIOListSize(); i++){
 			Signal* s = op->getIOListSignal(i);
-			if(s->type() == Signal::out)
-				outPortMap (op, s->getName(), s->getName());
+
 			if(s->type() == Signal::in) {
 				declare(s->getName(), s->width(), s->isBus());
 				startScheduling();
 				inPortMap (op, s->getName(), s->getName());
+			}
+		}
+		//  portmap for the outputs
+		//		first, determine the maximum output cycle
+		int maxOutputCycle = -1;
+		for(int i=0; i < op->getIOListSize(); i++){
+			if(op->getIOListSignal(i)->type() == Signal::out)
+				if(op->getIOListSignal(i)->getCycle() > maxOutputCycle)
+					maxOutputCycle = op->getIOListSignal(i)->getCycle();
+		}
+		//		map the outputs
+		for(int i=0; i < op->getIOListSize(); i++){
+			Signal* s = op->getIOListSignal(i);
+
+			if(s->type() == Signal::out)
+				outPortMap (op, s->getName(), join(s->getName(), "_int"));
+		}
+		//		the intermediary signals need to be scheduled
+		startScheduling();
+		//the port mappings have changed, so they must be updated
+		//	so must the schedule of the signal
+		op->reconnectIOPorts();
+		//		delay the outputs if necessary
+		for(int i=0; i < op->getIOListSize(); i++){
+			Signal* s = op->getIOListSignal(i);
+
+			if(s->type() == Signal::out)
+			{
+				Signal *s_int = getSignalByName(join(s->getName(), "_int"));
+				vhdl << tab << declare(s->getName()) << " <= ";
+				if(s_int->getCycle() < maxOutputCycle)
+					vhdl << delay(s_int->getName(), maxOutputCycle-s_int->getCycle()) << ";" << endl;
+				else
+					vhdl << s_int->getName() << ";" << endl;
+				getSignalByName(s->getName())->copySignalParameters(getSignalByName(join(s->getName(), "_int")));
+				//schedule the currently processed output to update the lifespans
+				setSignalTiming(getSignalByName(s->getName()), true);
 			}
 		}
 		// add clk and rst
@@ -80,12 +116,8 @@ namespace flopoco{
 			vhdl << tab << declare("ce") << " <= '1';" << endl;
 		}
 
-		//the port mappings have changed, so they must be updated
-		//	so must the schedule of the signal
-		op->reconnectIOPorts();
-
 		// The VHDL for the instance
-		vhdl << instance(op, "test");
+		vhdl << endl << instance(op, "test") << endl;
 
 
 		vhdl << tab << "-- Ticking clock signal" <<endl;
@@ -100,6 +132,7 @@ namespace flopoco{
 
 
 		//the rest of the code does not need to be parsed, so parsing is disabled
+		setSequential();
 		vhdl.disableParsing(true);
 
 
@@ -506,7 +539,7 @@ namespace flopoco{
 		// the operator to wrap
 		op_->outputVHDLComponent(o);
 		// The local signals
-		outputVHDLSignalDeclarations(o);
+		o << buildVHDLSignalDeclarations();
 
 		o << endl <<
 			tab << "-- FP compare function (found vs. real)\n" <<
@@ -522,73 +555,73 @@ namespace flopoco{
 			tab << "end;\n";
 
 
-                o << endl << endl << endl;
-                /* Generation of Vhdl function to parse file into std_logic_vector */
+		o << endl << endl << endl;
+		/* Generation of Vhdl function to parse file into std_logic_vector */
 
 
-                o << " -- converts std_logic into a character" << endl;
-                o << tab << "function chr(sl: std_logic) return character is" << endl
-                  << tab << tab << "variable c: character;" << endl
-                  << tab << "begin" << endl
-                  << tab << tab << "case sl is" << endl
-                  << tab << tab << tab << "when 'U' => c:= 'U';" << endl
-                  << tab << tab << tab << "when 'X' => c:= 'X';" << endl
-                  << tab << tab << tab << "when '0' => c:= '0';" << endl
-                  << tab << tab << tab << "when '1' => c:= '1';" << endl
-                  << tab << tab << tab << "when 'Z' => c:= 'Z';" << endl
-                  << tab << tab << tab << "when 'W' => c:= 'W';" << endl
-                  << tab << tab << tab << "when 'L' => c:= 'L';" << endl
-                  << tab << tab << tab << "when 'H' => c:= 'H';" << endl
-                  << tab << tab << tab << "when '-' => c:= '-';" << endl
-                  << tab << tab << "end case;" << endl
-                  << tab << tab << "return c;" << endl
-                  << tab <<  "end chr;" << endl;
+		o << " -- converts std_logic into a character" << endl;
+		o << tab << "function chr(sl: std_logic) return character is" << endl
+		  << tab << tab << "variable c: character;" << endl
+		  << tab << "begin" << endl
+		  << tab << tab << "case sl is" << endl
+		  << tab << tab << tab << "when 'U' => c:= 'U';" << endl
+		  << tab << tab << tab << "when 'X' => c:= 'X';" << endl
+		  << tab << tab << tab << "when '0' => c:= '0';" << endl
+		  << tab << tab << tab << "when '1' => c:= '1';" << endl
+		  << tab << tab << tab << "when 'Z' => c:= 'Z';" << endl
+		  << tab << tab << tab << "when 'W' => c:= 'W';" << endl
+		  << tab << tab << tab << "when 'L' => c:= 'L';" << endl
+		  << tab << tab << tab << "when 'H' => c:= 'H';" << endl
+		  << tab << tab << tab << "when '-' => c:= '-';" << endl
+		  << tab << tab << "end case;" << endl
+		  << tab << tab << "return c;" << endl
+		  << tab <<  "end chr;" << endl;
 
 
-				o << tab << "-- converts bit to std_logic (1 to 1)" << endl
-					<<	tab << "function to_stdlogic(b : bit) return std_logic is" << endl
-					<< tab << tab << " variable sl : std_logic;" << endl
-					<< tab << "begin" << endl
-					<< tab << tab << "case b is " << endl
-					<< tab << tab << tab << "when '0' => sl := '0';" << endl
-					<< tab << tab << tab << "when '1' => sl := '1';" << endl
-					<< tab << tab << "end case;" << endl
-					<< tab << tab << "return sl;" << endl
-					<< tab << "end to_stdlogic;" << endl;
+		o << tab << "-- converts bit to std_logic (1 to 1)" << endl
+			<<	tab << "function to_stdlogic(b : bit) return std_logic is" << endl
+			<< tab << tab << " variable sl : std_logic;" << endl
+			<< tab << "begin" << endl
+			<< tab << tab << "case b is " << endl
+			<< tab << tab << tab << "when '0' => sl := '0';" << endl
+			<< tab << tab << tab << "when '1' => sl := '1';" << endl
+			<< tab << tab << "end case;" << endl
+			<< tab << tab << "return sl;" << endl
+			<< tab << "end to_stdlogic;" << endl;
 
 
-                o << tab << "-- converts std_logic into a string (1 to 1)" << endl
-                  << tab << "function str(sl: std_logic) return string is" << endl
-                  << tab << " variable s: string(1 to 1);" << endl
-                  << tab << " begin" << endl
-                  << tab << tab << "s(1) := chr(sl);" << endl
-                  << tab << tab << "return s;" << endl
-                  << tab << "end str;" << endl;
+		o << tab << "-- converts std_logic into a string (1 to 1)" << endl
+		  << tab << "function str(sl: std_logic) return string is" << endl
+		  << tab << " variable s: string(1 to 1);" << endl
+		  << tab << " begin" << endl
+		  << tab << tab << "s(1) := chr(sl);" << endl
+		  << tab << tab << "return s;" << endl
+		  << tab << "end str;" << endl;
 
 
 
-                o << tab << "-- converts std_logic_vector into a string (binary base)" << endl
-                  << tab << "-- (this also takes care of the fact that the range of" << endl
-                  << tab << "--  a string is natural while a std_logic_vector may" << endl
-                  << tab << "--  have an integer range)" << endl
-                  << tab << "function str(slv: std_logic_vector) return string is" << endl
-                  << tab << tab << "variable result : string (1 to slv'length);" << endl
-                  << tab << tab << "variable r : integer;" << endl
-                  << tab << "begin" << endl
-                  << tab << tab << "r := 1;" << endl
-                  << tab << tab << "for i in slv'range loop" << endl
-                  << tab << tab << tab << "result(r) := chr(slv(i));" << endl
-                  << tab << tab << tab << "r := r + 1;" << endl
-                  << tab << tab << "end loop;" << endl
-                  << tab << tab << "return result;" << endl
-                  << tab << "end str;" << endl;
+		o << tab << "-- converts std_logic_vector into a string (binary base)" << endl
+		  << tab << "-- (this also takes care of the fact that the range of" << endl
+		  << tab << "--  a string is natural while a std_logic_vector may" << endl
+		  << tab << "--  have an integer range)" << endl
+		  << tab << "function str(slv: std_logic_vector) return string is" << endl
+		  << tab << tab << "variable result : string (1 to slv'length);" << endl
+		  << tab << tab << "variable r : integer;" << endl
+		  << tab << "begin" << endl
+		  << tab << tab << "r := 1;" << endl
+		  << tab << tab << "for i in slv'range loop" << endl
+		  << tab << tab << tab << "result(r) := chr(slv(i));" << endl
+		  << tab << tab << tab << "r := r + 1;" << endl
+		  << tab << tab << "end loop;" << endl
+		  << tab << tab << "return result;" << endl
+		  << tab << "end str;" << endl;
 
-              o << endl << endl << endl;
+		o << endl << endl << endl;
 
 
-                /* If op_ is an IEEE operator (IEEE input and output, we define) the function
-                 * fp_equal for the considered precision in the ieee case
-                 */
+		/* If op_ is an IEEE operator (IEEE input and output, we define) the function
+		 * fp_equal for the considered precision in the ieee case
+		 */
 		o << endl <<  // Fixed by Nicolas
 			tab << "-- test isZero\n" <<
 			tab << "function iszero(a : std_logic_vector) return boolean is\n" <<
@@ -639,7 +672,37 @@ namespace flopoco{
 		vhdl.disableParsing(true);
 
 		o << "begin\n";
+
+		//if the outputs of the tested operator are not synchronized
+		//	then registering and delaying the outputs might be necessary
+		bool opHasOutputsDesync = false;
+
+		for(unsigned i=0; i<op_->ioList_.size(); i++)
+		{
+			Signal *s = op_->getIOListSignal(i);
+
+			if(s->type() != Signal::out)
+				continue;
+
+			for(unsigned j=0; j<op_->ioList_.size(); j++)
+			{
+				Signal *t = op_->getIOListSignal(j);
+
+				if((t->type() == Signal::out) && (s->getName() != t->getName()) && (s->getCycle() != t->getCycle())){
+					opHasOutputsDesync = true;
+					break;
+				}
+			}
+
+			if(opHasOutputsDesync)
+				break;
+		}
+		if(opHasOutputsDesync == true)
+			o << buildVHDLRegisters() << endl;
+
+		//output the code of the
 		o << vhdl.str() << endl;
+
 		o << "end architecture;" << endl << endl;
 
 
