@@ -115,7 +115,7 @@ namespace flopoco{
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";
-		setNameWithFreqAndUID(_name);
+		setNameWithFreq(_name);
 
 		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
