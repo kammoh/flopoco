@@ -2824,6 +2824,8 @@ namespace flopoco{
 
 				if(newPair.second < 0)
 					return (-1)*newPair.second;
+				else
+					return newPair.second;
 			}
 		}
 
@@ -3164,8 +3166,7 @@ namespace flopoco{
 									(inputSignal->predecessor(i)->type() == Signal::out))
 								continue;
 							inputSignal->predecessor(i)->updateLifeSpan(
-									inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle()
-									+ getDelay(inputSignal->predecessor(i), inputSignal));
+									inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
 						}
 					}
 			}
@@ -3284,8 +3285,7 @@ namespace flopoco{
 					(targetSignal->predecessor(i)->type() == Signal::out))
 				continue;
 			targetSignal->predecessor(i)->updateLifeSpan(
-					targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle()
-					+ getDelay(targetSignal->predecessor(i), targetSignal));
+					targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 		}
 
 		targetSignal->setHasBeenImplemented(true);
