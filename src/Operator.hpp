@@ -286,7 +286,7 @@ public:
 	 * Reconnect the input and output ports of the operator to signals in the parent operator.
 	 * The scheduling must consequently be restarted.
 	 */
-	void reconnectIOPorts();
+	void reconnectIOPorts(bool restatSchedule = true);
 
 
 	/**

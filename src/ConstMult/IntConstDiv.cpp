@@ -209,8 +209,8 @@
 			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, gamma);
 			Table* table = new Table(target, tableContent, alpha+gamma, alpha+gamma );
 			table->setShared();
-			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
-			#endif // deprecated overloading of Table method
+			table->setNameWithFreq("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
+#endif // deprecated overloading of Table method
 			string ri, xi, ini, outi, qi;
 			ri = join("r", xDigits);
 			vhdl << tab << declare(ri, gamma) << " <= " << zg(gamma, 0) << ";" << endl;
@@ -228,11 +228,12 @@
 				ini = join("in", i);
 				vhdl << tab << declare(ini, alpha+gamma) << " <= " << ri << " & " << xi << ";" << endl; // This ri is r_{i+1}
 				outi = join("out", i);
+
 				outPortMap(table, "Y", outi);
 				inPortMap(table, "X", ini);
 
-
 				vhdl << instance(table, join("table",i));
+
 				ri = join("r", i);
 				qi = join("q", i);
 				vhdl << tab << declare(qi, alpha, true) << " <= " << outi << range(alpha+gamma-1, gamma) << ";" << endl;

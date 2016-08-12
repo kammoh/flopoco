@@ -479,7 +479,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::reconnectIOPorts()
+	void Operator::reconnectIOPorts(bool restartSchedule)
 	{
 		//schedule the parent operator, if it hasn't already been done
 		if(parentOp_ == nullptr){
@@ -491,12 +491,12 @@ namespace flopoco{
 		//	signals in the parent operator
 		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
 			connectIOFromPortMap(*it);
-		//seeing as the IO ports' connections have changed, the schedule should be restarted
 		//	add the IO ports to the list of signals to be scheduled
 		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
 			signalsToSchedule.push_back(*it);
 		//	now start the scheduling
-		startScheduling();
+		if(restartSchedule == true)
+			startScheduling();
 	}
 
 
@@ -1546,7 +1546,7 @@ namespace flopoco{
 						<< signal->getName() << " is not mapped to anything" << endl);
 			//if the signal to which the port is connected is not yet scheduled,
 			//	then we cannot continue
-			if(!isPredScheduled)
+			if(!isPredScheduled && (signal->type() == Signal::in))
 				THROWERROR("ERROR in instance() while trying to create a new instance of "
 						<< op->getName() << " called " << instanceName << ": input/output "
 						<< signal->getName() << " is connected to a signal not yet scheduled."
@@ -1603,10 +1603,20 @@ namespace flopoco{
 				//mark the signal as completely declared
 				it->second->setIncompleteDeclaration(false);
 				//connect the port to the corresponding signal
-				it->second->addPredecessor(op->getSignalByName(it->first));
-				op->getSignalByName(it->first)->addSuccessor(it->second);
+				//	for unique instances
+				if(op->isUnique())
+				{
+					it->second->addPredecessor(op->getSignalByName(it->first));
+					op->getSignalByName(it->first)->addSuccessor(it->second);
+				}
 				//the new signal doesn't add anything to the critical path
 				it->second->setCriticalPathContribution(0.0);
+				//add the newly created signal to the list of signals to schedule
+				it->second->setHasBeenImplemented(false);
+				if(op->isUnique())
+				{
+					signalsToSchedule.push_back(it->second);
+				}
 			}
 
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
@@ -1646,7 +1656,25 @@ namespace flopoco{
 			newOp->deepCloneOperator(op);
 
 			//reconnect the inputs/outputs to the corresponding external signals
-			newOp->reconnectIOPorts();
+			newOp->reconnectIOPorts(false);
+
+			//recreate the connection of the outputs and the corresponding dependences
+			for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+			{
+				//the signal connected to the output might be an incompletely declared signal,
+				//	so its information must be completed and it must be properly connected now
+				if(it->second->getIncompleteDeclaration() == true)
+				{
+					it->second->addPredecessor(newOp->getSignalByName(it->first));
+					newOp->getSignalByName(it->first)->addSuccessor(it->second);it->second->setCriticalPathContribution(0.0);
+					//add the newly created signal to the list of signals to schedule
+					it->second->setHasBeenImplemented(false);
+					if(op->isUnique())
+					{
+						signalsToSchedule.push_back(it->second);
+					}
+				}
+			}
 
 			//reconnect the inputs/outputs to the corresponding internal signals
 			for(unsigned int i=0; i<newOp->ioList_.size(); i++)
@@ -1694,6 +1722,9 @@ namespace flopoco{
 
 			//set a new name for the copy of the operator
 			newOp->setName(newOp->getName() + "_copy_" + vhdlize(getNewUId()));
+
+			//start the scheduling for the newly created operator
+			newOp->startScheduling();
 
 			//mark the subcomponent as already implemented
 			newOp->setIsOperatorImplemented(true);
