@@ -280,7 +280,7 @@
 			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, gamma);
 			Table* table = new Table(target, tableContent, alpha, rho+gamma);
 			table->setShared();
-			table->setNameWithFreqAndUID("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
+			table->setNameWithFreq("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 #endif  // deprecated overloading of Table method
 			//			double tableDelay=table->getOutputDelay("Y");
 			for (int i=0; i<xDigits; i++) {
@@ -336,7 +336,7 @@
 																 2*gamma, /* wIn*/
 																 (1<<(level-1))*alpha+gamma /*wOut*/  );
 				table->setShared();
-				table->setNameWithFreqAndUID("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
+				table->setNameWithFreq("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 #endif
 				for(int i=0; i<rLevelSize; i++) {
 					string tableNumber = "l" + to_string(level) + "_" + to_string(i);
