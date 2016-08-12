@@ -162,7 +162,7 @@
 		REPORT(DEBUG, "gamma=" << gamma << " qSize=" << qSize << " rho=" << rho);
 
 		if((d&1)==0)
-			REPORT(LIST, "WARNING, d=" << d << " is even, this is suspiscious. Might work nevertheless, but surely suboptimal.")
+			REPORT(LIST, "WARNING, d=" << d << " is even, this is suspicious. Might work nevertheless, but surely suboptimal.")
 
 		/* Generate unique name */
 
@@ -216,6 +216,9 @@
 			vhdl << tab << declare(ri, gamma) << " <= " << zg(gamma, 0) << ";" << endl;
 
 			for (int i=xDigits-1; i>=0; i--) {
+#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
+				manageCriticalPath(tableDelay);
+#endif
 				//			cerr << i << endl;
 				xi = join("x", i);
 				if(i==xDigits-1 && xPadBits!=0) // at the MSB, pad with 0es
@@ -271,13 +274,13 @@
 			// level 0
 			table = new CBLKTable(target, 0, d, alpha, gamma, rho);
 			useSoftRAM(table);
+			addSubComponent(table);
 #else  // deprecated overloading of Table method
 			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, gamma);
 			Table* table = new Table(target, tableContent, alpha, rho+gamma);
 			table->setShared();
 			table->setNameWithFreqAndUID("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 #endif  // deprecated overloading of Table method
-			addSubComponent(table);
 			//			double tableDelay=table->getOutputDelay("Y");
 			for (int i=0; i<xDigits; i++) {
 				xi = join("x", i);
@@ -324,6 +327,7 @@
 #if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 				table = new CBLKTable(target, level, d, alpha, gamma, rho);
 				useSoftRAM(table);
+				addSubComponent(table);
 
 #else  // deprecated overloading of Table method
 				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, gamma, rho);
@@ -333,7 +337,6 @@
 				table->setShared();
 				table->setNameWithFreqAndUID("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 #endif
-				addSubComponent(table);
 				for(int i=0; i<rLevelSize; i++) {
 					string tableNumber = "l" + to_string(level) + "_" + to_string(i);
 					string tableName = "table_" + tableNumber;
@@ -451,7 +454,7 @@
 		if(index==-1) // The unit tests
 		{ 
 
-			for(int wIn=8; wIn<10; wIn+=1) 
+			for(int wIn=8; wIn<34; wIn+=1) 
 			{ // test various input widths
 				for(int d=3; d<=17; d+=2) 
 				{ // test various divisors
