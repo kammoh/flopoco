@@ -8,7 +8,7 @@ namespace flopoco{
 
 
 	Compressor::Compressor(Target * target_, vector<int> heights_, bool compactView_)
-		: Operator(target_), heights(heights_), compactView(compactView_)
+		: Operator(target_), heights(heights_), compactView(compactView_), compressorUsed(false)
 	{
 		ostringstream name;
 		stringstream nm, xs;
@@ -101,10 +101,9 @@ namespace flopoco{
 	}
 
 
-
-
 	Compressor::~Compressor(){
 	}
+
 
 	unsigned Compressor::getColumnSize(int column)
 	{
@@ -118,6 +117,19 @@ namespace flopoco{
 	{
 		return wOut;
 	}
+
+	bool Compressor::markUsed()
+	{
+		compressorUsed = true;
+		return compressorUsed;
+	}
+
+	bool Compressor::markUnused()
+	{
+		compressorUsed = false;
+		return compressorUsed;
+	}
+
 
 	void Compressor::emulate(TestCase * tc)
 	{
@@ -133,6 +145,7 @@ namespace flopoco{
 
 		tc->addExpectedOutput("R", r);
 	}
+
 
 	OperatorPtr Compressor::parseArguments(Target *target, vector<string> &args) {
 		string in;
