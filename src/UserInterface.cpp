@@ -1027,7 +1027,7 @@ namespace flopoco
 		tabber("}");
 		file << endl;
 
-		tabber("# Actual comlpetion");
+		tabber("# Actual completion");
 		tabber("complete -F _flopoco flopoco");
 		file.close();
 
