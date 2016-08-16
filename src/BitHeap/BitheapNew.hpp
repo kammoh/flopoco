@@ -90,7 +90,7 @@ namespace flopoco{
 		 * @param rhsAssignment      the right-hand side VHDL code defining this bit.
 		 * @param comment            a VHDL comment for this bit
 		 */
-		void addBit(int weight, string rhsAssignment, string comment = "");
+		void addBit(int weight, string rhsAssignment);
 
 		/**
 		 * @brief add a bit to the bit heap.
@@ -100,7 +100,7 @@ namespace flopoco{
 		 * @param offset             the offset at which the bit is in the signal. for one-bit signals, this parameter is ignored.
 		 * @param comment            a VHDL comment for this bit
 		 */
-		void addBit(int weight, Signal *signal, int offset = 0, string comment = "");
+		void addBit(int weight, Signal *signal, int offset = 0);
 
 		/**
 		 * @brief add a bit to the bit heap. convenience function for adding signals directly to the bitheap.
@@ -112,15 +112,15 @@ namespace flopoco{
 		 *                           (by default 0, the lsb of the bitheap)
 		 * @param comment            a VHDL comment for this bit
 		 */
-		void addBit(Signal *signal, int offset = 0, int weight = 0, string comment = "");
+		void addBit(Signal *signal, int offset = 0, int weight = 0);
 
 		/**
 		 * @brief remove a bit from the bitheap.
 		 * @param weight  the weight of the bit to be removed
-		 * @param dir if dir==0 the bit will be removed from the beginning of the list
-		 *            if dir==1 the bit will be removed from the end of the list
+		 * @param direction if dir==0 the bit will be removed from the beginning of the list
+		 *                  if dir==1 the bit will be removed from the end of the list
 		 */
-		void removeBit(int weight, int dir = 1);
+		void removeBit(int weight, int direction = 1);
 
 		/**
 		 * @brief remove a bit from the bitheap.
@@ -133,20 +133,20 @@ namespace flopoco{
 		 * @brief remove a bit from the bitheap.
 		 * @param weight  the weight of the bit to be removed
 		 * @param count the number of bits to remove
-		 * @param dir if dir==0 the bit will be removed from the beginning of the list
-		 *            if dir==1 the bit will be removed from the end of the list
+		 * @param direction if dir==0 the bit will be removed from the beginning of the list
+		 *                  if dir==1 the bit will be removed from the end of the list
 		 */
-		void removeBits(int weight, unsigned count = 1, int dir = 1);
+		void removeBits(int weight, unsigned count = 1, int direction = 1);
 
 		/**
 		 * @brief remove a bit from the bitheap.
 		 * @param msb the column up until which to remove the bits
 		 * @param lsb the column from which to remove the bits
 		 * @param count the number of bits to remove
-		 * @param dir if dir==0 the bit will be removed from the beginning of the list
-		 *            if dir==1 the bit will be removed from the end of the list
+		 * @param direction if dir==0 the bit will be removed from the beginning of the list
+		 *                  if dir==1 the bit will be removed from the end of the list
 		 */
-		void removeBits(int msb, int lsb, unsigned count = 1, int dir = 1);
+		void removeBits(int msb, int lsb, unsigned count = 1, int direction = 1);
 
 		/**
 		 * @brief remove the bits that have already been marked as compressed
