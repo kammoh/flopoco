@@ -507,13 +507,113 @@ namespace flopoco {
 
 	void BitheapNew::addUnsignedBitVector(Signal* signal, int msb, int lsb, int weight)
 	{
-		if(signal->isFix())
+		if(signal->isFix()){
+			if((signal->LSB() > msb) || (signal->MSB() < lsb))
+				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
+						<< " (msb=" << signal->MSB() << ", lsb=" << signal->LSB()
+						<< ") to bitheap with msb=" << this->msb << ", lsb=" << this->lsb);
+
 			addUnsignedBitVector(signal->getName(), msb, lsb, weight);
-		else
+		}else{
+			if(msb-lsb+1 > signal->width())
+				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
+						<< " (size=" << signal->width() << ") to bitheap with msb="
+						<< this->msb << ", lsb=" << this->lsb);
+
 			addUnsignedBitVector(signal->getName(), msb-lsb+1, weight);
+		}
 	}
 
 
+	void BitheapNew::subtractUnsignedBitVector(string signalName, unsigned size, int weight)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		int startIndex, endIndex;
+
+		if(weight < lsb)
+			startIndex = lsb;
+		else
+			startIndex = weight;
+		if(size+weight > msb)
+			endIndex = msb;
+		else
+			endIndex = size+weight-1;
+
+		for(int i=startIndex; i<=endIndex; i++)
+		{
+			ostringstream s;
+
+			s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			addBit(i, s.str());
+		}
+		addConstantOneBit(startIndex);
+		for(int i=endIndex+1; i<=this->msb; i++)
+			addConstantOneBit(i);
+	}
+
+
+	void BitheapNew::subtractUnsignedBitVector(string signalName, int msb, int lsb, int weight)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		int startIndex, endIndex;
+
+		if(weight+lsb < this->lsb)
+			startIndex = this->lsb;
+		else
+			startIndex = weight+lsb;
+		if(msb+weight > this->msb)
+			endIndex = this->msb;
+		else
+			endIndex = msb+weight;
+
+		for(int i=startIndex; i<=endIndex; i++)
+		{
+			ostringstream s;
+
+			s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			addBit(i, s.str());
+		}
+		addConstantOneBit(startIndex);
+		for(int i=endIndex+1; i<=this->msb; i++)
+			addConstantOneBit(i);
+	}
+
+
+	void BitheapNew::subtractUnsignedBitVector(Signal* signal, int weight)
+	{
+		if(signal->isFix())
+			subtractUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
+		else
+			subtractUnsignedBitVector(signal->getName(), signal->width(), weight);
+	}
+
+
+	void BitheapNew::subtractUnsignedBitVector(Signal* signal, int msb, int lsb, int weight)
+	{
+		if(signal->isFix()){
+			if((signal->LSB() > msb) || (signal->MSB() < lsb))
+				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
+						<< " (msb=" << signal->MSB() << ", lsb=" << signal->LSB()
+						<< ") to bitheap with msb=" << this->msb << ", lsb=" << this->lsb);
+
+			subtractUnsignedBitVector(signal->getName(), msb, lsb, weight);
+		}else{
+			if(msb-lsb+1 > signal->width())
+				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
+						<< " (size=" << signal->width() << ") to bitheap with msb="
+						<< this->msb << ", lsb=" << this->lsb);
+
+			subtractUnsignedBitVector(signal->getName(), msb-lsb+1, weight);
+		}
+	}
 
 } /* namespace flopoco */
 
