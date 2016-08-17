@@ -369,6 +369,89 @@ namespace flopoco {
 			markBit(bits[i], type);
 	}
 
+
+	void BitheapNew::addConstantOneBit(int weight)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		constantBits += (mpz_class(1) << weight);
+	}
+
+
+	void BitheapNew::subConstantOneBit(int weight)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		constantBits -= (mpz_class(1) << weight);
+	}
+
+
+	void BitheapNew::addConstant(mpz_class constant, int weight = 0)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		constantBits += (constant << weight);
+	}
+
+
+	void BitheapNew::addConstant(mpz_class constant, int msb, int lsb, int weight = 0)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		mpz_class constantCpy = mpz_class(constant);
+
+		if(lsb < this->lsb)
+			constantCpy = constantCpy >> (this->lsb - lsb);
+		else
+			constantCpy = constantCpy << (lsb - this->lsb);
+
+		constantBits += (constantCpy << weight);
+	}
+
+
+	void BitheapNew::subConstant(mpz_class constant, int weight = 0)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		constantBits -= (constant << weight);
+	}
+
+
+	void BitheapNew::subConstant(mpz_class constant, int msb, int lsb, int weight = 0)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		mpz_class constantCpy = mpz_class(constant);
+
+		if(lsb < this->lsb)
+			constantCpy = constantCpy >> (this->lsb - lsb);
+		else
+			constantCpy = constantCpy << (lsb - this->lsb);
+
+		constantBits -= (constantCpy << weight);
+	}
+
+
+
+
 } /* namespace flopoco */
 
 

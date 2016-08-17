@@ -202,7 +202,7 @@ namespace flopoco{
 		 * @param weight            the weight of the 1 to be subtracted
 		 *                          (by default 0)
 		 */
-		void subConstantOneBit(int weight);
+		void subConstantOneBit(int weight = 0);
 
 		/**
 		 * @brief add a constant to the bitheap. It will be added to the constantBits mpz,
