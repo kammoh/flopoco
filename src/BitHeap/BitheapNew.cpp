@@ -498,6 +498,13 @@ namespace flopoco {
 
 	void BitheapNew::addUnsignedBitVector(Signal* signal, int weight)
 	{
+		if(signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding signed signal "
+					<< signal->getName() << " as an unsigned bit vector");
+		if(signal->isSigned() && !isSigned)
+			REPORT(DEBUG, "WARNING: adding signed signal "
+					<< signal->getName() << " to an unsigned bitheap");
+
 		if(signal->isFix())
 			addUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
@@ -507,6 +514,13 @@ namespace flopoco {
 
 	void BitheapNew::addUnsignedBitVector(Signal* signal, int msb, int lsb, int weight)
 	{
+		if(signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding signed signal "
+					<< signal->getName() << " as an unsigned bit vector");
+		if(signal->isSigned() && !isSigned)
+			REPORT(DEBUG, "WARNING: adding signed signal "
+					<< signal->getName() << " to an unsigned bitheap");
+
 		if(signal->isFix()){
 			if((signal->LSB() > msb) || (signal->MSB() < lsb))
 				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
@@ -589,6 +603,13 @@ namespace flopoco {
 
 	void BitheapNew::subtractUnsignedBitVector(Signal* signal, int weight)
 	{
+		if(signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting signed signal "
+					<< signal->getName() << " as an unsigned bit vector");
+		if(signal->isSigned() && !isSigned)
+			REPORT(DEBUG, "WARNING: subtracting signed signal "
+					<< signal->getName() << " from an unsigned bitheap");
+
 		if(signal->isFix())
 			subtractUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
@@ -598,6 +619,13 @@ namespace flopoco {
 
 	void BitheapNew::subtractUnsignedBitVector(Signal* signal, int msb, int lsb, int weight)
 	{
+		if(signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting signed signal "
+					<< signal->getName() << " as an unsigned bit vector");
+		if(signal->isSigned() && !isSigned)
+			REPORT(DEBUG, "WARNING: subtracting signed signal "
+					<< signal->getName() << " from an unsigned bitheap");
+
 		if(signal->isFix()){
 			if((signal->LSB() > msb) || (signal->MSB() < lsb))
 				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
