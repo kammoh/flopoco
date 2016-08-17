@@ -154,32 +154,35 @@ namespace flopoco{
 		void removeCompressedBits();
 
 		/**
-		 * @brief remove a bit from the bitheap.
+		 * @brief mark a bit in the bitheap.
 		 * @param weight the weight at which the bit is
 		 * @param number the number of the bit in the respective column
+		 *        (by default 0, the first one in the column)
 		 * @param type how the bit should be marked
+		 *        (by default as free)
 		 */
-		void markBit(int weight, unsigned number, Bit::BitType type);
+		void markBit(int weight, unsigned number = 0, Bit::BitType type = Bit::BitType::free);
 
 		/**
-		 * @brief remove a bit from the bitheap.
+		 * @brief mark a bit in the bitheap.
 		 * @param bit the bit to mark
 		 * @param type how the bit should be marked
+		 *        (by default as free)
 		 */
-		void markBit(Bit* bit, Bit::BitType type);
+		void markBit(Bit* bit, Bit::BitType type = Bit::BitType::free);
 
 		/**
-		 * @brief remove a bit from the bitheap.
+		 * @brief mark several bits in the bitheap.
 		 * @param msb the column up until which to mark the bits
 		 * @param lsb the column up until which to mark the bits
 		 * @param number the number of bits to mark in each column
-		 *               (by default=-1, i.e. mark all bits)
+		 *               (by default=0, i.e. mark all bits)
 		 * @param type how the bits should be marked
 		 */
-		void markBits(int msb, int lsb, Bit::BitType type, int number = -1);
+		void markBits(int msb, int lsb, Bit::BitType type = Bit::BitType::free, unsigned number = 0);
 
 		/**
-		 * @brief remove a bit from the bitheap.
+		 * @brief mark several bits in the bitheap.
 		 * @param bits the bits to mark
 		 * @param type how the bits should be marked
 		 */

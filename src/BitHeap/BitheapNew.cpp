@@ -291,4 +291,99 @@ namespace flopoco {
 		}
 	}
 
+
+	void BitheapNew::markBit(int weight, unsigned number, Bit::BitType type)
+	{
+		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+
+		vector<Bit*> bitsColumn = bits[weight];
+
+		if(number >= bitsColumn.size())
+			THROWERROR("Column with weight=" << weight << " only contains "
+					<< bitsColumn.size() << " bits, but bit number=" << number << " is to be marked");
+
+		bits[weight][number]->type = type;
+	}
+
+
+	void BitheapNew::markBit(Bit* bit, Bit::BitType type)
+	{
+		bool bitFound = false;
+
+		for(unsigned i=0; i<=size; i++)
+		{
+			vector<Bit*> bitsColumn = bits[i];
+			vector<Bit*>::iterator it = bitsColumn.begin(), lastIt = it;
+
+			//search for the bit
+			while(it != bitsColumn.end())
+			{
+				if(((*it)->name == bit->name) && ((*it)->getUid() == bit->getUid()))
+				{
+					(*it)->type = type;
+					bitFound = true;
+					return;
+				}else{
+					it++;
+				}
+			}
+		}
+		if(bitFound == false)
+			THROWERROR("Bit=" << bit->name << " with uid="
+					<< bit->getUid() << " not found in bitheap");
+	}
+
+
+	void BitheapNew::markBits(int msb, int lsb, Bit::BitType type, unsigned number)
+	{
+		if(lsb < this->lsb)
+			THROWERROR("LSB (=" << lsb << ") out of bitheap bit range in removeBit");
+		if(msb > this->lsb)
+			THROWERROR("MSB (=" << msb << ") out of bitheap bit range in removeBit");
+
+		for(int i=lsb; i<=msb; i++)
+		{
+			vector<Bit*> bitsColumn = bits[i];
+			unsigned currentWeight = i - this->lsb;
+			unsigned currentNumber = number;
+
+			if(number >= bitsColumn.size())
+			{
+				REPORT(DEBUG, "Column with weight=" << currentWeight << " only contains "
+						<< bitsColumn.size() << " bits, but number=" << number << " bits are to be marked");
+				currentNumber = bitsColumn.size();
+			}
+
+			for(unsigned j=0; j<currentNumber; j++)
+				markBit(currentWeight, j, type);
+		}
+	}
+
+
+	void BitheapNew::markBits(vector<Bit*> bits, Bit::BitType type)
+	{
+		for(unsigned i=0; i<bits.size(); i++)
+			markBit(bits[i], type);
+	}
+
 } /* namespace flopoco */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
