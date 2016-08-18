@@ -1028,6 +1028,26 @@ namespace flopoco {
 			resizeBitheap(newMsb-newLsb+1, 1);
 	}
 
+
+	void BitheapNew::mergeBitheap(BitheapNew* bitheap)
+	{
+		if(op->getName() != bitheap->op->getName())
+			THROWERROR("Cannot merge bitheaps belonging to different operators!");
+		if(isSigned != bitheap->isSigned)
+			REPORT(DEBUG, "WARNING: merging bitheaps with different signedness");
+
+		//resize if necessary
+		if(size < bitheap->size)
+		{
+			if(lsb > bitheap->lsb)
+				resizeBitheap(msb, bitheap->lsb);
+			if(msb < bitheap->msb)
+				resizeBitheap(bitheap->msb, lsb);
+		}
+		//add the bits
+
+	}
+
 } /* namespace flopoco */
 
 
