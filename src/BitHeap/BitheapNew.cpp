@@ -928,6 +928,106 @@ namespace flopoco {
 			subtractUnsignedBitVector(signal, msb, lsb, weight);
 	}
 
+
+	void BitheapNew::resizeBitheap(unsigned newSize, int direction)
+	{
+		if((direction != 0) && (direction != 1))
+			THROWERROR("Invalid direction in resizeBitheap: direction=" << direction);
+		if(isFixedPoint)
+			REPORT(DEBUG, "WARNING: using generic resize method to resize a fixed-point bitheap");
+		if(newSize < size)
+		{
+			REPORT(DEBUG, "WARNING: resizing the bitheap from size="
+					<< size << " to size=" << newSize);
+			if(direction == 0){
+				REPORT(DEBUG, "\t will loose the information in the lsb columns");
+			}else{
+				REPORT(DEBUG, "\t will loose the information in the msb columns");
+			}
+		}
+
+		//add/remove the columns
+		if(newSize < size)
+		{
+			//remove columns
+			if(direction == 0)
+			{
+				//remove lsb columns
+				bits.erase(bits.begin(), bits.begin()+(size-newSize));
+				history.erase(history.begin(), history.begin()+(size-newSize));
+				bitUID.erase(bitUID.begin(), bitUID.begin()+(size-newSize));
+				if(isFixedPoint)
+					lsb += size-newSize;
+			}else{
+				//remove msb columns
+				bits.resize(newSize);
+				history.resize(newSize);
+				bitUID.resize(newSize);
+				if(isFixedPoint)
+					msb -= size-newSize;
+			}
+		}else{
+			//add columns
+			if(direction == 0)
+			{
+				//add lsb columns
+				vector<Bit*> newVal;
+				bits.insert(bits.begin(), newSize-size, newVal);
+				history.insert(history.begin(), newSize-size, newVal);
+				bitUID.insert(bitUID.begin(), newSize-size, 0);
+				if(isFixedPoint)
+					lsb -= size-newSize;
+			}else{
+				//add msb columns
+				bits.resize(newSize-size);
+				history.resize(newSize-size);
+				bitUID.resize(newSize-size);
+				if(isFixedPoint)
+					msb += size-newSize;
+			}
+		}
+
+		//update the information inside the bitheap
+		size = newSize;
+		if(!isFixedPoint)
+		{
+			lsb = 0;
+			msb = newSize-1;
+		}
+		height = getMaxHeight();
+		for(int i=lsb; i<=msb; i++)
+			for(unsigned j=0; j<bits[i-lsb].size(); j++)
+				bits[i-lsb][j]->weight = i;
+	}
+
+
+	void BitheapNew::resizeBitheap(int newMsb, int newLsb)
+	{
+		if((newMsb < newLsb) || (newLsb<0 && !isFixedPoint) || (newMsb<0 && !isFixedPoint))
+			THROWERROR("Invalid arguments in resizeBitheap (isFixedPoint="
+					<< isFixedPoint << "): newMsb=" << newMsb << " newLsb=" << newLsb);
+		if(!isFixedPoint)
+			REPORT(DEBUG, "WARNING: using fixed-point resize method to resize an integer bitheap");
+		if(newMsb<msb || newLsb>lsb)
+		{
+			REPORT(DEBUG, "WARNING: resizing the bitheap from msb="
+					<< msb << " lsb=" << lsb << " to newMsb=" << newMsb << " newLsb=" << newLsb);
+			if(newMsb < msb){
+				REPORT(DEBUG, "\t will loose the information in the msb columns");
+			}
+			if(newLsb>lsb){
+				REPORT(DEBUG, "\t will loose the information in the lsb columns");
+			}
+		}
+
+		//resize on the lsb, if necessary
+		if(newLsb > lsb)
+			resizeBitheap(msb-newLsb+1, 0);
+		//resize on the msb, if necessary
+		if(newMsb < msb)
+			resizeBitheap(newMsb-newLsb+1, 1);
+	}
+
 } /* namespace flopoco */
 
 

@@ -436,16 +436,18 @@ namespace flopoco{
 
 		/**
 		 * @brief resize an integer bitheap to the new given size
-		 * @param size              the new size of the bitheap
+		 * @param newSize           the new size of the bitheap
+		 * @param direction         the direction in which to add or remove columns
+		 *                          (by default=0, the lsb, =1 for msb)
 		 */
-		void resizeBitheap(unsigned size);
+		void resizeBitheap(unsigned newSize, int direction = 0);
 
 		/**
 		 * @brief resize a fixed-point bitheap to the new given format
-		 * @param msb               the new msb of the bitheap
-		 * @param lsb               the new lsb of the bitheap
+		 * @param newMsb            the new msb of the bitheap
+		 * @param newLsb            the new lsb of the bitheap
 		 */
-		void resizeBitheap(int msb, int lsb);
+		void resizeBitheap(int newMsb, int newLsb);
 
 
 		/**
