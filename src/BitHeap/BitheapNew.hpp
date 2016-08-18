@@ -398,6 +398,43 @@ namespace flopoco{
 
 
 		/**
+		 * @brief add a signal to the bitheap.
+		 * @param signal            the signal being added
+		 * @param weight            the weight the signal is added to the bitheap
+		 *                          (by default 0)
+		 */
+		void addSignal(Signal* signal, int weight = 0);
+
+		/**
+		 * @brief add a signal to the bitheap.
+		 * @param signal            the signal being added
+		 * @param msb               the msb from which to add the bits of the signal
+		 * @param lsb               the lsb up until which to add the bits of the signal
+		 * @param weight            the weight the signal is added to the bitheap
+		 *                          (by default 0)
+		 */
+		void addSignal(Signal* signal, int msb, int lsb, int weight = 0);
+
+		/**
+		 * @brief subtract a signal from the bitheap.
+		 * @param signal            the signal being subtracted
+		 * @param weight            the weight of the signal subtracted from the bitheap
+		 *                          (by default 0)
+		 */
+		void subtractSignal(Signal* signal, int weight = 0);
+
+		/**
+		 * @brief subtract a signal from the bitheap.
+		 * @param signal            the signal being subtracted
+		 * @param msb               the msb from which to subtract the bits of the signal
+		 * @param lsb               the lsb up until which to subtract the bits of the signal
+		 * @param weight            the weight of the signal subtracted from the bitheap
+		 *                          (by default 0)
+		 */
+		void subtractSignal(Signal* signal, int msb, int lsb, int weight = 0);
+
+
+		/**
 		 * @brief resize an integer bitheap to the new given size
 		 * @param size              the new size of the bitheap
 		 */

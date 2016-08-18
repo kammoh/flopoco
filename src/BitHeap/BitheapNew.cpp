@@ -710,14 +710,12 @@ namespace flopoco {
 
 	void BitheapNew::addSignedBitVector(Signal* signal, int weight)
 	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
+		if(!signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding unsigned signal "
+					<< signal->getName() << " as an signed bit vector");
+		if(!isSigned)
 			REPORT(DEBUG, "WARNING: adding signed signal "
 					<< signal->getName() << " to an unsigned bitheap");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: adding a signed signal " << signal->getName() << " to an unsigned bitheap");
 
 		if(signal->isFix())
 			addSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
@@ -728,14 +726,12 @@ namespace flopoco {
 
 	void BitheapNew::addSignedBitVector(Signal* signal, int msb, int lsb, int weight)
 	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
+		if(!signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding unsigned signal "
+					<< signal->getName() << " as an signed bit vector");
+		if(!isSigned)
 			REPORT(DEBUG, "WARNING: adding signed signal "
 					<< signal->getName() << " to an unsigned bitheap");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: adding a signed signal " << signal->getName() << " to an unsigned bitheap");
 
 		if(signal->isFix()){
 			if((signal->LSB() > msb) || (signal->MSB() < lsb))
@@ -762,7 +758,8 @@ namespace flopoco {
 		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting a signed signal " << signalName << " to an unsigned bitheap");
+			REPORT(DEBUG, "WARNING: subtracting a signed signal "
+					<< signalName << " from an unsigned bitheap");
 
 		int startIndex, endIndex;
 
@@ -796,7 +793,8 @@ namespace flopoco {
 		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting a signed signal " << signalName << " to an unsigned bitheap");
+			REPORT(DEBUG, "WARNING: subtracting a signed signal "
+					<< signalName << " from an unsigned bitheap");
 
 		ostringstream s;
 		int startIndex, endIndex;
@@ -826,14 +824,12 @@ namespace flopoco {
 
 	void BitheapNew::subtractSignedBitVector(Signal* signal, int weight)
 	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
+		if(!signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting unsigned signal "
+					<< signal->getName() << " as an signed bit vector");
+		if(!isSigned)
 			REPORT(DEBUG, "WARNING: subtracting signed signal "
 					<< signal->getName() << " from an unsigned bitheap");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting a signed signal " << signal->getName() << " to an unsigned bitheap");
 
 		if(signal->isFix())
 			subtractSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
@@ -844,14 +840,12 @@ namespace flopoco {
 
 	void BitheapNew::subtractSignedBitVector(Signal* signal, int msb, int lsb, int weight)
 	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
+		if(!signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting unsigned signal "
+					<< signal->getName() << " as an signed bit vector");
+		if(!isSigned)
 			REPORT(DEBUG, "WARNING: subtracting signed signal "
 					<< signal->getName() << " from an unsigned bitheap");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting a signed signal " << signal->getName() << " to an unsigned bitheap");
 
 		if(signal->isFix()){
 			if((signal->LSB() > msb) || (signal->MSB() < lsb))
@@ -868,6 +862,70 @@ namespace flopoco {
 
 			subtractSignedBitVector(signal->getName(), msb-lsb+1, weight);
 		}
+	}
+
+
+	void BitheapNew::addSignal(Signal* signal, int weight)
+	{
+		if(!isSigned && signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding a signed signal "
+					<< signal->getName() << " to an unsigned bitheap");
+		if(isSigned && !signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding an unsigned signal "
+					<< signal->getName() << " to a signed bitheap");
+
+		if(signal->isSigned())
+			addSignedBitVector(signal, weight);
+		else
+			addUnsignedBitVector(signal, weight);
+	}
+
+
+	void BitheapNew::addSignal(Signal* signal, int msb, int lsb, int weight)
+	{
+		if(!isSigned && signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding a signed signal "
+					<< signal->getName() << " to an unsigned bitheap");
+		if(isSigned && !signal->isSigned())
+			REPORT(DEBUG, "WARNING: adding an unsigned signal "
+					<< signal->getName() << " to a signed bitheap");
+
+		if(signal->isSigned())
+			addSignedBitVector(signal, msb, lsb, weight);
+		else
+			addUnsignedBitVector(signal, msb, lsb, weight);
+	}
+
+
+	void BitheapNew::subtractSignal(Signal* signal, int weight)
+	{
+		if(!isSigned && signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting a signed signal "
+					<< signal->getName() << " from an unsigned bitheap");
+		if(isSigned && !signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting an unsigned signal "
+					<< signal->getName() << " from a signed bitheap");
+
+		if(signal->isSigned())
+			subtractSignedBitVector(signal, weight);
+		else
+			subtractUnsignedBitVector(signal, weight);
+	}
+
+
+	void BitheapNew::subtractSignal(Signal* signal, int msb, int lsb, int weight)
+	{
+		if(!isSigned && signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting a signed signal "
+					<< signal->getName() << " from an unsigned bitheap");
+		if(isSigned && !signal->isSigned())
+			REPORT(DEBUG, "WARNING: subtracting an unsigned signal "
+					<< signal->getName() << " from a signed bitheap");
+
+		if(signal->isSigned())
+			subtractSignedBitVector(signal, msb, lsb, weight);
+		else
+			subtractUnsignedBitVector(signal, msb, lsb, weight);
 	}
 
 } /* namespace flopoco */
