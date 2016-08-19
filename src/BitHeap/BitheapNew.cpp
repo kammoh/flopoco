@@ -1173,6 +1173,21 @@ namespace flopoco {
 	}
 
 
+	bool BitheapNew::compressionRequired()
+	{
+		if(getMaxHeight() < 3){
+			return false;
+		}else if(height > 3){
+			return true;
+		}else{
+			for(unsigned i=1; i<bits.size(); i++)
+				if(bits[i].size() > 2)
+					return true;
+			return false;
+		}
+	}
+
+
 	Plotter* BitheapNew::getPlotter()
 	{
 		return plotter;

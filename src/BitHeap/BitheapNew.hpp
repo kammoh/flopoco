@@ -490,6 +490,11 @@ namespace flopoco{
 		unsigned getColumnHeight(int weight);
 
 		/**
+		 * @brief is compression necessary, or not
+		 */
+		bool compressionRequired();
+
+		/**
 		 * @brief return the plotter object
 		 */
 		Plotter* getPlotter();

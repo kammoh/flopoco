@@ -47,10 +47,11 @@ namespace flopoco
 		void compress();
 
 		/**
-		 * @brief apply a 3 to 2 compressor to the column given as parameter
+		 * @brief apply a compressor to the column given as parameter
 		 * @param column the weight of the column
+		 * @param compressor the index of the compressor in the possible compressors list
 		 */
-		void applyCompressor3_2(int column);
+		void applyCompressor(int column, unsigned compressorNumber);
 
 		/**
 		 * @brief applies an adder with wIn = msbColumn-lsbColumn+1;
@@ -102,7 +103,7 @@ namespace flopoco
 
 		/**
 		 * @brief verify up until which lsb column the compression
-		 * has already been done
+		 * has already been done and concatenate those bits
 		 */
 		void concatenateLSBColumns();
 
@@ -114,6 +115,11 @@ namespace flopoco
 		int compressionDoneIndex;                   /**< The index in the range msb-lsb up to which the compression is completed */
 		int stagesPerCycle;                         /**< The number of stages of compression in each cycle */
 		double compressionDelay;                    /**< The duration of a compression stage */
+
+		// For error reporting to work
+		int guid;
+		string srcFileName;
+		string uniqueName_;
 	};
 }
 

@@ -10,6 +10,14 @@ namespace flopoco{
 	CompressionStrategy::CompressionStrategy(BitheapNew *bitheap_) :
 		bitheap(bitheap_)
 	{
+		stringstream s;
+
+		 //for REPORT to work
+		srcFileName = bitheap->op->getSrcFileName() + ":BitHeap:CompressionStrategy";
+		guid = Operator::getNewUId();
+		s << bitheap->name << "_CompressionStrategy_" << guid;
+		uniqueName_ = s.str();
+
 		compressionDoneIndex = 0;
 
 		compressionDelay = bitheap->op->getTarget()->lutDelay() + bitheap->op->getTarget()->localWireDelay();
@@ -25,7 +33,22 @@ namespace flopoco{
 
 	void CompressionStrategy::startCompression()
 	{
-
+		//compress the bitheap to height 2
+		//	(the last column can be of height 3)
+		if(!bitheap->isCompressed || bitheap->compressionRequired())
+		{
+			while(bitheap->compressionRequired())
+			{
+				compress();
+				bitheap->removeCompressedBits();
+			}
+		}else{
+			REPORT(DEBUG, "Bitheap already compressed, so startCompression has nothing else to do.");
+		}
+		//generate the final addition
+		generateFinalAddVHDL(bitheap->op->getTarget()->getVendor() == "Xilinx");
+		//mark the bitheap as compressed
+		bitheap->isCompressed = true;
 	}
 
 
