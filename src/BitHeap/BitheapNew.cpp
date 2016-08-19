@@ -111,6 +111,8 @@ namespace flopoco {
 				<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
 
 		printColumnInfo(weight);
+
+		isCompressed = false;
 	}
 
 
@@ -143,6 +145,8 @@ namespace flopoco {
 		REPORT(DEBUG, "added bit named "  << bit->name << " on column " << weight
 			<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
 		printColumnInfo(weight);
+
+		isCompressed = false;
 	}
 
 
@@ -173,6 +177,8 @@ namespace flopoco {
 		{
 			bitsColumn.insert(bitsColumn.end(), bit);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -195,6 +201,8 @@ namespace flopoco {
 			THROWERROR("Invalid direction for removeBit: direction=" << direction);
 
 		REPORT(DEBUG,"removed a bit from column " << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -226,6 +234,8 @@ namespace flopoco {
 					<< " not found in column with weight=" << weight);
 
 		REPORT(DEBUG,"removed bit " << bit->name << " from column " << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -250,6 +260,8 @@ namespace flopoco {
 		{
 			removeBit(weight, direction);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -266,6 +278,8 @@ namespace flopoco {
 
 			removeBits(currentWeight, count, direction);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -378,6 +392,8 @@ namespace flopoco {
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits += (mpz_class(1) << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -389,6 +405,8 @@ namespace flopoco {
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits -= (mpz_class(1) << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -400,6 +418,8 @@ namespace flopoco {
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits += (constant << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -418,6 +438,8 @@ namespace flopoco {
 			constantCpy = constantCpy << (lsb - this->lsb);
 
 		constantBits += (constantCpy << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -429,6 +451,8 @@ namespace flopoco {
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits -= (constant << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -447,6 +471,8 @@ namespace flopoco {
 			constantCpy = constantCpy << (lsb - this->lsb);
 
 		constantBits -= (constantCpy << weight);
+
+		isCompressed = false;
 	}
 
 
@@ -470,6 +496,8 @@ namespace flopoco {
 
 		for(int i=startIndex; i<=endIndex; i++)
 			addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
+
+		isCompressed = false;
 	}
 
 
@@ -493,6 +521,8 @@ namespace flopoco {
 
 		for(int i=startIndex; i<=endIndex; i++)
 			addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
+
+		isCompressed = false;
 	}
 
 
@@ -509,6 +539,8 @@ namespace flopoco {
 			addUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
 			addUnsignedBitVector(signal->getName(), signal->width(), weight);
+
+		isCompressed = false;
 	}
 
 
@@ -536,6 +568,8 @@ namespace flopoco {
 
 			addUnsignedBitVector(signal->getName(), msb-lsb+1, weight);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -567,6 +601,8 @@ namespace flopoco {
 		addConstantOneBit(startIndex);
 		for(int i=endIndex+1; i<=this->msb; i++)
 			addConstantOneBit(i);
+
+		isCompressed = false;
 	}
 
 
@@ -598,6 +634,8 @@ namespace flopoco {
 		addConstantOneBit(startIndex);
 		for(int i=endIndex+1; i<=this->msb; i++)
 			addConstantOneBit(i);
+
+		isCompressed = false;
 	}
 
 
@@ -614,6 +652,8 @@ namespace flopoco {
 			subtractUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
 			subtractUnsignedBitVector(signal->getName(), signal->width(), weight);
+
+		isCompressed = false;
 	}
 
 
@@ -641,6 +681,8 @@ namespace flopoco {
 
 			subtractUnsignedBitVector(signal->getName(), msb-lsb+1, weight);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -673,6 +715,8 @@ namespace flopoco {
 
 		for(int i=endIndex; i<=this->msb; i++)
 			addConstantOneBit(i);
+
+		isCompressed = false;
 	}
 
 
@@ -705,6 +749,8 @@ namespace flopoco {
 
 		for(int i=endIndex; i<=this->msb; i++)
 			addConstantOneBit(i);
+
+		isCompressed = false;
 	}
 
 
@@ -721,6 +767,8 @@ namespace flopoco {
 			addSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
 			addSignedBitVector(signal->getName(), signal->width(), weight);
+
+		isCompressed = false;
 	}
 
 
@@ -748,6 +796,8 @@ namespace flopoco {
 
 			addSignedBitVector(signal->getName(), msb-lsb+1, weight);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -783,6 +833,8 @@ namespace flopoco {
 		addConstantOneBit(startIndex);
 		for(int i=endIndex; i<=this->msb; i++)
 			addConstantOneBit(i);
+
+		isCompressed = false;
 	}
 
 
@@ -819,6 +871,8 @@ namespace flopoco {
 		addConstantOneBit(startIndex);
 		for(int i=endIndex; i<=this->msb; i++)
 			addConstantOneBit(i);
+
+		isCompressed = false;
 	}
 
 
@@ -835,6 +889,8 @@ namespace flopoco {
 			subtractSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
 			subtractSignedBitVector(signal->getName(), signal->width(), weight);
+
+		isCompressed = false;
 	}
 
 
@@ -862,6 +918,8 @@ namespace flopoco {
 
 			subtractSignedBitVector(signal->getName(), msb-lsb+1, weight);
 		}
+
+		isCompressed = false;
 	}
 
 
@@ -878,6 +936,8 @@ namespace flopoco {
 			addSignedBitVector(signal, weight);
 		else
 			addUnsignedBitVector(signal, weight);
+
+		isCompressed = false;
 	}
 
 
@@ -894,6 +954,8 @@ namespace flopoco {
 			addSignedBitVector(signal, msb, lsb, weight);
 		else
 			addUnsignedBitVector(signal, msb, lsb, weight);
+
+		isCompressed = false;
 	}
 
 
@@ -910,6 +972,8 @@ namespace flopoco {
 			subtractSignedBitVector(signal, weight);
 		else
 			subtractUnsignedBitVector(signal, weight);
+
+		isCompressed = false;
 	}
 
 
@@ -926,6 +990,8 @@ namespace flopoco {
 			subtractSignedBitVector(signal, msb, lsb, weight);
 		else
 			subtractUnsignedBitVector(signal, msb, lsb, weight);
+
+		isCompressed = false;
 	}
 
 
@@ -998,6 +1064,8 @@ namespace flopoco {
 		for(int i=lsb; i<=msb; i++)
 			for(unsigned j=0; j<bits[i-lsb].size(); j++)
 				bits[i-lsb][j]->weight = i;
+
+		isCompressed = false;
 	}
 
 
@@ -1026,6 +1094,8 @@ namespace flopoco {
 		//resize on the msb, if necessary
 		if(newMsb < msb)
 			resizeBitheap(newMsb-newLsb+1, 1);
+
+		isCompressed = false;
 	}
 
 
@@ -1045,8 +1115,17 @@ namespace flopoco {
 				resizeBitheap(bitheap->msb, lsb);
 		}
 		//add the bits
+		for(int i=bitheap->lsb; i<bitheap->msb; i++)
+			for(unsigned j=0; j<bitheap->bits[i-bitheap->lsb].size(); j++)
+				insertBitInColumn(bitheap->bits[i-bitheap->lsb][j], bits[i-bitheap->lsb+(lsb-bitheap->lsb)]);
+		//make the bit all point to this bitheap
+		for(unsigned i=0; i<size; i++)
+			for(unsigned j=0; j<bits[i].size(); j++)
+				bits[i][j]->bitheap = this;
 
+		isCompressed = false;
 	}
+
 
 } /* namespace flopoco */
 
