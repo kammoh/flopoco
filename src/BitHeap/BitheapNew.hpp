@@ -490,12 +490,6 @@ namespace flopoco{
 		unsigned getColumnHeight(int weight);
 
 		/**
-		 * @brief return the delay of a compression stage
-		 * (there can be several compression staged in a cycle)
-		 */
-		double getCompressorDelay();
-
-		/**
 		 * @brief return the plotter object
 		 */
 		Plotter* getPlotter();
@@ -564,8 +558,6 @@ namespace flopoco{
 		void drawConfiguration(int offsetY);
 
 		void drawBit(int cnt, int w, int turnaroundX, int offsetY, int c);
-
-		void concatenateLSBColumns();
 
 	public:
 		int msb;                                    /**< The maximum weight a bit can have inside the bitheap */

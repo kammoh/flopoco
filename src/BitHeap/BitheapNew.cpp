@@ -75,7 +75,7 @@ namespace flopoco {
 		vhdlCode.str("");
 
 		//create a compression strategy
-		compressionStrategy = new CompressionStrategy(this);
+		compressionStrategy = nullptr;
 		isCompressed = false;
 
 		//create a Plotter object for the SVG output
@@ -1125,6 +1125,149 @@ namespace flopoco {
 
 		isCompressed = false;
 	}
+
+
+	void BitheapNew::startCompression()
+	{
+		//create a new compression strategy, if one isn't present already
+		if(compressionStrategy == nullptr)
+			compressionStrategy = new CompressionStrategy(this);
+		//start the compression
+		compressionStrategy->startCompression();
+		//mark the bitheap compressed
+		isCompressed = true;
+	}
+
+
+	string BitheapNew::getSumName()
+	{
+		return join("CompressionResult_bh", guid);
+	}
+
+
+	string BitheapNew::getSumName(int msb, int lsb)
+	{
+		return join(join("CompressionResult_bh", guid), range(msb, lsb));
+	}
+
+
+	unsigned BitheapNew::getMaxHeight()
+	{
+		unsigned maxHeight = 0;
+
+		for(unsigned i=0; i<bits.size(); i++)
+			if(bits[i].size() > maxHeight)
+				maxHeight = bits[i].size();
+		height = maxHeight;
+
+		return height;
+	}
+
+
+	unsigned BitheapNew::getColumnHeight(int weight)
+	{
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Invalid argument for getColumnHeight: weight=" << weight);
+
+		return bits[weight-lsb].size();
+	}
+
+
+	Plotter* BitheapNew::getPlotter()
+	{
+		return plotter;
+	}
+
+
+	Operator* BitheapNew::getOp()
+	{
+		return op;
+	}
+
+
+	int BitheapNew::getGUid()
+	{
+		return guid;
+	}
+
+
+	string BitheapNew::getName()
+	{
+		return name;
+	}
+
+
+	void BitheapNew::setIsSigned(bool newIsSigned)
+	{
+		isSigned = newIsSigned;
+	}
+
+
+	bool BitheapNew::getIsSigned()
+	{
+		return isSigned;
+	}
+
+
+	int BitheapNew::newBitUid(unsigned weight)
+	{
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Invalid argument for newBitUid: weight=" << weight);
+
+		int returnVal = bits[weight-lsb];
+
+		bits[weight-lsb]++;
+		return returnVal;
+	}
+
+
+	void BitheapNew::printColumnInfo(int weight)
+	{
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Invalid argument for printColumnInfo: weight=" << weight);
+
+		for(unsigned i=0; i<bits[weight-lsb].size(); i++)
+		{
+			REPORT(FULL, "\t column weight=" << weight << " name=" << bits[weight-lsb][i]->name
+					<< " cycle=" << bits[weight-lsb][i]->signal->getCycle()
+					<< " criticaPath=" << bits[weight-lsb][i]->signal->getCriticalPath());
+		}
+	}
+
+
+	void BitheapNew::printBitHeapStatus()
+	{
+		REPORT(DEBUG, "Bitheap status:");
+		for(unsigned w=0; w<bits.size(); w++)
+		{
+			REPORT(DEBUG, "Column weight=" << w << ":\t height=" << bits[w].size());
+			printColumnInfo(w);
+		}
+	}
+
+
+	void BitheapNew::initializeDrawing()
+	{
+
+	}
+
+
+	void BitheapNew::closeDrawing(int offsetY)
+	{
+
+	}
+
+
+	void BitheapNew::drawConfiguration(int offsetY)
+	{
+
+	}
+
+	void BitheapNew::drawBit(int cnt, int w, int turnaroundX, int offsetY, int c)
+	{
+
+	}
+
 
 
 } /* namespace flopoco */

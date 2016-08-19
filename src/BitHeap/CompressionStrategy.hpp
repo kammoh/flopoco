@@ -94,6 +94,18 @@ namespace flopoco
 		 */
 		void generatePossibleCompressors();
 
+		/**
+		 * @brief return the delay of a compression stage
+		 * (there can be several compression staged in a cycle)
+		 */
+		double getCompressorDelay();
+
+		/**
+		 * @brief verify up until which lsb column the compression
+		 * has already been done
+		 */
+		void concatenateLSBColumns();
+
 	private:
 		BitheapNew *bitheap;                        /**< The bitheap this compression strategy belongs to */
 
