@@ -52,6 +52,50 @@ namespace flopoco{
 	}
 
 
+	void CompressionStrategy::compress()
+	{
+		Bit* soonestBit = nullptr;
+
+		//get the bit with the smallest (cycle, critical path)
+		soonestBit = getSoonestBit(0, bitheap->size-1);
+	}
+
+
+	Bit* CompressionStrategy::getSoonestBit(unsigned lsbColumn, unsigned msbColumn)
+	{
+		Bit* soonestBit = nullptr;
+		unsigned count = lsbColumn;
+
+		if((lsbColumn < bitheap->lsb) || (msbColumn > bitheap->msb))
+			THROWERROR("Invalid arguments for getSoonest bit: lsbColumn="
+					<< lsbColumn << " msbColumn=" << msbColumn);
+		if(bitheap->getMaxHeight() == 0)
+			REPORT(DEBUG, "Warning: trying to obtain the soonest bit from an empty bitheap!");
+
+		//determine the first non-empty bit column
+		while((count < msbColumn) && (bitheap->bits[count].size() == 0))
+			count++;
+		//select the first bit from the column
+		soonestBit = bitheap->bits[count][0];
+
+		//determine the soonest bit
+		for(unsigned i=count; i<=msbColumn; i++)
+			for(unsigned j=0; j<bitheap->bits[i].size(); j++)
+			{
+				Bit* currentBit = bitheap->bits[i][j];
+
+				if((soonestBit->signal->getCycle() > currentBit->signal->getCycle()) ||
+						((soonestBit->signal->getCycle() == currentBit->signal->getCycle())
+								&& (soonestBit->signal->getCriticalPath() > currentBit->signal->getCriticalPath())))
+				{
+					soonestBit = currentBit;
+				}
+			}
+
+		return soonestBit;
+	}
+
+
 	void CompressionStrategy::generatePossibleCompressors()
 	{
 		int col0, col1;

@@ -80,14 +80,15 @@ namespace flopoco
 		 * @param msbColumn the weight of the msb column
 		 * @param lsbColumn the weight of the lsb column
 		 */
-		Bit* getLatestBit(int lsbColumn, int msbColumn);
+		Bit* getLatestBit(unsigned lsbColumn, unsigned msbColumn);
 
 		/**
 		 * @brief computes the soonest bit from the bitheap, between columns lsbColumn and msbColumn
+		 *        if the bitheap is empty, nullptr is returned
 		 * @param msbColumn the weight of the msb column
 		 * @param lsbColumn the weight of the lsb column
 		 */
-		Bit* getSoonestBit(int lsbColumn, int msbColumn);
+		Bit* getSoonestBit(unsigned lsbColumn, unsigned msbColumn);
 
 		/**
 		 * @brief generate all the compressors that will be used for
