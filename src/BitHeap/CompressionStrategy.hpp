@@ -109,7 +109,7 @@ namespace flopoco
 	private:
 		BitheapNew *bitheap;                        /**< The bitheap this compression strategy belongs to */
 
-		vector<Compressor *> possibleCompressors;   /**< All the possible compressors that can be used for compressing the bitheap */
+		vector<Compressor*> possibleCompressors;   /**< All the possible compressors that can be used for compressing the bitheap */
 
 		int compressionDoneIndex;                   /**< The index in the range msb-lsb up to which the compression is completed */
 		int stagesPerCycle;                         /**< The number of stages of compression in each cycle */
