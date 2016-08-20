@@ -99,7 +99,6 @@ int main(int argc, char* argv[] )
 		
 		FPExp::registerFactory();
 		FPLog::registerFactory();
-		FPLogIterative::registerFactory();
 		FPPow::registerFactory();
 		FixSinCos::registerFactory();
 		CordicSinCos::registerFactory();

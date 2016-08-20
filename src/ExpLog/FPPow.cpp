@@ -17,7 +17,7 @@
 #include <sstream>
 #include <math.h>	// for NaN
 #include "FPPow.hpp"
-#include "FPLogIterative.hpp"
+#include "FPLog.hpp"
 #include "FPExp.hpp"
 #include "ShiftersEtc/LZOC.hpp"
 #include "FPMultSquare/FPMult.hpp"
@@ -298,7 +298,7 @@
 		// For the input to the log, take |X| as the case X<0 is managed separately
 		vhdl << tab << declare("logIn", 3+wE + logwF) << " <= flagsX & \"0\" & expFieldX & fracX & " << rangeAssign(logwF-wF-1, 0, "'0'") << " ;" << endl;
 
-		FPLogIterative* log = new FPLogIterative(target,  wE,  logwF, logTableSize );
+		FPLog* log = new FPLog(target,  wE,  logwF, logTableSize );
 		addSubComponent(log);
 		inPortMap(log, "X", "logIn");
 		outPortMap(log, "R", "lnX");

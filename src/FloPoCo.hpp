@@ -149,7 +149,6 @@
 // #include "Trigs/FixSinOrCos.hpp"  Replug when poly eval fixed
 #include "ExpLog/FPExp.hpp"
 #include "ExpLog/FPLog.hpp"
-#include "ExpLog/FPLogIterative.hpp"
 #include "ExpLog/FPPow.hpp"
 
 
