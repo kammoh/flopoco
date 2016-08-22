@@ -42,9 +42,13 @@ namespace flopoco
 	protected:
 
 		/**
-		 * @brief start a new round of compressing the bitheap using compressors
+		 * @brief start a new round of compression of the bitheap using compressors
+		 *        only bits that are within at most a given delay from the soonest
+		 *        bit are compressed
+		 * @param delay the maximum delay between the compressed bits and the soonest bit
+		 * @return whether a compression has been performed
 		 */
-		void compress();
+		bool compress(double delay);
 
 		/**
 		 * @brief apply a compressor to the column given as parameter
@@ -84,11 +88,24 @@ namespace flopoco
 
 		/**
 		 * @brief computes the soonest bit from the bitheap, between columns lsbColumn and msbColumn
-		 *        if the bitheap is empty, nullptr is returned
+		 *        if the bitheap is empty (or no bits are available for compression), nullptr is returned
 		 * @param msbColumn the weight of the msb column
 		 * @param lsbColumn the weight of the lsb column
 		 */
 		Bit* getSoonestBit(unsigned lsbColumn, unsigned msbColumn);
+
+		/**
+		 * @brief can the compressor given as parameter be applied to the column
+		 *        given as parameter, compressing bits within the given delay from
+		 *        the soonest bit, given as parameter
+		 * @param columnNumber the column being compressed (column index)
+		 * @param compressor the compressor being used for compression (compressor index)
+		 * @param soonestBit the bit used as reference for timing
+		 * @param delay the maximum delay between the bits compressed and the reference bit
+		 * @return a vector containing the bits that can be compressed, or an empty vector
+		 *         if the compressor cannot be applied
+		 */
+		vector<Bit*> canApplyCompressor(unsigned columnNumber, unsigned compressorNumber, Bit* soonestBit, double delay);
 
 		/**
 		 * @brief generate all the compressors that will be used for
