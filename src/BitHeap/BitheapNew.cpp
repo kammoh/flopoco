@@ -1141,13 +1141,13 @@ namespace flopoco {
 
 	string BitheapNew::getSumName()
 	{
-		return join("CompressionResult_bh", guid);
+		return join("bitheapResult_bh", guid);
 	}
 
 
 	string BitheapNew::getSumName(int msb, int lsb)
 	{
-		return join(join("CompressionResult_bh", guid), range(msb, lsb));
+		return join(join("bitheapResult_bh", guid), range(msb, lsb));
 	}
 
 

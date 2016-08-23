@@ -52,10 +52,11 @@ namespace flopoco
 
 		/**
 		 * @brief apply a compressor to the column given as parameter
-		 * @param column the weight of the column
-		 * @param compressor the index of the compressor in the possible compressors list
+		 * @param bitVector the bits to compress
+		 * @param compressor the compressor used for compression
+		 * @param weight the weight of the lsb column of bits
 		 */
-		void applyCompressor(int column, unsigned compressorNumber);
+		void applyCompressor(vector<Bit*> bitVector, Compressor* compressor, int weight);
 
 		/**
 		 * @brief applies an adder with wIn = msbColumn-lsbColumn+1;
@@ -77,7 +78,7 @@ namespace flopoco
 		 * @param isXilinx whether the target FPGA is a Xilinx device
 		 *        (different primitives used)
 		 */
-		void generateFinalAddVHDL(bool isXilinx);
+		void generateFinalAddVHDL(bool isXilinx = true);
 
 		/**
 		 * @brief computes the latest bit from the bitheap, between columns lsbColumn and msbColumn
@@ -125,12 +126,19 @@ namespace flopoco
 		 */
 		void concatenateLSBColumns();
 
+		/**
+		 * @brief concatenate all the chunks of the compressed bitheap and create the final result
+		 */
+		void concatenateChunks();
+
 	private:
 		BitheapNew *bitheap;                        /**< The bitheap this compression strategy belongs to */
 
-		vector<Compressor*> possibleCompressors;   /**< All the possible compressors that can be used for compressing the bitheap */
+		vector<Compressor*> possibleCompressors;    /**< All the possible compressors that can be used for compressing the bitheap */
 
-		int compressionDoneIndex;                   /**< The index in the range msb-lsb up to which the compression is completed */
+		unsigned compressionDoneIndex;              /**< The index in the range msb-lsb up to which the compression is completed */
+		vector<string> chunksDone;                  /**< The vector containing the chunks of the compression result */
+
 		int stagesPerCycle;                         /**< The number of stages of compression in each cycle */
 		double compressionDelay;                    /**< The duration of a compression stage */
 

@@ -47,6 +47,7 @@ namespace flopoco{
 			{
 				bitheapCompressed = compress(delay);
 				bitheap->removeCompressedBits();
+				concatenateLSBColumns();
 
 				if(bitheapCompressed == false)
 				{
@@ -61,6 +62,8 @@ namespace flopoco{
 		}
 		//generate the final addition
 		generateFinalAddVHDL(bitheap->op->getTarget()->getVendor() == "Xilinx");
+		//concatenate all the chunks and create the final result
+		concatenateChunks();
 		//mark the bitheap as compressed
 		bitheap->isCompressed = true;
 	}
@@ -83,13 +86,14 @@ namespace flopoco{
 		{
 			//go through all the lines and try to apply the compressor
 			//	to bits that are within a delay of a compressor
-			for(unsigned j=0; j<bitheap->bits.size(); j++)
+			for(unsigned j=compressionDoneIndex; j<bitheap->bits.size(); j++)
 			{
 				vector<Bit*> compressorBitVector = canApplyCompressor(j, i, soonestBit, compressionDelay);
 
 				while(compressorBitVector.size() > 0)
 				{
-					applyCompressor(j, i);
+					applyCompressor(compressorBitVector, possibleCompressors[i], bitheap->lsb+j);
+					compressorBitVector.clear();
 					compressorBitVector = canApplyCompressor(j, i, soonestBit, compressionDelay);
 					compressionPerformed = true;
 				}
@@ -97,6 +101,76 @@ namespace flopoco{
 		}
 
 		return compressionPerformed;
+	}
+
+
+	void CompressionStrategy::applyCompressor(vector<Bit*> bitVector, Compressor* compressor, int weight)
+	{
+		vector<string> compressorInputs;
+		ostringstream inputName, compressorIONames;
+		int instanceUID = Operator::getNewUId();
+		unsigned count = 0;
+
+		if(bitVector.size() == 0)
+			THROWERROR("Bit vector to compress is empty in applyCompressor");
+		if(compressor == nullptr)
+			THROWERROR("Compressor empty in applyCompressor");
+
+		for(unsigned i=0; i<compressor->heights.size(); i++)
+		{
+			inputName.str("");
+
+			if(compressor->heights[i] > 0)
+			{
+				if(count >= bitVector.size())
+					THROWERROR("Bit vector does not containing sufficient bits, "
+							<< "as requested by the compressor is applyCompressor.");
+
+				inputName << bitVector[count];
+				count++;
+			}
+			for(unsigned j=1; j<compressor->heights[i]; j++)
+			{
+				if(count >= bitVector.size())
+					THROWERROR("Bit vector does not containing sufficient bits, "
+							<< "as requested by the compressor is applyCompressor.");
+
+				inputName << " & " << bitVector[count];
+				count++;
+			}
+
+			compressorInputs.push_back(string(inputName.str()));
+		}
+
+		for(unsigned i=0; i<compressor->heights.size(); i++)
+		{
+			compressorIONames.str("");
+			compressorIONames << compressor->getName() << "_bh"
+					<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
+			bitheap->op->vhdl << tab << bitheap->op->declare(compressorIONames.str(), compressor->heights[i], (compressor->heights[i] > 1))
+					<< " <= " << compressorInputs[i] << ";" << endl;
+			bitheap->op->inPortMap(compressor, join("X",i), compressorIONames.str());
+		}
+
+		compressorIONames.str("");
+		compressorIONames << compressor->getName() << "_bh"
+				<< bitheap->guid << "_uid" << instanceUID << "_Out";
+		bitheap->op->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
+		bitheap->op->outPortMap(compressor, "R", compressorIONames.str(), false);
+
+		compressor->setShared();
+		bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID));
+
+		for(unsigned i=0; i<bitVector.size(); i++)
+			bitheap->markBit(bitVector[i], Bit::BitType::compressed);
+
+		bitheap->addSignal(bitheap->op->getSignalByName(compressorIONames.str()), weight);
+	}
+
+
+	void CompressionStrategy::generateFinalAddVHDL(bool isXilinx)
+	{
+
 	}
 
 
@@ -293,6 +367,56 @@ namespace flopoco{
 			newVect.push_back(col1);
 			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
 		}
+	}
+
+
+	void CompressionStrategy::concatenateLSBColumns()
+	{
+		unsigned count = compressionDoneIndex;
+
+		while((compressionDoneIndex < bitheap->bits.size()) && (bitheap->bits[count]<2))
+			count++;
+		if(bitheap->bits[count]>=2)
+			count--;
+
+		if(count == compressionDoneIndex)
+		{
+			return;
+		}else if(count > compressionDoneIndex){
+			if(count-compressionDoneIndex > 1)
+				bitheap->op->vhdl << tab
+					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
+							count-compressionDoneIndex, true) << " <= " ;
+			else
+				bitheap->op->vhdl << tab
+					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count)) << " <= " ;
+
+			bitheap->op->vhdl << bitheap->bits[count][0]->name;
+			for(unsigned i=count-1; i>compressionDoneIndex; i--)
+			{
+				if(bitheap->bits[i].size() > 0)
+					bitheap->op->vhdl << " & " << bitheap->bits[i][0]->name;
+			}
+			bitheap->op->vhdl << ";" << endl;
+
+			chunksDone.push_back(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
+
+			compressionDoneIndex = count;
+		}
+	}
+
+
+	void CompressionStrategy::concatenateChunks()
+	{
+		if(chunksDone.size() == 0)
+			THROWERROR("No chunks to concatenate in concatenateChunksDone");
+
+		bitheap->op->vhdl << tab
+				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->size+1) << " <= ";
+		bitheap->op->vhdl << chunksDone[chunksDone.size()-1];
+		for(int i=(int)chunksDone.size()-2; i>0; i--)
+			bitheap->op->vhdl << " & " << chunksDone[i];
+		bitheap->op->vhdl << ";" << endl;
 	}
 }
 
