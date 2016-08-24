@@ -1,5 +1,6 @@
 
 #include "Bit.hpp"
+#include "BitheapNew.hpp"
 
 using namespace std;
 

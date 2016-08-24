@@ -13,11 +13,13 @@
 
 #include "IntAddSubCmp/IntAdder.hpp"
 
-#include "Table.hpp"
-#include "DualTable.hpp"
-
 namespace flopoco
 {
+
+class Bit;
+class Compressor;
+class BitheapNew;
+class IntAdder;
 
 	class CompressionStrategy
 	{

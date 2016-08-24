@@ -23,6 +23,7 @@
 
 #include "BitHeap/Bit.hpp"
 #include "BitHeap/Compressor.hpp"
+#include "BitHeap/CompressionStrategy.hpp"
 
 #include "IntAddSubCmp/IntAdder.hpp"
 
@@ -37,7 +38,9 @@ namespace flopoco{
 
 
 
-	class Plotter;
+class Plotter;
+class Bit;
+enum BitType : unsigned;
 
 	class BitheapNew
 	{
@@ -161,7 +164,7 @@ namespace flopoco{
 		 * @param type how the bit should be marked
 		 *        (by default as free)
 		 */
-		void markBit(int weight, unsigned number = 0, Bit::BitType type = Bit::BitType::free);
+		void markBit(int weight, unsigned number = 0, BitType type = BitType::free);
 
 		/**
 		 * @brief mark a bit in the bitheap.
@@ -169,7 +172,7 @@ namespace flopoco{
 		 * @param type how the bit should be marked
 		 *        (by default as free)
 		 */
-		void markBit(Bit* bit, Bit::BitType type = Bit::BitType::free);
+		void markBit(Bit* bit, BitType type = BitType::free);
 
 		/**
 		 * @brief mark several bits in the bitheap.
@@ -179,14 +182,14 @@ namespace flopoco{
 		 *               (by default=0, i.e. mark all bits)
 		 * @param type how the bits should be marked
 		 */
-		void markBits(int msb, int lsb, Bit::BitType type = Bit::BitType::free, unsigned number = 0);
+		void markBits(int msb, int lsb, BitType type = BitType::free, unsigned number = 0);
 
 		/**
 		 * @brief mark several bits in the bitheap.
 		 * @param bits the bits to mark
 		 * @param type how the bits should be marked
 		 */
-		void markBits(vector<Bit*> bits, Bit::BitType type);
+		void markBits(vector<Bit*> bits, BitType type);
 
 		/**
 		 * @brief add a constant 1 to the bit heap.

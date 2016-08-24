@@ -306,7 +306,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBit(int weight, unsigned number, Bit::BitType type)
+	void BitheapNew::markBit(int weight, unsigned number, BitType type)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
@@ -323,7 +323,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBit(Bit* bit, Bit::BitType type)
+	void BitheapNew::markBit(Bit* bit, BitType type)
 	{
 		bool bitFound = false;
 
@@ -351,7 +351,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBits(int msb, int lsb, Bit::BitType type, unsigned number)
+	void BitheapNew::markBits(int msb, int lsb, BitType type, unsigned number)
 	{
 		if(lsb < this->lsb)
 			THROWERROR("LSB (=" << lsb << ") out of bitheap bit range in removeBit");
@@ -377,7 +377,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBits(vector<Bit*> bits, Bit::BitType type)
+	void BitheapNew::markBits(vector<Bit*> bits, BitType type)
 	{
 		for(unsigned i=0; i<bits.size(); i++)
 			markBit(bits[i], type);
