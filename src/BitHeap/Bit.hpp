@@ -8,7 +8,7 @@
 
 #include "src/Signal.hpp"
 #include "Compressor.hpp"
-#include "BitHeap.hpp"
+#include "BitheapNew.hpp"
 
 using namespace std;
 
@@ -57,7 +57,7 @@ namespace flopoco{
 		 * @param weight the weight at which this bit is added to the bitheap, by default 0 (or the lsb of the bitheap)
 		 * @param type the status of the bit, in terms of its processing
 		 */
-		Bit(BitHeap *bitheap, string rhsAssignment, int weight = 0, BitType type = BitType::free);
+		Bit(BitheapNew *bitheap, string rhsAssignment, int weight = 0, BitType type = BitType::free);
 
 		/**
 		 * @brief Standard constructor from an existing signal
@@ -67,7 +67,7 @@ namespace flopoco{
 		 * @param weight the weight at which this bit is added to the bitheap, by default 0 (or the lsb of the bitheap)
 		 * @param type the status of the bit, in terms of its processing
 		 */
-		Bit(BitHeap *bitheap, Signal *signal, int offset = 0, int weight = 0, BitType type = BitType::free);
+		Bit(BitheapNew *bitheap, Signal *signal, int offset = 0, int weight = 0, BitType type = BitType::free);
 
 		/**
 		 * @brief Clone constructor
@@ -95,7 +95,7 @@ namespace flopoco{
 		string name;
 		BitType type;
 
-		BitHeap *bitheap;
+		BitheapNew *bitheap;
 		Compressor *compressor;
 		Signal *signal;
 

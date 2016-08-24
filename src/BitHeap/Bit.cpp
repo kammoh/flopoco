@@ -6,12 +6,12 @@ using namespace std;
 namespace flopoco
 {
 
-	Bit::Bit(BitHeap *bitheap_, string rhsAssignment_, int weight_, BitType type_) :
+	Bit::Bit(BitheapNew *bitheap_, string rhsAssignment_, int weight_, BitType type_) :
 		weight(weight_), type(type_), bitheap(bitheap_), rhsAssignment(rhsAssignment_)
 	{
 		std::ostringstream p;
 
-		uid = bitheap->newUid(weight);
+		uid = bitheap->newBitUid(weight);
 		p  << "heap_bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
 		name = p.str();
 
@@ -23,12 +23,12 @@ namespace flopoco
 	}
 
 
-	Bit::Bit(BitHeap *bitheap_, Signal *signal_, int offset_, int weight_, BitType type_) :
+	Bit::Bit(BitheapNew *bitheap_, Signal *signal_, int offset_, int weight_, BitType type_) :
 		weight(weight_), type(type_), bitheap(bitheap_)
 	{
 		std::ostringstream p;
 
-		uid = bitheap->newUid(weight);
+		uid = bitheap->newBitUid(weight);
 		p  << "heap_bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
 		name = p.str();
 
@@ -54,7 +54,7 @@ namespace flopoco
 		bitheap = bit->bitheap;
 		compressor = bit->compressor;
 
-		uid = bitheap->newUid(weight);
+		uid = bitheap->newBitUid(weight);
 
 		p  << "heap_bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
 		name = p.str();
