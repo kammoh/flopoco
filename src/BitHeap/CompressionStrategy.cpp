@@ -286,7 +286,7 @@ namespace flopoco{
 			bitheap->op->vhdl << tab << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid, "_Out"));
 
 			//add the result of the final add as the last chunk
-			chunksDone.push_back(adderOutName.str());
+			chunksDone.push_back(join(adderOutName.str(), range(bitheap->size-1, 0)));
 		}
 	}
 
