@@ -37,10 +37,12 @@
 namespace flopoco{
 
 
-
 class Plotter;
 class Bit;
+class CompressionStrategy;
+
 enum BitType : unsigned;
+
 
 	class BitheapNew
 	{
@@ -160,11 +162,9 @@ enum BitType : unsigned;
 		 * @brief mark a bit in the bitheap.
 		 * @param weight the weight at which the bit is
 		 * @param number the number of the bit in the respective column
-		 *        (by default 0, the first one in the column)
 		 * @param type how the bit should be marked
-		 *        (by default as free)
 		 */
-		void markBit(int weight, unsigned number = 0, BitType type = BitType::free);
+		void markBit(int weight, unsigned number, BitType type);
 
 		/**
 		 * @brief mark a bit in the bitheap.
@@ -172,7 +172,7 @@ enum BitType : unsigned;
 		 * @param type how the bit should be marked
 		 *        (by default as free)
 		 */
-		void markBit(Bit* bit, BitType type = BitType::free);
+		void markBit(Bit* bit, BitType type);
 
 		/**
 		 * @brief mark several bits in the bitheap.
@@ -182,7 +182,7 @@ enum BitType : unsigned;
 		 *               (by default=0, i.e. mark all bits)
 		 * @param type how the bits should be marked
 		 */
-		void markBits(int msb, int lsb, BitType type = BitType::free, unsigned number = 0);
+		void markBits(int msb, int lsb, BitType, unsigned number = 0);
 
 		/**
 		 * @brief mark several bits in the bitheap.

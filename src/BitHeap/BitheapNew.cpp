@@ -4,13 +4,13 @@
 namespace flopoco {
 
 	BitheapNew::BitheapNew(Operator* op_, unsigned size_, bool isSigned_, string name_, int compressionType_) :
-		op(op_),
 		msb(size_-1), lsb(0),
 		size(size_),
 		height(0),
 		name(name_),
 		isSigned(isSigned_),
 		isFixedPoint(false),
+		op(op_),
 		compressionType(compressionType_)
 	{
 		initialize();
@@ -18,13 +18,13 @@ namespace flopoco {
 
 
 	BitheapNew::BitheapNew(Operator* op_, int msb_, int lsb_, bool isSigned_, string name_, int compressionType_) :
-		op(op_),
 		msb(msb_), lsb(lsb_),
 		size(msb_-lsb_+1),
 		height(0),
 		name(name_),
 		isSigned(isSigned_),
 		isFixedPoint(true),
+		op(op_),
 		compressionType(compressionType_)
 	{
 		initialize();
@@ -60,7 +60,7 @@ namespace flopoco {
 		REPORT(DEBUG, "Creating BitHeap of size " << size);
 
 		//set up the vector of lists of weighted bits, and the vector of bit uids
-		for(int i=0; i<size; i++)
+		for(unsigned i=0; i<size; i++)
 		{
 			bitUID.push_back(0);
 			vector<Bit*> t, t2;
@@ -79,7 +79,7 @@ namespace flopoco {
 		isCompressed = false;
 
 		//create a Plotter object for the SVG output
-		plotter = new Plotter(this);
+		plotter = nullptr;
 		drawCycleLine = true;
 		drawCycleNumber = 1;
 	}
@@ -102,7 +102,7 @@ namespace flopoco {
 
 		//create a new bit
 		//	the bit's constructor also declares the signal
-		Bit* bit = new Bit(this, rhsAssignment, weight, Bit::BitType::free);
+		Bit* bit = new Bit(this, rhsAssignment, weight, BitType::free);
 
 		//insert the new bit so that the vector is sorted by bit (cycle, delay)
 		insertBitInColumn(bit, bits[weight]);
@@ -137,7 +137,7 @@ namespace flopoco {
 
 		//create a new bit
 		//	the bit's constructor also declares the signal
-		Bit* bit = new Bit(this, signal, offset, weight, Bit::BitType::free);
+		Bit* bit = new Bit(this, signal, offset, weight, BitType::free);
 
 		//insert the new bit so that the vector is sorted by bit (cycle, delay)
 		insertBitInColumn(bit, bits[weight]);
@@ -186,7 +186,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		vector<Bit*> bitsColumn = bits[weight];
@@ -210,7 +210,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		bool bitFound = false;
@@ -243,7 +243,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		vector<Bit*> bitsColumn = bits[weight];
@@ -293,7 +293,7 @@ namespace flopoco {
 			//search for the bits marked as compressed and erase them
 			while(it != bitsColumn.end())
 			{
-				if((*it)->type == Bit::BitType::compressed)
+				if((*it)->type == BitType::compressed)
 				{
 					bitsColumn.erase(it);
 					it = lastIt;
@@ -310,7 +310,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		vector<Bit*> bitsColumn = bits[weight];
@@ -388,7 +388,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits += (mpz_class(1) << weight);
@@ -401,7 +401,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits -= (mpz_class(1) << weight);
@@ -410,11 +410,11 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addConstant(mpz_class constant, int weight = 0)
+	void BitheapNew::addConstant(mpz_class constant, int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits += (constant << weight);
@@ -423,11 +423,11 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addConstant(mpz_class constant, int msb, int lsb, int weight = 0)
+	void BitheapNew::addConstant(mpz_class constant, int msb, int lsb, int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		mpz_class constantCpy = mpz_class(constant);
@@ -443,11 +443,11 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::subConstant(mpz_class constant, int weight = 0)
+	void BitheapNew::subConstant(mpz_class constant, int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		constantBits -= (constant << weight);
@@ -456,11 +456,11 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::subConstant(mpz_class constant, int msb, int lsb, int weight = 0)
+	void BitheapNew::subConstant(mpz_class constant, int msb, int lsb, int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
 		mpz_class constantCpy = mpz_class(constant);
@@ -480,7 +480,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
 
 		int startIndex, endIndex;
@@ -489,7 +489,7 @@ namespace flopoco {
 			startIndex = lsb;
 		else
 			startIndex = weight;
-		if(size+weight > msb)
+		if((int)size+weight > msb)
 			endIndex = msb;
 		else
 			endIndex = size+weight-1;
@@ -505,7 +505,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
 
 		int startIndex, endIndex;
@@ -577,7 +577,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 
 		int startIndex, endIndex;
@@ -586,7 +586,7 @@ namespace flopoco {
 			startIndex = lsb;
 		else
 			startIndex = weight;
-		if(size+weight > msb)
+		if((int)size+weight > msb)
 			endIndex = msb;
 		else
 			endIndex = size+weight-1;
@@ -610,7 +610,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 
 		int startIndex, endIndex;
@@ -690,7 +690,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: adding a signed signal " << signalName << " to an unsigned bitheap");
@@ -702,7 +702,7 @@ namespace flopoco {
 			startIndex = lsb;
 		else
 			startIndex = weight;
-		if(size+weight > msb)
+		if((int)size+weight > msb)
 			endIndex = msb;
 		else
 			endIndex = size+weight-1;
@@ -720,11 +720,11 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addSignedBitVector(string signalName, int msb, int lsb, int weight = 0)
+	void BitheapNew::addSignedBitVector(string signalName, int msb, int lsb, int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: adding a signed signal " << signalName << " to an unsigned bitheap");
@@ -805,7 +805,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: subtracting a signed signal "
@@ -817,7 +817,7 @@ namespace flopoco {
 			startIndex = lsb;
 		else
 			startIndex = weight;
-		if(size+weight > msb)
+		if((int)size+weight > msb)
 			endIndex = msb;
 		else
 			endIndex = size+weight-1;
@@ -842,7 +842,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || (weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: subtracting a signed signal "
@@ -1226,12 +1226,12 @@ namespace flopoco {
 
 	int BitheapNew::newBitUid(unsigned weight)
 	{
-		if((weight < lsb) || (weight > msb))
+		if(((int)weight < lsb) || ((int)weight > msb))
 			THROWERROR("Invalid argument for newBitUid: weight=" << weight);
 
-		int returnVal = bits[weight-lsb];
+		int returnVal = bitUID[weight-lsb];
 
-		bits[weight-lsb]++;
+		bitUID[weight-lsb]++;
 		return returnVal;
 	}
 

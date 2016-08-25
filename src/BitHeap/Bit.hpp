@@ -14,17 +14,17 @@ using namespace std;
 
 namespace flopoco{
 
+enum BitType : unsigned {
+	free,
+	beingCompressed,
+	compressed
+};
+
 class BitheapNew;
 
 	class Bit
 	{
 	public:
-
-		enum BitType : unsigned {
-			free,
-			beingCompressed,
-			compressed
-		};
 
 		/**
 		 * Ordering by availability in time

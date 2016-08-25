@@ -141,7 +141,7 @@ namespace flopoco{
 				inputName << bitVector[count];
 				count++;
 			}
-			for(unsigned j=1; j<compressor->heights[i]; j++)
+			for(int j=1; j<compressor->heights[i]; j++)
 			{
 				if(count >= bitVector.size())
 					THROWERROR("Bit vector does not containing sufficient bits, "
@@ -183,7 +183,7 @@ namespace flopoco{
 		//mark the bits that were at the input of the compressor as having been compressed
 		//	so that they can be eliminated from the bitheap
 		for(unsigned i=0; i<bitVector.size(); i++)
-			bitheap->markBit(bitVector[i], Bit::BitType::compressed);
+			bitheap->markBit(bitVector[i], BitType::compressed);
 
 		//add the result of the compression to the bitheap
 		bitheap->addSignal(bitheap->op->getSignalByName(compressorIONames.str()), weight);
@@ -200,7 +200,6 @@ namespace flopoco{
 		}else{
 			ostringstream adderIn0, adderIn0Name, adderIn1, adderIn1Name, adderOutName, adderCin, adderCinName;
 			int adderStartIndex = compressionDoneIndex;
-			int count;
 
 			//create the names for the inputs/output of the adder
 			adderIn0Name << "bitheapFinalAdd_bh" << bitheap->guid << "_In0";
@@ -297,7 +296,7 @@ namespace flopoco{
 		Bit* soonestBit = nullptr;
 		unsigned count = lsbColumn;
 
-		if((lsbColumn < bitheap->lsb) || (msbColumn > bitheap->msb))
+		if(((int)lsbColumn < bitheap->lsb) || ((int)msbColumn > bitheap->msb))
 			THROWERROR("Invalid arguments for getSoonest bit: lsbColumn="
 					<< lsbColumn << " msbColumn=" << msbColumn);
 		if(bitheap->getMaxHeight() == 0)
@@ -316,7 +315,7 @@ namespace flopoco{
 				Bit* currentBit = bitheap->bits[i][j];
 
 				//only consider bits that are available for compression
-				if(currentBit->type != Bit::BitType::free)
+				if(currentBit->type != BitType::free)
 					continue;
 
 				if((soonestBit->signal->getCycle() > currentBit->signal->getCycle()) ||
@@ -354,7 +353,7 @@ namespace flopoco{
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
 			int bitCount = 0;
-			int columnIndex = 0;
+			unsigned columnIndex = 0;
 
 			while((bitCount < compressor->heights[i])
 					&& (columnIndex < bitheap->bits[columnNumber+i].size()))
@@ -363,7 +362,7 @@ namespace flopoco{
 				double currentBitTotalTime = 0.0;
 
 				//only consider bits that are free
-				if(currentBit->type != Bit::BitType::free)
+				if(currentBit->type != BitType::free)
 					continue;
 
 				//the total time of the current bit
@@ -493,10 +492,10 @@ namespace flopoco{
 		unsigned count = compressionDoneIndex;
 
 		//check up until which index has the bitheap already been compressed
-		while((compressionDoneIndex < bitheap->bits.size()) && (bitheap->bits[count]<2))
+		while((compressionDoneIndex < bitheap->bits.size()) && (bitheap->bits[count].size() < 2))
 			count++;
 		//if the current column needs compression, then do not consider it
-		if((bitheap->bits[count]>=2) && (count > 0))
+		if((bitheap->bits[count].size() >= 2) && (count > 0))
 			count--;
 
 		if(count == compressionDoneIndex)
