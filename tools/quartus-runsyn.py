@@ -52,13 +52,27 @@ if __name__ == '__main__':
         entityname=options.entity
         
     if (options.target==None):
-        target = "stratixV"
+        target = "StratixV"
     else:
         target=options.target
-        
+
+    if (target=="StratixV"):
+        part="5SGXEA3K1F35C1"
+        fmax_string="; Slow 900mV 85C Model Fmax Summary                ;"
+    # TODO manage stratix IV, too
 
     filename_abs = os.path.abspath(filename)
-    os.system("quartus_map --source="+filename + " --family="+target + " " + entity)
+    os.system("quartus_map --source="+filename + " --part="+part + " " + entity)
     os.system("quartus_fit " + entity)
+    os.system("quartus_sta " + entity)
 
+    fit_report=open(entity+".fit.rpt").read()
 
+    index1=fit_report.find("; Device")
+    index2=fit_report.find("; Total HSSI", index1)
+    print fit_report[index1:index2]
+
+    sta_report=open(entity+".sta.rpt").read()
+    index1=sta_report.find(fmax_string)
+    index2=sta_report.find("This panel", index1)
+    print sta_report[index1:index2]
