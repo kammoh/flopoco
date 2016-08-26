@@ -37,7 +37,7 @@ namespace flopoco{
 
 	void CompressionStrategy::startCompression()
 	{
-		bool bitheapCompressed = true;
+		bool bitheapCompressed = false;
 		double delay;
 
 		//first, set the delay to the delay of a compressor
@@ -55,6 +55,8 @@ namespace flopoco{
 				bitheap->removeCompressedBits();
 				//send the parts of the bitheap that has already been compressed to the final result
 				concatenateLSBColumns();
+				//print the status of the bitheap
+				bitheap->printBitHeapStatus();
 
 				//if no compression was performed, then the delay between
 				//	the soonest bit and the rest of the bits that need to be compressed needs to be increased
@@ -138,7 +140,7 @@ namespace flopoco{
 					THROWERROR("Bit vector does not containing sufficient bits, "
 							<< "as requested by the compressor is applyCompressor.");
 
-				inputName << bitVector[count];
+				inputName << bitVector[count]->name;
 				count++;
 			}
 			for(int j=1; j<compressor->heights[i]; j++)
@@ -147,7 +149,7 @@ namespace flopoco{
 					THROWERROR("Bit vector does not containing sufficient bits, "
 							<< "as requested by the compressor is applyCompressor.");
 
-				inputName << " & " << bitVector[count];
+				inputName << " & " << bitVector[count]->name;
 				count++;
 			}
 
@@ -184,6 +186,9 @@ namespace flopoco{
 		//	so that they can be eliminated from the bitheap
 		for(unsigned i=0; i<bitVector.size(); i++)
 			bitheap->markBit(bitVector[i], BitType::compressed);
+
+		//mark the compressor as having been used
+		compressor->markUsed();
 
 		//add the result of the compression to the bitheap
 		bitheap->addSignal(bitheap->op->getSignalByName(compressorIONames.str()), weight);
@@ -362,7 +367,11 @@ namespace flopoco{
 
 				//only consider bits that are free
 				if(currentBit->type != BitType::free)
+				{
+					//pass to the next bit
+					columnIndex++;
 					continue;
+				}
 
 				//the total time of the current bit
 				currentBitTotalTime = currentBit->signal->getCycle() * 1.0/bitheap->op->getTarget()->frequency() +
