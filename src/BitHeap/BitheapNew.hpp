@@ -555,9 +555,9 @@ enum BitType : unsigned;
 		 * @brief insert a bit into a column of bits, so that the column is ordered
 		 * in increasing lexicographical order on (cycle, critical path)
 		 * @param bit the bit to insert
-		 * @param bitsColumn the column of bits into which to insert the bit
+		 * @param columnNumber the index of the column of bits into which to insert the bit
 		 */
-		void insertBitInColumn(Bit* bit, vector<Bit*> bitsColumn);
+		void insertBitInColumn(Bit* bit, unsigned columnNumber);
 
 		void initializeDrawing();
 

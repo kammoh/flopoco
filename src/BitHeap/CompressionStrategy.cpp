@@ -418,10 +418,8 @@ namespace flopoco{
 			vector<int> newVect;
 
 			col0=6;
-			col1=0;
 
 			newVect.push_back(col0);
-			newVect.push_back(col1);
 			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
 		}
 		{
@@ -438,10 +436,8 @@ namespace flopoco{
 			vector<int> newVect;
 
 			col0=5;
-			col1=0;
 
 			newVect.push_back(col0);
-			newVect.push_back(col1);
 			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
 		}
 		{
@@ -458,10 +454,8 @@ namespace flopoco{
 			vector<int> newVect;
 
 			col0=4;
-			col1=0;
 
 			newVect.push_back(col0);
-			newVect.push_back(col1);
 			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
 		}
 		{
@@ -478,10 +472,8 @@ namespace flopoco{
 			vector<int> newVect;
 
 			col0=3;
-			col1=0;
 
 			newVect.push_back(col0);
-			newVect.push_back(col1);
 			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
 		}
 	}
@@ -492,8 +484,11 @@ namespace flopoco{
 		unsigned count = compressionDoneIndex;
 
 		//check up until which index has the bitheap already been compressed
-		while((compressionDoneIndex < bitheap->bits.size()) && (bitheap->bits[count].size() < 2))
+		while((count < bitheap->bits.size()) && (bitheap->bits[count].size() < 2))
 			count++;
+		//all the columns might have been already compressed
+		if(count == bitheap->bits.size())
+			count--;
 		//if the current column needs compression, then do not consider it
 		if((bitheap->bits[count].size() >= 2) && (count > 0))
 			count--;
@@ -509,17 +504,30 @@ namespace flopoco{
 			if(count-compressionDoneIndex > 1)
 				bitheap->op->vhdl << tab
 					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
-							count-compressionDoneIndex, true) << " <= " ;
+							count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0), true) << " <= " ;
 			else
 				bitheap->op->vhdl << tab
 					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count)) << " <= " ;
 
 			//add the bits to the chunk
-			bitheap->op->vhdl << bitheap->bits[count][0]->name;
+			//	add the first bit
+			if(bitheap->bits[count].size() > 0)
+				bitheap->op->vhdl << bitheap->bits[count][0]->name;
+			else
+				bitheap->op->vhdl << "\"0\"";
+			//	add the rest of the bits
 			for(unsigned i=count-1; i>compressionDoneIndex; i--)
 			{
 				if(bitheap->bits[i].size() > 0)
 					bitheap->op->vhdl << " & " << bitheap->bits[i][0]->name;
+				else
+					bitheap->op->vhdl << " & \"0\"";
+			}
+			//add one last bit, if necessary
+			if(compressionDoneIndex == 0)
+			{
+				if(bitheap->bits[0].size() > 0)
+					bitheap->op->vhdl << " & " << bitheap->bits[0][0]->name;
 				else
 					bitheap->op->vhdl << " & \"0\"";
 			}
@@ -541,7 +549,7 @@ namespace flopoco{
 
 		//create the signal containing the result of the bitheap compression
 		bitheap->op->vhdl << tab
-				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->size+1) << " <= ";
+				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->size) << " <= ";
 		//add the chunks in reverse order
 		//	from msb to lsb
 		bitheap->op->vhdl << chunksDone[chunksDone.size()-1];

@@ -105,7 +105,7 @@ namespace flopoco {
 		Bit* bit = new Bit(this, rhsAssignment, weight, BitType::free);
 
 		//insert the new bit so that the vector is sorted by bit (cycle, delay)
-		insertBitInColumn(bit, bits[weight]);
+		insertBitInColumn(bit, weight-lsb);
 
 		REPORT(DEBUG, "added bit named "  << bit->name << " on column " << weight
 				<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
@@ -140,7 +140,7 @@ namespace flopoco {
 		Bit* bit = new Bit(this, signal, offset, weight, BitType::free);
 
 		//insert the new bit so that the vector is sorted by bit (cycle, delay)
-		insertBitInColumn(bit, bits[weight]);
+		insertBitInColumn(bit, weight-lsb);
 
 		REPORT(DEBUG, "added bit named "  << bit->name << " on column " << weight
 			<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
@@ -156,18 +156,18 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::insertBitInColumn(Bit* bit, vector<Bit*> bitsColumn)
+	void BitheapNew::insertBitInColumn(Bit* bit, unsigned columnNumber)
 	{
-		vector<Bit*>::iterator it = bitsColumn.begin();
+		vector<Bit*>::iterator it = bits[columnNumber].begin();
 		bool inserted = false;
 
-		while(it != bitsColumn.end())
+		while(it != bits[columnNumber].end())
 		{
 			if((bit->signal->getCycle() < (*it)->signal->getCycle())
 					|| ((bit->signal->getCycle() == (*it)->signal->getCycle())
 							&& (bit->signal->getCriticalPath() < (*it)->signal->getCriticalPath())))
 			{
-				bitsColumn.insert(it, bit);
+				bits[columnNumber].insert(it, bit);
 				inserted = true;
 			}else{
 				it++;
@@ -175,7 +175,7 @@ namespace flopoco {
 		}
 		if(inserted == false)
 		{
-			bitsColumn.insert(bitsColumn.end(), bit);
+			bits[columnNumber].insert(bits[columnNumber].end(), bit);
 		}
 
 		isCompressed = false;
@@ -538,7 +538,7 @@ namespace flopoco {
 		if(signal->isFix())
 			addUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
-			addUnsignedBitVector(signal->getName(), signal->width(), weight);
+			addUnsignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
 
 		isCompressed = false;
 	}
@@ -566,7 +566,7 @@ namespace flopoco {
 						<< " (size=" << signal->width() << ") to bitheap with msb="
 						<< this->msb << ", lsb=" << this->lsb);
 
-			addUnsignedBitVector(signal->getName(), msb-lsb+1, weight);
+			addUnsignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
 		}
 
 		isCompressed = false;
@@ -651,7 +651,7 @@ namespace flopoco {
 		if(signal->isFix())
 			subtractUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
-			subtractUnsignedBitVector(signal->getName(), signal->width(), weight);
+			subtractUnsignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
 
 		isCompressed = false;
 	}
@@ -679,7 +679,7 @@ namespace flopoco {
 						<< " (size=" << signal->width() << ") to bitheap with msb="
 						<< this->msb << ", lsb=" << this->lsb);
 
-			subtractUnsignedBitVector(signal->getName(), msb-lsb+1, weight);
+			subtractUnsignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
 		}
 
 		isCompressed = false;
@@ -766,7 +766,7 @@ namespace flopoco {
 		if(signal->isFix())
 			addSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
-			addSignedBitVector(signal->getName(), signal->width(), weight);
+			addSignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
 
 		isCompressed = false;
 	}
@@ -794,7 +794,7 @@ namespace flopoco {
 						<< " (size=" << signal->width() << ") to bitheap with msb="
 						<< this->msb << ", lsb=" << this->lsb);
 
-			addSignedBitVector(signal->getName(), msb-lsb+1, weight);
+			addSignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
 		}
 
 		isCompressed = false;
@@ -888,7 +888,7 @@ namespace flopoco {
 		if(signal->isFix())
 			subtractSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
 		else
-			subtractSignedBitVector(signal->getName(), signal->width(), weight);
+			subtractSignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
 
 		isCompressed = false;
 	}
@@ -916,7 +916,7 @@ namespace flopoco {
 						<< " (size=" << signal->width() << ") to bitheap with msb="
 						<< this->msb << ", lsb=" << this->lsb);
 
-			subtractSignedBitVector(signal->getName(), msb-lsb+1, weight);
+			subtractSignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
 		}
 
 		isCompressed = false;
@@ -1117,7 +1117,7 @@ namespace flopoco {
 		//add the bits
 		for(int i=bitheap->lsb; i<bitheap->msb; i++)
 			for(unsigned j=0; j<bitheap->bits[i-bitheap->lsb].size(); j++)
-				insertBitInColumn(bitheap->bits[i-bitheap->lsb][j], bits[i-bitheap->lsb+(lsb-bitheap->lsb)]);
+				insertBitInColumn(bitheap->bits[i-bitheap->lsb][j], i-bitheap->lsb+(lsb-bitheap->lsb));
 		//make the bit all point to this bitheap
 		for(unsigned i=0; i<size; i++)
 			for(unsigned j=0; j<bits[i].size(); j++)

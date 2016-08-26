@@ -16,6 +16,9 @@ namespace flopoco{
 		//compressors are supposed to be combinatorial
 		setCombinatorial();
 
+		//for now, the compressor does not have a parent
+		setParentOperator(nullptr);
+
 		//remove the zero columns at the lsb
 		while(heights[0] == 0)
 		{
@@ -25,6 +28,8 @@ namespace flopoco{
 		name << "Compressor_";
 
 		//compute the size of the input and of the output
+		wIn = 0;
+		maxVal = 0;
 		for(int i=heights.size()-1; i>=0; i--)
 		{
 			wIn    += heights[i];
@@ -41,6 +46,10 @@ namespace flopoco{
 		//	and the internal signal which concatenates all the inputs
 		for(int i=heights.size()-1; i>=0; i--)
 		{
+			//no need to create a signal for columns of height 0
+			if(heights[i] == 0)
+				continue;
+
 			addInput(join("X",i), heights[i]);
 
 			xs << "X" << i << " ";
