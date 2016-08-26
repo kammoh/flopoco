@@ -199,12 +199,12 @@ namespace flopoco{
 			concatenateLSBColumns();
 		}else{
 			ostringstream adderIn0, adderIn0Name, adderIn1, adderIn1Name, adderOutName, adderCin, adderCinName;
-			int adderStartIndex = compressionDoneIndex;
+			int adderStartIndex = compressionDoneIndex + 1;
 
 			//create the names for the inputs/output of the adder
 			adderIn0Name << "bitheapFinalAdd_bh" << bitheap->guid << "_In0";
 			adderIn1Name << "bitheapFinalAdd_bh" << bitheap->guid << "_In1";
-			adderIn1Name << "bitheapFinalAdd_bh" << bitheap->guid << "_Cin";
+			adderCinName << "bitheapFinalAdd_bh" << bitheap->guid << "_Cin";
 			adderOutName << "bitheapFinalAdd_bh" << bitheap->guid << "_Out";
 
 			//add the first bits to the adder inputs
@@ -214,7 +214,7 @@ namespace flopoco{
 				{
 					adderIn0 << bitheap->bits[bitheap->size-1][0]->name;
 					adderIn1 << bitheap->bits[bitheap->size-1][1]->name;
-				}else if(bitheap->bits[bitheap->size-1].size() > 1)
+				}else if(bitheap->bits[bitheap->size-1].size() > 0)
 				{
 					adderIn0 << bitheap->bits[bitheap->size-1][0]->name;
 					adderIn1 << "\"0\"";
@@ -228,32 +228,29 @@ namespace flopoco{
 			{
 				if(bitheap->bits[i].size() > 1)
 				{
-					adderIn0 << bitheap->bits[i][0]->name;
-					adderIn1 << bitheap->bits[i][1]->name;
-				}else if(bitheap->bits[i].size() > 1)
+					adderIn0 << " & " << bitheap->bits[i][0]->name;
+					adderIn1 << " & " << bitheap->bits[i][1]->name;
+				}else if(bitheap->bits[i].size() > 0)
 				{
-					adderIn0 << bitheap->bits[i][0]->name;
-					adderIn1 << "\"0\"";
+					adderIn0 << " & " << bitheap->bits[i][0]->name;
+					adderIn1 << " & " << "\"0\"";
 				}else{
-					adderIn0 << "\"0\"";
-					adderIn1 << "\"0\"";
+					adderIn0 << " & " << "\"0\"";
+					adderIn1 << " & " << "\"0\"";
 				}
 			}
 			//add the last column to the adder, if compression is still required on that column
 			if((compressionDoneIndex == 0) && (bitheap->bits[compressionDoneIndex].size() > 1))
 			{
-				if(bitheap->bits[compressionDoneIndex].size() > 1)
-				{
-					adderIn0 << " & " << bitheap->bits[compressionDoneIndex][0]->name;
-					adderIn1 << " & " << bitheap->bits[compressionDoneIndex][1]->name;
+				adderIn0 << " & " << bitheap->bits[compressionDoneIndex][0]->name;
+				adderIn1 << " & " << bitheap->bits[compressionDoneIndex][1]->name;
 
-					if(bitheap->bits[compressionDoneIndex].size() > 2)
-						adderCin << bitheap->bits[compressionDoneIndex][2]->name;
-					else
-						adderCin << "\"0\"";
+				if(bitheap->bits[compressionDoneIndex].size() > 2)
+					adderCin << bitheap->bits[compressionDoneIndex][2]->name;
+				else
+					adderCin << "\'0\'";
 
-					adderStartIndex++;
-				}
+				adderStartIndex--;
 			}else{
 				if(bitheap->bits[compressionDoneIndex+1].size() > 2)
 					adderCin << bitheap->bits[compressionDoneIndex+1][2]->name;
@@ -262,12 +259,14 @@ namespace flopoco{
 			}
 
 			//create the signals for the inputs/output of the adder
+			bitheap->op->vhdl << endl;
 			bitheap->op->vhdl << tab << bitheap->op->declare(adderIn0Name.str(), bitheap->msb-adderStartIndex+1+1)
 					<< " <= \"0\" & " << adderIn0.str() << ";" << endl;
 			bitheap->op->vhdl << tab << bitheap->op->declare(adderIn1Name.str(), bitheap->msb-adderStartIndex+1+1)
 					<< " <= \"0\" & " << adderIn1.str() << ";" << endl;
 			bitheap->op->vhdl << tab << bitheap->op->declare(adderCinName.str())
 					<< " <= " << adderCin.str() << ";" << endl;
+			bitheap->op->vhdl << endl;
 			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
 
 			//declare the adder
@@ -283,7 +282,7 @@ namespace flopoco{
 			adder = new IntAdder(bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
 			//create the instance of the adder
-			bitheap->op->vhdl << tab << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid, "_Out"));
+			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
 
 			//add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->size-1, 0)));
