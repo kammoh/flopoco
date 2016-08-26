@@ -494,8 +494,13 @@ namespace flopoco {
 		else
 			endIndex = size+weight-1;
 
-		for(int i=startIndex; i<=endIndex; i++)
-			addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
+		if(op->getSignalByName(signalName)->width() == 1)
+		{
+			addBit(startIndex, signalName);
+		}else{
+			for(int i=startIndex; i<=endIndex; i++)
+				addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
+		}
 
 		isCompressed = false;
 	}
@@ -519,8 +524,13 @@ namespace flopoco {
 		else
 			endIndex = msb+weight;
 
-		for(int i=startIndex; i<=endIndex; i++)
-			addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
+		if(op->getSignalByName(signalName)->width() == 1)
+		{
+			addBit(startIndex, signalName);
+		}else{
+			for(int i=startIndex; i<=endIndex; i++)
+				addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
+		}
 
 		isCompressed = false;
 	}
@@ -595,7 +605,12 @@ namespace flopoco {
 		{
 			ostringstream s;
 
-			s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			if(op->getSignalByName(signalName)->width() == 1)
+			{
+				s << "not(" << signalName << ")";
+			}else{
+				s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			}
 			addBit(i, s.str());
 		}
 		addConstantOneBit(startIndex);
@@ -628,7 +643,12 @@ namespace flopoco {
 		{
 			ostringstream s;
 
-			s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			if(op->getSignalByName(signalName)->width() == 1)
+			{
+				s << "not(" << signalName << ")";
+			}else{
+				s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			}
 			addBit(i, s.str());
 		}
 		addConstantOneBit(startIndex);
@@ -707,8 +727,13 @@ namespace flopoco {
 		else
 			endIndex = size+weight-1;
 
-		for(int i=startIndex; i<endIndex; i++)
-			addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
+		if(op->getSignalByName(signalName)->width() == 1)
+		{
+			addBit(startIndex, signalName);
+		}else{
+			for(int i=startIndex; i<endIndex; i++)
+				addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
+		}
 
 		s << "not(" << signalName << of(endIndex-startIndex+startIndex-weight) << ")";
 		addBit(endIndex, s.str());
@@ -741,8 +766,13 @@ namespace flopoco {
 		else
 			endIndex = msb+weight;
 
-		for(int i=startIndex; i<endIndex; i++)
-			addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
+		if(op->getSignalByName(signalName)->width() == 1)
+		{
+			addBit(startIndex, signalName);
+		}else{
+			for(int i=startIndex; i<endIndex; i++)
+				addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
+		}
 
 		s << "not(" << signalName << of(endIndex-startIndex+startIndex-weight-lsb) << ")";
 		addBit(endIndex, s.str());
@@ -826,7 +856,12 @@ namespace flopoco {
 		{
 			ostringstream s;
 
-			s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			if(op->getSignalByName(signalName)->width() == 1)
+			{
+				s << "not(" << signalName << ")";
+			}else{
+				s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
+			}
 			addBit(i, s.str());
 		}
 		addBit(endIndex, join(signalName, of(endIndex-startIndex+startIndex-weight)));
@@ -864,7 +899,12 @@ namespace flopoco {
 		{
 			ostringstream s;
 
-			s << "not(" << signalName << of(i-startIndex+startIndex-weight-lsb) << ")";
+			if(op->getSignalByName(signalName)->width() == 1)
+			{
+				s << "not(" << signalName << ")";
+			}else{
+				s << "not(" << signalName << of(i-startIndex+startIndex-weight-lsb) << ")";
+			}
 			addBit(i, s.str());
 		}
 		addBit(endIndex, join(signalName, of(endIndex-startIndex+startIndex-weight-lsb)));
