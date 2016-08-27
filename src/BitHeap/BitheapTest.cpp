@@ -72,6 +72,8 @@ namespace flopoco{
 			r += sx << weights[i];
 		}
 
+		r = r % (mpz_class(1) << size);
+
 		tc->addExpectedOutput("R", r);
 	}
 

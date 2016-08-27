@@ -98,7 +98,7 @@ namespace flopoco{
 		for(unsigned i=0; i<possibleCompressors.size(); i++)
 		{
 			//go through all the lines and try to apply the compressor
-			//	to bits that are within a delay of a compressor
+			//	to bits that are within the given delay
 			for(unsigned j=compressionDoneIndex; j<bitheap->bits.size(); j++)
 			{
 				vector<Bit*> compressorBitVector = canApplyCompressor(j, i, soonestBit, compressionDelay);
@@ -158,13 +158,14 @@ namespace flopoco{
 
 		//create the signals for the compressor inputs
 		//	and create the port mappings
+		bitheap->op->vhdl << endl;
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
 			compressorIONames.str("");
 			compressorIONames << compressor->getName() << "_bh"
 					<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
-			bitheap->op->vhdl << tab << bitheap->op->declare(compressorIONames.str(), compressor->heights[i], (compressor->heights[i] > 1))
-					<< " <= " << compressorInputs[i] << ";" << endl;
+			bitheap->op->vhdl << tab << bitheap->op->declare(compressorIONames.str(), compressor->heights[i])
+					<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
 			bitheap->op->inPortMap(compressor, join("X",i), compressorIONames.str());
 		}
 
@@ -180,7 +181,7 @@ namespace flopoco{
 		//	this will be a global component, so set is as shared
 		compressor->setShared();
 		//create the compressor instance
-		bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID));
+		bitheap->op->vhdl << bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
 
 		//mark the bits that were at the input of the compressor as having been compressed
 		//	so that they can be eliminated from the bitheap
@@ -260,7 +261,7 @@ namespace flopoco{
 				if(bitheap->bits[compressionDoneIndex+1].size() > 2)
 					adderCin << bitheap->bits[compressionDoneIndex+1][2]->name;
 				else
-					adderCin << "\"0\"";
+					adderCin << "\'0\'";
 			}
 
 			//create the signals for the inputs/output of the adder
@@ -290,7 +291,7 @@ namespace flopoco{
 			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
 
 			//add the result of the final add as the last chunk
-			chunksDone.push_back(join(adderOutName.str(), range(bitheap->size-1, 0)));
+			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex, 0)));
 		}
 	}
 
@@ -351,7 +352,8 @@ namespace flopoco{
 		}
 
 		//check there are sufficient columns of bits
-		if(compressor->heights.size()+columnNumber >= bitheap->bits.size())
+		returnValue.clear();
+		if(compressor->heights.size()+columnNumber-1 >= bitheap->bits.size())
 			return returnValue;
 
 		for(unsigned i=0; i<compressor->heights.size(); i++)
@@ -428,7 +430,7 @@ namespace flopoco{
 			col0=6;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 		{
 			vector<int> newVect;
@@ -438,7 +440,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 		{
 			vector<int> newVect;
@@ -446,7 +448,7 @@ namespace flopoco{
 			col0=5;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 		{
 			vector<int> newVect;
@@ -456,7 +458,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 		{
 			vector<int> newVect;
@@ -464,7 +466,7 @@ namespace flopoco{
 			col0=4;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 		{
 			vector<int> newVect;
@@ -474,7 +476,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 		{
 			vector<int> newVect;
@@ -482,7 +484,7 @@ namespace flopoco{
 			col0=3;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect));
+			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
 		}
 	}
 
@@ -503,13 +505,27 @@ namespace flopoco{
 
 		if(count == compressionDoneIndex)
 		{
-			//no new columns that have been compressed
-			return;
+			if((bitheap->getMaxHeight() <= 3) && (count == 0) && (bitheap->bits[count].size() < 2))
+			{
+				//the bitheap is compressed, all that is left
+				//	is to add the lsb bit to the result
+				bitheap->op->vhdl << tab
+						<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
+				if(bitheap->bits[count].size() > 0)
+					bitheap->op->vhdl << " <= " << bitheap->bits[count][0]->name << ";" << endl;
+				else
+					bitheap->op->vhdl << " <= \'0\';" << endl;
+
+				chunksDone.insert(chunksDone.begin(), join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
+			}else{
+				//no new columns that have been compressed
+				return;
+			}
 		}else if(count > compressionDoneIndex){
 			//new columns have been compressed
 
 			//create the signals for a new chunk
-			if(count-compressionDoneIndex > 1)
+			if(count-compressionDoneIndex+1 > 1)
 				bitheap->op->vhdl << tab
 					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
 							count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0), true) << " <= " ;
@@ -561,7 +577,7 @@ namespace flopoco{
 		//add the chunks in reverse order
 		//	from msb to lsb
 		bitheap->op->vhdl << chunksDone[chunksDone.size()-1];
-		for(int i=(int)chunksDone.size()-2; i>0; i--)
+		for(int i=(int)chunksDone.size()-2; i>=0; i--)
 			bitheap->op->vhdl << " & " << chunksDone[i];
 		bitheap->op->vhdl << ";" << endl;
 	}

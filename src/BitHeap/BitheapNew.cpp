@@ -285,17 +285,16 @@ namespace flopoco {
 
 	void BitheapNew::removeCompressedBits()
 	{
-		for(unsigned i=0; i<=size; i++)
+		for(unsigned i=0; i<size; i++)
 		{
-			vector<Bit*> bitsColumn = bits[i];
-			vector<Bit*>::iterator it = bitsColumn.begin(), lastIt = it;
+			vector<Bit*>::iterator it = bits[i].begin(), lastIt = it;
 
 			//search for the bits marked as compressed and erase them
-			while(it != bitsColumn.end())
+			while(it != bits[i].end())
 			{
 				if((*it)->type == BitType::compressed)
 				{
-					bitsColumn.erase(it);
+					bits[i].erase(it);
 					it = lastIt;
 				}else{
 					lastIt = it;
@@ -313,11 +312,9 @@ namespace flopoco {
 		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
-		vector<Bit*> bitsColumn = bits[weight];
-
-		if(number >= bitsColumn.size())
+		if(number >= bits[weight].size())
 			THROWERROR("Column with weight=" << weight << " only contains "
-					<< bitsColumn.size() << " bits, but bit number=" << number << " is to be marked");
+					<< bits[weight].size() << " bits, but bit number=" << number << " is to be marked");
 
 		bits[weight][number]->type = type;
 	}
@@ -329,11 +326,10 @@ namespace flopoco {
 
 		for(unsigned i=0; i<=size; i++)
 		{
-			vector<Bit*> bitsColumn = bits[i];
-			vector<Bit*>::iterator it = bitsColumn.begin(), lastIt = it;
+			vector<Bit*>::iterator it = bits[i].begin(), lastIt = it;
 
 			//search for the bit
-			while(it != bitsColumn.end())
+			while(it != bits[i].end())
 			{
 				if(((*it)->name == bit->name) && ((*it)->getUid() == bit->getUid()))
 				{
@@ -360,15 +356,14 @@ namespace flopoco {
 
 		for(int i=lsb; i<=msb; i++)
 		{
-			vector<Bit*> bitsColumn = bits[i];
 			unsigned currentWeight = i - this->lsb;
 			unsigned currentNumber = number;
 
-			if(number >= bitsColumn.size())
+			if(number >= bits[i].size())
 			{
 				REPORT(DEBUG, "Column with weight=" << currentWeight << " only contains "
-						<< bitsColumn.size() << " bits, but number=" << number << " bits are to be marked");
-				currentNumber = bitsColumn.size();
+						<< bits[i].size() << " bits, but number=" << number << " bits are to be marked");
+				currentNumber = bits[i].size();
 			}
 
 			for(unsigned j=0; j<currentNumber; j++)
