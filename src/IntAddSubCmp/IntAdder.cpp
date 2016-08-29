@@ -48,6 +48,8 @@ namespace flopoco {
 		name << "IntAdder_" << wIn;
 		setNameWithFreqAndUID(name.str());
 		double targetPeriod, totalPeriod;
+		int maxCycle = 0;
+		double maxCp = 0.0;
 
 		setParentOperator(parentOp);
 													
@@ -59,15 +61,30 @@ namespace flopoco {
 
 		startScheduling();
 
-		targetPeriod = 1.0/target->frequency();
-		totalPeriod = max(max(getSignalByName("X")->getCriticalPath(), getSignalByName("Y")->getCriticalPath()),
-			getSignalByName("Cin")->getCriticalPath()) + target->adderDelay(wIn+1);
+		targetPeriod = 1.0/target->frequency() - target->ffDelay();
+
+		if((ioList_[0]->getCycle() > maxCycle)
+				|| ((ioList_[0]->getCycle() == maxCycle) && (ioList_[0]->getCriticalPath() > maxCp)))
+		{
+			maxCycle = ioList_[0]->getCycle();
+			maxCp = ioList_[0]->getCriticalPath();
+		}
+		for(unsigned i=1; i<ioList_.size(); i++)
+			if((ioList_[i]->getCycle() > maxCycle)
+					|| ((ioList_[i]->getCycle() == maxCycle) && (ioList_[i]->getCriticalPath() > maxCp)))
+			{
+				maxCycle = ioList_[i]->getCycle();
+				maxCp = ioList_[i]->getCriticalPath();
+			}
+
+		totalPeriod = maxCp + target->adderDelay(wIn+1);
 
 		if(totalPeriod <= targetPeriod)
 		{
 			vhdl << tab << " R <= X + Y + Cin;" << endl;
 			REPORT(INFO, "Adder " << name.str() << " adding delay " << target->adderDelay(wIn+1));
 			getSignalByName("R")->setCriticalPathContribution(target->adderDelay(wIn+1));
+			scheduleSignal(getSignalByName("R"));
 		}else
 		{
 			int maxAdderSize = getMaxAdderSizeForFreq(false);
