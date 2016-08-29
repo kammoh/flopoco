@@ -26,6 +26,7 @@ namespace flopoco{
 		/** overloading the virtual functions of Target
 		 * @see the target class for more details 
 		 */
+		double logicDelay(int inputs);
 		double adderDelay(int size);
 		double adder3Delay(int size);
 		double eqComparatorDelay(int size);

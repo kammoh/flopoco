@@ -20,6 +20,8 @@ namespace flopoco{
 		 * @see the target class for more details 
 		 */
 
+		double logicDelay(int inputs);
+
 		double adderDelay(int size);
 
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx

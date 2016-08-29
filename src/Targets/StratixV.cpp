@@ -76,6 +76,15 @@ namespace flopoco{
 			RAMToLogicWireDelay_		= 0.090e-9; 	// *obtained experimentaly from Quartus 2 11.1 - TODO: - check validity
 		}
 	
+	//TODO
+	double StratixV::logicDelay(int inputs){
+		double unitDelay = lutDelay();
+		if(inputs <= lutInputs())
+			return unitDelay;
+		else
+			return unitDelay * (inputs -lutInputs() + 1);
+	}
+
 	double StratixV::adderDelay(int size) 
 	{
 		int subAdd = 0;

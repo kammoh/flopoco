@@ -103,13 +103,13 @@ namespace flopoco{
 			//	to bits that are within the given delay
 			for(unsigned j=compressionDoneIndex; j<bitheap->bits.size(); j++)
 			{
-				vector<Bit*> compressorBitVector = canApplyCompressor(j, i, soonestBit, compressionDelay);
+				vector<Bit*> compressorBitVector = canApplyCompressor(j, i, soonestBit, delay);
 
 				while(compressorBitVector.size() > 0)
 				{
 					applyCompressor(compressorBitVector, possibleCompressors[i], bitheap->lsb+j);
 					compressorBitVector.clear();
-					compressorBitVector = canApplyCompressor(j, i, soonestBit, compressionDelay);
+					compressorBitVector = canApplyCompressor(j, i, soonestBit, delay);
 					compressionPerformed = true;
 				}
 			}

@@ -290,6 +290,12 @@ public:
 
 
 	/**
+	 * Mark the operator and its subcomponents as not having been scheduled
+	 */
+	void markOperatorUnscheduled();
+
+
+	/**
 	 * Sets the copyright string: should be authors + year
 	 * @param authorsYears the names of the authors and the years of their contributions
 	 */

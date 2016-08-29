@@ -44,6 +44,7 @@ namespace flopoco{
 			muxcyStoO_      		= 0.219e-9;
 			muxcyCINtoO_    		= 0.015e-9;
 			ffd_            		= -0.012e-9;
+			ff_net_            		= 0.604e-9;
 			muxf5_          		= 0.291e-9;
 			muxf7_          		= 0.187e-9; //without the NET delay (~0.357e-9)
 			muxf7_net_         		= 0.357e-9;
@@ -131,7 +132,7 @@ namespace flopoco{
 		return   lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_;
 	}
 	double Virtex6::ffDelay() {
-		return fdCtoQ_ + ffd_;
+		return fdCtoQ_ + ff_net_ + ffd_;
 	};
 
 	double Virtex6::carryPropagateDelay() {

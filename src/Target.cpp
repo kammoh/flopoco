@@ -137,13 +137,13 @@ namespace flopoco{
 	}
 
 
-	double Target::logicDelay(int inputs){
-		double unitDelay = lutDelay();
-		if(inputs <= lutInputs())
-			return unitDelay;
-		else
-			return unitDelay * (inputs -lutInputs() + 1);
-	}
+//	double Target::logicDelay(int inputs){
+//		double unitDelay = lutDelay();
+//		if(inputs <= lutInputs())
+//			return unitDelay;
+//		else
+//			return unitDelay * (inputs -lutInputs() + 1);
+//	}
 
 
 	

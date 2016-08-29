@@ -162,7 +162,7 @@ namespace flopoco{
 				It includes one level of local routing.
 				Default implementation in target uses only lutDelay etc
 		*/
-		virtual double logicDelay(int inputs=1);
+		virtual double logicDelay(int inputs=1) = 0;
 		
 
 		/** Function which returns addition delay for an n bit addition

@@ -43,6 +43,15 @@ namespace flopoco{
 
 	Zynq7000::~Zynq7000() {};
 
+	//TODO
+	double Zynq7000::logicDelay(int inputs){
+		double unitDelay = lutDelay();
+		if(inputs <= lutInputs())
+			return unitDelay;
+		else
+			return unitDelay * (inputs -lutInputs() + 1);
+	}
+
 
 	double Zynq7000::adderDelay(int size) {
 		return addRoutingDelay(lutDelay_ + ((size+3)/4)* carry4Delay_) ; 

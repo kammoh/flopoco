@@ -76,6 +76,7 @@ namespace flopoco{
 		double muxcyStoO_;      /**< The delay of the carry propagation MUX, from Source to Out*/
 		double muxcyCINtoO_;    /**< The delay of the carry propagation MUX, from CarryIn to Out*/
 		double ffd_;            /**< The Flip-Flop D delay*/
+		double ff_net_;            /**< The Flip-Flop D net delay*/
 		double muxf5_;          /**< The delay of the almighty mux F5*/
 		double muxf7_;          /**< The delay of the even mightier mux F7*/
 		double muxf7_net_;      /**< The NET delay of the even mightier mux F7*/
