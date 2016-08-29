@@ -38,7 +38,6 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
     parser.add_argument('-f', '--file', help='File name (default flopoco.vhdl)')
     parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
-    parser.add_argument('-t', '--report_timing_options', help='Additional options to report_timing, for instance "-max_paths 100 -path_type short"')
 
     options=parser.parse_args()
 
@@ -55,13 +54,9 @@ if __name__ == '__main__':
     if (options.entity==None):
         entity = get_last_entity(filename)
     else:
-        entityname=options.entity
-
-    if(options.report_timing_options==None):
-        report_timing_options= ""
-    else:
-        report_timing_options = options.report_timing_options
+        entity=options.entity
         
+
     workdir="/tmp/vivado_runsyn_files"
     project_name = "test_" + entity
     tcl_script_name = os.path.join(workdir, project_name+".tcl")
@@ -102,7 +97,7 @@ if __name__ == '__main__':
     else:
         timing_report_file +="placed.rpt"
 
-    tclscriptfile.write("report_timing -file " + timing_report_file + " " +report_timing_options + " \n")
+    tclscriptfile.write("report_timing -file " + timing_report_file + " \n")
         
     tclscriptfile.close()
 

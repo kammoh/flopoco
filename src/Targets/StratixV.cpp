@@ -24,25 +24,27 @@ namespace flopoco{
 			vendor_						= "Altera";
 			possibleDSPConfig_.push_back(make_pair(9,9));
 			whichDSPCongfigCanBeUnsigned_.push_back(true);
-			possibleDSPConfig_.push_back(make_pair(12,12));
-			whichDSPCongfigCanBeUnsigned_.push_back(true);
 			possibleDSPConfig_.push_back(make_pair(18,18));
 			whichDSPCongfigCanBeUnsigned_.push_back(true);
-			possibleDSPConfig_.push_back(make_pair(36,36));
+			possibleDSPConfig_.push_back(make_pair(36,18));
+			whichDSPCongfigCanBeUnsigned_.push_back(true);
+			possibleDSPConfig_.push_back(make_pair(27,27));
 			whichDSPCongfigCanBeUnsigned_.push_back(true);
 
 			hasFastLogicTernaryAdders_	= true;
+			lutInputs_					= 6;
+			almsPerLab_					= 10;			// there are 10 ALMs per LAB
+
 			maxFrequencyMHz_			= 717;
-			sizeOfBlock_				= 20480; 		// the size of a primitive block is 2^11 * 10
-			
-			fastcarryDelay_				= 0.026e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
-			elemWireDelay_				= 0.110e-9;		// *obtained from Quartus 2 Chip Planner 11.1
-			lut2lutDelay_ 				= 0.410e-9;		// *obtained from Quartus 2 Chip Planner 11.1 - emulates R4+C3+Lab_Line
+			sizeOfBlock_				= 20480; 		// the size of a primitive block is 2^11 * 10			
+			fastcarryDelay_				= 0.022e-9; 	// Read from .sta.rpt files -- this is the delay of two bits of carries
+
+			///  Validated up to here
+			elemWireDelay_				= 0.110e-9;		// 
+			lut2lutDelay_ 				= 0.410e-9;		// 
 			lutDelay_					= 0.433e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
 			ffDelay_					= 0.156e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
 			
-			lutInputs_					= 6;
-			almsPerLab_					= 10;			// there are 10 ALMs per LAB
 			// all these values are set precisely to match the Stratix 5
 			lut2_						= 0.298e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
 			lut3_						= 0.298e-9; 	// *obtained from Quartus 2 Chip Planner 11.1
@@ -87,18 +89,17 @@ namespace flopoco{
 
 	double StratixV::adderDelay(int size) 
 	{
-		int subAdd = 0;
+		// Just consider the case of an unpipelined adder
+		// One LAB is built of almsPerLab=10 ALMs, and each ALM can implement 2-bit carry propagation.
 		
-		suggestSubaddSize(subAdd, size);
-		
+		int neededLABs = ceil((size/almsPerLab_)/2.0);
+		int intraLABCarries = size/2-(neededLABs-1);
 		return (
 			lutDelay_ + 
-			((size/2-ceil((size/almsPerLab_)/2.0)-(size/(2*almsPerLab_))) * fastcarryDelay_) + 
-			(ceil((size/almsPerLab_)/2.0) * innerLABcarryDelay_) + 
-			((size/(2*almsPerLab_)) * interLABcarryDelay_) + 
-			carryInToSumOut_ + 
-			(size/subAdd)  * (ffDelay_ + fdCtoQ_ + elemWireDelay_)
-		);
+			intraLABCarries * fastcarryDelay_ + 
+			(neededLABs-1) * interLABcarryDelay_ + 
+			carryInToSumOut_
+						);
 	};
 	
 	double StratixV::adder3Delay(int size) 
