@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     if (target=="StratixV"):
         part="5SGXEA3K1F35C1"
-        fmax_string="; Slow 900mV 85C Model Fmax Summary"
+        fmax_string="; Fmax Summary"
     # TODO manage other targets, too
 
     filename_abs = os.path.abspath(filename)
