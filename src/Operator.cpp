@@ -2166,7 +2166,7 @@ namespace flopoco{
 		file.close();
 
 		// For quartus prime				
-		file.open("/tmp/"+getNme()+".sdc", ios::out);
+		file.open("/tmp/"+getName()+".sdc", ios::out);
 		file << "# This file was created by FloPoCo to be used by the quartus_runsyn utility. Sorry to clutter your tmp." << endl;
 		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]"
 				 << endl;
