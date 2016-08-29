@@ -23,7 +23,7 @@ namespace flopoco{
 
 		//the initial delay between the soonest bit and the rest of the bits
 		//	to be compressed is equal to the delay of a basic compressor
-		compressionDelay = bitheap->op->getTarget()->lutDelay() + bitheap->op->getTarget()->localWireDelay();
+		compressionDelay = bitheap->op->getTarget()->logicDelay(bitheap->op->getTarget()->lutInputs());
 		stagesPerCycle = (1.0/bitheap->op->getTarget()->frequency()) / compressionDelay;
 
 		//generate all the compressors that can be used
@@ -42,6 +42,8 @@ namespace flopoco{
 
 		//first, set the delay to the delay of a compressor
 		delay = compressionDelay;
+
+		REPORT(DEBUG, "current delay is: delay=" << delay);
 
 		//compress the bitheap to height 2
 		//	(the last column can be of height 3)
@@ -285,7 +287,7 @@ namespace flopoco{
 			bitheap->op->outPortMap(adder, "R", adderOutName.str(), false);
 
 			//create the adder
-			adder = new IntAdder(bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
+			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
 			//create the instance of the adder
 			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
@@ -525,7 +527,7 @@ namespace flopoco{
 			//new columns have been compressed
 
 			//create the signals for a new chunk
-			if(count-compressionDoneIndex+1 > 1)
+			if(count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0) > 1)
 				bitheap->op->vhdl << tab
 					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
 							count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0), true) << " <= " ;
