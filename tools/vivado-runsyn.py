@@ -54,7 +54,7 @@ if __name__ == '__main__':
     if (options.entity==None):
         entity = get_last_entity(filename)
     else:
-        entityname=options.entity
+        entity=options.entity
         
 
     workdir="/tmp/vivado_runsyn_files"
