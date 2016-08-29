@@ -62,9 +62,17 @@ if __name__ == '__main__':
     # TODO manage stratix IV, too
 
     filename_abs = os.path.abspath(filename)
-    os.system("quartus_map --source="+filename + " --part="+part + " " + entity)
-    os.system("quartus_fit " + entity)
-    os.system("quartus_sta " + entity)
+
+    map_command = "quartus_map --source="+filename + " --part="+part + " " + entity
+    fit_command = "quartus_fit " + entity
+    sta_command = "quartus_sta --do_report_timing " + entity 
+
+    print map_command
+    os.system(map_command)
+    print fit_command
+    os.system(fit_command)
+    print sta_command
+    os.system(sta_command)
 
     fit_report=open(entity+".fit.rpt").read()
 

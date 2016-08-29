@@ -1631,20 +1631,29 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 
 
 						void Operator::outputClock_xdc(){
+							// For Vivado
 							ofstream file; 
 							file.open("/tmp/clock.xdc", ios::out);
 							file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
 							file << "create_clock -name clk -period "  << (1.0e9/target_->frequency())
 			// << "  [get_ports clk]"
-							<< endl;
+									 << endl;
 							for(auto i: ioList_) {
 								if(i->type()==Signal::in)
 									file << "set_input_delay ";
-			else // should be output
-				file << "set_output_delay ";
-			file <<	"-clock clk 0 [get_ports " << i->getName() << "]" << endl;
-		}
-		file.close();
+								else // should be output
+									file << "set_output_delay ";
+								file <<	"-clock clk 0 [get_ports " << i->getName() << "]" << endl;
+							}
+							file.close();
+
+							// For quartus prime
+							
+							file.open("/tmp/"+getName()+".sdc", ios::out);
+							file << "# This file was created by FloPoCo to be used by the quartus_runsyn utility. Sorry to clutter your tmp." << endl;
+							file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]"
+							<< endl;
+							file.close();
 	}
 
 	
