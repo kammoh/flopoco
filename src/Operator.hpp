@@ -1444,15 +1444,22 @@ public:
 
 
 	/**
-	 * Set the operator to be fully flattened in the design
+	 * Set the operator to be reused in the design
+	 * NOTE: USE ONLY FOR SMALL COMBINATORIAL OPERATORS;
+	 * 		SUCH AN OPERATOR SHOULD NOT BE PIPELINED
 	 * @return the new value of isUnique_
 	 */
 	bool setShared();
 
 	/**
-	 * Get the value of isUnique_
+	 * Is this operator a unique component?
 	 */
 	bool isUnique();
+
+	/**
+	 * Is this operator a shared component?
+	 */
+	bool isShared();
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////

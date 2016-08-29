@@ -3206,7 +3206,7 @@ namespace flopoco{
 
 			//test if this operator is a global operator
 			bool isGlobalOperator = false;
-			string globalOperatorName = getName();
+			string globalOperatorName = targetSignal->parentOp()->getName();
 
 			//this might be a copy of the global operator, so try to remove the suffix
 			if(globalOperatorName.find("_copy_") != string::npos)
@@ -3220,10 +3220,39 @@ namespace flopoco{
 					break;
 				}
 
-			//if this is a global operator, and this is a copy, then
-			//	compute the maximum cycle of the inputs, and then synchronize
+			//if this is a global/shared operator, and this is not a copy,
+			//	then try to schedule the parent operator so that if the operator
+			//	is pipelined, the inputs have are registered
+			if((targetSignal->parentOp()->getName().find("_copy_") == string::npos)
+								&& targetSignal->parentOp()->isShared())
+			{
+				//start the scheduling of the parent operator of targetSignal
+				targetSignal->parentOp()->startScheduling();
+
+				//if the operator has been pipelined,
+				//	then advance the cycle of all its inputs and reschedule
+				if(targetSignal->parentOp()->getPipelineDepth() > 0)
+				{
+					for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
+					{
+						Signal *currentSignal = targetSignal->parentOp()->getIOListSignal(i);
+
+						if(currentSignal->type() != Signal::in)
+							continue;
+
+						currentSignal->setCycle(currentSignal->getCycle() + 1);
+						currentSignal->setCriticalPath(0.0);
+					}
+
+					targetSignal->parentOp()->startScheduling();
+				}
+			}
+
+			//if this is a global/shared operator, and this is a copy,
+			//	then compute the maximum cycle of the inputs, and then synchronize
 			//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
-			if(isGlobalOperator && (getName().find("_copy_") != string::npos))
+			if((targetSignal->parentOp()->getName().find("_copy_") != string::npos)
+					&& (isGlobalOperator || targetSignal->parentOp()->isShared()))
 			{
 				//all the other inputs of the parent operator of this signal have been scheduled
 				//	compute the maximum cycle of the inputs, and then synchronize
@@ -3334,19 +3363,19 @@ namespace flopoco{
 
 		//compute the cycle and the critical path for the node itself from
 		//	the maximum cycle and critical path of the predecessors
-		maxTargetCriticalPath = 1.0 / getTarget()->frequency();
+		maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
 		//check if the signal needs to pass to the next cycle,
 		//	due to its critical path contribution
 		if(maxCriticalPath + targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
 		{
 			double totalDelay = maxCriticalPath + targetSignal->getCriticalPathContribution();
 
-			while((totalDelay + getTarget()->ffDelay()) > maxTargetCriticalPath)
+			while(totalDelay > maxTargetCriticalPath)
 			{
 				// if maxCriticalPath+criticalPathContribution > 1/frequency, it may insert several pipeline levels.
 				// This is what we want to pipeline block-RAMs and DSPs up to the nominal frequency by just passing their overall delay.
 				maxCycle++;
-				totalDelay -= maxTargetCriticalPath + getTarget()->ffDelay();
+				totalDelay -= maxTargetCriticalPath;
 			}
 
 			if(totalDelay < 0)
@@ -4077,6 +4106,10 @@ namespace flopoco{
 
 	bool Operator::isUnique(){
 		return isUnique_;
+	}
+
+	bool Operator::isShared(){
+		return !isUnique_;
 	}
 
 
