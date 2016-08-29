@@ -38,7 +38,8 @@ int main(int argc, char* argv[] )
 
 		AutoTest::registerFactory();
 
-		//		Compressor::registerFactory();
+		Compressor::registerFactory();
+		BitheapTest::registerFactory();
 
 		// Florent has commented out all the operators for now.
 		// Uncomment them only to bring them up to the new framework.

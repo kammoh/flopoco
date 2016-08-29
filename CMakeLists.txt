@@ -248,8 +248,12 @@ src/AutoTest/AutoTest
  src/BitHeap/WeightedBit
  src/BitHeap/Plotter
  
- src/BitHeap/Compressor
  src/BitHeap/Bit
+ src/BitHeap/Compressor
+ src/BitHeap/BitheapNew
+ src/BitHeap/CompressionStrategy
+ 
+ src/BitHeap/BitheapTest
 
 
 #--------------------------------------------------------------------

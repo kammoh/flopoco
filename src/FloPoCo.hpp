@@ -53,8 +53,12 @@
 
 #include "TestBenches/TestBench.hpp"
 
+#include "BitHeap/Bit.hpp"
 #include "BitHeap/Compressor.hpp"
-#include "BitHeap/Compressor.hpp"
+#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/CompressionStrategy.hpp"
+
+#include "BitHeap/BitheapTest.hpp"
 
 /* shifters + lzoc ------------------------------------------- */
 #include "ShiftersEtc/Shifters.hpp"
