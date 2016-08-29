@@ -58,6 +58,7 @@ namespace flopoco{
 		}
 		//create the output
 		addOutput("R", wOut);
+		getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
 
 		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
 		vhdl << tab << "with X select R <= " << endl;

@@ -97,15 +97,17 @@ namespace flopoco{
 		indirectOperator_           = NULL;
 		hasDelay1Feedbacks_         = false;
 
-		isOperatorImplemented_       = false;
-		isOperatorScheduled_         = false;
-		isOperatorDrawn_             = false;
+		isOperatorImplemented_      = false;
+		isOperatorScheduled_        = false;
+		isOperatorDrawn_            = false;
 
-		isUnique_ = true;
-		uniquenessSet_ = false;
+		isUnique_                   = true;
+		uniquenessSet_              = false;
 
 		signalsToSchedule.clear();
 		unresolvedDependenceTable.clear();
+
+		parentOp_                   = nullptr;
 
 
 		// Currently we set the pipeline and clock enable from the global target.
@@ -3015,7 +3017,6 @@ namespace flopoco{
 								+ vhdlize(ioList_[j]->getCycle()));
 
 			Operator* originalOperator;
-			int maxInputCycle = 0;
 
 			//search for the global copy of the operator, which should already be scheduled
 			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
@@ -3025,30 +3026,87 @@ namespace flopoco{
 					break;
 				}
 
-			//determine the maximum cycle of the inputs
-			for(unsigned int i=0; i<ioList_.size(); i++)
-				if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() > maxInputCycle))
-					maxInputCycle = ioList_[i]->getCycle();
-
 			//set the timing for all the signals of the operator,
 			//	based on the timing of the global copy of the operator
-			for(unsigned int i=0; i<signalList_.size(); i++)
-			{
-				Signal *currentSignal = signalList_[i];
+			//if, the timing of the signals ends up different from the original,
+			//	then we must advance the inputs by one cycle
+			bool rescheduleNeeded = false;
+			bool firstPass = true;
 
-				//for input ports, only update the lifespan
-				if(currentSignal->type() == Signal::in)
+			do
+			{
+				for(unsigned int i=0; i<signalList_.size(); i++)
 				{
-					currentSignal->updateLifeSpan(originalOperator->getSignalByName(currentSignal->getName())->getLifeSpan());
-					continue;
+					Signal *currentSignal = signalList_[i];
+					Signal *originalSignal = originalOperator->getSignalByName(currentSignal->getName());
+
+					//for input ports, only update the lifespan
+					if(currentSignal->type() == Signal::in)
+					{
+						currentSignal->updateLifeSpan(originalSignal->getLifeSpan());
+						continue;
+					}
+
+					setSignalTiming(currentSignal, true);
+				}
+				//to ensure the timing is correct
+				for(unsigned int i=0; i<signalList_.size(); i++)
+					if(signalList_[i]->type() == Signal::in)
+						continue;
+					else
+						setSignalTiming(signalList_[i], true);
+
+				if(!firstPass)
+					break;
+
+				//check that the schedule is coherent to the one
+				//	of the original operator
+				for(unsigned int i=0; i<signalList_.size(); i++)
+				{
+					Signal *currentSignal = signalList_[i];
+					Signal *originalSignal = originalOperator->getSignalByName(currentSignal->getName());
+					int cycleDiff = 0, origCycleDiff = 0;
+
+					//determine the largest cycle difference between the original signal
+					//	and one of it's predecessors
+					for(unsigned j=0; j<originalSignal->predecessors()->size(); j++)
+					{
+						Signal *currentPredecessor = originalSignal->predecessor(j);
+
+						if(originalSignal->getCycle()-currentPredecessor->getCycle() > origCycleDiff)
+							origCycleDiff = originalSignal->getCycle()-currentPredecessor->getCycle();
+					}
+
+					for(unsigned j=0; j<currentSignal->predecessors()->size(); j++)
+					{
+						Signal *currentPredecessor = currentSignal->predecessor(j);
+
+						if(currentSignal->getCycle()-currentPredecessor->getCycle() > cycleDiff)
+							cycleDiff = currentSignal->getCycle()-currentPredecessor->getCycle();
+					}
+
+					if(cycleDiff != origCycleDiff)
+					{
+						rescheduleNeeded = true;
+						break;
+					}
 				}
 
-				currentSignal->setCycle(maxInputCycle + originalOperator->getSignalByName(currentSignal->getName())->getCycle());
-				currentSignal->setCriticalPath(originalOperator->getSignalByName(currentSignal->getName())->getCriticalPath());
-				currentSignal->setCriticalPathContribution(originalOperator->getSignalByName(currentSignal->getName())->getCriticalPathContribution());
-				currentSignal->updateLifeSpan(originalOperator->getSignalByName(currentSignal->getName())->getLifeSpan());
-				currentSignal->setHasBeenImplemented(true);
-			}
+				if(firstPass && rescheduleNeeded)
+				{
+					//advance the cycle of the inputs
+					for(unsigned int i=0; i<ioList_.size(); i++)
+					{
+						Signal *currentSignal = ioList_[i];
+
+						currentSignal->setCycle(currentSignal->getCycle() + 1);
+						currentSignal->setCriticalPath(0.0);
+					}
+					//prepare for the second pass
+					firstPass = false;
+				}
+
+			}while(rescheduleNeeded);
 
 			//the operator is now scheduled
 			//	so mark it as scheduled, and return
@@ -4005,16 +4063,16 @@ namespace flopoco{
 
 
 	bool Operator::setShared(){
-	  if(uniquenessSet_ == true)
-	    {
-	      THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
-	    }else
-	      {
-		isUnique_ = false;
-		uniquenessSet_ = true;
+		if((uniquenessSet_ == true) && (isUnique_ == true))
+		{
+			THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
+		}else
+		{
+			isUnique_ = false;
+			uniquenessSet_ = true;
 
-		return isUnique_;
-	      }
+			return isUnique_;
+		}
 	}
 
 	bool Operator::isUnique(){

@@ -505,7 +505,7 @@ namespace flopoco{
 
 		if(count == compressionDoneIndex)
 		{
-			if((bitheap->getMaxHeight() <= 3) && (count == 0) && (bitheap->bits[count].size() < 2))
+			if((!bitheap->compressionRequired()) && (count == 0) && (bitheap->bits[count].size() < 2))
 			{
 				//the bitheap is compressed, all that is left
 				//	is to add the lsb bit to the result
