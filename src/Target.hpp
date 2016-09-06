@@ -29,6 +29,10 @@
 #include "Targets/DSP.hpp"
 #include "IntMult/MultiplierBlock.hpp"
 
+#define REPORTDELAYS true
+
+#define TARGETREPORT(stream) {if (REPORTDELAYS){ cerr << "> " << id_ << ": " << stream << endl;}else{}} 
+
 using namespace std;
 
 namespace flopoco{
@@ -666,6 +670,7 @@ namespace flopoco{
 	protected:
 		/* Attributes that belong to the FPGA and are therefore static */
 		string id_;
+
 		string vendor_;
 		double maxFrequencyMHz_ ;   /**< The maximum practical frequency attainable on this target. An indicator of relative performance of FPGAs. 400 is for Virtex4 */
 		int    lutInputs_;          /**< The number of inputs for the LUTs */
@@ -695,7 +700,6 @@ namespace flopoco{
 																		1 means: any sub-multiplier, even very small ones, go to DSP*/
 		bool   plainVHDL_;     /**< True if we want the VHDL code to be concise and readable, with + and * instead of optimized FloPoCo operators. */
 		bool   generateFigures_;  /**< If true, some operators may generate some figures in SVG format */
-
 	};
 
 }

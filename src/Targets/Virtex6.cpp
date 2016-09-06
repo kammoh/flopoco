@@ -104,22 +104,27 @@ namespace flopoco{
 
 	
 	double Virtex6::logicDelay(int inputs){
+		double delay;
 		double unitDelay = lutDelay_ + elemWireDelay_;
 		if(inputs <= lutInputs())
-			return unitDelay;
+			delay = unitDelay;
 		else if (inputs==lutInputs()+1) { // use mux
-			return  muxf5_ + unitDelay; // TODO this branch never checked against reality
+			delay=  muxf5_ + unitDelay; // TODO this branch never checked against reality
 		}
 		else if (inputs==lutInputs()+2) { // use mux
-			return  muxf5_ + muxf7_ + muxf7_net_ + unitDelay; // TODO this branch never checked against reality
+			delay=  muxf5_ + muxf7_ + muxf7_net_ + unitDelay; // TODO this branch never checked against reality
 		}
 		else
-			return unitDelay * (inputs -lutInputs() + 1);
+			delay= unitDelay * (inputs -lutInputs() + 1);
+		TARGETREPORT("logicDelay(" << inputs << ") = " << delay*1e9 << " ns.");
+		return delay;
 	}
-
+	
 	
 	double Virtex6::adderDelay(int size) {
-		return  lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ + elemWireDelay_;
+		double delay=lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ + elemWireDelay_;
+		TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
+		return delay ;
 	};
 
 	

@@ -11,12 +11,12 @@
 
 
 namespace flopoco{
-
+	
 	/** Class for representing an Virtex6 target */
 	class Virtex6 : public Target
 	{
 	public:
-
+		
 	/** The default constructor. */
 		Virtex6();
 		/** The destructor */
