@@ -487,7 +487,8 @@ namespace flopoco{
 		if(parentOp_ == nullptr){
 			THROWERROR("Error: reconnectIOPorts: trying to connect a subcomponent to an empty parent operator");
 		}else{
-			parentOp_->startScheduling();
+			if(!parentOp_->isOperatorScheduled())
+				parentOp_->startScheduling();
 		}
 		//connect the inputs and outputs of the operator to the corresponding
 		//	signals in the parent operator
@@ -873,20 +874,20 @@ namespace flopoco{
 
 	void Operator::setPipelineDepth()
 	{
-		int minInputCycle, maxOutputCycle;
+		int maxInputCycle, maxOutputCycle;
 		bool firstInput = true, firstOutput = true;
 
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			if(firstInput && (ioList_[i]->type() == Signal::in))
 			{
-				minInputCycle = ioList_[i]->getCycle();
+				maxInputCycle = ioList_[i]->getCycle();
 				firstInput = false;
 				continue;
 			}
-			if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() < minInputCycle))
+			if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() > maxInputCycle))
 			{
-				minInputCycle = ioList_[i]->getCycle();
+				maxInputCycle = ioList_[i]->getCycle();
 				continue;
 			}
 
@@ -909,7 +910,7 @@ namespace flopoco{
 				REPORT(INFO, "WARNING: setPipelineDepth(): this operator's outputs are NOT SYNCHRONIZED!");
 		}
 
-		pipelineDepth_ = maxOutputCycle-minInputCycle;
+		pipelineDepth_ = maxOutputCycle-maxInputCycle;
 	}
 
 	void Operator::outputFinalReport(ostream& s, int level) {
@@ -3076,12 +3077,12 @@ namespace flopoco{
 
 					setSignalTiming(currentSignal, true);
 				}
-				//to ensure the timing is correct
-				for(unsigned int i=0; i<signalList_.size(); i++)
-					if(signalList_[i]->type() == Signal::in)
-						continue;
-					else
-						setSignalTiming(signalList_[i], true);
+				//schedule the outputs
+				for(unsigned int i=0; i<ioList_.size(); i++)
+					if(ioList_[i]->type() == Signal::in)
+						ioList_[i]->updateLifeSpan(originalOperator->getSignalByName(ioList_[i]->getName())->getLifeSpan());
+					else if(ioList_[i]->type() == Signal::out)
+						scheduleSignal(ioList_[i], true);
 
 				if(!firstPass)
 					break;
@@ -3126,8 +3127,13 @@ namespace flopoco{
 					{
 						Signal *currentSignal = ioList_[i];
 
+						//only modify the inputs
+						if(currentSignal->type() != Signal::in)
+							continue;
+
 						currentSignal->setCycle(currentSignal->getCycle() + 1);
 						currentSignal->setCriticalPath(0.0);
+						currentSignal->setHasBeenImplemented(false);
 					}
 					//prepare for the second pass
 					firstPass = false;
@@ -3254,14 +3260,7 @@ namespace flopoco{
 								&& targetSignal->parentOp()->isShared())
 			{
 				//start the scheduling of the parent operator of targetSignal
-				for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-					if(targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in)
-						targetSignal->parentOp()->setSignalTiming(targetSignal->parentOp()->getIOListSignal(i), true);
-				for(unsigned int i=0; i<targetSignal->parentOp()->getSignalList().size(); i++)
-					targetSignal->parentOp()->scheduleSignal(targetSignal->parentOp()->getSignalList()[i], true);
-				for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-					if(targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::out)
-						targetSignal->parentOp()->scheduleSignal(targetSignal->parentOp()->getIOListSignal(i), true);
+				targetSignal->parentOp()->startScheduling();
 
 				//if the operator has been pipelined,
 				//	then advance the cycle of all its inputs and reschedule
@@ -3277,17 +3276,14 @@ namespace flopoco{
 
 						currentSignal->setCycle(currentSignal->getCycle() + 1);
 						currentSignal->setCriticalPath(0.0);
+						currentSignal->setHasBeenImplemented(false);
 					}
 
+					//mark the operator as not having been implemented
+					targetSignal->parentOp()->markOperatorUnscheduled();
+
 					//start the scheduling of the parent operator of targetSignal
-					for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-						if(targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in)
-							targetSignal->parentOp()->setSignalTiming(targetSignal->parentOp()->getIOListSignal(i), true);
-					for(unsigned int i=0; i<targetSignal->parentOp()->getSignalList().size(); i++)
-						targetSignal->parentOp()->scheduleSignal(targetSignal->parentOp()->getSignalList()[i], true);
-					for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-						if(targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::out)
-							targetSignal->parentOp()->scheduleSignal(targetSignal->parentOp()->getIOListSignal(i), true);
+					targetSignal->parentOp()->startScheduling();
 				}
 			}
 
@@ -3333,14 +3329,7 @@ namespace flopoco{
 			}
 
 			//start the scheduling of the parent operator of targetSignal
-			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-				if(targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in)
-					targetSignal->parentOp()->setSignalTiming(targetSignal->parentOp()->getIOListSignal(i), true);
-			for(unsigned int i=0; i<targetSignal->parentOp()->getSignalList().size(); i++)
-				targetSignal->parentOp()->scheduleSignal(targetSignal->parentOp()->getSignalList()[i], true);
-			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-				if(targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::out)
-					targetSignal->parentOp()->scheduleSignal(targetSignal->parentOp()->getIOListSignal(i), true);
+			targetSignal->parentOp()->startScheduling();
 		}else
 		{
 			//this is a regular signal inside of the operator
