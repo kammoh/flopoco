@@ -183,6 +183,11 @@ namespace flopoco{
 		 */
 		virtual double adder3Delay(int n) =0;
 
+
+		// From there on:  Do not use if you can use one of the previous.
+		// We would like to deprecate this level of detail.
+
+
 		/**  Do not use this if you can use logicDelay
 				 Function which returns the lutDelay for this target
 		 * @return the LUT delay

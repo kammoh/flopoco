@@ -85,6 +85,7 @@ namespace flopoco{
 		double muxf_net_;       /**< The NET delay while inside the slice */
 		double slice2sliceDelay_;       /**< This is approximate. It approximates the wire delays between Slices */
 		double xorcyCintoO_;    /**< the S to O delay of the xor gate */
+		double xorcyCintoO_net_;
 		int nrDSPs_;			/**< Number of available DSPs on this target */
 		int dspFixedShift_;		/**< The amount by which the DSP block can shift an input to the ALU */
 

@@ -89,12 +89,12 @@ namespace flopoco {
 		{
 			int maxAdderSize = getMaxAdderSizeForFreq(false);
 			int chunks = wIn/maxAdderSize, lastChunkSize = 0;
-
 			if(chunks*maxAdderSize < wIn)
 			{
 				chunks++;
 				lastChunkSize = wIn - (chunks-1)*maxAdderSize;
 			}
+			REPORT(DETAILED, "chunks=" <<  chunks << " lastChunkSize=" << lastChunkSize);
 
 			for(int i=0; i<chunks; i++)
 			{

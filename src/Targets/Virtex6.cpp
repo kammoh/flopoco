@@ -31,7 +31,7 @@ namespace flopoco{
 			maxFrequencyMHz_		= 500;
 			// all these values are set more or less randomly, to match  virtex 6 more or less
 			fastcarryDelay_ 		= 0.015e-9; //s
-			elemWireDelay_  		= 0.313e-9;
+			elemWireDelay_  		= 0.400e-9; // Was 0.313, but more recent versions of ISE report variable delays around 0.400
 			lutDelay_       		= 0.053e-9;
 			// all these values are set precisely to match the Virtex6
 			fdCtoQ_         		= 0.280e-9;
@@ -53,6 +53,7 @@ namespace flopoco{
 			muxf_net_         		= 0.279e-9;
 			slice2sliceDelay_   	= 0.393e-9;
 			xorcyCintoO_    		= 0.180e-9;
+			xorcyCintoO_net_ 		= 0.604e-9;
 
 			lutInputs_ 				= 6;
 			nrDSPs_ 				= 160;
@@ -134,7 +135,7 @@ namespace flopoco{
 	}
 
 	double Virtex6::eqConstComparatorDelay(int size){
-		return   lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_;
+		return   lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_  + xorcyCintoO_ + xorcyCintoO_net_;
 	}
 	double Virtex6::ffDelay() {
 		return fdCtoQ_ + ff_net_ + ffd_;
