@@ -79,7 +79,7 @@ namespace flopoco{
 		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
 
 //		IntAdder *cmpAdder = nullptr;
-		IntAdder *cmpAdder = (IntAdder*)newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1:Y=>addCmpOp2", "R=>cmpRes", "Cin=>'1'");
+		IntAdder *cmpAdder = (IntAdder*)newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2", "R=>cmpRes", "Cin=>'1'");
 
 //		inPortMap(cmpAdder, "X", "addCmpOp1");
 //		inPortMap(cmpAdder, "Y", "addCmpOp2");
@@ -247,7 +247,7 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(4),"addToRoundBit")
 				<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
 
-#if 1
+#if 0
 		
 		IntAdder *ra = nullptr;
 
@@ -260,9 +260,10 @@ namespace flopoco{
 
 		vhdl << instance(ra, "roundingAdder");
 #else
-		vhdl << tab  << declare("zeros", ...)  zg(wE+2+wF+1,0);
+		vhdl << tab  << declare("zeros", wE+2+wF+1) << "  <= " <<  zg(wE+2+wF+1,0)<<";"<<endl;
 		
-		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;cin=>addToRoundBit","RoundedExpFrac" );
+		IntAdder *ra = (IntAdder*)newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>addToRoundBit","R=>RoundedExpFrac");
+		//		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;Cin=>addToRoundBit","RoundedExpFrac" );
 #endif
 		
 		addComment("possible update to exception bits");

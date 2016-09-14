@@ -1826,44 +1826,28 @@ namespace flopoco{
 
 	void Operator::parsePortMappings(OperatorPtr instance, string portMappings, int portTypes)
 	{
-		string portName, signalName, mapping;
-		size_t currentPos = 0;
-
-		mapping = "";
-		if(portMappings.find(':') != string::npos){
-			mapping = portMappings.substr(currentPos, portMappings.find(':', currentPos));
-			currentPos = portMappings.find(':') + 1;
-		}else{
-			mapping = portMappings;
-			currentPos = 0;
-		}
-		while(!((currentPos == portMappings.size()) && (mapping == "")))
-		{
-			size_t sepPos = mapping.find("=>");
-
-			if((sepPos == string::npos) && (mapping != ""))
-				THROWERROR("Error: in parsePortMappings: the input port mappings are not specified correctly: " << portMappings);
-			portName = mapping.substr(0, sepPos);
-			signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
-			if(portTypes == 0)
-				inPortMap(instance, portName, signalName);
-			else if(portTypes == 1)
-				inPortMapCst(instance, portName, signalName);
-			else
-				outPortMap(instance, portName, signalName);
-
-			if(portMappings.find(':', currentPos) != string::npos){
-				mapping = portMappings.substr(currentPos, portMappings.find(':', currentPos));
-				currentPos = portMappings.find(':') + 1;
-			}else{
-				if((currentPos != portMappings.size()) && (mapping != portMappings))
-				{
-					mapping = portMappings.substr(currentPos, portMappings.size()-currentPos);
-					currentPos = portMappings.size();
-				}else{
-					mapping = "";
-					currentPos = portMappings.size();
-				}
+		if(portMappings!="") {
+			// First tokenize using stack overflow code
+			std::vector<std::string> tokens;
+			std::size_t start = 0, end = 0;
+			while ((end = portMappings.find(',', start)) != std::string::npos) {
+			tokens.push_back(portMappings.substr(start, end - start));
+			start = end + 1;
+			}
+			tokens.push_back(portMappings.substr(start));
+			// now iterate over the found token, each of which should be a port map of syntax "X=>Y"
+			for(auto& mapping: tokens) {
+				size_t sepPos = mapping.find("=>");
+				if(sepPos == string::npos)
+					THROWERROR("Error: in newInstance: these port maps are not specified correctly: <" << portMappings<<">");
+				string portName = mapping.substr(0, sepPos);
+				string signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
+				if(portTypes == 0)
+					inPortMap(instance, portName, signalName);
+				else if(portTypes == 1)
+					inPortMapCst(instance, portName, signalName);
+				else
+					outPortMap(instance, portName, signalName);
 			}
 		}
 	}

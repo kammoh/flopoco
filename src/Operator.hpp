@@ -791,17 +791,18 @@ public:
 	 * @patam opName the type of operator being instantiated
 	 * @param instanceName the name of the instance being created (label compulsory in VHDL)
 	 * @parameters the parameters given to the constructor of the instance's operator
-	 * 				specified as a string containing 'paramName=paramValue' separated ':'
+	 * 				specified as a string containing 'paramName=paramValue' separated by spaces (as on the FloPoCo command line)
 	 * @param inPortMaps the port mappings for the inputs
-	 * 				specified as a string containing 'portName:signalName' separated by ':'
+	 * 				specified as a string containing 'portName:signalName' separated by ',' (as on VHDL port maps)
 	 * @param outPortMaps the port mappings for the outputs
-	 * 				specified as a string containing 'portName:signalName' separated by ':'
+	 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
 	 * @param inPortMapsCst the constant port mappings for the inputs, if there are any
-	 * 				specified as a string containing 'portName:signalName' separated by ':'
+	 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
 	 */
 	OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
 
+private:	
 	/**
 	 * Parse a string containing port mappings for a new instance of an operator
 	 * and add the corresponding port mappings to the parent operator.
@@ -812,7 +813,7 @@ public:
 	 */
 	void parsePortMappings(OperatorPtr instance, string portMappings, int portTypes);
 
-
+public:
 	/**
 	 * Adds attributes to the generated VHDL so that the tools use embedded RAM blocks for an instance
 	 * @param t a pointer to this instance
