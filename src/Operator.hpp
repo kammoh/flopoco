@@ -1333,7 +1333,7 @@ public:
 	 * Try to schedule all the inputs, and then launch the scheduling for the
 	 * rest of the internal signals of the operator.
 	 */
-	void startScheduling();
+	void schedule();
 
 	/**
 	 * Try to schedule the signal targetSignal. The signal can be schedules only

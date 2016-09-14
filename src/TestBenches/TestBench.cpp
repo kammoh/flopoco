@@ -64,7 +64,7 @@ namespace flopoco{
 
 			if(s->type() == Signal::in) {
 				declare(s->getName(), s->width(), s->isBus());
-				startScheduling();
+				schedule();
 				inPortMap (op, s->getName(), s->getName());
 			}
 		}
@@ -84,7 +84,7 @@ namespace flopoco{
 				outPortMap (op, s->getName(), join(s->getName(), "_int"));
 		}
 		//		the intermediary signals need to be scheduled
-		startScheduling();
+		schedule();
 		//the port mappings have changed, so they must be updated
 		//	so must the schedule of the signal
 		op->reconnectIOPorts();

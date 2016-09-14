@@ -93,7 +93,7 @@ namespace flopoco{
 
 			//launch the scheduling, if required
 			if(!disabledParsing){
-				parentOperator->startScheduling();
+				parentOperator->schedule();
 			}
 		}
 	}

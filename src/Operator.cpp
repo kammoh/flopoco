@@ -23,14 +23,14 @@ The algo should be:
    They still use bh->getSumName.
    This leaves holes in the DAG corresponding to the vhdl stream 
 
-2/ When startScheduling is called, it does all what it can (current code is OK for that).
+2/ When schedule is called, it does all what it can (current code is OK for that).
    if some outputs are not scheduled
      (it means that a bit heap needs compression)
       a/ search in the (recursive) BH list one BH that is not yet scheduled and has all its bits already scheduled
            (if none is found: the DAG has another hole: error!)
       b/ generateCompressorTree for this BH.
          This adds code to the vhdl stream of this operator: it will need to be re-parsed
-      c/ call startScheduling recursively.
+      c/ call schedule recursively.
    
 
 For Martin: 
@@ -191,7 +191,7 @@ namespace flopoco{
 
 		//start the scheduling, as some of the signals declared
 		//	hereafter might depend on this input's timing
-		startScheduling();
+		schedule();
 	}
 
 	void Operator::addInput(const std::string name) {
@@ -267,7 +267,7 @@ namespace flopoco{
 
 		//start the scheduling, as some of the signals declared
 		//	hereafter might depend on this input's timing
-		startScheduling();
+		schedule();
 	}
 
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
@@ -326,7 +326,7 @@ namespace flopoco{
 
 		//start the scheduling, as some of the signals declared
 		//	hereafter might depend on this input's timing
-		startScheduling();
+		schedule();
 	}
 
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -384,7 +384,7 @@ namespace flopoco{
 
 		//start the scheduling, as some of the signals declared
 		//	hereafter might depend on this input's timing
-		startScheduling();
+		schedule();
 	}
 
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
@@ -488,7 +488,7 @@ namespace flopoco{
 			THROWERROR("Error: reconnectIOPorts: trying to connect a subcomponent to an empty parent operator");
 		}else{
 			if(!parentOp_->isOperatorScheduled())
-				parentOp_->startScheduling();
+				parentOp_->schedule();
 		}
 		//connect the inputs and outputs of the operator to the corresponding
 		//	signals in the parent operator
@@ -501,7 +501,7 @@ namespace flopoco{
 		markOperatorUnscheduled();
 		//	now start the scheduling
 		if(restartSchedule == true)
-			startScheduling();
+			schedule();
 	}
 
 
@@ -1744,7 +1744,7 @@ namespace flopoco{
 			newOp->setName(newOp->getName() + "_copy_" + vhdlize(getNewUId()));
 
 			//start the scheduling for the newly created operator
-			newOp->startScheduling();
+			newOp->schedule();
 
 			//mark the subcomponent as already implemented
 			newOp->setIsOperatorImplemented(true);
@@ -2985,7 +2985,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::startScheduling()
+	void Operator::schedule()
 	{
 		//TODO: add more checks here
 		//if the operator is already scheduled, then there is nothing else to do
@@ -3023,7 +3023,7 @@ namespace flopoco{
 			for(unsigned int i=0; i<ioList_.size(); i++)
 				for(unsigned int j=i+1; j<ioList_.size(); j++)
 					if((ioList_[i]->type() == Signal::in) && (ioList_[j]->type() == Signal::in) && (ioList_[i]->getCycle() != ioList_[j]->getCycle()))
-						THROWERROR("Error in startScheduling(): not all signals are at the same cycle: signal "
+						THROWERROR("Error in schedule(): not all signals are at the same cycle: signal "
 								+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
 								+ " but signal " + ioList_[j]->getName() + " is at cycle "
 								+ vhdlize(ioList_[j]->getCycle()));
@@ -3244,7 +3244,7 @@ namespace flopoco{
 								&& targetSignal->parentOp()->isShared())
 			{
 				//start the scheduling of the parent operator of targetSignal
-				targetSignal->parentOp()->startScheduling();
+				targetSignal->parentOp()->schedule();
 
 				//if the operator has been pipelined,
 				//	then advance the cycle of all its inputs and reschedule
@@ -3267,7 +3267,7 @@ namespace flopoco{
 					targetSignal->parentOp()->markOperatorUnscheduled();
 
 					//start the scheduling of the parent operator of targetSignal
-					targetSignal->parentOp()->startScheduling();
+					targetSignal->parentOp()->schedule();
 				}
 			}
 
@@ -3313,7 +3313,7 @@ namespace flopoco{
 			}
 
 			//start the scheduling of the parent operator of targetSignal
-			targetSignal->parentOp()->startScheduling();
+			targetSignal->parentOp()->schedule();
 		}else
 		{
 			//this is a regular signal inside of the operator

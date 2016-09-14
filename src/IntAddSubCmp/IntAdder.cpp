@@ -59,7 +59,7 @@ namespace flopoco {
 		addInput  ("Cin");
 		addOutput ("R"  , wIn, 1 , true);
 
-		startScheduling();
+		schedule();
 
 		targetPeriod = 1.0/target->frequency() - target->ffDelay();
 
