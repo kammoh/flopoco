@@ -783,6 +783,8 @@ namespace flopoco{
 			o<<"--"; for(i=0; i<s; i++) o<<" "; o << "(" << commentedName_ << ")" << endl;
 		}
 		o<< headerComment_;
+		o << "-- VHDL generated for " << getTarget()->getID() << " @ " << getTarget()->frequencyMHz() <<"MHz"  <<endl;
+
 		o<<"-- This operator is part of the Infinite Virtual Library FloPoCoLib"<<endl;
 		o<<"-- All rights reserved "<<endl;
 		o<<"-- Authors: " << authorsyears <<endl;
