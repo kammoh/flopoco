@@ -95,7 +95,7 @@ namespace flopoco{
 			if(s->type() == Signal::out)
 			{
 				Signal *s_int = getSignalByName(join(s->getName(), "_int"));
-				vhdl << tab << declare(s->getName()) << " <= ";
+				vhdl << tab << declare(s->getName(), s->width()) << " <= ";
 				if(s_int->getCycle() < maxOutputCycle)
 					vhdl << delay(s_int->getName(), maxOutputCycle-s_int->getCycle()) << ";" << endl;
 				else
