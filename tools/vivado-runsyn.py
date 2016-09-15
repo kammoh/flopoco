@@ -33,7 +33,7 @@ def get_compile_info(filename):
 
     # target 
     endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
-    target_name_start = endss[-2] +1
+    target_name_start = endss[-1] +1
     i = target_name_start
     while(vhdl[i]!=" "):
         i=i+1
