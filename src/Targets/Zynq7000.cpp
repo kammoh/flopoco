@@ -109,11 +109,15 @@ namespace flopoco{
 				 C'est n'importe quoi.
 
 			*/
+#if 0
 		if(fanout < 10)
 			return 0.2e-9*fanout;
 		else
 			return 2e-9; // don't ask why
-
+#else
+		return 0;
+#endif
+		
 	};
 	
 	double Zynq7000::lutDelay(){

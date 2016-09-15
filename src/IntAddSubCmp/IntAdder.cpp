@@ -39,7 +39,7 @@ namespace flopoco {
 
 	}
 
-	IntAdder::IntAdder ( OperatorPtr parentOp, Target* target, int wIn_, int optimizeType, bool srl, int implementation):
+	IntAdder::IntAdder (OperatorPtr parentOp, Target* target, int wIn_, int optimizeType, bool srl, int implementation):
 		Operator ( target), wIn ( wIn_ )
 	{
 		srcFileName="IntAdder";
@@ -54,48 +54,43 @@ namespace flopoco {
 		setParentOperator(parentOp);
 													
 		// Set up the IO signals
+		REPORT(DEBUG, " ***** Before addInput");
 		addInput  ("X"  , wIn, true);
 		addInput  ("Y"  , wIn, true);
 		addInput  ("Cin");
 		addOutput ("R"  , wIn, 1 , true);
+		REPORT(DEBUG, " ***** After addInput");
 
 		schedule();
 
 		targetPeriod = 1.0/target->frequency() - target->ffDelay();
 
-
-#if 0
-		// TODO why not just a for?
-		if((ioList_[0]->getCycle() > maxCycle)
-				|| ((ioList_[0]->getCycle() == maxCycle) && (ioList_[0]->getCriticalPath() > maxCp)))		{
-			maxCycle = ioList_[0]->getCycle();
-			maxCp = ioList_[0]->getCriticalPath();
-		}
-		for(unsigned i=1; i<ioList_.size(); i++)
-			if((ioList_[i]->getCycle() > maxCycle)
-					|| ((ioList_[i]->getCycle() == maxCycle) && (ioList_[i]->getCriticalPath() > maxCp)))
-			{
-				maxCycle = ioList_[i]->getCycle();
-				maxCp = ioList_[i]->getCriticalPath();
-			}
-#else
-		for(auto i: ioList_)
+		for(auto i: ioList_) {
+			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			// BUG HERE Cycle and CP are always 0
+			// ./flopoco dependencygraph=full frequency=200 target=kintex7 verbose=3 FPAdd we=8 wf=23  Wrapper
+			// look at the dot
 			if((i->getCycle() > maxCycle)
 					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCp)))	{
 				maxCycle = i->getCycle();
 				maxCp = i->getCriticalPath();
 			}
-#endif
-
-		totalPeriod = maxCp + target->adderDelay(wIn+1);
+		}
+		totalPeriod = maxCp + target->adderDelay(wIn);
 		REPORT(DEBUG, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCp <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)
 		{
+#if 0 //TODO bug here?
 			vhdl << tab << " R <= X + Y + Cin;" << endl;
 			REPORT(INFO, "Adder " << name.str() << " adding delay " << target->adderDelay(wIn+1));
-			getSignalByName("R")->setCriticalPathContribution(target->adderDelay(wIn+1));
+			getSignalByName("R")->setCriticalPathContribution(target->adderDelay(wIn));
+			// TODO see with Matei: the following line should not be useful
 			scheduleSignal(getSignalByName("R"));
+#else
+			vhdl << tab << declare(target->adderDelay(wIn),"Rtmp", wIn) << " <= X + Y + Cin;" << endl; // just to use declare()
+			vhdl << tab << "R <= Rtmp;" << endl;
+#endif
 		}else
 		{
 			int maxAdderSize = getMaxAdderSizeForFreq(false);
@@ -206,16 +201,16 @@ namespace flopoco {
 
 	void IntAdder::registerFactory(){
 		UserInterface::add("IntAdder", // name
-							 "Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
-							 "BasicInteger", // category
-							 "",
-							 "wIn(int): input size in bits;\
+											 "Integer adder. In modern VHDL, integer addition is expressed by a + and one usually needn't define an entity for it. However, this operator will be pipelined if the addition is too large to be performed at the target frequency.",
+											 "BasicInteger", // category
+											 "",
+											 "wIn(int): input size in bits;\
 					  arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency; \
 					  optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count; \
 					  SRL(bool)=true: optimize for shift registers",
-							 "",
-							 IntAdder::parseArguments
-							 );
+											 "",
+											 IntAdder::parseArguments
+											 );
 		
 	}
 

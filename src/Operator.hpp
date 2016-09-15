@@ -392,10 +392,6 @@ public:
 	 */
 	OperatorPtr setParentOperator(OperatorPtr parentOp);
 
-	/**
-	 * Get the parent operator of this operator
-	 */
-	OperatorPtr setParentOperator();
 
 
 

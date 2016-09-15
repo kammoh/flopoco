@@ -76,10 +76,7 @@ namespace flopoco{
 	
 	
 	double Kintex7::fanoutDelay(int fanout){
-		if(fanout < 10)
-			return 0.2e-9*fanout;
-		else
-			return 2e-9; // don't ask why
+		return 1.5e-9*fanout/65; // Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65  
 
 	};
 	

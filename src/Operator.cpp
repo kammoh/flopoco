@@ -107,7 +107,7 @@ namespace flopoco{
 		signalsToSchedule.clear();
 		unresolvedDependenceTable.clear();
 
-		parentOp_                   = nullptr;
+ 		parentOp_                   = nullptr;
 
 
 		// Currently we set the pipeline and clock enable from the global target.
@@ -415,40 +415,44 @@ namespace flopoco{
 	}
 
 
-	void Operator::connectIOFromPortMap(Signal *ioSignal)
+	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
-		Signal *connectionSignal = nullptr;
+		Signal *connectionSignal = nullptr; // connectionSignal is the actual signal connected to portSignal
 		map<std::string, Signal*>::iterator itStart, itEnd;
+		REPORT(DEBUG, " ************* Entering connectIOFromPortMap");
 
 		//TODO: add more checks here
 		//if this is a global operator, then there is nothing to be done
 		if(parentOp_ == nullptr)
 			return;
-		//check that ioSignal is really an I/O signal
-		if((ioSignal->type() != Signal::in) && (ioSignal->type() != Signal::out))
-			//THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
-			THROWERROR("Error: signal " << ioSignal->getName() << " is not an input or ouput signal");
+		REPORT(DEBUG, " ************* Staying in connectIOFromPortMap");
+
+		//check that portSignal is really an I/O signal
+		if((portSignal->type() != Signal::in) && (portSignal->type() != Signal::out))
+			THROWERROR("Error: signal " << portSignal->getName() << " is not an input or ouput signal");
 
 		//select the iterators according to the signal type
-		if(ioSignal->type() == Signal::in){
+		if(portSignal->type() == Signal::in){
+			REPORT(DEBUG, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");  
 			itStart = parentOp_->tmpInPortMap_.begin();
 			itEnd = parentOp_->tmpInPortMap_.end();
 		}else{
+			REPORT(DEBUG, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");  
 			itStart = parentOp_->tmpOutPortMap_.begin();
 			itEnd = parentOp_->tmpOutPortMap_.end();
 		}
 
-		//check that ioSignal exists on the parent operator's port map
+		//check that portSignal exists on the parent operator's port map
 		for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
 		{
-			if(it->first == ioSignal->getName()){
+			if(it->first == portSignal->getName()){
 				connectionSignal = it->second;
 				break;
 			}
 		}
 		//check if any match was found in the port mappings
 		if(connectionSignal == nullptr)
-			THROWERROR("Error: I/O port " << ioSignal->getName() << " of operator " << getName()
+			THROWERROR("Error: I/O port " << portSignal->getName() << " of operator " << getName()
 					<< " is not connected to any signal of parent operator " << parentOp_->getName());
 		//sanity check: verify that the signal that was found is actually part of the parent operator
 		try{
@@ -458,23 +462,24 @@ namespace flopoco{
 					<< " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
 		}
 
+		REPORT(DEBUG, "   connected to " << connectionSignal->getName());  
 		//now we can connect the two signals
-		if(ioSignal->type() == Signal::in)
+		if(portSignal->type() == Signal::in)
 		{
 			//this is an input signal
-			ioSignal->addPredecessor(connectionSignal, 0);
-			connectionSignal->addSuccessor(ioSignal, 0);
+			portSignal->addPredecessor(connectionSignal, 0);
+			connectionSignal->addSuccessor(portSignal, 0);
 		}else{
 			//this is an output signal
-			ioSignal->addSuccessor(connectionSignal, 0);
-			connectionSignal->addPredecessor(ioSignal, 0);
+			portSignal->addSuccessor(connectionSignal, 0);
+			connectionSignal->addPredecessor(portSignal, 0);
 		}
 
 		//if the port was connected to a signal automatically created,
 		//	then copy the details of the port to the respective signal
 		if(connectionSignal->getIncompleteDeclaration() == true)
 		{
-			connectionSignal->copySignalParameters(ioSignal);
+			connectionSignal->copySignalParameters(portSignal);
 			connectionSignal->setIncompleteDeclaration(false);
 			connectionSignal->setCriticalPathContribution(0.0);
 		}
@@ -635,10 +640,7 @@ namespace flopoco{
 		return parentOp_;
 	}
 
-	OperatorPtr Operator::setParentOperator(){
-		return parentOp_;
-	}
-
+	
 	int Operator::getIOListSize() const{
 		return ioList_.size();
 	}
@@ -1816,6 +1818,7 @@ namespace flopoco{
 		//parse the input port mappings
 		parsePortMappings(instance, outPortMaps, 2);
 
+		// THE BUG IS HERE: this instance will be created without knowing its parentOp_
 		//create the operator
 		instance = instanceOpFactory->parseArguments(target_, parametersVector);
 
