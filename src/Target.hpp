@@ -12,7 +12,7 @@
 
 
 //TODO a logicTableDelay() that would replace the delay computation in Table.cpp (start from there)
-
+// TODO SuggestSlackAdd should add an optional parameter to suggestAdd
 
 #ifndef TARGET_HPP
 #define TARGET_HPP
@@ -251,12 +251,15 @@ namespace flopoco{
 		 */
 		virtual double DSPToLogicWireDelay()=0;
 
+ // used in Squarer
 		/** Function which returns the delay of the wiring between
 		 * slices and DSPs input
 		 * @return delay slice -> DSP
 		 */
 		virtual double LogicToDSPWireDelay()=0;
 
+
+		// TODO This is used in BitHeap. 
 		/**
 		 * Function which returns how many cycles should be added to the pipeline after
 		 * adding a DSP block and, if needed, how much should the critical path
@@ -283,18 +286,20 @@ namespace flopoco{
 
 		/* -------------------  BRAM related  --------------------------------*/
 
+#if 0
 		/** Function which returns the delay between
 		 * RAMs and slices
 		 * @return delay RAMout to slice
 		 */
 		virtual double RAMToLogicWireDelay()=0;
+#endif
 
 		/** Function which returns the delay between
 		 * slices and RAM input
 		 * @return delay slice to RAMin
 		 */
 		virtual double LogicToRAMWireDelay()=0;
-
+		
 		/** Function which returns the delay of the RAM
 		 * @return delay RAM
 		 */
@@ -333,11 +338,12 @@ namespace flopoco{
 		 */
 		virtual int tableDepth(int wIn, int wOut);
 
+#if 0
 		/** Function which returns the Equivalence between slices and a DSP.
 		 * @return X ,  where X * Slices = 1 DSP
 		 */
 		virtual int getEquivalenceSliceDSP() = 0;
-
+#endif
 
 		/** Function which returns the maximum widths of the operands of a DSP
 		 * @return widths with x>y
@@ -350,6 +356,10 @@ namespace flopoco{
 
 		/** Returns true if it is worth using hard multipliers for implementing a multiplier of size wX times wY */
 		bool worthUsingDSP(int wX, int wY);
+
+
+
+#if 0
  
 		/** Function which returns the number of LUTs needed to implement
 		 *	 a multiplier of the given width
@@ -358,7 +368,6 @@ namespace flopoco{
 		 */
 		virtual int getIntMultiplierCost(int wInX, int wInY) =0;
 
-
 		/** Function which return the number of Slices needed to implement
 		 * an adder that has 2 or more operands.
 		 * @param wIn the width (in bits) of the adder operands
@@ -366,20 +375,11 @@ namespace flopoco{
 		 * @return the cost of the adder in Slices/ALMs
 		 */
 		virtual int getIntNAdderCost(int wIn, int n) =0;
+#endif
 
-		/** Constructs a specific DSP to each target */
-		virtual DSP* createDSP() = 0;
 
-		/** Function for determining the submultiplication sizes so that the design is able
-		 * to function at a desired frequency ( multiplicatio is considerd X * Y )
-		 * @param[in,out] x the size of the submultiplication for x
-		 * @param[in,out] y the size of the submultiplication for y
-		 * @param[in] wInX the width of X
-		 * @param[in] wInY the width of Y
-		 */
-		virtual bool suggestSubmultSize(int &x, int &y, int wInX, int wInY)=0;
-
-		/** Function for determining the subadition sizes so that the design is able
+		// TODO the two following are used in BitHeap
+				/** Function for determining the subadition sizes so that the design is able
 		 * to function at a desired frequency ( addition is considerd X + Y )
 		 * @param[in,out] x the size of the subaddition for x and y
 		 * @param[in] wIn the widths of X and Y
@@ -393,6 +393,8 @@ namespace flopoco{
 		 */
 		virtual bool suggestSubadd3Size(int &x, int wIn)=0;
 
+
+
 		/** Function for determining the subadition sizes so that the design is able
 		 * to function at a desired frequency ( addition is considerd X + Y )
 		 * @param[in,out] x the size of the subaddition for x and y
@@ -400,6 +402,18 @@ namespace flopoco{
 		 * @param[in] slack the time delay consumed out of the input period
 		 */
 		virtual bool   suggestSlackSubaddSize(int &x, int wIn, double slack)=0;
+#if 0
+		/** Constructs a specific DSP to each target */
+		virtual DSP* createDSP() = 0;
+
+		/** Function for determining the submultiplication sizes so that the design is able
+		 * to function at a desired frequency ( multiplicatio is considerd X * Y )
+		 * @param[in,out] x the size of the submultiplication for x
+		 * @param[in,out] y the size of the submultiplication for y
+		 * @param[in] wInX the width of X
+		 * @param[in] wInY the width of Y
+		 */
+		virtual bool suggestSubmultSize(int &x, int &y, int wInX, int wInY)=0;
 
 		/** Function for determining the ternary subadition sizes so that the design is able
 		 * to function at a desired frequency ( addition is considerd X + Y + Z )
@@ -408,6 +422,7 @@ namespace flopoco{
 		 * @param[in] slack the time delay consumed out of the input period
 		 */
 		virtual bool   suggestSlackSubadd3Size(int &x, int wIn, double slack)=0;
+#endif
 
 		/** Function for determining the subcomparator sizes so that the design is able
 		* to function at a desired frequency
@@ -417,7 +432,6 @@ namespace flopoco{
 		* @param[in] constant if the comparisson is done against a constant or Y
 		*/
 		virtual bool suggestSlackSubcomparatorSize(int &x, int wIn, double slack, bool constant)=0;
-
 
 		/*------------ Resource Estimation - target specific ---------*/
 		/*------------------------------------------------------------*/

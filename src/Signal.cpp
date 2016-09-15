@@ -280,8 +280,10 @@ namespace flopoco{
 					&& (predecessorPair.first->type() == predecessor->type())
 					&& (predecessorPair.second == delayCycles))
 			{
+#if 0
 				cerr << "in addPredecessor(): trying to add an already existing signal "
 							 << predecessor->getName() << " to the predecessor list of " << name_ << endl;
+#endif
 				//nothing else to do
 				return;
 			}
@@ -336,8 +338,10 @@ namespace flopoco{
 					&& (successorPair.first->type() == successor->type())
 					&& (successorPair.second == delayCycles))
 			{
+#if 0
 				cerr << "in addSuccessor(): trying to add an already existing signal "
 							 << successor->getName() << " to the successor list of " << name_ << endl;
+#endif
 				//nothing else to do
 				return;
 			}

@@ -67,6 +67,7 @@ namespace flopoco
 	const vector<string> UserInterface::known_fpgas = []()->vector<string>{
 				vector<string> v;
 				v.push_back("zynq7000");
+				v.push_back("kintex7");
 				v.push_back("virtex4");
 				v.push_back("virtex5");
 				v.push_back("virtex6");
@@ -419,6 +420,7 @@ namespace flopoco
 				if (targetFPGA=="zynq7000")  target=new Zynq7000();
 				//					else if(targetFPGA=="virtex4") target=new Virtex4();
 				//				else if (targetFPGA=="virtex5") target=new Virtex5();
+				else if (targetFPGA=="kintex7") target=new Kintex7();
 				else if (targetFPGA=="virtex6") target=new Virtex6();
 				//					else if (targetFPGA=="spartan3") target=new Spartan3();
 				//					else if (targetFPGA=="stratixii" || targetFPGA=="stratix2") target=new StratixII();

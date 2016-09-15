@@ -21,7 +21,7 @@
 #include "OperatorPipeline/OperatorPipeline.hpp"
 
 /* resource estimation ---------------------------------------- */
-#include "Tools/ResourceEstimationHelper.hpp"
+// #include "Tools/ResourceEstimationHelper.hpp"
 /* resource estimation ---------------------------------------- */
 
 
@@ -50,6 +50,7 @@
 //#include "Targets/CycloneIV.hpp"
 //#include "Targets/CycloneV.hpp"
 #include "Targets/Zynq7000.hpp"
+#include "Targets/Kintex7.hpp"
 
 #include "TestBenches/TestBench.hpp"
 

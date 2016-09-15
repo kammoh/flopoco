@@ -63,9 +63,10 @@ namespace flopoco {
 
 		targetPeriod = 1.0/target->frequency() - target->ffDelay();
 
+		
+		// TODO why not just a for?
 		if((ioList_[0]->getCycle() > maxCycle)
-				|| ((ioList_[0]->getCycle() == maxCycle) && (ioList_[0]->getCriticalPath() > maxCp)))
-		{
+				|| ((ioList_[0]->getCycle() == maxCycle) && (ioList_[0]->getCriticalPath() > maxCp)))		{
 			maxCycle = ioList_[0]->getCycle();
 			maxCp = ioList_[0]->getCriticalPath();
 		}
@@ -88,7 +89,8 @@ namespace flopoco {
 		}else
 		{
 			int maxAdderSize = getMaxAdderSizeForFreq(false);
-			int chunks = wIn/maxAdderSize, lastChunkSize = 0;
+			int chunks = floor(wIn/maxAdderSize);
+			int lastChunkSize = 0;
 			if(chunks*maxAdderSize < wIn)
 			{
 				chunks++;

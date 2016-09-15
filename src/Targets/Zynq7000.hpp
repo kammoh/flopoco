@@ -27,6 +27,7 @@ namespace flopoco{
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
 		double eqComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);
+
 		
 		double DSPMultiplierDelay(){ return DSPMultiplierDelay_;}
 		double DSPAdderDelay(){ return DSPAdderDelay_;}
