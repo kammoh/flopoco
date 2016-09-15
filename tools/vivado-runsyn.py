@@ -33,14 +33,22 @@ def get_compile_info(filename):
 
     # target 
     endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
-    target_name_start = endss[-2] +1 # skip the space
+    target_name_start = endss[-2] +1
     i = target_name_start
     while(vhdl[i]!=" "):
         i=i+1
     target_name_end = i
     targetname=vhdl[target_name_start:target_name_end]
+    
     # the frequency follows but we don't need to read it so far
-    return (entityname, targetname)
+    frequency_start=target_name_end+3 #  skip " @ "
+    i = frequency_start
+    while(vhdl[i]!=" " and vhdl[i]!="M"): # 400MHz or 400 MHz
+        i=i+1
+    frequency_end = i
+    frequency = vhdl[frequency_start:frequency_end]
+
+    return (entityname, targetname, frequency)
 
 
 
@@ -50,9 +58,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='This is an helper script for FloPoCo that launches Xilinx Vivado and extracts resource consumption and critical path information')
     parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
-    parser.add_argument('-f', '--file', help='File name (default flopoco.vhdl)')
+    parser.add_argument('-v', '--vhdl', help='VHDL file name (default flopoco.vhdl)')
     parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
     parser.add_argument('-t', '--target', help='Target name (default is read from the VHDL file)')
+    parser.add_argument('-f', '--frequency', help='Objective frequency (default is read from the VHDL file)')
 
     options=parser.parse_args()
 
@@ -61,13 +70,15 @@ if __name__ == '__main__':
     else:
         synthesis_only=True
 
-    if (options.file==None):
+    if (options.vhdl==None):
         filename = "flopoco.vhdl"
     else:
-        filename = options.file
+        filename = options.vhdl
 
-    (entity_in_file, target_in_file) =  get_compile_info(filename)
-        
+    # Read from the vhdl file the entity name and target hardware and freqyency
+    (entity_in_file, target_in_file, frequency_in_file) =  get_compile_info(filename)
+
+#    print "vivado-runsyn: read " + entity_in_file + " for " + target_in_file + " at " + frequency_in_file + " MHz\n"
     if (options.entity==None):
         entity = entity_in_file
     else:
@@ -78,6 +89,13 @@ if __name__ == '__main__':
     else:
         target = options.target
 
+    if (options.frequency==None):
+        frequency = frequency_in_file
+    else:
+        frequency = options.frequency
+
+    print "vivado-runsyn: compiling " + entity + " for " + target + " at " + frequency + " MHz\n"
+
     if target.lower()=="kintex7":
         part="xc7k70tfbv484-3"
     elif target.lower()=="zynq7000":
@@ -85,18 +103,34 @@ if __name__ == '__main__':
     else:
         raise BaseException("Target " + target + " not supported by vivado-runsyn")
         
-    workdir="/tmp/vivado_runsyn_files"
+    workdir="/tmp/vivado_runsyn_"+entity+"_"+target+"_"+frequency
+    os.system("rm -R "+workdir)
+    os.mkdir(workdir)
+    os.system("cp flopoco.vhdl "+workdir)
+    os.chdir(workdir)
+    
+
+    # Create the clock.xdc file. For this we use the previous frequency,
+    # but since I am too lazy to parse the VHDL to find inouts and output names, I copy the set_input_delay etc from the FloPoCo generated file
+    # This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp.
+    xdc_file_name = workdir+"/clock.xdc" 
+    tmp_clock_file = open("/tmp/clock.xdc","r") # this is the one created by FloPoCo
+    clock_file = open(xdc_file_name,"w")
+    period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
+    clock_file.write("create_clock -name clk -period " + str(period) + " \n")
+    tmp_clock_file.readline() # skip the two first lines
+    tmp_clock_file.readline()
+    for line in tmp_clock_file:
+        clock_file.write(line)
+    clock_file.close()
+    tmp_clock_file.close()
+
     project_name = "test_" + entity
     tcl_script_name = os.path.join(workdir, project_name+".tcl")
     filename_abs = os.path.abspath(filename)
-    os.system("rm -R "+workdir)
-    os.mkdir(workdir)
-    os.chdir(workdir)
-
 
     # First futile attempt to get a timing report
 
-    xdc_file_name="/tmp/clock.xdc" # created by FloPoCo.
 
     tclscriptfile = open( tcl_script_name,"w")
     tclscriptfile.write("# Synthesis of " + entity + "\n")
