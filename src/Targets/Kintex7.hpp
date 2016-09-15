@@ -82,7 +82,8 @@ namespace flopoco{
 	private:
 
 		// The following is copypasted from Vivado timing reports
-		const double lutDelay_ = 0.124e-9;       /**< The delay between two LUTs */
+		const double lutDelay_ = 0.124e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
+		const double ffDelay_ = 0.216e-9;       /**< The delay of a flip-flop, without any routing  (cut from vivado timing report)*/
 		const double carry4Delay_ = 0.049e-9;    /**< The delay in the middle of the fast carry chain   */
 		const double adderConstantDelay_  = 0.043e-9 + 0.251e-9 + 0.145e-9; /**< includes a LUT delay and the initial and final carry4delays*/
 		const double DSPMultiplierDelay_ = 0; // TODO

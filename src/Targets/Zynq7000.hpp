@@ -64,9 +64,13 @@ namespace flopoco{
 	private:
 
 
-		double lutDelay_;       /**< The delay between two LUTs */
-		double carry4Delay_;    /**< The delay of the fast carry chain */
-		double elemWireDelay_;  /**< The elementary wire dealy (for computing the distant wire delay) */
+		const double lutDelay_ = 0.124e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
+		const double carry4Delay_ = 0.114e-9;    /**< The delay of the fast carry chain */
+		const double ffDelay_ = 0.518e-9;       /**< The delay of a flip-flop, without any routing  (cut from vivado timing report)*/
+		const double adderConstantDelay_  = 0.532e-9 + 0.222e-9; /**< includes a LUT delay and the initial and final carry4delays*/
+		const double DSPMultiplierDelay_ = 0; // TODO
+		const double RAMDelay_ = 0; // TODO
+		const double RAMToLogicWireDelay_= 0; // TODO
 
 
 		// From there on, obsolete stuff
@@ -83,13 +87,9 @@ namespace flopoco{
 		int nrDSPs_;			/**< Number of available DSPs on this target */
 		int dspFixedShift_;		/**< The amount by which the DSP block can shift an input to the ALU */
 		
-		double DSPMultiplierDelay_;
 		double DSPAdderDelay_;
 		double DSPCascadingWireDelay_;
 		double DSPToLogicWireDelay_;
-		
-		double RAMDelay_;
-		double RAMToLogicWireDelay_;;
 
 	};
 

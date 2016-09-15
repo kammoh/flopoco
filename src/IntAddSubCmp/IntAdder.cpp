@@ -63,7 +63,8 @@ namespace flopoco {
 
 		targetPeriod = 1.0/target->frequency() - target->ffDelay();
 
-		
+
+#if 0
 		// TODO why not just a for?
 		if((ioList_[0]->getCycle() > maxCycle)
 				|| ((ioList_[0]->getCycle() == maxCycle) && (ioList_[0]->getCriticalPath() > maxCp)))		{
@@ -77,8 +78,17 @@ namespace flopoco {
 				maxCycle = ioList_[i]->getCycle();
 				maxCp = ioList_[i]->getCriticalPath();
 			}
+#else
+		for(auto i: ioList_)
+			if((i->getCycle() > maxCycle)
+					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCp)))	{
+				maxCycle = i->getCycle();
+				maxCp = i->getCriticalPath();
+			}
+#endif
 
 		totalPeriod = maxCp + target->adderDelay(wIn+1);
+		REPORT(DEBUG, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCp <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)
 		{

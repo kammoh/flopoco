@@ -90,7 +90,7 @@ namespace flopoco{
 //
 //		vhdl << instance(cmpAdder, "cmpAdder") << endl;
 
-		vhdl<< tab << declare(target->localWireDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
+		vhdl<< tab << declare(target->fanoutDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 
 		addComment("exponent difference");
 		vhdl<< tab << declare(target->adderDelay(wE+1),

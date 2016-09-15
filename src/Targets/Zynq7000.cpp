@@ -36,8 +36,6 @@ namespace flopoco{
 
 
 			//////// Delay parameters, copypasted from Vivado timing reports
-			lutDelay_ = 0.124e-9;
-			carry4Delay_ = 0.117e-9;
 			
 		}
 
@@ -45,28 +43,35 @@ namespace flopoco{
 
 	//TODO
 	double Zynq7000::logicDelay(int inputs){
-		double unitDelay = lutDelay();
+		double delay;
 		if(inputs <= lutInputs())
-			return unitDelay;
+			delay= addRoutingDelay(lutDelay_);
 		else
-			return unitDelay * (inputs -lutInputs() + 1);
+			delay= addRoutingDelay(lutDelay_ * (inputs -lutInputs() + 1));
+		TARGETREPORT("logicDelay(" << inputs << ") = " << delay*1e9 << " ns.");
+		return  delay; 
 	}
 
 
 	double Zynq7000::adderDelay(int size) {
-		return addRoutingDelay(lutDelay_ + ((size+3)/4)* carry4Delay_) ; 
+		double delay;
+		delay=addRoutingDelay(adderConstantDelay_ + ((size-1)/4)* carry4Delay_);
+		TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
+		return  delay; 
 	};
 
 	
 	double Zynq7000::eqComparatorDelay(int size){
+		// TODO Refine
 		return addRoutingDelay( lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_); 
 	}
 	
 	double Zynq7000::eqConstComparatorDelay(int size){
+		// TODO Refine
 		return addRoutingDelay( lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_ ); 
 	}
 	double Zynq7000::ffDelay() {
-		return 1.443e-9; // 0.478 logic; 0.965 route 
+		return ffDelay_; 
 	};
 	
 	double Zynq7000::addRoutingDelay(double d) {

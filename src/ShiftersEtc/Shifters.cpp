@@ -72,9 +72,9 @@ namespace flopoco{
 		for(int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
 			levelInLut ++;
 			if (levelInLut >= levelPerLut) {
-				levelDelay=target->lutDelay() + target->localWireDelay(wIn+intpow2(currentLevel+1)-1);
+				levelDelay=target->logicDelay() + target->fanoutDelay(wIn+intpow2(currentLevel+1)-1);
 				totalDelay += levelDelay;
-				REPORT(DETAILED, "level delay is " << levelDelay << "   total delay is " << totalDelay);
+				REPORT(DETAILED, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
 				levelInLut=0;
 			}
 			else // this level incurs no delay
@@ -102,7 +102,6 @@ namespace flopoco{
 			}
 
 		}
-		//update the output slack
 
 		ostringstream lastLevelName;
 		lastLevelName << "level"<<wShiftIn_;
