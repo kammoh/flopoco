@@ -87,7 +87,7 @@ namespace flopoco{
 			return unitDelay * (inputs -lutInputs() + 1);
 	}
 
-	double StratixV::adderDelay(int size) 
+	double StratixV::adderDelay(int size, bool addRoutingDelay_) 
 	{
 		// Just consider the case of an unpipelined adder
 		// One LAB is built of almsPerLab=10 ALMs, and each ALM can implement 2-bit carry propagation.

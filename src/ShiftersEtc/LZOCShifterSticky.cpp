@@ -73,6 +73,8 @@ namespace flopoco{
 
 			// Delay evaluation.
 			// As we output the count bits, their computation will not be merged inside the shift
+			REPORT( INFO, "currSize="<<currLevSize);
+
 			double countBitDelay = target->fanoutDelay(currLevSize);
 			if (countType>=0)
 				countBitDelay += target->eqConstComparatorDelay( intpow2(i) )  ;
@@ -159,6 +161,8 @@ namespace flopoco{
 			else
 				vhdl << tab << "Sticky <= sticky0;"<<endl;
 		}
+		REPORT( INFO, "Leaving LZOCShifterSticky");
+
 	}
 
 	LZOCShifterSticky::~LZOCShifterSticky() {

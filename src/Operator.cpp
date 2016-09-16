@@ -2921,14 +2921,14 @@ namespace flopoco{
 			try{
 				lhs = getSignalByName(it->first);
 			}catch(string &e){
-				REPORT(INFO, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
+				REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
 				unknownLHSName = true;
 			}
 
 			try{
 				rhs = getSignalByName(it->second);
 			}catch(string &e){
-				REPORT(INFO, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
+				REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
 				unknownRHSName = true;
 			}
 
@@ -2961,14 +2961,14 @@ namespace flopoco{
 			try{
 			    lhs = getSignalByName(it->first);
 			}catch(string &e){
-			    REPORT(INFO, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
+			    REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
 			    unknownLHSName = true;
 			}
 
 			try{
 			    rhs = getSignalByName(it->second);
 			}catch(string &e){
-			    REPORT(INFO, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
+			    REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
 			    unknownRHSName = true;
 			}
 
@@ -3019,7 +3019,7 @@ namespace flopoco{
 		//if the operator is already scheduled, then there is nothing else to do
 		if(isOperatorScheduled())
 			return;
-		REPORT(DEBUG, "Really entering schedule()"); 
+		//REPORT(DEBUG, "Really entering schedule()"); 
 		//extract the dependences between the operator's internal signals
 		extractSignalDependences();
 
@@ -3193,13 +3193,13 @@ namespace flopoco{
 	
 	void Operator::scheduleSignal(Signal *targetSignal, bool override)
 	{
-		REPORT(DEBUG, "scheduleSignal("<< targetSignal->getName() << ")");
+		// REPORT(DEBUG, "scheduleSignal("<< targetSignal->getName() << ")");
 		//TODO: add more checks here
 		//check if the signal has already been scheduled
 		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
 			//there is nothing else to be done
 			return;
-		REPORT(DEBUG, "scheduleSignal1("<< targetSignal->getName() << ")");
+		//REPORT(DEBUG, "scheduleSignal1("<< targetSignal->getName() << ")");
 
 		//check if all the signal's predecessors have been scheduled
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
@@ -3207,7 +3207,7 @@ namespace flopoco{
 				//not all predecessors are scheduled, so the signal cannot be scheduled
 				return;
 
-		REPORT(DEBUG, "scheduleSignal2("<< targetSignal->getName() << ")");
+		// REPORT(DEBUG, "scheduleSignal2("<< targetSignal->getName() << ")");
 		//if the preconditions are satisfied, schedule the signal
 		setSignalTiming(targetSignal, override);
 
@@ -3359,7 +3359,7 @@ namespace flopoco{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
-		REPORT(DEBUG, "setSignalTiming("<< targetSignal->getName()<<")");
+		//REPORT(DEBUG, "setSignalTiming("<< targetSignal->getName()<<")");
 
 		//check if the signal has already been scheduled
 		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
@@ -3375,7 +3375,7 @@ namespace flopoco{
 			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
 		}
 
-		REPORT(DEBUG, "Really doing setSignalTiming("<< targetSignal->getName()<<")");
+		//REPORT(DEBUG, "Really doing setSignalTiming("<< targetSignal->getName()<<")");
 
 		//determine the lexicographic maximum cycle and critical path of the signal's parents
 		for(unsigned int i=1; i<targetSignal->predecessors()->size(); i++)

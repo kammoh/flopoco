@@ -31,7 +31,7 @@ namespace flopoco{
 			maxFrequencyMHz_		= 500;
 			// all these values are set more or less randomly, to match  virtex 6 more or less
 			fastcarryDelay_ 		= 0.015e-9; //s
-			elemWireDelay_  		= 0.400e-9; // Was 0.313, but more recent versions of ISE report variable delays around 0.400
+			elemWireDelay_  		= 0.313e-9; // Was 0.313, but more recent versions of ISE report variable delays around 0.400
 			lutDelay_       		= 0.053e-9;
 			// all these values are set precisely to match the Virtex6
 			fdCtoQ_         		= 0.280e-9;
@@ -122,7 +122,7 @@ namespace flopoco{
 	}
 	
 	
-	double Virtex6::adderDelay(int size) {
+	double Virtex6::adderDelay(int size, bool addRoutingDelay) {
 		double delay=lut2_ + muxcyStoO_ + double(size-1)*muxcyCINtoO_ + xorcyCintoO_ + elemWireDelay_;
 		TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
 		return delay ;
@@ -131,11 +131,20 @@ namespace flopoco{
 	
 
 	double Virtex6::eqComparatorDelay(int size){
-		return   lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_;
+		double delay;
+#if 0
+		delay = lut2_ + muxcyStoO_ + double((size-1)/(lutInputs_/2)+1)*muxcyCINtoO_;
+#else
+		delay= adderDelay(size);
+#endif
+		TARGETREPORT("eqComparatorDelay(" << size << ") = " << delay*1e9 << " ns.");
+		return delay;
 	}
 
 	double Virtex6::eqConstComparatorDelay(int size){
-		return   lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_  + xorcyCintoO_ + xorcyCintoO_net_;
+		double delay=  lut2_ + muxcyStoO_ + double((size-1)/lutInputs_+1)*muxcyCINtoO_  + xorcyCintoO_ + xorcyCintoO_net_;
+		TARGETREPORT("eqConstComparatorDelay(" << size << ") = " << delay*1e9 << " ns.");
+		return delay;
 	}
 	double Virtex6::ffDelay() {
 		return fdCtoQ_ + ff_net_ + ffd_;
@@ -148,7 +157,7 @@ namespace flopoco{
 	double Virtex6::fanoutDelay(int fanout){
 		// TODO the values used here were found experimentally using Planahead 14.7
 		double delay;
-#if 1 // All this commented out by Florent to better match ISE critical path report
+#if 0 // All this commented out by Florent to better match ISE critical path report
 		// Then plugged back in because it really depends.
 		if(fanout <= 16)
 			delay =  elemWireDelay_ + (double(fanout) * 0.063e-9);
@@ -163,14 +172,18 @@ namespace flopoco{
 		else if(fanout <= 512)
 			delay =  elemWireDelay_ + (double(fanout) * 0.004e-9);
 		else
-#endif
 			delay =  elemWireDelay_ + (double(fanout) * 0.002e-9);
+		delay/=2;
+#else
+			delay =  elemWireDelay_ + (double(fanout) * 0.001e-9);
+#endif
 		//cout << "localWireDelay(" << fanout << ") estimated to "<< delay*1e9 << "ns" << endl;
+		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
 		return delay;
 	};
 
 	double Virtex6::lutDelay(){
-		return lutDelay_+elemWireDelay_;
+		return lutDelay_ ;
 	};
 
 	double Virtex6::tableDelay(int wIn_, int wOut_, bool logicTable_){

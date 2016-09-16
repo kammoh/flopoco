@@ -53,10 +53,12 @@ namespace flopoco{
 	}
 
 
-	double Zynq7000::adderDelay(int size) {
-		double delay;
-		delay=addRoutingDelay(adderConstantDelay_ + ((size-1)/4)* carry4Delay_);
-		TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
+	double Zynq7000::adderDelay(int size, bool addRoutingDelay_) {
+		double delay = adderConstantDelay_ + ((size-1)/4)* carry4Delay_;
+		if(addRoutingDelay_) {
+			delay=addRoutingDelay(delay);
+			TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
+		}
 		return  delay; 
 	};
 
@@ -75,7 +77,7 @@ namespace flopoco{
 	};
 	
 	double Zynq7000::addRoutingDelay(double d) {
-		return(3.0*d);
+		return(d+typicalLocalRoutingDelay_);
 	};
 	
 	double Zynq7000::carryPropagateDelay() {
@@ -109,14 +111,9 @@ namespace flopoco{
 				 C'est n'importe quoi.
 
 			*/
-#if 0
-		if(fanout < 10)
-			return 0.2e-9*fanout;
-		else
-			return 2e-9; // don't ask why
-#else
-		return 0;
-#endif
+		double delay= fanoutConstant_*fanout;
+		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
+		return delay;
 		
 	};
 	

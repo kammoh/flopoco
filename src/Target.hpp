@@ -174,7 +174,7 @@ namespace flopoco{
 				It includes one level of local routing.
 		 * @param n the number of bits of the addition (n-bit + n-bit )
 		 */
-		virtual double adderDelay(int n) =0;
+		virtual double adderDelay(int n, bool addRoutingDelay=true) =0;
 
 
 		/** Function which returns addition delay for an n bit ternary addition

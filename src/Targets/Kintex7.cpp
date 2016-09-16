@@ -49,10 +49,12 @@ namespace flopoco{
 	}
 
 
-	double Kintex7::adderDelay(int size) {
-		double delay;
-		delay=addRoutingDelay(adderConstantDelay_ + ((size-1)/4)* carry4Delay_);
-		TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
+	double Kintex7::adderDelay(int size, bool addRoutingDelay_) {
+		double delay = adderConstantDelay_ + ((size-1)/4)* carry4Delay_;
+		if(addRoutingDelay_) {
+			delay=addRoutingDelay(delay);
+			TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
+		}
 		return  delay; 
 	};
 
@@ -76,8 +78,9 @@ namespace flopoco{
 	
 	
 	double Kintex7::fanoutDelay(int fanout){
-		return 1.5e-9*fanout/65; // Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65  
-
+		double delay= fanoutConstant_*fanout;
+		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
+		return delay;
 	};
 	
 	double Kintex7::lutDelay(){

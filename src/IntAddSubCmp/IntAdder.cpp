@@ -47,99 +47,76 @@ namespace flopoco {
 		ostringstream name;
 		name << "IntAdder_" << wIn;
 		setNameWithFreqAndUID(name.str());
-		double targetPeriod, totalPeriod;
-		int maxCycle = 0;
-		double maxCp = 0.0;
-
 		setParentOperator(getTarget()->readParentOpMailbox());
 													
 		// Set up the IO signals
-		REPORT(DEBUG, " ***** Before addInput");
 		addInput  ("X"  , wIn, true);
 		addInput  ("Y"  , wIn, true);
 		addInput  ("Cin");
 		addOutput ("R"  , wIn, 1 , true);
-		REPORT(DEBUG, " ***** After addInput");
 
 		schedule();
-
-		targetPeriod = 1.0/target->frequency() - target->ffDelay();
-
+		double targetPeriod = 1.0/target->frequency() - target->ffDelay();
+		// What is the maximum lexicographic time of our inputs?
+		int maxCycle = 0;
+		double maxCP = 0.0;
 		for(auto i: ioList_) {
-			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			// REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 			if((i->getCycle() > maxCycle)
-					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCp)))	{
+					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
 				maxCycle = i->getCycle();
-				maxCp = i->getCriticalPath();
+				maxCP = i->getCriticalPath();
 			}
 		}
-		totalPeriod = maxCp + target->adderDelay(wIn);
-		REPORT(DEBUG, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCp <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
+		double totalPeriod = maxCP + target->adderDelay(wIn);
 
-		if(totalPeriod <= targetPeriod)
-		{
-#if 0 //TODO bug here?
-			vhdl << tab << " R <= X + Y + Cin;" << endl;
-			REPORT(INFO, "Adder " << name.str() << " adding delay " << target->adderDelay(wIn+1));
-			getSignalByName("R")->setCriticalPathContribution(target->adderDelay(wIn));
-			// TODO see with Matei: the following line should not be useful
-			scheduleSignal(getSignalByName("R"));
-#else
+		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
+
+		if(totalPeriod <= targetPeriod)		{
 			vhdl << tab << declare(target->adderDelay(wIn),"Rtmp", wIn) << " <= X + Y + Cin;" << endl; // just to use declare()
 			vhdl << tab << "R <= Rtmp;" << endl;
-#endif
-		}else
-		{
-			int maxAdderSize = getMaxAdderSizeForFreq(false);
-			int chunks = floor(wIn/maxAdderSize);
-			int lastChunkSize = 0;
-			if(chunks*maxAdderSize < wIn)
-			{
-				chunks++;
-				lastChunkSize = wIn - (chunks-1)*maxAdderSize;
-			}
-			REPORT(DETAILED, "chunks=" <<  chunks << " lastChunkSize=" << lastChunkSize);
+		}
 
-			for(int i=0; i<chunks; i++)
-			{
-				if(i == 0)
-				{
-					vhdl << tab << declare("Cin_chunk_0") << " <= Cin;" << endl;
-				}else
-				{
-					vhdl << tab << declare(0.0, join("Cin_chunk_", i)) << " <= R_chunk_" << i-1
-							<<	of(maxAdderSize) << ";" << endl;
+		else		{
+			
+			// Here we split into chunks.
+			double remainingSlack = targetPeriod-maxCP;
+			int firstSubAdderSize = getMaxAdderSizeForPeriod(remainingSlack) - 2;
+			int maxSubAdderSize = getMaxAdderSizeForPeriod(targetPeriod) - 2;
+
+			bool loop=true;
+			int subAdderSize=firstSubAdderSize;
+			int previousSubAdderSize;
+			int subAdderFirstBit = 0;
+			int i=0; 
+			while(loop) {
+				REPORT(DETAILED, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
+				// Cin
+				if(subAdderFirstBit == 0)	{
+					vhdl << tab << declare("Cin_0") << " <= Cin;" << endl;
+				}else	 {
+					vhdl << tab << declare(join("Cin_", i)) << " <= " << join("S_", i-1) <<	of(previousSubAdderSize) << ";" << endl;
 				}
-
-				if((i == chunks-1) && (lastChunkSize != maxAdderSize))
-				{
-					vhdl << tab << declare(0.0, join("X_chunk_", i), lastChunkSize+1) << " <= '0' & X"
-							<<	range(lastChunkSize-1+i*maxAdderSize, i*maxAdderSize) << ";" << endl;
-					vhdl << tab << declare(0.0, join("Y_chunk_", i), lastChunkSize+1) << " <= '0' & Y"
-							<<	range(lastChunkSize-1+i*maxAdderSize, i*maxAdderSize) << ";" << endl;
-					vhdl << tab << declare(target->adderDelay(lastChunkSize+1), join("R_chunk_", i), lastChunkSize+1) << " <= X_chunk_" << i
-							<<	" + Y_chunk_" << i << " + Cin_chunk_" << i << ";" << endl;
-				}else
-				{
-					vhdl << tab << declare(0.0, join("X_chunk_", i), maxAdderSize+1) << " <= '0' & X"
-							<<	range((i+1)*maxAdderSize-1, i*maxAdderSize) << ";" << endl;
-					vhdl << tab << declare(0.0, join("Y_chunk_", i), maxAdderSize+1) << " <= '0' & Y"
-							<<	range((i+1)*maxAdderSize-1, i*maxAdderSize) << ";" << endl;
-					vhdl << tab << declare(target->adderDelay(maxAdderSize+1), join("R_chunk_", i), maxAdderSize+1) << " <= X_chunk_" << i
-							<<	" + Y_chunk_" << i << " + Cin_chunk_" << i << ";" << endl;
-				}
-
-				vhdl << endl;
-			}
-
-			vhdl << tab << "R <=";
-			for(int i=chunks-1; i>=0; i--)
-			{
-				vhdl << (i==(chunks-1)?" ":" & ") << "R_chunk_" << i;
-				if((i == chunks-1) && (lastChunkSize != maxAdderSize))
-					vhdl << range(lastChunkSize-1, 0);
+				// operands
+				vhdl << tab << declare(join("X_", i), subAdderSize+1) << " <= '0' & X"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
+				vhdl << tab << declare(join("Y_", i), subAdderSize+1) << " <= '0' & Y"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
+				vhdl << tab << declare(target->adderDelay(subAdderSize+1), join("S_", i), subAdderSize+1)
+						 << " <= X_" << i	<<	" + Y_" << i << " + Cin_" << i << ";" << endl;
+				vhdl << tab << declare(join("R_", i), subAdderSize) << " <= S_" << i	<<	range(subAdderSize-1,0) << ";" << endl;
+				// prepare next iteration
+				i++;
+				subAdderFirstBit += subAdderSize;
+				previousSubAdderSize = subAdderSize;
+				if (subAdderFirstBit==wIn)
+					loop=false;
 				else
-					vhdl << range(maxAdderSize-1, 0);
+					subAdderSize = min(wIn-subAdderFirstBit, maxSubAdderSize);
+			}
+
+			vhdl << tab << "R <= ";
+			while(i>0)		{
+				i--;
+				vhdl <<  "R_" << i << (i==0?" ":" & ");
 			}
 			vhdl << ";" << endl;
 		}
@@ -148,17 +125,11 @@ namespace flopoco {
 	}
 
 
-	int IntAdder::getMaxAdderSizeForFreq(bool hasFF)
-	{
-		int count = 1;
-		double targetPeriod = 1.0/getTarget()->frequency();
-
-		while(getTarget()->adderDelay(count)+(hasFF?getTarget()->ffDelay():0) < targetPeriod)
+	int IntAdder::getMaxAdderSizeForPeriod(double targetPeriod) {
+		int count = 10; // You have to add something eventually
+		while(getTarget()->adderDelay(count) < targetPeriod)
 			count++;
-		if(getTarget()->adderDelay(count)+(hasFF?getTarget()->ffDelay():0) > targetPeriod)
-			count--;
-
-		return count;
+		return count-1;
 	}
 
 

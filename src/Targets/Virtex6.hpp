@@ -26,7 +26,7 @@ namespace flopoco{
 		 * @see the target class for more details
 		 */
 		double logicDelay(int inputs=0);
-		double adderDelay(int size);
+		double adderDelay(int size, bool addRoutingDelay=true);
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
 		double eqComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);

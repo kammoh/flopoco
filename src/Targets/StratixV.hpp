@@ -27,7 +27,7 @@ namespace flopoco{
 		 * @see the target class for more details 
 		 */
 		double logicDelay(int inputs);
-		double adderDelay(int size);
+		double adderDelay(int size, bool addRoutingDelay=true);
 		double adder3Delay(int size);
 		double eqComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);

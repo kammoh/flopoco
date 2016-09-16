@@ -58,9 +58,9 @@ namespace flopoco {
 		void emulate ( TestCase* tc );
 
 		/**
-		 * get the maximum adder size for a given target frequency
+		 * get the maximum adder size for a given target period
 		 */
-		int getMaxAdderSizeForFreq(bool hasFF=false);
+		int getMaxAdderSizeForPeriod(double TargetPeriod);
 
 		// User-interface stuff
 		/** Factory method */
