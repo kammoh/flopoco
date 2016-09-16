@@ -2008,11 +2008,12 @@ namespace flopoco{
 	}
 
 
-	void Operator::addAttribute(std::string attributeName,  std::string attributeType,  std::string object, std::string value ) {
+	void Operator::addAttribute(std::string attributeName,  std::string attributeType,  std::string object, std::string value, bool addSignal ) {
 		// TODO add some checks ?
 		attributes_[attributeName] = attributeType;
 		pair<string,string> p = make_pair(attributeName,object);
 		attributesValues_[p] = value;
+		attributesAddSignal_[attributeName] = addSignal; 
 	}
 
 
@@ -2057,7 +2058,7 @@ namespace flopoco{
 			string value = it->second;
 			if(attributes_[name]=="string")
 				value = '"' + value + '"';
-			o <<  "attribute " << name << " of " << object << " is " << value << ";" << endl;
+			o <<  "attribute " << name << " of " << object << (attributesAddSignal_[name]?" : signal " : "") << " is " << value << ";" << endl;
 		}
 		return o.str();
 	}
@@ -2396,10 +2397,10 @@ namespace flopoco{
 			outputVHDLEntity(o);
 			newArchitecture(o,name);
 			o << buildVHDLComponentDeclarations();
+			o << buildVHDLAttributes();
 			o << buildVHDLSignalDeclarations();			//TODO: this cannot be called before scheduling the signals (it requires the lifespan of the signals, which is not yet computed)
 			o << buildVHDLTypeDeclarations();
 			o << buildVHDLConstantDeclarations();
-			o << buildVHDLAttributes();
 			beginArchitecture(o);
 			o << buildVHDLRegisters();					//TODO: this cannot be called before scheduling the signals (it requires the lifespan of the signals, which is not yet computed)
 			if(getIndirectOperator())

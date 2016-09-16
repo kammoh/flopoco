@@ -1159,7 +1159,7 @@ public:
 	/**
 	 * Add an attribute, declaring the attribute's name if it is not done already.
 	 */
-	void addAttribute(std::string attributeName,  std::string attributeType,  std::string object, std::string value );
+	void addAttribute(std::string attributeName,  std::string attributeType,  std::string object, std::string value, bool addSignal=false );
 
 	/**
 	 * A new line inline function
@@ -1921,6 +1921,7 @@ private:
 	map<string, Signal*>   signalMap_;                      /**< A container of tuples for recovering the signal based on it's name */
 	map<string, pair<string, string>> constants_;           /**< The list of constants of the operator: name, <type, value> */
 	map<string, string>    attributes_;                     /**< The list of attribute declarations (name, type) */
+	map<string, bool>    attributesAddSignal_;            /**< Vivado requires to add :signal, I have to read a VHDL book to understand how to do this cleany */
 	map<string, string>    types_;                          /**< The list of type declarations (name, type) */
 	map<pair<string,string>, string >  attributesValues_;   /**< attribute values <attribute name, object (component, signal, etc)> ,  value> */
 	bool                   hasRegistersWithoutReset_;       /**< True if the operator has registers without a reset */

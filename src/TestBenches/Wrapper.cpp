@@ -57,7 +57,10 @@ namespace flopoco{
 				idext = "o_" + s->getName();
 				outPortMap (op, s->getName(), idext);
 			}
+			// Adding an attribute so that Vivado doesn't connect the IOs to IOBuff
+			addAttribute("buffer_type",  "string",  s->getName(), "none", true );
 		}
+		
 
 		// The VHDL for the instance
 		vhdl << instance(op, "test");
