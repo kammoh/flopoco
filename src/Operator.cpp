@@ -1819,6 +1819,8 @@ namespace flopoco{
 		parsePortMappings(instance, outPortMaps, 2);
 
 		// THE BUG IS HERE: this instance will be created without knowing its parentOp_
+		// pass the parent operator through target (ugly hack to avoid having to add an argument to all the Operators)
+		target_->fillParentOpMailbox(this);
 		//create the operator
 		instance = instanceOpFactory->parseArguments(target_, parametersVector);
 

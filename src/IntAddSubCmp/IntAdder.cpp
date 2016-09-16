@@ -51,7 +51,7 @@ namespace flopoco {
 		int maxCycle = 0;
 		double maxCp = 0.0;
 
-		setParentOperator(parentOp);
+		setParentOperator(getTarget()->readParentOpMailbox());
 													
 		// Set up the IO signals
 		REPORT(DEBUG, " ***** Before addInput");

@@ -21,6 +21,7 @@ using namespace std;
 
 
 namespace flopoco{
+ 	typedef Operator* OperatorPtr;
 
 	extern int verbose;
 
@@ -1794,5 +1795,7 @@ namespace flopoco{
 	}
 
 	/*----------------------------------------------------------------*/
+	void Target::fillParentOpMailbox(OperatorPtr parentOp){ parentOpMailBox_=parentOp; };
+	OperatorPtr Target::readParentOpMailbox() {return parentOpMailBox_; }
 	/*----------------------------------------------------------------*/
 }

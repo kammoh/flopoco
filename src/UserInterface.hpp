@@ -24,7 +24,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 namespace flopoco
 {
 
-	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function to a function taking as parameters Target* etc., and returning an OperatorPtr
+	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function taking as parameters Target* etc., and returning an OperatorPtr
 	class OperatorFactory;
 	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
 

@@ -38,6 +38,7 @@ using namespace std;
 namespace flopoco{
 
 	class Operator;
+ 	typedef Operator* OperatorPtr;
 
 
 	/** Abstract target Class. All classes which model real chips inherit from this class */
@@ -663,8 +664,10 @@ namespace flopoco{
 		 */
 		virtual double getFFPerDecoder(int width);
 		/*------------------------------------------------------------*/
-
-
+		/*   Mailbox stuff   */
+		void fillParentOpMailbox(OperatorPtr parentOp);
+		OperatorPtr readParentOpMailbox();
+		
 		/*------------ Floorplanning Related Items -------------------*/
 		/**
 		 * NOTE: These variables should be set for each different FPGA
@@ -719,6 +722,7 @@ namespace flopoco{
 																		1 means: any sub-multiplier, even very small ones, go to DSP*/
 		bool   plainVHDL_;     /**< True if we want the VHDL code to be concise and readable, with + and * instead of optimized FloPoCo operators. */
 		bool   generateFigures_;  /**< If true, some operators may generate some figures in SVG format */
+		OperatorPtr parentOpMailBox_; /**< used to pass the parent op through the target argument to those who need it */
 	};
 
 }
