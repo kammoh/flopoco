@@ -67,9 +67,6 @@ namespace flopoco {
 
 		for(auto i: ioList_) {
 			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
-			// BUG HERE Cycle and CP are always 0
-			// ./flopoco dependencygraph=full frequency=200 target=kintex7 verbose=3 FPAdd we=8 wf=23  Wrapper
-			// look at the dot
 			if((i->getCycle() > maxCycle)
 					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCp)))	{
 				maxCycle = i->getCycle();

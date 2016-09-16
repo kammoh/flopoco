@@ -433,14 +433,14 @@ class Operator;
 		void setIncompleteDeclaration(bool newVal);
 
 		/**
-		 * Return the value of hasBeenImplemented
+		 * Return the value of hasBeenScheduled
 		 */
-		bool getHasBeenImplemented();
+		bool getHasBeenScheduled();
 
 		/**
-		 * Set the new value of hasBeenImplemented
+		 * Set the new value of hasBeenScheduled
 		 */
-		void setHasBeenImplemented(bool newVal);
+		void setHasBeenScheduled(bool newVal);
 
 		/**
 		 * Return the value of hasBeenDrawn

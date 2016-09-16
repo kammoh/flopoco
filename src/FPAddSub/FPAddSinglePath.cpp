@@ -77,10 +77,16 @@ namespace flopoco{
 
 		vhdl << tab << declare("addCmpOp1",wE+wF+3) << " <= '0'  & excExpFracX;"<<endl;
 		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
-
+		{Signal* i=getSignalByName("addCmpOp1");
+			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+	}
 //		IntAdder *cmpAdder = nullptr;
-		IntAdder *cmpAdder = (IntAdder*)newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2", "R=>cmpRes", "Cin=>'1'");
-
+#if 1
+		vhdl << tab << declare("addCmpCin") << " <= '1';"<<endl;
+		newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2,Cin=>addCmpCin", "R=>cmpRes");
+#else
+		newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2", "R=>cmpRes", "Cin=>'1'");
+#endif
 //		inPortMap(cmpAdder, "X", "addCmpOp1");
 //		inPortMap(cmpAdder, "Y", "addCmpOp2");
 //		inPortMapCst(cmpAdder, "Cin", "'1'");

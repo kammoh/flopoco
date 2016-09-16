@@ -523,11 +523,11 @@ namespace flopoco{
 	}
 
 
-	bool Signal::getHasBeenImplemented(){
+	bool Signal::getHasBeenScheduled(){
 		return hasBeenScheduled_;
 	}
 
-	void Signal::setHasBeenImplemented(bool newVal){
+	void Signal::setHasBeenScheduled(bool newVal){
 		hasBeenScheduled_ = newVal;
 	}
 

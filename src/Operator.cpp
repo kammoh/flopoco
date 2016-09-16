@@ -419,13 +419,11 @@ namespace flopoco{
 	{
 		Signal *connectionSignal = nullptr; // connectionSignal is the actual signal connected to portSignal
 		map<std::string, Signal*>::iterator itStart, itEnd;
-		REPORT(DEBUG, " ************* Entering connectIOFromPortMap");
 
 		//TODO: add more checks here
 		//if this is a global operator, then there is nothing to be done
 		if(parentOp_ == nullptr)
 			return;
-		REPORT(DEBUG, " ************* Staying in connectIOFromPortMap");
 
 		//check that portSignal is really an I/O signal
 		if((portSignal->type() != Signal::in) && (portSignal->type() != Signal::out))
@@ -462,7 +460,7 @@ namespace flopoco{
 					<< " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
 		}
 
-		REPORT(DEBUG, "   connected to " << connectionSignal->getName());  
+		REPORT(DEBUG, "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );  
 		//now we can connect the two signals
 		if(portSignal->type() == Signal::in)
 		{
@@ -495,8 +493,7 @@ namespace flopoco{
 			if(!parentOp_->isOperatorScheduled())
 				parentOp_->schedule();
 		}
-		//connect the inputs and outputs of the operator to the corresponding
-		//	signals in the parent operator
+		//connect the inputs and outputs of the operator to the corresponding	signals in the parent operator
 		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
 			connectIOFromPortMap(*it);
 		//	add the IO ports to the list of signals to be scheduled
@@ -509,19 +506,38 @@ namespace flopoco{
 			schedule();
 	}
 
-
-	void Operator::markOperatorUnscheduled()
-	{
+	
+	void Operator::markOperatorUnscheduled()	{
 		setIsOperatorScheduled(false);
 
-		for(unsigned i=0; i<ioList_.size(); i++)
-			ioList_[i]->setHasBeenImplemented(false);
-
-		for(unsigned i=0; i<signalList_.size(); i++)
-			signalList_[i]->setHasBeenImplemented(false);
-
-		for(unsigned i=0; i<subComponentList_.size(); i++)
-			subComponentList_[i]->markOperatorUnscheduled();
+		for(auto i: ioList_){
+			// TODO UGLY HACK SO THAT FPADD WORKS 
+		  if(// (i->getName() == "Cin" && i->predecessor(0)->getName() == "addCmpCin" ) ||
+				 i->type() == Signal::constant) {
+		    REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName()); 		
+		    i->setHasBeenScheduled(true);
+			}
+			else {
+		    REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName()); 		
+		    i->setHasBeenScheduled(false);
+			}
+	  } 
+		for(auto i: signalList_) {
+		  if(i->type() == Signal::constant) {
+		    REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName()); 		
+			}
+			else {
+		    REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName()); 		
+		    i->setHasBeenScheduled(false);
+			}
+		}
+	
+		for(auto i: subComponentList_) {
+			i->markOperatorUnscheduled();
+			for (auto j: i->ioList_) {
+					signalsToSchedule.push_back(j);
+			}
+		}
 	}
 
 
@@ -1453,7 +1469,7 @@ namespace flopoco{
 		try{
 			s = getSignalByName(actualSignalName);
 			//check that port can be scheduled
-			if(s->getHasBeenImplemented() == false){
+			if(s->getHasBeenScheduled() == false){
 				THROWERROR("ERROR in inPortMap() while trying to connect an input: "
 					<< componentPortName << " is to be connected to a signal not yet scheduled:"
 					<< s->getName() << ". Cannot continue as the architecture might depend on its timing." << endl);
@@ -1497,7 +1513,7 @@ namespace flopoco{
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
 		s->setCriticalPathContribution(0.0);
-		s->setHasBeenImplemented(true);
+		s->setHasBeenScheduled(true);
 
 		// add the newly created signal to signalMap and signalList
 		signalList_.push_back(s);
@@ -1557,7 +1573,7 @@ namespace flopoco{
 					//mark the signal as connected
 					isSignalMapped = true;
 					//check if the signal connected to the port has been scheduled
-					isPredScheduled = it->second->getHasBeenImplemented();
+					isPredScheduled = it->second->getHasBeenScheduled();
 					break;
 				}
 			}
@@ -1636,7 +1652,7 @@ namespace flopoco{
 				//the new signal doesn't add anything to the critical path
 				it->second->setCriticalPathContribution(0.0);
 				//add the newly created signal to the list of signals to schedule
-				it->second->setHasBeenImplemented(false);
+				it->second->setHasBeenScheduled(false);
 				if(op->isUnique())
 				{
 					signalsToSchedule.push_back(it->second);
@@ -1695,7 +1711,7 @@ namespace flopoco{
 					it->second->setCriticalPathContribution(0.0);
 
 					//add the newly created signal to the list of signals to schedule
-					it->second->setHasBeenImplemented(false);
+					it->second->setHasBeenScheduled(false);
 					signalsToSchedule.push_back(it->second);
 				}
 			}
@@ -1722,7 +1738,7 @@ namespace flopoco{
 						signalList_[i]->setCycle(0);
 						signalList_[i]->setCriticalPath(0.0);
 						signalList_[i]->setCriticalPathContribution(0.0);
-						signalList_[i]->setHasBeenImplemented(true);
+						signalList_[i]->setHasBeenScheduled(true);
 					}
 
 					newOp->ioList_[i]->addPredecessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
@@ -1798,6 +1814,7 @@ namespace flopoco{
 		vector<Signal*>::iterator itSignal;
 		string portName, signalName, mapping;
 
+		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
 		//parse the parameters
 		parametersVector.push_back(opName);
 		while(!parameters.empty())
@@ -1817,15 +1834,18 @@ namespace flopoco{
 		parsePortMappings(instance, inPortMapsCst, 1);
 		//parse the input port mappings
 		parsePortMappings(instance, outPortMaps, 2);
+		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
 
-		// THE BUG IS HERE: this instance will be created without knowing its parentOp_
 		// pass the parent operator through target (ugly hack to avoid having to add an argument to all the Operators)
 		target_->fillParentOpMailbox(this);
 		//create the operator
 		instance = instanceOpFactory->parseArguments(target_, parametersVector);
 
+		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
+
 		//create the instance
 		vhdl << this->instance(instance, instanceName);
+		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after instance()" );
 
 		return instance;
 	}
@@ -2923,8 +2943,8 @@ namespace flopoco{
 				lhs->addPredecessor(rhs, delay);
 				rhs->addSuccessor(lhs, delay);
 				//mark the signals as needing to be scheduled (possibly again)
-				lhs->setHasBeenImplemented(false);
-				rhs->setHasBeenImplemented(false);
+				lhs->setHasBeenScheduled(false);
+				rhs->setHasBeenScheduled(false);
 				//remove the current entry from the unresolved dependence table
 				unresolvedDependenceTable.erase(it);
 			}
@@ -2998,7 +3018,7 @@ namespace flopoco{
 		//if the operator is already scheduled, then there is nothing else to do
 		if(isOperatorScheduled())
 			return;
-
+		REPORT(DEBUG, "Really entering schedule()"); 
 		//extract the dependences between the operator's internal signals
 		extractSignalDependences();
 
@@ -3124,7 +3144,7 @@ namespace flopoco{
 
 						currentSignal->setCycle(currentSignal->getCycle() + 1);
 						currentSignal->setCriticalPath(0.0);
-						currentSignal->setHasBeenImplemented(false);
+						currentSignal->setHasBeenScheduled(false);
 					}
 					//prepare for the second pass
 					firstPass = false;
@@ -3145,22 +3165,21 @@ namespace flopoco{
 				}
 
 			return;
-		}
+		} // end if thus was a copy of a global operator
 
+
+
+		
 		//schedule each of the signals on the list of signals to be scheduled
-		for(unsigned int i=0; i<signalsToSchedule.size(); i++)
+		for(auto i: signalsToSchedule)
 		{
-			Signal *currentSignal = signalsToSchedule[i];
-
 			//schedule the current signal
-			setSignalTiming(currentSignal, true);
+			setSignalTiming(i, true);
 		}
 
 		//start the schedule on the children of the signals on the list of signals to be scheduled
-		for(unsigned int i=0; i<signalsToSchedule.size(); i++)
+		for(auto currentSignal: signalsToSchedule)
 		{
-			Signal *currentSignal = signalsToSchedule[i];
-
 			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
 				scheduleSignal(currentSignal->successor(j), true);
 		}
@@ -3173,19 +3192,21 @@ namespace flopoco{
 	
 	void Operator::scheduleSignal(Signal *targetSignal, bool override)
 	{
+		REPORT(DEBUG, "scheduleSignal("<< targetSignal->getName() << ")");
 		//TODO: add more checks here
-
 		//check if the signal has already been scheduled
-		if((targetSignal->getHasBeenImplemented() == true) && (override == false))
+		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
 			//there is nothing else to be done
 			return;
+		REPORT(DEBUG, "scheduleSignal1("<< targetSignal->getName() << ")");
 
 		//check if all the signal's predecessors have been scheduled
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
-			if(targetSignal->predecessor(i)->getHasBeenImplemented() == false)
+			if(targetSignal->predecessor(i)->getHasBeenScheduled() == false)
 				//not all predecessors are scheduled, so the signal cannot be scheduled
 				return;
 
+		REPORT(DEBUG, "scheduleSignal2("<< targetSignal->getName() << ")");
 		//if the preconditions are satisfied, schedule the signal
 		setSignalTiming(targetSignal, override);
 
@@ -3216,7 +3237,7 @@ namespace flopoco{
 			//check if all the inputs of the operator have been implemented
 			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
 				if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in)
-						&& (targetSignal->parentOp()->getIOListSignal(i)->getHasBeenImplemented() == false))
+						&& (targetSignal->parentOp()->getIOListSignal(i)->getHasBeenScheduled() == false))
 				{
 					allInputsScheduled = false;
 					break;
@@ -3267,7 +3288,7 @@ namespace flopoco{
 
 						currentSignal->setCycle(currentSignal->getCycle() + 1);
 						currentSignal->setCriticalPath(0.0);
-						currentSignal->setHasBeenImplemented(false);
+						currentSignal->setHasBeenScheduled(false);
 					}
 
 					//mark the operator as not having been implemented
@@ -3337,9 +3358,10 @@ namespace flopoco{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
+		REPORT(DEBUG, "setSignalTiming("<< targetSignal->getName()<<")");
 
 		//check if the signal has already been scheduled
-		if((targetSignal->getHasBeenImplemented() == true) && (override == false))
+		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
 			//there is nothing else to be done
 			return;
 
@@ -3351,6 +3373,8 @@ namespace flopoco{
 			maxCycle = targetSignal->predecessor(0)->getCycle() + max(0, targetSignal->predecessorPair(0)->second);
 			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
 		}
+
+		REPORT(DEBUG, "Really doing setSignalTiming("<< targetSignal->getName()<<")");
 
 		//determine the lexicographic maximum cycle and critical path of the signal's parents
 		for(unsigned int i=1; i<targetSignal->predecessors()->size(); i++)
@@ -3436,7 +3460,7 @@ namespace flopoco{
 					targetSignal->getCycle() - targetSignal->predecessor(i)->getCycle());
 		}
 
-		targetSignal->setHasBeenImplemented(true);
+		targetSignal->setHasBeenScheduled(true);
 	}
 
 
@@ -3896,7 +3920,7 @@ namespace flopoco{
 				tmpSignal->setCycle(0);
 				tmpSignal->setCriticalPath(0.0);
 				tmpSignal->setCriticalPathContribution(0.0);
-				tmpSignal->setHasBeenImplemented(true);
+				tmpSignal->setHasBeenScheduled(true);
 			}
 
 			newSignalList.push_back(tmpSignal);
@@ -3916,7 +3940,7 @@ namespace flopoco{
 				tmpSignal->setCycle(0);
 				tmpSignal->setCriticalPath(0.0);
 				tmpSignal->setCriticalPathContribution(0.0);
-				tmpSignal->setHasBeenImplemented(true);
+				tmpSignal->setHasBeenScheduled(true);
 			}
 
 			newIOList.push_back(tmpSignal);
@@ -3976,7 +4000,7 @@ namespace flopoco{
 					signalList_[i]->setCycle(0);
 					signalList_[i]->setCriticalPath(0.0);
 					signalList_[i]->setCriticalPathContribution(0.0);
-					signalList_[i]->setHasBeenImplemented(true);
+					signalList_[i]->setHasBeenScheduled(true);
 				}
 
 				newPredecessors.push_back(make_pair(getSignalByName(tmpPair.first->getName()), tmpPair.second));
@@ -4053,7 +4077,7 @@ namespace flopoco{
 						currentIO->setCycle(0);
 						currentIO->setCriticalPath(0.0);
 						currentIO->setCriticalPathContribution(0.0);
-						currentIO->setHasBeenImplemented(true);
+						currentIO->setHasBeenScheduled(true);
 					}
 
 					if(currentIO->type() == Signal::in)
