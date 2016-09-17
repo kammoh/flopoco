@@ -28,7 +28,7 @@ namespace flopoco{
 			maxFrequencyMHz_		= 741;
 
 			/////// Architectural parameters
-			lutInputs_ = 6;
+			lutInputs_ = 5;
 			possibleDSPConfig_.push_back(make_pair(25,18));
 			whichDSPCongfigCanBeUnsigned_.push_back(false);
 			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 9
@@ -37,20 +37,26 @@ namespace flopoco{
 
 	Kintex7::~Kintex7() {};
 
-	//TODO
 	double Kintex7::logicDelay(int inputs){
 		double delay;
-		if(inputs <= lutInputs())
-			delay= addRoutingDelay(lutDelay_);
-		else
-			delay= addRoutingDelay(lutDelay_ * (inputs -lutInputs() + 1));
+		do {
+			if(inputs <= 5) {
+				delay= addRoutingDelay(lut5Delay_);
+				inputs=0;
+			}
+			else {
+				delay=addRoutingDelay(lut6Delay_);
+				inputs -= 6;
+			}
+		}
+		while(inputs>0);
 		TARGETREPORT("logicDelay(" << inputs << ") = " << delay*1e9 << " ns.");
 		return  delay; 
 	}
 
 
 	double Kintex7::adderDelay(int size, bool addRoutingDelay_) {
-		double delay = adderConstantDelay_ + ((size-1)/4)* carry4Delay_;
+		double delay = adderConstantDelay_ + ((size)/4 -1)* carry4Delay_;
 		if(addRoutingDelay_) {
 			delay=addRoutingDelay(delay);
 			TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
@@ -61,19 +67,19 @@ namespace flopoco{
 	
 	double Kintex7::eqComparatorDelay(int size){
 		// TODO Refine
-		return addRoutingDelay( lutDelay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_); 
+		return addRoutingDelay( lut5Delay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_); 
 	}
 	
 	double Kintex7::eqConstComparatorDelay(int size){
 		// TODO refine
-		return addRoutingDelay( lutDelay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_ ); 
+		return addRoutingDelay( lut5Delay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_ ); 
 	}
 	double Kintex7::ffDelay() {
 		return ffDelay_;
 	};
 	
 	double Kintex7::addRoutingDelay(double d) {
-		return(3.0*d);
+		return(d+ typicalLocalRoutingDelay_);
 	};
 	
 	
@@ -84,7 +90,7 @@ namespace flopoco{
 	};
 	
 	double Kintex7::lutDelay(){
-		return lutDelay_;
+		return lut5Delay_;
 	};
 	
 	long Kintex7::sizeOfMemoryBlock()

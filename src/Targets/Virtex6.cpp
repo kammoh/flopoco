@@ -147,7 +147,7 @@ namespace flopoco{
 		return delay;
 	}
 	double Virtex6::ffDelay() {
-		return fdCtoQ_ + ff_net_ + ffd_;
+		return fdCtoQ_ + ffd_; // removed ff_net_ 
 	};
 
 	double Virtex6::carryPropagateDelay() {

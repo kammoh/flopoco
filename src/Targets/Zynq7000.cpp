@@ -47,14 +47,14 @@ namespace flopoco{
 		if(inputs <= lutInputs())
 			delay= addRoutingDelay(lutDelay_);
 		else
-			delay= addRoutingDelay(lutDelay_ * (inputs -lutInputs() + 1));
+			delay= addRoutingDelay(lutDelay_) * (inputs -lutInputs() + 1);
 		TARGETREPORT("logicDelay(" << inputs << ") = " << delay*1e9 << " ns.");
 		return  delay; 
 	}
 
 
 	double Zynq7000::adderDelay(int size, bool addRoutingDelay_) {
-		double delay = adderConstantDelay_ + ((size-1)/4)* carry4Delay_;
+		double delay = adderConstantDelay_ + ((size)/4 -1)* carry4Delay_;
 		if(addRoutingDelay_) {
 			delay=addRoutingDelay(delay);
 			TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");

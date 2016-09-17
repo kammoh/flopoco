@@ -82,11 +82,13 @@ namespace flopoco{
 	private:
 
 		// The following is copypasted from Vivado timing reports
-		const double lutDelay_ = 0.124e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
+		const double lut5Delay_ = 0.043e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
+		const double lut6Delay_ = 0.119e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
 		const double ffDelay_ = 0.216e-9;       /**< The delay of a flip-flop, without any routing  (cut from vivado timing report)*/
 		const double carry4Delay_ = 0.049e-9;    /**< The delay in the middle of the fast carry chain   */
-		const double adderConstantDelay_  = 0.043e-9 + 0.188e-9 + 0.145e-9; /**< includes a LUT delay and the initial and final carry4delays*/
+		const double adderConstantDelay_  =  0.124e-9 + 0.260e-9 + 0.159e-9; /**< includes a LUT delay and the initial and final carry4delays*/
 		const double fanoutConstant_ = 1e-9/65 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65 */
+		const double typicalLocalRoutingDelay_ = 0.5e-9;
 		const double DSPMultiplierDelay_ = 0; // TODO
 		const double RAMDelay_ = 0; // TODO
 		const double RAMToLogicWireDelay_= 0; // TODO
