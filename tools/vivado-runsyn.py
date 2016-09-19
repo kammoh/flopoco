@@ -14,9 +14,6 @@ import string
 import subprocess
 import argparse
 
-def usage():
-    print "Usage: \nvivado-runsyn\n" 
-    sys.exit()
 
     
 def get_compile_info(filename):
@@ -64,6 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--frequency', help='Objective frequency (default is read from the VHDL file)')
 
     options=parser.parse_args()
+
 
     if (options.implement==True):
         synthesis_only=False

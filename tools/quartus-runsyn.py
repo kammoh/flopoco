@@ -12,12 +12,12 @@ import string
 import subprocess
 import argparse
 
-def usage():
-    print "Usage: \nvivado-runsyn\n" 
-    sys.exit()
 
-def get_last_entity(filename):
+
+def get_compile_info(filename):
     vhdl=open(filename).read()
+
+    # last entity
     endss = [match.end() for match in re.finditer("entity", vhdl)] # list of endpoints of match of "entity"
     last_entity_name_start = endss[-2] +1 # skip the space
     i = last_entity_name_start
@@ -25,7 +25,26 @@ def get_last_entity(filename):
         i=i+1
     last_entity_name_end = i
     entityname=vhdl[last_entity_name_start:last_entity_name_end]
-    return entityname
+
+    # target 
+    endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
+    target_name_start = endss[-1] +1
+    i = target_name_start
+    while(vhdl[i]!=" "):
+        i=i+1
+    target_name_end = i
+    targetname=vhdl[target_name_start:target_name_end]
+    
+    # the frequency follows but we don't need to read it so far
+    frequency_start=target_name_end+3 #  skip " @ "
+    i = frequency_start
+    while(vhdl[i]!=" " and vhdl[i]!="M"): # 400MHz or 400 MHz
+        i=i+1
+    frequency_end = i
+    frequency = vhdl[frequency_start:frequency_end]
+
+    return (entityname, targetname, frequency)
+
 
 
 
@@ -35,28 +54,39 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='This is an helper script for FloPoCo that launches Xilinx Vivado and extracts resource consumption and critical path information')
 #    parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
-    parser.add_argument('-f', '--file', help='File name (default flopoco.vhdl)')
+    parser.add_argument('-v', '--vhdl', help='VHDL file name (default flopoco.vhdl)')
     parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
-    parser.add_argument('-t', '--target', help='Target name (default is StratixV)')
+    parser.add_argument('-t', '--target', help='Target name (default is read from the VHDL file)')
+    parser.add_argument('-f', '--frequency', help='Objective frequency (default is read from the VHDL file)')
 
     options=parser.parse_args()
-
-    if (options.file==None):
+    
+    if (options.vhdl==None):
         filename = "flopoco.vhdl"
     else:
-        filename = options.file
+        filename = options.vhdl
 
+
+    # Read from the vhdl file the entity name and target hardware and freqyency
+    (entity_in_file, target_in_file, frequency_in_file) =  get_compile_info(filename)
+
+# 
     if (options.entity==None):
-        entity = get_last_entity(filename)
+        entity = entity_in_file
     else:
         entity=options.entity
         
+    if (options.frequency==None):
+        frequency = frequency_in_file
+    else:
+        frequency = options.frequency
+
     if (options.target==None):
-        target = "StratixV"
+        target = target_in_file
     else:
         target=options.target
 
-    if (target=="StratixV"):
+    if (target.lower()=="stratixv"):
         part="5SGXEA3K1F35C1"
         fmax_string="; Fmax Summary"
     # TODO manage other targets, too
