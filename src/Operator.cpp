@@ -2195,13 +2195,14 @@ namespace flopoco{
 		}
 		file.close();
 
-		// For quartus prime				
+#if 0
+		// For quartus prime	-- no longer needed as quartus_runsyn reads the frequency from the comments in the VHDL and create this file.
 		file.open("/tmp/"+getName()+".sdc", ios::out);
 		file << "# This file was created by FloPoCo to be used by the quartus_runsyn utility. Sorry to clutter your tmp." << endl;
 		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]"
 				 << endl;
 		file.close();
-
+#endif
 	}
 
 	
