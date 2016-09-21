@@ -1847,7 +1847,8 @@ namespace flopoco{
 				Signal *inputSignal = op->getIOListSignal(i);
 
 				inputSignal->setCycle(maxCycle);
-				inputSignal->setCriticalPath(0.0);
+				//inputSignal->setCriticalPath(0.0);
+				inputSignal->setCriticalPath(op->getTarget()->ffDelay());
 				inputSignal->setHasBeenScheduled(true);
 
 				//update the lifespan of inputSignal's predecessors
@@ -1870,6 +1871,7 @@ namespace flopoco{
 
 		while(rescheduleNeeded == true)
 		{
+			//TODO: rescheduling the inputs is not needed, as they have just been synchronized to the same cycle
 			//first, do an initial schedule of the circuit
 			//	schedule the inputs
 			/*
@@ -1920,7 +1922,8 @@ namespace flopoco{
 					{
 						//if we have to delay the input, the we need to reset the critical path, as well
 						i->setCycle(i->getCycle() + 1);
-						i->setCriticalPath(0.0);
+						//i->setCriticalPath(0.0);
+						i->setCriticalPath(op->getTarget()->ffDelay());
 
 						//update the lifespan of inputSignal's predecessors
 						for(auto j : *i->predecessors())
@@ -1932,6 +1935,8 @@ namespace flopoco{
 							j.first->updateLifeSpan(i->getCycle() - j.first->getCycle());
 						}
 					}
+				//TODO: the operator doesn't need to be marked unscheduled,
+				//		as it will be forced to reschedule in the next pass
 				/*
 				op->markOperatorUnscheduled();
 				*/
