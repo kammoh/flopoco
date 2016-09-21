@@ -532,6 +532,30 @@ namespace flopoco{
 	}
 
 
+	bool Signal::unscheduleSignal(){
+		bool allPredecessorsConstant = true;
+
+		for(auto j: predecessors_){
+			if(j.first->type() != Signal::constant)
+			{
+				allPredecessorsConstant = false;
+				break;
+			}
+		}
+
+		if((predecessors_.size() == 0) && (type_ != Signal::constant))
+			allPredecessorsConstant = false;
+
+		if(allPredecessorsConstant){
+			setHasBeenScheduled(true);
+		}else{
+			setHasBeenScheduled(false);
+		}
+
+		return allPredecessorsConstant;
+	}
+
+
 	bool Signal::getHasBeenDrawn(){
 		return hasBeenDrawn_;
 	}

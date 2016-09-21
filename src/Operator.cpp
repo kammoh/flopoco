@@ -507,35 +507,46 @@ namespace flopoco{
 	}
 
 	
-	void Operator::markOperatorUnscheduled()	{
+	void Operator::markOperatorUnscheduled()
+	{
 		setIsOperatorScheduled(false);
 
 		for(auto i: ioList_){
-			// TODO UGLY HACK SO THAT FPADD WORKS 
-		  if(// (i->getName() == "Cin" && i->predecessor(0)->getName() == "addCmpCin" ) ||
-				 i->type() == Signal::constant) {
-		    REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName()); 		
-		    i->setHasBeenScheduled(true);
+			if(i->type() == Signal::constant) {
+				REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+				i->setHasBeenScheduled(true);
 			}
 			else {
-		    REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName()); 		
-		    i->setHasBeenScheduled(false);
-			}
-	  } 
-		for(auto i: signalList_) {
-		  if(i->type() == Signal::constant) {
-		    REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName()); 		
-			}
-			else {
-		    REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName()); 		
-		    i->setHasBeenScheduled(false);
+				bool allPredecessorsConstant = i->unscheduleSignal();
+
+				if(allPredecessorsConstant){
+					REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+				}else{
+					REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName());
+				}
 			}
 		}
-	
+
+		for(auto i: signalList_) {
+			if(i->type() == Signal::constant) {
+				REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+				i->setHasBeenScheduled(true);
+			}
+			else {
+				bool allPredecessorsConstant = i->unscheduleSignal();
+
+				if(allPredecessorsConstant){
+					REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+				}else{
+					REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName());
+				}
+			}
+		}
+
 		for(auto i: subComponentList_) {
 			i->markOperatorUnscheduled();
 			for (auto j: i->ioList_) {
-					signalsToSchedule.push_back(j);
+				signalsToSchedule.push_back(j);
 			}
 		}
 	}
@@ -1539,10 +1550,10 @@ namespace flopoco{
 
 		//check that the operator being instantiated has the parent operator set to this operator
 		//	if not, then set it and restart the scheduling for the subcomponent
-		if(op->parentOp_ == nullptr)
+		if((op->isUnique()) & (op->parentOp_ == nullptr))
 		{
 			op->parentOp_ = this;
-			op->reconnectIOPorts();
+			op->reconnectIOPorts(true);
 		}
 
 		// TODO add more checks here
@@ -1672,7 +1683,7 @@ namespace flopoco{
 		//	to the operator list. If it isn't, then insert the copy, instead
 		bool newOpFirstAdd = true;
 
-		if(!op->isUnique())
+		if(op->isShared())
 		{
 			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
 				if(UserInterface::globalOpList[i]->getName() == op->getName())
@@ -1686,94 +1697,9 @@ namespace flopoco{
 		//	either the operator, or a copy of the operator
 		Operator *opCpy;
 
-		if(!op->isUnique())
+		if(op->isShared())
 		{
-			//create a new operator
-			Operator *newOp = new Operator(op->getTarget());
-
-			//deep copy the original operator
-			//	this should also connect the inputs/outputs of the new operator to the right signals
-			newOp->deepCloneOperator(op);
-
-			//reconnect the inputs/outputs to the corresponding external signals
-			newOp->reconnectIOPorts(false);
-
-			//recreate the connection of the outputs and the corresponding dependences
-			for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
-			{
-				//the signal connected to the output might be an incompletely declared signal,
-				//	so its information must be completed and it must be properly connected now
-				if(it->second->getIncompleteDeclaration() == true)
-				{
-					it->second->addPredecessor(newOp->getSignalByName(it->first));
-					newOp->getSignalByName(it->first)->addSuccessor(it->second);
-
-					it->second->setCriticalPathContribution(0.0);
-
-					//add the newly created signal to the list of signals to schedule
-					it->second->setHasBeenScheduled(false);
-					signalsToSchedule.push_back(it->second);
-				}
-			}
-
-			//reconnect the inputs/outputs to the corresponding internal signals
-			for(unsigned int i=0; i<newOp->ioList_.size(); i++)
-			{
-				vector<pair<Signal*, int>> newPredecessors, newSuccessors;
-				Signal *originalSignal = op->getSignalByName(newOp->ioList_[i]->getName());
-
-				//create the new list of predecessors for the signal currently processed
-				//	only connect to internal signals
-				for(unsigned int j=0; j<originalSignal->predecessors()->size(); j++)
-				{
-					pair<Signal*, int> tmpPair = *(originalSignal->predecessorPair(j));
-
-					//only connect to internal signals
-					if(tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName())
-						continue;
-
-					//signals connected only to constants are already scheduled
-					if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
-					{
-						signalList_[i]->setCycle(0);
-						signalList_[i]->setCriticalPath(0.0);
-						signalList_[i]->setCriticalPathContribution(0.0);
-						signalList_[i]->setHasBeenScheduled(true);
-					}
-
-					newOp->ioList_[i]->addPredecessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
-					newOp->getSignalByName(tmpPair.first->getName())->addSuccessor(newOp->ioList_[i], tmpPair.second);
-				}
-
-				//create the new list of successors for the signal currently processed
-				//	only connect to internal signals
-				for(unsigned int j=0; j<originalSignal->successors()->size(); j++)
-				{
-					pair<Signal*, int> tmpPair = *(originalSignal->successorPair(j));
-
-					//only connect to internal signals
-					if(tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName())
-						continue;
-
-					newOp->ioList_[i]->addSuccessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
-					newOp->getSignalByName(tmpPair.first->getName())->addPredecessor(newOp->ioList_[i], tmpPair.second);
-				}
-			}
-
-			//set a new name for the copy of the operator
-			newOp->setName(newOp->getName() + "_copy_" + vhdlize(getNewUId()));
-
-			//start the scheduling for the newly created operator
-			newOp->schedule();
-
-			//mark the subcomponent as already implemented
-			newOp->setIsOperatorImplemented(true);
-
-			//mark the subcomponent as drawn
-			newOp->setIsOperatorDrawn(true);
-
-			//save a reference
-			opCpy = newOp;
+			opCpy = newSharedInstance(op);
 
 			//if this is the first instance of a global operator, then add
 			//	the original to the global operator list, as well
@@ -1786,6 +1712,14 @@ namespace flopoco{
 			//save a reference
 			opCpy = op;
 		}
+
+		//schedule the subcomponent's inputs
+		for(auto i : opCpy->ioList_)
+			if(i->type() == Signal::in)
+				opCpy->setSignalTiming(i, true);
+
+		//schedule the subcomponent
+		opCpy->schedule();
 
 		//add the operator to the subcomponent list/map
 		subComponentList_.push_back(opCpy);
@@ -1803,6 +1737,208 @@ namespace flopoco{
 
 
 		return o.str();
+	}
+
+
+	OperatorPtr Operator::newSharedInstance(Operator *originalOperator)
+	{
+		//create a new operator
+		Operator *newOp = new Operator(originalOperator->getTarget());
+
+		//deep copy the original operator
+		//	this should also connect the inputs/outputs of the new operator to the right signals
+		newOp->deepCloneOperator(originalOperator);
+
+		//reconnect the inputs/outputs to the corresponding external signals
+		newOp->setParentOperator(this);
+		newOp->reconnectIOPorts(false);
+
+		//recreate the connection of the outputs and the corresponding dependences
+		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+		{
+			//the signal connected to the output might be an incompletely declared signal,
+			//	so its information must be completed and it must be properly connected now
+			if(it->second->getIncompleteDeclaration() == true)
+			{
+				it->second->addPredecessor(newOp->getSignalByName(it->first));
+				newOp->getSignalByName(it->first)->addSuccessor(it->second);
+
+				it->second->setCriticalPathContribution(0.0);
+
+				//add the newly created signal to the list of signals to schedule
+				it->second->setHasBeenScheduled(false);
+				signalsToSchedule.push_back(it->second);
+			}
+		}
+
+		//reconnect the inputs/outputs to the corresponding internal signals
+		for(unsigned int i=0; i<newOp->ioList_.size(); i++)
+		{
+			vector<pair<Signal*, int>> newPredecessors, newSuccessors;
+			Signal *originalSignal = originalOperator->getSignalByName(newOp->ioList_[i]->getName());
+
+			//create the new list of predecessors for the signal currently processed
+			//	only connect to internal signals
+			for(unsigned int j=0; j<originalSignal->predecessors()->size(); j++)
+			{
+				pair<Signal*, int> tmpPair = *(originalSignal->predecessorPair(j));
+
+				//only connect to internal signals
+				if(tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName())
+					continue;
+
+				//signals connected only to constants are already scheduled
+				if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
+				{
+					signalList_[i]->setCycle(0);
+					signalList_[i]->setCriticalPath(0.0);
+					signalList_[i]->setCriticalPathContribution(0.0);
+					signalList_[i]->setHasBeenScheduled(true);
+				}
+
+				newOp->ioList_[i]->addPredecessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
+				newOp->getSignalByName(tmpPair.first->getName())->addSuccessor(newOp->ioList_[i], tmpPair.second);
+			}
+
+			//create the new list of successors for the signal currently processed
+			//	only connect to internal signals
+			for(unsigned int j=0; j<originalSignal->successors()->size(); j++)
+			{
+				pair<Signal*, int> tmpPair = *(originalSignal->successorPair(j));
+
+				//only connect to internal signals
+				if(tmpPair.first->parentOp()->getName() != originalSignal->parentOp()->getName())
+					continue;
+
+				newOp->ioList_[i]->addSuccessor(newOp->getSignalByName(tmpPair.first->getName()), tmpPair.second);
+				newOp->getSignalByName(tmpPair.first->getName())->addPredecessor(newOp->ioList_[i], tmpPair.second);
+			}
+		}
+
+		//set a new name for the copy of the operator
+		newOp->setName(newOp->getName() + "_copy_" + vhdlize(getNewUId()));
+
+		//mark the subcomponent as drawn
+		newOp->setIsOperatorDrawn(true);
+
+		return newOp;
+	}
+
+
+	void Operator::scheduleSharedInstance(Operator *op, Operator *originalOperator)
+	{
+		//TODO: for debug purposes
+		string opName = op->getName();
+
+		int maxCycle = 0;
+
+		//determine the maximum input cycle
+		for(unsigned int i=0; i<op->getIOList()->size(); i++)
+			if((op->getIOListSignal(i)->type() == Signal::in)
+					&& (op->getIOListSignal(i)->getCycle() > maxCycle))
+				maxCycle = op->getIOListSignal(i)->getCycle();
+
+		//set all the inputs to the maximum cycle
+		for(unsigned int i=0; i<op->getIOList()->size(); i++)
+			if((op->getIOListSignal(i)->type() == Signal::in) &&
+					(op->getIOListSignal(i)->getCycle() != maxCycle))
+			{
+				//if we have to delay the input, then we need to reset the critical path, as well
+				Signal *inputSignal = op->getIOListSignal(i);
+
+				inputSignal->setCycle(maxCycle);
+				inputSignal->setCriticalPath(0.0);
+				inputSignal->setHasBeenScheduled(true);
+
+				//update the lifespan of inputSignal's predecessors
+				for(unsigned int i=0; i<inputSignal->predecessors()->size(); i++)
+				{
+					//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+					if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
+							(inputSignal->predecessor(i)->type() == Signal::out))
+						continue;
+					inputSignal->predecessor(i)->updateLifeSpan(
+							inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
+				}
+			}
+
+		//	schedule the operator
+		//		in the new schedule signals must be distributed into cycles
+		//		in the same way as in the original operator
+		bool rescheduleNeeded = true;
+		bool firstSchedulePass = true;
+
+		while(rescheduleNeeded == true)
+		{
+			//first, do an initial schedule of the circuit
+			//	schedule the inputs
+			/*
+			for(auto i : op->ioList_)
+				if(i->type() == Signal::in)
+					setSignalTiming(i, true);
+			*/
+			//	schedule the successors of the inputs
+			for(auto i : op->ioList_)
+				if(i->type() == Signal::in)
+					for(auto j : *i->successors())
+						scheduleSignal(j.first, true);
+
+			//if this is the second pass, then there is nothing else to be done
+			if(!firstSchedulePass)
+				break;
+
+			//check if the schedule of the new instance matches with
+			//	the schedule of the original operator
+			rescheduleNeeded = false;
+			for(auto i : op->signalList_)
+			{
+				if(i->getCycle()-maxCycle
+						!= originalOperator->getSignalByName(i->getName())->getCycle())
+				{
+					rescheduleNeeded = true;
+					firstSchedulePass = false;
+					break;
+				}
+			}
+			for(auto i : op->ioList_)
+			{
+				if((i->type() == Signal::out) &&
+						(i->getCycle()-maxCycle
+								!= originalOperator->getSignalByName(i->getName())->getCycle()))
+				{
+					rescheduleNeeded = true;
+					firstSchedulePass = false;
+					break;
+				}
+			}
+
+			//if the schedule was not successful, then advance the inputs of the new instance
+			if(rescheduleNeeded == true)
+			{
+				for(auto i : op->ioList_)
+					if(i->type() == Signal::in)
+					{
+						//if we have to delay the input, the we need to reset the critical path, as well
+						i->setCycle(i->getCycle() + 1);
+						i->setCriticalPath(0.0);
+
+						//update the lifespan of inputSignal's predecessors
+						for(auto j : *i->predecessors())
+						{
+							//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
+							if((i->parentOp()->getName() != j.first->parentOp()->getName()) &&
+									(i->type() == Signal::out))
+								continue;
+							j.first->updateLifeSpan(i->getCycle() - j.first->getCycle());
+						}
+					}
+				/*
+				op->markOperatorUnscheduled();
+				*/
+			}
+		}
+
+		op->setIsOperatorImplemented(true);
 	}
 
 
@@ -3019,7 +3155,7 @@ namespace flopoco{
 		//if the operator is already scheduled, then there is nothing else to do
 		if(isOperatorScheduled())
 			return;
-		//REPORT(DEBUG, "Really entering schedule()"); 
+
 		//extract the dependences between the operator's internal signals
 		extractSignalDependences();
 
@@ -3027,11 +3163,12 @@ namespace flopoco{
 		//	if this is a global operator, and this is the global copy, then schedule it
 		//	if this is a global operator, but a local copy, then use the
 		//	scheduling of the global copy
+
 		//test if this operator is a global operator
 		bool isGlobalOperator = false;
 		string globalOperatorName = getName();
 
-		//this might be a copy of the global operator, so try to remove the suffix
+		//this might be a copy of the global shared operator, so try to remove the suffix
 		if(globalOperatorName.find("_copy_") != string::npos)
 			globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_copy_"));
 
@@ -3043,10 +3180,12 @@ namespace flopoco{
 				break;
 			}
 
-		//if this is a global operator, and this is a copy, then just copy the schedule
-		//	of the global copy
+		//if this is a shared operator, and this is a copy, then schedule the operator
+		//	according to the original operator
 		if(isGlobalOperator && (getName().find("_copy_") != string::npos))
 		{
+			//TODO: test no longer needed, as scheduleSharedInstance() will advance the inputs, if needed
+			/*
 			//check that all the inputs are at the same cycle
 			for(unsigned int i=0; i<ioList_.size(); i++)
 				for(unsigned int j=i+1; j<ioList_.size(); j++)
@@ -3055,6 +3194,7 @@ namespace flopoco{
 								+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
 								+ " but signal " + ioList_[j]->getName() + " is at cycle "
 								+ vhdlize(ioList_[j]->getCycle()));
+			*/
 
 			Operator* originalOperator;
 
@@ -3066,110 +3206,10 @@ namespace flopoco{
 					break;
 				}
 
-			//set the timing for all the signals of the operator,
-			//	based on the timing of the global copy of the operator
-			//if, the timing of the signals ends up different from the original,
-			//	then we must advance the inputs by one cycle
-			bool rescheduleNeeded = false;
-			bool firstPass = true;
-
-			do
-			{
-				for(unsigned int i=0; i<signalList_.size(); i++)
-				{
-					Signal *currentSignal = signalList_[i];
-					Signal *originalSignal = originalOperator->getSignalByName(currentSignal->getName());
-
-					//for input ports, only update the lifespan
-					if(currentSignal->type() == Signal::in)
-					{
-						currentSignal->updateLifeSpan(originalSignal->getLifeSpan());
-						continue;
-					}
-
-					setSignalTiming(currentSignal, true);
-				}
-				//schedule the outputs
-				for(unsigned int i=0; i<ioList_.size(); i++)
-					if(ioList_[i]->type() == Signal::in)
-						ioList_[i]->updateLifeSpan(originalOperator->getSignalByName(ioList_[i]->getName())->getLifeSpan());
-					else if(ioList_[i]->type() == Signal::out)
-						scheduleSignal(ioList_[i], true);
-
-				if(!firstPass)
-					break;
-
-				//check that the schedule is coherent to the one
-				//	of the original operator
-				for(unsigned int i=0; i<signalList_.size(); i++)
-				{
-					Signal *currentSignal = signalList_[i];
-					Signal *originalSignal = originalOperator->getSignalByName(currentSignal->getName());
-					int cycleDiff = 0, origCycleDiff = 0;
-
-					//determine the largest cycle difference between the original signal
-					//	and one of it's predecessors
-					for(unsigned j=0; j<originalSignal->predecessors()->size(); j++)
-					{
-						Signal *currentPredecessor = originalSignal->predecessor(j);
-
-						if(originalSignal->getCycle()-currentPredecessor->getCycle() > origCycleDiff)
-							origCycleDiff = originalSignal->getCycle()-currentPredecessor->getCycle();
-					}
-
-					for(unsigned j=0; j<currentSignal->predecessors()->size(); j++)
-					{
-						Signal *currentPredecessor = currentSignal->predecessor(j);
-
-						if(currentSignal->getCycle()-currentPredecessor->getCycle() > cycleDiff)
-							cycleDiff = currentSignal->getCycle()-currentPredecessor->getCycle();
-					}
-
-					if(cycleDiff != origCycleDiff)
-					{
-						rescheduleNeeded = true;
-						break;
-					}
-				}
-
-				if(firstPass && rescheduleNeeded)
-				{
-					//advance the cycle of the inputs
-					for(unsigned int i=0; i<ioList_.size(); i++)
-					{
-						Signal *currentSignal = ioList_[i];
-
-						//only modify the inputs
-						if(currentSignal->type() != Signal::in)
-							continue;
-
-						currentSignal->setCycle(currentSignal->getCycle() + 1);
-						currentSignal->setCriticalPath(0.0);
-						currentSignal->setHasBeenScheduled(false);
-					}
-					//prepare for the second pass
-					firstPass = false;
-				}
-
-			}while(rescheduleNeeded);
-
-			//the operator is now scheduled
-			//	so mark it as scheduled, and return
-			setIsOperatorScheduled(true);
-
-			//start scheduling the signals connected to the output of the sub-component
-			for(unsigned int i=0; i<ioList_.size(); i++)
-				if(ioList_[i]->type() == Signal::out)
-				{
-					for(unsigned int j=0; j<ioList_[i]->successors()->size(); j++)
-						scheduleSignal(ioList_[i]->successor(j), true);
-				}
+			scheduleSharedInstance(this, originalOperator);
 
 			return;
-		} // end if thus was a copy of a global operator
-
-
-
+		}
 		
 		//schedule each of the signals on the list of signals to be scheduled
 		for(auto i: signalsToSchedule)
@@ -3181,8 +3221,8 @@ namespace flopoco{
 		//start the schedule on the children of the signals on the list of signals to be scheduled
 		for(auto currentSignal: signalsToSchedule)
 		{
-			for(unsigned j=0; j<currentSignal->successors()->size(); j++)
-				scheduleSignal(currentSignal->successor(j), true);
+			for(auto successor : *currentSignal->successors())
+				scheduleSignal(successor.first, true);
 		}
 
 		//clear the list of signals to schedule
@@ -3193,13 +3233,11 @@ namespace flopoco{
 	
 	void Operator::scheduleSignal(Signal *targetSignal, bool override)
 	{
-		// REPORT(DEBUG, "scheduleSignal("<< targetSignal->getName() << ")");
 		//TODO: add more checks here
 		//check if the signal has already been scheduled
 		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
 			//there is nothing else to be done
 			return;
-		//REPORT(DEBUG, "scheduleSignal1("<< targetSignal->getName() << ")");
 
 		//check if all the signal's predecessors have been scheduled
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
@@ -3207,7 +3245,6 @@ namespace flopoco{
 				//not all predecessors are scheduled, so the signal cannot be scheduled
 				return;
 
-		// REPORT(DEBUG, "scheduleSignal2("<< targetSignal->getName() << ")");
 		//if the preconditions are satisfied, schedule the signal
 		setSignalTiming(targetSignal, override);
 
@@ -3227,15 +3264,12 @@ namespace flopoco{
 		}
 
 		//check if this is an input signal for a sub-component
-		//	it's safe to test if the signal belongs to a sub-component by checking
-		//	the signal type because the flow cannot get to this call for the main
-		//	component
 		if(targetSignal->type() == Signal::in)
 		{
 			//this is an input for a sub-component
 			bool allInputsScheduled = true;
 
-			//check if all the inputs of the operator have been implemented
+			//check if all the inputs of the operator have been scheduled
 			for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
 				if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in)
 						&& (targetSignal->parentOp()->getIOListSignal(i)->getHasBeenScheduled() == false))
@@ -3244,104 +3278,11 @@ namespace flopoco{
 					break;
 				}
 
-			//check whether all the other inputs of the parent operator of
-			//	this signal have been scheduled
+			//if all the inputs of the operator have been scheduled, then just stop
 			if(allInputsScheduled == false)
-				//if not, then we can just stop
 				return;
 
-			//test if this operator is a global operator
-			bool isGlobalOperator = false;
-			string globalOperatorName = targetSignal->parentOp()->getName();
-
-			//this might be a copy of the global operator, so try to remove the suffix
-			if(globalOperatorName.find("_copy_") != string::npos)
-				globalOperatorName = globalOperatorName.substr(0, globalOperatorName.find("_copy_"));
-
-			//look in the global operator list for the operator
-			for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++)
-				if(UserInterface::globalOpList[i]->getName() == globalOperatorName)
-				{
-					isGlobalOperator = true;
-					break;
-				}
-
-			//if this is a global/shared operator, and this is not a copy,
-			//	then try to schedule the parent operator so that if the operator
-			//	is pipelined, the inputs are registered
-			if((targetSignal->parentOp()->getName().find("_copy_") == string::npos)
-								&& targetSignal->parentOp()->isShared())
-			{
-				//start the scheduling of the parent operator of targetSignal
-				targetSignal->parentOp()->schedule();
-
-				//if the operator has been pipelined,
-				//	then advance the cycle of all its inputs and reschedule
-				if(targetSignal->parentOp()->getPipelineDepth() > 0)
-				{
-					//advance the cycle of the inputs
-					for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-					{
-						Signal *currentSignal = targetSignal->parentOp()->getIOListSignal(i);
-
-						if(currentSignal->type() != Signal::in)
-							continue;
-
-						currentSignal->setCycle(currentSignal->getCycle() + 1);
-						currentSignal->setCriticalPath(0.0);
-						currentSignal->setHasBeenScheduled(false);
-					}
-
-					//mark the operator as not having been implemented
-					targetSignal->parentOp()->markOperatorUnscheduled();
-
-					//start the scheduling of the parent operator of targetSignal
-					targetSignal->parentOp()->schedule();
-				}
-			}
-
-			//if this is a global/shared operator, and this is a copy,
-			//	then compute the maximum cycle of the inputs, and then synchronize
-			//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
-			if((targetSignal->parentOp()->getName().find("_copy_") != string::npos)
-					&& (isGlobalOperator || targetSignal->parentOp()->isShared()))
-			{
-				//all the other inputs of the parent operator of this signal have been scheduled
-				//	compute the maximum cycle of the inputs, and then synchronize
-				//	the inputs to that cycle, and launch the scheduling for the parent operator of the signal
-				int maxCycle = 0;
-
-				//determine the maximum cycle
-				for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-					if(targetSignal->parentOp()->getIOListSignal(i)->getCycle() > maxCycle)
-						maxCycle = targetSignal->parentOp()->getIOListSignal(i)->getCycle();
-				//set all the inputs of the parent operator of targetSignal to the maximum cycle
-				for(unsigned int i=0; i<targetSignal->parentOp()->getIOList()->size(); i++)
-					if((targetSignal->parentOp()->getIOListSignal(i)->type() == Signal::in) &&
-						(targetSignal->parentOp()->getIOListSignal(i)->getCycle() < maxCycle))
-					{
-						//if we have to delay the input, the we need to reset
-						//	the critical path, as well
-						//else, there is nothing else to do
-						Signal *inputSignal = targetSignal->parentOp()->getIOListSignal(i);
-
-						inputSignal->setCycle(maxCycle);
-						inputSignal->setCriticalPath(0.0);
-
-						//update the lifespan of inputSignal's predecessors
-						for(unsigned int i=0; i<inputSignal->predecessors()->size(); i++)
-						{
-							//predecessor signals that belong to a subcomponent do not need to have their lifespan affected
-							if((inputSignal->parentOp()->getName() != inputSignal->predecessor(i)->parentOp()->getName()) &&
-									(inputSignal->predecessor(i)->type() == Signal::out))
-								continue;
-							inputSignal->predecessor(i)->updateLifeSpan(
-									inputSignal->getCycle() - inputSignal->predecessor(i)->getCycle());
-						}
-					}
-			}
-
-			//start the scheduling of the parent operator of targetSignal
+			//schedule the signal's parent operator
 			targetSignal->parentOp()->schedule();
 		}else
 		{

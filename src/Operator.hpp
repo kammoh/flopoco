@@ -781,6 +781,20 @@ public:
 	 */
 	string instance(Operator* op, string instanceName);
 
+	/**
+	 * Create a new copy of a shared operator
+	 * @param originalOperator represents the original instance of the operator
+	 * @return the new instance
+	 */
+	OperatorPtr newSharedInstance(Operator *originalOperator);
+
+	/**
+	 * Create the schedule for a shared instance
+	 * @param op the instance to schedule
+	 * @parm originalOperator the original instance
+	 */
+	void scheduleSharedInstance(Operator *op, Operator *originalOperator);
+
 
 	/**
 	 * Create a new instance of an operator inside the current containing operator

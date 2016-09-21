@@ -443,6 +443,12 @@ class Operator;
 		void setHasBeenScheduled(bool newVal);
 
 		/**
+		 * Mark the signal as un-scheduled, if necessary
+		 * @return the new value of hasBeenScheduled
+		 */
+		bool unscheduleSignal();
+
+		/**
 		 * Return the value of hasBeenDrawn
 		 */
 		bool getHasBeenDrawn();
