@@ -216,3 +216,22 @@ run
     os.system(xst_command)
         
 
+
+    # Filtering the .syr
+    syr = open(entity+".syr").read()
+    report = ""
+    # Device utilization
+    starts = [match.start() for match in re.finditer("Device utilization summary:", syr)] # list of endpoints of match of "entity"
+    dus_start = starts[-1] # the first is in the summary
+    starts = [match.start() for match in re.finditer("Partition Resource Summary:", syr)] # list of endpoints of match of "entity"
+    dus_end = starts[-1]-28 # remove the "---------------------------"
+    report += syr[dus_start: dus_end]
+
+    # Timing report
+    starts = [match.start() for match in re.finditer("Timing Summary:", syr)] # list of endpoints of match of "entity"
+    tr_start = starts[-1] # the first is in the summary
+    starts = [match.start() for match in re.finditer("Timing Details:", syr)] # list of endpoints of match of "entity"
+    tr_end = starts[-1]
+    report += syr[tr_start: tr_end]
+
+    print report
