@@ -161,6 +161,15 @@ namespace flopoco {
 		vector<Bit*>::iterator it = bits[columnNumber].begin();
 		bool inserted = false;
 
+		//if the column is empty, then just insert the bit
+		if(bits[columnNumber].size() == 0)
+		{
+			bits[columnNumber].push_back(bit);
+			return;
+		}
+
+		//insert the bit in the column
+		//	in the lexicographic order of the timing
 		while(it != bits[columnNumber].end())
 		{
 			if((bit->signal->getCycle() < (*it)->signal->getCycle())
@@ -169,10 +178,12 @@ namespace flopoco {
 			{
 				bits[columnNumber].insert(it, bit);
 				inserted = true;
+				break;
 			}else{
 				it++;
 			}
 		}
+
 		if(inserted == false)
 		{
 			bits[columnNumber].insert(bits[columnNumber].end(), bit);

@@ -23,7 +23,8 @@ namespace flopoco{
 				<< "_nbInputs_" << vhdlize(nbInputs);
 		setName(name.str());
 
-		srand(time(NULL));
+		//srand(time(NULL));
+		srand(1);
 
 		if(nbInputs == -1)
 		{

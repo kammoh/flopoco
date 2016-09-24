@@ -428,65 +428,86 @@ namespace flopoco{
 		//	of their compression ratio
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=6;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=4;
 			col1=1;
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=5;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=3;
 			col1=1;
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=4;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=3;
 			col1=2;
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 		{
 			vector<int> newVect;
+			Compressor *newCompressor;
 
 			col0=3;
 
 			newVect.push_back(col0);
-			possibleCompressors.push_back(new Compressor(bitheap->op->getTarget(), newVect, true));
+			newCompressor = new Compressor(bitheap->op->getTarget(), newVect, true);
+			newCompressor->setShared();
+			possibleCompressors.push_back(newCompressor);
 		}
 	}
 
