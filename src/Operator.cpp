@@ -3051,9 +3051,12 @@ namespace flopoco{
 	}
 
 
+	// this is called by schedule() to transform the (string, string, int) dependencies produced by the lexer at each ;
+	// into signal dependencies in the graph.
 	void Operator::extractSignalDependences()
 	{
-		//try to parse the unknown dependences first
+		//try to parse the unknown dependences first (we have identified a dependency A->B but A or B has not yet been declared)
+		// unresolvedDependenceTable is a global variable that holds this information
 		for(vector<triplet<string, string, int>>::iterator it=unresolvedDependenceTable.begin(); it!=unresolvedDependenceTable.end(); it++)
 		{
 			Signal *lhs, *rhs;
@@ -3061,14 +3064,14 @@ namespace flopoco{
 			bool unknownLHSName = false, unknownRHSName = false;
 
 			try{
-				lhs = getSignalByName(it->first);
+				lhs = getSignalByName(it->first); // Was this signal declared since last time? 
 			}catch(string &e){
 				REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
 				unknownLHSName = true;
 			}
 
 			try{
-				rhs = getSignalByName(it->second);
+				rhs = getSignalByName(it->second); // or this one
 			}catch(string &e){
 				REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
 				unknownRHSName = true;
@@ -3094,6 +3097,7 @@ namespace flopoco{
 		}
 
 		//start parsing the dependence table, modifying the signals of each triplet
+		// dependenceTable is produced by the lexer between two VHDL statements / semicolons
 		for(vector<triplet<string, string, int>>::iterator it=vhdl.dependenceTable.begin(); it!=vhdl.dependenceTable.end(); it++)
 		{
 			Signal *lhs, *rhs;
@@ -3130,14 +3134,15 @@ namespace flopoco{
 				{
 					if(signalsToSchedule[i]->getName() == lhs->getName())
 						lhsPresent = true;
-					if(signalsToSchedule[i]->getName() == rhs->getName())
-						rhsPresent = true;
+					// Commented out 
+					// if(signalsToSchedule[i]->getName() == rhs->getName())
+					// 	rhsPresent = true;
 				}
 
 				if(!lhsPresent)
 					signalsToSchedule.push_back(lhs);
-				if(!rhsPresent)
-					signalsToSchedule.push_back(rhs);
+				// if(!rhsPresent)
+				// 	signalsToSchedule.push_back(rhs);
 			}else{
 				triplet<string, string, int> newDep = make_triplet(it->first, it->second, it->third);
 				unresolvedDependenceTable.push_back(newDep);

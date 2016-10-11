@@ -178,6 +178,7 @@ namespace flopoco{
 
 			for(i=nDigit-1; i>=1; i--) {
 
+				REPORT(DEBUG, "Entering iteration " << i);
 				// TODO: get rid of all the ostringstream on the model of qi
 				string qi =join("q", i);						//actual quotient digit, LUT's output
 
@@ -194,6 +195,7 @@ namespace flopoco{
 				inPortMap (selfunctiontable , "X", seli.str());
 				outPortMap(selfunctiontable , "Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str());
+				REPORT(DEBUG, "After table instance " << i);
 				
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
@@ -204,7 +206,9 @@ namespace flopoco{
 						 << tab << tab << wipad.str() << " + (\"0000\" & prescaledfY)			when \"11\"," << endl
 						 << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")		when \"10\"," << endl
 						 << tab << tab << wipad.str() << "							when others;" << endl;
-				
+
+				REPORT(DEBUG, "After with 1 ");
+
 #if 0 // Splitting the following logic into two levels gives better synthesis results...
 				vhdl << tab << "with " << qi << range(3,1) << " select " << endl;
 				vhdl << tab << declare(target->adderDelay(wF+7)+target->localWireDelay(2*(wF+7)), wim1full.str(), wF+7) << " <= " << endl;
@@ -220,16 +224,20 @@ namespace flopoco{
 						 << tab << tab << "(\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl
 						 << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl
 						 << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
+				REPORT(DEBUG, "After with2 ");
 				
 				vhdl << tab << "with " << qi << of(3) << " select" << endl; // Remark here: seli(6)==qi(3) but it we get better results using the latter.
 				vhdl << tab << declare(target->adderDelay(wF+7), wim1full.str(), wF+7) << " <= " << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - " << fYdec << "			when '0'," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " + " << fYdec << "			when others;" << endl;
+				REPORT(DEBUG, "After with 3 ");
 
 #endif
 				vhdl << tab << declare(wim1.str(),wF+6) << " <= " << wim1full.str()<<range(wF+3,0)<<" & \"00\";" << endl;
+				REPORT(DEBUG, "After range ");
 			}
 
+				REPORT(DEBUG, "After loop ");
 
 			vhdl << tab << declare(target->eqConstComparatorDelay(wF+3), "q0",4) << "(3 downto 0) <= \"0000\" when  w0 = (" << wF+5 << " downto 0 => '0')" << endl;
 			vhdl << tab << "             else w0(" << wF+5 << ") & \"010\";" << endl;
@@ -489,7 +497,6 @@ namespace flopoco{
 		vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
 		vhdl << tab << "R <= exnRfinal & sR & "
 				 << "expfracR(" << wE+wF-1 << " downto 0);" <<endl;
-		
 	}
 
 	FPDiv::~FPDiv() {
