@@ -233,7 +233,7 @@ namespace flopoco{
 		}
 		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
 
-		vhdl << tab << "with X select " << declareTable("Y0", wOut, tableAttributes) << " <= " << endl;
+		vhdl << tab << "with X select " << declareTable(cpDelay, "Y0", wOut, tableAttributes) << " <= " << endl;
 		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
 			vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
 		vhdl << tab << tab << "\"";
@@ -249,7 +249,7 @@ namespace flopoco{
 		else
 			vhdl << tab << "Y <= Y0;" << endl;
 
-		getSignalByName("Y")->setCriticalPathContribution(cpDelay);
+		//		getSignalByName("Y0")->setCriticalPathContribution(cpDelay);
 	}
 
 
