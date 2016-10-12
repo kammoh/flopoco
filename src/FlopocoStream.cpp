@@ -68,6 +68,7 @@ namespace flopoco{
 
 	void FlopocoStream::flush(){
 		ostringstream bufferCode;
+		string currentCode = vhdlCodeBuffer.str();
 
 		//parse the buffer if it is not empty
 		if(vhdlCodeBuffer.str() != string(""))
@@ -95,7 +96,7 @@ namespace flopoco{
 
 			//launch the scheduling, if required
 			if(!disabledParsing){
-				parentOperator->schedule();
+				parentOperator->schedule(!parentOperator->isOperatorScheduled());
 			}
 		}
 	}

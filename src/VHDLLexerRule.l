@@ -195,7 +195,8 @@ label					  ({identifier}{space_character}*":")
 	//	to be in this case, the ';' was probably omitted
 	if(yyextra->lexingMode == LexerContext::signalAssignment)
 	{
-		throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
+		//throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
+		throw("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!");
 	}
 	
 	if(yyextra->lexingMode == LexerContext::unset)
@@ -309,6 +310,7 @@ label					  ({identifier}{space_character}*":")
 		
 		if(yyextra->isLhsSet == true)
 		{
+			//throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
 			throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
 		yyextra->isLhsSet = true;
@@ -344,7 +346,7 @@ label					  ({identifier}{space_character}*":")
 		yyextra->extraRhsNames.push_back(yytext);
 		
 		//switch the parsing mode to the next stage, selectedSignalAssignment2
-		yyextra->lexingMode = LexerContext::selectedSignalAssignment;
+		yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
 		
 		//save the left-hand side name for later to create the dependence
 		yyextra->extraRhsNames.push_back(yytext);
@@ -357,7 +359,7 @@ label					  ({identifier}{space_character}*":")
 		
 		if(yyextra->isLhsSet == true)
 		{
-			throw("Error: something went wrong during the first parsing of the VHDL code!");
+			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
 		}
 		yyextra->isLhsSet = true;
 		
@@ -454,10 +456,10 @@ label					  ({identifier}{space_character}*":")
 }
 
 (\-\-.*) {
-	// this is  comment
+	// this is a comment
 	(*yyextra->os) << yytext;
 	
-	yyextra->lexingMode = LexerContext::comment;
+	//yyextra->lexingMode = LexerContext::comment;
 }
 
 (.) {

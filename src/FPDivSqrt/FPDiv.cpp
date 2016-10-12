@@ -493,6 +493,7 @@ namespace flopoco{
 		// Normalisation is common to both radix 4 and radix 8
 		vhdl << tab << "with exnR0 select" <<endl;
 		vhdl << tab << tab << declare(target->lutDelay(), "exnRfinal", 2) << " <= " <<endl;
+		//vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
 		vhdl << tab << tab << tab << "exnR   when \"01\", -- normal" <<endl;
 		vhdl << tab << tab << tab << "exnR0  when others;" <<endl;
 		vhdl << tab << "R <= exnRfinal & sR & "

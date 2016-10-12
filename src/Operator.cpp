@@ -427,7 +427,7 @@ namespace flopoco{
 
 		//check that portSignal is really an I/O signal
 		if((portSignal->type() != Signal::in) && (portSignal->type() != Signal::out))
-			THROWERROR("Error: signal " << portSignal->getName() << " is not an input or ouput signal");
+			THROWERROR("Error: signal " << portSignal->getName() << " is not an input or output signal");
 
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
@@ -491,7 +491,7 @@ namespace flopoco{
 			THROWERROR("Error: reconnectIOPorts: trying to connect a subcomponent to an empty parent operator");
 		}else{
 			if(!parentOp_->isOperatorScheduled())
-				parentOp_->schedule();
+				parentOp_->schedule(false);
 		}
 		//connect the inputs and outputs of the operator to the corresponding	signals in the parent operator
 		for(vector<Signal*>::iterator it=ioList_.begin(); it!=ioList_.end(); it++)
@@ -501,9 +501,9 @@ namespace flopoco{
 			signalsToSchedule.push_back(*it);
 		//mark the signal as not scheduled
 		markOperatorUnscheduled();
-		//	now start the scheduling
+		//	now re-start the scheduling
 		if(restartSchedule == true)
-			schedule();
+			schedule(false);
 	}
 
 	
@@ -548,6 +548,24 @@ namespace flopoco{
 			for (auto j: i->ioList_) {
 				signalsToSchedule.push_back(j);
 			}
+		}
+	}
+
+
+	void Operator::markOperatorScheduled()
+	{
+		setIsOperatorScheduled(true);
+
+		for(auto i: ioList_){
+			i->setHasBeenScheduled(true);
+		}
+
+		for(auto i: signalList_) {
+			i->setHasBeenScheduled(true);
+		}
+
+		for(auto i: subComponentList_) {
+			i->markOperatorScheduled();
 		}
 	}
 
@@ -1713,13 +1731,14 @@ namespace flopoco{
 			opCpy = op;
 		}
 
-		//schedule the subcomponent's inputs
-		for(auto i : opCpy->ioList_)
-			if(i->type() == Signal::in)
-				opCpy->setSignalTiming(i, true);
+		//mark the subcomponent as having to be scheduled
+		opCpy->markOperatorUnscheduled();
 
 		//schedule the subcomponent
-		opCpy->schedule();
+		for(auto i : opCpy->ioList_)
+			if(i->type() == Signal::in)
+				opCpy->signalsToSchedule.push_back(i);
+		opCpy->schedule(!opCpy->isOperatorScheduled());
 
 		//add the operator to the subcomponent list/map
 		subComponentList_.push_back(opCpy);
@@ -1825,7 +1844,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::scheduleSharedInstance(Operator *op, Operator *originalOperator)
+	void Operator::scheduleSharedInstance(Operator *op, Operator *originalOperator, bool forceReschedule)
 	{
 		//TODO: for debug purposes
 		string opName = op->getName();
@@ -1874,16 +1893,11 @@ namespace flopoco{
 			//TODO: rescheduling the inputs is not needed, as they have just been synchronized to the same cycle
 			//first, do an initial schedule of the circuit
 			//	schedule the inputs
-			/*
-			for(auto i : op->ioList_)
-				if(i->type() == Signal::in)
-					setSignalTiming(i, true);
-			*/
 			//	schedule the successors of the inputs
 			for(auto i : op->ioList_)
 				if(i->type() == Signal::in)
 					for(auto j : *i->successors())
-						scheduleSignal(j.first, true);
+						scheduleSignal(j.first, forceReschedule);
 
 			//if this is the second pass, then there is nothing else to be done
 			if(!firstSchedulePass)
@@ -1935,15 +1949,10 @@ namespace flopoco{
 							j.first->updateLifeSpan(i->getCycle() - j.first->getCycle());
 						}
 					}
-				//TODO: the operator doesn't need to be marked unscheduled,
-				//		as it will be forced to reschedule in the next pass
-				/*
-				op->markOperatorUnscheduled();
-				*/
 			}
 		}
 
-		op->setIsOperatorImplemented(true);
+		//op->setIsOperatorImplemented(true);
 	}
 
 
@@ -3160,11 +3169,11 @@ namespace flopoco{
 	}
 
 
-	void Operator::schedule()
+	void Operator::schedule(bool forceReschedule)
 	{
 		//TODO: add more checks here
 		//if the operator is already scheduled, then there is nothing else to do
-		if(isOperatorScheduled())
+		if(isOperatorScheduled() && !forceReschedule)
 			return;
 
 		//extract the dependences between the operator's internal signals
@@ -3195,18 +3204,6 @@ namespace flopoco{
 		//	according to the original operator
 		if(isGlobalOperator && (getName().find("_copy_") != string::npos))
 		{
-			//TODO: test no longer needed, as scheduleSharedInstance() will advance the inputs, if needed
-			/*
-			//check that all the inputs are at the same cycle
-			for(unsigned int i=0; i<ioList_.size(); i++)
-				for(unsigned int j=i+1; j<ioList_.size(); j++)
-					if((ioList_[i]->type() == Signal::in) && (ioList_[j]->type() == Signal::in) && (ioList_[i]->getCycle() != ioList_[j]->getCycle()))
-						THROWERROR("Error in schedule(): not all signals are at the same cycle: signal "
-								+ ioList_[i]->getName() + " is at cycle " + vhdlize(ioList_[i]->getCycle())
-								+ " but signal " + ioList_[j]->getName() + " is at cycle "
-								+ vhdlize(ioList_[j]->getCycle()));
-			*/
-
 			Operator* originalOperator;
 
 			//search for the global copy of the operator, which should already be scheduled
@@ -3217,7 +3214,7 @@ namespace flopoco{
 					break;
 				}
 
-			scheduleSharedInstance(this, originalOperator);
+			scheduleSharedInstance(this, originalOperator, forceReschedule);
 
 			return;
 		}
@@ -3226,14 +3223,14 @@ namespace flopoco{
 		for(auto i: signalsToSchedule)
 		{
 			//schedule the current signal
-			setSignalTiming(i, true);
+			setSignalTiming(i, forceReschedule);
 		}
 
 		//start the schedule on the children of the signals on the list of signals to be scheduled
 		for(auto currentSignal: signalsToSchedule)
 		{
 			for(auto successor : *currentSignal->successors())
-				scheduleSignal(successor.first, true);
+				scheduleSignal(successor.first, forceReschedule);
 		}
 
 		//clear the list of signals to schedule
@@ -3242,11 +3239,11 @@ namespace flopoco{
 
 
 	
-	void Operator::scheduleSignal(Signal *targetSignal, bool override)
+	void Operator::scheduleSignal(Signal *targetSignal, bool forceReschedule)
 	{
 		//TODO: add more checks here
 		//check if the signal has already been scheduled
-		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
+		if((targetSignal->getHasBeenScheduled() == true) && (forceReschedule == false))
 			//there is nothing else to be done
 			return;
 
@@ -3257,7 +3254,7 @@ namespace flopoco{
 				return;
 
 		//if the preconditions are satisfied, schedule the signal
-		setSignalTiming(targetSignal, override);
+		setSignalTiming(targetSignal, forceReschedule);
 
 		//update the lifespan of targetSignal's predecessors
 		for(unsigned int i=0; i<targetSignal->predecessors()->size(); i++)
@@ -3294,27 +3291,25 @@ namespace flopoco{
 				return;
 
 			//schedule the signal's parent operator
-			targetSignal->parentOp()->schedule();
+			targetSignal->parentOp()->schedule(forceReschedule);
 		}else
 		{
 			//this is a regular signal inside of the operator
 
 			//try to schedule the successors of the signal
 			for(unsigned int i=0; i<targetSignal->successors()->size(); i++)
-				scheduleSignal(targetSignal->successor(i), override);
+				scheduleSignal(targetSignal->successor(i), forceReschedule);
 		}
 
 	}
 
-	void Operator::setSignalTiming(Signal* targetSignal, bool override)
+	void Operator::setSignalTiming(Signal* targetSignal, bool forceReschedule)
 	{
 		int maxCycle = 0;
 		double maxCriticalPath = 0.0, maxTargetCriticalPath;
 
-		//REPORT(DEBUG, "setSignalTiming("<< targetSignal->getName()<<")");
-
 		//check if the signal has already been scheduled
-		if((targetSignal->getHasBeenScheduled() == true) && (override == false))
+		if((targetSignal->getHasBeenScheduled() == true) && (forceReschedule == false))
 			//there is nothing else to be done
 			return;
 
@@ -3326,8 +3321,6 @@ namespace flopoco{
 			maxCycle = targetSignal->predecessor(0)->getCycle() + max(0, targetSignal->predecessorPair(0)->second);
 			maxCriticalPath = targetSignal->predecessor(0)->getCriticalPath();
 		}
-
-		//REPORT(DEBUG, "Really doing setSignalTiming("<< targetSignal->getName()<<")");
 
 		//determine the lexicographic maximum cycle and critical path of the signal's parents
 		for(unsigned int i=1; i<targetSignal->predecessors()->size(); i++)

@@ -138,8 +138,8 @@ namespace flopoco
 			sollya_lib_init();
 			initialize();
 			buildAll(argc, argv);
-			schedule();
 			drawDotDiagram();
+			schedule();
 			outputVHDL();
 			finalReport(cerr);
 			sollya_lib_close();
@@ -473,6 +473,10 @@ namespace flopoco
 
 
 	void UserInterface::schedule() {
+		//mark the operators as having been scheduled
+		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
+			UserInterface::globalOpList[i]->markOperatorScheduled();
+		}
 		//all that is left is to start the second code parse
 		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
 			UserInterface::globalOpList[i]->parseVHDL();

@@ -296,6 +296,12 @@ public:
 
 
 	/**
+	 * Mark the operator and its subcomponents as having been scheduled
+	 */
+	void markOperatorScheduled();
+
+
+	/**
 	 * Sets the copyright string: should be authors + year
 	 * @param authorsYears the names of the authors and the years of their contributions
 	 */
@@ -792,8 +798,12 @@ public:
 	 * Create the schedule for a shared instance
 	 * @param op the instance to schedule
 	 * @parm originalOperator the original instance
+	 * @param forceReschedule if set to true, then the schedule is
+	 *        force-started for all the nodes, even if they have been previously scheduled
+	 *        WARNING: this may result in exponential run-times for circuits with signals
+	 *                 that have high fan-outs
 	 */
-	void scheduleSharedInstance(Operator *op, Operator *originalOperator);
+	void scheduleSharedInstance(Operator *op, Operator *originalOperator, bool forceReschedule);
 
 
 	/**
@@ -1342,23 +1352,35 @@ public:
 	 * Start the scheduling for this operator.
 	 * Try to schedule all the inputs, and then launch the scheduling for the
 	 * rest of the internal signals of the operator.
+	 * @param forceReschedule if set to true, then the schedule is
+	 *        force-started for all the nodes, even if they have been previously scheduled
+	 *        WARNING: this may result in exponential run-times for circuits with signals
+	 *                 that have high fan-outs
 	 */
-	void schedule();
+	void schedule(bool forceReschedule = true);
 
 	/**
 	 * Try to schedule the signal targetSignal. The signal can be schedules only
 	 * if all of its predecessors have been already scheduled. The function will
 	 * also trigger the scheduling of its children, if targetSignal has any.
 	 * @param targetSignal the signal to be scheduled
+	 * @param forceReschedule if set to true, then the schedule is
+	 *        force-started for all the nodes, even if they have been previously scheduled
+	 *        WARNING: this may result in exponential run-times for circuits with signals
+	 *                 that have high fan-outs
 	 */
-	void scheduleSignal(Signal *targetSignal, bool override = false);
+	void scheduleSignal(Signal *targetSignal, bool forceReschedule = false);
 
 	/**
 	 * Set the timing of a signal.
 	 * Used also to share code between the different timing methods.
 	 * @param targetSignal the signal to be scheduled
+	 * @param forceReschedule if set to true, then the schedule is
+	 *        force-started for all the nodes, even if they have been previously scheduled
+	 *        WARNING: this may result in exponential run-times for circuits with signals
+	 *                 that have high fan-outs
 	 */
-	void setSignalTiming(Signal* targetSignal, bool override = false);
+	void setSignalTiming(Signal* targetSignal, bool forceReschedule = false);
 
 
 	/**
