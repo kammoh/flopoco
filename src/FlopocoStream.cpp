@@ -86,7 +86,7 @@ namespace flopoco{
 				bufferCode << parseCode();
 			}
 			// TODO REMOVE
-			cerr << "BUFFER " << bufferCode.str() << endl;
+			// cerr << "BUFFER " << bufferCode.str() << endl;
 			
 			//fix the dependence table, to the correct content type 
 			cleanupDependenceTable();

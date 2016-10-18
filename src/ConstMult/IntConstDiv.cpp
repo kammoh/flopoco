@@ -133,6 +133,56 @@
 		setCopyrightString("F. de Dinechin (2011)");
 		srcFileName="IntConstDiv";
 
+		if ((d&1)==0) {
+			THROWERROR("Divisor is even! Please manage this outside IntConstDiv");
+		}
+
+				/* Generate unique name */
+
+		std::ostringstream o;
+		if(remainderOnly)
+			o << "IntConstRem_";
+		else
+			o << "IntConstDiv_";
+		o << d << "_" << wIn << "_"  << alpha ;
+
+		setNameWithFreqAndUID(o.str());
+
+		addInput("X", wIn);
+
+
+		
+		vector<int> divisors;
+
+		int divofd=3;
+		int dd=d;
+		while (dd>1){
+			while(dd % divofd ==0){
+				REPORT(INFO, "Found divisor: " << divofd);
+				divisors.push_back(divofd);
+				dd = dd/divofd;
+			}
+			divofd +=2;
+		}
+
+		if(divisors[0]!=d) { // which means that there is more than one
+			vhdl << tab << declare("Q0",wIn) << " <= X;" << endl;
+			for(unsigned int i=0; i<divisors.size(); i++) {
+				
+				REPORT (INFO, "Dividing by " << divisors[i]);
+				ostringstream params, inportmap,outportmap;
+				params << "wIn="<< wIn << " d=" << divisors[i];
+				inportmap << "X=>Q"<<i;
+				outportmap << "Q=>Q"<<i+1<<",R=>R"<<i+1;
+				newInstance("IntConstDiv", join("subDiv",i), params.str(), inportmap.str(), outportmap.str());
+
+			}
+			vhdl << tab << "Q << Q" << divisors.size()<<";" << endl;
+			vhdl << tab << "R << R" << divisors.size()<<";" << endl;
+			
+			return;
+		}
+		
 		gamma = intlog2(d-1);
 
 		if(gamma>4) {
@@ -164,19 +214,6 @@
 		if((d&1)==0)
 			REPORT(LIST, "WARNING, d=" << d << " is even, this is suspicious. Might work nevertheless, but surely suboptimal.")
 
-		/* Generate unique name */
-
-		std::ostringstream o;
-		if(remainderOnly)
-			o << "IntConstRem_";
-		else
-			o << "IntConstDiv_";
-		o << d << "_" << wIn << "_"  << alpha ;
-
-		setNameWithFreqAndUID(o.str());
-
-
-		addInput("X", wIn);
 
 
 		if(!remainderOnly)
@@ -196,7 +233,7 @@
 		REPORT(INFO, "Architecture splits the input in xDigits=" << xDigits  <<  " chunks."   );
 		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  xDigits=" << xDigits  <<  "  qSize=" << qSize );
 
-		if(architecture==0) {
+		if(architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
 #if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
@@ -256,7 +293,7 @@
 
 		// Bug on  ./flopoco IntConstDiv alpha=6 arch=1 d=3 remainderOnly=false wIn=31 TestBench n=1000
 		// because qisize=0 below. The input is split into 6 chunks but Q fits on 30 bits and needs 5 chunks only
-		else if (architecture==1){
+		else if (architecture==INTCONSTDIV_LOGARITHMIC_ARCHITECTURE){
 			//////////////////////////////////////// Logarithmic architecture //////////////////////////////////:
 			// The management of the tree is quite intricate when everything is not a power of two.
 			

@@ -1970,7 +1970,7 @@ namespace flopoco{
 		while(!parameters.empty())
 		{
 			if(parameters.find(" ") != string::npos){
-				parametersVector.push_back(parameters.substr(0,parameters.find(":")));
+				parametersVector.push_back(parameters.substr(0,parameters.find(" ")));
 				parameters.erase(0,parameters.find(" ")+1);
 			}else{
 				parametersVector.push_back(parameters);

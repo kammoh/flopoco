@@ -21,7 +21,8 @@
 #include "Target.hpp"
 #include "Table.hpp"
 
-
+#define INTCONSTDIV_LINEAR_ARCHITECTURE 0
+#define INTCONSTDIV_LOGARITHMIC_ARCHITECTURE 1
 namespace flopoco{
 
 
