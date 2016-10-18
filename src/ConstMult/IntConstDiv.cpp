@@ -137,21 +137,51 @@
 			THROWERROR("Divisor is even! Please manage this outside IntConstDiv");
 		}
 
-				/* Generate unique name */
+		gamma = intlog2(d-1);
 
+		if(gamma>4) {
+			REPORT(LIST, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
+		}
+
+						
+		if(alpha==-1){
+			if(architecture==0) {
+				alpha = target->lutInputs()-gamma;
+				if (alpha<1) {
+					REPORT(LIST, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha="<<alpha<<").");
+					REPORT(LIST, " Building an architecture nevertheless, but it may be very large and inefficient.");
+					alpha=1;
+				}
+			}
+			else {
+#if 0 // DEBUG IN HEXA
+				alpha=4;
+#else
+				alpha = target->lutInputs();
+#endif				
+			}
+		}
+		
+
+		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
 		std::ostringstream o;
 		if(remainderOnly)
 			o << "IntConstRem_";
 		else
 			o << "IntConstDiv_";
 		o << d << "_" << wIn << "_"  << alpha ;
-
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);
+				
+
+		if(!remainderOnly)
+			addOutput("Q", qSize);
+		addOutput("R", gamma);
 
 
-		
+
+#if 1
 		vector<int> divisors;
 
 		int divofd=3;
@@ -175,37 +205,17 @@
 				inportmap << "X=>Q"<<i;
 				outportmap << "Q=>Q"<<i+1<<",R=>R"<<i+1;
 				newInstance("IntConstDiv", join("subDiv",i), params.str(), inportmap.str(), outportmap.str());
-
+				REPORT(INFO, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
 			}
 			vhdl << tab << "Q << Q" << divisors.size()<<";" << endl;
 			vhdl << tab << "R << R" << divisors.size()<<";" << endl;
 			
 			return;
 		}
-		
-		gamma = intlog2(d-1);
+#endif
 
-		if(gamma>4) {
-			REPORT(LIST, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
-		}
-		if(alpha==-1){
-			if(architecture==0) {
-				alpha = target->lutInputs()-gamma;
-				if (alpha<1) {
-					REPORT(LIST, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha="<<alpha<<").");
-					REPORT(LIST, " Building an architecture nevertheless, but it may be very large and inefficient.");
-					alpha=1;
-				}
-			}
-			else {
-#if 0 // DEBUG IN HEXA
-				alpha=4;
-#else
-				alpha = target->lutInputs();
-#endif				
-			}
-		}
-		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
+
+
 		rho = intlog2(  ((mpz_class(1)<<alpha)-1)/d  );
 
 		REPORT(INFO, "alpha="<<alpha);
@@ -214,11 +224,6 @@
 		if((d&1)==0)
 			REPORT(LIST, "WARNING, d=" << d << " is even, this is suspicious. Might work nevertheless, but surely suboptimal.")
 
-
-
-		if(!remainderOnly)
-			addOutput("Q", qSize);
-		addOutput("R", gamma);
 
 		int xDigits = wIn/alpha;
 		int xPadBits = wIn%alpha;
