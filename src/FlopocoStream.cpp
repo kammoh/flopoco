@@ -113,7 +113,15 @@ namespace flopoco{
 		//call the FlexLexer++ on the buffer. The lexing output is
 		//	in the variable vhdlO. Additionally, a temporary table containing
 		//	the triplets <lhsName, rhsName, delay> is created
-		lexer->lex();
+		try
+		{
+			lexer->lex();
+		}catch(string &e)
+		{
+			cerr << "Lexing failed: " << e << endl;
+			cerr << "The VHDL code to parse:" << vhdlCodeBuffer.str() << endl;
+			exit(1);
+		}
 
 		//the temporary table is used to update the member of FlopocoStream
 		//	this also empties the lexer's dependence table
