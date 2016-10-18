@@ -310,8 +310,8 @@ label					  ({identifier}{space_character}*":")
 		
 		if(yyextra->isLhsSet == true)
 		{
-			//throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
-			throw("Error: something went wrong during the first parsing of the VHDL code!");
+			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
+			//throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
 		yyextra->isLhsSet = true;
 	}else if(yyextra->lexingMode == LexerContext::signalAssignment)
