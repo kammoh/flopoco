@@ -122,8 +122,26 @@
 		
 	int IntConstDiv::quotientSize() {return qSize; };
 
-	int IntConstDiv::remainderSize() {return gamma; };
+		int IntConstDiv::remainderSize() {return gamma; };
 
+
+		// This method mostly replicates the computations done in the constructor
+		// l is the number of inputs to the LUT of the target FPGA
+		int evaluateLUTCostOfLinearArch(int wIn, int d, int l) {
+				int gamma = intlog2(d-1);
+				int alpha = l-gamma;
+				if (alpha<1)	alpha=1;
+				int xDigits = wIn/alpha;
+				int xPadBits = wIn%alpha;
+				if (xPadBits!=0)
+					xDigits++;
+				
+				int tableOutputSize = alpha + gamma;
+				int lutsPerOutputBit = 1<<(alpha+gamma-l);
+				int cost = tableOutputSize * lutsPerOutputBit * xDigits;
+				// cout << "l=" << l << " alpha=" << alpha << " gamma=" << gamma << " xDigits=" << xDigits << endl; 
+				return cost;
+		}
 
 
 
@@ -181,7 +199,6 @@
 
 
 
-#if 1
 		vector<int> divisors;
 
 		int divofd=3;
@@ -196,23 +213,43 @@
 		}
 
 		if(divisors[0]!=d) { // which means that there is more than one
-			vhdl << tab << declare("Q0",wIn) << " <= X;" << endl;
+			REPORT(INFO, "This constant can be decomposed in smaller factors");
+			// First evaluate the cost of the atomic divider
+			int cost0=evaluateLUTCostOfLinearArch(wIn, d, target->lutInputs());		  
+			REPORT(INFO, "  Cost of atomic division: " << cost0 );
+			int wInCurrent=wIn;
+			int overallCost=0;
+
 			for(unsigned int i=0; i<divisors.size(); i++) {
-				
-				REPORT (INFO, "Dividing by " << divisors[i]);
+				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], target->lutInputs());
+				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
+				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
+				overallCost+=cost;
+			}
+			REPORT(INFO, "  Overall cost of composite division: " << overallCost );
+
+
+#if 0 // VHDL generation
+			vhdl << tab << declare("quotient0",wIn) << " <= X;" << endl;
+			for(unsigned int i=0; i<divisors.size(); i++) {
+				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisor[i], target->lutInputs());
+				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent " costs " << cost);
+				wInCurrent = intlog( ((mpz_class(1)<<wIn)-1) /divisor[i]);
+				overallCost+=cost;
 				ostringstream params, inportmap,outportmap;
-				params << "wIn="<< wIn << " d=" << divisors[i];
+				params << "wIn="<< wInCurrent << " d=" << divisors[i];
 				inportmap << "X=>Q"<<i;
 				outportmap << "Q=>Q"<<i+1<<",R=>R"<<i+1;
 				newInstance("IntConstDiv", join("subDiv",i), params.str(), inportmap.str(), outportmap.str());
 				REPORT(INFO, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
+				wInCurrent = getSignalByName(join("Q",i+1))->width();
 			}
-			vhdl << tab << "Q << Q" << divisors.size()<<";" << endl;
-			vhdl << tab << "R << R" << divisors.size()<<";" << endl;
+			vhdl << tab << "Q <= Q" << divisors.size()<<";" << endl;
+			vhdl << tab << "R <= R" << divisors.size()<<";" << endl;
 			
 			return;
-		}
 #endif
+		}
 
 
 
