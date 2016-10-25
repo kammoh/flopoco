@@ -84,7 +84,7 @@
 
 		vector<mpz_class>  IntConstDiv::euclideanDivTable(int d, int alpha, int gamma) { 		// machine integer arithmetic should be safe here
 			vector<mpz_class>  result;
-			for (int x=0; x<(1<<(alpha+gamma)); x++){
+			for (int x=0; x<(d<<alpha); x++){
 					int q = x/d;
 					int r = x%d;
 					result.push_back(mpz_class( (q<<gamma) + r) );
@@ -139,7 +139,7 @@
 				int tableOutputSize = alpha + gamma;
 				int lutsPerOutputBit = 1<<(alpha+gamma-l);
 				int cost = tableOutputSize * lutsPerOutputBit * xDigits;
-				// cout << "l=" << l << " alpha=" << alpha << " gamma=" << gamma << " xDigits=" << xDigits << endl; 
+				 cout << "l=" << l << " k=" << alpha << " r=" << gamma << " xDigits=" << xDigits << endl; 
 				return cost;
 		}
 
@@ -198,7 +198,10 @@
 		addOutput("R", gamma);
 
 
-
+		// First evaluate the cost of the atomic divider
+		int cost0=evaluateLUTCostOfLinearArch(wIn, d, target->lutInputs());		  
+		REPORT(INFO, "  Estimated cost of atomic division: " << cost0 );
+		
 		vector<int> divisors;
 
 		int divofd=3;
@@ -214,9 +217,6 @@
 
 		if(divisors[0]!=d) { // which means that there is more than one
 			REPORT(INFO, "This constant can be decomposed in smaller factors");
-			// First evaluate the cost of the atomic divider
-			int cost0=evaluateLUTCostOfLinearArch(wIn, d, target->lutInputs());		  
-			REPORT(INFO, "  Cost of atomic division: " << cost0 );
 			int wInCurrent=wIn;
 			int overallCost=0;
 
