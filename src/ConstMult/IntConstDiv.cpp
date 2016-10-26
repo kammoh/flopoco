@@ -231,18 +231,34 @@
 
 #if 1 // VHDL generation
 			vhdl << tab << declare("Q0",wIn) << " <= X;" << endl;
+			wInCurrent=wIn;
+			int currentDivProd=1;
 			for(unsigned int i=0; i<divisors.size(); i++) {
-				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
-				ostringstream params, inportmap,outportmap;
+				currentDivProd *= divisors[i];
+				 ostringstream params, inportmap,outportmap;
 				params << "wIn="<< wInCurrent << " d=" << divisors[i];
 				inportmap << "X=>Q"<<i;
 				outportmap << "Q=>Q"<<i+1<<",R=>R"<<i+1;
-				newInstance("IntConstDiv", join("subDiv",i), params.str(), inportmap.str(), outportmap.str());
+				newInstance("IntConstDiv", join("subDiv",i+1), params.str(), inportmap.str(), outportmap.str());
+
 				REPORT(INFO, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
+				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
 				wInCurrent = getSignalByName(join("Q",i+1))->width();
+				if(i==0){
+					vhdl << tab << declare("RR1", intlog2(currentDivProd)) << " <= R1;" << endl;					
+				}
+				else {
+					// R_i = divisors[i-1] * R_i +R_{i-1}
+					// R2 <= 3 * R1 + RR2
+					ostringstream multParams;
+					multParams << "wIn=" << intlog2(divisors[i]-1) << " n=" << divisors[i-1];
+					newInstance("IntConstMult", join("rMult",i+1), multParams.str(), "X=>"+join("R",i+1), "R=>"+join("M",i+1));
+					vhdl << tab << declare(join("RR",i+1), intlog2(currentDivProd)) << " <= RR" << i << + " + M" << i+1 << ";" << endl;
+					
+				}
 			}
-			vhdl << tab << "Q <= Q" << divisors.size()<<";" << endl;
-			vhdl << tab << "R <= R" << divisors.size()<<";" << endl;
+			vhdl << tab << "Q <= Q" << divisors.size()<<range(qSize-1,0) << ";" << endl;
+			vhdl << tab << "R <= RR" << divisors.size()<<";" << endl;
 			
 			return;
 #endif
