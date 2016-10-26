@@ -2,6 +2,16 @@ TODO file for FloPoCo
 
 * List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
+
+	IntConstMult: still need to 
+	1/ add the delays 
+	2/ resurrect IntConstMultRational (parseArgument etc)
+	3 fix the mult by 7 in 2 additions 
+
+	IntConstDiv: still need to
+	1/ add the delays 
+	2/ fix the bug that duplicates the tables
+
 		Fix2FP
 		FP2Fix
 		InputIEEE
@@ -35,7 +45,6 @@ TODO file for FloPoCo
 
 		FPConstMult
 		FPRealKCM
-		IntConstDiv
 		FPConstDiv
 		FixFunctionByTable
 		FixFunctionBySimplePoly

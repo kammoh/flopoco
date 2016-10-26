@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "IntConstDiv.hpp"
 
@@ -139,11 +140,14 @@
 				int tableOutputSize = alpha + gamma;
 				int lutsPerOutputBit = 1<<(alpha+gamma-l);
 				int cost = tableOutputSize * lutsPerOutputBit * xDigits;
-				 cout << "l=" << l << " k=" << alpha << " r=" << gamma << " xDigits=" << xDigits << endl; 
+				// cout << "l=" << l << " k=" << alpha << " r=" << gamma << " xDigits=" << xDigits << endl; 
 				return cost;
 		}
 
 
+
+
+		
 
 	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool remainderOnly_, map<string, double> inputDelays)
 	: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), remainderOnly(remainderOnly_)
@@ -215,20 +219,42 @@
 			divofd +=2;
 		}
 
+		
 		if(divisors[0]!=d) { // which means that there is more than one
+
+
 			REPORT(INFO, "This constant can be decomposed in smaller factors");
 			int wInCurrent=wIn;
-			int overallCost=0;
-
+			int currentDivProd=1;
+			int overallCostUp=0;
 			for(unsigned int i=0; i<divisors.size(); i++) {
 				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], target->lutInputs());
 				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
-				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
-				overallCost+=cost;
+				currentDivProd *= divisors[i];
+				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
+				overallCostUp+=cost;
 			}
-			REPORT(INFO, "  Overall cost of composite division: " << overallCost );
+			REPORT(INFO, "  Overall cost of composite division, counting up: " << overallCostUp );
+
+			 wInCurrent=wIn;
+			 currentDivProd=1;
+			 int overallCostDown=0;
+			for(int i=divisors.size()-1; i>=0; i--) {
+				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], target->lutInputs());
+				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
+				currentDivProd *= divisors[i];
+				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
+				overallCostDown+=cost;
+			}
+			REPORT(INFO, "  Overall cost of composite division, counting down: " << overallCostDown );
 
 
+		// Now we reverse
+			if(overallCostDown<overallCostUp) {
+				REPORT(INFO, "Reversing the divisor list");
+				reverse(divisors.begin(), divisors.end());
+			}
+			
 #if 1 // VHDL generation
 			vhdl << tab << declare("Q0",wIn) << " <= X;" << endl;
 			wInCurrent=wIn;
@@ -251,7 +277,7 @@
 			
 			// recurrence is  RR2=R3   RR_i-1 = R[i] + divisors[i-1]*RR_i    R=RR_0
 			vhdl << tab << declare(join("RR",divisors.size()), getSignalByName(join("R",divisors.size()))->width()) << " <= " << join("R",divisors.size()) << ";" << endl;					
-			int currentDivProd=divisors[divisors.size()-1];
+			currentDivProd=divisors[divisors.size()-1];
 #if 1
 			for(i=divisors.size()-1; i>=1; i--) {
 				//				currentDivProd *= divisors[i];
