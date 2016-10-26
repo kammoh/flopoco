@@ -253,7 +253,7 @@
 					ostringstream multParams;
 					multParams << "wIn=" << intlog2(divisors[i]-1) << " n=" << divisors[i-1];
 					newInstance("IntConstMult", join("rMult",i+1), multParams.str(), "X=>"+join("R",i+1), "R=>"+join("M",i+1));
-					vhdl << tab << declare(join("RR",i+1), intlog2(currentDivProd)) << " <= RR" << i << + " + M" << i+1 << ";" << endl;
+					vhdl << tab << declare(join("RR",i+1), intlog2(currentDivProd)) << " <= RR" << i << + " + M" << i+1 << range(intlog2(currentDivProd)-1,0) <<  ";" << endl;
 					
 				}
 			}
