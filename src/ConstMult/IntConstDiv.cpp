@@ -232,33 +232,47 @@
 #if 1 // VHDL generation
 			vhdl << tab << declare("Q0",wIn) << " <= X;" << endl;
 			wInCurrent=wIn;
-			int currentDivProd=1;
-			for(unsigned int i=0; i<divisors.size(); i++) {
-				currentDivProd *= divisors[i];
-				 ostringstream params, inportmap,outportmap;
+			unsigned int i;
+			for(i=0; i<divisors.size(); i++) {
+				ostringstream params, inportmap,outportmap;
 				params << "wIn="<< wInCurrent << " d=" << divisors[i];
 				inportmap << "X=>Q"<<i;
 				outportmap << "Q=>Q"<<i+1<<",R=>R"<<i+1;
-				newInstance("IntConstDiv", join("subDiv",i+1), params.str(), inportmap.str(), outportmap.str());
+				newInstance("IntConstDiv", join("subDiv",i), params.str(), inportmap.str(), outportmap.str());
 
-				REPORT(INFO, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
-				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
+				// REPORT(INFO, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
+				// Slight sub-optimality here, TODO: we can win one bit from time to time
+				// wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
 				wInCurrent = getSignalByName(join("Q",i+1))->width();
-				if(i==0){
-					vhdl << tab << declare("RR1", intlog2(currentDivProd)) << " <= R1;" << endl;					
-				}
-				else {
-					// R_i = divisors[i-1] * R_i +R_{i-1}
-					// R2 <= 3 * R1 + RR2
-					ostringstream multParams;
-					multParams << "wIn=" << intlog2(divisors[i]-1) << " n=" << divisors[i-1];
-					newInstance("IntConstMult", join("rMult",i+1), multParams.str(), "X=>"+join("R",i+1), "R=>"+join("M",i+1));
-					vhdl << tab << declare(join("RR",i+1), intlog2(currentDivProd)) << " <= RR" << i << + " + M" << i+1 << range(intlog2(currentDivProd)-1,0) <<  ";" << endl;
-					
-				}
 			}
+			// Now rebuild the remainder
+			// for (3,5,7) R = R1 + 3*(R2+3*R3))
+			// R = R1 + divisors[0] *(R2 +divisors[1]*R3) )
+			
+			// recurrence is  RR2=R3   RR_i-1 = R[i] + divisors[i-1]*RR_i    R=RR_0
+			vhdl << tab << declare(join("RR",divisors.size()), getSignalByName(join("R",divisors.size()))->width()) << " <= " << join("R",divisors.size()) << ";" << endl;					
+			int currentDivProd=divisors[divisors.size()-1];
+#if 1
+			for(i=divisors.size()-1; i>=1; i--) {
+				//				currentDivProd *= divisors[i];
+				// wInCurrent = getSignalByName(join("Q",i+1))->width();
+				ostringstream multParams;
+				multParams << "wIn=" << intlog2(currentDivProd) << " n=" << divisors[i-1];
+				newInstance("IntConstMult", join("rMult",i), multParams.str(), "X=>"+join("RR",i+1), "R=>"+join("M",i));
+				currentDivProd *= divisors[i-1];
+				int sizeRR = intlog2(currentDivProd);
+				int sizeM  = getSignalByName(join("M",i))->width();
+				// int sizePreviousRR =  getSignalByName(join("RR",i+1))->width();
+				vhdl << tab << declare(join("RR",i), sizeRR) << " <= ";
+				//				if (sizePreviousRR<sizeRR)
+				//	vhdl << zg(sizeRR-sizePreviousRR) << "&";
+				vhdl << "R" << i << + " + M" << i
+						 << (sizeRR<sizeM? range(intlog2(currentDivProd)-1,0)  : "")
+						 <<  ";" << endl;
+			}
+#endif
 			vhdl << tab << "Q <= Q" << divisors.size()<<range(qSize-1,0) << ";" << endl;
-			vhdl << tab << "R <= RR" << divisors.size()<<";" << endl;
+			vhdl << tab << "R <= RR1;" << endl;
 			
 			return;
 #endif
