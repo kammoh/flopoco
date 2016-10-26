@@ -229,13 +229,10 @@
 			REPORT(INFO, "  Overall cost of composite division: " << overallCost );
 
 
-#if 0 // VHDL generation
-			vhdl << tab << declare("quotient0",wIn) << " <= X;" << endl;
+#if 1 // VHDL generation
+			vhdl << tab << declare("Q0",wIn) << " <= X;" << endl;
 			for(unsigned int i=0; i<divisors.size(); i++) {
-				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisor[i], target->lutInputs());
-				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent " costs " << cost);
-				wInCurrent = intlog( ((mpz_class(1)<<wIn)-1) /divisor[i]);
-				overallCost+=cost;
+				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
 				ostringstream params, inportmap,outportmap;
 				params << "wIn="<< wInCurrent << " d=" << divisors[i];
 				inportmap << "X=>Q"<<i;

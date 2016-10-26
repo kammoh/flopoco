@@ -1679,4 +1679,65 @@ namespace flopoco{
 
 	}
 
+
+
+	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
+	TestList IntConstMult::unitTest(int index)
+	{
+		throw ("TestList IntConstDiv::unitTest : TODO, plz FIXME");
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) // The unit tests
+		{ 
+
+			for(int wIn=8; wIn<34; wIn+=1) 
+			{ // test various input widths
+				for(int d=3; d<=17; d+=2) 
+				{ // test various divisors
+					for(int arch=0; arch <2; arch++) 
+					{ // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
+						paramList.push_back(make_pair("wIn", to_string(wIn) ));	
+						paramList.push_back(make_pair("d", to_string(d) ));	
+						paramList.push_back(make_pair("arch", to_string(arch) ));
+						testStateList.push_back(paramList);
+						paramList.clear();
+					}
+				}
+			}
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
+
+
+
+	OperatorPtr IntConstMult::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		string	n;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
+		UserInterface::parseString(args, "n", &n);
+		mpz_class nz(n); // TODO catch exceptions here?
+		return new IntConstMult(target, wIn, nz);
+	}
+
+	void IntConstMult::registerFactory(){
+		UserInterface::add("IntConstMult", // name
+			"Integer multiplier by a constant using a shift-and-add tree.",
+			"ConstMultDiv",
+											 "FixRealKCM,IntConstDiv", // seeAlso
+											 "wIn(int): input size in bits; \
+											 n(int): constant to multiply by",
+											 "An early version of this operator is described in <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
+											 IntConstMult::parseArguments,
+											 IntConstMult::unitTest
+											 ) ;
+	}
+
+	
 }

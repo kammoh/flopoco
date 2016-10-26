@@ -64,6 +64,17 @@ namespace flopoco{
 		void emulate(TestCase* tc);
 		void buildStandardTestCases(TestCaseList* tcl);
 
+
+		/** Factory method that parses arguments and calls the constructor */
+		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+
+		static TestList unitTest(int index);
+
+		/** Factory register method */ 
+		static void registerFactory();
+
+
+		
 		/** @brief Recodes input n; returns the number of non-zero bits */
 		int recodeBooth(mpz_class n, int* BoothCode);
 

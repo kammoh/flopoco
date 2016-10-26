@@ -82,6 +82,7 @@ int main(int argc, char* argv[] )
 		 IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
+		 IntConstMult::registerFactory();
 		// FPConstMult::registerFactory();
 		// FPRealKCM::registerFactory();
 		 IntConstDiv::registerFactory();
