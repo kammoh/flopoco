@@ -614,6 +614,32 @@ namespace flopoco
 	}
 
 
+	void UserInterface::parseIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption){
+		string val=getVal(args, key);
+		if(val=="") {
+			if(genericOption)
+				return; // do nothing
+			// key not given, use default value
+			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			if (val=="")
+				throwMissingArgError(args[0], key);
+		}
+		std::stringstream ss;
+    ss.str(val);
+    std::string item;
+		try {
+			while (std::getline(ss, item, ',')) {
+				variable->push_back(std::stoi(item));
+			}
+		}
+		catch(std::exception &s){
+			std::cerr << "Problem in parseIntList for "<< val << endl << "got exception : "<<s.what()<<"\n";
+			//factory->Usage(std::cerr);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	
 
 	void UserInterface::parsePositiveInt(vector<string> &args, string key, int* variable, bool genericOption){
 		string val=getVal(args, key);
@@ -1200,7 +1226,7 @@ namespace flopoco
 				int typeEnd = part.find(')', 0);
 				string type=part.substr(nameEnd+1, typeEnd-nameEnd-1);
 				//cout << " of type  {" << type <<"}";
-				if(type=="bool" || type=="int" || type=="real" || type=="string")
+				if(type=="bool" || type=="int" || type=="real" || type=="string" || type=="intlist")
 					m_paramType[name] = type;
 				else {
 					ostringstream s;

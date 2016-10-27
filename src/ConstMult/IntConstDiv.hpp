@@ -64,17 +64,31 @@ namespace flopoco{
 #endif // deprecated overloading of Table method
 
 
-		/** @brief The constructor
+		/** @brief The atomic constructor, to be used for small constants
 		* @param d The divisor.
 		* @param n The size of the input X.
 		* @param alpha The size of the chunk, or, use radix 2^alpha
 		* @param architecture Architecture used, can be 0 for o(n) area, o(n) time, or 1 for o(n.log(n)) area, o(log(n)) time
 		* @param remainderOnly As the name suggests
 		*/
+
 		IntConstDiv(Target* target, int wIn, int d, int alpha=-1, int architecture=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
+
+
+		/** @brief The composite constructor
+		* @param dList The list of divisors
+		* @param n The size of the input X.
+		* @param alpha The size of the chunk, or, use radix 2^alpha
+		* @param architecture Architecture used, can be 0 for o(n) area, o(n) time, or 1 for o(n.log(n)) area, o(log(n)) time
+		* @param remainderOnly As the name suggests
+		*/
+		IntConstDiv(Target* target, int wIn, vector<int> d, int alpha=-1, int architecture=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
 
 		~IntConstDiv();
 
+		/** @brief the code generation method for an atomic divider */
+		void generateVHDL();
+		
 		// Overloading the virtual functions of Operator
 		// void outputVHDL(std::ostream& o, std::string name);
 
