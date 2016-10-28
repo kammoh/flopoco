@@ -2541,6 +2541,16 @@ namespace flopoco{
 	}
 
 	void Operator::outputVHDL(std::ostream& o, std::string name) {
+
+		//safety checks
+		//	if this is a copy of a global operator, then its code doesn't need to
+		//	be added to the file, as the global copy is already there
+		if(isShared()
+				&& (getName().find("_copy_") != string::npos))
+		{
+			return;
+		}
+
 		if (! vhdl.isEmpty() ){
 			licence(o);
 			pipelineInfo(o);
@@ -3834,6 +3844,9 @@ namespace flopoco{
 
 		isOperatorImplemented_      = op->isOperatorImplemented();
 		isOperatorDrawn_            = op->isOperatorDrawn();
+
+		isUnique_                   = op->isUnique();
+		uniquenessSet_              = op->uniquenessSet_;
 
 		resourceEstimate.str(op->resourceEstimate.str());
 		resourceEstimateReport.str(op->resourceEstimateReport.str());
