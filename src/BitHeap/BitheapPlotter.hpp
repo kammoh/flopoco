@@ -85,7 +85,7 @@ namespace flopoco
 		/**
 		 * @brief take a snapshot of the bitheap's current state
 		 */
-		void takeSnapshot();
+		void takeSnapshot(Bit *soonestBit);
 
 		/**
 		 * @brief plot all the bitheap's stages

@@ -1307,6 +1307,18 @@ namespace flopoco {
 	}
 
 
+	vector<vector<Bit*>> BitheapNew::getBits()
+	{
+		return bits;
+	}
+
+
+	CompressionStrategy* BitheapNew::getCompressionStrategy()
+	{
+		return compressionStrategy;
+	}
+
+
 	void BitheapNew::initializeDrawing()
 	{
 

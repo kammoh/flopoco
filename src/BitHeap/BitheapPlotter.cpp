@@ -86,38 +86,11 @@ namespace flopoco
 	}
 
 
-	void BitheapPlotter::takeSnapshot()
+	void BitheapPlotter::takeSnapshot(Bit *soonestBit)
 	{
-		if(!(cp==0.0 && cycle==0))
-		{
-			if(compress)
-			{
-				unsigned size=snapshots.size();
-				Snapshot* s = new Snapshot(bh->bits, bh->getMinWeight(), bh->getMaxWeight(), bh->getMaxHeight(), compress, cycle, cp);
-				bool proceed=true;
+		Snapshot* s = new Snapshot(bitheap->getBits(), bitheap->getMaxHeight(), soonestBit->signal->getCycle(), soonestBit->signal->getCriticalPath());
 
-				if (size==0)
-				{
-					snapshots.push_back(s);
-				}else
-				{
-					vector<Snapshot*>::iterator it = snapshots.begin();
-
-					it++;
-					while(proceed)
-					{
-						if (it==snapshots.end() || (*s < **it))
-						{ // test in this order to avoid segfault!
-							snapshots.insert(it, s);
-							proceed=false;
-						}else
-						{
-							it++;
-						}
-					}
-				}
-			}
-		}
+		snapshots.push_back(s);
 	}
 
 
@@ -131,19 +104,17 @@ namespace flopoco
 
 	void BitheapPlotter::drawInitialBitheap()
 	{
+		int offsetY, turnaroundX;
+
 		initializePlotter(true);
 
-		int offsetY = 0;
-		int turnaroundX = snapshots[0]->bits.size() * 10 + 80;
-
-
 		offsetY += 20 + snapshots[0]->maxHeight * 10;
+		turnaroundX = snapshots[0]->bits.size() * 10 + 80;
 
 		drawInitialConfiguration(snapshots[0], offsetY, turnaroundX);
 
-		closePlotter(offsetY, turnaroundX)
+		closePlotter(offsetY, turnaroundX);
 	}
-
 
 
 	void BitheapPlotter::drawBitheapCompression()
@@ -151,49 +122,17 @@ namespace flopoco
 		initializePlotter(false);
 
 		int offsetY = 0;
-		int turnaroundX = snapshots[snapshots.size()-1]->maxWeight * 10 + 100;
+		int turnaroundX = snapshots[snapshots.size()-1]->bits.size() * 10 + 100;
 
-		//lastStage=snapshots[0]->stage;
-
-		bool timeCondition;
-
-
-		for(unsigned i=0; i< snapshots.size(); i++)
+		for(unsigned int i=0; i<snapshots.size(); i++)
 		{
-			if(snapshots[i]->didCompress)
-			{
-				timeCondition = true;
-				if (i > snapshots.size()-3)
-					timeCondition = false;
+			offsetY += 15 + snapshots[i]->maxHeight * 10;
 
-				offsetY += 15 + snapshots[i]->maxHeight * 10;
-				drawConfiguration(snapshots[i]->bits, i,snapshots[i]->cycle, snapshots[i]->cp,
-						snapshots[i]->minWeight, offsetY, turnaroundX, timeCondition);
+			drawConfiguration(snapshots[i], offsetY, turnaroundX);
 
-				if (i!=snapshots.size()-1)
-				{
-					int j=i+1;
-
-					while(snapshots[j]->didCompress==false)
-						j++;
-
-					int c = snapshots[j]->cycle - snapshots[i]->cycle;
-
-					fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\""
-						<< offsetY + 10 << "\" x2=\"" << 50
-						<< "\" y2=\"" << offsetY + 10 << "\" style=\"stroke:lightsteelblue;stroke-width:1\" />" << endl;
-
-					while(c>0)
-					{
-						offsetY += 10;
-						fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\""
-							<< offsetY  << "\" x2=\"" << 50
-							<< "\" y2=\"" << offsetY  << "\" style=\"stroke:midnightblue;stroke-width:2\" />" << endl;
-
-						c--;
-					}
-				}
-			}
+			fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\"" << offsetY + 10
+					<< "\" x2=\"" << 50 << "\" y2=\"" << offsetY + 10
+					<< "\" style=\"stroke:lightsteelblue;stroke-width:1\" />" << endl;
 		}
 
 		closePlotter(offsetY, turnaroundX);
@@ -205,9 +144,9 @@ namespace flopoco
 		ostringstream figureFileName;
 
 		if(isInitial)
-			figureFileName << "BitHeap_initial_" << bh->getName()  << ".svg";
+			figureFileName << "BitHeap_initial_" << bitheap->getName()  << ".svg";
 		else
-			figureFileName << "BitHeap_compression_" << bh->getName()  << ".svg";
+			figureFileName << "BitHeap_compression_" << bitheap->getName()  << ".svg";
 
 		FILE* pfile;
 		pfile  = fopen(figureFileName.str().c_str(), "w");
