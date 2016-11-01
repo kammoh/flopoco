@@ -128,7 +128,7 @@ namespace flopoco
 		{
 			offsetY += 15 + snapshots[i]->maxHeight * 10;
 
-			drawConfiguration(snapshots[i], offsetY, turnaroundX);
+			drawConfiguration(i, snapshots[i], offsetY, turnaroundX);
 
 			fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\"" << offsetY + 10
 					<< "\" x2=\"" << 50 << "\" y2=\"" << offsetY + 10
@@ -180,89 +180,29 @@ namespace flopoco
 	void BitheapPlotter::drawInitialConfiguration(Snapshot* snapshot, int offsetY, int turnaroundX)
 	{
 		int color = 0;
-		int cnt = 0;
-		vector<WeightedBit*> orderedBits;
 
 		fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\""
-				<< offsetY +10 << "\" x2=\"" << turnaroundX - bits.size()*10 - 50
+				<< offsetY +10 << "\" x2=\"" << turnaroundX - snapshot->bits.size()*10 - 50
 				<< "\" y2=\"" << offsetY +10 << "\" style=\"stroke:lightsteelblue;stroke-width:1\" />" << endl;
 
-		for(unsigned i=minWeight; i<bits.size(); i++)
+		for(unsigned int i=0; i<snapshot->bits.size(); i++)
 		{
-			if(bits[i].size()>0)
+			if(snapshot->bits[i].size() > 0)
 			{
-				for(list<WeightedBit*>::iterator bit = bits[i].begin(); bit!=bits[i].end(); ++bit)
+				for(unsigned int j=0; j<snapshot->bits[i].size(); j++)
 				{
-					if(orderedBits.size()==0)
-					{
-						orderedBits.push_back((*bit));
-					}
-					bool proceed=true;
-					vector<WeightedBit*>::iterator iterBit = orderedBits.begin();
-
-					while(proceed)
-					{
-						if (iterBit==orderedBits.end())
-						{
-							orderedBits.push_back((*bit));
-							proceed=false;
-						}
-						else
-						{
-							if( (**bit) == (**iterBit))
-							{
-								proceed=false;
-							}
-							else
-							{
-								if( (**bit) < (**iterBit))
-								{
-									orderedBits.insert(iterBit, *bit);
-									proceed=false;
-								}
-								else
-								{
-									iterBit++;
-								}
-							}
-
-						}
-					}
-				}
-			}
-		}
-
-		for(unsigned i=0; i<bits.size(); i++)
-		{
-			if(bits[i].size()>0)
-			{
-				cnt = 0;
-				for(list<WeightedBit*>::iterator it = bits[i].begin(); it!=bits[i].end(); ++it)
-				{
-					color=0;
-
-					for (unsigned j=0; j<orderedBits.size(); j++)
-					{
-						if ( (**it) == (*orderedBits[j]) )
-							color=j;
-					}
-
-					int cy = (*it)->getCycle();
-					double cp = (*it)->getCriticalPath(cy)*100000000000;
-
-					drawBit(cnt, i, turnaroundX, offsetY, color, cy, cp, (*it)->getName());
-					cnt++;
+					drawBit(j, turnaroundX, offsetY, snapshot->bits[i][j]->signal->getCycle(), snapshot->bits[i][j]);
 				}
 			}
 		}
 	}
 
 
-	void BitheapPlotter::drawConfiguration(Snapshot *snapshot, int offsetY, int turnaroundX)
+	void BitheapPlotter::drawConfiguration(int index, Snapshot *snapshot, int offsetY, int turnaroundX)
 	{
 		int cnt = 0;
-		int ci,c1,c2,c3;							//print cp as a number as a rational number, in nanoseconds
-		int cpint = criticalPath * 1000000000000;
+		int ci,c1,c2,c3;										//print cp as a number as a rational number, in nanoseconds
+		int cpint = snapshot->criticalPath * 1000000000000;
 
 		c3 = cpint % 10;
 		cpint = cpint / 10;
@@ -272,78 +212,56 @@ namespace flopoco
 		cpint = cpint / 10;
 		ci = cpint % 10;
 
-		if(nr == 0)
+		if(index == 0)
 		{
 			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
-					<< "\" fill=\"midnightblue\">" << "before first compression" << "</text>" << endl;
-		}else if(nr == snapshots.size()-1)
+					<< "\" fill=\"midnightblue\">" << "initial bitheap contents" << "</text>" << endl;
+		}else if(index == snapshots.size()-1)
 		{
 			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
 					<< "\" fill=\"midnightblue\">" << "before final addition" << "</text>" << endl;
-		}else if(nr == snapshots.size()-2)
-		{
-			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
-					<< "\" fill=\"midnightblue\">" << "before 3-bit height additions" << "</text>" << endl;
 		}else
 		{
 			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
-					<< "\" fill=\"midnightblue\">" << cycle << "</text>" << endl
+					<< "\" fill=\"midnightblue\">" << snapshot->cycle << "</text>" << endl
 					<< "<text x=\"" << turnaroundX + 80 << "\" y=\"" << offsetY + 3
 					<< "\" fill=\"midnightblue\">" << ci << "." << c1 << c2 << c3 << " ns"  << "</text>" << endl;
 		}
 
-		turnaroundX -= minWeight*10;
-
-		for(unsigned i=0; i<bits.size(); i++)
+		for(unsigned int i=0; i<snapshot->bits.size(); i++)
 		{
-			if(bits[i].size()>0)
+			if(snapshot->bits[i].size() > 0)
 			{
-				cnt = 0;
-				for(list<WeightedBit*>::iterator it = bits[i].begin(); it!=bits[i].end(); ++it)
+				for(unsigned int j=0; j<snapshot->bits[i].size(); j++)
 				{
-					int cy = (*it)->getCycle();
-					double cp = (*it)->getCriticalPath(cy);
-
-					if (timeCondition)
-					{
-						if ((cy<cycle) || ((cy==cycle) && (cp<=criticalPath)))
-						{
-							cp = cp * 1000000000000;  //picoseconds
-							drawBit(cnt, i, turnaroundX, offsetY, (*it)->getType(), cy, cp, (*it)->getName());
-							cnt++;
-						}
-					}
-					else
-					{
-						drawBit(cnt, i, turnaroundX, offsetY, (*it)->getType(), cy, cp, (*it)->getName());
-						cnt++;
-					}
+					drawBit(j, turnaroundX, offsetY, snapshot->bits[i][j]->signal->getCycle(), snapshot->bits[i][j]);
 				}
 			}
 		}
 	}
 
 
-	void BitheapPlotter::drawBit(int cnt, int turnaroundX, int offsetY, int color, Bit *bit)
+	void BitheapPlotter::drawBit(int index, int turnaroundX, int offsetY, int color, Bit *bit)
 	{
-		const std::string colors[] = { "#97bf04","#0f1af2",
-			"orange", "#f5515c",  "lightgreen", "fuchsia", "indianred"};
-		int index = color % 7;
+		const std::string colors[] = { "darkblue", "mediumblue", "blue", "royalblue", "dodgerblue", "cornflowerblue", "teal",
+				"darkcyan", "deepskyblue", "darkturquoise", "turquoise", "skyblue", "lightskyblue", "cyan"};
+		int colorIndex = color % 14;
 		int ci,c1,c2,c3;	//print cp as a number, as a rational number, in nanoseconds
+		int criticalPath = (int)(bit->signal->getCriticalPath() * 1000000000000);
 
-		c3 = cp % 10;
-		cp = cp / 10;
-		c2 = cp % 10;
-		cp = cp / 10;
-		c1 = cp % 10;
-		cp = cp / 10;
-		ci = cp % 10;
+		c3 = criticalPath % 10;
+		criticalPath /= 10;
+		c2 = criticalPath % 10;
+		criticalPath /= 10;
+		c1 = criticalPath % 10;
+		criticalPath /= 10;
+		ci = criticalPath % 10;
 
-		fig << "<circle cx=\"" << turnaroundX - w*10 - 5 << "\""
-			<< " cy=\"" << offsetY - cnt*10 - 5 << "\""
+		fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
+			<< " cy=\"" << offsetY - index*10 - 5 << "\""
 			<< " r=\"3\""
-			<< " fill=\"" << colors[index] << "\" stroke=\"black\" stroke-width=\"0.5\""
-			<< " onmousemove=\"ShowTooltip(evt, \'" << name << ", " << cycle << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+			<< " fill=\"" << colors[colorIndex] << "\" stroke=\"black\" stroke-width=\"0.5\""
+			<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 			<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 	}
 

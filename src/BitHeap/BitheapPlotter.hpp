@@ -124,12 +124,12 @@ namespace flopoco
 		/**
 		 * @brief draw the state of the bitheap
 		 */
-		void drawConfiguration(Snapshot *snapshot, int offsetY, int turnaroundX);
+		void drawConfiguration(int index, Snapshot *snapshot, int offsetY, int turnaroundX);
 
 		/**
 		 * @brief draws a single bit
 		 */
-		void drawBit(int cnt, int turnaroundX, int offsetY, int color, Bit *bit);
+		void drawBit(int index, int turnaroundX, int offsetY, int color, Bit *bit);
 
 		/*
 		 * @brief write the SVG initialization functions
