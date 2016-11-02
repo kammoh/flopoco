@@ -57,7 +57,9 @@ namespace flopoco{
 		ShiftAddDag* implementation;
 
 
+		int getArea(); 
 
+		
 
 		// Overloading the virtual functions of Operator
 

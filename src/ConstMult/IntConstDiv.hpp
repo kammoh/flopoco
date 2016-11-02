@@ -21,8 +21,9 @@
 #include "Target.hpp"
 #include "Table.hpp"
 
-#define INTCONSTDIV_LINEAR_ARCHITECTURE 0
-#define INTCONSTDIV_LOGARITHMIC_ARCHITECTURE 1
+#define INTCONSTDIV_LINEAR_ARCHITECTURE 0      // from the ARC 2012 paper by Dinechin Didier
+#define INTCONSTDIV_LOGARITHMIC_ARCHITECTURE 1 // from the 2015 Arith paper by Udurgag et al 
+#define INTCONSTDIV_RECIPROCAL_ARCHITECTURE 2 // From the 2102 TCAS paper by Drane et al  
 namespace flopoco{
 
 
@@ -39,8 +40,8 @@ namespace flopoco{
 		public:
 			int d;
 			int alpha;
-			int gamma;
-			EuclideanDivTable(Target* target, int d, int alpha, int gamma);
+			int rSize;
+			EuclideanDivTable(Target* target, int d, int alpha, int rSize);
 			mpz_class function(int x);
 		};
 
@@ -51,15 +52,15 @@ namespace flopoco{
 			int level; /**< input will be a group of 2^level alpha-bit digits*/
 			int d;
 			int alpha;
-			int gamma;
+			int rSize;
 			int rho;
-			CBLKTable(Target* target, int level, int d, int alpha, int gamma, int rho);
+			CBLKTable(Target* target, int level, int d, int alpha, int rSize, int rho);
 			mpz_class function(int x);
 		};
 #else
-		vector<mpz_class>  euclideanDivTable(int d, int alpha, int gamma);
-		vector<mpz_class>  firstLevelCBLKTable(int d, int alpha, int gamma);
-		vector<mpz_class>  otherLevelCBLKTable(int level, int d, int alpha, int gamma, int rho );
+		vector<mpz_class>  euclideanDivTable(int d, int alpha, int rSize);
+		vector<mpz_class>  firstLevelCBLKTable(int d, int alpha, int rSize);
+		vector<mpz_class>  otherLevelCBLKTable(int level, int d, int alpha, int rSize, int rho );
 
 #endif // deprecated overloading of Table method
 
@@ -79,7 +80,7 @@ namespace flopoco{
 		* @param dList The list of divisors
 		* @param n The size of the input X.
 		* @param alpha The size of the chunk, or, use radix 2^alpha
-		* @param architecture Architecture used, can be 0 for o(n) area, o(n) time, or 1 for o(n.log(n)) area, o(log(n)) time
+		* @param architecture Architecture used, can be 0 for linear are, linear time, or 1 for n log n area, log n time
 		* @param remainderOnly As the name suggests
 		*/
 		IntConstDiv(Target* target, int wIn, vector<int> d, int alpha=-1, int architecture=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
@@ -104,7 +105,7 @@ namespace flopoco{
 
 	public:
 		int quotientSize();   /**< Size in bits of the quotient output */
-		int remainderSize();  /**< Size in bits of a remainder; gamma=ceil(log2(d-1)) */
+		int remainderSize();  /**< Size in bits of a remainder; rSize=ceil(log2(d-1)) */
 
 
 
@@ -114,7 +115,8 @@ namespace flopoco{
 		int alpha; /**< Size of the chunk (should be between 1 and 16)*/
 		int architecture; /** 0 for the linear architecture. 1 for the log(n) architecture */
 		bool remainderOnly; /**< if true, only the remainder will be computed. If false, quotient will be computed */
-		int gamma;  /**< Size in bits of a remainder; gamma=ceil(log2(d-1)) */
+		bool computeRemainder; /**<  */
+		int rSize;  /**< Size in bits of a remainder; rSize=ceil(log2(d-1)) */
 		int qSize;   /**< Size in bits of the quotient output */
 		int rho;    /**< Size in bits of the quotient of one digit */
 

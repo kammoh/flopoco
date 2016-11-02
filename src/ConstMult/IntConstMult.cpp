@@ -132,7 +132,6 @@ namespace flopoco{
 
 
 
-
 	/**
 	 * Finds and returns the index of the best ShiftAddDag in an array considering the priority flag. 
 	 * If the flag is not set, we consider both latency and surface.
@@ -465,6 +464,9 @@ namespace flopoco{
 
 
 
+	int IntConstMult::getArea() {
+		return ( compute_total_cost(implementation->result) );
+	}
 
 
 
