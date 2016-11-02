@@ -544,6 +544,16 @@ enum BitType : unsigned;
 		 */
 		void printBitHeapStatus();
 
+		/**
+		 * @brief return the bits currently stored in the bitheap
+		 */
+		vector<vector<Bit*>> getBits();
+
+		/**
+		 * @brief return the compression strategy
+		 */
+		CompressionStrategy* getCompressionStrategy();
+
 	protected:
 
 		/**
