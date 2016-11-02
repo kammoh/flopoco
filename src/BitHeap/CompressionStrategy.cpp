@@ -28,6 +28,9 @@ namespace flopoco{
 
 		//generate all the compressors that can be used
 		generatePossibleCompressors();
+
+		//create the plotter
+		bitheapPlotter = new BitheapPlotter(bitheap);
 	}
 
 
@@ -39,6 +42,9 @@ namespace flopoco{
 	{
 		bool bitheapCompressed = false;
 		double delay;
+
+		//take a snapshot of the bitheap, before the start of the compression
+		bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
 
 		//first, set the delay to the delay of a compressor
 		delay = compressionDelay;
@@ -53,8 +59,22 @@ namespace flopoco{
 			{
 				//apply as many compressors as possible, with the current delay
 				bitheapCompressed = compress(delay);
+				//take a snapshot of the bitheap, if a compression was performed
+				//	including the bits that are to be removed
+				if(bitheapCompressed == true)
+				{
+					//take a snapshot of the bitheap
+					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+				}
 				//remove the bits that have just been compressed
 				bitheap->removeCompressedBits();
+				//take a snapshot of the bitheap, if a compression was performed
+				//	without the bits that have been removed
+				if(bitheapCompressed == true)
+				{
+					//take a snapshot of the bitheap
+					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+				}
 				//send the parts of the bitheap that has already been compressed to the final result
 				concatenateLSBColumns();
 				//print the status of the bitheap
@@ -81,6 +101,8 @@ namespace flopoco{
 		concatenateChunks();
 		//mark the bitheap as compressed
 		bitheap->isCompressed = true;
+		//plot the bitheap
+		bitheapPlotter->plotBitHeap();
 	}
 
 
@@ -349,7 +371,7 @@ namespace flopoco{
 					<< compressorNumber << " maximum index=" << possibleCompressors.size()-1);
 		}else{
 			compressor = possibleCompressors[compressorNumber];
-			soonestBitTotalTime = soonestBit->signal->getCycle() * 1.0/bitheap->op->getTarget()->frequency() +
+			soonestBitTotalTime = soonestBit->signal->getCycle() * (1.0/bitheap->op->getTarget()->frequency()) +
 									soonestBit->signal->getCriticalPath();
 		}
 

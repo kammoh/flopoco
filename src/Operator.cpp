@@ -1851,6 +1851,11 @@ namespace flopoco{
 
 		int maxCycle = 0;
 
+		//first, do an initial schedule of the inputs, if they haven't been scheduled
+		for(auto i : op->ioList_)
+			if((i->type() == Signal::in) && (i->getHasBeenScheduled() == false))
+				setSignalTiming(i, true);
+
 		//determine the maximum input cycle
 		for(unsigned int i=0; i<op->getIOList()->size(); i++)
 			if((op->getIOListSignal(i)->type() == Signal::in)
@@ -1892,7 +1897,10 @@ namespace flopoco{
 		{
 			//TODO: rescheduling the inputs is not needed, as they have just been synchronized to the same cycle
 			//first, do an initial schedule of the circuit
-			//	schedule the inputs
+			//	schedule the inputs, if they haven't been scheduled
+			for(auto i : op->ioList_)
+				if((i->type() == Signal::in) && (i->getHasBeenScheduled() == false))
+					setSignalTiming(i, true);
 			//	schedule the successors of the inputs
 			for(auto i : op->ioList_)
 				if(i->type() == Signal::in)

@@ -26,6 +26,9 @@ All rights reserved.
 namespace flopoco
 {
 
+class Bit;
+class BitheapNew;
+
 	class BitheapPlotter
 	{
 

@@ -10,6 +10,7 @@
 #include "BitHeap/Bit.hpp"
 #include "BitHeap/Compressor.hpp"
 #include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitheapPlotter.hpp"
 
 #include "IntAddSubCmp/IntAdder.hpp"
 
@@ -20,6 +21,7 @@ class Bit;
 class Compressor;
 class BitheapNew;
 class IntAdder;
+class BitheapPlotter;
 
 	class CompressionStrategy
 	{
@@ -135,6 +137,7 @@ class IntAdder;
 
 	private:
 		BitheapNew *bitheap;                        /**< The bitheap this compression strategy belongs to */
+		BitheapPlotter *bitheapPlotter;             /**< The bitheap plotter for this bitheap compression */
 
 		vector<Compressor*> possibleCompressors;    /**< All the possible compressors that can be used for compressing the bitheap */
 

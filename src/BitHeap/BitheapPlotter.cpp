@@ -104,7 +104,7 @@ namespace flopoco
 
 	void BitheapPlotter::drawInitialBitheap()
 	{
-		int offsetY, turnaroundX;
+		int offsetY = 0, turnaroundX = 0;
 
 		initializePlotter(true);
 
@@ -179,8 +179,6 @@ namespace flopoco
 
 	void BitheapPlotter::drawInitialConfiguration(Snapshot* snapshot, int offsetY, int turnaroundX)
 	{
-		int color = 0;
-
 		fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\""
 				<< offsetY +10 << "\" x2=\"" << turnaroundX - snapshot->bits.size()*10 - 50
 				<< "\" y2=\"" << offsetY +10 << "\" style=\"stroke:lightsteelblue;stroke-width:1\" />" << endl;
@@ -200,8 +198,7 @@ namespace flopoco
 
 	void BitheapPlotter::drawConfiguration(int index, Snapshot *snapshot, int offsetY, int turnaroundX)
 	{
-		int cnt = 0;
-		int ci,c1,c2,c3;										//print cp as a number as a rational number, in nanoseconds
+		int ci,c1,c2,c3;										//print the critical path as a number as a rational number, in nanoseconds
 		int cpint = snapshot->criticalPath * 1000000000000;
 
 		c3 = cpint % 10;
