@@ -76,6 +76,17 @@ class BitheapNew;
 		 */
 		Bit(Bit* bit);
 
+		/**
+		 * @brief a simple constructor, creating an empty bit
+		 * 		  to be used in conjunction with the clone() method
+		 */
+		Bit();
+
+
+		/**
+		 * @brief clone a bit, without adding a new bit to the bitheap
+		 */
+		Bit* clone();
 
 		/**
 		 * @brief Return the uid of this bit inside the bitheap that contains it

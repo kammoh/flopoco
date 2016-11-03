@@ -59,26 +59,43 @@ namespace flopoco{
 			{
 				//apply as many compressors as possible, with the current delay
 				bitheapCompressed = compress(delay);
+
+				bitheap->op->vhdl << endl << "------------ end of call to compress ------------" << endl << endl;
+
 				//take a snapshot of the bitheap, if a compression was performed
 				//	including the bits that are to be removed
 				if(bitheapCompressed == true)
 				{
+					bitheap->op->vhdl << endl << "------------ before taking a snapshot after the compression, including removed bits ------------" << endl << endl;
+
 					//take a snapshot of the bitheap
 					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+
+					bitheap->op->vhdl << endl << "------------ took a snapshot after the compression, including removed bits ------------" << endl << endl;
 				}
 				//remove the bits that have just been compressed
 				bitheap->removeCompressedBits();
+
+				bitheap->op->vhdl << endl << "------------ end of call to removeCompressedBits ------------" << endl << endl;
+
 				//take a snapshot of the bitheap, if a compression was performed
 				//	without the bits that have been removed
 				if(bitheapCompressed == true)
 				{
 					//take a snapshot of the bitheap
 					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+
+					bitheap->op->vhdl << endl << "------------ took a snapshot after the compression, without removed bits ------------" << endl << endl;
 				}
 				//send the parts of the bitheap that has already been compressed to the final result
 				concatenateLSBColumns();
+
+				bitheap->op->vhdl << endl << "------------ end of call to concatenateLSBColumns ------------" << endl << endl;
+
 				//print the status of the bitheap
 				bitheap->printBitHeapStatus();
+
+				bitheap->op->vhdl << endl << "------------ end of call to printBitHeapStatus ------------" << endl << endl;
 
 				//if no compression was performed, then the delay between
 				//	the soonest bit and the rest of the bits that need to be compressed needs to be increased
@@ -90,6 +107,12 @@ namespace flopoco{
 						delay = 1.0 / bitheap->op->getTarget()->frequency();
 					else
 						delay += 1.0 / bitheap->op->getTarget()->frequency();
+				}
+
+				//add a marker in the code to more easily separate the compression stages
+				if(bitheapCompressed == false)
+				{
+					bitheap->op->vhdl << endl << "------------ end of compression round ------------" << endl << endl;
 				}
 			}
 		}else{

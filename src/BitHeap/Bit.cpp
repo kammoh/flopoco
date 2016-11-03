@@ -66,6 +66,42 @@ namespace flopoco
 	}
 
 
+	Bit::Bit()
+	{
+		weight = -1;
+		name = "";
+		type = BitType::free;
+
+		bitheap = nullptr;
+		compressor = nullptr;
+		signal = nullptr;
+
+		uid = -1;
+
+		rhsAssignment = "";
+	}
+
+
+	Bit* Bit::clone()
+	{
+		Bit* newBit = new Bit();
+
+		newBit->weight = weight;
+		newBit->name = name;
+		newBit->type = type;
+
+		newBit->bitheap = bitheap;
+		newBit->compressor = compressor;
+		newBit->signal = signal;
+
+		newBit->uid = uid;
+
+		newBit->rhsAssignment = rhsAssignment;
+
+		return newBit;
+	}
+
+
 	int Bit::getUid()
 	{
 		return uid;

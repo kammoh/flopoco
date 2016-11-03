@@ -31,8 +31,7 @@ namespace flopoco
 			{
 				for(vector<Bit*>::iterator it = bits_[i].begin(); it!=bits_[i].end(); ++it)
 				{
-					Bit* b = new Bit(*it);
-					newColumn.push_back(b);
+					newColumn.push_back((*it)->clone());
 				}
 			}
 
@@ -88,7 +87,7 @@ namespace flopoco
 
 	void BitheapPlotter::takeSnapshot(Bit *soonestBit)
 	{
-		Snapshot* s = new Snapshot(bitheap->getBits(), bitheap->getMaxHeight(), soonestBit->signal->getCycle(), soonestBit->signal->getCriticalPath());
+		BitheapPlotter::Snapshot* s = new BitheapPlotter::Snapshot(bitheap->getBits(), bitheap->getMaxHeight(), soonestBit->signal->getCycle(), soonestBit->signal->getCriticalPath());
 
 		snapshots.push_back(s);
 	}
