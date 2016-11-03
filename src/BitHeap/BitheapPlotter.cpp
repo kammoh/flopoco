@@ -253,12 +253,29 @@ namespace flopoco
 		criticalPath /= 10;
 		ci = criticalPath % 10;
 
-		fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
-			<< " cy=\"" << offsetY - index*10 - 5 << "\""
-			<< " r=\"3\""
-			<< " fill=\"" << colors[colorIndex] << "\" stroke=\"black\" stroke-width=\"0.5\""
-			<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
-			<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
+		if(bit->type == BitType::compressed)
+		{
+			fig << "<pattern id=\"diagonalHatch\" patternUnits=\"userSpaceOnUse\" width=\"3\" height=\"3\">"
+					<< "<path d=\"M-1,1 l3,-3"
+					<< "M0,3 l3,-3"
+					<< "M2,4 l3,-3\" "
+					<< "style=\"stroke:" << colors[colorIndex] << "; stroke-width:1\" />"
+				<< "</pattern>" << endl;
+			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
+				<< " cy=\"" << offsetY - index*10 - 5 << "\""
+				<< " r=\"3\""
+				<< " fill=\"url(#diagonalHatch)\" stroke=\"black\" stroke-width=\"0.5\""
+				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
+		}else
+		{
+			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
+				<< " cy=\"" << offsetY - index*10 - 5 << "\""
+				<< " r=\"3\""
+				<< " fill=\"" << colors[colorIndex] << "\" stroke=\"black\" stroke-width=\"0.5\""
+				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
+		}
 	}
 
 
