@@ -252,8 +252,8 @@ namespace flopoco
 
 	void BitheapPlotter::drawBit(int index, int turnaroundX, int offsetY, Bit *bit)
 	{
-		const std::string colors[] = { "darkblue", "mediumblue", "blue", "royalblue", "dodgerblue", "cornflowerblue", "teal",
-				"darkcyan", "deepskyblue", "darkturquoise", "turquoise", "skyblue", "lightskyblue", "cyan"};
+		const std::string colors[] = { "darkblue", "blue", "royalblue", "dodgerblue", "teal", "deepskyblue", "cyan",
+										"lightseagreen", "mediumgreen", "forestgreen", "olivedrab", "darkolivegreen", "darkgreen", "darkslategrey"};
 		const unsigned int colorsNumber = 14;
 		int ci,c1,c2,c3;	//print cp as a number, as a rational number, in nanoseconds
 		int criticalPath = (int)(bit->signal->getCriticalPath() * 1000000000000);
