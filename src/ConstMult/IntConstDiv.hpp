@@ -73,7 +73,7 @@ namespace flopoco{
 		* @param remainderOnly As the name suggests
 		*/
 
-		IntConstDiv(Target* target, int wIn, int d, int alpha=-1, int architecture=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
+		IntConstDiv(Target* target, int wIn, int d, int alpha=-1, int architecture=0, bool computeQuotient=true, bool computeRemainder=true);
 
 
 		/** @brief The composite constructor
@@ -83,7 +83,7 @@ namespace flopoco{
 		* @param architecture Architecture used, can be 0 for linear are, linear time, or 1 for n log n area, log n time
 		* @param remainderOnly As the name suggests
 		*/
-		IntConstDiv(Target* target, int wIn, vector<int> d, int alpha=-1, int architecture=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
+		IntConstDiv(Target* target, int wIn, vector<int> d, int alpha=-1, int architecture=0, bool computeQuotient=true, bool computeRemainder=true);
 
 		~IntConstDiv();
 
@@ -113,9 +113,9 @@ namespace flopoco{
 		int d; /**<  Divisor*/
 		int wIn;  /**<  Size in bits of the input X */
 		int alpha; /**< Size of the chunk (should be between 1 and 16)*/
-		int architecture; /** 0 for the linear architecture. 1 for the log(n) architecture */
-		bool remainderOnly; /**< if true, only the remainder will be computed. If false, quotient will be computed */
-		bool computeRemainder; /**<  */
+		int architecture; /** selects architecture. See the user interface help */
+		bool computeQuotient; /**<  as the name suggests */
+		bool computeRemainder; /**< as the name suggests */
 		int rSize;  /**< Size in bits of a remainder; rSize=ceil(log2(d-1)) */
 		int qSize;   /**< Size in bits of the quotient output */
 		int rho;    /**< Size in bits of the quotient of one digit */
