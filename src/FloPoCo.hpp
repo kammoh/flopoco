@@ -58,6 +58,7 @@
 #include "BitHeap/Compressor.hpp"
 #include "BitHeap/BitheapNew.hpp"
 #include "BitHeap/CompressionStrategy.hpp"
+#include "BitHeap/BitheapPlotter.hpp"
 
 #include "BitHeap/BitheapTest.hpp"
 

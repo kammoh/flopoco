@@ -253,6 +253,7 @@ src/AutoTest/AutoTest
  src/BitHeap/Compressor
  src/BitHeap/BitheapNew
  src/BitHeap/CompressionStrategy
+ src/BitHeap/BitheapPlotter
  
  src/BitHeap/BitheapTest
 
