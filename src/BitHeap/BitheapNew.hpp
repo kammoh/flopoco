@@ -192,6 +192,19 @@ enum BitType : unsigned;
 		void markBits(vector<Bit*> bits, BitType type);
 
 		/**
+		 * @brief mark the bits of a signal added to the bitheap.
+		 * @param signalName the signal who's bits to mark
+		 * @param type how the bits should be marked
+		 * @param weight the weight of the signal, so as to speed-up the search
+		 */
+		void markBits(Signal *signal, BitType type, int weight);
+
+		/**
+		 * @brief mark bits that are ready to be compressed as free
+		 */
+		void markBitsForCompression();
+
+		/**
 		 * @brief add a constant 1 to the bit heap.
 		 * All the constant bits are added to the constantBits mpz,
 		 * so we don't generate hardware to compress constants.

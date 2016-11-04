@@ -15,6 +15,7 @@ using namespace std;
 namespace flopoco{
 
 enum BitType : unsigned {
+	justAdded,
 	free,
 	beingCompressed,
 	compressed
@@ -102,6 +103,11 @@ class BitheapNew;
 		 * @brief Return the compressor that compressed this bit
 		 */
 		Compressor* getCompressor();
+
+		/**
+		 * @brief return the rhsAssignment
+		 */
+		string getRhsAssignment();
 
 	public:
 		int weight;

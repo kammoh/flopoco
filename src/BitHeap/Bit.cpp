@@ -107,16 +107,23 @@ namespace flopoco
 		return uid;
 	}
 
+
 	void Bit::setCompressor(Compressor *compressor_)
 	{
 		compressor = compressor_;
 	}
+
 
 	Compressor* Bit::getCompressor()
 	{
 		return compressor;
 	}
 
+
+	string Bit::getRhsAssignment()
+	{
+		return rhsAssignment;
+	}
 
 
 	bool operator< (Bit& b1, Bit& b2){

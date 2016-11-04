@@ -255,7 +255,7 @@ namespace flopoco
 
 		if(bit->type == BitType::compressed)
 		{
-			fig << "<pattern id=\"diagonalHatch\" patternUnits=\"userSpaceOnUse\" width=\"3\" height=\"3\">"
+			fig << "<pattern id=\"diagonalHatchRightLeft\" patternUnits=\"userSpaceOnUse\" width=\"3\" height=\"3\">"
 					<< "<path d=\"M-1,1 l3,-3"
 					<< "M0,3 l3,-3"
 					<< "M2,4 l3,-3\" "
@@ -264,7 +264,21 @@ namespace flopoco
 			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
 				<< " r=\"3\""
-				<< " fill=\"url(#diagonalHatch)\" stroke=\"black\" stroke-width=\"0.5\""
+				<< " fill=\"url(#diagonalHatchRightLeft)\" stroke=\"black\" stroke-width=\"0.5\""
+				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
+		}else if(bit->type == BitType::justAdded)
+		{
+			fig << "<pattern id=\"diagonalHatchLeftRight\" patternUnits=\"userSpaceOnUse\" width=\"3\" height=\"3\">"
+					<< "<path d=\"M2,-1 l3,3"
+					<< "M0,0 l3,3"
+					<< "M-1,2 l3,3\" "
+					<< "style=\"stroke:" << colors[colorIndex] << "; stroke-width:1\" />"
+				<< "</pattern>" << endl;
+			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
+				<< " cy=\"" << offsetY - index*10 - 5 << "\""
+				<< " r=\"3\""
+				<< " fill=\"url(#diagonalHatchLeftRight)\" stroke=\"red\" stroke-width=\"0.5\""
 				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 		}else

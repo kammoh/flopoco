@@ -390,6 +390,48 @@ namespace flopoco {
 	}
 
 
+	void BitheapNew::markBits(Signal *signal, BitType type, int weight)
+	{
+		int startIndex;
+
+		if(weight > msb)
+		{
+			THROWERROR("Error in markBits: weight cannot be more than the msb: weight=" << weight);
+		}
+
+		if(weight < lsb)
+			startIndex = 0;
+		else
+			startIndex = weight - lsb;
+
+		for(int i=startIndex; (unsigned)i<bits.size(); i++)
+		{
+			for(unsigned int j=0; j<bits[i].size(); j++)
+			{
+				if(bits[i][j]->getRhsAssignment().find(signal->getName()) != string::npos)
+				{
+					bits[i][j]->type = type;
+				}
+			}
+		}
+	}
+
+
+	void BitheapNew::markBitsForCompression()
+	{
+		for(unsigned i=0; i<size; i++)
+		{
+			for(unsigned j=0; j<bits[i].size(); j++)
+			{
+				if(bits[i][j]->type == BitType::justAdded)
+				{
+					bits[i][j]->type = BitType::free;
+				}
+			}
+		}
+	}
+
+
 	void BitheapNew::addConstantOneBit(int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
