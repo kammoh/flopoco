@@ -201,7 +201,7 @@ namespace flopoco
 			{
 				for(unsigned int j=0; j<snapshot->bits[i].size(); j++)
 				{
-					drawBit(j, turnaroundX, offsetY, snapshot->bits[i][j]->signal->getCycle(), snapshot->bits[i][j]);
+					drawBit(j, turnaroundX, offsetY, snapshot->bits[i][j]);
 				}
 			}
 		}
@@ -243,18 +243,18 @@ namespace flopoco
 			{
 				for(unsigned int j=0; j<snapshot->bits[i].size(); j++)
 				{
-					drawBit(j, turnaroundX, offsetY, snapshot->bits[i][j]->signal->getCycle(), snapshot->bits[i][j]);
+					drawBit(j, turnaroundX, offsetY, snapshot->bits[i][j]);
 				}
 			}
 		}
 	}
 
 
-	void BitheapPlotter::drawBit(int index, int turnaroundX, int offsetY, int color, Bit *bit)
+	void BitheapPlotter::drawBit(int index, int turnaroundX, int offsetY, Bit *bit)
 	{
 		const std::string colors[] = { "darkblue", "mediumblue", "blue", "royalblue", "dodgerblue", "cornflowerblue", "teal",
 				"darkcyan", "deepskyblue", "darkturquoise", "turquoise", "skyblue", "lightskyblue", "cyan"};
-		int colorIndex = color % 14;
+		const unsigned int colorsNumber = 14;
 		int ci,c1,c2,c3;	//print cp as a number, as a rational number, in nanoseconds
 		int criticalPath = (int)(bit->signal->getCriticalPath() * 1000000000000);
 
@@ -272,7 +272,7 @@ namespace flopoco
 					<< "<path d=\"M-1,1 l3,-3"
 					<< "M0,3 l3,-3"
 					<< "M2,4 l3,-3\" "
-					<< "style=\"stroke:" << colors[colorIndex] << "; stroke-width:1\" />"
+					<< "style=\"stroke:" << colors[bit->colorCount % colorsNumber] << "; stroke-width:1\" />"
 				<< "</pattern>" << endl;
 			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
@@ -286,7 +286,7 @@ namespace flopoco
 					<< "<path d=\"M2,-1 l3,3"
 					<< "M0,0 l3,3"
 					<< "M-1,2 l3,3\" "
-					<< "style=\"stroke:" << colors[colorIndex] << "; stroke-width:1\" />"
+					<< "style=\"stroke:" << colors[bit->colorCount % colorsNumber] << "; stroke-width:1\" />"
 				<< "</pattern>" << endl;
 			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
@@ -299,7 +299,7 @@ namespace flopoco
 			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
 				<< " r=\"3\""
-				<< " fill=\"" << colors[colorIndex] << "\" stroke=\"black\" stroke-width=\"0.5\""
+				<< " fill=\"" << colors[bit->colorCount % colorsNumber] << "\" stroke=\"black\" stroke-width=\"0.5\""
 				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 		}

@@ -118,6 +118,8 @@ class BitheapNew;
 		Compressor *compressor;
 		Signal *signal;
 
+		unsigned int colorCount;
+
 	private:
 		int uid;
 

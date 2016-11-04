@@ -205,6 +205,13 @@ enum BitType : unsigned;
 		void markBitsForCompression();
 
 		/**
+		 * @brief color the bits of the given type, with the given color
+		 * @param type the type of the bits who's color is going to be changed
+		 * @param newColor the new color of the bits
+		 */
+		void colorBits(BitType type, unsigned int newColor);
+
+		/**
 		 * @brief add a constant 1 to the bit heap.
 		 * All the constant bits are added to the constantBits mpz,
 		 * so we don't generate hardware to compress constants.

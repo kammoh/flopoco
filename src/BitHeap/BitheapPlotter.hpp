@@ -132,7 +132,7 @@ class BitheapNew;
 		/**
 		 * @brief draws a single bit
 		 */
-		void drawBit(int index, int turnaroundX, int offsetY, int color, Bit *bit);
+		void drawBit(int index, int turnaroundX, int offsetY, Bit *bit);
 
 		/*
 		 * @brief write the SVG initialization functions

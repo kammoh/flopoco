@@ -42,6 +42,7 @@ namespace flopoco{
 	{
 		bool bitheapCompressed = false;
 		double delay;
+		unsigned int colorCount = 0;
 
 		//take a snapshot of the bitheap, before the start of the compression
 		bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
@@ -64,6 +65,9 @@ namespace flopoco{
 				//	including the bits that are to be removed
 				if(bitheapCompressed == true)
 				{
+					//color the newly added bits
+					colorCount++;
+					bitheap->colorBits(BitType::justAdded, colorCount);
 					//take a snapshot of the bitheap
 					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
 				}

@@ -432,6 +432,22 @@ namespace flopoco {
 	}
 
 
+	void BitheapNew::colorBits(BitType type, unsigned int newColor)
+	{
+		for(unsigned i=0; i<size; i++)
+		{
+			for(unsigned j=0; j<bits[i].size(); j++)
+			{
+				if(bits[i][j]->type == type)
+				{
+					bits[i][j]->colorCount = newColor;
+				}
+			}
+		}
+	}
+
+
+
 	void BitheapNew::addConstantOneBit(int weight)
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))

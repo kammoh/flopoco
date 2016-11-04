@@ -8,7 +8,7 @@ namespace flopoco
 {
 
 	Bit::Bit(BitheapNew *bitheap_, string rhsAssignment_, int weight_, BitType type_) :
-		weight(weight_), type(type_), bitheap(bitheap_), rhsAssignment(rhsAssignment_)
+		weight(weight_), type(type_), bitheap(bitheap_), rhsAssignment(rhsAssignment_), colorCount(0)
 	{
 		std::ostringstream p;
 
@@ -25,7 +25,7 @@ namespace flopoco
 
 
 	Bit::Bit(BitheapNew *bitheap_, Signal *signal_, int offset_, int weight_, BitType type_) :
-		weight(weight_), type(type_), bitheap(bitheap_)
+		weight(weight_), type(type_), bitheap(bitheap_), colorCount(0)
 	{
 		std::ostringstream p;
 
@@ -63,6 +63,8 @@ namespace flopoco
 		bitheap->getOp()->declare(name);
 		signal = bitheap->getOp()->getSignalByName(name);
 		bitheap->getOp()->vhdl << tab << name << " <= " << rhsAssignment << ";" << endl;
+
+		colorCount = 0;
 	}
 
 
@@ -79,6 +81,8 @@ namespace flopoco
 		uid = -1;
 
 		rhsAssignment = "";
+
+		colorCount = 0;
 	}
 
 
@@ -97,6 +101,8 @@ namespace flopoco
 		newBit->uid = uid;
 
 		newBit->rhsAssignment = rhsAssignment;
+
+		newBit->colorCount = colorCount;
 
 		return newBit;
 	}
