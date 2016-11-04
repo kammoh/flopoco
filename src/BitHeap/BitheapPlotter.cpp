@@ -141,6 +141,18 @@ namespace flopoco
 	void BitheapPlotter::initializePlotter(bool isInitial)
 	{
 		ostringstream figureFileName;
+		ostringstream bitheapName;
+		int bitheapWidth, bitheapHeight, bitheapLength;
+
+		bitheapWidth  = (bitheap->msb - bitheap->lsb + 1) * 20 + 150;
+		bitheapHeight = bitheap->height * snapshots.size() * 45;
+		bitheapLength = bitheapHeight;
+
+		if(bitheap->getName() == "")
+		{
+			bitheapName << bitheap->getOp()->getName() << "_bitheap_" << bitheap->getGUid();
+			bitheap->name = bitheapName.str();
+		}
 
 		if(isInitial)
 			figureFileName << "BitHeap_initial_" << bitheap->getName()  << ".svg";
@@ -156,7 +168,8 @@ namespace flopoco
 		fig << "<?xml version=\"1.0\" standalone=\"no\"?>" << endl
 				<< "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"" << endl
 				<< "\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">" << endl
-				<< "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" onload=\"init(evt)\" >" << endl;
+				<< "<svg width=\"" << bitheapWidth << "\" height=\"" << bitheapHeight << "\" length=\"" << bitheapLength
+				<< "\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" onload=\"init(evt)\" >" << endl;
 
 		addECMAFunction();
 	}
