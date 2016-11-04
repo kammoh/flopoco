@@ -152,8 +152,8 @@ namespace flopoco{
 	}
 		
 
-	IntConstDiv::IntConstDiv(Target* target, int wIn_, vector<int> divisors, int alpha_, int architecture_,  bool remainderOnly_, map<string, double> inputDelays)
-		: Operator(target),  wIn(wIn_), alpha(alpha_), architecture(architecture_), remainderOnly(remainderOnly_)
+	IntConstDiv::IntConstDiv(Target* target, int wIn_, vector<int> divisors, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
+		: Operator(target),  wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
 	{
 		setCopyrightString("F. de Dinechin (2016)");
 		srcFileName="IntConstDiv";
@@ -178,19 +178,24 @@ namespace flopoco{
 
 		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
 		std::ostringstream o;
-		if(remainderOnly)
-			o << "IntConstRem_";
-		else
-			o << "IntConstDiv_";
+		if(!computeQuotient && !computeRemainder) {
+			THROWERROR("Neither quotient, neither remainder to compute: better die just now")
+		}
+		o << "IntConstDiv_";
+		if(computeQuotient)
+			o << "Q";
+		if(computeRemainder)
+			o << "R";
 		o << d << "_" << wIn << "_"  << alpha ;
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);
 				
 
-		if(!remainderOnly)
+		if(computeQuotient)
 			addOutput("Q", qSize);
-		addOutput("R", rSize);
+		if(computeRemainder)
+			addOutput("R", rSize);
 
 			int wInCurrent=wIn;
 			int currentDivProd=1;
@@ -274,8 +279,8 @@ namespace flopoco{
 
 
 	
-	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool remainderOnly_, map<string, double> inputDelays)
-		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), remainderOnly(remainderOnly_)
+	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
+		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
 	{
 		setCopyrightString("F. de Dinechin (2011, 2016)");
 		srcFileName="IntConstDiv";
@@ -284,8 +289,6 @@ namespace flopoco{
 			THROWERROR("Divisor is even! Please manage this outside IntConstDiv");
 		}
 
-
-		bool computeRemainder=true; // soon an argument
 
 
 		//		if((architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) || (architecture==INTCONSTDIV_LOGARITHMIC_ARCHITECTURE)) {
@@ -319,16 +322,18 @@ namespace flopoco{
  
 		
 		std::ostringstream o;
-		if(remainderOnly)
-				o << "IntConstRem_";
-		else
-			o << "IntConstDiv_";
+		o << "IntConstDiv_";
+		if(computeQuotient)
+			o << "Q";
+		if(computeRemainder)
+			o << "R";
 		o << d << "_" << wIn << "_"  << alpha ;
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);
 				
-		if(!remainderOnly)
+
+		if(computeQuotient)
 			addOutput("Q", qSize);
 		if(computeRemainder)
 			addOutput("R", rSize);
@@ -425,7 +430,7 @@ namespace flopoco{
 			}
 
 
-			if(!remainderOnly) { // build the quotient output
+			if(computeQuotient) { // build the quotient output
 				vhdl << tab << declare("tempQ", xDigits*alpha) << " <= " ;
 				for (unsigned int i=xDigits-1; i>=1; i--)
 					vhdl << "q" << i << " & ";
@@ -433,7 +438,9 @@ namespace flopoco{
 				vhdl << tab << "Q <= tempQ" << range(qSize-1, 0)  << ";" << endl;
 			}
 
-			vhdl << tab << "R <= " << ri << ";" << endl; // This ri is r_0
+			if(computeRemainder) { // build the remainder output
+				vhdl << tab << "R <= " << ri << ";" << endl; // This ri is r_0
+			}
 		}
 
 
@@ -590,12 +597,13 @@ namespace flopoco{
 				
 			} // for level
 			
-			if(!remainderOnly) { // build the quotient output
+			if(computeQuotient) { // build the quotient output
 				vhdl << tab << "Q <= " << qs  << range(qSize-1, 0) << ";" << endl;
 			}
 			
-			vhdl << tab << "R <= " << r << ";" << endl;
-
+			if(computeRemainder) { // build the remainder output
+				vhdl << tab << "R <= " << r << ";" << endl;
+			}
 			
 		}
 
@@ -632,6 +640,8 @@ namespace flopoco{
 			int optkm=k;
 			REPORT(INFO, "Found optkp=" << optkp << "   optkm=" << optkm );
 
+			// optkm--; optkp--; // optimality check: if this line is uncommented, it should no longer pass the exhaustive test
+			//                   // which is te case. 
 
 			// Attempt to build the optkp
 			// We need the ceil of 2^k/d
@@ -668,8 +678,13 @@ namespace flopoco{
 
 				vhdl << tab << declare("Q1", qSize) << " <= Q0"<< range(pSize-1, pSize-qSize) << ";" << endl;
 			}
-			vhdl << tab << "Q <= Q1;" <<endl;
-
+			if(computeQuotient) {
+				vhdl << tab << "Q <= Q1;" <<endl;
+			}
+			else
+				{
+					REPORT(INFO, "WARNING: this architecture computed the quotient and does not output it; consider using architecture=0, it could be cheaper."); 
+				}
 			if(computeRemainder) {
 				ostringstream multParams;
 				multParams << "wIn=" << qSize << " n=" << d;
@@ -703,7 +718,7 @@ namespace flopoco{
 		/* Compute correct value */
 		mpz_class Q = X/d;
 		mpz_class R = X%d;
-		if(!remainderOnly)
+		if(computeQuotient)
 			tc->addExpectedOutput("Q", Q);
 		if(computeRemainder)
 			tc->addExpectedOutput("R", R);
@@ -749,17 +764,19 @@ namespace flopoco{
 	OperatorPtr IntConstDiv::parseArguments(Target *target, vector<string> &args) {
 		int wIn, arch, alpha;
 		vector<int> divisors;
-		bool remainderOnly;
+		bool computeQuotient, computeRemainder;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
 		UserInterface::parseIntList(args, "d", &divisors);
 		UserInterface::parseInt(args, "alpha", &alpha);
 		UserInterface::parsePositiveInt(args, "arch", &arch);
-		UserInterface::parseBoolean(args, "remainderOnly", &remainderOnly);
+		UserInterface::parseBoolean(args, "computeQuotient",  &computeQuotient);
+		UserInterface::parseBoolean(args, "computeRemainder", &computeRemainder);
+		
 		if(divisors.size()==1) {
-			return new IntConstDiv(target, wIn, divisors[0], alpha, arch, remainderOnly);
+			return new IntConstDiv(target, wIn, divisors[0], alpha, arch, computeQuotient, computeRemainder);
 		}
 		else { // composite divisor
-			return new IntConstDiv(target, wIn, divisors, alpha, arch, remainderOnly);
+			return new IntConstDiv(target, wIn, divisors, alpha, arch, computeQuotient, computeRemainder);
 		}
 	}
 
@@ -771,7 +788,8 @@ namespace flopoco{
 											 "wIn(int): input size in bits; \
 											 d(intlist): integer to divide by. Either a small integer, or a comma-separated list of small integers, in which case a composite divider by the product is built;  \
 											 arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal; \
-											 remainderOnly(bool)=false: if true, the architecture doesn't output the quotient; \
+											 computeQuotient(bool)=true: if true, the architecture outputs the quotient; \
+											 computeRemainder(bool)=true: if true, the architecture outputs the remainder; \
 											 alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
 											 "This operator is described, for arch=0, in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>, and for arch=1, in <a href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>.", // TODO Add recip arch
 											 IntConstDiv::parseArguments,
