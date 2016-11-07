@@ -160,6 +160,12 @@ namespace flopoco
 						<< "\" x2=\"" << 50 << "\" y2=\"" << offsetY + 15
 						<< "\" style=\"stroke:midnightblue;stroke-width:1\" />" << endl;
 			}
+
+			if(i>0 && i%2==1)
+			{
+				fig << "<text x=\"" << 15 << "\" y=\"" << offsetY + 15
+						<< "\" fill=\"midnightblue\">" << (i+1)/2 << "</text>" << endl;
+			}
 		}
 
 		closePlotter(offsetY, turnaroundX);
@@ -371,7 +377,16 @@ namespace flopoco
 				tab << "}" << endl <<
 				"</style>" << endl;
 		fig << endl;
-		fig << "<script type=\"text/ecmascript\"> <![CDATA[  " << endl <<
+		fig << "<script type=\"text/ecmascript\"> <![CDATA[  " << endl << endl <<
+				tab << "var svg = document.querySelector('svg');" << endl <<
+				endl <<
+				tab << "var pt = svg.createSVGPoint();" << endl <<
+				endl <<
+				tab << "function cursorLocation(evt){" << endl <<
+				tab << tab << "pt.x = evt.clientX; pt.y = evt.clientY;" << endl <<
+				tab << tab << "return pt.matrixTransform(svg.getScreenCTM().inverse());" << endl <<
+				tab << "}" << endl <<
+				endl <<
 				tab << "function init(evt) {" << endl <<
 				tab << tab << "if ( window.svgDocument == null ) {" << endl <<
 				tab << tab << tab << "svgDocument = evt.target.ownerDocument;" << endl <<
@@ -379,18 +394,22 @@ namespace flopoco
 				tab << tab << "tooltip = svgDocument.getElementById('tooltip');" << endl <<
 				tab << tab << "tooltip_bg = svgDocument.getElementById('tooltip_bg');" << endl <<
 				tab << "}" << endl <<
+				endl <<
 				tab << "function ShowTooltip(evt, mouseovertext) {" << endl <<
-				tab << tab << "tooltip.setAttributeNS(null,\"x\",evt.clientX+10);" << endl <<
-				tab << tab << "tooltip.setAttributeNS(null,\"y\",evt.clientY+30);" << endl <<
+				tab << tab << "var loc = cursorLocation(evt);" << endl <<
+				endl <<
+				tab << tab << "tooltip.setAttributeNS(null,\"x\",loc.x+10);" << endl <<
+				tab << tab << "tooltip.setAttributeNS(null,\"y\",loc.y+30);" << endl <<
 				tab << tab << "tooltip.firstChild.data = mouseovertext;" << endl <<
 				tab << tab << "tooltip.setAttributeNS(null,\"visibility\",\"visible\");" << endl <<
 				endl <<
 				tab << tab << "length = tooltip.getComputedTextLength();" << endl <<
 				tab << tab << "tooltip_bg.setAttributeNS(null,\"width\",length+8);" << endl <<
-				tab << tab << "tooltip_bg.setAttributeNS(null,\"x\",evt.clientX+7);" << endl <<
-				tab << tab << "tooltip_bg.setAttributeNS(null,\"y\",evt.clientY+18);" << endl <<
+				tab << tab << "tooltip_bg.setAttributeNS(null,\"x\",loc.x+7);" << endl <<
+				tab << tab << "tooltip_bg.setAttributeNS(null,\"y\",loc.y+18);" << endl <<
 				tab << tab << "tooltip_bg.setAttributeNS(null,\"visibility\",\"visible\");" << endl <<
 				tab << "}" << endl <<
+				endl <<
 				tab << "function HideTooltip(evt) {" << endl <<
 				tab << tab << "tooltip.setAttributeNS(null,\"visibility\",\"hidden\");" << endl <<
 				tab << tab << "tooltip_bg.setAttributeNS(null,\"visibility\",\"hidden\");" << endl <<
