@@ -140,13 +140,26 @@ namespace flopoco
 
 		for(unsigned int i=0; i<snapshots.size(); i++)
 		{
-			offsetY += 15 + snapshots[i]->maxHeight * 10;
+			offsetY += 25 + snapshots[i]->maxHeight * 10;
 
 			drawConfiguration(i, snapshots[i], offsetY, turnaroundX);
 
-			fig << "<line x1=\"" << turnaroundX + 150 << "\" y1=\"" << offsetY + 10
-					<< "\" x2=\"" << 50 << "\" y2=\"" << offsetY + 10
-					<< "\" style=\"stroke:lightsteelblue;stroke-width:1\" />" << endl;
+			fig << "<line x1=\"" << turnaroundX + 350 << "\" y1=\"" << offsetY + 10
+					<< "\" x2=\"" << 50 << "\" y2=\"" << offsetY + 10;
+			if((i == 0) || (i>0 && i%2==1) || (i == snapshots.size()-1))
+			{
+				fig	<< "\" style=\"stroke:midnightblue;stroke-width:1\" />" << endl;
+			}else
+			{
+				fig	<< "\" style=\"stroke:lightsteelblue;stroke-width:1\" />" << endl;
+			}
+
+			if((i == 0) || (i == snapshots.size()-1))
+			{
+				fig << "<line x1=\"" << turnaroundX + 350 << "\" y1=\"" << offsetY + 15
+						<< "\" x2=\"" << 50 << "\" y2=\"" << offsetY + 15
+						<< "\" style=\"stroke:midnightblue;stroke-width:1\" />" << endl;
+			}
 		}
 
 		closePlotter(offsetY, turnaroundX);
@@ -159,8 +172,8 @@ namespace flopoco
 		ostringstream bitheapName;
 		int bitheapWidth, bitheapHeight, bitheapLength;
 
-		bitheapWidth  = (bitheap->msb - bitheap->lsb + 1) * 20 + 150;
-		bitheapHeight = bitheap->height * snapshots.size() * 45;
+		bitheapWidth  = (bitheap->msb - bitheap->lsb + 1) * 20 + 350;
+		bitheapHeight = bitheap->height * snapshots.size() * 50;
 		bitheapLength = bitheapHeight;
 
 		if(bitheap->getName() == "")
@@ -225,8 +238,10 @@ namespace flopoco
 
 	void BitheapPlotter::drawConfiguration(int index, Snapshot *snapshot, int offsetY, int turnaroundX)
 	{
-		int ci,c1,c2,c3;										//print the critical path as a number as a rational number, in nanoseconds
+		int ci,c1,c2,c3;		//print the critical path as a number as a rational number, in nanoseconds
+		int ci2,c12,c22,c32;	//print the critical path as a number as a rational number, in nanoseconds
 		int cpint = snapshot->soonestBit->signal->getCriticalPath() * 1000000000000;
+		int cp2int = snapshot->soonestCompressibleBit->signal->getCriticalPath() * 1000000000000;
 
 		c3 = cpint % 10;
 		cpint = cpint / 10;
@@ -236,20 +251,36 @@ namespace flopoco
 		cpint = cpint / 10;
 		ci = cpint % 10;
 
+		c32 = cp2int % 10;
+		cp2int = cp2int / 10;
+		c22 = cp2int % 10;
+		cp2int = cp2int / 10;
+		c12 = cp2int % 10;
+		cp2int = cp2int / 10;
+		ci2 = cp2int % 10;
+
 		if(index == 0)
 		{
-			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
+			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 0
 					<< "\" fill=\"midnightblue\">" << "initial bitheap contents" << "</text>" << endl;
 		}else if(index == snapshots.size()-1)
 		{
-			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
+			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 0
 					<< "\" fill=\"midnightblue\">" << "before final addition" << "</text>" << endl;
 		}else
 		{
-			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
+			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY - 20
 					<< "\" fill=\"midnightblue\">" << snapshot->soonestBit->signal->getCycle() << "</text>" << endl
-					<< "<text x=\"" << turnaroundX + 80 << "\" y=\"" << offsetY + 3
-					<< "\" fill=\"midnightblue\">" << ci << "." << c1 << c2 << c3 << " ns"  << "</text>" << endl;
+				<< "<text x=\"" << turnaroundX + 80 << "\" y=\"" << offsetY - 20
+					<< "\" fill=\"midnightblue\">" << ci << "." << c1 << c2 << c3 << " ns"  << "</text>" << endl
+				<< "<text x=\"" << turnaroundX + 180 << "\" y=\"" << offsetY - 20
+									<< "\" fill=\"midnightblue\"> soonest bit </text>" << endl;
+			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 0
+					<< "\" fill=\"midnightblue\">" << snapshot->soonestCompressibleBit->signal->getCycle() << "</text>" << endl
+				<< "<text x=\"" << turnaroundX + 80 << "\" y=\"" << offsetY + 0
+					<< "\" fill=\"midnightblue\">" << ci2 << "." << c12 << c22 << c32 << " ns"  << "</text>" << endl
+				<< "<text x=\"" << turnaroundX + 180 << "\" y=\"" << offsetY + 0
+									<< "\" fill=\"midnightblue\"> soonest compressible bit </text>" << endl;
 		}
 
 		for(unsigned int i=0; i<snapshot->bits.size(); i++)
