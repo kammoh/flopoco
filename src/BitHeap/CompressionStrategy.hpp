@@ -51,8 +51,9 @@ class BitheapPlotter;
 		 *        bit are compressed
 		 * @param delay the maximum delay between the compressed bits and the soonest bit
 		 * @return whether a compression has been performed
+		 * @param soonestCompressibleBit the earliest bit in the bitheap that is compressible
 		 */
-		bool compress(double delay);
+		bool compress(double delay, Bit *soonestCompressibleBit);
 
 		/**
 		 * @brief apply a compressor to the column given as parameter
@@ -98,6 +99,15 @@ class BitheapPlotter;
 		 * @param lsbColumn the weight of the lsb column
 		 */
 		Bit* getSoonestBit(unsigned lsbColumn, unsigned msbColumn);
+
+		/**
+		 * @brief computes the soonest compressible bit from the bitheap, between columns lsbColumn and msbColumn
+		 *        if the bitheap is empty (or no bits are available for compression), nullptr is returned
+		 * @param msbColumn the weight of the msb column
+		 * @param lsbColumn the weight of the lsb column
+		 * @param delay the maximum delay between the compressed bits
+		 */
+		Bit* getSoonestCompressibleBit(unsigned lsbColumn, unsigned msbColumn, double delay);
 
 		/**
 		 * @brief can the compressor given as parameter be applied to the column

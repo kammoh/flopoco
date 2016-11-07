@@ -45,7 +45,7 @@ namespace flopoco{
 		unsigned int colorCount = 0;
 
 		//take a snapshot of the bitheap, before the start of the compression
-		bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+		bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1), getSoonestBit(0, bitheap->size-1));
 
 		//first, set the delay to the delay of a compressor
 		delay = compressionDelay;
@@ -58,8 +58,15 @@ namespace flopoco{
 		{
 			while(bitheap->compressionRequired())
 			{
+				Bit *soonestBit, *soonestCompressibleBit;
+
+				//get the soonest bit in the bitheap
+				soonestBit = getSoonestBit(0, bitheap->size-1);
+				//get the soonest compressible bit in the bitheap
+				soonestCompressibleBit = getSoonestCompressibleBit(0, bitheap->size-1, delay);
+
 				//apply as many compressors as possible, with the current delay
-				bitheapCompressed = compress(delay);
+				bitheapCompressed = compress(delay, soonestCompressibleBit);
 
 				//take a snapshot of the bitheap, if a compression was performed
 				//	including the bits that are to be removed
@@ -69,7 +76,7 @@ namespace flopoco{
 					colorCount++;
 					bitheap->colorBits(BitType::justAdded, colorCount);
 					//take a snapshot of the bitheap
-					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+					bitheapPlotter->takeSnapshot(soonestBit, soonestCompressibleBit);
 				}
 
 				//remove the bits that have just been compressed
@@ -84,7 +91,7 @@ namespace flopoco{
 				if(bitheapCompressed == true)
 				{
 					//take a snapshot of the bitheap
-					bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1));
+					bitheapPlotter->takeSnapshot(soonestBit, soonestCompressibleBit);
 				}
 				//send the parts of the bitheap that has already been compressed to the final result
 				concatenateLSBColumns();
@@ -118,15 +125,13 @@ namespace flopoco{
 	}
 
 
-	bool CompressionStrategy::compress(double delay)
+	bool CompressionStrategy::compress(double delay, Bit *soonestCompressibleBit)
 	{
-		Bit* soonestBit = nullptr;
 		bool compressionPerformed = false;
 
-		//get the bit with the smallest (cycle, critical path)
-		soonestBit = getSoonestBit(0, bitheap->size-1);
-		//if there is no soonest bit, the ther's nothing else to do
-		if(soonestBit == nullptr)
+		//if there is no soonest bit, the there's nothing else to do
+		//	the bit wit the smallest (cycle, critical path), which is also compressible
+		if(soonestCompressibleBit == nullptr)
 			return false;
 
 		//try to apply the compressors in the decreasing
@@ -137,13 +142,13 @@ namespace flopoco{
 			//	to bits that are within the given delay
 			for(unsigned j=compressionDoneIndex; j<bitheap->bits.size(); j++)
 			{
-				vector<Bit*> compressorBitVector = canApplyCompressor(j, i, soonestBit, delay);
+				vector<Bit*> compressorBitVector = canApplyCompressor(j, i, soonestCompressibleBit, delay);
 
 				while(compressorBitVector.size() > 0)
 				{
 					applyCompressor(compressorBitVector, possibleCompressors[i], bitheap->lsb+j);
 					compressorBitVector.clear();
-					compressorBitVector = canApplyCompressor(j, i, soonestBit, delay);
+					compressorBitVector = canApplyCompressor(j, i, soonestCompressibleBit, delay);
 					compressionPerformed = true;
 				}
 			}
@@ -371,6 +376,66 @@ namespace flopoco{
 			}
 
 		return soonestBit;
+	}
+
+
+	Bit* CompressionStrategy::getSoonestCompressibleBit(unsigned lsbColumn, unsigned msbColumn, double delay)
+	{
+		Bit *soonestBit = nullptr, *soonestCompressibleBit = nullptr;
+		unsigned count = lsbColumn;
+		vector<Bit*> appliedCompressor;
+
+		if(((int)lsbColumn < bitheap->lsb) || ((int)msbColumn > bitheap->msb))
+			THROWERROR("Invalid arguments for getSoonest bit: lsbColumn="
+					<< lsbColumn << " msbColumn=" << msbColumn);
+		if(bitheap->getMaxHeight() == 0)
+			REPORT(DEBUG, "Warning: trying to obtain the soonest bit from an empty bitheap!");
+
+		//determine the first non-empty bit column
+		while((count < msbColumn) && (bitheap->bits[count].size() == 0))
+			count++;
+
+		//search in each column for the soonest bit
+		for(unsigned i=count; i<=msbColumn; i++)
+		{
+			//clear the possible content of the compressor
+			appliedCompressor.clear();
+
+			//initialize the soonest bit
+			if(bitheap->bits[i].size())
+			{
+				soonestBit = bitheap->bits[i][0];
+			}else
+			{
+				//empty column, so no compressor can be applied
+				continue;
+			}
+
+			//try to apply a compressor to the current column
+			for(unsigned j=0; j<possibleCompressors.size(); j++)
+			{
+				appliedCompressor = canApplyCompressor(i, j, soonestBit, delay);
+				if(appliedCompressor.size() > 0)
+					break;
+			}
+
+			//if a compressor can be applied on this column, then check
+			//	if the current soonest bit is earlier
+			if(soonestCompressibleBit == nullptr)
+			{
+				soonestCompressibleBit = soonestBit;
+				continue;
+			}
+			if(appliedCompressor.size() > 0)
+				if((soonestBit->signal->getCycle() > soonestCompressibleBit->signal->getCycle()) ||
+						((soonestBit->signal->getCycle() == soonestCompressibleBit->signal->getCycle())
+								&& (soonestBit->signal->getCriticalPath() > soonestCompressibleBit->signal->getCriticalPath())))
+				{
+					soonestCompressibleBit = soonestBit;
+				}
+		}
+
+		return soonestCompressibleBit;
 	}
 
 

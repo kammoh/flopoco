@@ -38,7 +38,7 @@ class BitheapNew;
 		{
 			public:
 
-				Snapshot(vector<vector<Bit*> > bits, int maxHeight, int cycle, double criticalPath);
+				Snapshot(vector<vector<Bit*> > bits, int maxHeight, Bit* soonestBit, Bit *soonestCompressibleBit);
 
 
 				/**
@@ -69,8 +69,8 @@ class BitheapNew;
 
 				vector<vector<Bit*> > bits;                          /*< the bits inside a bitheap at the given moment in time wen the snapshot is taken */
 				int maxHeight;                                       /*< the height of the bitheap at the given moment in time wen the snapshot is taken */
-				int cycle;                                           /*< the cycle of the soonest bit at the given moment in time wen the snapshot is taken */
-				double criticalPath;                                 /*< the critical path of the soonest bit at the given moment in time wen the snapshot is taken */
+				Bit *soonestBit;                                     /*< the soonest bit at the given moment in time when the snapshot is taken */
+				Bit *soonestCompressibleBit;                         /*< the soonest compressible bit at the given moment in time when the snapshot is taken */
 
 				string srcFileName;
 		};
@@ -87,8 +87,11 @@ class BitheapNew;
 
 		/**
 		 * @brief take a snapshot of the bitheap's current state
+		 * @param soonestBit the bit in the bitheap with the earliest timing
+		 * @param soonestCompressibleBit the bit in the bitheap with the earliest timing,
+		 * 			which is part of a column that can be compressed
 		 */
-		void takeSnapshot(Bit *soonestBit);
+		void takeSnapshot(Bit *soonestBit, Bit *soonestCompressibleBit);
 
 		/**
 		 * @brief plot all the bitheap's stages

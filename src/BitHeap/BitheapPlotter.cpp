@@ -20,9 +20,12 @@ using namespace std;
 namespace flopoco
 {
 
-	BitheapPlotter::Snapshot::Snapshot(vector<vector<Bit*> > bits_, int maxHeight_, int cycle_, double criticalPath_):
-		maxHeight(maxHeight_), cycle(cycle_), criticalPath(criticalPath_)
+	BitheapPlotter::Snapshot::Snapshot(vector<vector<Bit*> > bits_, int maxHeight_, Bit *soonestBit_, Bit *soonestCompressibleBit_):
+		maxHeight(maxHeight_)
 	{
+		soonestBit = soonestBit_;
+		soonestCompressibleBit = soonestCompressibleBit_;
+
 		for(unsigned int i=0; i<bits_.size(); i++)
 		{
 			vector<Bit*> newColumn;
@@ -42,32 +45,43 @@ namespace flopoco
 
 	bool operator< (BitheapPlotter::Snapshot& b1, BitheapPlotter::Snapshot& b2)
 	{
-		return ((b1.cycle < b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath<b2.criticalPath));
+		return ((b1.soonestBit->signal->getCycle() < b2.soonestBit->signal->getCycle())
+				|| (b1.soonestBit->signal->getCycle()==b2.soonestBit->signal->getCycle()
+						&& b1.soonestBit->signal->getCriticalPath()<b2.soonestBit->signal->getCriticalPath()));
 	}
 
 	bool operator<= (BitheapPlotter::Snapshot& b1, BitheapPlotter::Snapshot& b2)
 	{
-		return ((b1.cycle<b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath<=b2.criticalPath));
+		return ((b1.soonestBit->signal->getCycle()<b2.soonestBit->signal->getCycle())
+				|| (b1.soonestBit->signal->getCycle()==b2.soonestBit->signal->getCycle()
+						&& b1.soonestBit->signal->getCriticalPath()<=b2.soonestBit->signal->getCriticalPath()));
 	}
 
 	bool operator== (BitheapPlotter::Snapshot& b1, BitheapPlotter::Snapshot& b2)
 	{
-		return (b1.cycle==b2.cycle && b1.criticalPath==b2.criticalPath);
+		return (b1.soonestBit->signal->getCycle()==b2.soonestBit->signal->getCycle()
+				&& b1.soonestBit->signal->getCriticalPath()==b2.soonestBit->signal->getCriticalPath());
 	}
 
 	bool operator!= (BitheapPlotter::Snapshot& b1, BitheapPlotter::Snapshot& b2)
 	{
-		return ((b1.cycle!=b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath!=b2.criticalPath));
+		return ((b1.soonestBit->signal->getCycle()!=b2.soonestBit->signal->getCycle())
+				|| (b1.soonestBit->signal->getCycle()==b2.soonestBit->signal->getCycle()
+						&& b1.soonestBit->signal->getCriticalPath()!=b2.soonestBit->signal->getCriticalPath()));
 	}
 
 	bool operator> (BitheapPlotter::Snapshot& b1, BitheapPlotter::Snapshot& b2)
 	{
-		return ((b1.cycle>b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath>b2.criticalPath));
+		return ((b1.soonestBit->signal->getCycle()>b2.soonestBit->signal->getCycle())
+				|| (b1.soonestBit->signal->getCycle()==b2.soonestBit->signal->getCycle()
+						&& b1.soonestBit->signal->getCriticalPath()>b2.soonestBit->signal->getCriticalPath()));
 	}
 
 	bool operator>= (BitheapPlotter::Snapshot& b1, BitheapPlotter::Snapshot& b2)
 	{
-		return ((b1.cycle>b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath>=b2.criticalPath));
+		return ((b1.soonestBit->signal->getCycle()>b2.soonestBit->signal->getCycle())
+				|| (b1.soonestBit->signal->getCycle()==b2.soonestBit->signal->getCycle()
+						&& b1.soonestBit->signal->getCriticalPath()>=b2.soonestBit->signal->getCriticalPath()));
 	}
 
 
@@ -85,9 +99,10 @@ namespace flopoco
 	}
 
 
-	void BitheapPlotter::takeSnapshot(Bit *soonestBit)
+	void BitheapPlotter::takeSnapshot(Bit *soonestBit, Bit *soonestCompressibleBit)
 	{
-		BitheapPlotter::Snapshot* s = new BitheapPlotter::Snapshot(bitheap->getBits(), bitheap->getMaxHeight(), soonestBit->signal->getCycle(), soonestBit->signal->getCriticalPath());
+		BitheapPlotter::Snapshot* s = new BitheapPlotter::Snapshot(bitheap->getBits(),
+											bitheap->getMaxHeight(), soonestBit, soonestCompressibleBit);
 
 		snapshots.push_back(s);
 	}
@@ -211,7 +226,7 @@ namespace flopoco
 	void BitheapPlotter::drawConfiguration(int index, Snapshot *snapshot, int offsetY, int turnaroundX)
 	{
 		int ci,c1,c2,c3;										//print the critical path as a number as a rational number, in nanoseconds
-		int cpint = snapshot->criticalPath * 1000000000000;
+		int cpint = snapshot->soonestBit->signal->getCriticalPath() * 1000000000000;
 
 		c3 = cpint % 10;
 		cpint = cpint / 10;
@@ -232,7 +247,7 @@ namespace flopoco
 		}else
 		{
 			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 3
-					<< "\" fill=\"midnightblue\">" << snapshot->cycle << "</text>" << endl
+					<< "\" fill=\"midnightblue\">" << snapshot->soonestBit->signal->getCycle() << "</text>" << endl
 					<< "<text x=\"" << turnaroundX + 80 << "\" y=\"" << offsetY + 3
 					<< "\" fill=\"midnightblue\">" << ci << "." << c1 << c2 << c3 << " ns"  << "</text>" << endl;
 		}
