@@ -1115,7 +1115,7 @@ namespace flopoco{
 		return s->getCriticalPath();
 	}
 
-
+#if 1
 	double Operator::getCriticalPath()
 	{
 		REPORT(0, "WARNING: function getCriticalPath() is deprecated!");
@@ -1123,6 +1123,7 @@ namespace flopoco{
 		return -1;
 	}
 
+	
 	void Operator::setCriticalPath(double delay)
 	{
 		REPORT(0, "WARNING: function setCriticalPath() is deprecated  and no longer has any effect!");
@@ -1134,7 +1135,7 @@ namespace flopoco{
 	}
 
 
-
+#endif
 
 
 	bool Operator::manageCriticalPath(double delay, bool report){

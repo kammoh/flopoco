@@ -438,6 +438,7 @@ public:
 	 */
 	void previousCycle(bool report=true) ;
 
+#if 1
 	/**
 	 * DEPRECATED
 	 * Return the critical path of the current cycle so far
@@ -456,7 +457,7 @@ public:
 	 * @param the delay to add to the critical path of current pipeline stage
 	 */
 	void addToCriticalPath(double delay) ;
-
+#endif
 	/**
 	 * DEPRECATED
 	 * Add @delay to the critical path, advancing the pipeline stages, if needed.

@@ -476,7 +476,7 @@ namespace flopoco{
 				REPORT(DEBUG, "lsbIn=" << lsbIn);
 				parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
 											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << ";"
-					//<< "-- input address  m=" << m[i] << "  l=" << l[i]
+											 << "-- input address  m=" << m[i] << "  l=" << l[i]
 											 << endl;
 
 #if NEWTABLEINTERFACE
