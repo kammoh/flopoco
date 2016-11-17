@@ -39,6 +39,7 @@ I don't really understand
 
 using namespace std;
 
+
 namespace flopoco{
 
 
@@ -474,9 +475,25 @@ namespace flopoco{
 			else { // Build it and add its output to the bit heap
 				REPORT(DEBUG, "lsbIn=" << lsbIn);
 				parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
-											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << "; -- input address  m=" << m[i] << "  l=" << l[i]  << endl;
+											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << ";"
+					//<< "-- input address  m=" << m[i] << "  l=" << l[i]
+											 << endl;
+
+#if NEWTABLEINTERFACE
+				vector<mpz_class> tableContent = kcmTableContent(i);
+				Table* t = new Table(parentOp->getTarget(),
+														tableContent,
+														m[i] - l[i]+1, // wIn
+														m[i] + msbC  - lsbOut + g +1, //wOut TODO: the +1 could sometimes be removed
+														join("kcmTable_",i), //name
+														1 // logicTable
+														);
+				
+#else
+					
 				FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
 				parentOp->addSubComponent(t);
+#endif
 				parentOp->inPortMap (t , "X", sliceInName);
 				parentOp->outPortMap(t , "Y", sliceOutName);
 				parentOp->vhdl << parentOp->instance(t , instanceName);
@@ -681,7 +698,85 @@ namespace flopoco{
 
 	
 	/************************** The FixRealKCMTable class ********************/
+#if NEWTABLEINTERFACE
 
+	
+	vector<mpz_class> FixRealKCM::kcmTableContent(int i) {
+		vector<mpz_class> r;
+		int wIn = m[i] - l[i]+1;
+		int wOut = 	m[i] + msbC  - lsbOut + g +1;
+		for (int x0=0; x0 < (1<<wIn); x0++) {
+			// get rid of two's complement
+			int x=x0;
+			//Only the MSB "digit" has a negative weight
+			if(tableOutputSign[i]==0)	{ // only in this case interpret input as two's complement
+				if ( x > ((1<<(wIn-1))-1) )	{
+					x -= (1<<wIn);
+				}
+			} // Now x is a signed number only if it was chunk 0 and its sign bit was set
+
+			//cout << "i=" << i << " x0=" << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   "  <<"  wout="<<wOut<< "   " ;
+
+			mpz_class result;
+			mpfr_t mpR, mpX;
+
+			mpfr_init2(mpR, 10*wOut);
+			mpfr_init2(mpX, 2*wIn); //To avoid mpfr bug if wIn = 1
+		                       
+			mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
+			// Scaling so that the input has its actual weight
+			mpfr_mul_2si(mpX, mpX, l[i], GMP_RNDN); //Exact
+
+			//						double dx = mpfr_get_d(mpX, GMP_RNDN);
+			//			cout << "input as double=" <<dx << "  l[i]="  << l[i] << "    ";
+			
+			// do the mult in large precision
+			if(tableOutputSign[i]==0)	
+				mpfr_mul(mpR, mpX, mpC, GMP_RNDN);
+			else // multiply by the absolute value of the constant, the bitheap logic does the rest
+				mpfr_mul(mpR, mpX, absC, GMP_RNDN);
+			
+			// Result is integer*mpC, which is more or less what we need: just scale it to an integer.
+			mpfr_mul_2si( mpR, 
+										mpR,
+										-lsbOut + g,	
+										GMP_RNDN	); //Exact
+
+			//			double dr=mpfr_get_d(mpR, GMP_RNDN);
+			//			cout << "  dr=" << dr << "  ";
+			
+			// Here is when we do the rounding
+			mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
+
+			//cout << tableOutputSign[i] << "  result0=" << result << "  ";
+
+			// sign management
+			if(tableOutputSign[i]==0) {
+				// this is a two's complement number with a non-constant sign bit
+				// so we encode it as two's complement
+				if(result<0)
+					result +=(mpz_class(1) << wOut);				
+			}
+		
+			//cout  << result << "  " <<endl;
+
+			// Add the rounding bit to the table 0 if there are guard bits,
+			if(addRoundBit && (i==0) && (g>0)) {
+				int roundBit=1<<(g-1);
+				// but beware: the table output may be subtracted (see buildTablesForBitHeap() )
+				if(tableOutputSign[0] >= 0) // This table will be added
+					result += roundBit;
+				else // This table will be subtracted
+					result -= roundBit;
+			}
+			r.push_back(result);
+		}
+		return r;
+	}
+
+
+
+#else
 
 	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i):
 			Table(target,
@@ -775,6 +870,9 @@ namespace flopoco{
 		}
 		return result;
 	}
+
+#endif
+	
 }
 
 

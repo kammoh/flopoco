@@ -83,10 +83,10 @@ int main(int argc, char* argv[] )
 		// IntSquarer::registerFactory();
 
 		 IntConstMult::registerFactory();
-		// FPConstMult::registerFactory();
+		 FPConstMult::registerFactory();
 		// FPRealKCM::registerFactory();
 		 IntConstDiv::registerFactory();
-		// FPConstDiv::registerFactory();
+		 FPConstDiv::registerFactory();
 		// FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();
 		// FixFunctionByPiecewisePoly::registerFactory();
@@ -119,9 +119,9 @@ int main(int argc, char* argv[] )
 		// CordicSinCos::registerFactory();
 		// FixAtan2::registerFactory();
 		// //FixedComplexAdder::registerFactory();
-		// FixFIR::registerFactory();
-		// FixSOPC::registerFactory();
-		// FixIIR::registerFactory();
+		 FixFIR::registerFactory();
+		 FixSOPC::registerFactory();
+		 FixIIR::registerFactory();
 
 		// hidden for now
 		// Fix2DNorm::registerFactory();

@@ -13,7 +13,7 @@ namespace flopoco{
 	{
 	public:
 		/** @brief The generic constructor */
-		FPConstDiv(Target* target, int wEIn, int wFIn, int wEOut, int wFOut, int d, int dExp=0, int alpha=-1);
+		FPConstDiv(Target* target, int wEIn, int wFIn, int wEOut, int wFOut, int d, int dExp=0, int alpha=-1, int arch=0);
 
 
 		~FPConstDiv();

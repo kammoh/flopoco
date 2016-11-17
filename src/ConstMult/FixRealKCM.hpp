@@ -7,6 +7,7 @@
 
 
 namespace flopoco{
+#define NEWTABLEINTERFACE 1 // transitional, remove the old table interface at some point
 
 	// Here is the principle for a bit-heap version.
 	// The parent first calls the constructor, which predicts the architecture (shift or tables, how many tables) and deduces errorInUlps.
@@ -164,11 +165,12 @@ namespace flopoco{
 		void buildTablesForBitHeap();
 		string createShiftedPowerOfTwo(string resultSignalName);
 
-	};
+		
+#if NEWTABLEINTERFACE
+		vector<mpz_class> kcmTableContent(int i);
 
-
-
-	class FixRealKCMTable : public Table
+#else
+		class FixRealKCMTable : public Table
 	{
 		public:
 			FixRealKCMTable(
@@ -183,6 +185,9 @@ namespace flopoco{
 			//Weight of input lsb
 			int lsbInWeight;
 			bool negativeSubproduct;
+	};
+#endif
+
 	};
 
 }
