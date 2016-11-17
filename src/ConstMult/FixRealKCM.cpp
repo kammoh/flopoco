@@ -113,11 +113,8 @@ namespace flopoco{
 		//compress the bitheap and produce the result
 		bitHeap->generateCompressorVHDL();
 
-		//manage the critical path
-		syncCycleFromSignal(bitHeap->getSumName());
-
 		// Retrieve the bits we want from the bit heap
-		vhdl << declare("OutRes",msbOut-lsbOut+1+g) << " <= " << 
+		vhdl << tab << declare("OutRes",msbOut-lsbOut+1+g) << " <= " << 
 			bitHeap->getSumName() << range(msbOut-lsbOut+g, 0) << ";" << endl; // This range is useful in case there was an overflow?
 
 		vhdl << tab << "R <= OutRes" << range(msbOut-lsbOut+g, g) << ";" << endl;
@@ -485,7 +482,7 @@ namespace flopoco{
 														tableContent,
 														m[i] - l[i]+1, // wIn
 														m[i] + msbC  - lsbOut + g +1, //wOut TODO: the +1 could sometimes be removed
-														join("kcmTable_",i), //name
+														 join(parentOp->getName()+"_T",i), //name
 														1 // logicTable
 														);
 				
