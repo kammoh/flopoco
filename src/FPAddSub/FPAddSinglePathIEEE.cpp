@@ -103,7 +103,7 @@ namespace flopoco{
 		vhdl << tab << declare("resultIsNaN") << " <= '1' when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else '0';" << endl;
 		
 		vhdl << tab << declare("signR") << " <= '0' when (expNewX=" << zg(wE) << " and expNewY=" << zg(wE) << " and signNewX/=signNewY and bothSubNormalOr0='0') else signNewX;"<<endl;
-		vhdl << tab << declare("fracNewY", wF+1) << " <= not(subNormalNewyOr0) & newY" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare("fracNewY", wF+1) << " <= not(subNormalNewYOr0) & newY" << range(wF-1, 0) << ";" << endl;
 
 
 		//=========================================================================|
@@ -173,7 +173,8 @@ namespace flopoco{
 		vhdl << tab << declare("finalLeftShiftValue", sizeLeftShift) << " <= leftShiftAddValue2 when EffSub='0' else leftShiftSubValue2;" << endl;
 
 		/*LeftShifter to renormalize number*/
-		Shifter* leftShifter = (Shifter*) newInstance("Shifter", "LeftShifterComponent", "wIn=" + to_string((2*wF)+4) + " maxShift=" + to_string((2*wF)+6) + " dir=0", "X=>sigAddResult;S=>finalLeftShiftValue" + range(intlog2((2*wF)+4)-1,0) + ";R=>leftShiftedFrac");
+		vhdl << tab << declare("finalLeftShift",intlog2((2*wF)+4))  << " <= finalLeftShiftValue" + range(intlog2((2*wF)+4)-1,0) << ";" << endl; 
+		Shifter* leftShifter = (Shifter*) newInstance("Shifter", "LeftShifterComponent", "wIn=" + to_string((2*wF)+4) + " maxShift=" + to_string((2*wF)+6) + " dir=0", "X=>sigAddResult;S=>finalLeftShift;R=>leftShiftedFrac");
 		vhdl << tab << declare("finalExpResult", wE) << " <= expSubResult when EffSub='1' else expAddResult+subNormalSumCarry;" << endl;
 
 
@@ -207,7 +208,7 @@ namespace flopoco{
 		vhdl << tab << declare("expSigResult3", wE+wF) << " <= " << og(wE+wF) << " when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else expSigResult2;" << endl;		
 		
 		/*Update sign if necessary*/
-		vhdl << tab << declare("signR2") << " <= '0' when ((resultIsNaN='1' or (leftshiftedOut='1' and xIsInfinity='0' and yIsInfinity='0')) and bothSubNormalOr0='0') else signR;" << endl;
+		vhdl << tab << declare("signR2") << " <= '0' when ((resultIsNaN='1' or (leftShiftedOut='1' and xIsInfinity='0' and yIsInfinity='0')) and bothSubNormalOr0='0') else signR;" << endl;
 
 		/*Result*/
 		vhdl<<tab<< declare("computedR",wE+wF+1) << " <= signR2 & expSigResult3;"<<endl;
