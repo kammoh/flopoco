@@ -193,6 +193,7 @@
 
 		ostringstream name;
 		name <<"VirtualIntMultiplier";
+				
 		if(parentOp->getTarget()->useHardMultipliers())
 			name << "UsingDSP_";
 		else
@@ -223,7 +224,6 @@
 		srcFileName="IntMultiplier";
 		setCopyrightString ( "Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012" );
 
-		
 		// the addition operators need the ieee_std_signed/unsigned libraries
 		useNumericStd();
 
@@ -240,6 +240,7 @@
 		}
 
 		parentOp=this;
+
 		// set the name of the multiplier operator
 		{
 			ostringstream name;

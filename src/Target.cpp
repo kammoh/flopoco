@@ -35,7 +35,7 @@ namespace flopoco{
 			useClockEnable_       = false;
 			frequency_         = 400000000.;
 			useHardMultipliers_= true;
-			unusedHardMultThreshold_=0.5;
+			unusedHardMultThreshold_=0.7;
 		}
 	
 	Target::~Target()
@@ -94,7 +94,7 @@ namespace flopoco{
 	}
 
 	void Target::setUseHardMultipliers(bool v){
-		unusedHardMultThreshold_ = v;
+		useHardMultipliers_ = v;
 	}
 
 	void Target::setPlainVHDL(bool v){

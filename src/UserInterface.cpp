@@ -391,6 +391,7 @@ namespace flopoco
 				if (fp==NULL){
 					throw( "Can't find the operator factory for " + opName) ;
 				}
+
 				OperatorPtr op = fp->parseArguments(target, opParams);
 				if(op!=NULL)	{// Some factories don't actually create an operator
 					if(entityName!="") {
