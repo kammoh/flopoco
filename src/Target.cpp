@@ -101,7 +101,7 @@ namespace flopoco{
 	}
 
 	void Target::setUseHardMultipliers(bool v){
-		unusedHardMultThreshold_ = v;
+		hasHardMultipliers_ = v;
 	}
 
 	void Target::setPlainVHDL(bool v){
