@@ -540,10 +540,11 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addUnsignedBitVector(string signalName, unsigned size, int weight)
+	void BitheapNew::addUnsignedBitVector(string signalName, unsigned vectorSize, int weight)
 	{
+		//		REPORT(0, "msb=" << msb << " lsb=" << lsb << " w=" << weight << " size=" << size);
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
+			THROWERROR("Weight " << weight << " out of bitheap bit range in addUnsignedBitVector (msb=" << msb << " lsb=" << lsb <<")");
 		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
 
@@ -553,10 +554,11 @@ namespace flopoco {
 			startIndex = lsb;
 		else
 			startIndex = weight;
-		if((int)size+weight > msb)
+		
+		if((int)vectorSize+weight > msb)
 			endIndex = msb;
 		else
-			endIndex = size+weight-1;
+			endIndex = vectorSize+weight-1;
 
 		if(op->getSignalByName(signalName)->width() == 1)
 		{
@@ -651,7 +653,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 
 		int startIndex, endIndex;
@@ -689,7 +691,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 
 		int startIndex, endIndex;
@@ -774,7 +776,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: adding a signed signal " << signalName << " to an unsigned bitheap");
@@ -813,7 +815,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: adding a signed signal " << signalName << " to an unsigned bitheap");
@@ -899,7 +901,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: subtracting a signed signal "
@@ -941,7 +943,7 @@ namespace flopoco {
 	{
 		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
+		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
 		if(!isSigned)
 			REPORT(DEBUG, "WARNING: subtracting a signed signal "

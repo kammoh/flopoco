@@ -853,9 +853,11 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 
 
 FixSinCos::~FixSinCos(){
+#if 0
 	if(scT) free(scT);
 	if(pi_mult) free(pi_mult);
 	mpfr_clears (scale, constPi, NULL);		
+#endif
 };
 
 

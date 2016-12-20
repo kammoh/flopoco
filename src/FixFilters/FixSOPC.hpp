@@ -4,7 +4,7 @@
 #include "Operator.hpp"
 #include "utils.hpp"
 
-#include "BitHeap/BitHeap.hpp"
+#include "BitHeap/BitheapNew.hpp"
 
 /*  All flopoco operators and utility functions are declared within
   the flopoco namespace.
@@ -90,7 +90,7 @@ namespace flopoco{
 		bool computeMSBOut;     /** <*/
 		bool computeGuardBits;     /** <*/
 		bool addFinalRoundBit;     /** <*/
-		BitHeap* bitHeap;    			 /**< The heap of weighted bits that will be used to do the additions */
+		BitheapNew* bitHeap;    			 /**< The heap of weighted bits that will be used to do the additions */
 	};
 
 

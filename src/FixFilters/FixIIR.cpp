@@ -129,12 +129,14 @@ namespace flopoco {
 
 
 	FixIIR::~FixIIR(){
+#if 0
 		free(coeffb_d);
 		free(coeffa_d);
 		for (int i=0; i<n; i++)
 				mpfr_clear(mpcoeffb[i]);
 		for (int i=0; i<m; i++)
 				mpfr_clear(mpcoeffa[i]);
+#endif
 	};
 
 

@@ -158,11 +158,11 @@ namespace flopoco {
 			int guardBits_re = intlog2(errorInUlpsRe);
 			int guardBits_im = intlog2(errorInUlpsIm);
 
-			BitHeap* bitheapRe = new BitHeap(
+			BitheapNew* bitheapRe = new BitheapNew(
 					this,
 					 outputre_width + guardBits_re
 				);
-			BitHeap* bitheapIm = new BitHeap(
+			BitheapNew* bitheapIm = new BitheapNew(
 					this, 
 					outputim_width + guardBits_im 
 				);
@@ -173,8 +173,8 @@ namespace flopoco {
 			kcmInReConstIm->addToBitHeap(bitheapIm, guardBits_im);
 			kcmInImConstRe->addToBitHeap(bitheapIm, guardBits_im);
 
-			bitheapIm->generateCompressorVHDL();
-			bitheapRe->generateCompressorVHDL();
+			bitheapIm->startCompression();
+			bitheapRe->startCompression();
 
 			vhdl << "ImOut" << " <= " << 
 				bitheapIm->getSumName(

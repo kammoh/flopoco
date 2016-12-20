@@ -196,7 +196,7 @@ namespace flopoco{
 		if(!getTarget()->plainVHDL())
 		{
 			//create the bitheap that computes the sum
-			bitHeap = new BitHeap(this, sumSize);
+			bitHeap = new BitheapNew(this, sumSize);
 
 			// actually generate the code
 			for(int i=0; i<n; i++)		{
@@ -206,7 +206,7 @@ namespace flopoco{
 			// The rounding bit is incorporated into the KCMs
 
 			//compress the bitheap
-			bitHeap -> generateCompressorVHDL();
+			bitHeap -> startCompression();
 
 			vhdl << tab << "R" << " <= " << bitHeap-> getSumName() << 
 					range(sumSize-1, g) << ";" << endl;

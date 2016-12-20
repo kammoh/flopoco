@@ -106,12 +106,12 @@ namespace flopoco{
 		//create the bitheap
 		//		int bitheaplsb = lsbOut - g;
 		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
-		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
+		bitHeap = new BitheapNew(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
 
 		buildTablesForBitHeap(); // does everything up to bit heap compression
 
 		//compress the bitheap and produce the result
-		bitHeap->generateCompressorVHDL();
+		bitHeap->startCompression();
 
 		// Retrieve the bits we want from the bit heap
 		vhdl << tab << declare("OutRes",msbOut-lsbOut+1+g) << " <= " << 
@@ -388,7 +388,7 @@ namespace flopoco{
 	}
 
 
-	void FixRealKCM::addToBitHeap(BitHeap* bitHeap_, int g_) {
+	void FixRealKCM::addToBitHeap(BitheapNew* bitHeap_, int g_) {
 		bitHeap=bitHeap_;
 		g=g_;
 
@@ -415,13 +415,13 @@ namespace flopoco{
 			int rTempSize = parentOp->getSignalByName(rTempName)->width();
 
 			if(negativeConstant) {
-				bitHeap -> subtractSignedBitVector(0, rTempName, rTempSize);
+				bitHeap -> subtractSignedBitVector(rTempName, rTempSize, 0);
 			}
 			else{
 				if(signedInput)
-					bitHeap -> addSignedBitVector(0, rTempName, rTempSize);
+					bitHeap -> addSignedBitVector(rTempName, rTempSize, 0);
 				else // !negativeConstant and !signedInput
-					bitHeap -> addUnsignedBitVector(0, rTempName, rTempSize);
+					bitHeap -> addUnsignedBitVector(rTempName, rTempSize, 0);
 			}
 			return true; // and that 's all folks.
 			}
@@ -500,21 +500,24 @@ namespace flopoco{
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
-					bitHeap -> addSignedBitVector(0, // weight
+					bitHeap -> addSignedBitVector(
 																				sliceOutName, // name
-																				sliceOutWidth // size
+																				sliceOutWidth, // size
+																				0 // weight
 																				);
 					break;
 				case 1:
-					bitHeap -> addUnsignedBitVector(0, // weight
+					bitHeap -> addUnsignedBitVector(
 																					sliceOutName, // name
-																					sliceOutWidth // size
+																					sliceOutWidth, // size
+																					0 // weight
 																					);
 					break;
 				case -1: // In this case the table simply stores x* absC 
-					bitHeap -> subtractUnsignedBitVector(0, // weight
+					bitHeap -> subtractUnsignedBitVector(
 																							 sliceOutName, // name
-																							 sliceOutWidth // size
+																							 sliceOutWidth, // size
+																							 0 // weight
 																							 );
 					
 					break;

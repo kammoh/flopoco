@@ -88,6 +88,7 @@ TODO file for FloPoCo
 ** FPPipeline
 ** lut_rng
 * Cleaning up
+** get rid of old BitHeap (and rename the new one)
 ** get rid of rst signal
 Observation: no operator uses rst, except FixFIR and LargeAcc. 
 There is a good reason for that: it would prevent the inference of srl logic.
