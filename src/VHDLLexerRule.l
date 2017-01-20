@@ -459,7 +459,7 @@ label					  ({identifier}{space_character}*":")
 	// this is a comment
 	(*yyextra->os) << yytext;
 	
-	//yyextra->lexingMode = LexerContext::comment;
+	yyextra->lexingMode = LexerContext::comment;
 }
 
 (.) {

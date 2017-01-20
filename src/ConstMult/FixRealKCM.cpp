@@ -441,7 +441,7 @@ namespace flopoco{
 		// This is a shift left: negative means shift right.
 		int shift= lsbIn -(lsbOut-g)  + msbC ; 
 		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
-		REPORT(0,"msbC=" << msbC << "     Shift left of " << shift << " bits");
+		REPORT(DETAILED,"Power of two, msbC=" << msbC << "     Shift left of " << shift << " bits");
 		// compute the product by the abs constant
 		parentOp->vhdl << tab << parentOp->declare(rTempName, rTempSize) << " <= ";
 		// Still there are two cases: 
@@ -452,7 +452,13 @@ namespace flopoco{
 		else { // shift right; truncate
 			parentOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
 		}
+#if 0 // This breaks the lexer, I keep it as a case study to fix it. TODO 
 		parentOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
+#else
+		ostringstream t;
+		t << "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
+		parentOp->vhdl <<  t.str();
+#endif
 		return rTempName;
 	}
 
