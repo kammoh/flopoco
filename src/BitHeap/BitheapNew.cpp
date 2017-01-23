@@ -3,13 +3,12 @@
 
 namespace flopoco {
 
-	BitheapNew::BitheapNew(Operator* op_, unsigned size_, bool isSigned_, string name_, int compressionType_) :
-		msb(size_-1), lsb(0),
-		size(size_),
+	BitheapNew::BitheapNew(Operator* op_, unsigned width_, bool isSigned_, string name_, int compressionType_) :
+		msb(width_-1), lsb(0),
+		width(width_),
 		height(0),
 		name(name_),
 		isSigned(isSigned_),
-		isFixedPoint(false),
 		op(op_),
 		compressionType(compressionType_)
 	{
@@ -19,11 +18,10 @@ namespace flopoco {
 
 	BitheapNew::BitheapNew(Operator* op_, int msb_, int lsb_, bool isSigned_, string name_, int compressionType_) :
 		msb(msb_), lsb(lsb_),
-		size(msb_-lsb_+1),
+		width(msb_-lsb_+1),
 		height(0),
 		name(name_),
 		isSigned(isSigned_),
-		isFixedPoint(true),
 		op(op_),
 		compressionType(compressionType_)
 	{
@@ -57,10 +55,10 @@ namespace flopoco {
 		s << op->getName() << "_BitHeap_"<< name << "_" << guid;
 		uniqueName_ = s.str();
 
-		REPORT(DEBUG, "Creating BitHeap of size " << size);
+		REPORT(DEBUG, "Creating BitHeap of width " << width);
 
 		//set up the vector of lists of weighted bits, and the vector of bit uids
-		for(unsigned i=0; i<size; i++)
+		for(unsigned i=0; i<width; i++)
 		{
 			bitUID.push_back(0);
 			vector<Bit*> t, t2;
@@ -87,16 +85,12 @@ namespace flopoco {
 
 	void BitheapNew::addBit(int weight, string rhsAssignment)
 	{
-		if((!isFixedPoint) && (weight < 0))
-			THROWERROR("Negative weight (=" << weight << ") in addBit, for an integer bitheap");
-
 		REPORT(FULL, "adding a bit at weight " << weight << " with rhs=" << rhsAssignment);
 
-		//ignore bits beyond the declared msb
-		if(weight > msb)
+		if((weight < lsb) || (weight>msb))
 		{
 			REPORT(INFO, "WARNING: in addBit, weight=" << weight
-					<< " greater than msb=" << msb << "... ignoring it");
+					<< " out of the bit heap range ("<< msb << ", " << lsb << ")... ignoring it");
 			return;
 		}
 
@@ -116,46 +110,27 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addBit(int weight, Signal *signal, int offset)
+#if 0 // don't see where it is used
+
+	void BitheapNew::addBit(int weight, Signal *signal, int index)
 	{
-		if((!isFixedPoint) && (weight < 0))
-			THROWERROR("Negative weight (=" << weight << ") in addBit, for an integer bitheap");
-		if((signal->isFix()) && ((offset < signal->LSB()) || (offset > signal->MSB())))
-			THROWERROR("Offset (=" << offset << ") out of signal bit range");
-		if((!signal->isFix()) && (offset >= signal->width()))
-			THROWERROR("Negative weight (=" << weight << ") in addBit, for an integer bitheap");
+		// check this bit exists in the signal
+		if((index < 0) || (index > signal->width()-1 ))
+			THROWERROR("addBit: Index (=" << index << ") out of signal bit range");
+		string rhs;
+		if(signal->width()==1)
+			rhs = signal->getName();
+		else
+			rhs = signal->getName() + of(index);
 
-		REPORT(FULL, "adding a bit at weight " << weight << " with rhs=" << signal->getName() << of(offset));
-
-		//ignore bits beyond the declared msb
-		if(weight > msb)
-		{
-			REPORT(INFO, "WARNING: in addBit, weight=" << weight
-					<< " greater than msb=" << msb << "... ignoring it");
-			return;
-		}
-
-		//create a new bit
-		//	the bit's constructor also declares the signal
-		Bit* bit = new Bit(this, signal, offset, weight, BitType::free);
-
-		//insert the new bit so that the vector is sorted by bit (cycle, delay)
-		insertBitInColumn(bit, weight-lsb);
-
-		REPORT(DEBUG, "added bit named "  << bit->name << " on column " << weight
-			<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
-		printColumnInfo(weight);
-
-		isCompressed = false;
+		addBit(weight, rhs);
 	}
 
-
-	void BitheapNew::addBit(Signal *signal, int offset, int weight)
-	{
-		addBit(weight, signal, offset);
-	}
+#endif
 
 
+
+	
 	void BitheapNew::insertBitInColumn(Bit* bit, unsigned columnNumber)
 	{
 		vector<Bit*>::iterator it = bits[columnNumber].begin();
@@ -195,12 +170,10 @@ namespace flopoco {
 
 	void BitheapNew::removeBit(int weight, int direction)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Weight " << weight << " out of the bit heap range ("<< msb << ", " << lsb << ") in removeBit");
 
-		vector<Bit*> bitsColumn = bits[weight];
+		vector<Bit*> bitsColumn = bits[weight-lsb];
 
 		//if dir=0 the bit will be removed from the beginning of the list,
 		//	else from the end of the list of weighted bits
@@ -219,13 +192,11 @@ namespace flopoco {
 
 	void BitheapNew::removeBit(int weight, Bit* bit)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Weight " << weight << " out of the bit heap range ("<< msb << ", " << lsb << ") in removeBit");
 
 		bool bitFound = false;
-		vector<Bit*> bitsColumn = bits[weight];
+		vector<Bit*> bitsColumn = bits[weight-lsb];
 		vector<Bit*>::iterator it = bitsColumn.begin();
 
 		//search for the bit and erase it,
@@ -252,12 +223,10 @@ namespace flopoco {
 
 	void BitheapNew::removeBits(int weight, unsigned count, int direction)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Weight " << weight << " out of the bit heap range ("<< msb << ", " << lsb << ") in removeBit");
 
-		vector<Bit*> bitsColumn = bits[weight];
+		vector<Bit*> bitsColumn = bits[weight-lsb];
 		unsigned currentCount = 0;
 
 		if(count > bitsColumn.size())
@@ -279,9 +248,9 @@ namespace flopoco {
 	void BitheapNew::removeBits(int msb, int lsb, unsigned count, int direction)
 	{
 		if(lsb < this->lsb)
-			THROWERROR("LSB (=" << lsb << ") out of bitheap bit range in removeBit");
+			THROWERROR("LSB (=" << lsb << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ") in removeBit");
 		if(msb > this->lsb)
-			THROWERROR("MSB (=" << msb << ") out of bitheap bit range in removeBit");
+			THROWERROR("MSB (=" << msb << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ") in removeBit");
 
 		for(int i=lsb; i<=msb; i++)
 		{
@@ -296,7 +265,7 @@ namespace flopoco {
 
 	void BitheapNew::removeCompressedBits()
 	{
-		for(unsigned i=0; i<size; i++)
+		for(unsigned i=0; i<width; i++)
 		{
 			vector<Bit*>::iterator it = bits[i].begin(), lastIt = it;
 
@@ -318,16 +287,14 @@ namespace flopoco {
 
 	void BitheapNew::markBit(int weight, unsigned number, BitType type)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-
-		if(number >= bits[weight].size())
+		if((weight < lsb) || (weight > msb))
+			THROWERROR("Weight (=" << weight << ") out of bitheap bit range ("<< msb << ", " << lsb << ")  in markBit");
+	
+		if(number >= bits[weight-lsb].size())
 			THROWERROR("Column with weight=" << weight << " only contains "
 					<< bits[weight].size() << " bits, but bit number=" << number << " is to be marked");
 
-		bits[weight][number]->type = type;
+		bits[weight-lsb][number]->type = type;
 	}
 
 
@@ -335,7 +302,7 @@ namespace flopoco {
 	{
 		bool bitFound = false;
 
-		for(unsigned i=0; i<=size; i++)
+		for(unsigned i=0; i<=width; i++)
 		{
 			vector<Bit*>::iterator it = bits[i].begin(), lastIt = it;
 
@@ -361,9 +328,9 @@ namespace flopoco {
 	void BitheapNew::markBits(int msb, int lsb, BitType type, unsigned number)
 	{
 		if(lsb < this->lsb)
-			THROWERROR("LSB (=" << lsb << ") out of bitheap bit range in removeBit");
+			THROWERROR("markBits: LSB (=" << lsb << ") out of bitheap bit range ("<< this->msb << ", " << this->lsb << ")");
 		if(msb > this->lsb)
-			THROWERROR("MSB (=" << msb << ") out of bitheap bit range in removeBit");
+			THROWERROR("markBits: MSB (=" << msb << ") out of bitheap bit range ("<< this->msb << ", " << this->lsb << ")");
 
 		for(int i=lsb; i<=msb; i++)
 		{
@@ -419,7 +386,7 @@ namespace flopoco {
 
 	void BitheapNew::markBitsForCompression()
 	{
-		for(unsigned i=0; i<size; i++)
+		for(unsigned i=0; i<width; i++)
 		{
 			for(unsigned j=0; j<bits[i].size(); j++)
 			{
@@ -434,7 +401,7 @@ namespace flopoco {
 
 	void BitheapNew::colorBits(BitType type, unsigned int newColor)
 	{
-		for(unsigned i=0; i<size; i++)
+		for(unsigned i=0; i<width; i++)
 		{
 			for(unsigned j=0; j<bits[i].size(); j++)
 			{
@@ -450,667 +417,142 @@ namespace flopoco {
 
 	void BitheapNew::addConstantOneBit(int weight)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if( (weight < lsb) || (weight > msb) )
+			THROWERROR("addConstantOneBit(): weight (=" << weight << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ")");
 
-		constantBits += (mpz_class(1) << weight);
+		constantBits += (mpz_class(1) << (weight-lsb));
 
 		isCompressed = false;
 	}
 
 
-	void BitheapNew::subConstantOneBit(int weight)
+	void BitheapNew::subtractConstantOneBit(int weight)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if( (weight < lsb) || (weight > msb) )
+			THROWERROR("subtractConstantOneBit(): weight (=" << weight << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ")");
 
-		constantBits -= (mpz_class(1) << weight);
+		constantBits -= (mpz_class(1) << (weight-lsb));
 
 		isCompressed = false;
 	}
 
 
-	void BitheapNew::addConstant(mpz_class constant, int weight)
+	void BitheapNew::addConstant(mpz_class constant, int shift)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if( (shift < lsb) || (shift+intlog2(constant) > msb) )
+			THROWERROR("addConstant: Constant " << constant << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
-		constantBits += (constant << weight);
+		constantBits += (constant << (shift-lsb));
 
 		isCompressed = false;
 	}
 
 
-	void BitheapNew::addConstant(mpz_class constant, int msb, int lsb, int weight)
+
+	void BitheapNew::subtractConstant(mpz_class constant, int shift)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
+		if( (shift < lsb) || (shift+intlog2(constant) > msb) )
+			THROWERROR("subtractConstant: Constant " << constant << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
-		mpz_class constantCpy = mpz_class(constant);
-
-		if(lsb < this->lsb)
-			constantCpy = constantCpy >> (this->lsb - lsb);
-		else
-			constantCpy = constantCpy << (lsb - this->lsb);
-
-		constantBits += (constantCpy << weight);
+		constantBits -= (constant << (shift-lsb));
 
 		isCompressed = false;
 	}
 
 
-	void BitheapNew::subConstant(mpz_class constant, int weight)
+
+
+
+
+
+	void BitheapNew::addSignal(string signalName, int shift)
 	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
 
-		constantBits -= (constant << weight);
+		REPORT(0, "addSignal	" << signalName << " shift=" << shift);
+		Signal* s = op->getSignalByName(signalName);
+		int sMSB = s->MSB();
+		int sLSB = s->LSB();
+	
+		// No error reporting here: the current situation is that addBit will ignore bits thrown out of the bit heap (with a warning)
+	
+		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
+			REPORT(0,"WARNING: addSignal(): " << signalName << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
-		isCompressed = false;
-	}
+		if(s->isSigned()) { // We must sign-extend it, using the constant trick
 
+			if(!op->getSignalByName(signalName)->isBus()) {
+				// getting here doesn't make much sense
+				THROWERROR("addSignal(): signal " << signalName << " is not a bus, but is signed : this looks like a bug");
+			}
 
-	void BitheapNew::subConstant(mpz_class constant, int msb, int lsb, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in removeBit");
-
-		mpz_class constantCpy = mpz_class(constant);
-
-		if(lsb < this->lsb)
-			constantCpy = constantCpy >> (this->lsb - lsb);
-		else
-			constantCpy = constantCpy << (lsb - this->lsb);
-
-		constantBits -= (constantCpy << weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addUnsignedBitVector(string signalName, unsigned vectorSize, int weight)
-	{
-		//		REPORT(0, "msb=" << msb << " lsb=" << lsb << " w=" << weight << " size=" << size);
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight " << weight << " out of bitheap bit range in addUnsignedBitVector (msb=" << msb << " lsb=" << lsb <<")");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
-
-		int startIndex, endIndex;
-
-		if(weight < lsb)
-			startIndex = lsb;
-		else
-			startIndex = weight;
+			// Now we have a bit vector but it might be of width 1, in which case the following loop is empty.
+			for(int w=sLSB; w<=sMSB-1; w++) {
+				addBit(w+shift,	 signalName + of(w-sLSB));
+			}
+			if(sMSB==this->msb) { // No point in complementing it and adding a constant bit
+				addBit(sMSB+shift,	 signalName + of(sMSB-sLSB));
+			}
+			else{
+				// complement the leading bit
+				addBit(sMSB+shift,	"not("+signalName + of(sMSB-sLSB)+")");
+				// add the string of ones from this bit to the MSB of the bit heap
+				for(int w=sMSB; w<=this->msb-shift; w++) {
+					addConstantOneBit(w+shift);
+				}
+			}
+		}
+			
+		else{ // unsigned
+			if(!op->getSignalByName(signalName)->isBus())
+				addBit(shift,signalName);
+			else {// isBus: this is a bit vector
+				for(int w=sLSB; w<=sMSB; w++) {
+					addBit(w+shift, signalName + of(w-sLSB));
+				}
+			}
+		}
 		
-		if((int)vectorSize+weight > msb)
-			endIndex = msb;
-		else
-			endIndex = vectorSize+weight-1;
+		isCompressed = false;
+	}
 
-		if(op->getSignalByName(signalName)->width() == 1)
-		{
-			addBit(startIndex, signalName);
-		}else{
-			for(int i=startIndex; i<=endIndex; i++)
-				addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
+
+	void BitheapNew::subtractSignal(string signalName, int shift)
+	{
+
+		REPORT(0, "subtractSignal  " << signalName << " shift=" << shift);
+		Signal* s = op->getSignalByName(signalName);
+		int sMSB = s->MSB();
+		int sLSB = s->LSB();
+		
+		// No error reporting here: the current situation is that addBit will ignore bits thrown out of the bit heap (with a warning)
+		
+		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
+			REPORT(0,"WARNING: subtractSignal(): " << signalName << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
+		
+		// If the bit vector is of width 1, the following loop is empty.
+		for(int w=sLSB; w<=sMSB; w++) {
+			addBit(w+shift,	 "not(" + signalName + of(w-sLSB) + ")"  );
 		}
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addUnsignedBitVector(string signalName, int msb, int lsb, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addUnsignedBitVector");
-
-		int startIndex, endIndex;
-
-		if(weight+lsb < this->lsb)
-			startIndex = this->lsb;
-		else
-			startIndex = weight+lsb;
-		if(msb+weight > this->msb)
-			endIndex = this->msb;
-		else
-			endIndex = msb+weight;
-
-		if(op->getSignalByName(signalName)->width() == 1)
-		{
-			addBit(startIndex, signalName);
-		}else{
-			for(int i=startIndex; i<=endIndex; i++)
-				addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
+		// add the string of ones from this bit to the MSB of the bit heap
+		for(int w=sMSB+1; w<=this->msb-shift; w++) {
+			 addConstantOneBit(w+shift);
 		}
+		addConstantOneBit(sLSB+shift);
 
 		isCompressed = false;
 	}
 
 
-	void BitheapNew::addUnsignedBitVector(Signal* signal, int weight)
-	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " to an unsigned bitheap");
 
-		if(signal->isFix())
-			addUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
-		else
-			addUnsignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addUnsignedBitVector(Signal* signal, int msb, int lsb, int weight)
-	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " to an unsigned bitheap");
-
-		if(signal->isFix()){
-			if((signal->LSB() > msb) || (signal->MSB() < lsb))
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (msb=" << signal->MSB() << ", lsb=" << signal->LSB()
-						<< ") to bitheap with msb=" << this->msb << ", lsb=" << this->lsb);
-
-			addUnsignedBitVector(signal->getName(), msb, lsb, weight);
-		}else{
-			if(msb-lsb+1 > signal->width())
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (size=" << signal->width() << ") to bitheap with msb="
-						<< this->msb << ", lsb=" << this->lsb);
-
-			addUnsignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
-		}
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractUnsignedBitVector(string signalName, unsigned size, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-
-		int startIndex, endIndex;
-
-		if(weight < lsb)
-			startIndex = lsb;
-		else
-			startIndex = weight;
-		if((int)size+weight > msb)
-			endIndex = msb;
-		else
-			endIndex = size+weight-1;
-
-		for(int i=startIndex; i<=endIndex; i++)
-		{
-			ostringstream s;
-
-			if(op->getSignalByName(signalName)->width() == 1)
-			{
-				s << "not(" << signalName << ")";
-			}else{
-				s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
-			}
-			addBit(i, s.str());
-		}
-		addConstantOneBit(startIndex);
-		for(int i=endIndex+1; i<=this->msb; i++)
-			addConstantOneBit(i);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractUnsignedBitVector(string signalName, int msb, int lsb, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-
-		int startIndex, endIndex;
-
-		if(weight+lsb < this->lsb)
-			startIndex = this->lsb;
-		else
-			startIndex = weight+lsb;
-		if(msb+weight > this->msb)
-			endIndex = this->msb;
-		else
-			endIndex = msb+weight;
-
-		for(int i=startIndex; i<=endIndex; i++)
-		{
-			ostringstream s;
-
-			if(op->getSignalByName(signalName)->width() == 1)
-			{
-				s << "not(" << signalName << ")";
-			}else{
-				s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
-			}
-			addBit(i, s.str());
-		}
-		addConstantOneBit(startIndex);
-		for(int i=endIndex+1; i<=this->msb; i++)
-			addConstantOneBit(i);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractUnsignedBitVector(Signal* signal, int weight)
-	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " from an unsigned bitheap");
-
-		if(signal->isFix())
-			subtractUnsignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
-		else
-			subtractUnsignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractUnsignedBitVector(Signal* signal, int msb, int lsb, int weight)
-	{
-		if(signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " as an unsigned bit vector");
-		if(signal->isSigned() && !isSigned)
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " from an unsigned bitheap");
-
-		if(signal->isFix()){
-			if((signal->LSB() > msb) || (signal->MSB() < lsb))
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (msb=" << signal->MSB() << ", lsb=" << signal->LSB()
-						<< ") to bitheap with msb=" << this->msb << ", lsb=" << this->lsb);
-
-			subtractUnsignedBitVector(signal->getName(), msb, lsb, weight);
-		}else{
-			if(msb-lsb+1 > signal->width())
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (size=" << signal->width() << ") to bitheap with msb="
-						<< this->msb << ", lsb=" << this->lsb);
-
-			subtractUnsignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
-		}
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addSignedBitVector(string signalName, unsigned size, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: adding a signed signal " << signalName << " to an unsigned bitheap");
-
-		ostringstream s;
-		int startIndex, endIndex;
-
-		if(weight < lsb)
-			startIndex = lsb;
-		else
-			startIndex = weight;
-		if((int)size+weight > msb)
-			endIndex = msb;
-		else
-			endIndex = size+weight-1;
-
-		if(op->getSignalByName(signalName)->width() == 1)
-		{
-			addBit(startIndex, signalName);
-		}else{
-			for(int i=startIndex; i<endIndex; i++)
-				addBit(i, join(signalName, of(i-startIndex+startIndex-weight)));
-		}
-
-		s << "not(" << signalName << of(endIndex-startIndex+startIndex-weight) << ")";
-		addBit(endIndex, s.str());
-
-		for(int i=endIndex; i<=this->msb; i++)
-			addConstantOneBit(i);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addSignedBitVector(string signalName, int msb, int lsb, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: adding a signed signal " << signalName << " to an unsigned bitheap");
-
-		ostringstream s;
-		int startIndex, endIndex;
-
-		if(weight+lsb < this->lsb)
-			startIndex = this->lsb;
-		else
-			startIndex = weight+lsb;
-		if(msb+weight > this->msb)
-			endIndex = this->msb;
-		else
-			endIndex = msb+weight;
-
-		if(op->getSignalByName(signalName)->width() == 1)
-		{
-			addBit(startIndex, signalName);
-		}else{
-			for(int i=startIndex; i<endIndex; i++)
-				addBit(i, join(signalName, of(i-startIndex+startIndex-weight-lsb)));
-		}
-
-		s << "not(" << signalName << of(endIndex-startIndex+startIndex-weight-lsb) << ")";
-		addBit(endIndex, s.str());
-
-		for(int i=endIndex; i<=this->msb; i++)
-			addConstantOneBit(i);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addSignedBitVector(Signal* signal, int weight)
-	{
-		if(!signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding unsigned signal "
-					<< signal->getName() << " as an signed bit vector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " to an unsigned bitheap");
-
-		if(signal->isFix())
-			addSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
-		else
-			addSignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addSignedBitVector(Signal* signal, int msb, int lsb, int weight)
-	{
-		if(!signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding unsigned signal "
-					<< signal->getName() << " as an signed bit vector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: adding signed signal "
-					<< signal->getName() << " to an unsigned bitheap");
-
-		if(signal->isFix()){
-			if((signal->LSB() > msb) || (signal->MSB() < lsb))
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (msb=" << signal->MSB() << ", lsb=" << signal->LSB()
-						<< ") to bitheap with msb=" << this->msb << ", lsb=" << this->lsb);
-
-			addSignedBitVector(signal->getName(), msb, lsb, weight);
-		}else{
-			if(msb-lsb+1 > signal->width())
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (size=" << signal->width() << ") to bitheap with msb="
-						<< this->msb << ", lsb=" << this->lsb);
-
-			addSignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
-		}
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractSignedBitVector(string signalName, unsigned size, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in subtractUnsignedBitVector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting a signed signal "
-					<< signalName << " from an unsigned bitheap");
-
-		int startIndex, endIndex;
-
-		if(weight < lsb)
-			startIndex = lsb;
-		else
-			startIndex = weight;
-		if((int)size+weight > msb)
-			endIndex = msb;
-		else
-			endIndex = size+weight-1;
-
-		for(int i=startIndex; i<endIndex; i++)
-		{
-			ostringstream s;
-
-			if(op->getSignalByName(signalName)->width() == 1)
-			{
-				s << "not(" << signalName << ")";
-			}else{
-				s << "not(" << signalName << of(i-startIndex+startIndex-weight) << ")";
-			}
-			addBit(i, s.str());
-		}
-		addBit(endIndex, join(signalName, of(endIndex-startIndex+startIndex-weight)));
-		addConstantOneBit(startIndex);
-		for(int i=endIndex; i<=this->msb; i++)
-			addConstantOneBit(i);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractSignedBitVector(string signalName, int msb, int lsb, int weight)
-	{
-		if(isFixedPoint && ((weight < lsb) || (weight > msb)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isFixedPoint && ((weight < 0) || ((unsigned)weight >= this->size)))
-			THROWERROR("Weight (=" << weight << ") out of bitheap bit range in addSignedBitVector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting a signed signal "
-					<< signalName << " from an unsigned bitheap");
-
-		ostringstream s;
-		int startIndex, endIndex;
-
-		if(weight+lsb < this->lsb)
-			startIndex = this->lsb;
-		else
-			startIndex = weight+lsb;
-		if(msb+weight > this->msb)
-			endIndex = this->msb;
-		else
-			endIndex = msb+weight;
-
-		for(int i=startIndex; i<endIndex; i++)
-		{
-			ostringstream s;
-
-			if(op->getSignalByName(signalName)->width() == 1)
-			{
-				s << "not(" << signalName << ")";
-			}else{
-				s << "not(" << signalName << of(i-startIndex+startIndex-weight-lsb) << ")";
-			}
-			addBit(i, s.str());
-		}
-		addBit(endIndex, join(signalName, of(endIndex-startIndex+startIndex-weight-lsb)));
-		addConstantOneBit(startIndex);
-		for(int i=endIndex; i<=this->msb; i++)
-			addConstantOneBit(i);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractSignedBitVector(Signal* signal, int weight)
-	{
-		if(!signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting unsigned signal "
-					<< signal->getName() << " as an signed bit vector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " from an unsigned bitheap");
-
-		if(signal->isFix())
-			subtractSignedBitVector(signal->getName(), signal->MSB(), signal->LSB(), weight);
-		else
-			subtractSignedBitVector(signal->getName(), (unsigned)signal->width(), weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractSignedBitVector(Signal* signal, int msb, int lsb, int weight)
-	{
-		if(!signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting unsigned signal "
-					<< signal->getName() << " as an signed bit vector");
-		if(!isSigned)
-			REPORT(DEBUG, "WARNING: subtracting signed signal "
-					<< signal->getName() << " from an unsigned bitheap");
-
-		if(signal->isFix()){
-			if((signal->LSB() > msb) || (signal->MSB() < lsb))
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (msb=" << signal->MSB() << ", lsb=" << signal->LSB()
-						<< ") to bitheap with msb=" << this->msb << ", lsb=" << this->lsb);
-
-			subtractSignedBitVector(signal->getName(), msb, lsb, weight);
-		}else{
-			if(msb-lsb+1 > signal->width())
-				THROWERROR("Incorrect bounds while adding unsigned signal " << signal->getName()
-						<< " (size=" << signal->width() << ") to bitheap with msb="
-						<< this->msb << ", lsb=" << this->lsb);
-
-			subtractSignedBitVector(signal->getName(), (unsigned)(msb-lsb+1), weight);
-		}
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addSignal(Signal* signal, int weight)
-	{
-		if(!isSigned && signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding a signed signal "
-					<< signal->getName() << " to an unsigned bitheap");
-		if(isSigned && !signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding an unsigned signal "
-					<< signal->getName() << " to a signed bitheap");
-
-		if(signal->isSigned())
-			addSignedBitVector(signal, weight);
-		else
-			addUnsignedBitVector(signal, weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::addSignal(Signal* signal, int msb, int lsb, int weight)
-	{
-		if(!isSigned && signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding a signed signal "
-					<< signal->getName() << " to an unsigned bitheap");
-		if(isSigned && !signal->isSigned())
-			REPORT(DEBUG, "WARNING: adding an unsigned signal "
-					<< signal->getName() << " to a signed bitheap");
-
-		if(signal->isSigned())
-			addSignedBitVector(signal, msb, lsb, weight);
-		else
-			addUnsignedBitVector(signal, msb, lsb, weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractSignal(Signal* signal, int weight)
-	{
-		if(!isSigned && signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting a signed signal "
-					<< signal->getName() << " from an unsigned bitheap");
-		if(isSigned && !signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting an unsigned signal "
-					<< signal->getName() << " from a signed bitheap");
-
-		if(signal->isSigned())
-			subtractSignedBitVector(signal, weight);
-		else
-			subtractUnsignedBitVector(signal, weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::subtractSignal(Signal* signal, int msb, int lsb, int weight)
-	{
-		if(!isSigned && signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting a signed signal "
-					<< signal->getName() << " from an unsigned bitheap");
-		if(isSigned && !signal->isSigned())
-			REPORT(DEBUG, "WARNING: subtracting an unsigned signal "
-					<< signal->getName() << " from a signed bitheap");
-
-		if(signal->isSigned())
-			subtractSignedBitVector(signal, msb, lsb, weight);
-		else
-			subtractUnsignedBitVector(signal, msb, lsb, weight);
-
-		isCompressed = false;
-	}
-
-
-	void BitheapNew::resizeBitheap(unsigned newSize, int direction)
+	
+	void BitheapNew::resizeBitheap(unsigned newWidth, int direction)
 	{
 		if((direction != 0) && (direction != 1))
 			THROWERROR("Invalid direction in resizeBitheap: direction=" << direction);
-		if(isFixedPoint)
-			REPORT(DEBUG, "WARNING: using generic resize method to resize a fixed-point bitheap");
-		if(newSize < size)
+		if(newWidth < width)
 		{
-			REPORT(DEBUG, "WARNING: resizing the bitheap from size="
-					<< size << " to size=" << newSize);
+			REPORT(DEBUG, "WARNING: resizing the bitheap from width="
+					<< width << " to width=" << newWidth);
 			if(direction == 0){
 				REPORT(DEBUG, "\t will loose the information in the lsb columns");
 			}else{
@@ -1119,24 +561,22 @@ namespace flopoco {
 		}
 
 		//add/remove the columns
-		if(newSize < size)
+		if(newWidth < width)
 		{
 			//remove columns
 			if(direction == 0)
 			{
 				//remove lsb columns
-				bits.erase(bits.begin(), bits.begin()+(size-newSize));
-				history.erase(history.begin(), history.begin()+(size-newSize));
-				bitUID.erase(bitUID.begin(), bitUID.begin()+(size-newSize));
-				if(isFixedPoint)
-					lsb += size-newSize;
+				bits.erase(bits.begin(), bits.begin()+(width-newWidth));
+				history.erase(history.begin(), history.begin()+(width-newWidth));
+				bitUID.erase(bitUID.begin(), bitUID.begin()+(width-newWidth));
+				lsb += width-newWidth;
 			}else{
 				//remove msb columns
-				bits.resize(newSize);
-				history.resize(newSize);
-				bitUID.resize(newSize);
-				if(isFixedPoint)
-					msb -= size-newSize;
+				bits.resize(newWidth);
+				history.resize(newWidth);
+				bitUID.resize(newWidth);
+				msb -= width-newWidth;
 			}
 		}else{
 			//add columns
@@ -1144,28 +584,21 @@ namespace flopoco {
 			{
 				//add lsb columns
 				vector<Bit*> newVal;
-				bits.insert(bits.begin(), newSize-size, newVal);
-				history.insert(history.begin(), newSize-size, newVal);
-				bitUID.insert(bitUID.begin(), newSize-size, 0);
-				if(isFixedPoint)
-					lsb -= size-newSize;
+				bits.insert(bits.begin(), newWidth-width, newVal);
+				history.insert(history.begin(), newWidth-width, newVal);
+				bitUID.insert(bitUID.begin(), newWidth-width, 0);
+				lsb -= width-newWidth;
 			}else{
 				//add msb columns
-				bits.resize(newSize-size);
-				history.resize(newSize-size);
-				bitUID.resize(newSize-size);
-				if(isFixedPoint)
-					msb += size-newSize;
+				bits.resize(newWidth-width);
+				history.resize(newWidth-width);
+				bitUID.resize(newWidth-width);
+				msb += width-newWidth;
 			}
 		}
 
 		//update the information inside the bitheap
-		size = newSize;
-		if(!isFixedPoint)
-		{
-			lsb = 0;
-			msb = newSize-1;
-		}
+		width = newWidth;
 		height = getMaxHeight();
 		for(int i=lsb; i<=msb; i++)
 			for(unsigned j=0; j<bits[i-lsb].size(); j++)
@@ -1177,11 +610,8 @@ namespace flopoco {
 
 	void BitheapNew::resizeBitheap(int newMsb, int newLsb)
 	{
-		if((newMsb < newLsb) || (newLsb<0 && !isFixedPoint) || (newMsb<0 && !isFixedPoint))
-			THROWERROR("Invalid arguments in resizeBitheap (isFixedPoint="
-					<< isFixedPoint << "): newMsb=" << newMsb << " newLsb=" << newLsb);
-		if(!isFixedPoint)
-			REPORT(DEBUG, "WARNING: using fixed-point resize method to resize an integer bitheap");
+		if((newMsb < newLsb))
+			THROWERROR("Invalid arguments in resizeBitheap: newMsb=" << newMsb << " newLsb=" << newLsb);
 		if(newMsb<msb || newLsb>lsb)
 		{
 			REPORT(DEBUG, "WARNING: resizing the bitheap from msb="
@@ -1213,7 +643,7 @@ namespace flopoco {
 			REPORT(DEBUG, "WARNING: merging bitheaps with different signedness");
 
 		//resize if necessary
-		if(size < bitheap->size)
+		if(width < bitheap->width)
 		{
 			if(lsb > bitheap->lsb)
 				resizeBitheap(msb, bitheap->lsb);
@@ -1221,11 +651,12 @@ namespace flopoco {
 				resizeBitheap(bitheap->msb, lsb);
 		}
 		//add the bits
-		for(int i=bitheap->lsb; i<bitheap->msb; i++)
+		for(int i=bitheap->lsb; i<bitheap->msb; i++) {
 			for(unsigned j=0; j<bitheap->bits[i-bitheap->lsb].size(); j++)
-				insertBitInColumn(bitheap->bits[i-bitheap->lsb][j], i-bitheap->lsb+(lsb-bitheap->lsb));
+				insertBitInColumn(bitheap->bits[i-bitheap->lsb][j], i-bitheap->lsb + (lsb-bitheap->lsb));
+		}
 		//make the bit all point to this bitheap
-		for(unsigned i=0; i<size; i++)
+		for(unsigned i=0; i<width; i++)
 			for(unsigned j=0; j<bits[i].size(); j++)
 				bits[i][j]->bitheap = this;
 

@@ -44,8 +44,26 @@ namespace flopoco{
 		double delay;
 		unsigned int colorCount = 0;
 
+		// Add the constant bits
+		REPORT(DEBUG, "Adding the constant bits");
+		bitheap-> op->vhdl << endl << tab << "-- Adding the constant bits" << endl;
+		bool isConstantNonzero = false;
+		for (unsigned w=0; w<bitheap-> width; w++){
+			if (1 == ((bitheap->constantBits>>w) & 1) ){
+				bitheap-> addBit(w-bitheap->lsb, "'1'");
+				isConstantNonzero = true;
+			}
+		}
+		//when the constant bits are all zero, report it
+		if(!isConstantNonzero){
+			REPORT(DEBUG, "All the constant bits are zero, nothing to add");
+			bitheap-> op->vhdl << tab << tab << "-- All the constant bits are zero, nothing to add" << endl;
+		}
+		bitheap-> op->vhdl << endl;
+
+		
 		//take a snapshot of the bitheap, before the start of the compression
-		bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->size-1), getSoonestBit(0, bitheap->size-1));
+		bitheapPlotter->takeSnapshot(getSoonestBit(0, bitheap->width-1), getSoonestBit(0, bitheap->width-1));
 
 		//first, set the delay to the delay of a compressor
 		delay = compressionDelay;
@@ -61,9 +79,9 @@ namespace flopoco{
 				Bit *soonestBit, *soonestCompressibleBit;
 
 				//get the soonest bit in the bitheap
-				soonestBit = getSoonestBit(0, bitheap->size-1);
+				soonestBit = getSoonestBit(0, bitheap->width-1);
 				//get the soonest compressible bit in the bitheap
-				soonestCompressibleBit = getSoonestCompressibleBit(0, bitheap->size-1, delay);
+				soonestCompressibleBit = getSoonestCompressibleBit(0, bitheap->width-1, delay);
 
 				//apply as many compressors as possible, with the current delay
 				bitheapCompressed = compress(delay, soonestCompressibleBit);
@@ -233,7 +251,7 @@ namespace flopoco{
 		compressor->markUsed();
 
 		//add the result of the compression to the bitheap
-		bitheap->addSignal(bitheap->op->getSignalByName(compressorIONames.str()), weight);
+		bitheap->addSignal(compressorIONames.str(), weight);
 
 		//mark the bits of the result of the compression as just added
 		bitheap->markBits(bitheap->op->getSignalByName(compressorIONames.str()), BitType::justAdded, weight);
@@ -258,15 +276,15 @@ namespace flopoco{
 			adderOutName << "bitheapFinalAdd_bh" << bitheap->guid << "_Out";
 
 			//add the first bits to the adder inputs
-			if(compressionDoneIndex <= bitheap->size)
+			if(compressionDoneIndex <= bitheap->width)
 			{
-				if(bitheap->bits[bitheap->size-1].size() > 1)
+				if(bitheap->bits[bitheap->width-1].size() > 1)
 				{
-					adderIn0 << bitheap->bits[bitheap->size-1][0]->name;
-					adderIn1 << bitheap->bits[bitheap->size-1][1]->name;
-				}else if(bitheap->bits[bitheap->size-1].size() > 0)
+					adderIn0 << bitheap->bits[bitheap->width-1][0]->name;
+					adderIn1 << bitheap->bits[bitheap->width-1][1]->name;
+				}else if(bitheap->bits[bitheap->width-1].size() > 0)
 				{
-					adderIn0 << bitheap->bits[bitheap->size-1][0]->name;
+					adderIn0 << bitheap->bits[bitheap->width-1][0]->name;
 					adderIn1 << "\"0\"";
 				}else{
 					adderIn0 << "\"0\"";
@@ -274,7 +292,7 @@ namespace flopoco{
 				}
 			}
 			//add the rest of the terms to the adder inputs
-			for(int i=bitheap->size-2; i>(int)compressionDoneIndex; i--)
+			for(int i=bitheap->width-2; i>(int)compressionDoneIndex; i--)
 			{
 				if(bitheap->bits[i].size() > 1)
 				{
@@ -698,7 +716,7 @@ namespace flopoco{
 
 		//create the signal containing the result of the bitheap compression
 		bitheap->op->vhdl << tab
-				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->size) << " <= ";
+				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->width) << " <= ";
 		//add the chunks in reverse order
 		//	from msb to lsb
 		bitheap->op->vhdl << chunksDone[chunksDone.size()-1];

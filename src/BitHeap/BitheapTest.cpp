@@ -50,7 +50,7 @@ namespace flopoco{
 		bitheap = new BitheapNew(this, msb, lsb, isSigned);
 
 		for(int i=0; i<nbInputs; i++)
-			bitheap->addSignal(getSignalByName(join("X", i)), weights[i]);
+			bitheap->addSignal(join("X", i), weights[i]);
 
 		bitheap->startCompression();
 

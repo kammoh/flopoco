@@ -411,17 +411,22 @@ namespace flopoco{
 		
 		if(constantIsPowerOfTwo)	{
 			// Create a signal that shifts it or truncates it into place
-			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
-			int rTempSize = parentOp->getSignalByName(rTempName)->width();
+			string rTempName = createShiftedPowerOfTwo(inputSignalName);
+			Signal* rTemp = parentOp->getSignalByName(rTempName);
 
 			if(negativeConstant) {
-				bitHeap -> subtractSignedBitVector(rTempName, rTempSize, 0);
+				rTemp->setFixSigned(false); // make it a signed signal
+				bitHeap -> subtractSignal(rTempName);
 			}
 			else{
-				if(signedInput)
-					bitHeap -> addSignedBitVector(rTempName, rTempSize, 0);
-				else // !negativeConstant and !signedInput
-					bitHeap -> addUnsignedBitVector(rTempName, rTempSize, 0);
+				if(signedInput)	{
+					rTemp->setFixSigned(false); // make it a signed signal
+					bitHeap -> addSignal(rTempName);
+				}
+				else  { // !negativeConstant and !signedInput
+					rTemp->setFixUnsigned(false); // make it a signed signal
+					bitHeap -> addSignal(rTempName);
+				}
 			}
 			return true; // and that 's all folks.
 			}
@@ -501,31 +506,28 @@ namespace flopoco{
 				parentOp->outPortMap(t , "Y", sliceOutName);
 				parentOp->vhdl << parentOp->instance(t , instanceName);
 
-				int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
-				
+				Signal* sliceOut = parentOp->getSignalByName(sliceOutName);
+				int sliceOutWidth = sliceOut->width();
+
+				cerr << "***** Size of "<< sliceOutName << " is " << sliceOutWidth	 << " " << tableOutputSign[i] << endl;
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
-					bitHeap -> addSignedBitVector(
-																				sliceOutName, // name
-																				sliceOutWidth, // size
-																				0 // weight
-																				);
+					// bitHeap -> addSignedBitVector(
+					// 															sliceOutName, // name
+					// 															sliceOutWidth, // size
+					// 															0 // weight
+					// 															);
+					sliceOut -> setFixSigned(false);
+					bitHeap -> addSignal(sliceOutName);
 					break;
 				case 1:
-					bitHeap -> addUnsignedBitVector(
-																					sliceOutName, // name
-																					sliceOutWidth, // size
-																					0 // weight
-																					);
+					sliceOut -> setFixUnsigned(false);
+					bitHeap -> addSignal(sliceOutName);
 					break;
 				case -1: // In this case the table simply stores x* absC 
-					bitHeap -> subtractUnsignedBitVector(
-																							 sliceOutName, // name
-																							 sliceOutWidth, // size
-																							 0 // weight
-																							 );
-					
+					sliceOut -> setFixSigned(false);
+					bitHeap -> subtractSignal(sliceOutName);
 					break;
 				default: THROWERROR("unexpected value in tableOutputSign");
 				}

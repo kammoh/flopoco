@@ -56,7 +56,7 @@ enum BitType : unsigned;
 		/**
 		 * @brief The constructor for an signed/unsigned integer bitheap
 		 * @param op                the operator in which the bitheap is being built
-		 * @param size              the size (maximum weight of the heap, or number of columns) of the bitheap
+		 * @param width              the width (maximum weight of the heap, or number of columns) of the bitheap
 		 * @param isSigned          whether the bitheap is signed, or not (unsigned, by default)
 		 * @param name              a description of the heap that will be integrated into its unique name (empty by default)
 		 * @param compressionType	the type of compression applied to the bit heap:
@@ -66,7 +66,7 @@ enum BitType : unsigned;
 		 *									addition tree at the end of the
 		 *									compression
 		 */
-		BitheapNew(Operator* op, unsigned size, bool isSigned = false, string name = "", int compressionType = COMPRESSION_TYPE);
+		BitheapNew(Operator* op, unsigned width, bool isSigned = false, string name = "", int compressionType = COMPRESSION_TYPE);
 
 		/**
 		 * @brief The constructor for an signed/unsigned fixed-point bitheap
@@ -97,27 +97,62 @@ enum BitType : unsigned;
 		 */
 		void addBit(int weight, string rhsAssignment);
 
-		/**
-		 * @brief add a bit to the bit heap.
-		 * @param weight             the weight of the bit to be added. It should be non-negative,
-		 *                           for an integer bitheap, or between msb and lsb for a fixed-point bitheap.
-		 * @param signal             the signal out of which a bit is added to the bitheap.
-		 * @param offset             the offset at which the bit is in the signal. for one-bit signals, this parameter is ignored.
-		 * @param comment            a VHDL comment for this bit
-		 */
-		void addBit(int weight, Signal *signal, int offset = 0);
 
 		/**
-		 * @brief add a bit to the bit heap. convenience function for adding signals directly to the bitheap.
-		 * @param signal             the signal out of which a bit is added to the bitheap.
-		 * @param offset             the offset at which the bit is in the signal. for one-bit signals, this parameter is ignored.
-		 *                           (by default 0, the lsb of the signal)
-		 * @param weight             the weight of the bit to be added. It should be non-negative,
-		 *                           for an integer bitheap, or between msb and lsb for a fixed-point bitheap.
-		 *                           (by default 0, the lsb of the bitheap)
-		 * @param comment            a VHDL comment for this bit
+		 * @brief add a constant 1 to the bit heap.
+		 * All the constant bits are added to the constantBits mpz,
+		 * so we don't generate hardware to compress constants.
+		 * @param weight            the weight of the 1 bit to be added
+		 *                          (by default 0)
 		 */
-		void addBit(Signal *signal, int offset = 0, int weight = 0);
+		void addConstantOneBit(int weight = 0);
+
+		/**
+		 * @brief subtract a constant 1 from the bitheap.
+		 * @param weight             the weight to which the LSB of the (integer) constant should be added
+		 *                          (by default 0)
+		 */
+		void subtractConstantOneBit(int weight = 0);
+
+		/**
+		 * @brief add a constant to the bitheap. It will be added to the constantBits mpz,
+		 * so we don't generate hardware to compress constants.
+		 * @param constant          the value to be added
+		 * @param shift             the weight to which the LSB of the (integer) constant should be added
+		 *                          (by default 0)
+		 */
+		void addConstant(mpz_class constant, int shift = 0);
+
+
+		/**
+		 * @brief subtract a constant from the bitheap. It will be subtracted from the constantBits mpz,
+		 * so we don't generate hardware to compress constants.
+		 * @param constant          the value to be subtracted
+		 * @param weight            the weight of the LSB of constant
+		 *                          (by default 0)
+		 */
+		void subtractConstant(mpz_class constant, int shift = 0);
+
+
+		/**
+		 * @brief add to the bitheap a signal
+		 * @param signal            the signal being added
+		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap. 
+		 *                          (by default 0)
+		 The signedness will be read from the signal itself
+		 */
+		void addSignal(string signalName, int shift = 0);
+
+
+		/**
+		 * @brief subtract a signal from the bitheap 
+		 * @param signal            the signal 
+		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap. 
+		 *                          (by default 0)
+		 The signedness will be read from the signal itself
+		 */
+		void subtractSignal(string signalName, int shift = 0);
+
 
 		/**
 		 * @brief remove a bit from the bitheap.
@@ -211,259 +246,14 @@ enum BitType : unsigned;
 		 */
 		void colorBits(BitType type, unsigned int newColor);
 
-		/**
-		 * @brief add a constant 1 to the bit heap.
-		 * All the constant bits are added to the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param weight            the weight of the 1 bit to be added
-		 *                          (by default 0)
-		 */
-		void addConstantOneBit(int weight = 0);
-
-		/**
-		 * @brief subtract a constant 1 from the bitheap.
-		 * @param weight            the weight of the 1 to be subtracted
-		 *                          (by default 0)
-		 */
-		void subConstantOneBit(int weight = 0);
-
-		/**
-		 * @brief add a constant to the bitheap. It will be added to the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param constant          the value to be added
-		 * @param weight            the weight of the LSB of constant
-		 *                          (by default 0)
-		 */
-		void addConstant(mpz_class constant, int weight = 0);
-
-		/**
-		 * @brief add a constant to the bitheap. It will be added to the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param constant          the value to be added
-		 * @param msb               the msb of the format of the constant
-		 * @param lsb               the lsb of the format of the constant
-		 * @param weight            the weight of the LSB of constant
-		 *                          (by default 0)
-		 */
-		void addConstant(mpz_class constant, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief subtract a constant to the bitheap. It will be subtracted from the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param constant          the value to be subtracted
-		 * @param weight            the weight of the LSB of constant
-		 *                          (by default 0)
-		 */
-		void subConstant(mpz_class constant, int weight = 0);
-
-		/**
-		 * @brief subtract a constant to the bitheap. It will be subtracted to the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param constant          the value to be subtracted
-		 * @param msb               the msb of the format of the constant
-		 * @param lsb               the lsb of the format of the constant
-		 * @param weight            the weight of the LSB of constant
-		 *                          (by default 0)
-		 */
-		void subConstant(mpz_class constant, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as an unsigned integer
-		 * @param signalName        the name of the signal being added
-		 * @param size              the size of the signal being added
-		 *                          (by default 1)
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addUnsignedBitVector(string signalName, unsigned size = 1, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as an unsigned integer
-		 * @param signalName        the name of the signal being added
-		 * @param msb               the msb from which to add bits of the signal
-		 * @param lsb               the lsb up until which to add bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addUnsignedBitVector(string signalName, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as an unsigned integer
-		 * @param signal            the signal being added
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addUnsignedBitVector(Signal* signal, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as an unsigned integer
-		 * @param signal            the signal being added
-		 * @param msb               the msb from which to add bits of the signal
-		 * @param lsb               the lsb up until which to add bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addUnsignedBitVector(Signal* signal, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as an unsigned integer
-		 * @param signalName        the name of the signal being added
-		 * @param size              the size of the signal being subtracted
-		 *                          (by default 1)
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractUnsignedBitVector(string signalName, unsigned size = 1, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as an unsigned integer
-		 * @param signalName        the name of the signal being added
-		 * @param msb               the msb from which to consider the bits of the signal
-		 * @param lsb               the lsb up until which to consider bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractUnsignedBitVector(string signalName, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as an unsigned integer
-		 * @param signal            the signal being added
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractUnsignedBitVector(Signal* signal, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as an unsigned integer
-		 * @param signal            the signal being added
-		 * @param msb               the msb from which to consider the bits of the signal
-		 * @param lsb               the lsb up until which to consider bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractUnsignedBitVector(Signal* signal, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as a signed integer. the size includes the sign bit.
-		 * @param signalName        the name of the signal being added
-		 * @param size              the size of the signal being added
-		 *                          (by default 1)
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addSignedBitVector(string signalName, unsigned size = 1, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as an signed integer
-		 * @param signalName        the name of the signal being added
-		 * @param msb               the msb from which to add bits of the signal
-		 * @param lsb               the lsb up until which to add bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addSignedBitVector(string signalName, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as an signed integer
-		 * @param signal            the signal being added
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addSignedBitVector(Signal* signal, int weight = 0);
-
-		/**
-		 * @brief add to the bitheap a signal, considered as a signed integer. the size includes the sign bit.
-		 * @param signal            the signal being added
-		 * @param msb               the msb from which to add bits of the signal
-		 * @param lsb               the lsb up until which to add bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addSignedBitVector(Signal* signal, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as a signed integer. the size includes the sign bit.
-		 * @param signalName        the name of the signal being subtracted
-		 * @param size              the size of the signal being subtracted
-		 *                          (by default 1)
-		 * @param weight            the weight the signal is subtracted from the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractSignedBitVector(string signalName, unsigned size = 1, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as a signed integer. the size includes the sign bit.
-		 * @param signalName        the name of the signal being added
-		 * @param msb               the msb from which to add bits of the signal
-		 * @param lsb               the lsb up until which to add bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractSignedBitVector(string signalName, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as a signed integer.
-		 * @param signal            the signal being subtracted
-		 * @param weight            the weight the signal is subtracted from the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractSignedBitVector(Signal* signal, int weight = 0);
-
-		/**
-		 * @brief subtract from the bitheap a signal, considered as a signed integer.
-		 * @param signal            the signal being subtracted
-		 * @param msb               the msb from which to subtract the bits of the signal
-		 * @param lsb               the lsb up until which to subtract the bits of the signal
-		 * @param weight            the weight the signal is subtracted from the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractSignedBitVector(Signal* signal, int msb, int lsb, int weight = 0);
-
-
-		/**
-		 * @brief add a signal to the bitheap.
-		 * @param signal            the signal being added
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addSignal(Signal* signal, int weight = 0);
-
-		/**
-		 * @brief add a signal to the bitheap.
-		 * @param signal            the signal being added
-		 * @param msb               the msb from which to add the bits of the signal
-		 * @param lsb               the lsb up until which to add the bits of the signal
-		 * @param weight            the weight the signal is added to the bitheap
-		 *                          (by default 0)
-		 */
-		void addSignal(Signal* signal, int msb, int lsb, int weight = 0);
-
-		/**
-		 * @brief subtract a signal from the bitheap.
-		 * @param signal            the signal being subtracted
-		 * @param weight            the weight of the signal subtracted from the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractSignal(Signal* signal, int weight = 0);
-
-		/**
-		 * @brief subtract a signal from the bitheap.
-		 * @param signal            the signal being subtracted
-		 * @param msb               the msb from which to subtract the bits of the signal
-		 * @param lsb               the lsb up until which to subtract the bits of the signal
-		 * @param weight            the weight of the signal subtracted from the bitheap
-		 *                          (by default 0)
-		 */
-		void subtractSignal(Signal* signal, int msb, int lsb, int weight = 0);
-
 
 		/**
 		 * @brief resize an integer bitheap to the new given size
-		 * @param newSize           the new size of the bitheap
+		 * @param newWidth           the new size of the bitheap
 		 * @param direction         the direction in which to add or remove columns
 		 *                          (by default=0, the lsb, =1 for msb)
 		 */
-		void resizeBitheap(unsigned newSize, int direction = 0);
+		void resizeBitheap(unsigned newWidth, int direction = 0);
 
 		/**
 		 * @brief resize a fixed-point bitheap to the new given format
@@ -600,12 +390,11 @@ enum BitType : unsigned;
 	public:
 		int msb;                                    /**< The maximum weight a bit can have inside the bitheap */
 		int lsb;                                    /**< The minimum weight a bit can have inside the bitheap */
-		unsigned size;                              /**< The size of the bitheap */
+		unsigned width;                              /**< The width of the bitheap */
 		int height;                                 /**< The current maximum height of any column of the bitheap */
 		string name;                                /**< The name of the bitheap */
 
 		bool isSigned;                              /**< Is the bitheap signed, or unsigned */
-		bool isFixedPoint;                          /**< Is the bitheap fixed-point, or integer */
 
 	private:
 		Operator* op;

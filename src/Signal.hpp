@@ -13,6 +13,19 @@
 //#include "Operator.hpp"
 
 
+/* A class for signals (bits, bit vectors, std_numeric)
+
+Ultimately, all the signals are declared as std_logic_vector (size-1 downto 0). 
+This is a disputable choice made in the early days.
+Anyway, for fixed-point signals, we have in the Signal class  a MSB and a LSB, 
+but we compute the size=MSB-LSB+1, and in the vhdl we will have std_logic_vector (size-1 downto 0)
+and *not* std_logic_vector (MSB downto LSB)
+
+In the FloPoCo methods, 
+an integer in the range  (size-1 downto 0) should be called an index,
+an integer in the range  (MSB downto LSB) should be called a weight 
+*/
+
 namespace flopoco{
 
 //forward reference to Operator, in order to avoid cyclic references
@@ -526,7 +539,7 @@ class Operator;
 		int           wF_;                             /**< The width of the fraction. Used for FP signals */
 		int           MSB_;                            /**< MSB. Used for fixed-point signals */
 		int           LSB_;                            /**< LSB. Used for fixed-point signals */
-		bool          isSigned_;                       /**< true if this a signed fixed-point signals, false otherwise */
+		bool          isSigned_;                       /**< true if this a signed fixed-point signal, false otherwise */
 		bool          isBus_;                          /**< True is the signal is a bus (std_logic_vector)*/
 
 		static const vector<string> dotNodeColors;     /**< the possible colors used for the dot diagrams */
