@@ -54,7 +54,7 @@ namespace flopoco{
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
-		wE_(0), wF_(0), MSB_(0), LSB_(0),
+		wE_(0), wF_(0), MSB_(width-1), LSB_(0),
 		isSigned_(false), isBus_(isBus) {
 	}
 
@@ -68,6 +68,7 @@ namespace flopoco{
 		isBus_(false)
 	{
 		width_ = intlog2(fabs(constValue_));
+		MSB_=width_-1;
 		isSigned_ = constValue_ < 0;
 	}
 
@@ -78,7 +79,7 @@ namespace flopoco{
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
-		wE_(0), wF_(0), MSB_(0), LSB_(0),
+		wE_(0), wF_(0), MSB_(width-1), LSB_(0),
 		isSigned_(false), isBus_(false)
 	{
 	}
@@ -132,6 +133,11 @@ namespace flopoco{
 	Signal::~Signal(){}
 
 	void	Signal::promoteToFix(const bool isSigned, const int MSB, const int LSB){
+		if(isFP_){
+			std::ostringstream o;
+			o << "Error in Signal::promoteToFix(" <<  getName() << "): can't promote a floating-point signal to fix point";
+			throw o.str();
+		}
 		if(MSB - LSB +1 != width_){
 			std::ostringstream o;
 			o << "Error in Signal::promoteToFix(" <<  getName() << "): width doesn't match";
@@ -159,21 +165,15 @@ namespace flopoco{
 		hasBeenScheduled_ = false;
 		hasBeenDrawn_ = false;
 
-		if(originalSignal->isFix())
-		{
-			isSigned_ = originalSignal->isSigned();
-			MSB_ = originalSignal->MSB();
-			LSB_ = originalSignal->LSB();
-		}else if(originalSignal->isFP())
-		{
-			wE_ = originalSignal->wE();
-			wF_ = originalSignal->wF();
-			isIEEE_ = originalSignal->isIEEE_;
-		} else
-		{
-			width_ = originalSignal->width();
-			isBus_ = originalSignal->isBus();
-		}
+		// Some of the following parameters are only used in some contexts but it doesn't hurt to copy them all
+		width_  = originalSignal->width_;
+		wE_     = originalSignal->wE();
+		wF_     = originalSignal->wF();
+		isIEEE_ = originalSignal->isIEEE_;
+		MSB_    = originalSignal->MSB();
+		LSB_    = originalSignal->LSB();
+		isBus_  = originalSignal->isBus();
+		isSigned_ = originalSignal->isSigned();
 	}
 
 
