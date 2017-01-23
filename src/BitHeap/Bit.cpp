@@ -8,7 +8,7 @@ namespace flopoco
 {
 
 	Bit::Bit(BitheapNew *bitheap_, string rhsAssignment_, int weight_, BitType type_) :
-		weight(weight_), type(type_), bitheap(bitheap_), rhsAssignment(rhsAssignment_), colorCount(0)
+		weight(weight_), type(type_), bitheap(bitheap_), colorCount(0), rhsAssignment(rhsAssignment_)
 	{
 		std::ostringstream p;
 
