@@ -241,10 +241,11 @@ namespace flopoco{
 		}
 		
 		// A few sanity checks related to the magnitude of the constant
-		// A bit of weight l is sent to position l+msbC+1 at most. For this to be useful we want l+msbC+1 > lsbOut.  
-		int lsbInUseful = lsbOut -1 - msbC -1; // Second -1 for the rounding;  input bits with lower weights than lsbInUseful have at most rounding inpact on the output
-
-		if(msbIn<lsbInUseful){
+		
+		// A bit of weight l is sent to position l+msbC+1 at most.
+		// msbIn is sent to msbIn+ msbC +1 at most
+		msbOut =   msbIn + msbC;
+		if(msbOut<lsbOut){
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			errorInUlps=0.5;// TODO this is an overestimation
@@ -252,9 +253,7 @@ namespace flopoco{
 			return;
 		}
 
-		
-		// Now we can discuss MSBs
-		msbOut = msbC + msbIn;
+
 
 		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
 		// However this depends on how many guard bits we add...
@@ -486,7 +485,8 @@ namespace flopoco{
 				parentOp->vhdl << parentOp->instance(t , instanceName);
 
 				int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
-				
+				cerr << "***** Size of "<< sliceOutName << " is " << sliceOutWidth << endl;
+
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
