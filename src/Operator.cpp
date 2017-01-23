@@ -3156,7 +3156,7 @@ namespace flopoco{
 				rhs->addSuccessor(lhs, delay);
 				//add the signals to the list of signals to be scheduled
 				//	if they don't already exist on the list
-				bool lhsPresent = false, rhsPresent = false;
+				bool lhsPresent = false;
 
 				for(size_t i=0; i<signalsToSchedule.size(); i++)
 				{

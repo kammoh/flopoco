@@ -29,7 +29,7 @@
 #include "Targets/DSP.hpp"
 #include "IntMult/MultiplierBlock.hpp"
 
-#define REPORTDELAYS true
+#define REPORTDELAYS false
 
 #define TARGETREPORT(stream) {if (REPORTDELAYS){ cerr << "> " << id_ << ": " << stream << endl;}else{}} 
 
