@@ -13,14 +13,16 @@ namespace flopoco
 		std::ostringstream p;
 
 		uid = bitheap->newBitUid(weight);
-		p  << "heap_bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
-		name = p.str();
-
+		p  << "bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
+		string name = p.str();
+		bitheap->getOp()-> vhdl << tab
+														<< bitheap->getOp()->declare(name)
+														<< " <= " << rhsAssignment << ";" << endl;
+		
+		signal = bitheap->getOp()->getSignalByName(name);
+		
 		compressor = nullptr;
 
-		bitheap->getOp()->declare(name);
-		signal = bitheap->getOp()->getSignalByName(name);
-		bitheap->getOp()->vhdl << tab << name << " <= " << rhsAssignment << ";" << endl;
 	}
 
 
@@ -30,18 +32,20 @@ namespace flopoco
 		std::ostringstream p;
 
 		uid = bitheap->newBitUid(weight);
-		p  << "heap_bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
-		name = p.str();
+		p  << "bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
+		string name = p.str();
 
 		p.str("");
 		p << signal->getName() << (signal->width()==1 ? "" : of(offset_));
 		rhsAssignment = p.str();
 
-		compressor = nullptr;
+		bitheap->getOp()->vhdl << tab
+													 << bitheap->getOp()->declare(name)
+													 << " <= " << rhsAssignment << ";" << endl;
 
-		bitheap->getOp()->declare(name);
 		signal = bitheap->getOp()->getSignalByName(name);
-		bitheap->getOp()->vhdl << tab << name << " <= " << rhsAssignment << ";" << endl;
+		
+		compressor = nullptr;
 	}
 
 
@@ -57,12 +61,13 @@ namespace flopoco
 
 		uid = bitheap->newBitUid(weight);
 
-		p  << "heap_bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
-		name = p.str();
+		p  << "bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
+		string name = p.str();
 
-		bitheap->getOp()->declare(name);
+		bitheap->getOp()->vhdl << tab
+													 << bitheap->getOp()->declare(name)
+													 << " <= " << rhsAssignment << ";" << endl;
 		signal = bitheap->getOp()->getSignalByName(name);
-		bitheap->getOp()->vhdl << tab << name << " <= " << rhsAssignment << ";" << endl;
 
 		colorCount = 0;
 	}
@@ -71,7 +76,6 @@ namespace flopoco
 	Bit::Bit()
 	{
 		weight = -1;
-		name = "";
 		type = BitType::free;
 
 		bitheap = nullptr;
@@ -91,7 +95,6 @@ namespace flopoco
 		Bit* newBit = new Bit();
 
 		newBit->weight = weight;
-		newBit->name = name;
 		newBit->type = type;
 
 		newBit->bitheap = bitheap;
@@ -123,6 +126,11 @@ namespace flopoco
 	Compressor* Bit::getCompressor()
 	{
 		return compressor;
+	}
+
+	string Bit::getName()
+	{
+		return signal->getName();
 	}
 
 

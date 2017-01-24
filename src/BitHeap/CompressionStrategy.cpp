@@ -199,7 +199,7 @@ namespace flopoco{
 					THROWERROR("Bit vector does not containing sufficient bits, "
 							<< "as requested by the compressor is applyCompressor.");
 
-				inputName << bitVector[count]->name;
+				inputName << bitVector[count]->getName();
 				count++;
 			}
 			for(int j=1; j<compressor->heights[i]; j++)
@@ -208,7 +208,7 @@ namespace flopoco{
 					THROWERROR("Bit vector does not containing sufficient bits, "
 							<< "as requested by the compressor is applyCompressor.");
 
-				inputName << " & " << bitVector[count]->name;
+				inputName << " & " << bitVector[count]->getName();
 				count++;
 			}
 
@@ -280,11 +280,11 @@ namespace flopoco{
 			{
 				if(bitheap->bits[bitheap->width-1].size() > 1)
 				{
-					adderIn0 << bitheap->bits[bitheap->width-1][0]->name;
-					adderIn1 << bitheap->bits[bitheap->width-1][1]->name;
+					adderIn0 << bitheap->bits[bitheap->width-1][0]->getName();
+					adderIn1 << bitheap->bits[bitheap->width-1][1]->getName();
 				}else if(bitheap->bits[bitheap->width-1].size() > 0)
 				{
-					adderIn0 << bitheap->bits[bitheap->width-1][0]->name;
+					adderIn0 << bitheap->bits[bitheap->width-1][0]->getName();
 					adderIn1 << "\"0\"";
 				}else{
 					adderIn0 << "\"0\"";
@@ -296,11 +296,11 @@ namespace flopoco{
 			{
 				if(bitheap->bits[i].size() > 1)
 				{
-					adderIn0 << " & " << bitheap->bits[i][0]->name;
-					adderIn1 << " & " << bitheap->bits[i][1]->name;
+					adderIn0 << " & " << bitheap->bits[i][0]->getName();
+					adderIn1 << " & " << bitheap->bits[i][1]->getName();
 				}else if(bitheap->bits[i].size() > 0)
 				{
-					adderIn0 << " & " << bitheap->bits[i][0]->name;
+					adderIn0 << " & " << bitheap->bits[i][0]->getName();
 					adderIn1 << " & " << "\"0\"";
 				}else{
 					adderIn0 << " & " << "\"0\"";
@@ -310,18 +310,18 @@ namespace flopoco{
 			//add the last column to the adder, if compression is still required on that column
 			if((compressionDoneIndex == 0) && (bitheap->bits[compressionDoneIndex].size() > 1))
 			{
-				adderIn0 << " & " << bitheap->bits[compressionDoneIndex][0]->name;
-				adderIn1 << " & " << bitheap->bits[compressionDoneIndex][1]->name;
+				adderIn0 << " & " << bitheap->bits[compressionDoneIndex][0]->getName();
+				adderIn1 << " & " << bitheap->bits[compressionDoneIndex][1]->getName();
 
 				if(bitheap->bits[compressionDoneIndex].size() > 2)
-					adderCin << bitheap->bits[compressionDoneIndex][2]->name;
+					adderCin << bitheap->bits[compressionDoneIndex][2]->getName();
 				else
 					adderCin << "\'0\'";
 
 				adderStartIndex--;
 			}else{
 				if(bitheap->bits[compressionDoneIndex+1].size() > 2)
-					adderCin << bitheap->bits[compressionDoneIndex+1][2]->name;
+					adderCin << bitheap->bits[compressionDoneIndex+1][2]->getName();
 				else
 					adderCin << "\'0\'";
 			}
@@ -655,7 +655,7 @@ namespace flopoco{
 				bitheap->op->vhdl << tab
 						<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
 				if(bitheap->bits[count].size() > 0)
-					bitheap->op->vhdl << " <= " << bitheap->bits[count][0]->name << ";" << endl;
+					bitheap->op->vhdl << " <= " << bitheap->bits[count][0]->getName() << ";" << endl;
 				else
 					bitheap->op->vhdl << " <= \'0\';" << endl;
 
@@ -679,14 +679,14 @@ namespace flopoco{
 			//add the bits to the chunk
 			//	add the first bit
 			if(bitheap->bits[count].size() > 0)
-				bitheap->op->vhdl << bitheap->bits[count][0]->name;
+				bitheap->op->vhdl << bitheap->bits[count][0]->getName();
 			else
 				bitheap->op->vhdl << "\"0\"";
 			//	add the rest of the bits
 			for(unsigned i=count-1; i>compressionDoneIndex; i--)
 			{
 				if(bitheap->bits[i].size() > 0)
-					bitheap->op->vhdl << " & " << bitheap->bits[i][0]->name;
+					bitheap->op->vhdl << " & " << bitheap->bits[i][0]->getName();
 				else
 					bitheap->op->vhdl << " & \"0\"";
 			}
@@ -694,7 +694,7 @@ namespace flopoco{
 			if(compressionDoneIndex == 0)
 			{
 				if(bitheap->bits[0].size() > 0)
-					bitheap->op->vhdl << " & " << bitheap->bits[0][0]->name;
+					bitheap->op->vhdl << " & " << bitheap->bits[0][0]->getName();
 				else
 					bitheap->op->vhdl << " & \"0\"";
 			}

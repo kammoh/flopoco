@@ -101,7 +101,7 @@ namespace flopoco {
 		//insert the new bit so that the vector is sorted by bit (cycle, delay)
 		insertBitInColumn(bit, weight-lsb);
 
-		REPORT(DEBUG, "added bit named "  << bit->name << " on column " << weight
+		REPORT(DEBUG, "added bit named "  << bit->getName() << " on column " << weight
 				<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
 
 		printColumnInfo(weight);
@@ -212,10 +212,10 @@ namespace flopoco {
 			}
 		}
 		if(bitFound == false)
-			THROWERROR("Bit " << bit->name << " with uid=" << bit->getUid()
+			THROWERROR("Bit " << bit->getName() << " with uid=" << bit->getUid()
 					<< " not found in column with weight=" << weight);
 
-		REPORT(DEBUG,"removed bit " << bit->name << " from column " << weight);
+		REPORT(DEBUG,"removed bit " << bit->getName() << " from column " << weight);
 
 		isCompressed = false;
 	}
@@ -309,7 +309,7 @@ namespace flopoco {
 			//search for the bit
 			while(it != bits[i].end())
 			{
-				if(((*it)->name == bit->name) && ((*it)->getUid() == bit->getUid()))
+				if(((*it)->getName() == bit->getName()) && ((*it)->getUid() == bit->getUid()))
 				{
 					(*it)->type = type;
 					bitFound = true;
@@ -320,7 +320,7 @@ namespace flopoco {
 			}
 		}
 		if(bitFound == false)
-			THROWERROR("Bit=" << bit->name << " with uid="
+			THROWERROR("Bit=" << bit->getName() << " with uid="
 					<< bit->getUid() << " not found in bitheap");
 	}
 
@@ -780,7 +780,7 @@ namespace flopoco {
 
 		for(unsigned i=0; i<bits[weight-lsb].size(); i++)
 		{
-			REPORT(FULL, "\t column weight=" << weight << " name=" << bits[weight-lsb][i]->name
+			REPORT(FULL, "\t column weight=" << weight << " name=" << bits[weight-lsb][i]->getName()
 					<< " cycle=" << bits[weight-lsb][i]->signal->getCycle()
 					<< " criticaPath=" << bits[weight-lsb][i]->signal->getCriticalPath());
 		}

@@ -100,6 +100,11 @@ class BitheapNew;
 		void setCompressor(Compressor *compressor);
 
 		/**
+		 * @brief get the name of a bit
+		 */
+		string getName();
+		
+		/**
 		 * @brief Return the compressor that compressed this bit
 		 */
 		Compressor* getCompressor();
@@ -111,7 +116,6 @@ class BitheapNew;
 
 	public:
 		int weight;
-		string name;
 		BitType type;
 
 		BitheapNew *bitheap;

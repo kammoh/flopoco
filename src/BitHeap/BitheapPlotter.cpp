@@ -330,7 +330,7 @@ namespace flopoco
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
 				<< " r=\"3\""
 				<< " fill=\"url(#diagonalHatchRightLeft)\" stroke=\"black\" stroke-width=\"0.5\""
-				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->getName() << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 		}else if(bit->type == BitType::justAdded)
 		{
@@ -344,7 +344,7 @@ namespace flopoco
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
 				<< " r=\"3\""
 				<< " fill=\"url(#diagonalHatchLeftRight)\" stroke=\"red\" stroke-width=\"0.5\""
-				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->getName() << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 		}else
 		{
@@ -352,7 +352,7 @@ namespace flopoco
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
 				<< " r=\"3\""
 				<< " fill=\"" << colors[bit->colorCount % colorsNumber] << "\" stroke=\"black\" stroke-width=\"0.5\""
-				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->name << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
+				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->getName() << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 		}
 	}
