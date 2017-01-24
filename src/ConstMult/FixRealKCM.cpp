@@ -754,13 +754,6 @@ namespace flopoco{
 
 		//cout << mother->tableOutputSign[index] << "  result0=" << result << "  ";
 
-		// sign management
-		if(mother->tableOutputSign[index]==0) {
-			// this is a two's complement number with a non-constant sign bit
-			// so we encode it as two's complement
-			if(result<0)
-				result +=(mpz_class(1) << wOut);				
-		}
 		
 		//cout  << result << "  " <<endl;
 
@@ -773,6 +766,17 @@ namespace flopoco{
 			else // This table will be subtracted
 				result -= roundBit;
 		}
+		if(result<0) {
+			if(mother-> tableOutputSign[index]!=1) {
+				// this is a two's complement number with a non-constant sign bit
+				// so we encode it as two's complement
+				result +=(mpz_class(1) << wOut);				
+			}
+			else{
+				THROWERROR("kcmTableContent: For table " << index << " at index " << x0 << ", the computed table entry is " << result <<". This table should contain positive values");
+			}
+		}
+
 		return result;
 	}
 }
