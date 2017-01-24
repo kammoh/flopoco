@@ -711,6 +711,7 @@ namespace flopoco{
 		vector<mpz_class> r;
 		int wIn = m[i] - l[i]+1;
 		int wOut = 	m[i] + msbC  - lsbOut + g +1;
+		REPORT(DEBUG, "Table "<<i<<" wOut=" << wOut);
 		for (int x0=0; x0 < (1<<wIn); x0++) {
 			// get rid of two's complement
 			int x=x0;
@@ -756,13 +757,6 @@ namespace flopoco{
 
 			//cout << tableOutputSign[i] << "  result0=" << result << "  ";
 
-			// sign management
-			if(tableOutputSign[i]==0) {
-				// this is a two's complement number with a non-constant sign bit
-				// so we encode it as two's complement
-				if(result<0)
-					result +=(mpz_class(1) << wOut);				
-			}
 		
 			//cout  << result << "  " <<endl;
 
@@ -774,6 +768,17 @@ namespace flopoco{
 					result += roundBit;
 				else // This table will be subtracted
 					result -= roundBit;
+			}
+						// sign management
+			if(result<0) {
+				if(tableOutputSign[i]!=1) {
+					// this is a two's complement number with a non-constant sign bit
+					// so we encode it as two's complement
+					result +=(mpz_class(1) << wOut);				
+				}
+				else{
+					THROWERROR("kcmTableContent: For table " << i << " at index " << x0 << ", the computed table entry is " << result <<". This table should contain positive values");
+				}
 			}
 			r.push_back(result);
 		}
