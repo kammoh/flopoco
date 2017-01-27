@@ -755,8 +755,13 @@ namespace flopoco
 
 
 	void UserInterface::buildHTMLDoc(){
+		ifstream versionfile;
+		versionfile.open("VERSION", ios::in);
+		string version;
+		versionfile >> version;
+		versionfile.close();
 		ofstream file;
-		file.open("doc/web/operators.html", ios::out);
+		file.open("doc/web/operators_" + version + ".html", ios::out);
 		file << "<!DOCTYPE html>" << endl;
 		file << "<html>" << endl;
 		file << "<head>" << endl;
@@ -765,6 +770,7 @@ namespace flopoco
 		file << "<title>FloPoCo user manual</title>" << endl;
 		file << "</head>" << endl;
 		file << "<body>" << endl;
+		file << "<h1> Operator list for FloPoCo version " << version << "</h1>" << endl;
 
 		// The following is an inefficient double loop to avoid duplicating the data structure: nobody needs efficiency here
 		for(auto catIt: UserInterface::categories) {
