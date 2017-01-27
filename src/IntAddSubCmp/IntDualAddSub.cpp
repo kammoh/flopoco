@@ -46,7 +46,7 @@ namespace flopoco{
 		}
 		name << wIn;
 		setNameWithFreqAndUID(name.str());
-
+		useNumericStd();
 
 		// Set up the IO signals
 		addInput ("X"  , wIn_, true);
@@ -71,11 +71,13 @@ namespace flopoco{
 
 		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
-		if(totalPeriod <= targetPeriod)		{
+
+		//		if(totalPeriod <= targetPeriod)		{
+		if(true){ 
 			vhdl << tab << declare(target->adderDelay(wIn), "tempRxMy", wIn)
-					 << " <= X - Y;" <<endl;
-			vhdl << tab << declare(target->adderDelay(wIn), "tempR"+son_)
-					 <<" <= "<< (opType_==0 ? "Y - X;" : "X+Y;") << endl;
+					 << " <= std_logic_vector(unsigned(X) - unsigned(Y));" <<endl;
+			vhdl << tab << declare(target->adderDelay(wIn), "tempR"+son_, wIn)
+					 <<" <= "<< (opType_==0 ? "std_logic_vector(unsigned(Y) - unsigned(X));" : "std_logic_vector(unsigned(X) + unsigned(Y));") << endl;
 			vhdl << tab << "RxMy <= tempRxMy;" << endl;
 			vhdl << tab << "R" << son_ << " <= tempR" << son_ << ";" << endl;
 		}
