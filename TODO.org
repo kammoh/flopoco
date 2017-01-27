@@ -109,7 +109,8 @@ ConstMult:
 General
 
 
-* the NewPipelineFramework branch: redoing pipeline from scratch
+* Discussions
+** the NewPipelineFramework branch: redoing pipeline from scratch
 If we were to redo the pipeline framework from scratch, here is the proper way to do it.
 
 The current situation has a history: we first added cycle management, then, as a refinement, critical-path based subcycle timing.
@@ -144,8 +145,7 @@ The question is: don't we loose some control on the circuit with this approach, 
 
 Note that all this is so much closer to textbook literature, with simple DAGs labelled by delay...
 
-
-* Options for signed/unsigned VHDL
+** Options for signed/unsigned VHDL
 Option 0: Do nothing radical. It seems when the options
  --ieee=standard --ieee=synopsys
 are passed to ghdl in this order, we may mix standard and synopsys entities
