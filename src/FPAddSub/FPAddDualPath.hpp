@@ -12,7 +12,7 @@
 #include "../ShiftersEtc/LZOCShifterSticky.hpp"
 #include "../TestBenches/FPNumber.hpp"
 #include "../IntAddSubCmp/IntAdder.hpp"
-#include "../IntAddSubCmp/IntDualSub.hpp"
+#include "../IntAddSubCmp/IntDualAddSub.hpp"
 
 namespace flopoco{
 
@@ -52,7 +52,7 @@ namespace flopoco{
 		/** The integer adder object for subtraction in the close path */
 		IntAdder *fracSubClose;
 		/** The dual subtractor for the close path */
-		IntDualSub *dualSubClose;
+		IntDualAddSub *dualSubClose;
 		/** The fraction adder for the far path */
 		IntAdder *fracAddFar;
 		/** The adder that does the final rounding */

@@ -12,7 +12,6 @@
 #include "../ShiftersEtc/LZOCShifterSticky.hpp"
 #include "../TestBenches/FPNumber.hpp"
 #include "../IntAddSubCmp/IntAdder.hpp"
-#include "../IntAddSubCmp/IntDualSub.hpp"
 
 namespace flopoco{
 

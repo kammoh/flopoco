@@ -78,7 +78,7 @@
 
 /* regular pipelined integer adder/ adder+subtracter --------- */
 #include "IntAddSubCmp/IntAdder.hpp" // includes several other .hpp
-#include "IntAddSubCmp/IntDualSub.hpp"
+#include "IntAddSubCmp/IntDualAddSub.hpp"
 #include "IntAddSubCmp/IntComparator.hpp"
 
 // #include "IntAddSubCmp/IntAdderClassical.hpp"

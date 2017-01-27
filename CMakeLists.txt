@@ -295,7 +295,7 @@ src/ShiftReg
 # src/IntAddSubCmp/IntAdderAlternative 
 # src/IntAddSubCmp/IntAdderShortLatency
  src/IntAddSubCmp/IntComparator
- src/IntAddSubCmp/IntDualSub
+ src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
  
 # ---------- First generation of fast large adders ------------------------

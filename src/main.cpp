@@ -78,7 +78,7 @@ int main(int argc, char* argv[] )
 		IntComparatorSpecific::registerFactory();
 #endif
 		// IntComparator::registerFactory();
-		// IntDualSub::registerFactory();
+		IntDualAddSub::registerFactory();
 		// IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 

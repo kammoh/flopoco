@@ -22,30 +22,30 @@
 #include <gmpxx.h>
 #include "utils.hpp"
 #include "Operator.hpp"
-#include "IntDualSub.hpp"
+#include "IntDualAddSub.hpp"
 
 using namespace std;
 
 
 namespace flopoco{
 
-	IntDualSub::IntDualSub(Target* target, int wIn, int opType, map<string, double> inputDelays):
-		Operator(target), wIn_(wIn), opType_(opType), inputDelays_(inputDelays)
+	IntDualAddSub::IntDualAddSub(Target* target, int wIn, int opType):
+		Operator(target), wIn_(wIn), opType_(opType)
 	{
 		ostringstream name;
-		srcFileName="IntDualSub";
+		srcFileName="IntDualAddSub";
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008-2010)");
 
 		if (opType==0) {
 			son_ = "yMx";
-			name << "IntDualSub_";
+			name << "IntDualAddSub_";
 		}
 		else {
 			son_ = "xPy";
 			name << "IntDualAddSub_";
 		}
 		name << wIn;
-		setNameWithFreq(name.str());
+		setNameWithFreqAndUID(name.str());
 
 
 		// Set up the IO signals
@@ -54,8 +54,40 @@ namespace flopoco{
 		addOutput("RxMy", wIn_, 1, true);
 		addOutput("R"+son_, wIn_, 1, true);
 
-		REPORT(DETAILED, "delay for X is   "<< inputDelays["X"]);
-		REPORT(DETAILED, "delay for Y is   "<< inputDelays["Y"]);
+		schedule();
+		double targetPeriod = 1.0/target->frequency() - target->ffDelay();
+		// What is the maximum lexicographic time of our inputs?
+		int maxCycle = 0;
+		double maxCP = 0.0;
+		for(auto i: ioList_) {
+			// REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			if((i->getCycle() > maxCycle)
+					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
+				maxCycle = i->getCycle();
+				maxCP = i->getCriticalPath();
+			}
+		}
+		double totalPeriod = maxCP + target->adderDelay(wIn);
+
+		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
+
+		if(totalPeriod <= targetPeriod)		{
+			vhdl << tab << declare(target->adderDelay(wIn), "tempRxMy", wIn)
+					 << " <= X - Y;" <<endl;
+			vhdl << tab << declare(target->adderDelay(wIn), "tempR"+son_)
+					 <<" <= "<< (opType_==0 ? "Y - X;" : "X+Y;") << endl;
+			vhdl << tab << "RxMy <= tempRxMy;" << endl;
+			vhdl << tab << "R" << son_ << " <= tempR" << son_ << ";" << endl;
+		}
+
+		else		{
+
+		}
+	}
+
+
+#if 0
+			
 
 		if (target->isPipelined()){
 			//compute the maximum input delay
@@ -179,16 +211,14 @@ namespace flopoco{
 				else
 					vhdl << " & ";
 			}
-		}else{
-			vhdl << tab << "RxMy <= X + not(Y) + '1';" <<endl;
-			vhdl << tab << "R"<<son_<<" <= "<< (opType_==0 ? "not(X) + Y + '1'" : "X+Y")<<";"<<endl;
 		}
+#endif
+
+
+	IntDualAddSub::~IntDualAddSub() {
 	}
 
-	IntDualSub::~IntDualSub() {
-	}
-
-	void IntDualSub::emulate(TestCase* tc)
+	void IntDualAddSub::emulate(TestCase* tc)
 	{
 		mpz_class svX = tc->getInputValue("X");
 		mpz_class svY = tc->getInputValue("Y");
@@ -208,7 +238,7 @@ namespace flopoco{
 	}
 
 
-	void IntDualSub::buildStandardTestCases(TestCaseList* tcl){
+	void IntDualAddSub::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		tc = new TestCase(this);
@@ -224,23 +254,23 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
-	OperatorPtr IntDualSub::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntDualAddSub::parseArguments(Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int opType;
 		UserInterface::parseStrictlyPositiveInt(args, "opType", &opType);
-		return new IntDualSub(target, wIn, opType);
+		return new IntDualAddSub(target, wIn, opType);
 	}
 
-	void IntDualSub::registerFactory(){
-		UserInterface::add("IntDualSub", // name
+	void IntDualAddSub::registerFactory(){
+		UserInterface::add("IntDualAddSub", // name
 											 "Pipelined dual adder/subtractor",
 											 "BasicInteger", // category
 											 "",
 											 "wIn(int): input size in bits;\
 opType(int): 1=compute X-Y and X+Y, 2=compute X-Y and Y-X;",
 											 "",
-											 IntDualSub::parseArguments
+											 IntDualAddSub::parseArguments
 											 ) ;
 
 	}

@@ -1,5 +1,5 @@
-#ifndef IntDualSub_HPP
-#define IntDualSub_HPP
+#ifndef IntDualAddSub_HPP
+#define IntDualAddSub_HPP
 #include <vector>
 #include <sstream>
 #include <gmp.h>
@@ -9,26 +9,26 @@
 
 namespace flopoco{
 
-	/** The IntDualSub class computes both X-Y and Y-X, or both X-Y and X+Y
+	/** The IntDualAddSub class computes both X-Y and Y-X, or both X-Y and X+Y
 	 */
-	class IntDualSub : public Operator
+	class IntDualAddSub : public Operator
 	{
 	public:
 		/**
-		 * The IntDualSub constructor
+		 * The IntDualAddSub constructor
 		 * @param[in] target the target device
 		 * @param[in] wIn    the with of the inputs and output
 		 * @param[in] opType:  if 1, compute X-Y and X+Y; if 0, compute X-Y and Y-X
 		 * @param[in] inputDelays the delays for each input
 		 **/
-		IntDualSub(Target* target, int wIn, int opType, map<string, double> inputDelays = emptyDelayMap);
-		/*IntDualSub(Target* target, int wIn);
+		IntDualAddSub(Target* target, int wIn, int opType);
+		/*IntDualAddSub(Target* target, int wIn);
 		  void cmn(Target* target, int wIn, map<string, double> inputDelays);*/
 
 		/**
 		 *  Destructor
 		 */
-		~IntDualSub();
+		~IntDualAddSub();
 
 		void emulate(TestCase* tc);
 		void buildStandardTestCases(TestCaseList* tcl);
@@ -45,9 +45,7 @@ namespace flopoco{
 		string son_;			   	  /**< second output name; can be yMx or xPy */
 
 	private:
-		map<string, double> inputDelays_; /**< a map between input signal names and their maximum delays */
 		int bufferedInputs;               /**< variable denoting an initial buffering of the inputs */
-		double maxInputDelay;             /**< the maximum delay between the inputs present in the map*/
 		int nbOfChunks;                   /**< the number of chunks that the addition will be split in */
 		int chunkSize_;                   /**< the suggested chunk size so that the addition can take place at the objective frequency*/
 		int *cSize;                       /**< array containing the chunk sizes for all nbOfChunks*/

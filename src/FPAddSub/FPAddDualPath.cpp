@@ -165,7 +165,7 @@ namespace flopoco{
 
 		// instanciate the box that computes X-Y and Y-X. Note that it could take its inputs before the swap (TODO ?)
 		REPORT(DETAILED, "Building close path dual mantissa subtraction box");
-		dualSubClose = new 	IntDualSub(target, wF + 3, 0);
+		dualSubClose = new 	IntDualAddSub(target, wF + 3, 0);
 		dualSubClose->changeName(getName()+"_DualSubClose");
 
 		inPortMap  (dualSubClose, "X", "fracXClose1");
