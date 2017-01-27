@@ -60,7 +60,7 @@
 #include "FixFilters/FixHalfSine.hpp"
 #include "FixFilters/FixIIR.hpp"
 
-#include "FixFilters/FixSIF.hpp"
+// #include "FixFilters/FixSIF.hpp"
 
 #include "ShiftReg.hpp"
 

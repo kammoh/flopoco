@@ -30,9 +30,9 @@ SET(CPACK_PACKAGE_VERSION_PATCH "0")
 INCLUDE(CPack)
 # 
 #Compilation flags
-#SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
+SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
 #SET(CMAKE_CXX_FLAGS_DEBUG "-pg -Wall")
 # Do you want an executable of 30MB ?
 SET(CMAKE_BUILD_TYPE DEBUG)
@@ -259,7 +259,7 @@ src/Conversions/Fix2FP
  src/FixFilters/FixHalfSine
  src/FixFilters/FixIIR
  
- src/FixFilters/FixSIF
+# src/FixFilters/FixSIF
 
 
 # pipelined Integer addition -------------------------------------------------
