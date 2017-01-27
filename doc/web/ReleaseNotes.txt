@@ -5,7 +5,8 @@ Removing all operators that have not been ported to these new framework, they wi
 
 ======================================================================
 Version 4.1
-Operators: FixFIR and FixIIR, overhaul of FixRealKCM
+Operators: FixFIR and FixIIR, overhaul of FixRealKCM,
+FPAddSinglePathIEEE (supports subnormals etc)
 Autotest that attempts to test as many relevant combinations of parameters as possible.
 
 ======================================================================
