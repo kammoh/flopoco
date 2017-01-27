@@ -1,3 +1,15 @@
+Version 5.0-alpha0
+Overhaul of the pipelining framework.
+Overhaul of the BitHeap framework.
+Removing all operators that have not been ported to these new framework, they will hopefully slowly trickle back.
+
+======================================================================
+Version 4.1
+Operators: FixFIR and FixIIR, overhaul of FixRealKCM,
+FPAddSinglePathIEEE (supports subnormals etc)
+Autotest that attempts to test as many relevant combinations of parameters as possible.
+
+======================================================================
 Version 4.0
 New command-line interface, and the associated framework changes.
 Multipartite tables.

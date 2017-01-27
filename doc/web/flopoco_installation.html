@@ -12,9 +12,9 @@
 <p style="text-align: center"> <img src="FloPoCoSmall.png"/>	</p>
 <ul>
 	<li> <a href="#linux">Installation on Linux</a></li>  
-	<li> <a href="#windows">Installation in Windows</a> <span style="color:red;background:yellow">(New!)</span></li> 
+	<li> <a href="#windows">Installation in Windows</a></li> 
 </ul>
-<p>Operators tend to come and go as we struggle to support them, and we apologize for that. Maybe the one you want works better in an older version: read the <a href="ReleaseNotes.txt">release notes</a>.</p> 
+<p>Operators tend to come and go as we struggle to support them, and we apologize for that. Hopefully the new Autotest features will bring more stability. Meanwhile, it is possible that the operator you want works better in an older version: read the <a href="ReleaseNotes.txt">release notes</a>.</p> 
 
 
 
@@ -29,9 +29,9 @@
 Copy this in a dash/bash shell (and enter your password when prompted):
 
 
-<h4>Version 4, which will be the greatest ever, if it ever gets out of beta</h4>
+<h4>Version 4.1, the last one with the old framework</h4>
 
-<p><kbd>yes | sudo apt-get install g++ libgmp3-dev libmpfr-dev libfplll-dev libxml2-dev bison libmpfi-dev flex cmake libboost-all-dev libgsl0-dev && wget https://gforge.inria.fr/frs/download.php/33151/sollya-4.1.tar.gz && tar xzf sollya-4.1.tar.gz && cd sollya-4.1/ && ./configure && make -j4  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/file/35449/flopoco-4.0.beta0.tgz && tar xzf flopoco-4.0.beta0.tgz && cd flopoco-4.0.beta0/ && cmake . && make -j4  && ./flopoco && ./flopoco BuildHTMLDoc </kbd></p>
+<p><kbd>yes | sudo apt-get install g++ libgmp3-dev libmpfr-dev libfplll-dev libxml2-dev bison libmpfi-dev flex cmake libboost-all-dev libgsl0-dev && wget https://gforge.inria.fr/frs/download.php/33151/sollya-4.1.tar.gz && tar xzf sollya-4.1.tar.gz && cd sollya-4.1/ && ./configure && make -j4  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/file/36442/flopoco-4.1.tgz && tar xzf flopoco-4.1.tgz && cd flopoco-4.1/ && cmake . && make -j4  && ./flopoco && ./flopoco BuildHTMLDoc </kbd></p>
 
 <p>Once the above line has installed all the dependencies, you may also live on the edge and compile the git version available from the <a href="https://gforge.inria.fr/scm/?group_id=1030">source code repository</a></p>
 
