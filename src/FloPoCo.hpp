@@ -69,10 +69,10 @@
 
 
 /* FixFilters ------------------------------------------------ */
-#include "FixFilters/FixSOPC.hpp"
-#include "FixFilters/FixFIR.hpp"
-#include "FixFilters/FixHalfSine.hpp"
-#include "FixFilters/FixIIR.hpp"
+//#include "FixFilters/FixSOPC.hpp"
+//#include "FixFilters/FixFIR.hpp"
+//#include "FixFilters/FixHalfSine.hpp"
+//#include "FixFilters/FixIIR.hpp"
 
 #include "ShiftReg.hpp"
 
@@ -97,10 +97,10 @@
 // #include "IntAddSubCmp/LongIntAdderMuxNetwork.hpp"
 
 /* Integer and fixed-point multipliers ------------------------ */
-#include "IntMult/IntMultiplier.hpp"
-#include "IntMult/FixMultAdd.hpp"
+// #include "IntMult/IntMultiplier.hpp"
+// #include "IntMult/FixMultAdd.hpp"
 // #include "IntMult/IntKaratsuba.hpp"
-#include "IntMult/IntSquarer.hpp"
+// #include "IntMult/IntSquarer.hpp"
 // #include "IntMult/GenericBinaryPolynomial.hpp"
 // #include "IntMult/IntPower.hpp"
 
@@ -109,13 +109,13 @@
 #include "FPAddSub/FPAdd.hpp"
 #include "FPAddSub/FPAddDualPath.hpp"
 #include "FPAddSub/FPAddSinglePath.hpp"
-#include "FPAddSub/FPAdd3Input.hpp"
+// #include "FPAddSub/FPAdd3Input.hpp"
 #include "FPAddSub/FPAddSub.hpp"
 
 /* Floating-point multiplier variants-------------------------- */
-#include "FPMultSquare/FPMult.hpp"
+//#include "FPMultSquare/FPMult.hpp"
 //#include "FPMultKaratsuba.hpp" // Resurrect some day?
-#include "FPMultSquare/FPSquare.hpp"
+//#include "FPMultSquare/FPSquare.hpp"
 
 #include "FPDivSqrt/FPDiv.hpp"
 #include "FPDivSqrt/FPSqrt.hpp"
@@ -123,48 +123,48 @@
 
 
 /* Constant multipliers and dividers ------------------------ */
-#include "ConstMult/IntConstMult.hpp"
-#include "ConstMult/IntConstMCM.hpp"
-#include "ConstMult/IntIntKCM.hpp"
+//#include "ConstMult/IntConstMult.hpp"
+//#include "ConstMult/IntConstMCM.hpp"
+//#include "ConstMult/IntIntKCM.hpp"
 #include "ConstMult/FixRealKCM.hpp"
-#include "ConstMult/FPConstMult.hpp"
-#include "ConstMult/CRFPConstMult.hpp"
-#include "ConstMult/FPRealKCM.hpp"
+//#include "ConstMult/FPConstMult.hpp"
+//#include "ConstMult/CRFPConstMult.hpp"
+//#include "ConstMult/FPRealKCM.hpp"
 
-#include "ConstMult/IntConstDiv.hpp"
-#include "ConstMult/FPConstDiv.hpp"
+// #include "ConstMult/IntConstDiv.hpp" // depends on intconstmut
+// #include "ConstMult/FPConstDiv.hpp"
 
 /* FP composite operators */
 #include "FPComposite/FPLargeAcc.hpp"
 #include "FPComposite/LargeAccToFP.hpp"
-#include "FPComposite/FPDotProduct.hpp"
+// #include "FPComposite/FPDotProduct.hpp"
 
 
 /* Fixed-point function generators ---------------------*/
 
 #include "FixFunctions/FixFunction.hpp"
 #include "FixFunctions/BasicPolyApprox.hpp"
-#include "FixFunctions/PiecewisePolyApprox.hpp"
 #include "FixFunctions/FixFunctionByTable.hpp"
-#include "FixFunctions/FixFunctionBySimplePoly.hpp"
-#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
+//#include "FixFunctions/PiecewisePolyApprox.hpp"
+//#include "FixFunctions/FixFunctionBySimplePoly.hpp"
+//#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
 
 #include "FixFunctions/GenericTable.hpp"
-#include "FixFunctions/BipartiteTable.hpp"
-#include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
+//#include "FixFunctions/BipartiteTable.hpp"
+// #include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
 
 /*  Various elementary functions in fixed or floating point*/
-#include "Trigs/FixSinCos.hpp"
+//#include "Trigs/FixSinCos.hpp"
 #include "Trigs/CordicSinCos.hpp"
-#include "Trigs/FixAtan2.hpp"
-#include "Trigs/FixAtan2ByCORDIC.hpp"
-#include "Trigs/FixAtan2ByRecipMultAtan.hpp"
-#include "Trigs/FixAtan2ByBivariateApprox.hpp"
-#include "Trigs/Fix2DNorm.hpp"
+// #include "Trigs/FixAtan2.hpp"
+// #include "Trigs/FixAtan2ByCORDIC.hpp"
+//#include "Trigs/FixAtan2ByRecipMultAtan.hpp"
+//#include "Trigs/FixAtan2ByBivariateApprox.hpp"
+//#include "Trigs/Fix2DNorm.hpp"
 // #include "Trigs/FixSinOrCos.hpp"  Replug when poly eval fixed
 #include "ExpLog/IterativeLog.hpp"
-#include "ExpLog/FPExp.hpp"
-#include "ExpLog/FPPow.hpp"
+//#include "ExpLog/FPExp.hpp"
+//#include "ExpLog/FPPow.hpp"
 
 
 #include "Conversions/Fix2FP.hpp"

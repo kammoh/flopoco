@@ -5,6 +5,102 @@
 using namespace std;
 namespace flopoco{
 
+
+	void FPAdd::emulate(TestCase * tc, int wE, int wF, bool subtract)
+	{
+		/* Get I/O values */
+		mpz_class svX = tc->getInputValue("X");
+		mpz_class svY = tc->getInputValue("Y");
+
+		/* Compute correct value */
+		FPNumber fpx(wE, wF, svX);
+		FPNumber fpy(wE, wF, svY);
+		mpfr_t x, y, r;
+		mpfr_init2(x, 1+wF);
+		mpfr_init2(y, 1+wF);
+		mpfr_init2(r, 1+wF);
+		fpx.getMPFR(x);
+		fpy.getMPFR(y);
+		if(subtract)
+			mpfr_sub(r, x, y, GMP_RNDN);
+		else
+			mpfr_add(r, x, y, GMP_RNDN);
+
+		// Set outputs
+		FPNumber  fpr(wE, wF, r);
+		mpz_class svR = fpr.getSignalValue();
+		tc->addExpectedOutput("R", svR);
+
+		// clean up
+		mpfr_clears(x, y, r, NULL);
+	}
+
+
+
+	TestCase* FPAdd::buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract){
+		TestCase *tc;
+		mpz_class x,y;
+		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
+		mpz_class negative  = mpz_class(1)<<(wE+wF);
+
+		tc = new TestCase(op);
+		/* Fill inputs */
+		if ((i & 7) == 0) {// cancellation, same exponent
+			mpz_class e = getLargeRandom(wE);
+			x  = getLargeRandom(wF) + (e << wF) + normalExn;
+			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+		}
+		else if ((i & 7) == 1) {// cancellation, exp diff=1
+			mpz_class e = getLargeRandom(wE);
+			x  = getLargeRandom(wF) + (e << wF) + normalExn;
+			e++; // may rarely lead to an overflow, who cares
+			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+		}
+		else if ((i & 7) == 2) {// cancellation, exp diff=1
+			mpz_class e = getLargeRandom(wE);
+			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			e++; // may rarely lead to an overflow, who cares
+			y  = getLargeRandom(wF) + (e << wF) + normalExn;
+		}
+		else if ((i & 7) == 3) {// alignment within the mantissa sizes
+			mpz_class e = getLargeRandom(wE);
+			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow, who cares
+			y  = getLargeRandom(wF) + (e << wF) + normalExn;
+		}
+		else if ((i & 7) == 4) {// subtraction, alignment within the mantissa sizes
+			mpz_class e = getLargeRandom(wE);
+			x  = getLargeRandom(wF) + (e << wF) + normalExn;
+			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
+			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
+		}
+		else if ((i & 7) == 5 || (i & 7) == 6) {// addition, alignment within the mantissa sizes
+			mpz_class e = getLargeRandom(wE);
+			x  = getLargeRandom(wF) + (e << wF) + normalExn;
+			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
+			y  = getLargeRandom(wF) + (e << wF) + normalExn;
+		}
+		else{ //fully random
+			x = getLargeRandom(wE+wF+3);
+			y = getLargeRandom(wE+wF+3);
+		}
+		// Random swap
+		mpz_class swap = getLargeRandom(1);
+		if (swap == mpz_class(0)) {
+			tc->addInput("X", x);
+			tc->addInput("Y", y);
+		}
+		else {
+			tc->addInput("X", y);
+			tc->addInput("Y", x);
+		}
+		/* Get correct outputs */
+		emulate(tc,wE, wF, subtract);
+		return tc;
+	}
+
+
+	
 	OperatorPtr FPAdd::parseArguments(Target *target, vector<string> &args) {
 		int wE, wF;
 		bool sub, dualPath;

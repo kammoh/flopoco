@@ -15,7 +15,14 @@ namespace flopoco{
 
 		/** Factory register method */ 
 		static void registerFactory();
-		
+
+		/** emulate() function to be shared by various implementations */
+		static void emulate(TestCase * tc, int wE, int wF, bool subtract);
+
+		/** Random FP number generator biased to stress floating-point addition,
+				to be shared by various implementations */
+		static TestCase* buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract);
+
 	};
 }
 #endif

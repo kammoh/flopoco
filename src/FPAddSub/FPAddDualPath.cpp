@@ -29,6 +29,7 @@
 #include <utils.hpp>
 
 #include "FPAddDualPath.hpp"
+#include "FPAdd.hpp"
 
 using namespace std;
 
@@ -49,9 +50,10 @@ namespace flopoco{
 		else
 			name<<"FPAdd_";
 		name<<wE<<"_"<<wF;
-		setNameWithFreq(name.str());
+		
+		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008)");
+		setCopyrightString("Jérémie Detrey, Bogdan Pasca, Florent de Dinechin (2008-2017)");
 
 		sizeRightShift = intlog2(wF+3);
 
@@ -81,10 +83,10 @@ namespace flopoco{
 		vhdl<<tab<<declare("signedExponentX",wE+1) << " <= \"0\" & inX("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
 		vhdl<<tab<<declare("signedExponentY",wE+1) << " <= \"0\" & inY("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
 		vhdl<<tab<<declare("exponentDifferenceXY",wE+1) << " <= signedExponentX - signedExponentY ;"<<endl;
-		vhdl<<tab<<declare("exponentDifferenceYX",wE) << " <= signedExponentY("<<wE-1<<" downto 0) - signedExponentX("<<wE-1<<" downto 0);"<<endl;
+		vhdl<<tab<<declare(target->adderDelay(wE+1), "exponentDifferenceYX",wE) << " <= signedExponentY("<<wE-1<<" downto 0) - signedExponentX("<<wE-1<<" downto 0);"<<endl;
 
 		// SWAP when: [excX=excY and expY>expX] or [excY>excX]
-		vhdl<<tab<<declare("swap") << " <= (exceptionXEqualY and exponentDifferenceXY("<<wE<<")) or (not(exceptionXSuperiorY));"<<endl;
+		vhdl<<tab<<declare(target->logicDelay(), "swap") << " <= (exceptionXEqualY and exponentDifferenceXY("<<wE<<")) or (not(exceptionXSuperiorY));"<<endl;
 
 
 		string pmY="inY";
@@ -99,7 +101,6 @@ namespace flopoco{
 		vhdl<<tab<<declare("exponentDifference",wE) << " <= " << "exponentDifferenceYX"
 			 << " when swap = '1' else exponentDifferenceXY("<<wE-1<<" downto 0);"<<endl;
 
-		setCriticalPath(target->adderDelay(wE+1) +  target->lutDelay() + target->lutDelay());
 
 		// determine if the fractional part of Y was shifted out of the operation //
 		if (wE>sizeRightShift){
@@ -411,31 +412,8 @@ namespace flopoco{
 
 	void FPAddDualPath::emulate(TestCase * tc)
 	{
-		/* Get I/O values */
-		mpz_class svX = tc->getInputValue("X");
-		mpz_class svY = tc->getInputValue("Y");
-
-		/* Compute correct value */
-		FPNumber fpx(wE, wF, svX);
-		FPNumber fpy(wE, wF, svY);
-		mpfr_t x, y, r;
-		mpfr_init2(x, 1+wF);
-		mpfr_init2(y, 1+wF);
-		mpfr_init2(r, 1+wF);
-		fpx.getMPFR(x);
-		fpy.getMPFR(y);
-		if(sub)
-			mpfr_sub(r, x, y, GMP_RNDN);
-		else
-			mpfr_add(r, x, y, GMP_RNDN);
-
-		// Set outputs
-		FPNumber  fpr(wE, wF, r);
-		mpz_class svR = fpr.getSignalValue();
-		tc->addExpectedOutput("R", svR);
-
-		// clean up
-		mpfr_clears(x, y, r, NULL);
+		// use the generic one defined in FPAdd
+		FPAdd::emulate(tc, wE, wF, sub);
 	}
 
 
@@ -493,66 +471,9 @@ namespace flopoco{
 
 
 	TestCase* FPAddDualPath::buildRandomTestCase(int i){
-
-		TestCase *tc;
-		mpz_class x,y;
-		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
-		mpz_class negative  = mpz_class(1)<<(wE+wF);
-
-		tc = new TestCase(this);
-		/* Fill inputs */
-		if ((i & 7) == 0) {// cancellation, same exponent
-			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
-		}
-		else if ((i & 7) == 1) {// cancellation, exp diff=1
-			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			e++; // may rarely lead to an overflow, who cares
-			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
-		}
-		else if ((i & 7) == 2) {// cancellation, exp diff=1
-			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
-			e++; // may rarely lead to an overflow, who cares
-			y  = getLargeRandom(wF) + (e << wF) + normalExn;
-		}
-		else if ((i & 7) == 3) {// alignment within the mantissa sizes
-			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow, who cares
-			y  = getLargeRandom(wF) + (e << wF) + normalExn;
-		}
-		else if ((i & 7) == 4) {// subtraction, alignment within the mantissa sizes
-			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
-			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
-		}
-		else if ((i & 7) == 5 || (i & 7) == 6) {// addition, alignment within the mantissa sizes
-			mpz_class e = getLargeRandom(wE);
-			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
-			y  = getLargeRandom(wF) + (e << wF) + normalExn;
-		}
-		else{ //fully random
-			x = getLargeRandom(wE+wF+3);
-			y = getLargeRandom(wE+wF+3);
-		}
-		// Random swap
-		mpz_class swap = getLargeRandom(1);
-		if (swap == mpz_class(0)) {
-			tc->addInput("X", x);
-			tc->addInput("Y", y);
-		}
-		else {
-			tc->addInput("X", y);
-			tc->addInput("Y", x);
-		}
-		/* Get correct outputs */
-		emulate(tc);
-		return tc;
+		// use the generic one defined in FPAdd
+		return FPAdd::buildRandomTestCase(this, i, wE, wF, sub);
 	}
+
 
 }

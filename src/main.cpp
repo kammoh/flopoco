@@ -79,18 +79,18 @@ int main(int argc, char* argv[] )
 #endif
 		// IntComparator::registerFactory();
 		// IntDualSub::registerFactory();
-		 IntMultiplier::registerFactory();
+		// IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
-		 IntConstMult::registerFactory();
-		 FPConstMult::registerFactory();
+		// IntConstMult::registerFactory(); // depends on BH
+		// FPConstMult::registerFactory();
 		// FPRealKCM::registerFactory();
-		 IntConstDiv::registerFactory();
-		 FPConstDiv::registerFactory();
+		// IntConstDiv::registerFactory(); // depends on IntConstMult
+		// FPConstDiv::registerFactory();
 		// FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();
 		// FixFunctionByPiecewisePoly::registerFactory();
-		// FixFunctionByMultipartiteTable::registerFactory();
+		// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH
 		// BasicPolyApprox::registerFactory();
 		// PiecewisePolyApprox::registerFactory();
 	  FixRealKCM::registerFactory();
@@ -98,7 +98,6 @@ int main(int argc, char* argv[] )
 		Wrapper::registerFactory();
 		FPAdd::registerFactory();
 		// FPAddSub::registerFactory();
-		// FPAddDualPath::registerFactory();
 		// FPAdd3Input::registerFactory();
 		// FPAddSinglePath::registerFactory();
 		// FPMult::registerFactory();
@@ -119,9 +118,9 @@ int main(int argc, char* argv[] )
 		// CordicSinCos::registerFactory();
 		// FixAtan2::registerFactory();
 		// //FixedComplexAdder::registerFactory();
-		 FixFIR::registerFactory();
-		 FixSOPC::registerFactory();
-		 FixIIR::registerFactory();
+		// FixFIR::registerFactory();
+		// FixSOPC::registerFactory();
+		// FixIIR::registerFactory();
 
 		// hidden for now
 		// Fix2DNorm::registerFactory();

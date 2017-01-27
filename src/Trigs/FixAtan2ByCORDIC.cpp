@@ -6,7 +6,6 @@
 #include "mpfr.h"
 
 #include "FixAtan2ByCORDIC.hpp"
-#include "IntMult/IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "ConstMult/FixRealKCM.hpp"
 #include "ShiftersEtc/LZOC.hpp"

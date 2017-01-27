@@ -245,9 +245,9 @@ src/AutoTest/AutoTest
 
 
 # Bit heap  ------------------------------------------------
- src/BitHeap/BitHeap
- src/BitHeap/WeightedBit
- src/BitHeap/Plotter
+# src/BitHeap/BitHeap
+# src/BitHeap/WeightedBit
+# src/BitHeap/Plotter
  
  src/BitHeap/Bit
  src/BitHeap/Compressor
@@ -281,11 +281,12 @@ src/Conversions/Fix2FP
  src/ShiftersEtc/Shifters
 
 # FixFilters ----------------------------------------------------------
- src/ShiftReg
- src/FixFilters/FixSOPC
- src/FixFilters/FixFIR
- src/FixFilters/FixHalfSine
- src/FixFilters/FixIIR
+src/ShiftReg
+# the following still depends on old bit heap
+# src/FixFilters/FixSOPC
+# src/FixFilters/FixFIR
+# src/FixFilters/FixHalfSine
+#  src/FixFilters/FixIIR # 
 
 
 # pipelined Integer addition -------------------------------------------------
@@ -312,25 +313,25 @@ src/Conversions/Fix2FP
 # src/IntAddSubCmp/LongIntAdderMuxNetwork
 
 # Constant multiplications and divisions
- src/ConstMult/ShiftAddOp 
- src/ConstMult/ShiftAddDag 
- src/ConstMult/IntConstMult 
- src/ConstMult/IntConstMCM  
- src/ConstMult/KCMTable
- src/ConstMult/IntIntKCM 
- src/ConstMult/FPConstMult 
- src/ConstMult/CRFPConstMult 
+# src/ConstMult/ShiftAddOp 
+# src/ConstMult/ShiftAddDag 
+# src/ConstMult/IntConstMult 
+# src/ConstMult/IntConstMCM  
+# src/ConstMult/KCMTable
+# src/ConstMult/IntIntKCM 
+# src/ConstMult/FPConstMult 
+# src/ConstMult/CRFPConstMult 
  src/ConstMult/FixRealKCM
- src/ConstMult/FPRealKCM
- src/ConstMult/IntConstDiv 
- src/ConstMult/FPConstDiv 
+# src/ConstMult/FPRealKCM
+# src/ConstMult/IntConstDiv 
+# src/ConstMult/FPConstDiv 
 
  
 # Multiplication related --------------------------------------------
- src/IntMult/IntMultiplier
- src/IntMult/FixMultAdd
- src/IntMult/MultiplierBlock
- src/IntMult/IntSquarer
+# src/IntMult/IntMultiplier
+# src/IntMult/FixMultAdd
+src/IntMult/MultiplierBlock
+# src/IntMult/IntSquarer
 
 # Complex numbers ---------------------------------------------------
 src/Complex/FixComplexKCM
@@ -341,13 +342,13 @@ src/Complex/FixComplexKCM
  src/FPAddSub/FPAdd
  src/FPAddSub/FPAddDualPath
  src/FPAddSub/FPAddSinglePath
- src/FPAddSub/FPAdd3Input
+# src/FPAddSub/FPAdd3Input
  src/FPAddSub/FPAddSub
 
 # Floating-point multipliers and squarers
- src/FPMultSquare/FPMult
+# src/FPMultSquare/FPMult
 #  src/FPMultSquare/FPMultKaratsuba # See TODO
- src/FPMultSquare/FPSquare
+# src/FPMultSquare/FPSquare
 
 # Floating-point dividers and square roots
 src/FPDivSqrt/FPDiv
@@ -359,8 +360,8 @@ src/FPDivSqrt/FPSqrt
 # Composite operators
 src/FPComposite/FPLargeAcc 
 src/FPComposite/LargeAccToFP 
-src/FPComposite/FPDotProduct 
-src/FPComposite/FP2DNorm
+#src/FPComposite/FPDotProduct 
+#src/FPComposite/FP2DNorm
 
 
 # Generic fixed-point function evaluators ---------------------------
@@ -371,40 +372,40 @@ src/FPComposite/FP2DNorm
 
  src/FixFunctions/FixFunction
  src/FixFunctions/FixFunctionByTable
- src/FixFunctions/BasicPolyApprox
- src/FixFunctions/PiecewisePolyApprox
- src/FixFunctions/FixHornerEvaluator
- src/FixFunctions/FixFunctionBySimplePoly
- src/FixFunctions/FixFunctionByPiecewisePoly
+ #src/FixFunctions/BasicPolyApprox
+ #src/FixFunctions/PiecewisePolyApprox
+ #src/FixFunctions/FixHornerEvaluator
+ #src/FixFunctions/FixFunctionBySimplePoly
+ #src/FixFunctions/FixFunctionByPiecewisePoly
 
  src/FixFunctions/GenericTable
  src/FixFunctions/BipartiteTable
- src/FixFunctions/Multipartite
- src/FixFunctions/FixFunctionByMultipartiteTable
+# src/FixFunctions/Multipartite 
+# src/FixFunctions/FixFunctionByMultipartiteTable
 # src/FixFunctions/QuineMcCluskey
 
 # Trigonometric functions ------------------------------------------
 src/Trigs/ConstDiv3ForSinPoly
-src/Trigs/FixSinPoly
-src/Trigs/FixSinCos
-src/Trigs/CordicSinCos
+#src/Trigs/FixSinPoly
+# src/Trigs/FixSinCos
+# src/Trigs/CordicSinCos
 # src/Trigs/CordicSinOrCos
-src/Trigs/FixAtan2
-src/Trigs/FixAtan2ByCORDIC
-src/Trigs/FixAtan2ByRecipMultAtan
-src/Trigs/FixAtan2ByBivariateApprox
+# src/Trigs/FixAtan2
+ src/Trigs/FixAtan2ByCORDIC
+#src/Trigs/FixAtan2ByRecipMultAtan
+#src/Trigs/FixAtan2ByBivariateApprox
 src/Trigs/Atan2Table
 
-src/Trigs/Fix2DNorm
+#src/Trigs/Fix2DNorm
 
 
 src/Tools/Plane
 src/Tools/Point
 
 # Exp, Log and Power
-src/ExpLog/FPExp
-src/ExpLog/IterativeLog
-src/ExpLog/FPPow
+#src/ExpLog/FPExp
+# src/ExpLog/IterativeLog //depends on IntSquarer
+#src/ExpLog/FPPow
 
 # If you want to add your operator, feel free
 src/UserDefinedOperator
@@ -468,5 +469,5 @@ TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
 
 
 
-add_subdirectory(src/random)
-target_link_libraries(FloPoCoLib flopoco_random_lib)
+#add_subdirectory(src/random)
+#target_link_libraries(FloPoCoLib flopoco_random_lib)
