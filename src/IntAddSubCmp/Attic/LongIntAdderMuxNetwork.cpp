@@ -48,9 +48,9 @@ namespace flopoco{
 
 					cSize = new int[2000];
 					REPORT(3, "-- The new version: direct mapping without 0/1 padding, IntAdders instantiated");
-					double	objectivePeriod = double(1) / target->frequency();
-					REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<target->frequency());
-					target->suggestSubaddSize(chunkSize_ ,wIn_);
+					double	objectivePeriod = double(1) / getTarget()->frequency();
+					REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<getTarget()->frequency());
+					getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 					REPORT(2, "The chunkSize for first two chunks is: " << chunkSize_ );
 
 					if (2*chunkSize_ >= wIn_){
@@ -74,7 +74,7 @@ namespace flopoco{
 					while (not (finished))	 {
 						REPORT(2, "The width is " << width);
 						propagationSize+=2;
-						double delay = objectivePeriod - target->adderDelay(width)- target->adderDelay(propagationSize); //2*target->localWireDelay()  -
+						double delay = objectivePeriod - getTarget()->adderDelay(width)- getTarget()->adderDelay(propagationSize); //2*getTarget()->localWireDelay()  -
 						REPORT(2, "The value of the delay at step " << chunkIndex << " is " << delay);
 						if ((delay > 0) || (width < 4)) {
 							REPORT(2, "finished -> found last chunk of size: " << width);
@@ -83,10 +83,10 @@ namespace flopoco{
 						}else{
 							REPORT(2, "Found regular chunk ");
 							int cs;
-							double slack =  target->adderDelay(propagationSize) ; //+ 2*target->localWireDelay()
+							double slack =  getTarget()->adderDelay(propagationSize) ; //+ 2*getTarget()->localWireDelay()
 							REPORT(2, "slack is: " << slack);
-							REPORT(2, "adderDelay of " << propagationSize << " is " << target->adderDelay(propagationSize) );
-							target->suggestSlackSubaddSize( cs, width, slack);
+							REPORT(2, "adderDelay of " << propagationSize << " is " << getTarget()->adderDelay(propagationSize) );
+							getTarget()->suggestSlackSubaddSize( cs, width, slack);
 							REPORT(2, "size of the regular chunk is : " << cs);
 							width = width - cs;
 							cSize[chunkIndex] = cs;
@@ -106,7 +106,7 @@ namespace flopoco{
 					decomposition */
 					if (invalid){
 						REPORT(2,"SECOND PHASE chunk splitting ...");
-						target->suggestSubaddSize(chunkSize_ ,wIn_);
+						getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 						lastChunkSize_ = (wIn_% chunkSize_ ==0 ? chunkSize_ :wIn_% chunkSize_);
 
 						/* the index of the last chunk pair */
@@ -145,7 +145,7 @@ namespace flopoco{
 
 				int fanOutWeight;
 
-				if (target->getID()=="Virtex5"){
+				if (getTarget()->getID()=="Virtex5"){
 					// fdcq = 0.396e-9;
 					// xordelay = 0.300e-9;
 					// dcarry = 0.023e-9;
@@ -153,7 +153,7 @@ namespace flopoco{
 					muxcystooOut = 0.504e-9;
 					fanOutWeight = 45;
 				}else{
-					if (target->getID()=="Virtex6"){
+					if (getTarget()->getID()=="Virtex6"){
 						// fdcq = 0.280e-9;
 						// xordelay = 0.180e-9;
 						// dcarry = 0.015e-9;
@@ -161,7 +161,7 @@ namespace flopoco{
 						muxcystooOut = 0.373e-9;
 						fanOutWeight = 51;
 					}else{
-						if (target->getID()=="Virtex4"){
+						if (getTarget()->getID()=="Virtex4"){
 							// fdcq = 0.272e-9;
 							// xordelay = 0.273e-9;
 							// dcarry = 0.034e-9;
@@ -178,38 +178,38 @@ namespace flopoco{
 
 #ifdef MAXSIZE
 	for (int aa=25; aa<=500; aa+=5){
-		target->setFrequency(double(aa)*1000000.0);
+		getTarget()->setFrequency(double(aa)*1000000.0);
 
 #endif
 bool nogo = false;
-double t = 1.0 / target->frequency();
+double t = 1.0 / getTarget()->frequency();
 
-				if (!target->suggestSlackSubaddSize(lkm1, wIn, iDelay /*fdcq + target->localWireDelay()*/ + target->localWireDelay() + target->lutDelay())){
+				if (!getTarget()->suggestSlackSubaddSize(lkm1, wIn, iDelay /*fdcq + getTarget()->localWireDelay()*/ + getTarget()->localWireDelay() + getTarget()->lutDelay())){
 //					cerr << "Impossible 1" << endl;
 					nogo = true;
 				}
 //				cout << "lkm1 = " << lkm1 << endl;
 
 				double z =				iDelay +
-										/*fdcq + target->localWireDelay() +*/
-										target->lutDelay() + //xordelay +
+										/*fdcq + getTarget()->localWireDelay() +*/
+										getTarget()->lutDelay() + //xordelay +
 										muxcystooOut + // the select to output line of the carry chain multiplexer.
 													// usually this delay for the 1-bit addition which is not overlapping
-										target->localWireDelay() +
-										target->localWireDelay(fanOutWeight) + //final multiplexer delay. Fan-out of the CGC bits is accounted for
-										target->lutDelay();
+										getTarget()->localWireDelay() +
+										getTarget()->localWireDelay(fanOutWeight) + //final multiplexer delay. Fan-out of the CGC bits is accounted for
+										getTarget()->lutDelay();
 #ifdef DEBUGN
-				cerr << "lut             delay = " << target->lutDelay() << endl;
+				cerr << "lut             delay = " << getTarget()->lutDelay() << endl;
 				cerr << "muxcystooOut    delay = " << muxcystooOut << endl;
-				cerr << "localWireDelay  delay = " << target->localWireDelay() << endl;
-				cerr << "localWireDelay2 delay = " << target->localWireDelay(fanOutWeight) << endl;
+				cerr << "localWireDelay  delay = " << getTarget()->localWireDelay() << endl;
+				cerr << "localWireDelay2 delay = " << getTarget()->localWireDelay(fanOutWeight) << endl;
 				cerr << "z slack = " << z << endl;
 #endif
-				nogo = nogo | (!target->suggestSlackSubaddSize(ll, wIn, z));
+				nogo = nogo | (!getTarget()->suggestSlackSubaddSize(ll, wIn, z));
 #ifdef DEBUGN
 				cerr << "ll is = "<<ll << endl;
 #endif
-				/*nogo = nogo | (!*/target->suggestSlackSubaddSize(l0, wIn, t - (2*target->lutDelay()+ muxcystooOut/* xordelay*/)); //);
+				/*nogo = nogo | (!*/getTarget()->suggestSlackSubaddSize(l0, wIn, t - (2*getTarget()->lutDelay()+ muxcystooOut/* xordelay*/)); //);
 
 				REPORT(INFO, "l0="<<l0);
 
@@ -362,7 +362,7 @@ exit(1);
 				}
 
 
-//				if (target->getVendor()== "Xilinx"){
+//				if (getTarget()->getVendor()== "Xilinx"){
 //					//////////////////////////////////////////////////////
 //					vhdl << tab << "--perform the short carry additions" << endl;
 //					CarryGenerationCircuit *cgc = new CarryGenerationCircuit(target,nbOfChunks-2);

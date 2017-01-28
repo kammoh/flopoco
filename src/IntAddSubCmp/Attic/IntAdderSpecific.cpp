@@ -44,7 +44,7 @@ namespace flopoco{
 		addOutput("Cout", 1, false);
 
 		/*unpipelined IntAdder architecture FPGA specific primitives*/
-		if (target->getVendor() == "Xilinx"){
+		if (getTarget()->getVendor() == "Xilinx"){
 			declare("p",wIn,true);
 			declare("c",wIn-1,true);
 			for (int i=0; i<wIn;i++){

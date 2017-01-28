@@ -51,7 +51,7 @@ FixSinCos::SinCosTable::SinCosTable(Target* target_, int wIn_, int lsbOut_, int 
 	if (g>0) 
 		name << "p" << g;
 	setNameWithFreqAndUID(name.str());
-	//	outDelayMap["Y"]=target->RMADelay();
+	//	outDelayMap["Y"]=getTarget()->RMADelay();
 }
 
 FixSinCos::SinCosTable::~SinCosTable(){
@@ -178,16 +178,16 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// These are limits between small-precision cases for which we generate simpler architectures
 
 	// plain tabulation fits LUTs
-	bool wSmallerThanBorder1 = ( w <= target->lutInputs() );    
+	bool wSmallerThanBorder1 = ( w <= getTarget()->lutInputs() );    
 
 	//  table with quadrant reduction fits LUTs
-	bool wSmallerThanBorder2 = ( w-2 <= target->lutInputs() );   
+	bool wSmallerThanBorder2 = ( w-2 <= getTarget()->lutInputs() );   
 
 	// plain tabulation fits BlockRAM
-	bool wSmallerThanBorder3 = ( (w+1)*(mpz_class(2)<<(w+1)) <= target->sizeOfMemoryBlock() );
+	bool wSmallerThanBorder3 = ( (w+1)*(mpz_class(2)<<(w+1)) <= getTarget()->sizeOfMemoryBlock() );
 
 	//  table with quadrant reduction fits BlockRAM
-	bool wSmallerThanBorder4 = ( (w+1)*(mpz_class(2)<<(w+1-3)) <= target->sizeOfMemoryBlock() );
+	bool wSmallerThanBorder4 = ( (w+1)*(mpz_class(2)<<(w+1-3)) <= getTarget()->sizeOfMemoryBlock() );
 
 	bool usePlainTable = wSmallerThanBorder1 || (!wSmallerThanBorder2 && wSmallerThanBorder3);
 	bool usePlainTableWithQuadrantReduction = wSmallerThanBorder2 || (!wSmallerThanBorder3 && wSmallerThanBorder4);
@@ -204,13 +204,13 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// Let us compute wA such that these bits fit in a blockRAM
 	// but it depends on g, so we compute the various cases
 	int wAtemp=3;
-	while((mpz_class(2)<<wAtemp)*(w+1+gOrder1Arch) < target->sizeOfMemoryBlock()) wAtemp++; 
+	while((mpz_class(2)<<wAtemp)*(w+1+gOrder1Arch) < getTarget()->sizeOfMemoryBlock()) wAtemp++; 
 	int wAOrder1Arch = wAtemp--;
 	wAtemp=3;
-	while((mpz_class(2)<<wAtemp)*(w+1+gOrder2Arch) < target->sizeOfMemoryBlock()) wAtemp++; 
+	while((mpz_class(2)<<wAtemp)*(w+1+gOrder2Arch) < getTarget()->sizeOfMemoryBlock()) wAtemp++; 
 	int wAOrder2Arch = wAtemp--;
 	wAtemp=3;
-	while((mpz_class(2)<<wAtemp)*(w+1+gGeneric) < target->sizeOfMemoryBlock()) wAtemp++; 
+	while((mpz_class(2)<<wAtemp)*(w+1+gGeneric) < getTarget()->sizeOfMemoryBlock()) wAtemp++; 
 	int wAGeneric = wAtemp--;
 
 
@@ -352,7 +352,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 		int wYIn=w-2+g;
 		
 		addComment("Computing .25-Y :  we do a logic NOT, at a cost of 1 ulp");
-		manageCriticalPath(target->localWireDelay(w-2) + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay(w-2) + getTarget()->lutDelay());
 		vhdl << tab << declare ("Yneg", wYIn) << " <= ((not Y) & " << '"' << std::string (g, '1') << '"' << ") when O='1' "
 				 << "else (Y & " << '"' << std::string (g, '0') << '"' << ");" << endl;
 
@@ -539,7 +539,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 				vhdl << instance (z3o6Table, "z3o6Table");
 				syncCycleFromSignal("Z3o6");
 
-				manageCriticalPath(target->adderDelay(wZ));
+				manageCriticalPath(getTarget()->adderDelay(wZ));
 				vhdl << tab << declare ("SinZ", wZ) << " <= Z - Z3o6;" << endl;
 				setSignalDelay("SinZ", getCriticalPath());
 				
@@ -636,14 +636,14 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			nextCycle();
 
 			// TODO: critical path supposed suboptimal (but don't know how to fix)
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("CosZCosPiA_plus_rnd", w+g)
 					 << " <= CosPiA - Z2o2CosPiA;" << endl;
 
 			syncCycleFromSignal ("SinZSinPiA");
 			nextCycle();
 
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("C_out_rnd_aux", w+g)
 			<< " <= CosZCosPiA_plus_rnd - SinZSinPiA;" << endl;
 
@@ -791,14 +791,14 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			setCycleFromSignal ("Z2o2SinPiA");
 			nextCycle();
 			
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("CosZSinPiA_plus_rnd", w+g)
 					 << " <= SinPiA - Z2o2SinPiA;" << endl;
 			
 			syncCycleFromSignal ("SinZCosPiA");
 			nextCycle();
 			
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("S_out_rnd_aux", w+g)
 					 << " <= CosZSinPiA_plus_rnd + SinZCosPiA;" << endl;
 

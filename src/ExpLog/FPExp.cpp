@@ -209,7 +209,7 @@ namespace flopoco{
 		int sizeExpZm1; // 
 		int sizeMultIn; // sacrificing accuracy where it costs
 		IntAdder* addexpZminus1;		
-		int blockRAMSize=target->sizeOfMemoryBlock();
+		int blockRAMSize=getTarget()->sizeOfMemoryBlock();
 
 
 		//* The following lines decide the architecture out of the size of wF *
@@ -365,7 +365,7 @@ namespace flopoco{
 
 		//******** Input unpacking and shifting to fixed-point ********
 
-		setCriticalPath( getMaxInputDelays(inputDelays) + target->localWireDelay());
+		setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay());
 		vhdl << tab  << declare("Xexn", 2) << " <= X(wE+wFIn+2 downto wE+wFIn+1);" << endl;
 		vhdl << tab  << declare("XSign") << " <= X(wE+wFIn);" << endl;
 		vhdl << tab  << declare("XexpField", wE) << " <= X(wE+wFIn-1 downto wFIn);" << endl;
@@ -373,7 +373,7 @@ namespace flopoco{
 
 		int e0 = bias - (wF+g);
 		vhdl << tab  << declare("e0", wE+2) << " <= conv_std_logic_vector(" << e0 << ", wE+2);  -- bias - (wF+g)" << endl;
-		manageCriticalPath( target->localWireDelay() + target->adderDelay(wE+2) ); 
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->adderDelay(wE+2) ); 
 		vhdl << tab  << declare("shiftVal", wE+2) << " <= (\"00\" & XexpField) - e0; -- for a left shift" << endl;
 
 		vhdl << tab  << "-- underflow when input is shifted to zero (shiftval<0), in which case exp = 1" << endl;
@@ -409,7 +409,7 @@ namespace flopoco{
 		double scp = getCriticalPath();
 		vhdl << tab  << "-- Partial overflow/underflow detection" << endl;
 		int maxshift=wE-1+ wF+g; // maxX < 2^(wE-1); 
-		manageCriticalPath( target->adderDelay(wE+1) + target->localWireDelay() + target->lutDelay() + target->localWireDelay());
+		manageCriticalPath( getTarget()->adderDelay(wE+1) + getTarget()->localWireDelay() + getTarget()->lutDelay() + getTarget()->localWireDelay());
 		vhdl << tab  << declare("oufl0") << " <= not shiftVal(wE+1) when shiftVal(wE downto 0) >= conv_std_logic_vector(" << maxshift << ", wE+1) else '0';" << endl;
 
 		setCycleFromSignal("shiftVal", scp);
@@ -428,7 +428,7 @@ namespace flopoco{
 #endif	
 		
 		int sizeXfix = wE+wF+g; // still unsigned; msb=wE-1; lsb = -wF-g
-		manageCriticalPath( target->localWireDelay(sizeXfix) + target->lutDelay());
+		manageCriticalPath( getTarget()->localWireDelay(sizeXfix) + getTarget()->lutDelay());
 
 		vhdl << tab << declare("fixX", sizeXfix) << " <= " << " fixX0" << 
 		range(wE-1 + wF+g + wFIn+1 -1, wFIn) << 
@@ -460,11 +460,11 @@ namespace flopoco{
 
 		// Now I have two things to do in parallel: compute K, and compute absKLog2
 		// First compute K
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));
 		vhdl << tab << declare("minusAbsK",wE+1) << " <= " << rangeAssign(wE, 0, "'0'")<< " - ('0' & absK);"<<endl;
 		// The synthesizer should be able to merge the addition and this mux, so
 		// the next line is commented
-		// manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		// manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("K",wE+1) << " <= minusAbsK when  XSign='1'   else ('0' & absK);"<<endl;
 
 		// get back to the cycle+critical path at the output of the first multiplier
@@ -491,18 +491,18 @@ namespace flopoco{
 
 		sizeY=wF+g; // This is also the weight of Y's LSB
 
-		manageCriticalPath( target->localWireDelay() + target->lutDelay() );
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay() );
 
 		vhdl << tab << declare("subOp1",sizeY) << " <= fixX" << range(sizeY-1, 0) << " when XSign='0'"
 		<< " else not (fixX" << range(sizeY-1, 0) << ");"<<endl;
 		vhdl << tab << declare("subOp2",sizeY) << " <= absKLog2" << range(sizeY-1, 0) << " when XSign='1'"
 		<< " else not (absKLog2" << range(sizeY-1, 0) << ");"<<endl;
 
-		double ctperiod = 1.0 / target->frequency(); 
-		target->setFrequency( 1.0 / (ctperiod - target->LogicToRAMWireDelay() ) ); // Bogdan, WTF is that? 
+		double ctperiod = 1.0 / getTarget()->frequency(); 
+		getTarget()->setFrequency( 1.0 / (ctperiod - getTarget()->LogicToRAMWireDelay() ) ); // Bogdan, WTF is that? 
 		IntAdder *yPaddedAdder = new IntAdder(target, sizeY // we know the leading bits will cancel out
 ); 
-		target->setFrequency( 1.0 / ctperiod );
+		getTarget()->setFrequency( 1.0 / ctperiod );
 		addSubComponent(yPaddedAdder);
 
 		outPortMap( yPaddedAdder, "R", "Y");
@@ -563,7 +563,7 @@ namespace flopoco{
 				outPortMap(table, "Y1", "expA_output");
 				inPortMap(table, "X1", "Addr1");
 				vhdl << instance(table, "table");
-				setSignalDelay("expZ_output",  target->RAMDelay() );
+				setSignalDelay("expZ_output",  getTarget()->RAMDelay() );
 				syncCycleFromSignal("expZ_output", getSignalDelay("expZ_output"));
 
 				vhdl << tab << declare("expA", sizeExpA) << " <=  expA_output" << range(sizeExpA+sizeExpZPart-1, sizeExpZPart) << ";" << endl;
@@ -585,7 +585,7 @@ namespace flopoco{
 				vhdl << tab << declare("Zhigh", sizeZhigh) << " <= Z" << range(sizeZ-1, sizeZ-sizeZhigh) << ";\n";
 				
 				double cpZhigh = getCriticalPath();
-				//			manageCriticalPath( target->LogicToRAMWireDelay() + target->RAMDelay() );
+				//			manageCriticalPath( getTarget()->LogicToRAMWireDelay() + getTarget()->RAMDelay() );
 				ExpYTable* table;
 				table = new ExpYTable(target, k, sizeExpA); // e^A-1 has MSB weight 1
 				addSubComponent(table);
@@ -747,7 +747,7 @@ namespace flopoco{
 //		nextCycle();
 
 		vhdl << tab << declare("needNoNorm") << " <= expY(" << sizeExpY-1 << ");" << endl;
-		manageCriticalPath( target->localWireDelay(wE+wF+2) + target->lutDelay() );		
+		manageCriticalPath( getTarget()->localWireDelay(wE+wF+2) + getTarget()->lutDelay() );		
 		vhdl << tab << "-- Rounding: all this should consume one row of LUTs" << endl; 
 		vhdl << tab << declare("preRoundBiasSig", wE+wF+2)
 		<< " <= conv_std_logic_vector(" << bias << ", wE+2)  & expY" << range(sizeExpY-2, sizeExpY-2-wF+1) << " when needNoNorm = '1'" << endl
@@ -769,11 +769,11 @@ namespace flopoco{
 		syncCycleFromSignal("roundedExpSigRes", roundedExpSigOperandAdder->getOutputDelay("R") );
 		vhdl << tab << "-- delay at adder output is " << getCriticalPath() << endl;
 
-		manageCriticalPath( target->localWireDelay() + target->lutDelay() );
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay() );
 		vhdl << tab << declare("roundedExpSig", wE+wF+2) << " <= roundedExpSigRes when Xexn=\"01\" else "
 		<< " \"000\" & (wE-2 downto 0 => '1') & (wF-1 downto 0 => '0');" << endl;
 
-		manageCriticalPath( target->localWireDelay() + target->lutDelay() );
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay() );
 		vhdl << tab << declare("ofl1") << " <= not XSign and oufl0 and (not Xexn(1) and Xexn(0)); -- input positive, normal,  very large" << endl;
 		vhdl << tab << declare("ofl2") << " <= not XSign and (roundedExpSig(wE+wF) and not roundedExpSig(wE+wF+1)) and (not Xexn(1) and Xexn(0)); -- input positive, normal, overflowed" << endl;
 		vhdl << tab << declare("ofl3") << " <= not XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;

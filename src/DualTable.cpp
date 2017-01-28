@@ -67,7 +67,7 @@ namespace flopoco{
 		setCombinatorial();
 
 		//limitSingleMemory = intpow2(11)*9;
-		limitSingleMemory = target->sizeOfMemoryBlock();
+		limitSingleMemory = getTarget()->sizeOfMemoryBlock();
 		
 		// Set up the IO signals
 		addInput ("X1"  , wIn);

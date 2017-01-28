@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(SymmetricCubicTest)
 	std::vector<double> x(n);
 	for(int i=0;i<n/2;i++){
 		double u=(i+0.5)/n;
-		x[i]=target->InvCdf(u);
+		x[i]=getTarget()->InvCdf(u);
 		x[n-i-1]=-x[i];
 	}
 	
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(CubicTest)
 	std::vector<double> x(n);
 	for(int i=0;i<n/2;i++){
 		double u=(i+0.5)/n;
-		x[i]=target->InvCdf(u);
+		x[i]=getTarget()->InvCdf(u);
 		x[n-i-1]=-x[i];
 	}
 	
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(CubicTest)
 	TableDistribution<double>::TypePtr corrected=current->ApplyPolynomial(poly);
 	
 	for(int i=0;i<=6;i++){
-		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", target->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
+		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", getTarget()->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
 	}
 }
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(QuinticTest)
 	std::vector<double> x(n);
 	for(int i=0;i<n/2;i++){
 		double u=(i+0.5)/n;
-		x[i]=target->InvCdf(u);
+		x[i]=getTarget()->InvCdf(u);
 		x[n-i-1]=-x[i];
 	}
 	
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(QuinticTest)
 	TableDistribution<double>::TypePtr corrected=current->ApplyPolynomial(poly);
 	
 	for(int i=0;i<=10;i++){
-		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", target->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
+		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", getTarget()->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
 	}
 }
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(SymmetricQuinticTest)
 	std::vector<double> x(n);
 	for(int i=0;i<n/2;i++){
 		double u=(i+0.5)/n;
-		x[i]=target->InvCdf(u);
+		x[i]=getTarget()->InvCdf(u);
 		x[n-i-1]=-x[i];
 	}
 	
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(SymmetricQuinticTest)
 	TableDistribution<double>::TypePtr corrected=current->ApplyPolynomial(poly);
 	
 	for(int i=0;i<=10;i++){
-		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", target->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
+		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", getTarget()->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
 	}
 }
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(SymmetricHepticTest)
 	std::vector<double> x(n);
 	for(int i=0;i<n/2;i++){
 		double u=(i+0.5)/n;
-		x[i]=target->InvCdf(u);
+		x[i]=getTarget()->InvCdf(u);
 		x[n-i-1]=-x[i];
 	}
 	
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(SymmetricHepticTest)
 	TableDistribution<double>::TypePtr corrected=current->ApplyPolynomial(poly);
 	
 	for(int i=0;i<=14;i++){
-		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", target->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
+		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", getTarget()->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
 	}
 }
 
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(SymmetricNonicTest)
 	std::vector<double> x(n);
 	for(int i=0;i<n/2;i++){
 		double u=(i+0.5)/n;
-		x[i]=target->InvCdf(u);
+		x[i]=getTarget()->InvCdf(u);
 		x[n-i-1]=-x[i];
 	}
 	
@@ -208,6 +208,6 @@ BOOST_AUTO_TEST_CASE(SymmetricNonicTest)
 	TableDistribution<double>::TypePtr corrected=current->ApplyPolynomial(poly);
 	
 	for(int i=0;i<=16;i++){
-		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", target->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
+		fprintf(stderr, "%12.10lg, %12.10lg, %12.10lg\n", getTarget()->RawMoment(i), current->RawMoment(i), corrected->RawMoment(i));
 	}
 }

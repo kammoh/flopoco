@@ -81,7 +81,7 @@ namespace flopoco{
 		/* count the number of zeros/ones in order to determine
 		the value of the exponent */
 
-		lzocShifterSticky_ = new LZOCShifterSticky(target, sizeAcc_+1,  wFOut_ + 1, intlog2(sizeAcc_+1), false, -1, inDelayMap("I",target->localWireDelay()+getCriticalPath()));
+		lzocShifterSticky_ = new LZOCShifterSticky(target, sizeAcc_+1,  wFOut_ + 1, intlog2(sizeAcc_+1), false, -1, inDelayMap("I",getTarget()->localWireDelay()+getCriticalPath()));
 		countWidth_ = lzocShifterSticky_->getCountWidth();
 
 		inPortMapCst ( lzocShifterSticky_, "I"    , "acc");
@@ -94,23 +94,23 @@ namespace flopoco{
 		setCriticalPath( lzocShifterSticky_->getOutputDelay("O") );
 		setSignalDelay("resFrac",getCriticalPath());
 
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(countWidth_+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(countWidth_+1));
 		vhdl << tab <<declare("unbiasedExp", countWidth_+1) << " <= CONV_STD_LOGIC_VECTOR("<<MSBA_+1<<","<<countWidth_+1<<") - (\"0\" & nZO);"<<endl;
 		expBias_ =  intpow2(wEOut-1) - 1;
 		if (countWidth_+1 < wEOut_){
 			/* accumulator does not cover all exponent range */
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wEOut_));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEOut_));
 			vhdl << tab << declare("bias"     , wEOut_) << " <= CONV_STD_LOGIC_VECTOR("<<expBias_<<","<<wEOut_<<");"<<endl; //fixed value
 			vhdl << tab << declare("expBiased", wEOut_) << " <= bias + ("<< rangeAssign(wEOut_-1,countWidth_+1, "unbiasedExp"+of(countWidth_))<<" & unbiasedExp);"<<endl;
 			vhdl << tab << declare("excBits"  , 2)      << " <=\"01\";"<<endl;
 		} else if (countWidth_+1 == wEOut_){
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wEOut_));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEOut_));
 			vhdl << tab << declare("bias"     ,wEOut_) << " <= CONV_STD_LOGIC_VECTOR("<<expBias_<<","<<wEOut_<<");"<<endl; //fixed value
 			vhdl << tab << declare("expBiased",wEOut_) << " <= bias + unbiasedExp;"<<endl;
 			vhdl << tab << declare("excBits"  ,2)      << " <=\"01\";"<<endl;
 		}else{
 			/* acc covers more range than destination output format */
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(countWidth_+1));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(countWidth_+1));
 			vhdl << tab << declare("bias"   , countWidth_+1) << " <= CONV_STD_LOGIC_VECTOR("<<expBias_<<","<<countWidth_+1<<");"<<endl;
 			vhdl << tab << declare("expExt" , countWidth_+1) << " <= bias + unbiasedExp;"<<endl;
 			vhdl << tab << declare("signExpExt") << " <= expExt" << of(countWidth_)<<";"<<endl;
@@ -134,7 +134,7 @@ namespace flopoco{
 		setCycleFromSignal("resFrac");
 		setCriticalPath( getSignalDelay("resFrac"));
 
-		manageCriticalPath( target->localWireDelay() + target->lutDelay());
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("notResFrac",wFOut_+1) << " <= resFrac xor "<<rangeAssign(wFOut_,0,"resSign")<<";"<<endl;
 
 		//convert fraction in sign-magnitude

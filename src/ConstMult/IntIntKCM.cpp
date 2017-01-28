@@ -53,7 +53,7 @@ namespace flopoco{
 		setName(name.str());
 
 		int constantWidth = intlog2( C );
-		int lutWidth = target->lutInputs();
+		int lutWidth = getTarget()->lutInputs();
 		chunkSize_ = lutWidth;
 		int nbOfTables = int ( ceil( double(wIn)/double(lutWidth)) );
 		int lastLutWidth = (wIn%lutWidth==0 ? lutWidth : wIn%lutWidth);
@@ -250,7 +250,7 @@ namespace flopoco{
 		setName(name.str());
 
 		int constantWidth = intlog2(C);
-		int lutWidth = target->lutInputs();
+		int lutWidth = getTarget()->lutInputs();
 		chunkSize_ = lutWidth;
 		int nbOfTables = int ( ceil(double(wIn)/double(lutWidth)) );
 		int lastLutWidth = (wIn%lutWidth==0 ? lutWidth : wIn%lutWidth);

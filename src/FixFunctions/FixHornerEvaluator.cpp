@@ -156,7 +156,7 @@ namespace flopoco{
 
 		// declaring outputs
 		addOutput("R", msbOut-lsbOut+1);
-		//		setCriticalPath( getMaxInputDelays(inputDelays) + target->localWireDelay() );
+		//		setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay() );
 
 }
 

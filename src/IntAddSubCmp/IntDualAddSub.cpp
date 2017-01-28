@@ -55,7 +55,7 @@ namespace flopoco{
 		addOutput("R"+son_, wIn_, 1, true);
 
 		schedule();
-		double targetPeriod = 1.0/target->frequency() - target->ffDelay();
+		double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
 		// What is the maximum lexicographic time of our inputs?
 		int maxCycle = 0;
 		double maxCP = 0.0;
@@ -67,16 +67,16 @@ namespace flopoco{
 				maxCP = i->getCriticalPath();
 			}
 		}
-		double totalPeriod = maxCP + target->adderDelay(wIn);
+		double totalPeriod = maxCP + getTarget()->adderDelay(wIn);
 
 		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 
 		//		if(totalPeriod <= targetPeriod)		{
 		if(true){ 
-			vhdl << tab << declare(target->adderDelay(wIn), "tempRxMy", wIn)
+			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempRxMy", wIn)
 					 << " <= std_logic_vector(unsigned(X) - unsigned(Y));" <<endl;
-			vhdl << tab << declare(target->adderDelay(wIn), "tempR"+son_, wIn)
+			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempR"+son_, wIn)
 					 <<" <= "<< (opType_==0 ? "std_logic_vector(unsigned(Y) - unsigned(X));" : "std_logic_vector(unsigned(X) + unsigned(Y));") << endl;
 			vhdl << tab << "RxMy <= tempRxMy;" << endl;
 			vhdl << tab << "R" << son_ << " <= tempR" << son_ << ";" << endl;
@@ -91,7 +91,7 @@ namespace flopoco{
 #if 0
 			
 
-		if (target->isPipelined()){
+		if (getTarget()->isPipelined()){
 			//compute the maximum input delay
 			maxInputDelay = 0;
 			map<string, double>::iterator iter;
@@ -102,9 +102,9 @@ namespace flopoco{
 			REPORT(DETAILED, "Maximum input delay is "<<	maxInputDelay);
 
 			double	objectivePeriod;
-			objectivePeriod = 1/ target->frequency();
+			objectivePeriod = 1/ getTarget()->frequency();
 
-			REPORT(DETAILED, "Objective period is "<< objectivePeriod<<" at an objective frequency of "<<target->frequency());
+			REPORT(DETAILED, "Objective period is "<< objectivePeriod<<" at an objective frequency of "<<getTarget()->frequency());
 
 			if (objectivePeriod<maxInputDelay){
 				//It is the responsability of the previous components to not have a delay larger than the period
@@ -112,10 +112,10 @@ namespace flopoco{
 			  maxInputDelay = objectivePeriod;
 			}
 
-			if (((objectivePeriod - maxInputDelay) - target->lutDelay())<0)	{
+			if (((objectivePeriod - maxInputDelay) - getTarget()->lutDelay())<0)	{
 				bufferedInputs = 1;
 				maxInputDelay=0;
-				target->suggestSubaddSize(chunkSize_ ,wIn_);
+				getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 				nbOfChunks = ceil(double(wIn_)/double(chunkSize_));
 				cSize = new int[nbOfChunks+1];
 				cSize[nbOfChunks-1]=( ((wIn_%chunkSize_)==0)?chunkSize_:wIn_-(nbOfChunks-1)*chunkSize_);
@@ -126,13 +126,13 @@ namespace flopoco{
 				int cS0;
 				bufferedInputs=0;
 				int maxInAdd;
-				target->suggestSlackSubaddSize(maxInAdd, wIn_, maxInputDelay);
-				//int maxInAdd = ceil(((objectivePeriod - maxInputDelay) - target->lutDelay())/target->carryPropagateDelay());
+				getTarget()->suggestSlackSubaddSize(maxInAdd, wIn_, maxInputDelay);
+				//int maxInAdd = ceil(((objectivePeriod - maxInputDelay) - getTarget()->lutDelay())/getTarget()->carryPropagateDelay());
 				cS0 = (maxInAdd<=wIn_?maxInAdd:wIn_);
 				if ((wIn_-cS0)>0)
 					{
 						int newWIn = wIn_-cS0;
-						target->suggestSubaddSize(chunkSize_,newWIn);
+						getTarget()->suggestSubaddSize(chunkSize_,newWIn);
 						nbOfChunks = ceil( double(newWIn)/double(chunkSize_));
 
 						cSize = new int[nbOfChunks+1];
@@ -154,9 +154,9 @@ namespace flopoco{
 				REPORT(DETAILED, "chunk size[" <<i<<"]="<<cSize[i]);
 
 
-			getOutDelayMap()["RxMy"] = target->adderDelay(cSize[nbOfChunks-1]);
-			getOutDelayMap()["R"+son_] = target->adderDelay(cSize[nbOfChunks-1]);
-			REPORT(DETAILED, "Last addition size is "<<cSize[nbOfChunks-1]<< " having a delay of "<<target->adderDelay(cSize[nbOfChunks-1]));
+			getOutDelayMap()["RxMy"] = getTarget()->adderDelay(cSize[nbOfChunks-1]);
+			getOutDelayMap()["R"+son_] = getTarget()->adderDelay(cSize[nbOfChunks-1]);
+			REPORT(DETAILED, "Last addition size is "<<cSize[nbOfChunks-1]<< " having a delay of "<<getTarget()->adderDelay(cSize[nbOfChunks-1]));
 
 			//VHDL generation
 

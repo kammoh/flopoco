@@ -53,7 +53,7 @@ namespace flopoco{
 
 
 		// Digit-recurrence implementation recycled from FPLibrary
-		//cout << "   DDDD" <<  target->adderDelay(10) << "  " <<  target->localWireDelay() << "  " << target->lutDelay();
+		//cout << "   DDDD" <<  getTarget()->adderDelay(10) << "  " <<  getTarget()->localWireDelay() << "  " << getTarget()->lutDelay();
 		vhdl << tab << declare("fracX", wF) << " <= X" << range(wF-1, 0) << "; -- fraction"  << endl;
 		vhdl << tab << declare("eRn0", wE) << " <= \"0\" & X" << range(wE+wF-1, wF+1) << "; -- exponent" << endl;
 		vhdl << tab << declare("xsX", 3) << " <= X"<< range(wE+wF+2, wE+wF) << "; -- exception and sign" << endl;
@@ -65,7 +65,7 @@ namespace flopoco{
 		//		vhdl << tab << declare(join("d",wF+3)) << " <= '0';" << endl;
 		//		vhdl << tab << declare(join("s",wF+3)) << " <= '1';" << endl;
 
-		double delay= target->lutDelay() + target->localWireDelay() + target->ffDelay(); // estimated delay so far (one mux)
+		double delay= getTarget()->lutDelay() + getTarget()->localWireDelay() + getTarget()->ffDelay(); // estimated delay so far (one mux)
 		for(int step=1; step<=wF+2; step++) {
 		  int i = wF+3-step; // to have the same indices as FPLibrary
 		  vhdl << tab << "-- Step " << i << endl;
@@ -101,16 +101,16 @@ namespace flopoco{
 		    vhdl << sip /*<< range(step-1,1)*/ << " & not " << di << ";"<< endl;
 
 		  // Pipeline management
-		  double stageDelay= target->adderDelay(step) + target->localWireDelay() + 2*target->lutDelay();
+		  double stageDelay= getTarget()->adderDelay(step) + getTarget()->localWireDelay() + 2*getTarget()->lutDelay();
 		  delay += stageDelay;
 		  if (UserInterface::verbose>=2) {
 		    cout << "estimated delay for stage "<< step << " is " << stageDelay << "s" << endl;
-		    cout << "   cumulated delay would be " << delay << "s,   target is " << 1/target->frequency()<< endl;
+		    cout << "   cumulated delay would be " << delay << "s,   target is " << 1/getTarget()->frequency()<< endl;
 		  }
-		  if(delay > 1/target->frequency()) {
+		  if(delay > 1/getTarget()->frequency()) {
 		    // insert a pipeline register and reset the cumulated delay
 		    nextCycle();
-		    delay= target->ffDelay() + stageDelay;
+		    delay= getTarget()->ffDelay() + stageDelay;
 		    if (UserInterface::verbose>=2)
 		      cout << "----inserted a register level" << endl;
 		  }

@@ -62,11 +62,11 @@ namespace flopoco{
 		vhdl << tab << declare("expY", wEY_) << " <= Y"<< range(wEY_ + wFY_ -1, wFY_) << ";" << endl;
 
 		//Add exponents and substract bias
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wEX+2));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
 		vhdl << tab << declare("expSumPreSub", wEX_+2) << " <= (\"00\" & expX) + (\"00\" & expY);" << endl;
 		vhdl << tab << declare("bias", wEX_+2) << " <= CONV_STD_LOGIC_VECTOR(" << intpow2(wER-1)-1 << ","<<wEX_+2<<");"<< endl;
 
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wEX+2));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
 		vhdl << tab << declare("expSum",wEX+2) << " <= expSumPreSub - bias;" << endl;
 		double exponentCriticalPath=getCriticalPath();
 
@@ -127,7 +127,7 @@ namespace flopoco{
 
 			vhdl << tab<< declare("norm") << " <= sigProd" << of(sigProdSize -1) << ";"<<endl;
 
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wEX+2));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
 			double expPostNormCriticalPath=getCriticalPath();
 			vhdl << tab<< "-- exponent update"<<endl;
 			vhdl << tab<< declare("expPostNorm", wEX_+2) << " <= expSum + (" << zg(wEX_+1,0) << " & norm);"<<endl;
@@ -143,7 +143,7 @@ namespace flopoco{
 				vhdl << tab << declare("resSig", wFR_) << " <= sigProd" << range(wFX_+wFY_,0) << " & " <<   zg(1+wFR_ - (wFX_+wFY_+2) , 0)<<" when norm='1' else"<<endl;
 				vhdl << tab <<"                      sigProd" << range(wFX_+wFY_-1,0) << " & " << zg(1+wFR_ - (wFX_+wFY_+2) + 1 , 0) << ";"<<endl;
 
-				manageCriticalPath(target->localWireDelay() + target->lutDelay());
+				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 				vhdl << tab <<"with expPostNorm" << range(wER_+1, wER_) << " select"<<endl;
 				vhdl << tab << declare("excPostNorm",2) << " <=  \"01\"  when  \"00\","<<endl;
 				vhdl << tab <<"                            \"10\"             when \"01\", "<<endl;
@@ -158,7 +158,7 @@ namespace flopoco{
 			}
 			else{
 				vhdl << tab<< "-- significand normalization shift"<<endl;
-				manageCriticalPath(target->localWireDelay() + target->lutDelay());
+				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 				vhdl << tab << declare("sigProdExt", sigProdSize) << " <= sigProd" << range(sigProdSize-2, 0) << " & " << zg(1,0) <<" when norm='1' else"<<endl;
 				vhdl << tab << "                      sigProd" << range(sigProdSize-3, 0) << " & " << zg(2,0) << ";"<<endl;
 
@@ -170,10 +170,10 @@ namespace flopoco{
 					vhdl << tab << declare("sticky") << " <= sigProdExt" << of(wFX_+wFY + 1 - wFR) << ";" << endl;
 
 					if(wFX_+wFY + 1 - wFR>0) // otherwise the user has been stupid anyway
-						manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(sigProdSize-1 - wFR));
+						manageCriticalPath(getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(sigProdSize-1 - wFR));
 					vhdl << tab << declare("guard") << " <= '0' when sigProdExt" << range(wFX_+wFY + 1 - wFR - 1,0) << "=" << zg(wFX_+wFY + 1 - wFR - 1 +1,0) <<" else '1';" << endl;
 
-					manageCriticalPath(target->localWireDelay() + target->lutDelay());
+					manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 					vhdl << tab << declare("round") << " <= sticky and ( (guard and not(sigProdExt" << of(wFX_+wFY + 1 - wFR+1) <<")) or ("
 					     << "sigProdExt" << of(wFX_+wFY + 1 - wFR+1) << " ))  ;" << endl;
 				}

@@ -35,7 +35,7 @@ namespace flopoco {
 		ostringstream name;
 
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
-		name << "IntAdderShortLatency_" << wIn_<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
+		name << "IntAdderShortLatency_" << wIn_<<"_f"<<getTarget()->frequencyMHz()<<"_uid"<<getNewUId();
 		setName ( name.str() );
 
 		// Set up the IO signals
@@ -55,7 +55,7 @@ namespace flopoco {
 
 		if(isSequential())
 		{
-			objectivePeriod	 = 1 / target->frequency();
+			objectivePeriod	 = 1 / getTarget()->frequency();
 			k = shortLatencyKValue;
 
 			ostringstream verb;
@@ -229,7 +229,7 @@ namespace flopoco {
 
 				getSignalByName("R")->setCriticalPathContribution(getTarget()->localWireDelay());
 
-				getOutDelayMap()["R"] = target->adderDelay(cSize[k-1]);
+				getOutDelayMap()["R"] = getTarget()->adderDelay(cSize[k-1]);
 
 				REPORT ( DEBUG, " FINISHED SHORT-LATENCY IMPLEMENTATION" );
 		} else {
@@ -237,7 +237,7 @@ namespace flopoco {
 
 			getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn_));
 
-			getOutDelayMap()["R"] = target->adderDelay ( wIn_ ) + getMaxInputDelays ( inputDelays );
+			getOutDelayMap()["R"] = getTarget()->adderDelay ( wIn_ ) + getMaxInputDelays ( inputDelays );
 		}
 
 		REPORT ( DEBUG, "OutDelay for R is " << getOutDelayMap()["R"] );
@@ -367,7 +367,7 @@ namespace flopoco {
 //	/**************************************************************************/
 //	void IntAdderShortLatency::updateParameters ( Target* target, int &alpha, int &beta, int &k ) {
 //
-//		target->suggestSubaddSize ( alpha , wIn_ ); /* chunk size */
+//		getTarget()->suggestSubaddSize ( alpha , wIn_ ); /* chunk size */
 //		if ( wIn_ == alpha ) {
 //			/* addition requires one chunk */
 //			beta = 0;
@@ -382,7 +382,7 @@ namespace flopoco {
 //	void IntAdderShortLatency::updateParameters ( Target* target, map<string, double> inputDelays, int &alpha, int &beta, int &gamma, int &k ) {
 //
 //		int typeOfChunks = 1;
-//		bool status = target->suggestSlackSubaddSize ( gamma , wIn_, getMaxInputDelays ( inputDelays ) ); // the first chunk size
+//		bool status = getTarget()->suggestSlackSubaddSize ( gamma , wIn_, getMaxInputDelays ( inputDelays ) ); // the first chunk size
 //		REPORT ( DEBUG, "suggestSlackSubaddSize returns gamma="<<gamma<<" with status:"<< ( status?"true":"false" ) );
 //
 //		if ( ! status ) {
@@ -392,7 +392,7 @@ namespace flopoco {
 //			gamma=0;
 //		} else
 //			if ( wIn_ - gamma > 0 ) { //more than 1 chunk
-//				target->suggestSubaddSize ( alpha, wIn_-gamma );
+//				getTarget()->suggestSubaddSize ( alpha, wIn_-gamma );
 //				if ( wIn_-gamma == alpha )
 //					typeOfChunks++; //only two types of chunks
 //					else
@@ -421,7 +421,7 @@ namespace flopoco {
 //
 //	/**************************************************************************/
 //	void IntAdderShortLatency::updateParameters ( Target* target, map<string, double> inputDelays, int &alpha, int &beta, int &k ) {
-//		bool status = target->suggestSlackSubaddSize ( alpha , wIn_,  getMaxInputDelays ( inputDelays ) ); /* chunk size */
+//		bool status = getTarget()->suggestSlackSubaddSize ( alpha , wIn_,  getMaxInputDelays ( inputDelays ) ); /* chunk size */
 //		if ( !status ) {
 //			k=-1;
 //			alpha=0;
@@ -445,15 +445,15 @@ namespace flopoco {
 			cSize[u] = -1;
 
 		int alpha0;
-		double tSelect = target->lutDelay() + target->localWireDelay();
+		double tSelect = getTarget()->lutDelay() + getTarget()->localWireDelay();
 
 		double k1,k2;
-		target->getAdderParameters ( k1,k2,wIn );  /* adder delay is modeled as d = k1 + (w-1)k2 */
-		target->suggestSlackSubaddSize ( alpha0, wIn, tSelect );
+		getTarget()->getAdderParameters ( k1,k2,wIn );  /* adder delay is modeled as d = k1 + (w-1)k2 */
+		getTarget()->suggestSlackSubaddSize ( alpha0, wIn, tSelect );
 		int alpha;
-		target->suggestSubaddSize ( alpha,wIn );
+		getTarget()->suggestSubaddSize ( alpha,wIn );
 
-		double C = ( ( 1.0 / target->frequency() ) - tSelect - 2*k1 + 2*k2 ) /k2;
+		double C = ( ( 1.0 / getTarget()->frequency() ) - tSelect - 2*k1 + 2*k2 ) /k2;
 		int U = int ( floor ( C ) );
 
 		REPORT ( DEBUG, "U="<<U<<" C="<<C );
@@ -473,10 +473,10 @@ namespace flopoco {
 		REPORT ( DEBUG, "Max addition size for latency 0, two chunk architecture:" << 2*alpha0 );
 		REPORT ( DEBUG, "Max addition size for latency 0 is:" << maxW );
 
-		double C2 = ( ( 1.0 / target->frequency() ) - tSelect - k1 + k2 ) / ( 2*k2 );
+		double C2 = ( ( 1.0 / getTarget()->frequency() ) - tSelect - k1 + k2 ) / ( 2*k2 );
 		int U2 = int ( floor ( C2 ) );
 
-		double C3 = ( ( 1.0 / target->frequency() ) - k1 + k2 ) / ( 2*k2 );
+		double C3 = ( ( 1.0 / getTarget()->frequency() ) - k1 + k2 ) / ( 2*k2 );
 		int U3 = int ( floor ( C3 ) );
 
 		REPORT ( DEBUG, "Max addition size for latency 1 is:" << ( U2+2 ) *alpha0 );
@@ -578,17 +578,17 @@ namespace flopoco {
 			cSize[u] = -1;
 
 		int alpha0;
-		double tSelect = target->lutDelay() + target->localWireDelay();
+		double tSelect = getTarget()->lutDelay() + getTarget()->localWireDelay();
 
-		double T0 = ( 1.0 / target->frequency() ) - getMaxInputDelays ( inputDelays );
-		//		double Tf = (1.0 / target->frequency());
+		double T0 = ( 1.0 / getTarget()->frequency() ) - getMaxInputDelays ( inputDelays );
+		//		double Tf = (1.0 / getTarget()->frequency());
 
 		double k1,k2;
-		target->getAdderParameters ( k1,k2,wIn ); /* adder delay is modeled as d = k1 + (w-1)k2 */
-		target->suggestSlackSubaddSize ( alpha0, wIn, tSelect + getMaxInputDelays ( inputDelays ) );
+		getTarget()->getAdderParameters ( k1,k2,wIn ); /* adder delay is modeled as d = k1 + (w-1)k2 */
+		getTarget()->suggestSlackSubaddSize ( alpha0, wIn, tSelect + getMaxInputDelays ( inputDelays ) );
 
 		int alpha;
-		target->suggestSubaddSize ( alpha,wIn );
+		getTarget()->suggestSubaddSize ( alpha,wIn );
 
 		double C = ( T0 - tSelect - 2*k1 + 2*k2 ) /k2;
 		int U = int ( floor ( C ) );
@@ -610,10 +610,10 @@ namespace flopoco {
 		REPORT ( DEBUG, "Max addition size for latency 0, two chunk architecture:" << 2*alpha0 );
 		REPORT ( DEBUG, "Max addition size for latency 0 is:" << maxW );
 
-		double C2 = ( ( 1.0 / target->frequency() ) - tSelect - k1 + k2 ) / ( 2*k2 );
+		double C2 = ( ( 1.0 / getTarget()->frequency() ) - tSelect - k1 + k2 ) / ( 2*k2 );
 		int U2 = int ( floor ( C2 ) );
 
-		double C3 = ( ( 1.0 / target->frequency() ) - k1 + k2 ) / ( 2*k2 );
+		double C3 = ( ( 1.0 / getTarget()->frequency() ) - k1 + k2 ) / ( 2*k2 );
 		int U3 = int ( floor ( C3 ) );
 
 		REPORT ( DEBUG, "Max addition size for latency 1 is:" << ( U2+2 ) *alpha0 );

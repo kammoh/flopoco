@@ -35,7 +35,7 @@ namespace flopoco {
 		ostringstream name;
 
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
-		name << "IntAdderAlternative_" << wIn_<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
+		name << "IntAdderAlternative_" << wIn_<<"_f"<<getTarget()->frequencyMHz()<<"_uid"<<getNewUId();
 		setName ( name.str() );
 
 		//set up the IO signals
@@ -45,17 +45,17 @@ namespace flopoco {
 		addOutput( "R"  , wIn_, 1 , true);
 
 		inputsGotRegistered = false;
-		objectivePeriod	    = 1 / target->frequency();
+		objectivePeriod	    = 1 / getTarget()->frequency();
 		maxInputDelay       = getMaxInputDelays ( inputDelays );
 
-		if (maxInputDelay < target->ffDelay() + target->localWireDelay()){
-			inputDelays["X"] = target->ffDelay() + target->localWireDelay();
+		if (maxInputDelay < getTarget()->ffDelay() + getTarget()->localWireDelay()){
+			inputDelays["X"] = getTarget()->ffDelay() + getTarget()->localWireDelay();
 		}
 
 		if(maxInputDelay > objectivePeriod){
 			//this component should register its inputs
 			nextCycle();
-			maxInputDelay = target->ffDelay() + target->localWireDelay();
+			maxInputDelay = getTarget()->ffDelay() + getTarget()->localWireDelay();
 			inputDelays.clear();
 			inputsGotRegistered = true;
 		}
@@ -73,7 +73,7 @@ namespace flopoco {
 
 		if(isSequential())
 		{
-			objectivePeriod	 = 1 / target->frequency();
+			objectivePeriod	 = 1 / getTarget()->frequency();
 			maxInputDelay = min(getMaxInputDelays(inputDelays), objectivePeriod);
 
 			if(alternativeSlackVersion == -1)
@@ -153,7 +153,7 @@ namespace flopoco {
 
 				getSignalByName("R")->setCriticalPathContribution(getTarget()->localWireDelay());
 
-				getOutDelayMap()["R"] = target->adderDelay(cSize[k-1]);
+				getOutDelayMap()["R"] = getTarget()->adderDelay(cSize[k-1]);
 			} else {
 				vhdl << tab << " R <= X + Y + Cin;" << endl;
 
@@ -161,9 +161,9 @@ namespace flopoco {
 
 				if(alternativeSlackVersion == 1)
 				{
-					getOutDelayMap()["R"] = target->adderDelay ( wIn );
+					getOutDelayMap()["R"] = getTarget()->adderDelay ( wIn );
 				}else{
-					getOutDelayMap()["R"] = getMaxInputDelays ( inputDelays ) + target->adderDelay ( wIn );
+					getOutDelayMap()["R"] = getMaxInputDelays ( inputDelays ) + getTarget()->adderDelay ( wIn );
 				}
 			}
 		} else {
@@ -171,7 +171,7 @@ namespace flopoco {
 
 			getSignalByName("R")->setCriticalPathContribution(getTarget()->adderDelay(wIn));
 
-			getOutDelayMap()["R"] = target->adderDelay ( wIn_ ) + getMaxInputDelays ( inputDelays );
+			getOutDelayMap()["R"] = getTarget()->adderDelay ( wIn_ ) + getMaxInputDelays ( inputDelays );
 		}
 	}
 
@@ -182,13 +182,13 @@ namespace flopoco {
 	/**************************************************************************/
 	int IntAdderAlternative::getLutCostAlternative ( Target* target, int wIn, map<string, double> inputDelays, bool srl ) {
 		REPORT ( DEBUG, DEBUG_SEPARATOR );
-		if ( getMaxInputDelays(inputDelays) == target->ffDelay() + target->localWireDelay() || getMaxInputDelays(inputDelays) == 0.0 ) {
+		if ( getMaxInputDelays(inputDelays) == getTarget()->ffDelay() + getTarget()->localWireDelay() || getMaxInputDelays(inputDelays) == 0.0 ) {
 			/* no input slack problem */
 			int alpha, beta, k, cost;
 			updateParameters ( target, alpha, beta, k );
 			REPORT ( DEBUG, "LUT, Alternative, NO-SLACK: alpha="<<alpha<<" beta="<<beta<<" k="<<k );
 
-			if (target->getVendor() == "Xilinx" && srl ) {
+			if (getTarget()->getVendor() == "Xilinx" && srl ) {
 				if ( k == 1 ) {
 					cost = wIn;
 				} else if ( k <= 3 ) {
@@ -212,7 +212,7 @@ namespace flopoco {
 			REPORT ( DEBUG, "LUT, Alternative, SLACK, Version 0: alpha="<<alpha<<" beta="<<beta<<" k="<<k );
 
 			if ( k>0 ){
-				if (target->getVendor() == "Xilinx" && srl) {
+				if (getTarget()->getVendor() == "Xilinx" && srl) {
 					if ( k==1 ) {
 						version0 = wIn;
 					} else if ( k <= 3 ) {
@@ -232,7 +232,7 @@ namespace flopoco {
 			kVersion1 = k;
 			REPORT ( DEBUG, "LUT, Alternative, SLACK, Version 1 (buffered inputs): alpha="<<alpha<<" beta="<<beta<<" k="<<k << " p="<<k+1 );
 
-			if (target->getVendor() == "Xilinx" && srl) {
+			if (getTarget()->getVendor() == "Xilinx" && srl) {
 				if ( k==1 ) {
 					version1 = wIn;
 				} else if ( k <= 3 ) {
@@ -278,7 +278,7 @@ namespace flopoco {
 	/**************************************************************************/
 	int IntAdderAlternative::getRegCostAlternative ( Target* target, int wIn, map<string, double> inputDelays, bool srl ) {
 		REPORT ( DEBUG, DEBUG_SEPARATOR );
-		if ( getMaxInputDelays(inputDelays) == target->ffDelay() + target->localWireDelay() || getMaxInputDelays(inputDelays) == 0.0 ) {
+		if ( getMaxInputDelays(inputDelays) == getTarget()->ffDelay() + getTarget()->localWireDelay() || getMaxInputDelays(inputDelays) == 0.0 ) {
 			/* no input slack problem */
 			int alpha, beta, k, cost;
 			updateParameters ( target, alpha, beta, k );
@@ -287,7 +287,7 @@ namespace flopoco {
 			if ( k == 1 ) {
 				cost = 0;
 			} else {
-				if (target->getVendor() == "Xilinx" && srl )
+				if (getTarget()->getVendor() == "Xilinx" && srl )
 					if (k <= 3)
 						cost = (k-1)*wIn + k*(k-1)/2;
 					else
@@ -309,7 +309,7 @@ namespace flopoco {
 				if ( k==1 ) {
 					version0 = 0;
 				} else {
-					if (target->getVendor() == "Xilinx" &&  srl )
+					if (getTarget()->getVendor() == "Xilinx" &&  srl )
 						if (k <= 3)
 							version0 = (k-1)*wIn + k*(k-1)/2;
 						else
@@ -327,7 +327,7 @@ namespace flopoco {
 			if ( k==1 ) {
 				version1 = 0;
 			} else {
-				if (target->getVendor() == "Xilinx" &&  srl )
+				if (getTarget()->getVendor() == "Xilinx" &&  srl )
 					if (k <= 3)
 						version1 = 2*wIn + 1 + (k-1)*wIn + k*(k-1)/2;
 					else
@@ -357,7 +357,7 @@ namespace flopoco {
 	/**************************************************************************/
 	int IntAdderAlternative::getSliceCostAlternative ( Target* target, int wIn, map<string, double> inputDelays, bool srl ) {
 		REPORT ( DEBUG, DEBUG_SEPARATOR );
-		if ( getMaxInputDelays(inputDelays) == target->ffDelay() + target->localWireDelay() || getMaxInputDelays(inputDelays) == 0.0 ) {
+		if ( getMaxInputDelays(inputDelays) == getTarget()->ffDelay() + getTarget()->localWireDelay() || getMaxInputDelays(inputDelays) == 0.0 ) {
 			/* no input slack problem */
 			int alpha, beta, k, cost;
 			updateParameters ( target, alpha, beta, k );
@@ -365,7 +365,7 @@ namespace flopoco {
 
 			if ( k == 1 ){
 				cost = wIn ;
-			} else if (target->getVendor() == "Xilinx" &&  srl ) {
+			} else if (getTarget()->getVendor() == "Xilinx" &&  srl ) {
 				if (k<=3)
 					cost = (k-1)*wIn + beta + (k-1)*k/2;
 				else
@@ -385,7 +385,7 @@ namespace flopoco {
 			if ( k>0 ) {
 				if ( k==1 ) {
 					version0 = wIn;
-				} else if (target->getVendor() == "Xilinx" && srl ) {
+				} else if (getTarget()->getVendor() == "Xilinx" && srl ) {
 					if (k<=3)
 						version0 = (k-1)*wIn + beta + (k-1)*k/2;
 					else
@@ -401,7 +401,7 @@ namespace flopoco {
 
 			if ( k==1 ) {
 				version1 = 2*wIn + 1 + wIn;
-			} else if (target->getVendor() == "Xilinx" &&  srl ) {
+			} else if (getTarget()->getVendor() == "Xilinx" &&  srl ) {
 				if (k<=3){
 					version1 = 2*wIn + 1 + (k-1)*wIn + beta + (k-1)*k/2;
 				} else {

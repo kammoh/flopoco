@@ -166,13 +166,13 @@ namespace flopoco{
 
 		if(alpha==-1){
 			if(architecture==0) {
-				alpha = target->lutInputs()-rSize;
+				alpha = getTarget()->lutInputs()-rSize;
 				if (alpha<1) {
 					alpha=1;
 				}
 			}
 			else {
-				alpha = target->lutInputs();
+				alpha = getTarget()->lutInputs();
 			}
 		}
 
@@ -201,7 +201,7 @@ namespace flopoco{
 			int currentDivProd=1;
 			int overallCostUp=0;
 			for(unsigned int i=0; i<divisors.size(); i++) {
-				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], target->lutInputs());
+				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
 				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " should cost about " << cost << " LUTs");
 				currentDivProd *= divisors[i];
 				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
@@ -213,7 +213,7 @@ namespace flopoco{
 			currentDivProd=1;
 			int overallCostDown=0;
 			for(int i=divisors.size()-1; i>=0; i--) {
-				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], target->lutInputs());
+				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
 				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
 				currentDivProd *= divisors[i];
 				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
@@ -301,7 +301,7 @@ namespace flopoco{
 			
 		if(alpha==-1){
 			if(architecture==0) {
-				alpha = target->lutInputs()-rSize;
+				alpha = getTarget()->lutInputs()-rSize;
 				if (alpha<1) {
 					REPORT(LIST, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha="<<alpha<<").");
 					REPORT(LIST, " Building an architecture nevertheless, but it may be very large and inefficient.");
@@ -312,7 +312,7 @@ namespace flopoco{
 #if 0 // DEBUG IN HEXA
 				alpha=4;
 #else
-				alpha = target->lutInputs();
+				alpha = getTarget()->lutInputs();
 #endif				
 			}
 		}
@@ -340,7 +340,7 @@ namespace flopoco{
 
 
 		// First evaluate the cost of the atomic divider
-		int cost0=evaluateLUTCostOfLinearArch(wIn, d, target->lutInputs());		  
+		int cost0=evaluateLUTCostOfLinearArch(wIn, d, getTarget()->lutInputs());		  
 		REPORT(INFO, "  Estimated cost: " << cost0 );
 		
 		vector<int> divisors;

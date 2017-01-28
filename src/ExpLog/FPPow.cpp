@@ -83,8 +83,8 @@ namespace flopoco{
 		ostringstream o;
 
 		o << (type?"FPPowr_":"FPPow_") << wE << "_" << wF << "_";
-		if(target->isPipelined())
-			o << target->frequencyMHz() ;
+		if(getTarget()->isPipelined())
+			o << getTarget()->frequencyMHz() ;
 		else
 			o << "comb";
 		setName(o.str());
@@ -327,7 +327,7 @@ namespace flopoco{
 		syncCycleFromSignal("P");
 #if 0 // while fine-tuning the pipeline
 		setCriticalPath( mult->getOutputDelay("R") );
-		FPExp* exp = new FPExp(target,  wE,  wF, 0/* means default*/, 0, expG, true, inDelayMap("X", getCriticalPath() + 2*target->localWireDelay()) );
+		FPExp* exp = new FPExp(target,  wE,  wF, 0/* means default*/, 0, expG, true, inDelayMap("X", getCriticalPath() + 2*getTarget()->localWireDelay()) );
 #else
 		nextCycle();
 		FPExp* exp = new FPExp(target,  wE,  wF, 0/* means default*/, 0, expG, true);

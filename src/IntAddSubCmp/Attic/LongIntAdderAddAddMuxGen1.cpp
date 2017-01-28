@@ -64,9 +64,9 @@ namespace flopoco{
 
 					cSize = new int[2000];
 					REPORT(3, "-- The new version: direct mapping without 0/1 padding, IntAdders instantiated");
-					double	objectivePeriod = double(1) / target->frequency();
-					REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<target->frequency());
-					target->suggestSubaddSize(chunkSize_ ,wIn_);
+					double	objectivePeriod = double(1) / getTarget()->frequency();
+					REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<getTarget()->frequency());
+					getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 					REPORT(2, "The chunkSize for first two chunks is: " << chunkSize_ );
 
 					if (2*chunkSize_ >= wIn_){
@@ -90,7 +90,7 @@ namespace flopoco{
 					while (not (finished))	 {
 						REPORT(2, "The width is " << width);
 						propagationSize+=2;
-						double delay = objectivePeriod - target->adderDelay(width)- target->adderDelay(propagationSize); //2*target->localWireDelay()  -
+						double delay = objectivePeriod - getTarget()->adderDelay(width)- getTarget()->adderDelay(propagationSize); //2*getTarget()->localWireDelay()  -
 						REPORT(2, "The value of the delay at step " << chunkIndex << " is " << delay);
 						if ((delay > 0) || (width < 4)) {
 							REPORT(2, "finished -> found last chunk of size: " << width);
@@ -99,10 +99,10 @@ namespace flopoco{
 						}else{
 							REPORT(2, "Found regular chunk ");
 							int cs;
-							double slack =  target->adderDelay(propagationSize) ; //+ 2*target->localWireDelay()
+							double slack =  getTarget()->adderDelay(propagationSize) ; //+ 2*getTarget()->localWireDelay()
 							REPORT(2, "slack is: " << slack);
-							REPORT(2, "adderDelay of " << propagationSize << " is " << target->adderDelay(propagationSize) );
-							target->suggestSlackSubaddSize( cs, width, slack);
+							REPORT(2, "adderDelay of " << propagationSize << " is " << getTarget()->adderDelay(propagationSize) );
+							getTarget()->suggestSlackSubaddSize( cs, width, slack);
 							REPORT(2, "size of the regular chunk is : " << cs);
 							width = width - cs;
 							cSize[chunkIndex] = cs;
@@ -122,7 +122,7 @@ namespace flopoco{
 					decomposition */
 					if (invalid){
 						REPORT(2,"SECOND PHASE chunk splitting ...");
-						target->suggestSubaddSize(chunkSize_ ,wIn_);
+						getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 						lastChunkSize_ = (wIn_% chunkSize_ ==0 ? chunkSize_ :wIn_% chunkSize_);
 
 						/* the index of the last chunk pair */
@@ -155,18 +155,18 @@ namespace flopoco{
 				int ll,l0;
 				double xordelay;
 				// double dcarry, muxcystoo;
-				if (target->getID()=="Virtex5"){
+				if (getTarget()->getID()=="Virtex5"){
 					xordelay = 0.300e-9;
 					// dcarry = 0.023e-9;
 					// muxcystoo = 0.305e-9;
 
 				}else{
-					if (target->getID()=="Virtex6"){
+					if (getTarget()->getID()=="Virtex6"){
 						xordelay = 0.180e-9;
 						// dcarry = 0.015e-9;
 						// muxcystoo =	0.219e-9;
 					}else{
-						if (target->getID()=="Virtex4"){
+						if (getTarget()->getID()=="Virtex4"){
 							xordelay = 0.273e-9;
 							// dcarry = 0.034e-9;
 							// muxcystoo = 0.278e-9;
@@ -177,18 +177,18 @@ namespace flopoco{
 
 #ifdef MAXSIZE
 for (int aa=25; aa<=400; aa+=25){
-	target->setFrequency(double(aa)*1000000.0);
+	getTarget()->setFrequency(double(aa)*1000000.0);
 
 #endif
 
-double t = 1.0 / target->frequency();
+double t = 1.0 / getTarget()->frequency();
 
-				if (!target->suggestSlackSubaddSize(lkm1, wIn, target->localWireDelay() + target->lutDelay()))
+				if (!getTarget()->suggestSlackSubaddSize(lkm1, wIn, getTarget()->localWireDelay() + getTarget()->lutDelay()))
 					REPORT(INFO, "Impossible 1");
 
-				target->suggestSlackSubaddSize(ll, wIn, (2*target->localWireDelay() + target->lutDelay() + xordelay + target->lutDelay()) );
+				getTarget()->suggestSlackSubaddSize(ll, wIn, (2*getTarget()->localWireDelay() + getTarget()->lutDelay() + xordelay + getTarget()->lutDelay()) );
 
-				target->suggestSlackSubaddSize(l0, wIn, t - (2*target->lutDelay()+ xordelay) );
+				getTarget()->suggestSlackSubaddSize(l0, wIn, t - (2*getTarget()->lutDelay()+ xordelay) );
 
 				REPORT(INFO, "l0="<<l0);
 
@@ -268,10 +268,10 @@ exit(1);
 
 #ifdef XILINX_OPTIMIZATION
 					{ //code for adder instantiation to stop ise from "optimizing"
-					int tp = target->isPipelined();
-					target->setPipelined(false);
+					int tp = getTarget()->isPipelined();
+					getTarget()->setPipelined(false);
 					IntAdder *adder = new IntAdder(target, cSize[j]+1);
-					if (tp) target->setPipelined();
+					if (tp) getTarget()->setPipelined();
 
 					if (j>0){ //for all chunks greater than zero we perform this additions
 						inPortMap(adder, "X", join("sX",j,"_0_l",l-1) );
@@ -359,9 +359,9 @@ exit(1);
 				//THE new version that works well with VHDL (well, not that well finally )
 				cSize = new int[2000];
 				REPORT(3, "-- The new version: direct mapping without 0/1 padding, IntAdders instantiated");
-				double	objectivePeriod = double(1) / target->frequency();
-				REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<target->frequency());
-				target->suggestSubaddSize(chunkSize_ ,wIn_);
+				double	objectivePeriod = double(1) / getTarget()->frequency();
+				REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<getTarget()->frequency());
+				getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 				REPORT(2, "The chunkSize for first two chunks is: " << chunkSize_ );
 
 				if (2*chunkSize_ >= wIn_){
@@ -385,7 +385,7 @@ exit(1);
 				while (not (finished))	 {
 					REPORT(2, "The width is " << width);
 					propagationSize+=1;
-					double delay = objectivePeriod - target->adderDelay(width)- 2*target->localWireDelay()  - target->adderDelay(propagationSize);
+					double delay = objectivePeriod - getTarget()->adderDelay(width)- 2*getTarget()->localWireDelay()  - getTarget()->adderDelay(propagationSize);
 					REPORT(2, "The value of the delay at step " << chunkIndex << " is " << delay);
 					if ((delay > 0) || (width < 4)) {
 						REPORT(2, "finished -> found last chunk of size: " << width);
@@ -394,10 +394,10 @@ exit(1);
 					}else{
 						REPORT(2, "Found regular chunk ");
 						int cs;
-						double slack =  target->adderDelay(propagationSize);
+						double slack =  getTarget()->adderDelay(propagationSize);
 						REPORT(2, "slack is: " << slack);
-						REPORT(2, "adderDelay of " << propagationSize << " is " << target->adderDelay(propagationSize) );
-						target->suggestSlackSubaddSize( cs, width, slack);
+						REPORT(2, "adderDelay of " << propagationSize << " is " << getTarget()->adderDelay(propagationSize) );
+						getTarget()->suggestSlackSubaddSize( cs, width, slack);
 						REPORT(2, "size of the regular chunk is : " << cs);
 						width = width - cs;
 						cSize[chunkIndex] = cs;
@@ -417,7 +417,7 @@ exit(1);
 				decomposition */
 				if (invalid){
 					REPORT(2,"SECOND PHASE chunk splitting ...");
-					target->suggestSubaddSize(chunkSize_ ,wIn_);
+					getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 					lastChunkSize_ = (wIn_% chunkSize_ ==0 ? chunkSize_ :wIn_% chunkSize_);
 
 					/* the index of the last chunk pair */
@@ -471,8 +471,8 @@ exit(1);
 
 #ifdef XILINX_OPTIMIZATION
 	// the xst synthetsies x+y and x+y+1 slower if this optimization is not used
-					bool pipe = target->isPipelined();
-					target->setPipelined(false);
+					bool pipe = getTarget()->isPipelined();
+					getTarget()->setPipelined(false);
 
 					IntAdder *adder = new IntAdder(target, cSize[j]+1);
 					ostringstream a;
@@ -501,9 +501,9 @@ exit(1);
 							vhdl << instance( adder, a.str() );
 						}
 					if (pipe)
-						target->setPipelined();
+						getTarget()->setPipelined();
 					else
-						target->setPipelined(false);
+						getTarget()->setPipelined(false);
 					}else{
 						vhdl << tab << "-- the carry resulting from the addition of the chunk + Cin is obtained directly" << endl;
 						vhdl << tab << declare(dnameCin.str(),cSize[j]+1) << "  <= (\"0\" & "<< use(uname1.str())<<range(cSize[j]-1,0) <<") +  (\"0\" & "<< use(uname2.str())<<range(cSize[j]-1,0)<<") + scIn;"<<endl;

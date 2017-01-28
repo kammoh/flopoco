@@ -50,17 +50,17 @@ namespace flopoco{
 		double dcarry;
 		double muxcystoo;
 		double muxcytolacal;
-		if (target->getID()=="Virtex5"){
+		if (getTarget()->getID()=="Virtex5"){
 			xordelay = 0.300e-9;
 			dcarry = 0.023e-9;
 			muxcystoo = 0.305e-9;
 			muxcytolacal = 0.222e-9;
-		}else if (target->getID()=="Virtex6"){
+		}else if (getTarget()->getID()=="Virtex6"){
 			xordelay = 0.180e-9;
 			dcarry = 0.015e-9;
 			muxcystoo =	0.219e-9;
 			muxcytolacal = 0.169e-9;
-		}else if (target->getID()=="Virtex4"){
+		}else if (getTarget()->getID()=="Virtex4"){
 			xordelay = 0.273e-9;
 			dcarry = 0.034e-9;
 			muxcystoo = 0.278e-9;
@@ -75,26 +75,26 @@ namespace flopoco{
 
 #ifdef MAXSIZE
 for (int aa=25; aa<=400; aa+=25){
-	target->setFrequency(double(aa)*1000000.0);
+	getTarget()->setFrequency(double(aa)*1000000.0);
 
 #endif
-		double t = 1.0 / target->frequency();
+		double t = 1.0 / getTarget()->frequency();
 
-		if (target->getVendor()=="Xilinx"){
+		if (getTarget()->getVendor()=="Xilinx"){
 			ll = (1.0/2.0)* ((t -
 							  z - //the register c->q delay + net delay from register
-							  2*(target->lutDelay() + muxcystoo + muxcytolacal) -
-							  (target->lutDelay() + muxcystoo + xordelay) -
-							  2*target->localWireDelay())/dcarry + 2);
+							  2*(getTarget()->lutDelay() + muxcystoo + muxcytolacal) -
+							  (getTarget()->lutDelay() + muxcystoo + xordelay) -
+							  2*getTarget()->localWireDelay())/dcarry + 2);
 			if (ll<=1){
 				cerr << "WARNING: The adder does not seem to meet the required frequency constraints"<<endl;
 				ll = 2;
 			}
-		}else if (target->getVendor()=="Altera"){
+		}else if (getTarget()->getVendor()=="Altera"){
 			ll = 1;
 			bool sol1 = false, sol2 = false;
 			while (!sol1 || !sol2){
-				double ed = target->localWireDelay() + target->adderDelay(ll) + target->localWireDelay() + target->lutDelay() + target->adderDelay(ll);
+				double ed = getTarget()->localWireDelay() + getTarget()->adderDelay(ll) + getTarget()->localWireDelay() + getTarget()->lutDelay() + getTarget()->adderDelay(ll);
 				if ((ed<t) && (!sol1))
 					sol1 = true;
 				if ((sol1) && (ed>=t))
@@ -106,7 +106,7 @@ for (int aa=25; aa<=400; aa+=25){
 			exit(-1);
 		}
 		l1 = ll-1;
-		target->suggestSlackSubaddSize(l0, wIn, t - (target->lutDelay()+ target->adderDelay(l1)) );
+		getTarget()->suggestSlackSubaddSize(l0, wIn, t - (getTarget()->lutDelay()+ getTarget()->adderDelay(l1)) );
 
 		maxAdderSize = l0+l1+ll*(ll+1)/2;
 		REPORT(INFO, "l0 ="<<l0<<"	l1="<<l1<<"	ll="<<ll);
@@ -141,7 +141,7 @@ exit(-1);
 		}
 
 		if (wIn>maxAdderSize){
-			cerr << "WARNING: the "<<wIn<<"-bit adder is too large for frequency " << target->frequencyMHz() << endl;
+			cerr << "WARNING: the "<<wIn<<"-bit adder is too large for frequency " << getTarget()->frequencyMHz() << endl;
 		}
 
 		if(!solution){ //it did not get split into 3 chunks or one simple addition
@@ -235,14 +235,14 @@ exit(-1);
 
 		//////////////////////////////////////////////////////
 		//perform the additions to recover the sum bits
-		if (target->getVendor()== "Xilinx"){
+		if (getTarget()->getVendor()== "Xilinx"){
 			declare("rawCarrySum2",nbOfChunks-2,true);
 			declare("p",nbOfChunks-2,true);
 			declare("g",nbOfChunks-2,true);
 		}
 		for (int j=1;j<nbOfChunks;j++){
 
-			if (target->getVendor()== "Xilinx"){
+			if (getTarget()->getVendor()== "Xilinx"){
 				if (j>1){
 					vhdl << tab << "l"<<getNewUId()<<": LUT6_2 generic map ( INIT => X\"0000000000000002\")"<<endl;
 					vhdl << tab << "port map( O6 => p("<<j-2<<"),"<<endl;
@@ -269,9 +269,9 @@ exit(-1);
 			if (j==1)
 				inPortMapCst(adder, "Cin", join("coutX",0,"_0_l",1,"_Cin"));
 			else
-				if (target->getVendor()== "Xilinx")
+				if (getTarget()->getVendor()== "Xilinx")
 					inPortMapCst(adder, "Cin", "rawCarrySum2"+of(j-2));
-				else if (target->getVendor()== "Altera")
+				else if (getTarget()->getVendor()== "Altera")
 					inPortMapCst(adder, "Cin", "rawCarrySum"+of(j-2));
 
 			outPortMap(adder, "R",    join("sX",j,"_0_l",l+1));

@@ -82,7 +82,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 
 		setCriticalPath( getMaxInputDelays(inputDelays));
 		double cpinput = getCriticalPath();
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		vhdl << tab << declare("expRes1") << " <= '1' when (excX(1)='1' or excY(1)='1' or excZ(1)='1') else '0';"<<endl;
 		vhdl << tab << declare("expRes0") << " <= '1' when (((excX(1)='0' and excY(1)='0' and excZ(1)='0') and (excX(0)='1' or excY(0)='1' or excZ(0)='1') ) or " << endl;
@@ -99,7 +99,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		//det max exponent difference:
 		setCycleFromSignal("eX");
 		setCriticalPath(cpinput);
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));
 		vhdl << tab << declare("dexy",wE+1) << " <= (\"0\" & eX) - (\"0\" & eY);"<<endl;
 		vhdl << tab << declare("deyz",wE+1) << " <= (\"0\" & eY) - (\"0\" & eZ);"<<endl;
 		vhdl << tab << declare("dezx",wE+1) << " <= (\"0\" & eZ) - (\"0\" & eX);"<<endl;
@@ -108,7 +108,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << declare("cdeyz") << " <= deyz"<<of(wE)<<";"<<endl;
 		vhdl << tab << declare("cdezx") << " <= dezx"<<of(wE)<<";"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("eMaxSel",3) << " <= cdexy & cdeyz & cdezx;"<<endl;
 		vhdl << tab << "with (eMaxSel) select " <<endl;
 		vhdl << tab << declare("eMax",wE) << " <= eX when \"001\"|\"011\","<<endl;
@@ -141,19 +141,19 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << tab << " \"10\" when \"010\"|\"110\","<<endl;
 		vhdl << tab << tab << " \"11\" when others;"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("mux1out",wE+1) << " <= dexy when m1='0' else dezx;"<<endl;
 		vhdl << tab << declare("mux2out",wE+1) << " <= deyz when m2='0' else dexy;"<<endl;
 		vhdl << tab << declare("mux3out",wE+1) << " <= dezx when m3='0' else deyz;"<<endl;
 
 		//possible negative fix
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));
 		vhdl << tab << declare("nmux1out", wE+1) << " <=  not(mux1out) + '1';" <<endl;
 		vhdl << tab << declare("nmux2out", wE+1) << " <=  not(mux2out) + '1';" <<endl;
 		vhdl << tab << declare("nmux3out", wE+1) << " <=  not(mux3out) + '1';" <<endl;
 
 		//alignment of mantissas
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << "with (alpha) select " <<endl;
 		vhdl << tab << declare("amx",wE+1) << " <= mux1out when \"00\","<<endl;
 		vhdl << tab << tab << "nmux1out when \"01\", "<<endl;
@@ -180,7 +180,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 
 		double shifterSignals = getCriticalPath();
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("sout0") << " <=  '1' when amx"<<range(wE, sizeRightShift)<<">0 else '0';"<<endl;
 		vhdl << tab << declare("sout1") << " <=  '1' when bmx"<<range(wE, sizeRightShift)<<">0 else '0';"<<endl;
 		vhdl << tab << declare("sout2") << " <=  '1' when gmx"<<range(wE, sizeRightShift)<<">0 else '0';"<<endl;
@@ -194,7 +194,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << declare("nfY",wF+1) << " <=  \"1\" & mY;"<<endl;
 		vhdl << tab << declare("nfZ",wF+1) << " <=  \"1\" & mZ;"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("fX",wF+1) << " <= "<<zg(wF+1,0)<< " when excX=\"00\" else nfX;"<<endl;
 		vhdl << tab << declare("fY",wF+1) << " <= "<<zg(wF+1,0)<< " when excY=\"00\" else nfY;"<<endl;
 		vhdl << tab << declare("fZ",wF+1) << " <= "<<zg(wF+1,0)<< " when excZ=\"00\" else nfZ;"<<endl;
@@ -230,12 +230,12 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		syncCycleFromSignal("sout0");
 
 		//check if these two were not shifted out
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("efX", 3 + 3*wF+1) << " <= (\"000\" & sfX) when sout0='0' else "<<zg(3 + 3*wF+1,0)<<";"<<endl;
 		vhdl << tab << declare("efY", 3 + 3*wF+1) << " <= (\"000\" & sfY) when sout1='0' else "<<zg(3 + 3*wF+1,0)<<";"<<endl;
 		vhdl << tab << declare("efZ", 3 + 3*wF+1) << " <= (\"000\" & sfZ) when sout2='0' else "<<zg(3 + 3*wF+1,0)<<";"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("xsefX",3 + 3*wF+1) << " <= (efX xor "<<rangeAssign( 3 + 3*wF,0,"sX") << ");"<<endl;
 		vhdl << tab << declare("xsefY",3 + 3*wF+1) << " <= (efY xor "<<rangeAssign( 3 + 3*wF,0,"sY") << ");"<<endl;
 		vhdl << tab << declare("xsefZ",3 + 3*wF+1) << " <= (efZ xor "<<rangeAssign( 3 + 3*wF,0,"sZ") << ");"<<endl;
@@ -266,7 +266,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		setCriticalPath( ia2->getOutputDelay("R"));
 
 #if 0
-		IntMultiAdder *ct = new IntMultiAdder(target, 3 + 3*wF+1, 3, inDelayMap("X0", target->localWireDelay() + getCriticalPath()));
+		IntMultiAdder *ct = new IntMultiAdder(target, 3 + 3*wF+1, 3, inDelayMap("X0", getTarget()->localWireDelay() + getCriticalPath()));
 
 		inPortMap( ct, "X0", "sefX");
 		inPortMap( ct, "X1", "sefY");
@@ -287,7 +287,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 
 		vhdl << tab << declare("trSign") << " <= addRes"<<of(3 + 3*wF)<< ";"<< endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << declare("xposExtF",3 + 3*wF) << " <= (addRes"<<range(3 + 3*wF-1, 0) << " xor "<<rangeAssign(3 + 3*wF-1, 0, "trSign")<<");"<<endl;
 
 		// get the result back to positive and remove the signals
@@ -304,7 +304,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 // 		vhdl << tab << declare("posExtF",3 + 3*wF) << " <= (addRes"<<range(3 + 3*wF-1, 0) << " xor "<<rangeAssign(3 + 3*wF-1, 0, "trSign")<<") + trSign;"<<endl;
 
 		//sticky
-		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wF-1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(wF-1));
  		vhdl << tab << declare("sticky") << " <=  '1' when posExtF"<<range(wF-2,0)<<">"<<zg(wF-1,0)<<" else '0';"<<endl;
 //		vhdl << tab << declare("sticky") << " <=  trSign when xposExtF"<<range(wF-1,0)<<"="<<rangeAssign(wF,0,"trSign")<<" else not(trSign);"<<endl;
 		vhdl << tab << declare("posExtFsticky", 2*wF + 4) << " <= posExtF"<<range(3 + 3*wF-1, wF) << " & sticky;" << endl;
@@ -318,7 +318,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		syncCycleFromSignal("shiftedFrac");
 		setCriticalPath(getOutputDelay("O"));
 
-		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wF+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(wF+1));
 		vhdl<<tab<<declare("stk")<<"<= '1' when shiftedFrac"<<range(wF,0)<<">"<<zg(wF+1,0)<<"else '0';"<<endl;
 		vhdl<<tab<<declare("rnd")<<"<= shiftedFrac"<<of(wF+1)<<";"<<endl;
 		vhdl<<tab<<declare("grd")<<"<= shiftedFrac"<<of(wF+2)<<";"<<endl;
@@ -327,7 +327,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 
 		vhdl << tab << declare("biasedZeros",wE+1) << " <= CONV_STD_LOGIC_VECTOR(2,"<<wE+1<<") - ("<<zg( wE+1 - intlog2(2*wF+4), 0) << " & nZerosNew);"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl<<tab<<declare("addToRoundBit")<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
 
 		IntAdder *ia4 = new IntAdder( target, 1 + wE + wF+1);
@@ -348,7 +348,7 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		vhdl << tab << declare("tnexp", wE + 1) << "<= roundedExpFrac" << range(wE+wF+1, wF+1)<<";"<<endl;
 		//update exponent
 
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));
 		vhdl << tab << declare("upexp",wE+1) << "  <=  tnexp + biasedZeros;"<<endl;
 
 		//compose result

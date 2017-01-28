@@ -83,10 +83,10 @@ namespace flopoco{
 		vhdl<<tab<<declare("signedExponentX",wE+1) << " <= \"0\" & inX("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
 		vhdl<<tab<<declare("signedExponentY",wE+1) << " <= \"0\" & inY("<<wE+wF-1<<" downto "<<wF<<");"<<endl;
 		vhdl<<tab<<declare("exponentDifferenceXY",wE+1) << " <= signedExponentX - signedExponentY ;"<<endl;
-		vhdl<<tab<<declare(target->adderDelay(wE+1), "exponentDifferenceYX",wE) << " <= signedExponentY("<<wE-1<<" downto 0) - signedExponentX("<<wE-1<<" downto 0);"<<endl;
+		vhdl<<tab<<declare(getTarget()->adderDelay(wE+1), "exponentDifferenceYX",wE) << " <= signedExponentY("<<wE-1<<" downto 0) - signedExponentX("<<wE-1<<" downto 0);"<<endl;
 
 		// SWAP when: [excX=excY and expY>expX] or [excY>excX]
-		vhdl<<tab<<declare(target->logicDelay(), "swap") << " <= (exceptionXEqualY and exponentDifferenceXY("<<wE<<")) or (not(exceptionXSuperiorY));"<<endl;
+		vhdl<<tab<<declare(getTarget()->logicDelay(), "swap") << " <= (exceptionXEqualY and exponentDifferenceXY("<<wE<<")) or (not(exceptionXSuperiorY));"<<endl;
 
 
 		string pmY="inY";
@@ -104,7 +104,7 @@ namespace flopoco{
 
 		// determine if the fractional part of Y was shifted out of the operation //
 		if (wE>sizeRightShift){
-			vhdl<<tab<<declare(target->adderDelay(wE-sizeRightShift),  "shiftedOut") << " <= ";
+			vhdl<<tab<<declare(getTarget()->adderDelay(wE-sizeRightShift),  "shiftedOut") << " <= ";
 			for (int i=wE-1;i>=sizeRightShift;i--)
 				if (i==sizeRightShift)
 					vhdl<< "exponentDifference("<<i<<")";
@@ -130,7 +130,7 @@ namespace flopoco{
 		}
 
 		// compute EffSub as (signA xor signB) at cycle 1
-		vhdl<<tab<<declare(target->lutDelay() + target-> localWireDelay(),
+		vhdl<<tab<<declare(getTarget()->lutDelay() + getTarget()-> localWireDelay(),
 											 "EffSub")
 				<< " <= newX("<<wE+wF<<") xor newY("<<wE+wF<<");"<<endl;
 
@@ -321,7 +321,7 @@ namespace flopoco{
 		//=========================================================================|
 		vhdl<<endl<<"-- Synchronization of both paths --"<<endl;
 
-		double muxDelay= target->lutDelay() + target->localWireDelay(); // estimated delay so far (one mux)
+		double muxDelay= getTarget()->lutDelay() + getTarget()->localWireDelay(); // estimated delay so far (one mux)
 		// select between the results of the close or far path as the result of the operation
 		vhdl<<tab<< "with selectClosePath select"<<endl;
 		vhdl<<tab<< declare(muxDelay, "resultBeforeRound", wE+1 + wF+1)
@@ -365,7 +365,7 @@ namespace flopoco{
 		vhdl<<tab<< declare("UnderflowOverflow",2) << " <= resultRounded"<<range( wE+1+wF, wE+wF)<<";"<<endl;
 
 		vhdl<<tab<< "with UnderflowOverflow select"<<endl;
-		vhdl<<tab<< declare(target->lutDelay() + target->localWireDelay(), "resultNoExn",wE+wF+3)
+		vhdl<<tab<< declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "resultNoExn",wE+wF+3)
 				<< "("<<wE+wF+2<<" downto "<<wE+wF+1<<") <=   (not zeroFromClose) & \"0\" when \"01\", -- overflow"<<endl;
 		vhdl<<tab<< "                              \"00\" when \"10\" | \"11\",  -- underflow"<<endl;
 		vhdl<<tab<< "                              \"0\" &  not zeroFromClose  when others; -- normal "<<endl;
@@ -375,21 +375,21 @@ namespace flopoco{
 		vhdl<<tab<< declare("syncExnXY", 4) << " <= sdExnXY;"<<endl;
 		vhdl<<tab<< "-- Exception bits of the result" << endl;
 		vhdl<<tab<< "with syncExnXY select -- remember that ExnX > ExnY "<<endl;
-		vhdl<<tab<<tab<< declare(target->lutDelay() + target->localWireDelay(), "exnR",2)
+		vhdl<<tab<<tab<< declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "exnR",2)
 				<<" <= resultNoExn("<<wE+wF+2<<" downto "<<wE+wF+1<<") when \"0101\","<<endl;
 		vhdl<<tab<<tab<< "        \"1\" & syncEffSub          when \"1010\","<<endl;
 		vhdl<<tab<<tab<< "        \"11\"                      when \"1110\","<<endl;
 		vhdl<<tab<<tab<< "        syncExnXY(3 downto 2)     when others;"<<endl;
 		vhdl<<tab<< "-- Sign bit of the result" << endl;
 		vhdl<<tab<< "with syncExnXY select"<<endl;
-		vhdl<<tab<<tab<<declare(target->lutDelay() + target->localWireDelay(), "sgnR")
+		vhdl<<tab<<tab<<declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "sgnR")
 				<< " <= resultNoExn("<<wE+wF<<")         when \"0101\","<<endl;
 		vhdl<<tab<< "           syncX("<<wE+wF<<") and syncSignY when \"0000\","<<endl;
 		vhdl<<tab<< "           syncX("<<wE+wF<<")               when others;"<<endl;
 
 		vhdl<<tab<< "-- Exponent and significand of the result" << endl;
 		vhdl<<tab<< "with syncExnXY select  "<<endl;
-		vhdl<<tab<<tab<< declare(target->lutDelay() + target->localWireDelay(), "expsigR", wE+wF)
+		vhdl<<tab<<tab<< declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "expsigR", wE+wF)
 				<< " <= resultNoExn("<<wE+wF-1<<" downto 0)   when \"0101\" ,"<<endl;
 		vhdl<<tab<<tab<< "           syncX("<<wE+wF-1<<" downto  0)        when others; -- 0100, or at least one NaN or one infty "<<endl;
 

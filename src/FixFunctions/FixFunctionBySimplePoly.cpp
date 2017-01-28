@@ -56,7 +56,7 @@ namespace flopoco{
 		int outputSize = msbOut-lsbOut+1;
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
-		setCriticalPath( getMaxInputDelays(inputDelays) + target->localWireDelay() );
+		setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay() );
 
 		if(f->signedIn)
 			vhdl << tab << declareFixPoint("Xs", true, 0, lsbIn) << " <= signed(X);" << endl;
@@ -115,7 +115,7 @@ namespace flopoco{
 
 			resizeFixPoint(join("XsTrunc", i), "Xs", 0, xTruncLSB);
 
-			if(target->plainVHDL()) {				// No pipelining here
+			if(getTarget()->plainVHDL()) {				// No pipelining here
 				vhdl << tab << declareFixPoint(join("P", i), true, pMSB,  sigmaLSB  + xTruncLSB /*LSB*/)
 						 <<  " <= "<< join("XsTrunc", i) <<" * Sigma" << i+1 << ";" << endl;
 				// However the bit of weight pMSB is a 0. We want to keep the bits from  pMSB-1

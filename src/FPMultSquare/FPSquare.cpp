@@ -99,7 +99,7 @@ namespace flopoco{
 		}else{
 			//rounding will be needed
 			setCriticalPath(0.0);
-			manageCriticalPath( target->localWireDelay() + target->eqConstComparatorDelay(2*(wFX+1)-(wFR+3)));
+			manageCriticalPath( getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(2*(wFX+1)-(wFR+3)));
 			vhdl << tab << declare("sticky") << "<='0' when sqrFrac" << range( 2*(wFX+1)-(wFR+3)-1,0)<<"="<<zg(2*(wFX+1)-(wFR+3),0) << "else '1';"<<endl;
 			vhdl << tab << declare("guard") << " <= sqrFrac" << of(2*(wFX+1)-(wFR+3))<<" when sqrFrac" << of(2*(wFX+1)-1)<<"='0' else "
 				 << "sqrFrac" << of(2*(wFX+1)-(wFR+3)+1) << ";"<< endl;
@@ -130,7 +130,7 @@ namespace flopoco{
 
 			vhdl << tab << declare ("excConcat",4) << " <= exc & postRound" << range(wE+2 + wFR-1,wE+2 + wFR-2) << ";" <<endl;
 
-			manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 			//exception bits
 			vhdl << tab << "with excConcat select " << endl;
 			vhdl << tab << declare("excR",2) << "<=""\"00\" when \"0000\"," << endl;

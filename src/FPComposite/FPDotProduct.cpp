@@ -47,8 +47,8 @@ namespace flopoco{
 			  <<(LSBA>=0?"":"M")<<abs(LSBA)<<"_"
 			  <<(MSBA>=0?"":"M")<<abs(MSBA) ;
 
-		if(target->isPipelined()) 
-			name << target->frequencyMHz() ;
+		if(getTarget()->isPipelined()) 
+			name << getTarget()->frequencyMHz() ;
 		else
 			name << "comb";
 		setName(name.str()); 
@@ -92,7 +92,7 @@ namespace flopoco{
 		IntMultiplier *mMult = new IntMultiplier(target, 1+wFX, 1+wFY, 
 		                                         0 /* untruncated*/,  
 		                                         false /*unsigned*/,  
-		                                         inDelayMap("X", target->localWireDelay() + getCriticalPath()));
+		                                         inDelayMap("X", getTarget()->localWireDelay() + getCriticalPath()));
 
 		inPortMap ( mMult, "X", "fracX");
 		inPortMap ( mMult, "Y", "fracY");
@@ -102,14 +102,14 @@ namespace flopoco{
 		setSignalDelay("mFrac", mMult->getOutputDelay("R"));
 
 		/*in parallel manage exponents */
-		manageCriticalPath( target->localWireDelay() + target->adderDelay(wE+1));		
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));		
 		vhdl << tab << declare("sumExp",wE+1) << " <= (\"0\" & expX) + (\"0\" & expY);"<<endl;
 		
 		/*check overflow*/
 		vhdl << tab << declare("overflow") << " <= sumExp"<<of(wE)<<";"<<endl;
 		
 		/* subtract bias */
-		manageCriticalPath( target->localWireDelay() + target->adderDelay(wE+1));		
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));		
 		vhdl << tab << declare("sumExpMBias",wE+1) << " <= sumExp - (\"0\" & CONV_STD_LOGIC_VECTOR("<<intpow2(wE-1)-1<<","<<wE<<"));"<<endl;
 		
 		/*check underflow*/
@@ -118,7 +118,7 @@ namespace flopoco{
 		/*set exceptions */
 		vhdl << tab << declare("excConcat",4) << "<= excX & excY;"<<endl;
 		
-		manageCriticalPath( target->localWireDelay() + target->lutDelay());
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << " with excConcat select " << endl;
 		vhdl << tab << declare( "excPhase1",2 ) << " <=  \"00\" when \"0000\","<<endl
 		     << tab << tab << "\"01\" when \"0101\","<<endl
@@ -127,7 +127,7 @@ namespace flopoco{
 
 		vhdl << tab << declare("excConcatOU",4) << " <= excPhase1 & overflow & underflow;"<<endl;
 
-		manageCriticalPath( target->localWireDelay() + target->lutDelay());
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << " with excConcatOU select " << endl;
 		vhdl << tab << declare( "exc",2 ) << " <=  \"00\" when \"0101\","<<endl
 		     << tab << tab << "\"10\" when \"0110\","<<endl
@@ -138,7 +138,7 @@ namespace flopoco{
 		syncCycleFromSignal("mFrac", getSignalDelay("mFrac"));			
 
 		/* now we instantiate the accumulator */
-		FPLargeAcc* la = new FPLargeAcc(target, wE, wFX, MaxMSBX, MSBA, LSBA, inDelayMap("sigX_dprod",target->localWireDelay() + getCriticalPath()),true, wFY);
+		FPLargeAcc* la = new FPLargeAcc(target, wE, wFX, MaxMSBX, MSBA, LSBA, inDelayMap("sigX_dprod",getTarget()->localWireDelay() + getCriticalPath()),true, wFY);
 		
 		inPortMap( la, "sigX_dprod", "signP");
 		inPortMap( la, "excX_dprod", "exc");

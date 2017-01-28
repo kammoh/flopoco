@@ -4,6 +4,8 @@ TODO file for FloPoCo
 ** Target -> OperatorContext
 Here is the work plan:
 1/ sed global replace target-> with getTarget()->
+findReplace("src", "target->", "getTarget()->", "*.cpp")
+findReplace("src", "target ->", "getTarget()->", "*.cpp")
 
   (should be mostly harmless)
 2/ create OperatorContext class including a target, a ParentOp, and a frequency

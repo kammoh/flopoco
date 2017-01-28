@@ -63,8 +63,8 @@ namespace flopoco{
 		// Pipelining
 		// The theory is that the number of shift levels that the tools should be able to pack in a row of LUT-k is ceil((k-1)/2)
 		// Actually there are multiplexers in CLBs etc that can also be used, so let us keep it simple at k/2. It works on Virtex6, TODO test on Stratix.
-		int levelPerLut = (target->lutInputs()-1)/2; // this is a floor so it is the same as the formula above
-		REPORT(DETAILED, "Trying to pack " << levelPerLut << " levels in a row of LUT" << target->lutInputs())
+		int levelPerLut = (getTarget()->lutInputs()-1)/2; // this is a floor so it is the same as the formula above
+		REPORT(DETAILED, "Trying to pack " << levelPerLut << " levels in a row of LUT" << getTarget()->lutInputs())
 		int levelInLut=0;
 		double levelDelay;
 		double totalDelay=0; // for reporting
@@ -72,7 +72,7 @@ namespace flopoco{
 		for(int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
 			levelInLut ++;
 			if (levelInLut >= levelPerLut) {
-				levelDelay=target->logicDelay() + target->fanoutDelay(wIn+intpow2(currentLevel+1)-1);
+				levelDelay=getTarget()->logicDelay() + getTarget()->fanoutDelay(wIn+intpow2(currentLevel+1)-1);
 				totalDelay += levelDelay;
 				REPORT(DETAILED, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
 				levelInLut=0;

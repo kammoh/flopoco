@@ -56,7 +56,7 @@ namespace flopoco {
 		addOutput ("R"  , wIn, 1 , true);
 
 		schedule();
-		double targetPeriod = 1.0/target->frequency() - target->ffDelay();
+		double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
 		// What is the maximum lexicographic time of our inputs?
 		int maxCycle = 0;
 		double maxCP = 0.0;
@@ -68,12 +68,12 @@ namespace flopoco {
 				maxCP = i->getCriticalPath();
 			}
 		}
-		double totalPeriod = maxCP + target->adderDelay(wIn);
+		double totalPeriod = maxCP + getTarget()->adderDelay(wIn);
 
 		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)		{
-			vhdl << tab << declare(target->adderDelay(wIn),"Rtmp", wIn) << " <= X + Y + Cin;" << endl; // just to use declare()
+			vhdl << tab << declare(getTarget()->adderDelay(wIn),"Rtmp", wIn) << " <= X + Y + Cin;" << endl; // just to use declare()
 			vhdl << tab << "R <= Rtmp;" << endl;
 		}
 
@@ -100,7 +100,7 @@ namespace flopoco {
 				// operands
 				vhdl << tab << declare(join("X_", i), subAdderSize+1) << " <= '0' & X"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
 				vhdl << tab << declare(join("Y_", i), subAdderSize+1) << " <= '0' & Y"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
-				vhdl << tab << declare(target->adderDelay(subAdderSize+1), join("S_", i), subAdderSize+1)
+				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1), join("S_", i), subAdderSize+1)
 						 << " <= X_" << i	<<	" + Y_" << i << " + Cin_" << i << ";" << endl;
 				vhdl << tab << declare(join("R_", i), subAdderSize) << " <= S_" << i	<<	range(subAdderSize-1,0) << ";" << endl;
 				// prepare next iteration

@@ -108,7 +108,7 @@ namespace flopoco{
 		addOutput  ( "S"  , wOut, 2 );
 		
 		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath( target->lutDelay());
+		manageCriticalPath( getTarget()->lutDelay());
 		
 		//reduce the argument X to [0, 1/2)
 		vhdl << tab << declare("sgn") << " <= X(" << wIn-1 << ");  -- sign" << endl;
@@ -187,8 +187,8 @@ namespace flopoco{
 			// Critical path delay for one stage:
 			// The data dependency is from one Z to the next 
 			// We may assume that the rotations themselves overlap once the DI are known
-			//manageCriticalPath(target->localWireDelay(w) + target->adderDelay(w) + target->lutDelay()));
- 			manageCriticalPath(target->localWireDelay(sizeZ) + target->adderDelay(sizeZ));
+			//manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w) + getTarget()->lutDelay()));
+ 			manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->adderDelay(sizeZ));
 			
 #if ROUNDED_ROTATION  // rounding of the shifted operand, should save 1 bit in each addition
 			
@@ -246,8 +246,8 @@ namespace flopoco{
 		}
 		
 		// Give the time to finish the last rotation
-		manageCriticalPath( target->localWireDelay(w+1) + target->adderDelay(w+1) // actual CP delay
-		                    - (target->localWireDelay(sizeZ+1) + target->adderDelay(sizeZ+1))); // CP delay that was already added
+		manageCriticalPath( getTarget()->localWireDelay(w+1) + getTarget()->adderDelay(w+1) // actual CP delay
+		                    - (getTarget()->localWireDelay(sizeZ+1) + getTarget()->adderDelay(sizeZ+1))); // CP delay that was already added
 
 			
 		if(reducedIterations == 0){ //regular struture; all that remains is to assign the outputs correctly
@@ -277,7 +277,7 @@ namespace flopoco{
 			syncCycleFromSignal("PiZ");
 			nextCycle();
 
-			manageCriticalPath(target->localWireDelay(sizeZ) + target->DSPMultiplierDelay());
+			manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->DSPMultiplierDelay());
 
 
 
@@ -302,7 +302,7 @@ namespace flopoco{
 			
 			syncCycleFromSignal("CosTimesZ");
 			
-			manageCriticalPath(target->localWireDelay(w) + target->adderDelay(w));
+			manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w));
 			
 			vhdl << tab << declare("CosTimesZTrunc", sizeZ) << "<= CosTimesZ" << range(2*sizeZ-1, sizeZ) << ";" << endl;
 			vhdl << tab << declare("SinTimesZTrunc", sizeZ) << "<= SinTimesZ" << range(2*sizeZ-1, sizeZ) << ";" << endl;
@@ -321,7 +321,7 @@ namespace flopoco{
 		
 
 		// All this should fit in one level of LUTs
-		manageCriticalPath(target->localWireDelay(wOut) + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay(wOut) + getTarget()->lutDelay());
 
 		vhdl << tab << declare("redCosNeg", w+1) << " <= (not redCos); -- negate by NOT, 1 ulp error"<< endl;
 		vhdl << tab << declare("redSinNeg", w+1) << " <= (not redSin); -- negate by NOT, 1 ulp error"<< endl;
@@ -341,7 +341,7 @@ namespace flopoco{
 		vhdl << tab << tab << tab << " redCosNeg when others;" << endl;
 		
 		
-		manageCriticalPath( target->adderDelay(1+wOut+1));
+		manageCriticalPath( getTarget()->adderDelay(1+wOut+1));
 
 		vhdl << tab << declare("roundedCosX", wOut+1) << " <= CosX0" << range(w, w-wOut) << " + " << " (" << zg(wOut) << " & \'1\');" << endl;
 		vhdl << tab << declare("roundedSinX", wOut+1) << " <= SinX0" << range(w, w-wOut) << " + " << " (" << zg(wOut) << " & \'1\');" << endl;
@@ -527,5 +527,5 @@ namespace flopoco{
 			p=p*0.5;
 		}		
 		cout  << "Should be  \t\t\t\t\t\t c=" << cos(pi*z0) << "  \t s=" << sin(pi*z0) << endl;
-		//		manageCriticalPath(target->localWireDelay(wcs + g) + target->lutDelay());
+		//		manageCriticalPath(getTarget()->localWireDelay(wcs + g) + getTarget()->lutDelay());
 #endif		

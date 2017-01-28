@@ -23,8 +23,8 @@ namespace flopoco{
 		ostringstream name;
 
 		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2008-2012)" );
-		if(target->isPipelined())
-			name << "FixSinOrCos_" << w <<"_f"<< target->frequencyMHz() << "_uid" << getNewUId();
+		if(getTarget()->isPipelined())
+			name << "FixSinOrCos_" << w <<"_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "FixSinOrCos_" << w << "_uid" << getNewUId();
 		setName( name.str() );

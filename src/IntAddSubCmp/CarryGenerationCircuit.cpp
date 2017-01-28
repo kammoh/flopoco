@@ -43,8 +43,8 @@ namespace flopoco{
 		addOutput("R"  , wIn_,2,true);
 
 		/*unpipelined IntAdder architecture FPGA specific primitives*/
-		if (target->getVendor() == "Xilinx"){
-			if ((target->getID() == "Virtex4") || (target->getID()=="Spartan3")){
+		if (getTarget()->getVendor() == "Xilinx"){
+			if ((getTarget()->getID() == "Virtex4") || (getTarget()->getID()=="Spartan3")){
 				declare("p",wIn,true);
 				declare("c",wIn-1,true);
 				for (int i=0; i<wIn;i++){
@@ -62,7 +62,7 @@ namespace flopoco{
 					vhdl << tab << "          S  => p("<<i<<")   -- MUX select, tie to '1' or LUT4 out"<<endl;
 					vhdl << tab << ");"<<endl;
 				}
-			}else if ((target->getID() == "Virtex5") || (target->getID()=="Virtex6")){
+			}else if ((getTarget()->getID() == "Virtex5") || (getTarget()->getID()=="Virtex6")){
 				declare("p",wIn,true);
 				declare("c",wIn-1,true);
 				for (int i=0; i<wIn;i++){

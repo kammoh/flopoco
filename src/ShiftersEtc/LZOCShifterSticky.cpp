@@ -75,18 +75,18 @@ namespace flopoco{
 			// As we output the count bits, their computation will not be merged inside the shift
 			REPORT( INFO, "currSize="<<currLevSize);
 
-			double countBitDelay = target->fanoutDelay(currLevSize);
+			double countBitDelay = getTarget()->fanoutDelay(currLevSize);
 			if (countType>=0)
-				countBitDelay += target->eqConstComparatorDelay( intpow2(i) )  ;
+				countBitDelay += getTarget()->eqConstComparatorDelay( intpow2(i) )  ;
 			else
-				countBitDelay += target->eqComparatorDelay( intpow2(i) ) ;
+				countBitDelay += getTarget()->eqComparatorDelay( intpow2(i) ) ;
 			
 			vhdl << tab << declare(countBitDelay, join("count",i))
 					 << "<= '1' when " <<join("level",i+1)<<range(prevLevSize-1,prevLevSize - intpow2(i))<<" = "
 					 <<"("<<prevLevSize-1<<" downto "<<prevLevSize - intpow2(i)<<"=>"<< (countType_==-1? "sozb": countType_==0?"'0'":"'1'")<<") else '0';"<<endl;
 
 			// The shift will take at most one LUT delay per level. We don't take into account that shift level can be merged: TODO ? It seems non-trivial.
-			double shiftDelay = target->logicDelay(3);
+			double shiftDelay = getTarget()->logicDelay(3);
 			vhdl << tab << declare(shiftDelay,join("level",i),currLevSize)
 					 << "<= " << join("level",i+1)<<"("<<prevLevSize-1<<" downto "<< prevLevSize-currLevSize << ")"
 					 << " when " << join("count",i) << "='0' else ";

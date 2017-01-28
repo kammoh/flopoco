@@ -137,15 +137,15 @@ namespace flopoco{
 
 			// The exponent datapath
 
-			// setCriticalPath( getMaxInputDelays(inputDelays) + target->localWireDelay());
+			// setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay());
 
 			setCriticalPath(0);
 
 
 		 
-			manageCriticalPath(  target->adderDelay(wE+1) // subtractions 
-													 + target->localWireDelay(wE) // fanout of XltY etc
-													 + target->lutDelay()         // & and mux
+			manageCriticalPath(  getTarget()->adderDelay(wE+1) // subtractions 
+													 + getTarget()->localWireDelay(wE) // fanout of XltY etc
+													 + getTarget()->lutDelay()         // & and mux
 													 );
 
 			//---------------------------------------------------------------------
@@ -178,7 +178,7 @@ namespace flopoco{
 		
 			//---------------------------------------------------------------------
 			// Now recompute our two shift values -- they were already computed at cycle 0 but it is cheaper this way, otherwise we have to register, negate and mux them.
-			manageCriticalPath(  target->adderDelay(wE-1) );
+			manageCriticalPath(  getTarget()->adderDelay(wE-1) );
 
 			vhdl << tab << declare("fullShiftValB", wE) << " <=  (EA" << range(wE-2,0) << " - EB" << range(wE-2,0) << ") & '0' ; -- positive result, no overflow " << endl;
 			vhdl << tab << declare("fullShiftValC", wE) << " <=  (EA" << range(wE-2,0) << " - EC" << range(wE-2,0) << ") & '0' ; -- positive result, no overflow " << endl;
@@ -188,7 +188,7 @@ namespace flopoco{
 
 			int sizeRightShift = tmprightShifter->getShiftInWidth(); 
 
-			manageCriticalPath( target->localWireDelay() + target->lutDelay() );
+			manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay() );
 			vhdl<<tab<<declare("shiftedOutB") << " <= "; 
 			if (wE>sizeRightShift){
 				for (int i=wE-1;i>=sizeRightShift;i--) {
@@ -214,7 +214,7 @@ namespace flopoco{
 				vhdl<<tab<<"'0';"<<endl; 
 
 				
-			manageCriticalPath( target->localWireDelay() + target->lutDelay());	
+			manageCriticalPath( getTarget()->localWireDelay() + getTarget()->lutDelay());	
 		
 			vhdl<<tab<<declare("shiftValB",sizeRightShift) << " <= " ;
 			if (wE>sizeRightShift) {
@@ -293,7 +293,7 @@ namespace flopoco{
 			// Now we have our three FP squares, we rename them to A,B,C with A>=(B,C) 
 			// only 3 3-muxes
 
-			manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 			vhdl << tab << declare("MA", wF+g+2)  << " <= " << endl
 				  << tab << tab << "Z2t when (XltZ='1') and (YltZ='1')  else " << endl
 				  << tab << tab << "Y2t when (XltY='1') and (YltZ='0')  else " << endl
@@ -312,7 +312,7 @@ namespace flopoco{
 			syncCycleFromSignal("shiftValB", false);
 //			nextCycle();
 		
-			Shifter* rightShifter = new Shifter(target,wF+g+2, wF+g+2, Shifter::Right, inDelayMap("X", target->localWireDelay()+ cpShiftValB) ); 
+			Shifter* rightShifter = new Shifter(target,wF+g+2, wF+g+2, Shifter::Right, inDelayMap("X", getTarget()->localWireDelay()+ cpShiftValB) ); 
 			oplist.push_back(rightShifter);
 
 			inPortMap  (rightShifter, "X", "MB");
@@ -336,7 +336,7 @@ namespace flopoco{
 			vhdl << tab << declare("paddedB", wF+g+4)  << " <= \"00\" & alignedB; " << endl;
 			vhdl << tab << declare("paddedC", wF+g+4)  << " <= \"00\" & alignedC; " << endl;
 		
-			IntAdder* adder = new IntAdder(target,wF+g+4, inDelayMap("X", target->localWireDelay() + getCriticalPath()) );
+			IntAdder* adder = new IntAdder(target,wF+g+4, inDelayMap("X", getTarget()->localWireDelay() + getCriticalPath()) );
 			oplist.push_back(adder);
 
 			// TODO multi-op adder! using two instances of our pipelined adder is inefficient
@@ -359,7 +359,7 @@ namespace flopoco{
 			syncCycleFromSignal("sum", false);
 			setCriticalPath( adder->getOutputDelay("R") );
 		
-			manageCriticalPath( target->localWireDelay(wF+g) + 2*target->lutDelay()); //big mux
+			manageCriticalPath( getTarget()->localWireDelay(wF+g) + 2*getTarget()->lutDelay()); //big mux
 			// Possible 3-bit normalisation, with a truncation
 			vhdl << tab << declare("finalFraction", wF+g)  << " <= " << endl
 				  << tab << tab << "sum" << range(wF+g+2,3) << "   when sum(" << wF+g+3 << ")='1'    else " << endl
@@ -377,7 +377,7 @@ namespace flopoco{
 				  << tab << tab << "CONV_STD_LOGIC_VECTOR(" << bias-1 << ", "<< wE+1 <<")  when (sum" << range(wF+g+3, wF+g+1) << "=\"001\")     else " << endl
 				  << tab << tab << "CONV_STD_LOGIC_VECTOR(" << bias   << ", "<< wE+1 <<")  ; " << endl;
 		
-			manageCriticalPath( target->localWireDelay() + target->adderDelay(wE+1));
+			manageCriticalPath( getTarget()->localWireDelay() + getTarget()->adderDelay(wE+1));
 			vhdl << tab << declare("finalExp", wE+1)  << " <= (EA & '0') - exponentUpdate ; " << endl;
 
 			vhdl << tab << declare("X2PY2PZ2", wE+wF+g)  << " <= finalExp" << range(wE-1,0) << " & finalFraction; " << endl;
@@ -385,7 +385,7 @@ namespace flopoco{
 //			vhdl << tab << declare("diff", wE+wF+g+1) << " <=  ('0'& X2PY2PZ2)  - ('0'& R2pipe & CONV_STD_LOGIC_VECTOR(0, " << g << ") );" << endl;
 //			vhdl << tab <<  "P(0) <= diff(" << wE+wF+g << ");"  << endl ;
 
-			manageCriticalPath( target->localWireDelay() + target->eqComparatorDelay(wE+wF+g));
+			manageCriticalPath( getTarget()->localWireDelay() + getTarget()->eqComparatorDelay(wE+wF+g));
 			vhdl << tab <<  "P(0) <= '1' when (X2PY2PZ2 > (R2pipe & CONV_STD_LOGIC_VECTOR(0, " << g << "))) else '0' ;" << endl; 
 
 		}

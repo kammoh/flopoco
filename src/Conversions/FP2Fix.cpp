@@ -104,7 +104,7 @@ namespace flopoco{
       setCriticalPath(Exponent_difference->getOutputDelay("R"));
 
       
-      manageCriticalPath(target->localWireDelay() + target->lutDelay());
+      manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
       int wShiftIn = intlog2(wFO0+2);
       if(wShiftIn < wEI)
         vhdl << tab << declare("shiftedby", wShiftIn) <<  " <= eA1" << range(wShiftIn-1, 0)                 << " when eA1" << of(wEI-1) << " = '0' else " << rangeAssign(wShiftIn-1,0,"'0'") << ";"<<endl;
@@ -131,7 +131,7 @@ namespace flopoco{
          else
          {
             vhdl << tab << declare("fA2",wFO) <<  "<= fA1" << range(wFO0+wFI+LSB, wFI+1+LSB)<< ";"<<endl;
-            manageCriticalPath(target->localWireDelay() + target->adderDelay(wFO));
+            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wFO));
             vhdl << tab << declare("fA4",wFO) <<  "<= fA2 when I" << of(wEI+wFI) <<" = '0' else -signed(fA2);" <<endl;
          }
       }
@@ -141,13 +141,13 @@ namespace flopoco{
          IntAdder* MantSum;
          if(!Signed)
          {
-            manageCriticalPath(target->localWireDelay() + target->lutDelay());
+            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
             vhdl << tab << declare("notallzero") << " <= '0' when fA1" << range(wFI+LSB-1, 0) << " = " << rangeAssign(wFI+LSB-1, 0,"'0'") << " else '1';"<<endl;
             vhdl << tab << declare("round") << " <= fA1" << of(wFI+LSB) << " and notallzero ;"<<endl;
          }
          else
          {
-            manageCriticalPath(target->localWireDelay() + target->lutDelay());
+            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
             vhdl << tab << declare("notallzero") << " <= '0' when fA1" << range(wFI+LSB-1, 0) << " = " << rangeAssign(wFI+LSB-1, 0,"'0'") << " else '1';"<<endl;
             vhdl << tab << declare("round") << " <= (fA1" << of(wFI+LSB) << " and I" << of(wEI+wFI) << ") or (fA1" << of(wFI+LSB) << " and notallzero and not I" << of(wEI+wFI) << ");"<<endl;
          }   
@@ -167,9 +167,9 @@ namespace flopoco{
          }
          else
          {
-            manageCriticalPath(target->localWireDelay() + target->adderDelay(wFO+1));
+            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wFO+1));
             vhdl << tab << declare("fA3b",wFO+1) <<  "<= -signed(fA3);" <<endl;
-            manageCriticalPath(target->localWireDelay() + target->lutDelay());
+            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
             vhdl << tab << declare("fA4",wFO) <<  "<= fA3" << range(wFO-1, 0) << " when I" << of(wEI+wFI) <<" = '0' else fA3b" << range(wFO-1, 0) << ";" <<endl;
          }
       }
@@ -188,7 +188,7 @@ namespace flopoco{
             vhdl << tab << declare("overFl1") << " <= fA1" << of(wFO0+wFI+1+LSB) << ";"<<endl;
          else
          {
-            manageCriticalPath(target->localWireDelay() + target->lutDelay());
+            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
             vhdl << tab << declare("notZeroTest") << " <= '1' when fA4 /= conv_std_logic_vector(0," << wFO <<")"<< " else '0';"<<endl;
             vhdl << tab << declare("overFl1") << " <= (fA4" << of(wFO-1) << " xor I" << of(wEI+wFI) << ") and notZeroTest;"<<endl;
         }
@@ -198,10 +198,10 @@ namespace flopoco{
          vhdl << tab << declare("overFl1") << " <= fA3" << of(wFO) << ";"<<endl;
       }
 
-      manageCriticalPath(target->localWireDelay() + target->lutDelay());
+      manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
       vhdl << tab << declare("eTest") << " <= (overFl0 or overFl1);" << endl;
 
-      manageCriticalPath(target->localWireDelay() + target->lutDelay());
+      manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
       vhdl << tab << "O <= fA4 when eTest = '0' else" << endl;
       vhdl << tab << tab << "I" << of(wEI+wFI) << " & (" << wFO-2 << " downto 0 => not I" << of(wEI+wFI) << ");"<<endl;
    }

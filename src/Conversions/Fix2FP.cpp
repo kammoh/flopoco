@@ -270,7 +270,7 @@ namespace flopoco{
 	
 			// signals for Muxes
 	
-			if(inputWidth>32&&target->frequencyMHz()>=250)
+			if(inputWidth>32&&getTarget()->frequencyMHz()>=250)
 				nextCycle();
 	
 			//selection of mux 3

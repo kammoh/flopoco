@@ -53,7 +53,7 @@ namespace flopoco{
 			bool tilingIncomplete = true;
 			
 			//get the width and height of a DSP
-			target->getDSPWidths(dspWidth, dspHeight);
+			getTarget()->getDSPWidths(dspWidth, dspHeight);
 			//make sure the tile is placed horizontally; exchange values if necessary
 			if(dspHeight>dspWidth){
 				dspHeight += dspWidth;
@@ -116,7 +116,7 @@ namespace flopoco{
 			bool tilingIncomplete = true;
 			
 			//get the width and height of a DSP
-			target->getDSPWidths(dspWidth, dspHeight);
+			getTarget()->getDSPWidths(dspWidth, dspHeight);
 			//make sure the tile is placed horizontally; exchange values if necessary
 			if(dspHeight<dspWidth){
 				dspHeight += dspWidth;

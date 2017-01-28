@@ -115,7 +115,7 @@ namespace flopoco{
 
 		/* set-up carry-save parameters */		
 		int chunkSize_;
-		target->suggestSlackSubaddSize(chunkSize_ , sizeAcc_, target->localWireDelay() + target->lutDelay());
+		getTarget()->suggestSlackSubaddSize(chunkSize_ , sizeAcc_, getTarget()->localWireDelay() + getTarget()->lutDelay());
 		REPORT( DEBUG, "Addition chunk size in FPLargeAcc is:"<<chunkSize_);
 		 
 		int nbOfChunks    = ceil(double(sizeAcc_)/double(chunkSize_));
@@ -136,7 +136,7 @@ namespace flopoco{
 		}
 
 		setCriticalPath( getMaxInputDelays(inputDelays));
-		manageCriticalPath( target->localWireDelay() + target->adderDelay(wEX+1)); 
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+1)); 
 
 		/* declaring the underflow and overflow conditions of the input X. 
 		these two flags are used to reparameter the accumulator following a test

@@ -55,17 +55,17 @@ namespace flopoco{
 			double xordelay;
 			double dcarry;
 			double muxcystoo;
-			if (target->getID()=="Virtex5"){
+			if (getTarget()->getID()=="Virtex5"){
 				xordelay = 0.300e-9;
 				dcarry = 0.023e-9;
 				muxcystoo = 0.305e-9;
 			}else{
-				if (target->getID()=="Virtex6"){
+				if (getTarget()->getID()=="Virtex6"){
 					xordelay = 0.180e-9;
 					dcarry = 0.015e-9;
 					muxcystoo =	0.219e-9;
 				}else{
-					if (target->getID()=="Virtex4"){
+					if (getTarget()->getID()=="Virtex4"){
 						xordelay = 0.273e-9;
 						dcarry = 0.034e-9;
 						muxcystoo = 0.278e-9;
@@ -79,9 +79,9 @@ namespace flopoco{
 
 #ifdef RCATEST
 	for (int aa=25; aa<=400; aa+=25){
-		target->setFrequency(double(aa)*1000000.0);
+		getTarget()->setFrequency(double(aa)*1000000.0);
 		int y;
-		target->suggestSubaddSize(y, 10000);
+		getTarget()->suggestSubaddSize(y, 10000);
 		cout << "f="<<aa<<" s="<<y<<endl;
 	}
 	exit(-1);
@@ -89,22 +89,22 @@ namespace flopoco{
 
 #ifdef MAXSIZE
 for (int aa=25; aa<=400; aa+=25){
-	target->setFrequency(double(aa)*1000000.0);
+	getTarget()->setFrequency(double(aa)*1000000.0);
 #endif
 
-double t = 1.0 / target->frequency();
+double t = 1.0 / getTarget()->frequency();
 
-ll = (1.0/2.0)* ((t - 3*target->lutDelay()-3*xordelay-3*muxcystoo-2*target->localWireDelay())/dcarry + 2);
+ll = (1.0/2.0)* ((t - 3*getTarget()->lutDelay()-3*xordelay-3*muxcystoo-2*getTarget()->localWireDelay())/dcarry + 2);
 l1=ll-1;
 
 
 
-// 			double c = (2 * target->localWireDelay()) + target->lutDelay()+ xordelay;
-// 			target->suggestSlackSubaddSize(ll, wIn, (t+c)/2);
+// 			double c = (2 * getTarget()->localWireDelay()) + getTarget()->lutDelay()+ xordelay;
+// 			getTarget()->suggestSlackSubaddSize(ll, wIn, (t+c)/2);
 //
 // 			l1=ll-1;
 //
-			target->suggestSlackSubaddSize(l0, wIn, t - (target->lutDelay()+ target->adderDelay(l1)) );
+			getTarget()->suggestSlackSubaddSize(l0, wIn, t - (getTarget()->lutDelay()+ getTarget()->adderDelay(l1)) );
 
 			maxAdderSize =  l0+l1+ll*(ll+1)/2;
 
@@ -150,11 +150,11 @@ exit(1);
 
 
 /*			//declare the constant
-			double c = (2 * target->localWireDelay()) + target->adderDelay(1);
-			double t = 1.0 / target->frequency();
+			double c = (2 * getTarget()->localWireDelay()) + getTarget()->adderDelay(1);
+			double t = 1.0 / getTarget()->frequency();
 			//compute l
 			int ll;
-			target->suggestSlackSubaddSize(ll, wIn, t - (t-c)/2);
+			getTarget()->suggestSlackSubaddSize(ll, wIn, t - (t-c)/2);
 
 			int maxAdderSize =  2*ll+ll*(ll+1)/2;
 			REPORT(INFO, "ll="<<ll);
@@ -207,13 +207,13 @@ exit(1);
 					<< ") + (\"0\" & "<<join("sX",j,"_1_l",l-1)<<");"<<endl;
 					vhdl<<tab<<declare(join("sX",j,"_0_l",l,"_One"))<< "  <= '1' when "<< join("sX",j,"_0_l",l-1)<< " >= not("<<join("sX",j,"_1_l",l-1)<<") else '0';"<<endl;
 #else
-int tp = target->isPipelined();
-target->setPipelined(false);
+int tp = getTarget()->isPipelined();
+getTarget()->setPipelined(false);
 IntAdder *addZero = new IntAdder(target, cSize[j]+1);
 IntComparator *compOne = new IntComparator(target, cSize[j], 1, false, 0);
 
 
-if (tp) target->setPipelined();
+if (tp) getTarget()->setPipelined();
 
 vhdl << tab << declare(join("opX",j), cSize[j]+1) << " <= \"0\" & " << join("sX",j,"_0_l",l-1)<<";"<<endl;
 vhdl << tab << declare(join("opY",j), cSize[j]+1) << " <= \"0\" & " << join("sX",j,"_1_l",l-1)<<";"<<endl;

@@ -43,7 +43,7 @@ namespace flopoco {
 		addOutput("S" , 32);
 		if(type==0) {
 			// we first put the most significant bit of the result into R
-			REPORT(INFO, "Delay should be adderDelay(32) = " << target->adderDelay(32));
+			REPORT(INFO, "Delay should be adderDelay(32) = " << getTarget()->adderDelay(32));
 			vhdl << tab << "S <= X+Y;" << endl;
 		}
 	};

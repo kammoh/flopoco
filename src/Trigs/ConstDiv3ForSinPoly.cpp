@@ -131,7 +131,7 @@ namespace flopoco{
 		//check alpha, and set it properly if necessary
 		if(alpha == -1)
 		{
-			alpha = target->lutInputs() - gamma;
+			alpha = getTarget()->lutInputs() - gamma;
 
 			if (alpha<1)
 			{
@@ -149,8 +149,8 @@ namespace flopoco{
 		else
 			o << "ConstDiv3ForSinPoly_";
 		o << d << "_" << vhdlize(wIn) << "_"  << vhdlize(alpha) << "_" << vhdlize(nbZeros) << "zeros_";
-		if(target->isPipelined())
-			o << vhdlize(target->frequencyMHz());
+		if(getTarget()->isPipelined())
+			o << vhdlize(getTarget()->frequencyMHz());
 		else
 			o << "comb";
 		uniqueName_ = o.str();
@@ -191,7 +191,7 @@ namespace flopoco{
 		for (int i=k-1; i>0; i--)
 		{
 			//manageCriticalPath(tableDelay);
-			manageCriticalPath(target->lutDelay());
+			manageCriticalPath(getTarget()->lutDelay());
 
 			xi = join("x", i);
 			if(i==k-1 && rem!=0)
@@ -229,7 +229,7 @@ namespace flopoco{
 			//tableDelay = table->getOutputDelay("Y");
 
 			//manageCriticalPath(tableDelay);
-			manageCriticalPath(target->lutDelay());
+			manageCriticalPath(getTarget()->lutDelay());
 
 			xi = join("x", 0);
 			vhdl << tab << declare(xi, alpha, true) << " <= X" << range(alpha-1, 0) << ";" << endl;

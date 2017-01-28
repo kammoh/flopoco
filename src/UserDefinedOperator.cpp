@@ -88,8 +88,8 @@ namespace flopoco {
 
 		   Each code transmited to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
 		*/
-		vhdl << declare(target->adderDelay(param0+1), "T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
-		vhdl << declare(target->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
+		vhdl << declare(getTarget()->adderDelay(param0+1), "T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
+		vhdl << declare(getTarget()->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
 
 		// we first put the most significant bit of the result into R
 		vhdl << tab << "S <= (R" << of(param0 +1) << " & ";

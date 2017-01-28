@@ -84,7 +84,7 @@ namespace flopoco{
 
 		//manage the pipeline
 		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay());
+		manageCriticalPath(getTarget()->localWireDelay());
 
 		//add the bits corresponding to sum_{i=imin}^imax(2^i*x_i)
 		indexMin = (truncated ? (lsbOut-g>lsbIn ? lsbOut-g : lsbIn) : lsbIn);
@@ -132,7 +132,7 @@ namespace flopoco{
 
 		//manage the pipeline
 		syncCycleFromSignal("XZeroIntDiv3");
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		indexMax = ((msbIn-lsbIn+1)*3-2)-1;
 		indexMin = (truncated ? wOutFull-1-(msbIn-lsbOut+g) : 0);
@@ -158,7 +158,7 @@ namespace flopoco{
 		//manage the pipeline
 		setCycleFromSignal("X");
 		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		//add the terms corresponding to sum_i_j_imin^imax(2^(i+2j-1)*x_i*x_j)
 		//	negated
@@ -193,7 +193,7 @@ namespace flopoco{
 		//manage the pipeline
 		setCycleFromSignal("X");
 		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		//add the terms corresponding to sum_i_j_k_imin^imax(2^(i+j+k)*x_i*x_j*x_k)
 		//	negated

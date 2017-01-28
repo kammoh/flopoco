@@ -38,14 +38,14 @@ namespace flopoco {
 
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
 
-		if(target->isPipelined())
-			name << "IntAdderClassical_" << wIn<<"_f"<<target->frequencyMHz()<<"_uid"<<getNewUId();
+		if(getTarget()->isPipelined())
+			name << "IntAdderClassical_" << wIn<<"_f"<<getTarget()->frequencyMHz()<<"_uid"<<getNewUId();
 		else
 			name << "IntAdderClassical_" << wIn<<"_comb"<<"_uid"<<getNewUId();
 		setName( name.str() );
 
 		inputsGotRegistered = false;
-		objectivePeriod	    = 1.0 / target->frequency();
+		objectivePeriod	    = 1.0 / getTarget()->frequency();
 
 		
 

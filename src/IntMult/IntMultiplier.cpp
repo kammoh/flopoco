@@ -92,7 +92,7 @@ namespace flopoco {
 
 
 	bool IntMultiplier::tabulatedMultiplierP(Target* target, int wX, int wY){
-		return (wX+wY <=  target->lutInputs()+2);
+		return (wX+wY <=  getTarget()->lutInputs()+2);
 	}
 
 	//TODO: function must add better handling of corner cases
@@ -931,7 +931,7 @@ namespace flopoco {
 		vhdl << tab << "-- buildheaplogiconly called for lsbX=" << lsbX << " lsbY=" << lsbY << " msbX="<< msbX << " msbY="<< msbY << endl;
 
 		int dx, dy;				// Here we need to split in small sub-multiplications
-		int li = target->lutInputs();
+		int li = getTarget()->lutInputs();
 
 		dx = li >> 1;
 		dy = li - dx;
@@ -1285,16 +1285,16 @@ namespace flopoco {
 			REPORT(DEBUG, "in worthUsingOneDSP:   usable blockArea=" << usefulDSPArea << "   dspArea=" << totalDSPArea);
 
 			//checking according to ratio/area
-			if(usefulDSPArea >= (1.0-target->unusedHardMultThreshold())*totalDSPArea)
+			if(usefulDSPArea >= (1.0-getTarget()->unusedHardMultThreshold())*totalDSPArea)
 			{
 				REPORT(DEBUG, "in worthUsingOneDSP: "
-						<< usefulDSPArea << ">= (1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> worth using a DSP block");
+						<< usefulDSPArea << ">= (1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> worth using a DSP block");
 				return true;
 			}
 			else
 			{
 				REPORT(DEBUG, "in worthUsingOneDSP: "
-						<< usefulDSPArea << "< (1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> not worth using a DSP block");
+						<< usefulDSPArea << "< (1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> not worth using a DSP block");
 				return false;
 			}
 		}
@@ -1421,13 +1421,13 @@ namespace flopoco {
 		REPORT(DEBUG, "in worthUsingOneDSP:   intersectX1=" << intersectX1 << " intersectY1=" << intersectY1 << " intersectX2=" << intersectX2 << " intersectY2=" << intersectY2);
 
 		//test if the DSP DSPThreshold is satisfied
-		if(usefulDSPArea >= (1.0-target->unusedHardMultThreshold())*totalDSPArea)
+		if(usefulDSPArea >= (1.0-getTarget()->unusedHardMultThreshold())*totalDSPArea)
 		{
-			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << ">=(1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> WORTH using a DSP block");
+			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << ">=(1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> WORTH using a DSP block");
 			return true;
 		}else
 		{
-			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << "<(1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> NOT worth using a DSP block");
+			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << "<(1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> NOT worth using a DSP block");
 			return false;
 		}
 #endif
@@ -1499,11 +1499,11 @@ namespace flopoco {
 				//if both DSP dimensions are large enough, the DSP block might still fit the DSPThreshold
 				if(worthUsingOneDSP(blockTopX, blockTopY, blockBottomX, blockBottomY, dspSizeX, dspSizeY))
 				{
-					//target->unusedHardMultThreshold() fulfilled; search is over
+					//getTarget()->unusedHardMultThreshold() fulfilled; search is over
 					dspSizeNotFound = false;
 				}else
 				{
-					//target->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
+					//getTarget()->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
 					if(newMultIndex == multWidthsSize-1)
 					{
 						dspSizeNotFound = false;
@@ -1529,11 +1529,11 @@ namespace flopoco {
 
 					if(worthUsingOneDSP((tx<blockTopX ? blockTopX : tx), (ty<blockTopY ? blockTopY : ty), bx, by, dspSizeX, dspSizeY))
 					{
-						//target->unusedHardMultThreshold() fulfilled; search is over
+						//getTarget()->unusedHardMultThreshold() fulfilled; search is over
 						dspSizeNotFound = false;
 					}else
 					{
-						//target->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
+						//getTarget()->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
 						if(newMultIndex == multWidthsSize-1)
 						{
 							dspSizeNotFound = false;
