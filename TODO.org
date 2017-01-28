@@ -1,6 +1,19 @@
 TODO file for FloPoCo
 
-* List of operators to port to the new pipeline framework
+* Version 5
+** Target -> OperatorContext
+Here is the work plan:
+1/ sed global replace target-> with getTarget()->
+
+  (should be mostly harmless)
+2/ create OperatorContext class including a target, a ParentOp, and a frequency
+  (should be mostly harmless)
+3/ sed global replace Target* target  with OperatorContext* context
++ add the indirection in Operator::getTarget()
+4/ get rid of the mailbox and get back to work.
+
+
+** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
 
 	IntConstMult: still need to 
