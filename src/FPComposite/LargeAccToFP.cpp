@@ -81,7 +81,7 @@ namespace flopoco{
 		/* count the number of zeros/ones in order to determine
 		the value of the exponent */
 
-		lzocShifterSticky_ = new LZOCShifterSticky(target, sizeAcc_+1,  wFOut_ + 1, intlog2(sizeAcc_+1), false, -1, inDelayMap("I",getTarget()->localWireDelay()+getCriticalPath()));
+		lzocShifterSticky_ = new LZOCShifterSticky(target, sizeAcc_+1,  wFOut_ + 1, intlog2(sizeAcc_+1), false, -1) ;
 		countWidth_ = lzocShifterSticky_->getCountWidth();
 
 		inPortMapCst ( lzocShifterSticky_, "I"    , "acc");
@@ -152,7 +152,6 @@ namespace flopoco{
 		syncCycleFromSignal("excRes",  getSignalDelay("excRes"));
 
 		vhdl << tab << "R <= excRes & resSign & expBiased" << range(wEOut_-1,0)<<" & resultFraction" << range(wFOut_-1,0) <<";"<<endl;
-		getOutDelayMap()["R"] = getCriticalPath();
 	}
 
 	LargeAccToFP::~LargeAccToFP() {

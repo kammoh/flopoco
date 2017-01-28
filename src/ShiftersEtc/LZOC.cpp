@@ -28,8 +28,8 @@ using namespace std;
 
 namespace flopoco{
 
-	LZOC::LZOC(Target* target, int wIn, map<string, double> inputDelays) :
-		Operator(target, inputDelays), wIn_(wIn) {
+	LZOC::LZOC(Target* target, int wIn) :
+		Operator(target), wIn_(wIn) {
 		ostringstream currLevel, currDigit, nextLevel;
 
 		srcFileName = "LZOC";
@@ -56,7 +56,6 @@ namespace flopoco{
 
 		vhdl << tab << declare(currLevel.str(),intpow2(wOut_)) << "<= I" << padStr.str() <<";"<<endl; //zero padding if necessary
 		//each operation is formed of a comparisson folloewd by a multiplexing
-		setCriticalPath( getMaxInputDelays(inputDelays));
 
 		for (int i=wOut_;i>=1;i--){
 			currDigit.str(""); currDigit << "digit" << i ;

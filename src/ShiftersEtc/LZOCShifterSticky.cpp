@@ -30,8 +30,8 @@ using namespace std;
 namespace flopoco{
 
 
-	LZOCShifterSticky::LZOCShifterSticky(Target* target, int wIn, int wOut, int wCount, bool computeSticky, const int countType, map<string, double> inputDelays) :
-		Operator(target, inputDelays), wIn_(wIn), wOut_(wOut), wCount_(wCount), computeSticky_(computeSticky), countType_(countType) {
+	LZOCShifterSticky::LZOCShifterSticky(Target* target, int wIn, int wOut, int wCount, bool computeSticky, const int countType) :
+		Operator(target), wIn_(wIn), wOut_(wOut), wCount_(wCount), computeSticky_(computeSticky), countType_(countType) {
 
 		// -------- Parameter set up -----------------
 		srcFileName = "LZOCShifterSticky";

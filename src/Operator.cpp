@@ -79,8 +79,7 @@ namespace flopoco{
 	int Operator::uid = 0; 										//init of the uid static member of Operator
 	int verbose=0;
 
-	Operator::Operator(Target* target, map<string, double> inputDelays){
-		vhdl.setParentOperator(this);
+	Operator::Operator(Target* target){
 		stdLibType_                 = 0;						// unfortunately this is the historical default.
 		target_                     = target;
 		numberOfInputs_             = 0;
@@ -107,7 +106,7 @@ namespace flopoco{
 		signalsToSchedule.clear();
 		unresolvedDependenceTable.clear();
 
- 		parentOp_                   = nullptr;
+ 		parentOp_                   = nullptr; // will usually be overwritten soon after
 
 
 		// Currently we set the pipeline and clock enable from the global target.

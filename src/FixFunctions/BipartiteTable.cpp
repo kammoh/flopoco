@@ -31,8 +31,8 @@ using namespace std;
 namespace flopoco{
 
 
-	BipartiteTable::BipartiteTable(Target* target_, string functionName_, int lsbIn_, int msbOut_, int lsbOut_,  map<string, double> inputDelays):
-			Operator(target_, inputDelays), functionName(functionName_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_)
+	BipartiteTable::BipartiteTable(Target* target_, string functionName_, int lsbIn_, int msbOut_, int lsbOut_):
+			Operator(target_), functionName(functionName_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_)
 	{
 		srcFileName = "BipartiteTable";
 

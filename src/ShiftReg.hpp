@@ -11,7 +11,7 @@ namespace flopoco{
 	  
 		public:
 			/* Costructor : w is the input and output size; n is the number of taps */
-			ShiftReg(Target* target, int w, int n, map<string, double> inputDelays = emptyDelayMap); 
+			ShiftReg(Target* target, int w, int n); 
 
 			/* Destructor */
 			~ShiftReg();

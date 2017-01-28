@@ -82,6 +82,22 @@ class Operator
 
 public:
 
+
+	/**
+	 * Operator Constructor.
+	 * Creates an operator instance with an instantiated target for deployment.
+	 * @param target_ The deployment target of the operator.
+	 */
+	Operator(Target* target);
+
+
+	/**
+	 * Operator Destructor.
+	 */
+	virtual ~Operator() {}
+
+
+
 	/**
 	 * The possible types signal delays
 	 */
@@ -138,18 +154,6 @@ public:
 	void outputVHDLToFile(ofstream& file);
 #endif
 
-	/**
-	 * Operator Constructor.
-	 * Creates an operator instance with an instantiated target for deployment.
-	 * @param target_ The deployment target of the operator.
-	 */
-	Operator(Target* target, map<string, double> inputDelays = emptyDelayMap);
-
-
-	/**
-	 * Operator Destructor.
-	 */
-	virtual ~Operator() {}
 
 
  /*****************************************************************************/

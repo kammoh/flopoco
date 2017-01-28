@@ -10,8 +10,8 @@ using namespace std;
 
 namespace flopoco {
 
-	ShiftReg::ShiftReg(Target* target, int w_, int n_, map<string, double> inputDelays)
-		: Operator(target, inputDelays), w(w_), n(n_)
+	ShiftReg::ShiftReg(Target* target, int w_, int n_)
+		: Operator(target), w(w_), n(n_)
 	{
 		srcFileName="ShiftReg";
 		setCopyrightString ( "Louis Beseme, Florent de Dinechin, Matei Istoan (2014-2016)" );

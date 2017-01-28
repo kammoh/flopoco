@@ -30,8 +30,8 @@ using namespace std;
 namespace flopoco{
 
 
-	IntComparator::IntComparator(Target* target, int wIn, int criteria, bool constant, int constValue, map<string, double> inputDelays) :
-		Operator(target, inputDelays), wIn_(wIn), criteria_(criteria) {
+	IntComparator::IntComparator(Target* target, int wIn, int criteria, bool constant, int constValue) :
+		Operator(target), wIn_(wIn), criteria_(criteria) {
 
 		// -------- Parameter set up -----------------
 		srcFileName = "IntComaprator";
@@ -63,7 +63,6 @@ namespace flopoco{
 
 				//determine chunk size
 				int cs;
-				setCriticalPath(getMaxInputDelays(inputDelays));
 				if (!getTarget()->suggestSlackSubcomparatorSize(cs, wIn_, getCriticalPath() + getTarget()->localWireDelay() + getTarget()->ffDelay(), constant)){
 					REPORT(INFO, "Extra reg level inserted here!");
 					nextCycle();

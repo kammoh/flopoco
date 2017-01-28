@@ -36,18 +36,17 @@ namespace flopoco {
 	IntAdder::IntAdder ( Target* target, int wIn_, int optimizeType, bool srl, int implementation):
 		IntAdder(nullptr, target, wIn_, optimizeType, srl, implementation)
 	{
-
 	}
 
 	IntAdder::IntAdder (OperatorPtr parentOp, Target* target, int wIn_, int optimizeType, bool srl, int implementation):
-		Operator ( target), wIn ( wIn_ )
+		Operator (target), wIn ( wIn_ )
 	{
 		srcFileName="IntAdder";
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		ostringstream name;
 		name << "IntAdder_" << wIn;
 		setNameWithFreqAndUID(name.str());
-		setParentOperator(getTarget()->readParentOpMailbox());
+		setParentOperator(parentOp);
 													
 		// Set up the IO signals
 		addInput  ("X"  , wIn, true);

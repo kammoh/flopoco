@@ -30,7 +30,7 @@ namespace flopoco{
 			 @param[int]    lsbOut  output LSB weight
 		 */
 		BipartiteTable(Target* target, string functionName,
-				int lsbIn=0, int msbOut=0, int lsbOut=0,  map<string, double> inputDelays = emptyDelayMap);
+				int lsbIn=0, int msbOut=0, int lsbOut=0);
 
 		virtual ~BipartiteTable();
 
