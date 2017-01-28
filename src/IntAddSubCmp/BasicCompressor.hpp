@@ -45,7 +45,7 @@ namespace flopoco
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target ,const vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target ,const vector<string> &args);
 
 		static void registerFactory();
 	};

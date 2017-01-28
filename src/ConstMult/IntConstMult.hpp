@@ -68,7 +68,7 @@ namespace flopoco{
 
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		static TestList unitTest(int index);
 

@@ -274,7 +274,7 @@ namespace flopoco{
 
 
 		
-	OperatorPtr FP2Fix::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FP2Fix::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, wF, MSB, LSB;
 		bool signedO, trunc;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 

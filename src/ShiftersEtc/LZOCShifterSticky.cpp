@@ -223,7 +223,7 @@ namespace flopoco{
 
 	
 
-	OperatorPtr LZOCShifterSticky::parseArguments(Target *target, std::vector<std::string> &args) {
+	OperatorPtr LZOCShifterSticky::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn, wOut, wCount, countType;
 		bool computeSticky;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);

@@ -603,7 +603,7 @@ namespace flopoco{
 		return tc;
 	}
 
-	OperatorPtr FPPow::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPPow::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;

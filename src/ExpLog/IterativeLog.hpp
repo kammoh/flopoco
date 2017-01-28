@@ -80,7 +80,7 @@ namespace flopoco{
 		TestCase* buildRandomTestCase(int i);
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static void registerFactory();
 
 		int wE, wF;

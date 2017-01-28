@@ -449,8 +449,7 @@ namespace flopoco
 				if (fp==NULL){
 					throw( "Can't find the operator factory for " + opName) ;
 				}
-				target->fillParentOpMailbox(nullptr); // meaning: this is the top level
-				OperatorPtr op = fp->parseArguments(target, opParams);
+				OperatorPtr op = fp->parseArguments(nullptr, target, opParams);
 				if(op!=NULL)	{// Some factories don't actually create an operator
 					if(entityName!="") {
 						op->changeName(entityName);
@@ -1273,8 +1272,8 @@ namespace flopoco
 	}
 	
 
-	OperatorPtr OperatorFactory::parseArguments(Target* target, vector<string> &args	)	{
-		return m_parser(target, args);
+	OperatorPtr OperatorFactory::parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args	)	{
+		return m_parser(parentOp, target, args);
 	}
 	
 		

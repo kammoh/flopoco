@@ -39,7 +39,7 @@ namespace flopoco{
 
 
 	
-	OperatorPtr Fix2DNorm::parseArguments(Target *target, vector<string> &args) {		
+	OperatorPtr Fix2DNorm::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {		
 		int msb,lsb, method;
 		UserInterface::parseInt(args, "msb", &msb);
 		UserInterface::parseInt(args, "lsb", &lsb);

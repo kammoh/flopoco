@@ -421,7 +421,7 @@ namespace flopoco {
 #endif
 	}
 
-	OperatorPtr FixComplexKCM::parseArguments(Target* target, std::vector<std::string> &args)
+	OperatorPtr FixComplexKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
 		//		bool signedInput;

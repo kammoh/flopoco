@@ -359,7 +359,7 @@ exit(-1);
 		tc->addExpectedOutput("R", svR);
 	}
 
-	OperatorPtr LongIntAdderCmpCmpAddGen2::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr LongIntAdderCmpCmpAddGen2::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new LongIntAdderCmpCmpAddGen2(target, wIn);

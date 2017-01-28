@@ -718,7 +718,7 @@ namespace flopoco{
 
 
 
-	OperatorPtr TestBench::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr TestBench::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int n;
 		bool file;
 

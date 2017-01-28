@@ -79,7 +79,7 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr BitheapTest::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr BitheapTest::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int msb_, lsb_, nbInputs_, weight_;
 		bool isSigned_;
 

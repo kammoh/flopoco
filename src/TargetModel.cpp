@@ -52,7 +52,7 @@ namespace flopoco {
 
 
 
-	OperatorPtr TargetModel::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr TargetModel::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		 int type;
 		 UserInterface::parseInt(args, "type", &type); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
 		 return new TargetModel(target, type);

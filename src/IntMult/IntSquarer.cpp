@@ -289,7 +289,7 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr IntSquarer::parseArguments(Target *target, std::vector<std::string> &args) {
+	OperatorPtr IntSquarer::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new IntSquarer(target, wIn);

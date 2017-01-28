@@ -978,7 +978,7 @@ namespace flopoco{
 
 
 
-		OperatorPtr FPExp::parseArguments(Target *target, vector<string> &args) {
+		OperatorPtr FPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 			int wE, wF, k, d, g;
 			UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
 			UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);

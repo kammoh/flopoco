@@ -10,7 +10,7 @@
 namespace flopoco
 {
 
-	OperatorPtr AutoTest::parseArguments(Target *target , vector<string> &args)
+	OperatorPtr AutoTest::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args)
 	{
 		string opName;
 		bool testDependences;

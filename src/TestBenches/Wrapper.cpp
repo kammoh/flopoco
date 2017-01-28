@@ -85,7 +85,7 @@ namespace flopoco{
 	Wrapper::~Wrapper() {
 	}
 
-	OperatorPtr Wrapper::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr Wrapper::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		if(UserInterface::globalOpList.empty()){
 			throw("ERROR: Wrapper has no operator to wrap (it should come after the operator it wraps)");
 		}

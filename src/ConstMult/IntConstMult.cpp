@@ -1719,7 +1719,7 @@ namespace flopoco{
 
 
 
-	OperatorPtr IntConstMult::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntConstMult::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		string	n;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 

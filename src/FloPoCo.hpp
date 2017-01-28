@@ -32,7 +32,7 @@
 
 /* targets ---------------------------------------------------- */
 #include "Target.hpp"
-#include "TargetModel.hpp"
+// #include "TargetModel.hpp"
 #include "Targets/DSP.hpp"
 
 //#include "Targets/Spartan3.hpp"

@@ -2072,7 +2072,7 @@ namespace flopoco {
 
 
 	
-	OperatorPtr IntMultiplier::parseArguments(Target *target, std::vector<std::string> &args) {
+	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut ;
 		bool signedIO,superTile;
 		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);

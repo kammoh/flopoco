@@ -858,7 +858,7 @@ namespace flopoco{
 
 	}
 
-	OperatorPtr FPDiv::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
@@ -883,7 +883,7 @@ radix(int)=0: Can be 0, 4 or 8. Default 0 means: let FloPoCo choose between 4 an
 	}
 
 
-	OperatorPtr FPDiv::NbBitsMinParseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPDiv::NbBitsMinParseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int radix, digitSet;
 		UserInterface::parseStrictlyPositiveInt(args, "radix", &radix);
 		UserInterface::parseStrictlyPositiveInt(args, "digitSet", &digitSet);

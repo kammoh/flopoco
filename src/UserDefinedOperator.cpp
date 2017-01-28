@@ -126,7 +126,7 @@ namespace flopoco {
 
 
 
-	OperatorPtr UserDefinedOperator::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr UserDefinedOperator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int param0, param1;
 		UserInterface::parseInt(args, "param0", &param0); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
 		UserInterface::parseInt(args, "param1", &param1); 

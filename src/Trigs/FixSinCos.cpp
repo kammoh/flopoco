@@ -967,7 +967,7 @@ void FixSinCos::buildStandardTestCases(TestCaseList * tcl)
 
 }
 
-OperatorPtr FixSinCos::parseArguments(Target *target, vector<string> &args) {
+OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 	int lsb;
 	UserInterface::parseInt(args, "lsb", &lsb); 
 	return new FixSinCos(target, -lsb); // TODO we want to expose the constructor parameters in the new  interface, so this "-" is a bug

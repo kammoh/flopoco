@@ -57,7 +57,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target, vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
 		static void registerFactory();
 
 	private:
@@ -69,7 +69,7 @@ namespace flopoco{
 		static void computeNbBit(int radix, int digitSet);
 	public:
 		static void NbBitsMinRegisterFactory();
-		static OperatorPtr NbBitsMinParseArguments(Target *target, vector<string> &args);
+		static OperatorPtr NbBitsMinParseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
 
 		
 	private:

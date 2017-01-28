@@ -1234,7 +1234,7 @@ namespace flopoco{
 		return tc;
 	}
 
-		OperatorPtr IterativeLog::parseArguments(Target *target, vector<string> &args) {
+		OperatorPtr IterativeLog::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;

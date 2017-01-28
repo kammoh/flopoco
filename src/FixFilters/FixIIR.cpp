@@ -218,7 +218,7 @@ namespace flopoco {
 
 	void FixIIR::buildStandardTestCases(TestCaseList* tcl){};
 
-	OperatorPtr FixIIR::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixIIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int msbOut;
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		int lsbIn;

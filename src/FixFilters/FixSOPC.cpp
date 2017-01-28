@@ -317,7 +317,7 @@ namespace flopoco{
 		tc->addExpectedOutput ("R", results.second);
 	}
 
-	OperatorPtr FixSOPC::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixSOPC::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsbIn;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;

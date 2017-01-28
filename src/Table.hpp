@@ -81,7 +81,7 @@ namespace flopoco{
 		virtual ~Table() {};
 
 
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		static void registerFactory();
 

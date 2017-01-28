@@ -541,7 +541,7 @@ namespace flopoco{
 	}
 
 
-		OperatorPtr Fix2FP::parseArguments(Target *target, vector<string> &args) {
+		OperatorPtr Fix2FP::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, wF, MSB, LSB;
 		bool signedO;
 		UserInterface::parseBoolean(args, "signed", &signedO);

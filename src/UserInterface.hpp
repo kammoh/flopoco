@@ -9,7 +9,7 @@ Author : David Thomas, Florent de Dinechin
 Initial software.
 Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 2015-.
-  All rights reserved.S
+  All rights reserved.
 
 */
 #ifndef UserInterface_hpp
@@ -24,7 +24,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 namespace flopoco
 {
 
-	typedef OperatorPtr (*parser_func_t)(Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function taking as parameters Target* etc., and returning an OperatorPtr
+	typedef OperatorPtr (*parser_func_t)(OperatorPtr, Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function taking as parameters Target* etc., and returning an OperatorPtr
 	class OperatorFactory;
 	typedef shared_ptr<OperatorFactory> OperatorFactoryPtr;
 
@@ -214,11 +214,12 @@ namespace flopoco
 		string getDefaultParamVal(const string& key);
 
 		/*! Consumes zero or more string arguments, and creates an operator
+			The parentOp may be nullptr for top-level entities
 			\param args The offered arguments start at index 0 of the vector, and it is up to the
 			factory to check the types and whether there are enough.
 			\param consumed On exit, the factory indicates how many of the arguments are used up.
 		*/
-		virtual OperatorPtr parseArguments(Target* target, vector<string> &args	);
+		virtual OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args	);
 		
 		/*! Generate a list of arg-value pairs out of the index value
 		*/

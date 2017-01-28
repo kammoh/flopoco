@@ -187,7 +187,7 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr FPSquare::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPSquare::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF_in;

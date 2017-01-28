@@ -157,7 +157,7 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr Compressor::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr Compressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string in;
 		bool compactView_;
 		vector<int> heights_;

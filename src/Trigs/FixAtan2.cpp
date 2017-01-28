@@ -318,7 +318,7 @@ namespace flopoco {
 
 	}
 
-	OperatorPtr FixAtan2::parseArguments(Target *target, vector<string> &args) {		
+	OperatorPtr FixAtan2::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {		
 		int lsb, method;
 		UserInterface::parseInt(args, "lsb", &lsb);
 		UserInterface::parsePositiveInt(args, "method", &method);

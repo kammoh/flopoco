@@ -420,7 +420,7 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr InputIEEE::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr InputIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wEIn, wFIn, wEOut, wFOut;
 		 bool flushToZero=true;
 		UserInterface::parseStrictlyPositiveInt(args, "wEIn", &wEIn); 

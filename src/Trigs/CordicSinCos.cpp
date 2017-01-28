@@ -476,7 +476,7 @@ namespace flopoco{
 
 
 	// TODO There should be only one factory for the cordicsincos and fixsincos... On the model of FixAtan2
-	OperatorPtr CordicSinCos::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr CordicSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsb;
 		//int lsbOut;
 		bool reducedIterations;

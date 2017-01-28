@@ -256,7 +256,7 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
-	OperatorPtr IntDualAddSub::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntDualAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int opType;

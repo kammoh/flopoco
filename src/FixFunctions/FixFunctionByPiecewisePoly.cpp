@@ -366,7 +366,7 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsbIn, msbOut, lsbOut, d;
 		string f;
 		double approxErrorBudget;

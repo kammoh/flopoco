@@ -272,7 +272,7 @@ namespace flopoco{
 
 
 	//FOR TEST PURPOSES ONLY
-	OperatorPtr Table::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr Table::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn_;
 		int wOut_;
 		int logicTable_;

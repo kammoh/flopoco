@@ -40,7 +40,7 @@ namespace flopoco{
 		void emulate(TestCase* tc);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		/** Factory register method */ 
 		static void registerFactory();

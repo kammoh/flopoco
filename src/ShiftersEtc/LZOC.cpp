@@ -112,7 +112,7 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr LZOC::parseArguments(Target *target, std::vector<std::string> &args) {
+	OperatorPtr LZOC::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new LZOC(target, wIn);

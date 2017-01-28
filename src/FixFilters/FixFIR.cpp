@@ -189,7 +189,7 @@ namespace flopoco {
 #endif
 	};
 
-	OperatorPtr FixFIR::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixFIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsbInOut;
 		UserInterface::parseInt(args, "lsbInOut", &lsbInOut);
 		bool rescale;

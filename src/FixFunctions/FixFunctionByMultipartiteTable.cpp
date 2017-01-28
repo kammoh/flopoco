@@ -555,7 +555,7 @@ namespace flopoco
 
 
 
-	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string f;
 		bool signedIn;
 		int lsbIn, lsbOut, msbOut, nbTables;

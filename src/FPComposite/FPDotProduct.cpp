@@ -332,7 +332,7 @@ namespace flopoco{
 		cout <<endl;
 	}
 	
-	OperatorPtr FPDotProduct::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPDotProduct::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, wFX, wFY, MaxMSBX, MSBA, LSBA;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
 		UserInterface::parseStrictlyPositiveInt(args, "wFX", &wFX);

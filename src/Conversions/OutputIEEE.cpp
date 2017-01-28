@@ -182,7 +182,7 @@ namespace flopoco{
 
 
 	
-	OperatorPtr OutputIEEE::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr OutputIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wEIn, wFIn, wEOut, wFOut;
 		bool onlyPositiveZeroes;
 		UserInterface::parseStrictlyPositiveInt(args, "wEIn", &wEIn); 

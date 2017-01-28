@@ -134,7 +134,7 @@ namespace flopoco{
 	  sollya_lib_clear_obj(degreeSupS);
 	}
 
-	OperatorPtr BasicPolyApprox::parseArguments(Target *target, vector<string> &args)
+	OperatorPtr BasicPolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 	{
 		string f;
 		double ta;

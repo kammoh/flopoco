@@ -47,7 +47,7 @@ namespace flopoco
 		/**
 		 * Factory method
 		 */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		/**
 		 * Register the factory

@@ -63,7 +63,7 @@ namespace flopoco{
 		f->emulate(tc, true /* correct rounding */);
 	}
 
-	OperatorPtr FixFunctionByTable::parseArguments(Target *target, vector<string> &args)
+	OperatorPtr FixFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 	{
 		bool signedIn;
 		int lsbIn, msbOut, lsbOut;

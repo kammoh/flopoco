@@ -154,7 +154,7 @@ namespace flopoco {
 	}
 
 
-	OperatorPtr IntAdder::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		int arch;
 		int optObjective;

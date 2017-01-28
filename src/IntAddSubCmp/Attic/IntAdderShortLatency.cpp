@@ -723,7 +723,7 @@ namespace flopoco {
 		tc->addExpectedOutput ( "R", svR );
 	}
 
-	OperatorPtr IntAdderShortLatency::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntAdderShortLatency::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int optimizeType;

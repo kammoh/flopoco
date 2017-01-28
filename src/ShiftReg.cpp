@@ -59,7 +59,7 @@ namespace flopoco {
 	};
 
 
-	OperatorPtr ShiftReg::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr ShiftReg::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int w_, n_;
 
 		UserInterface::parseStrictlyPositiveInt(args, "w", &w_);

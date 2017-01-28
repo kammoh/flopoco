@@ -428,7 +428,7 @@ namespace flopoco {
 		return -1;
 	}
 
-	OperatorPtr IntAdderAlternative::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntAdderAlternative::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int optimizeType;

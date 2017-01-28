@@ -181,7 +181,7 @@ namespace flopoco{
 		}
 	}
 
-	OperatorPtr FixFunctionBySimplePoly::parseArguments(Target *target, vector<string> &args)
+	OperatorPtr FixFunctionBySimplePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 	{
 		string f;
 		bool signedIn;

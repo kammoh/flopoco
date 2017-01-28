@@ -162,7 +162,7 @@ namespace flopoco{
 		tc->addExpectedOutput ( "R", svR );
 	}
 
-	OperatorPtr IntComparator::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int criteria;

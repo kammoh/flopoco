@@ -151,7 +151,7 @@ namespace flopoco{
 
 
 
-	OperatorPtr Shifter::parseArguments(Target *target, std::vector<std::string> &args) {
+	OperatorPtr Shifter::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn, maxShift;
 		bool dirArg;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);

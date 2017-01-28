@@ -237,7 +237,7 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr FixSinOrCos::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixSinOrCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, degree;
 		UserInterface::parseStrictlyPositiveInt(args, "w", &w); 
 		UserInterface::parseInt(args, "degree", &degree);

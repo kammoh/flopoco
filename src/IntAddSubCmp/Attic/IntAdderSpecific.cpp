@@ -158,7 +158,7 @@ namespace flopoco{
 		tc->addExpectedOutput("Cout",cout);
 	}
 
-	OperatorPtr IntAdderSpecific::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntAdderSpecific::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new IntAdderSpecific(target, wIn);

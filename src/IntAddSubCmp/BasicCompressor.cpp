@@ -142,7 +142,7 @@ BasicCompressor::BasicCompressor(Target * target, vector<int> h)
 		tc->addExpectedOutput("R", r);
 	}
 
-//	OperatorPtr BasicCompressor::parseArguments(Target *target, const vector<string> &args) {
+//	OperatorPtr BasicCompressor::parseArguments(OperatorPtr parentOp, Target *target, const vector<string> &args) {
 //		return new BasicCompressor(target);
 //	}
 //

@@ -761,7 +761,7 @@ namespace flopoco{
 
 
 
-	OperatorPtr IntConstDiv::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn, arch, alpha;
 		vector<int> divisors;
 		bool computeQuotient, computeRemainder;

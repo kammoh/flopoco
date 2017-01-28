@@ -448,7 +448,7 @@ exit(1);
 
 	}
 
-	OperatorPtr LongIntAdderMuxNetwork::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr LongIntAdderMuxNetwork::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int regular;

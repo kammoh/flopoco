@@ -81,21 +81,8 @@ namespace flopoco{
 		{Signal* i=getSignalByName("addCmpOp1");
 			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 	}
-//		IntAdder *cmpAdder = nullptr;
-#if 1
 		vhdl << tab << declare("addCmpCin") << " <= '1';"<<endl;
 		newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2,Cin=>addCmpCin", "R=>cmpRes");
-#else
-		newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2", "R=>cmpRes", "Cin=>'1'");
-#endif
-//		inPortMap(cmpAdder, "X", "addCmpOp1");
-//		inPortMap(cmpAdder, "Y", "addCmpOp2");
-//		inPortMapCst(cmpAdder, "Cin", "'1'");
-//		outPortMap (cmpAdder, "R", "cmpRes");
-//
-//		cmpAdder = new IntAdder(target, wE+wF+3);
-//
-//		vhdl << instance(cmpAdder, "cmpAdder") << endl;
 
 		vhdl<< tab << declare(getTarget()->fanoutDelay(2*(wE+wF+3) + 2*wE), "swap")  << " <= cmpRes"<<of(wE+wF+2)<<";"<<endl;
 
@@ -170,8 +157,9 @@ namespace flopoco{
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building right shifter");
-		Shifter* rightShifter = nullptr;
 
+		Shifter* rightShifter = nullptr;
+#if 1
 		inPortMap  (rightShifter, "X", "fracY");
 		inPortMap  (rightShifter, "S", "shiftVal");
 		outPortMap (rightShifter, "R", "shiftedFracY");
@@ -180,7 +168,11 @@ namespace flopoco{
 		rightShifter->changeName(getName()+"_RightShifter");
 
 		vhdl << instance(rightShifter, "RightShifterComponent");
+#else
+		newInstance...
+#endif
 
+		
 #if 1 // vivado compiles it very expensively
 		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky") 
 				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF) << ") else '1';"<<endl;

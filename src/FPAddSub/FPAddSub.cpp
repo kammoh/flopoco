@@ -622,7 +622,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 		return tc;
 	}
 
-	OperatorPtr FPAddSub::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;

@@ -660,7 +660,7 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr FixRealKCM::parseArguments(Target* target, std::vector<std::string> &args)
+	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
 		bool signedInput;

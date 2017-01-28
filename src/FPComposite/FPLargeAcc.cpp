@@ -606,7 +606,7 @@ namespace flopoco{
 		return tc;
 	}
 	
-	OperatorPtr FPLargeAcc::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPLargeAcc::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wEX, wFX, MaxMSBX, MSBA, LSBA;
 		UserInterface::parseStrictlyPositiveInt(args, "wEX", &wEX); 
 		UserInterface::parseStrictlyPositiveInt(args, "wFX", &wFX);

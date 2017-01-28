@@ -431,7 +431,7 @@ exit(1);
 
 	}
 
-	OperatorPtr LongIntAdderAddAddMuxGen2::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr LongIntAdderAddAddMuxGen2::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int regular;
