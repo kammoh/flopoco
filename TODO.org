@@ -1,19 +1,16 @@
 TODO file for FloPoCo
 
 * Version 5
-** Target -> OperatorContext
-Here is the work plan:
-1/ sed global replace target-> with getTarget()->
-findReplace("src", "target->", "getTarget()->", "*.cpp")
-findReplace("src", "target ->", "getTarget()->", "*.cpp")
+** Target -> parentOp
+Idea: currently each operator constructor takes a Target as first arg.
+We should systematically add a second constructor 
+that takes an Operator* parentOp, and copies the Target* from it.
+The historical constructor should set parentOp to nullptr 
+  (this is what Operator(Target*) dies
+and only be invoked from  UserInterface.
+All the constructors called from operators should call the new constructor.
 
-  (should be mostly harmless)
-2/ create OperatorContext class including a target, a ParentOp, and a frequency
-  (should be mostly harmless)
-3/ sed global replace Target* target  with OperatorContext* context
-+ add the indirection in Operator::getTarget()
-4/ get rid of the mailbox and get back to work.
-
+Testbench: IntAdder and the other subcomponents of FPAdder
 
 ** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
