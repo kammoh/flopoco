@@ -4,7 +4,9 @@ An integer adder for FloPoCo
 It may be pipelined to arbitrary frequency.
 Also useful to derive the carry-propagate delays for the subclasses of Target
 
-Authors:  Bogdan Pasca, Florent de Dinechin
+This is also the canonical example of an operator that pipelines itself according to the schedule of its parentOp.
+
+Authors:  Bogdan Pasca, Florent de Dinechin, Matei Istoan
 
 This file is part of the FloPoCo project
 developed by the Arenaire team at Ecole Normale Superieure de Lyon
@@ -55,7 +57,7 @@ namespace flopoco {
 		int maxCycle = 0;
 		double maxCP = 0.0;
 		for(auto i: ioList_) {
-			//REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 			if((i->getCycle() > maxCycle)
 					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
 				maxCycle = i->getCycle();
@@ -157,7 +159,7 @@ namespace flopoco {
 	OperatorPtr IntAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn, false);
-		return new IntAdder(nullptr, target, wIn);
+		return new IntAdder(parentOp, target, wIn);
 	}
 
 	void IntAdder::registerFactory(){

@@ -196,17 +196,7 @@ namespace flopoco{
 
 		//result is always positive.
 
-#if 1
 		newInstance("IntAdder", "fracAdder", join("wIn=",wF+4), "X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar","R=>fracAddResult");
-#else
-		IntAdder* fracAddFar = nullptr;
-		inPortMap  (fracAddFar, "X", "fracXfar");
-		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
-		inPortMap  (fracAddFar, "Cin", "cInAddFar");
-		outPortMap (fracAddFar, "R","fracAddResult");
-		fracAddFar = new IntAdder(this,target,wF+4);
-		vhdl << instance(fracAddFar, "fracAdder");
-#endif
 		
 		//shift in place
 		vhdl << tab << declare("fracGRS",wF+5) << "<= fracAddResult & sticky; "<<endl;

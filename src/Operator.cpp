@@ -513,32 +513,32 @@ namespace flopoco{
 
 		for(auto i: ioList_){
 			if(i->type() == Signal::constant) {
-				REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+				REPORT(FULL, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
 				i->setHasBeenScheduled(true);
 			}
 			else {
 				bool allPredecessorsConstant = i->unscheduleSignal();
 
 				if(allPredecessorsConstant){
-					REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+					REPORT(FULL, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
 				}else{
-					REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName());
+					REPORT(FULL, "markOperatorUnscheduled: de-scheduling signal " << i->getName());
 				}
 			}
 		}
 
 		for(auto i: signalList_) {
 			if(i->type() == Signal::constant) {
-				REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+				REPORT(FULL, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
 				i->setHasBeenScheduled(true);
 			}
 			else {
 				bool allPredecessorsConstant = i->unscheduleSignal();
 
 				if(allPredecessorsConstant){
-					REPORT(DEBUG, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
+					REPORT(FULL, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
 				}else{
-					REPORT(DEBUG, "markOperatorUnscheduled: de-scheduling signal " << i->getName());
+					REPORT(FULL, "markOperatorUnscheduled: de-scheduling signal " << i->getName());
 				}
 			}
 		}
