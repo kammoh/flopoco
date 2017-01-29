@@ -150,7 +150,7 @@ namespace flopoco{
 	
 			vhdl << tab << declare("valueExponent",wE)<<"<= not (zeroPadding4Exponent & temporalExponent );"<<endl;
 	
-			exponentConversion = new IntAdder(target,wE);
+			exponentConversion = new IntAdder(this, target,wE);
 			exponentConversion->changeName(getName()+"exponentConversion");
 			inPortMap  (exponentConversion, "X", "MSB2Signal");
 			inPortMap  (exponentConversion, "Y", "valueExponent");
@@ -166,7 +166,7 @@ namespace flopoco{
 			vhdl << tab << declare("partialConvertedExponentBit",wE+1)<<"<= '0' & partialConvertedExponent;"<<endl;
 			vhdl << tab << declare("sign4OU")<<"<=partialConvertedExponent"<<of(wE-1)<<";"<<endl;
 	
-			exponentFinal = new IntAdder(target,wE+1);
+			exponentFinal = new IntAdder(this, target,wE+1);
 			exponentFinal->changeName(getName()+"exponentFinal");
 			inPortMap  (exponentFinal, "X", "partialConvertedExponentBit");
 			inPortMap  (exponentFinal, "Y", "biassSignalBit");
@@ -188,7 +188,7 @@ namespace flopoco{
 			if(Signed){
 				vhdl << tab << declare("minusOne4ZD",MSB -LSB)<<"<=CONV_STD_LOGIC_VECTOR("<<-1<<","<<MSB-LSB<<");"<<endl;
 	
-				zeroD = new IntAdder(target, MSB-LSB );
+				zeroD = new IntAdder(this, target, MSB-LSB );
 				zeroD->changeName(getName()+"zeroD");
 				inPortMap  (zeroD, "X", "passedInput");
 				inPortMap  (zeroD, "Y", "minusOne4ZD");
@@ -203,7 +203,7 @@ namespace flopoco{
 
 				vhdl << tab << declare("minusOne4ZD",MSB -LSB+1)<<"<=CONV_STD_LOGIC_VECTOR("<<-1<<","<<MSB-LSB+1<<");"<<endl;
 				vhdl << tab << declare("passedInputBit",MSB-LSB+1)<<"<= '0' & passedInput;"<<endl;
-				zeroD = new IntAdder(target, MSB-LSB +1);
+				zeroD = new IntAdder(this, target, MSB-LSB +1);
 				zeroD->changeName(getName()+"zeroD");
 				inPortMap  (zeroD, "X", "passedInputBit");
 				inPortMap  (zeroD, "Y", "minusOne4ZD");
@@ -228,7 +228,7 @@ namespace flopoco{
 				vhdl << tab << declare("tempAddSign",maximalOutputValue+1)<<"<=tempPaddingAddSign & signSignal;"<<endl;
 
 				//Integer adder for obtaining the fraction value
-				fractionConvert = new IntAdder(target,maximalOutputValue+1);
+				fractionConvert = new IntAdder(this, target,maximalOutputValue+1);
 				fractionConvert->changeName(getName()+"_fractionConvert");
 				inPortMap  (fractionConvert, "X", "tempConvert0");
 				inPortMap  (fractionConvert, "Y", "tempAddSign");
@@ -256,7 +256,7 @@ namespace flopoco{
 			setCycleFromSignal("tempFractionResult");
 			vhdl << tab << declare("minusOne",sizeOfRemainder)<<"<=CONV_STD_LOGIC_VECTOR("<<-1<<","<<sizeOfRemainder<<");"<<endl;
 			vhdl << tab << declare("fractionRemainder",sizeOfRemainder)<<"<= tempFractionResult"<<range(sizeOfRemainder-1,0)<<";"<<endl;
-			oneSubstracter = new IntAdder(target,sizeOfRemainder);
+			oneSubstracter = new IntAdder(this, target,sizeOfRemainder);
 			oneSubstracter->changeName(getName()+"_oneSubstracter");
 			inPortMap  (oneSubstracter, "X", "fractionRemainder");
 			inPortMap  (oneSubstracter, "Y", "minusOne");
@@ -287,7 +287,7 @@ namespace flopoco{
 			vhdl << tab << declare("testM")<<"<= outputOfMux1;"<<endl;
 	
 	
-			roundingAdder = new IntAdder(target,wF+wE+1);
+			roundingAdder = new IntAdder(this, target,wF+wE+1);
 			roundingAdder->changeName(getName()+"roundingAdder");
 			inPortMap  (roundingAdder, "X", "concatenationForRounding");
 			inPortMap  (roundingAdder, "Y", "possibleCorrector4Rounding");
@@ -322,7 +322,7 @@ namespace flopoco{
 				if(Signed){
 					vhdl << tab << declare("minusOne4ZD",MSB -LSB)<<"<=CONV_STD_LOGIC_VECTOR("<<-1<<","<<MSB-LSB<<");"<<endl;
 	
-					zeroD = new IntAdder(target, MSB-LSB );
+					zeroD = new IntAdder(this, target, MSB-LSB );
 					zeroD->changeName(getName()+"zeroD");
 					inPortMap  (zeroD, "X", "passedInput");
 					inPortMap  (zeroD, "Y", "minusOne4ZD");
@@ -336,7 +336,7 @@ namespace flopoco{
 				}else{
 					vhdl << tab << declare("minusOne4ZD",MSB -LSB+1)<<"<=CONV_STD_LOGIC_VECTOR("<<-1<<","<<MSB-LSB+1<<");"<<endl;
 					vhdl << tab << declare("passedInputBit",MSB-LSB+1)<<"<= '0' & passedInput;"<<endl;
-					zeroD = new IntAdder(target, MSB-LSB +1);
+					zeroD = new IntAdder(this, target, MSB-LSB +1);
 					zeroD->changeName(getName()+"zeroD");
 					inPortMap  (zeroD, "X", "passedInputBit");
 					inPortMap  (zeroD, "Y", "minusOne4ZD");
@@ -392,7 +392,7 @@ namespace flopoco{
 	
 					//Integer adder for obtaining the fraction value
 	
-					fractionConvert = new IntAdder(target,sizeFractionPlusOne+1);
+					fractionConvert = new IntAdder(this, target,sizeFractionPlusOne+1);
 					fractionConvert->changeName(getName()+"_fractionConvert");
 					inPortMap  (fractionConvert, "X", "tempConvert0");
 					inPortMap  (fractionConvert, "Y", "tempAddSign");
@@ -422,7 +422,7 @@ namespace flopoco{
 	
 				vhdl << tab << declare("valueExponent",wE,true)<<"<= not(zeroPadding4Exponent & temporalExponent);"<<endl;
 	
-				exponentConversion = new IntAdder(target,wE);
+				exponentConversion = new IntAdder(this, target,wE);
 				exponentConversion->changeName(getName()+"exponentConversion");
 				inPortMap  (exponentConversion, "X", "MSB2Signal");
 				inPortMap  (exponentConversion, "Y", "valueExponent");
@@ -439,7 +439,7 @@ namespace flopoco{
 				vhdl << tab << declare("partialConvertedExponentBit",wE+1)<<"<= '0' & partialConvertedExponent;"<<endl;
 				vhdl << tab << declare("sign4OU")<<"<= partialConvertedExponent"<<of(wE-1)<<";"<<endl;
 	
-				exponentFinal = new IntAdder(target,wE+1);
+				exponentFinal = new IntAdder(this, target,wE+1);
 				exponentFinal->changeName(getName()+"exponentFinal");
 				inPortMap  (exponentFinal, "X", "partialConvertedExponentBit");
 				inPortMap  (exponentFinal, "Y", "biassSignalBit");
@@ -462,7 +462,7 @@ namespace flopoco{
 				vhdl << tab << declare("possibleConvertedExponent20",wE+1)<<"<= '0' & possibleConvertedExponent2;"<<endl;
 				vhdl << tab << declare("sign4OU2")<<"<= possibleConvertedExponent2"<<of(wE-1)<<";"<<endl;
 	
-				expCorrect = new IntAdder(target,wE+1);
+				expCorrect = new IntAdder(this, target,wE+1);
 				expCorrect->changeName(getName()+"expCorrect");
 				inPortMap  (expCorrect, "X",   "possibleConvertedExponent20");
 				inPortMap  (expCorrect, "Y",   "zeroInput4Exponent");

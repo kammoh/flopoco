@@ -663,10 +663,6 @@ namespace flopoco{
 		 * @return the ratio of FFs per decoder bits
 		 */
 		virtual double getFFPerDecoder(int width);
-		/*------------------------------------------------------------*/
-		/*   Mailbox stuff   */
-		void fillParentOpMailbox(OperatorPtr parentOp);
-		OperatorPtr readParentOpMailbox();
 		
 		/*------------ Floorplanning Related Items -------------------*/
 		/**
@@ -722,7 +718,6 @@ namespace flopoco{
 																		1 means: any sub-multiplier, even very small ones, go to DSP*/
 		bool   plainVHDL_;     /**< True if we want the VHDL code to be concise and readable, with + and * instead of optimized FloPoCo operators. */
 		bool   generateFigures_;  /**< If true, some operators may generate some figures in SVG format */
-		OperatorPtr parentOpMailBox_; /**< used to pass the parent op through the target argument to those who need it */
 	};
 
 }

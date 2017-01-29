@@ -33,11 +33,6 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 using namespace std;
 namespace flopoco {
 
-	IntAdder::IntAdder ( Target* target, int wIn_):
-		IntAdder(nullptr, target, wIn_)
-	{
-	}
-
 	IntAdder::IntAdder (OperatorPtr parentOp, Target* target, int wIn_):
 		Operator (target), wIn ( wIn_ )
 	{
@@ -162,7 +157,7 @@ namespace flopoco {
 	OperatorPtr IntAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn, false);
-		return new IntAdder(target, wIn);
+		return new IntAdder(nullptr, target, wIn);
 	}
 
 	void IntAdder::registerFactory(){

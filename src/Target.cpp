@@ -1794,8 +1794,4 @@ namespace flopoco{
 		return 0;
 	}
 
-	/*----------------------------------------------------------------*/
-	void Target::fillParentOpMailbox(OperatorPtr parentOp){ parentOpMailBox_=parentOp; };
-	OperatorPtr Target::readParentOpMailbox() {return parentOpMailBox_; }
-	/*----------------------------------------------------------------*/
 }

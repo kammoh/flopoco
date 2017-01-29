@@ -195,17 +195,19 @@ namespace flopoco{
 				<< " <= EffSub and not sticky;"<< endl;//TODO understand why
 
 		//result is always positive.
-		IntAdder* fracAddFar = nullptr;
 
+#if 1
+		newInstance("IntAdder", "fracAdder", join("wIn=",wF+4), "X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar","R=>fracAddResult");
+#else
+		IntAdder* fracAddFar = nullptr;
 		inPortMap  (fracAddFar, "X", "fracXfar");
 		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
 		inPortMap  (fracAddFar, "Cin", "cInAddFar");
 		outPortMap (fracAddFar, "R","fracAddResult");
-
-		fracAddFar = new IntAdder(target,wF+4);
-
+		fracAddFar = new IntAdder(this,target,wF+4);
 		vhdl << instance(fracAddFar, "fracAdder");
-
+#endif
+		
 		//shift in place
 		vhdl << tab << declare("fracGRS",wF+5) << "<= fracAddResult & sticky; "<<endl;
 
@@ -246,24 +248,10 @@ namespace flopoco{
 		vhdl << tab << declare(getTarget()->logicDelay(4),"addToRoundBit")
 				<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
 
-#if 0
-		
-		IntAdder *ra = nullptr;
-
-		inPortMap(ra,"X", "expFrac");
-		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );
-		inPortMap( ra, "Cin", "addToRoundBit");
-		outPortMap( ra, "R", "RoundedExpFrac");
-
-		ra = new IntAdder(target, wE+2+wF+1);
-
-		vhdl << instance(ra, "roundingAdder");
-#else
 		vhdl << tab  << declare("zeros", wE+2+wF+1) << "  <= " <<  zg(wE+2+wF+1,0)<<";"<<endl;
 		
 		newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>addToRoundBit","R=>RoundedExpFrac");
 		//		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;Cin=>addToRoundBit","RoundedExpFrac" );
-#endif
 		
 		addComment("possible update to exception bits");
 		vhdl << tab << declare("upExc",2)<<" <= RoundedExpFrac"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;

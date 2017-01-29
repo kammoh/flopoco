@@ -92,7 +92,7 @@ namespace flopoco{
       bias = eMax - 1;
       vhdl << tab << declare("bias",wEI) << " <= not conv_std_logic_vector(" << bias << ", "<< wEI<<");"<<endl;
 
-      Exponent_difference = new IntAdder(target, wEI);
+      Exponent_difference = new IntAdder(this, target, wEI);
       Exponent_difference->changeName(getName()+"Exponent_difference");
       inPortMap  (Exponent_difference, "X", "bias");
       inPortMap  (Exponent_difference, "Y", "eA0");
@@ -152,7 +152,7 @@ namespace flopoco{
             vhdl << tab << declare("round") << " <= (fA1" << of(wFI+LSB) << " and I" << of(wEI+wFI) << ") or (fA1" << of(wFI+LSB) << " and notallzero and not I" << of(wEI+wFI) << ");"<<endl;
          }   
          vhdl << tab << declare("fA2b",wFO+1) <<  "<= '0' & " << rangeAssign(wFO-1,1,"'0'") << " & round;"<<endl;
-         MantSum = new IntAdder(target, wFO+1);
+         MantSum = new IntAdder(this, target, wFO+1);
          MantSum->changeName(getName()+"MantSum");
          inPortMap  (MantSum, "X", "fA2a");
          inPortMap  (MantSum, "Y", "fA2b");

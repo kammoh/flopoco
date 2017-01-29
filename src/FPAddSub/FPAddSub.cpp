@@ -85,7 +85,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+wF+2)); //comparator delay implemented for now as adder
 			vhdl<< tab << declare("swap")       << " <= '0' when excExpFracX >= excExpFracY else '1';"<<endl;
 		}else{
-			IntAdder *cmpAdder = new IntAdder(target, wE+wF+2+1);
+			IntAdder *cmpAdder = new IntAdder(this, target, wE+wF+2+1);
 
 			vhdl << tab << declare("addCmpOp1",wE+wF+2+1) << "<= " << zg(1,0) << " & excExpFracX;"<<endl;
 			vhdl << tab << declare("addCmpOp2",wE+wF+2+1) << "<= " << og(1,0) << " & not(excExpFracY);"<<endl;
@@ -233,7 +233,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 		vhdl << tab << declare("cInFracAdderSub") << " <= not sticky;" << endl;
 
 		//mantisa addition
-		fracAdder = new IntAdder(target,wF+4);
+		fracAdder = new IntAdder(this, target,wF+4);
 		inPortMap  (fracAdder, "X", "fracX");
 		inPortMap  (fracAdder, "Y", "fracYAdd");
 		inPortMapCst  (fracAdder, "Cin", "\'0\'");
@@ -327,7 +327,7 @@ FPAddSub::FPAddSub(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, 
 			if (syncCycleFromSignal("expFracSub"))
 				setCriticalPath(cpexpFrac);
 
-		IntAdder *ra = new IntAdder(target, wE+2+wF+1);
+		IntAdder *ra = new IntAdder(this, target, wE+2+wF+1);
 
 		inPortMap(ra,"X", "expFracSub");
 		inPortMapCst(ra, "Y", zg(wE+2+wF+1,0) );

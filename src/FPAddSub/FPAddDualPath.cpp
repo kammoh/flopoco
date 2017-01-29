@@ -261,7 +261,7 @@ namespace flopoco{
 
 		// perform carry in addition
 		REPORT(DETAILED, "Building far path adder");
-		fracAddFar = new IntAdder(target,wF+4);
+		fracAddFar = new IntAdder(this, target,wF+4);
 		fracAddFar->changeName(getName()+"_fracAddFar");
 		inPortMap  (fracAddFar, "X", "fracXfar");
 		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
@@ -337,7 +337,7 @@ namespace flopoco{
 
 		REPORT(DETAILED, "Building final round adder");
 		// finalRoundAdd will add the mantissa concatenated with exponent, two bits reserved for possible under/overflow
-		finalRoundAdd = new IntAdder(target, wE + wF + 2);
+		finalRoundAdd = new IntAdder(this, target, wE + wF + 2);
 		finalRoundAdd->changeName(getName()+"_finalRoundAdd");
 
 		ostringstream zero;

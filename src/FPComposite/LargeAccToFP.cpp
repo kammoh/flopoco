@@ -64,7 +64,7 @@ namespace flopoco{
 		vhdl << tab << declare("extA", sizeAcc_+1) << " <= signA & A;"<<endl;
 		vhdl << tab << declare("extC", sizeAcc_+1) << " <= signC & C;"<<endl;
 
-		IntAdder *a = new IntAdder(target, sizeAcc_+1);
+		IntAdder *a = new IntAdder(this, target, sizeAcc_+1);
 
 		inPortMap( a,   "X",   "extA");
 		inPortMap( a,   "Y",   "extC");
@@ -138,7 +138,7 @@ namespace flopoco{
 		vhdl << tab << declare("notResFrac",wFOut_+1) << " <= resFrac xor "<<rangeAssign(wFOut_,0,"resSign")<<";"<<endl;
 
 		//convert fraction in sign-magnitude
-		IntAdder *smFracAdder = new IntAdder(target,wFOut_ + 1 );
+		IntAdder *smFracAdder = new IntAdder(this, target,wFOut_ + 1 );
 
 		inPortMap   (smFracAdder, "X",   "notResFrac");
 		inPortMapCst(smFracAdder, "Y",   zg(wFOut+1,0));
