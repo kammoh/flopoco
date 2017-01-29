@@ -9,16 +9,19 @@
 
 namespace flopoco {
 
-#define LOGIC      0
-#define REGISTER   1
-#define SLICE      2
-#define LATENCY    3
-
-	/** The IntAdder class for experimenting with adders.
+	/** The IntAdder class for pipelined integer adders.
 	 */
 	class IntAdder : public Operator {
 	public:
 
+		/** The types of integer addition */
+		typedef enum {
+			Add, /**< plain adder */
+			Sub, /**< subtracter */
+			AddSub, /**< X+Y, X-Y */
+			SubSub, /**< X-Y, Y-X */
+		} Type;
+		
 		/**
 		 * The IntAdder constructor
 		 * @param[in] target           the target device
@@ -30,7 +33,7 @@ namespace flopoco {
 		 *            2: optimize slice/ALM count
 		 * @param[in] srl              optimize for use of shift registers
 		 **/
-		IntAdder ( Target* target, int wIn, int optimizeType = SLICE, bool srl = true, int implementation = -1 );
+		IntAdder ( Target* target, int wIn);
 
 		/**
 		 * The IntAdder constructor
@@ -44,7 +47,7 @@ namespace flopoco {
 		 *            2: optimize slice/ALM count
 		 * @param[in] srl              optimize for use of shift registers
 		 **/
-		IntAdder ( OperatorPtr parentOp, Target* target, int wIn, int optimizeType = SLICE, bool srl = true, int implementation = -1 );
+		IntAdder ( OperatorPtr parentOp, Target* target, int wIn);
 
 		/**
 		 *  Destructor
