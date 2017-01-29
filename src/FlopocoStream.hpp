@@ -174,7 +174,7 @@ namespace flopoco{
 
 			bool isEmpty();
 
-			bool setParentOperator(Operator* parentOperator);
+			bool setOperator(Operator* op);
 
 			/**
 			 * The dependence table should contain pairs of the form (lhsName, RhsName),
@@ -193,7 +193,7 @@ namespace flopoco{
 
 		protected:
 
-			Operator *parentOperator;
+			Operator *op;
 			bool codeParsed;
 			bool disabledParsing;
 	};

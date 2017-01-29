@@ -80,6 +80,7 @@ namespace flopoco{
 	int verbose=0;
 
 	Operator::Operator(Target* target){
+		vhdl.setOperator(this);
 		stdLibType_                 = 0;						// unfortunately this is the historical default.
 		target_                     = target;
 		numberOfInputs_             = 0;

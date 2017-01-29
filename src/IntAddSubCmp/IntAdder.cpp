@@ -60,7 +60,7 @@ namespace flopoco {
 		int maxCycle = 0;
 		double maxCP = 0.0;
 		for(auto i: ioList_) {
-			// REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			//REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 			if((i->getCycle() > maxCycle)
 					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
 				maxCycle = i->getCycle();
@@ -72,8 +72,13 @@ namespace flopoco {
 		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)		{
-			vhdl << tab << declare(getTarget()->adderDelay(wIn),"Rtmp", wIn) << " <= X + Y + Cin;" << endl; // just to use declare()
+			REPORT(DEBUG, "1 " << getTarget()->adderDelay(wIn));
+			vhdl << tab << declare(getTarget()->adderDelay(wIn),"Rtmp", wIn); // just to use declare()
+			REPORT(DEBUG, "2");
+			vhdl << " <= X + Y + Cin;" << endl; 
+			REPORT(DEBUG, "3");
 			vhdl << tab << "R <= Rtmp;" << endl;
+
 		}
 
 		else		{
@@ -119,7 +124,7 @@ namespace flopoco {
 			}
 			vhdl << ";" << endl;
 		}
-
+		REPORT(DEBUG, "Done");
 
 	}
 

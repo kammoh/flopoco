@@ -221,7 +221,6 @@ label					  ({identifier}{space_character}*":")
 
 ";" {
     //the left-hand side signal itself is marked, instead of putting it at the end of the statement
-	
 	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)
 	{
 		triplet<string, string, int> tempTriplet;
@@ -239,6 +238,7 @@ label					  ({identifier}{space_character}*":")
 	yyextra->isLhsSet = false;
 	
 	(*yyextra->os) << yytext;
+
 }
 
 

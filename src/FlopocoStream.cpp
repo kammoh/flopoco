@@ -44,7 +44,7 @@ namespace flopoco{
 		dependenceTable.clear();
 		disabledParsing = false;
 		codeParsed = false;
-		parentOperator = nullptr;
+		op = nullptr;
 	}
 
 
@@ -96,8 +96,9 @@ namespace flopoco{
 
 			//launch the scheduling, if required
 			if(!disabledParsing){
-				parentOperator->schedule(!parentOperator->isOperatorScheduled());
+				op->schedule(!op->isOperatorScheduled());
 			}
+
 		}
 	}
 
@@ -130,7 +131,6 @@ namespace flopoco{
 		//set the flag for code parsing and reset the vhdl code buffer
 		codeParsed = true;
 		vhdlCodeBuffer.str("");
-
 		//the annotated string is returned
 		return vhdlO.str();
 	}
@@ -174,9 +174,9 @@ namespace flopoco{
 	}
 
 
-	bool FlopocoStream::setParentOperator(Operator* parentOperator_){
-		if(parentOperator == nullptr){
-			parentOperator = parentOperator_;
+	bool FlopocoStream::setOperator(Operator* op_){
+		if(op == nullptr){
+			op = op_;
 		}else{
 			throw "Error: parent operator for vhdl stream already set.";
 		}
