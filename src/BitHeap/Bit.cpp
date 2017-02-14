@@ -16,8 +16,8 @@ namespace flopoco
 		p  << "bh" << bitheap->getGUid() << "_w" << weight << "_" << uid;
 		string name = p.str();
 		bitheap->getOp()-> vhdl << tab
-														<< bitheap->getOp()->declare(name)
-														<< " <= " << rhsAssignment << ";" << endl;
+			<< bitheap->getOp()->declare(name)
+			<< " <= " << rhsAssignment << ";" << endl;
 		
 		signal = bitheap->getOp()->getSignalByName(name);
 		
@@ -40,8 +40,8 @@ namespace flopoco
 		rhsAssignment = p.str();
 
 		bitheap->getOp()->vhdl << tab
-													 << bitheap->getOp()->declare(name)
-													 << " <= " << rhsAssignment << ";" << endl;
+			 << bitheap->getOp()->declare(name)
+			 << " <= " << rhsAssignment << ";" << endl;
 
 		signal = bitheap->getOp()->getSignalByName(name);
 		

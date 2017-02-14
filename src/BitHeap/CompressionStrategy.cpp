@@ -50,7 +50,19 @@ namespace flopoco{
 		bool isConstantNonzero = false;
 		for (unsigned w=0; w<bitheap-> width; w++){
 			if (1 == ((bitheap->constantBits>>w) & 1) ){
-				bitheap-> addBit(w-bitheap->lsb, "'1'");
+				Bit* bit = bitheap->addBit(w-bitheap->lsb, "'1'");
+
+				//set the signal to constant type, with declaration
+				bit->signal->setType(Signal::constantWithDeclaration);
+				//initialize the signals predecessors and successors
+				bit->signal->resetPredecessors();
+				bit->signal->resetSuccessors();
+				//set the timing for the constant signal, at cycle 0, criticalPath 0, criticalPathContribution 0
+				bit->signal->setCycle(0);
+				bit->signal->setCriticalPath(0.0);
+				bit->signal->setCriticalPathContribution(0.0);
+				bit->signal->setHasBeenScheduled(true);
+
 				isConstantNonzero = true;
 			}
 		}

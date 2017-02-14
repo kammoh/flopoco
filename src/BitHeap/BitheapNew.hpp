@@ -94,8 +94,9 @@ enum BitType : unsigned;
 		 *                           for an integer bitheap, or between msb and lsb for a fixed-point bitheap.
 		 * @param rhsAssignment      the right-hand side VHDL code defining this bit.
 		 * @param comment            a VHDL comment for this bit
+		 * @return the newly added bit
 		 */
-		void addBit(int weight, string rhsAssignment);
+		Bit* addBit(int weight, string rhsAssignment);
 
 
 		/**

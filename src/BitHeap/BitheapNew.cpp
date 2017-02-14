@@ -83,7 +83,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addBit(int weight, string rhsAssignment)
+	Bit* BitheapNew::addBit(int weight, string rhsAssignment)
 	{
 		REPORT(FULL, "adding a bit at weight " << weight << " with rhs=" << rhsAssignment);
 
@@ -91,7 +91,7 @@ namespace flopoco {
 		{
 			REPORT(INFO, "WARNING: in addBit, weight=" << weight
 					<< " out of the bit heap range ("<< msb << ", " << lsb << ")... ignoring it");
-			return;
+			return nullptr;
 		}
 
 		//create a new bit
@@ -107,6 +107,8 @@ namespace flopoco {
 		printColumnInfo(weight);
 
 		isCompressed = false;
+
+		return bit;
 	}
 
 

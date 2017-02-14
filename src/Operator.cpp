@@ -512,7 +512,7 @@ namespace flopoco{
 		setIsOperatorScheduled(false);
 
 		for(auto i: ioList_){
-			if(i->type() == Signal::constant) {
+			if((i->type() == Signal::constant) || (i->type() == Signal::constantWithDeclaration)) {
 				REPORT(FULL, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
 				i->setHasBeenScheduled(true);
 			}
@@ -528,7 +528,7 @@ namespace flopoco{
 		}
 
 		for(auto i: signalList_) {
-			if(i->type() == Signal::constant) {
+			if((i->type() == Signal::constant) || (i->type() == Signal::constantWithDeclaration)) {
 				REPORT(FULL, "markOperatorUnscheduled: NOT de-scheduling signal " << i->getName());
 				i->setHasBeenScheduled(true);
 			}
@@ -1808,7 +1808,8 @@ namespace flopoco{
 					continue;
 
 				//signals connected only to constants are already scheduled
-				if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
+				if(((tmpPair.first->type() == Signal::constant) || (tmpPair.first->type() == Signal::constantWithDeclaration))
+						&& (originalSignal->predecessors()->size() == 1))
 				{
 					signalList_[i]->setCycle(0);
 					signalList_[i]->setCriticalPath(0.0);
@@ -2242,7 +2243,7 @@ namespace flopoco{
 			for(unsigned int i=0; i<signalList_.size(); i++) {
 				Signal *s = signalList_[i];
 				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser)
-						|| (s->type() == Signal::wire) || (s->type() == Signal::table))
+						|| (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration))
 					if(s->getLifeSpan() > 0) {
 						for(int j=1; j <= s->getLifeSpan(); j++)
 							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
@@ -3348,7 +3349,7 @@ namespace flopoco{
 			int currentPredCycleDelay = max(0, targetSignal->predecessorPair(i)->second);
 
 			//constant signals are not taken into account
-			if(currentPred->type() == Signal::constant)
+			if((currentPred->type() == Signal::constant) || (currentPred->type() == Signal::constantWithDeclaration))
 				continue;
 
 			//check if the predecessor is at a later cycle
@@ -3881,7 +3882,7 @@ namespace flopoco{
 			Signal* tmpSignal = new Signal(this, signalList_[i]);
 
 			//if this a constant signal, then it doesn't need to be scheduled
-			if(tmpSignal->type() == Signal::constant)
+			if((tmpSignal->type() == Signal::constant) || (tmpSignal->type() == Signal::constantWithDeclaration))
 			{
 				tmpSignal->setCycle(0);
 				tmpSignal->setCriticalPath(0.0);
@@ -3901,7 +3902,7 @@ namespace flopoco{
 			Signal* tmpSignal = new Signal(this, ioList_[i]);
 
 			//if this a constant signal, then it doesn't need to be scheduled
-			if(tmpSignal->type() == Signal::constant)
+			if((tmpSignal->type() == Signal::constant) || (tmpSignal->type() == Signal::constantWithDeclaration))
 			{
 				tmpSignal->setCycle(0);
 				tmpSignal->setCriticalPath(0.0);
@@ -3961,7 +3962,8 @@ namespace flopoco{
 					continue;
 
 				//signals connected only to constants are already scheduled
-				if((tmpPair.first->type() == Signal::constant) && (originalSignal->predecessors()->size() == 1))
+				if(((tmpPair.first->type() == Signal::constant) || (tmpPair.first->type() == Signal::constantWithDeclaration))
+						&& (originalSignal->predecessors()->size() == 1))
 				{
 					signalList_[i]->setCycle(0);
 					signalList_[i]->setCriticalPath(0.0);
@@ -4038,7 +4040,8 @@ namespace flopoco{
 
 					//if the signal is only connected to a constant,
 					//	then the signal doesn't need to be scheduled
-					if((tmpPair->first->type() == Signal::constant) && (originalIO->predecessors()->size() == 1))
+					if(((tmpPair->first->type() == Signal::constant) || (tmpPair->first->type() == Signal::constantWithDeclaration))
+							&& (originalIO->predecessors()->size() == 1))
 					{
 						currentIO->setCycle(0);
 						currentIO->setCriticalPath(0.0);

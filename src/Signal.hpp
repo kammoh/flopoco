@@ -43,6 +43,7 @@ class Operator;
 			out,                             /**< if the signal is an output signal */
 			wire,                            /**< if the signal is a wire (not registered) */
 			constant,                        /**< if the signal is a constant */
+			constantWithDeclaration,         /**< if the signal is a constant, but needs to be declared */
 			table,                           /**< if the signal is a table (either logic, or RAM-based) */
 			registeredWithoutReset,          /**< if the signal is registered, but does not have a reset */
 			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */

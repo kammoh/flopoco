@@ -228,7 +228,11 @@ namespace flopoco{
 		}
 
 		if(logicTable){
-			int lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
+			int lutsPerBit;
+			if(wIn < getTarget()->lutInputs())
+				lutsPerBit = 1;
+			else
+				lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
 			REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
 		}
 		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
