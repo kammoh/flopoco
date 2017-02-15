@@ -485,7 +485,6 @@ namespace flopoco{
 				parentOp->vhdl << parentOp->instance(t , instanceName);
 
 				int sliceOutWidth = parentOp->getSignalByName(sliceOutName)->width();
-				cerr << "***** Size of "<< sliceOutName << " is " << sliceOutWidth << endl;
 
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {

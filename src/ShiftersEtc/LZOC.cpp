@@ -123,7 +123,7 @@ namespace flopoco{
 	
 	void LZOC::registerFactory(){
 		UserInterface::add("LZOC", // name
-											 "A classical barrel shifter. The output size is computed.",
+											 "A leading zero/one counter. One input specifies if 0s or 1s should be counted. The output size is computed.",
 											 "ShiftersLZOCs", // category
 											 "",
 											 "wIn(int): input size in bits", // This string will be parsed
