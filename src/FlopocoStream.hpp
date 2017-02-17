@@ -191,6 +191,13 @@ namespace flopoco{
 
 			vector<triplet<string, string, int>> dependenceTable;   /**< table containing the left-hand side - right-hand side dependences, with the possible delay on the edge */
 
+			//the lexing context
+			string lexLhsName;
+			vector<string> lexExtraRhsNames;
+			vector<triplet<string, string, int>> lexDependenceTable;
+			LexerContext::LexMode lexLexingMode;
+			bool lexIsLhsSet;
+
 		protected:
 
 			Operator *op;

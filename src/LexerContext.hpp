@@ -27,33 +27,30 @@ public:
 	} LexMode;
 
 	void* scanner;
-	int result;
 	istream* is;
 	ostream* os;
-	int yyTheCycle;
-	vector<pair<string, int> > theUseTable;
 
-	string lhsName;
-	vector<string> extraRhsNames;
-	vector<triplet<string, string, int>> dependenceTable;
+	string *lhsName;
+	vector<string> *extraRhsNames;
+	vector<triplet<string, string, int>> *dependenceTable;
 
-	LexMode lexingMode;
+	LexMode *lexingMode;
 
-	bool isLhsSet;
+	bool *isLhsSet;
 
 public:
-	LexerContext(istream* is = &cin, ostream* os = &cout) {
+	LexerContext(istream* is, ostream* os,
+			string *lhsName_, vector<string> *extraRhsNames_, vector<triplet<string, string, int>> *dependenceTable_,
+			LexMode *lexingMode_, bool *isLhsSet_) {
 		init_scanner();
 		this->is = is;
 		this->os = os;
-		yyTheCycle=0;
 
-		lhsName = "";
-		extraRhsNames.clear();
-		dependenceTable.clear();
-		lexingMode = LexMode::unset;
-
-		isLhsSet = false;
+		this->lhsName = lhsName_;
+		this->extraRhsNames = extraRhsNames_;
+		this->dependenceTable = dependenceTable_;
+		this->lexingMode = lexingMode_;
+		this->isLhsSet = isLhsSet_;
 	}
 
 	//these methods are generated in VHDLLexer.cpp 

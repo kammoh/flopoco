@@ -45,6 +45,13 @@ namespace flopoco{
 		disabledParsing = false;
 		codeParsed = false;
 		op = nullptr;
+
+		//initialize the lexing context
+		lexLhsName = "";
+		lexExtraRhsNames.clear();
+		lexDependenceTable.clear();
+		lexLexingMode = LexerContext::unset;
+		lexIsLhsSet = false;
 	}
 
 
@@ -109,7 +116,7 @@ namespace flopoco{
 		istringstream in(vhdlCodeBuffer.str());
 
 		//instantiate the flex++ object  for lexing the buffer info
-		LexerContext* lexer = new LexerContext(&in, &vhdlO);
+		LexerContext* lexer = new LexerContext(&in, &vhdlO, &lexLhsName, &lexExtraRhsNames, &lexDependenceTable, &lexLexingMode, &lexIsLhsSet);
 
 		//call the FlexLexer++ on the buffer. The lexing output is
 		//	in the variable vhdlO. Additionally, a temporary table containing
@@ -126,7 +133,7 @@ namespace flopoco{
 
 		//the temporary table is used to update the member of FlopocoStream
 		//	this also empties the lexer's dependence table
-		updateDependenceTable(lexer->dependenceTable);
+		updateDependenceTable(*lexer->dependenceTable);
 
 		//set the flag for code parsing and reset the vhdl code buffer
 		codeParsed = true;

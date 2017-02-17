@@ -455,7 +455,7 @@ namespace flopoco{
 		else { // shift right; truncate
 			parentOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
 		}
-#if 0 // This breaks the lexer, I keep it as a case study to fix it. TODO 
+#if 1 // This breaks the lexer, I keep it as a case study to fix it. TODO
 		parentOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
 #else
 		ostringstream t;
