@@ -72,7 +72,7 @@ graphic_character         ({basic_graphic_character}|{lower_case_letter}|{other_
 basic_graphic_character   ({upper_case_letter}|{digit}|{special_character}|{space_character})
 letter                    ({upper_case_letter}|{lower_case_letter})
 letter_or_digit           ({letter}|{digit})
-decimal_literal           {integer}(\.{integer})?({exponent})?
+decimal_literal           (\+|\-)?{integer}(\.{integer})?({exponent})?
 integer                   {digit}(_?{digit})*
 exponent                  ([eE][-+]?{integer})
 base                      {integer}
@@ -193,49 +193,49 @@ label					  ({identifier}{space_character}*":")
 	
 	//check for possible errors in the VHDL code
 	//	to be in this case, the ';' was probably omitted
-	if(yyextra->lexingMode == LexerContext::signalAssignment)
+	if(*yyextra->lexingMode == LexerContext::signalAssignment)
 	{
 		//throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
 		throw("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!");
 	}
 	
-	if(yyextra->lexingMode == LexerContext::unset)
+	if(*yyextra->lexingMode == LexerContext::unset)
 	{
-		yyextra->lexingMode = LexerContext::signalAssignment;
+		*yyextra->lexingMode = LexerContext::signalAssignment;
 	}
 	
-	if(yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
+	if(*yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
 	{
-		yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
+		*yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
 	}
 }
 
 ":=" {
 	(*yyextra->os) << yytext;
 	
-	yyextra->extraRhsNames.clear();
-	yyextra->lexingMode = LexerContext::variableAssignment;
-	yyextra->lhsName = "";
+	yyextra->extraRhsNames->clear();
+	*yyextra->lexingMode = LexerContext::variableAssignment;
+	*yyextra->lhsName = "";
 }
 
 
 ";" {
     //the left-hand side signal itself is marked, instead of putting it at the end of the statement
-	for(int i=0; (unsigned)i<yyextra->extraRhsNames.size(); i++)
+	for(int i=0; (unsigned)i<yyextra->extraRhsNames->size(); i++)
 	{
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = yyextra->lhsName;
-		tempTriplet.second = yyextra->extraRhsNames[i];
+		tempTriplet.first = *yyextra->lhsName;
+		tempTriplet.second = (*yyextra->extraRhsNames)[i];
 		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempTriplet);
+		yyextra->dependenceTable->push_back(tempTriplet);
 	}
-	yyextra->extraRhsNames.clear();
-	yyextra->lexingMode = LexerContext::unset;
-	yyextra->lhsName = "";
+	yyextra->extraRhsNames->clear();
+	*yyextra->lexingMode = LexerContext::unset;
+	*yyextra->lhsName = "";
 	
-	yyextra->isLhsSet = false;
+	*yyextra->isLhsSet = false;
 	
 	(*yyextra->os) << yytext;
 
@@ -245,9 +245,9 @@ label					  ({identifier}{space_character}*":")
 ({w}{h}{e}{n}) {
 	(*yyextra->os) << yytext;
 	
-	if(yyextra->lexingMode != LexerContext::selectedSignalAssignment)
+	if(*yyextra->lexingMode != LexerContext::selectedSignalAssignment)
 	{
-		yyextra->lexingMode = LexerContext::conditionalSignalAssignment;
+		*yyextra->lexingMode = LexerContext::conditionalSignalAssignment;
 	}
 }
 
@@ -255,32 +255,32 @@ label					  ({identifier}{space_character}*":")
 ({w}{i}{t}{h}) {
 	(*yyextra->os) << yytext;
 	
-	yyextra->lexingMode = LexerContext::selectedSignalAssignment;
+	*yyextra->lexingMode = LexerContext::selectedSignalAssignment;
 }
 
 
 ({s}{e}{l}{e}{c}{t}) {
 	(*yyextra->os) << yytext;
 	
-	yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
+	*yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
 }
 
 
 ({p}{o}{r}{t}({space_character})+{m}{a}{p}) {
 	(*yyextra->os) << yytext;
 	
-	yyextra->lexingMode = LexerContext::instance;
-	yyextra->lhsName = "";
-	yyextra->extraRhsNames.clear();
+	*yyextra->lexingMode = LexerContext::instance;
+	*yyextra->lhsName = "";
+	yyextra->extraRhsNames->clear();
 }
 
 
 ({c}{a}{s}{e}) {
 	(*yyextra->os) << yytext;
 	
-	yyextra->lexingMode = LexerContext::caseStatement;
-	yyextra->lhsName = "";
-	yyextra->extraRhsNames.clear();
+	*yyextra->lexingMode = LexerContext::caseStatement;
+	*yyextra->lhsName = "";
+	yyextra->extraRhsNames->clear();
 }
 
 
@@ -297,104 +297,105 @@ label					  ({identifier}{space_character}*":")
 	//	if in conditionalSignalAssignment mode, c.f. signalAssignment mode
 	//	if in selectedSignalAssignment mode, then if the mode is unset this signal is stored and added later to the dependence table, else c.f. signalAssignment mode
 	//	for all other cases, just copy the code to the output stream and don't perform any other action
- 
-	if(yyextra->lexingMode == LexerContext::unset)
+	
+	if(*yyextra->lexingMode == LexerContext::unset)
 	{
 		// this is the left hand side of the assignment
 		(*yyextra->os) << "??" << yytext << "??";
 		
-		if(yyextra->lhsName == "")
+		if(*yyextra->lhsName == "")
 		{
-			yyextra->lhsName = yytext;
+			*yyextra->lhsName = yytext;
 		}
 		
-		if(yyextra->isLhsSet == true)
+		if(*yyextra->isLhsSet == true)
 		{
-			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
-			//throw("Error: something went wrong during the first parsing of the VHDL code!");
+			//throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
+			throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
-		yyextra->isLhsSet = true;
-	}else if(yyextra->lexingMode == LexerContext::signalAssignment)
+		*yyextra->isLhsSet = true;
+	}else if(*yyextra->lexingMode == LexerContext::signalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.first = *yyextra->lhsName;
 		tempTriplet.second = yytext;
 		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempTriplet);
-	}else if(yyextra->lexingMode == LexerContext::conditionalSignalAssignment)
+		yyextra->dependenceTable->push_back(tempTriplet);
+	}else if(*yyextra->lexingMode == LexerContext::conditionalSignalAssignment)
 	{
 		// this is the right hand side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.first = *yyextra->lhsName;
 		tempTriplet.second = yytext;
 		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempTriplet);
-	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment)
+		yyextra->dependenceTable->push_back(tempTriplet);
+	}else if(*yyextra->lexingMode == LexerContext::selectedSignalAssignment)
 	{
 		// this signal is on the left side of the assignment, but belongs to the right side
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
-		yyextra->extraRhsNames.push_back(yytext);
+		yyextra->extraRhsNames->push_back(yytext);
 		
 		//switch the parsing mode to the next stage, selectedSignalAssignment2
-		yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
+		*yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
 		
 		//save the left-hand side name for later to create the dependence
-		yyextra->extraRhsNames.push_back(yytext);
-	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
+		yyextra->extraRhsNames->push_back(yytext);
+	}else if(*yyextra->lexingMode == LexerContext::selectedSignalAssignment2)
 	{
 		// this signal is on the left side of the assignment
 		(*yyextra->os) << "??" << yytext << "??";
 		
-		yyextra->lhsName = yytext;
+		*yyextra->lhsName = yytext;
 		
-		if(yyextra->isLhsSet == true)
+		if(*yyextra->isLhsSet == true)
 		{
-			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
+			//throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
+			throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
-		yyextra->isLhsSet = true;
+		*yyextra->isLhsSet = true;
 		
 		//switch the parsing mode to the next stage, selectedSignalAssignment3
-        yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
-	}else if(yyextra->lexingMode == LexerContext::selectedSignalAssignment3)
+        *yyextra->lexingMode = LexerContext::selectedSignalAssignment3;
+	}else if(*yyextra->lexingMode == LexerContext::selectedSignalAssignment3)
 	{
 		// this signal is on the right side of the assignment
 		(*yyextra->os) << "$$" << yytext << "$$";
 		
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = yyextra->lhsName;
+		tempTriplet.first = *yyextra->lhsName;
 		tempTriplet.second = yytext;
 		tempTriplet.third = 0;
 
-		yyextra->dependenceTable.push_back(tempTriplet);
-	}else if(yyextra->lexingMode == LexerContext::variableAssignment)
+		yyextra->dependenceTable->push_back(tempTriplet);
+	}else if(*yyextra->lexingMode == LexerContext::variableAssignment)
 	{
 		(*yyextra->os) << yytext;
-	}else if(yyextra->lexingMode == LexerContext::instance)
+	}else if(*yyextra->lexingMode == LexerContext::instance)
 	{
 		(*yyextra->os) << "??" << yytext << "??";
-		yyextra->lexingMode = LexerContext::instance2;
-	}else if(yyextra->lexingMode == LexerContext::instance2)
+		*yyextra->lexingMode = LexerContext::instance2;
+	}else if(*yyextra->lexingMode == LexerContext::instance2)
 	{
 		(*yyextra->os) << "$$" << yytext << "$$";
-		yyextra->lexingMode = LexerContext::instance;
-	}else if(yyextra->lexingMode == LexerContext::caseStatement)
+		*yyextra->lexingMode = LexerContext::instance;
+	}else if(*yyextra->lexingMode == LexerContext::caseStatement)
 	{
 		(*yyextra->os) << yytext;
-	}else if(yyextra->lexingMode == LexerContext::process)
+	}else if(*yyextra->lexingMode == LexerContext::process)
 	{
 		(*yyextra->os) << yytext;
-	}else if(yyextra->lexingMode == LexerContext::comment)
+	}else if(*yyextra->lexingMode == LexerContext::comment)
 	{
 		//this is a comment, so just output the input
 		(*yyextra->os) << yytext;
@@ -417,9 +418,13 @@ label					  ({identifier}{space_character}*":")
 [\n] {
 	(*yyextra->os) << yytext;
 	
-	if(yyextra->lexingMode == LexerContext::comment)
+	if(*yyextra->lexingMode == LexerContext::comment)
 	{
-		yyextra->lexingMode = LexerContext::unset;
+		*yyextra->lexingMode = LexerContext::unset;
+		
+		yyextra->extraRhsNames->clear();
+		*yyextra->lhsName = "";
+		*yyextra->isLhsSet = false;
 	}
 }
 
@@ -432,9 +437,9 @@ label					  ({identifier}{space_character}*":")
 	
 	//if, while parsing a component instance, there is a constant signal connected to
 	//	the port, then just reinitialize the state count
-	if(yyextra->lexingMode == LexerContext::instance2)
+	if(*yyextra->lexingMode == LexerContext::instance2)
 	{
-		yyextra->lexingMode = LexerContext::instance;
+		*yyextra->lexingMode = LexerContext::instance;
 	}
 }
 
@@ -455,11 +460,11 @@ label					  ({identifier}{space_character}*":")
 	(*yyextra->os) << yytext;
 }
 
-(\-\-.*) {
+("--".*) {
 	// this is a comment
 	(*yyextra->os) << yytext;
 	
-	yyextra->lexingMode = LexerContext::comment;
+	*yyextra->lexingMode = LexerContext::comment;
 }
 
 (.) {
