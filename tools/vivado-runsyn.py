@@ -144,18 +144,28 @@ if __name__ == '__main__':
     tclscriptfile.write("update_compile_order -fileset sources_1\n")
     tclscriptfile.write("update_compile_order -fileset sim_1\n")
 
+    # Reporting files
+    utilization_report_file = workdir + "/"  + entity + "_utilization_"
+    if synthesis_only:
+        utilization_report_file +="synth.rpt"
+    else:
+        utilization_report_file +="placed.rpt"
+
     if synthesis_only:
         result_name = "synth_1"
+        # The following command is great because it remove the OBUFs but where to get the area?
+        tclscriptfile.write("synth_design  -mode out_of_context \n")
+        tclscriptfile.write("report_utilization  -file "+  utilization_report_file +"\n")
     else:
         result_name = "impl_1"
+        tclscriptfile.write("launch_runs " + result_name + "\n")
+        tclscriptfile.write("wait_on_run " + result_name + "\n")
+        tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
         
-    tclscriptfile.write("launch_runs " + result_name + "\n")
-    tclscriptfile.write("wait_on_run " + result_name + "\n")
-    tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
 #    tclscriptfile.write("report_timing_summary -delay_type max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -file " + os.path.join(workdir, project_name+"_timing_report.txt") + " \n")
 
     # Timing report
-    timing_report_file = workdir + "/" + project_name + ".runs/" + result_name + "/" + entity + "_timing_"
+    timing_report_file = workdir + "/" + project_name  + entity + "_timing_"
     if synthesis_only:
         timing_report_file +="synth.rpt"
     else:
@@ -169,12 +179,6 @@ if __name__ == '__main__':
     report("Running Vivado: " + vivado_command)
     os.system(vivado_command)
 
-    # Reporting
-    utilization_report_file = workdir + "/" + project_name + ".runs/" + result_name + "/" + entity + "_utilization_"
-    if synthesis_only:
-        utilization_report_file +="synth.rpt"
-    else:
-        utilization_report_file +="placed.rpt"
 
     report("cat " + utilization_report_file)
     os.system("cat " + utilization_report_file)

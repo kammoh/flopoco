@@ -196,7 +196,7 @@ run
 -resource_sharing YES
 -async_to_sync NO
 -shreg_min_size 2
--iobuf YES
+-iobuf NO
 -max_fanout 100000
 -bufg 32
 -register_duplication YES
@@ -207,7 +207,7 @@ run
 -use_clock_enable Auto
 -use_sync_set Auto
 -use_sync_reset Auto
--iob auto
+-iob Auto
 -equivalent_register_removal YES
 -slice_utilization_ratio_maxmargin 5"
 ''')
