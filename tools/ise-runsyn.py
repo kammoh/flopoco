@@ -196,7 +196,6 @@ run
 -resource_sharing YES
 -async_to_sync NO
 -shreg_min_size 2
--iobuf NO
 -max_fanout 100000
 -bufg 32
 -register_duplication YES
@@ -214,6 +213,12 @@ run
     if(target == "virtex4"):
 	xst_file.write('-bufr 16')
 
+    if synthesis_only:
+	xst_file.write('-iobuf NO')
+    else:
+	xst_file.write('-iobuf YES')
+    
+        
     xst_file.close()
 
 
@@ -222,6 +227,18 @@ run
     os.system(xst_command)
         
 
+
+    if synthesis_only==False:
+        ngdbuild_command = 'ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p '+part+ ' ' + entity + '.ngc ' + entity + '.ngd'
+        report("Running the ngdbuild command: " + ngdbuild_command)
+        os.system(ngdbuild_command)
+        map_command='map -intstyle ise -p ' + part+' -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt on -ir off -pr off -lc off -power off -o ' + entity + '_map.ncd ' + entity + '.ngd ' + entity + '.pcf'
+        report("Running the map command: " + map_command)
+        os.system(map_command)
+        par_command='par -w -intstyle ise -ol high -mt on ' + entity + '_map.ncd  ' + entity + '.ncd  ' + entity + '.pcf '
+        report("Running the par command: " + map_command)
+        os.system(par_command)
+    
 
     # Filtering the .syr
     syr = open(entity+".syr").read()
