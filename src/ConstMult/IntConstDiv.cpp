@@ -186,7 +186,7 @@ namespace flopoco{
 			o << "Q";
 		if(computeRemainder)
 			o << "R";
-		o << d << "_" << wIn << "_"  << alpha ;
+		o << d << "_" << wIn << "_"  << architecture<< "_" << alpha ;
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);
@@ -327,7 +327,7 @@ namespace flopoco{
 			o << "Q";
 		if(computeRemainder)
 			o << "R";
-		o << d << "_" << wIn << "_"  << alpha ;
+		o <<"_"<< d << "_" << wIn << "_"  << architecture<< "_" << alpha ;
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);

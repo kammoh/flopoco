@@ -155,12 +155,14 @@ if __name__ == '__main__':
         result_name = "synth_1"
         # The following command is great because it remove the OBUFs but where to get the area?
         tclscriptfile.write("synth_design  -mode out_of_context \n")
-        tclscriptfile.write("report_utilization  -file "+  utilization_report_file +"\n")
     else:
         result_name = "impl_1"
         tclscriptfile.write("launch_runs " + result_name + "\n")
         tclscriptfile.write("wait_on_run " + result_name + "\n")
         tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
+    tclscriptfile.write("report_utilization  -file "+  utilization_report_file +"\n")
+
+
         
 #    tclscriptfile.write("report_timing_summary -delay_type max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -file " + os.path.join(workdir, project_name+"_timing_report.txt") + " \n")
 
