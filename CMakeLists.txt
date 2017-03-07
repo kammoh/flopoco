@@ -313,9 +313,9 @@ src/ShiftReg
 # src/IntAddSubCmp/LongIntAdderMuxNetwork
 
 # Constant multiplications and divisions
-# src/ConstMult/ShiftAddOp 
-# src/ConstMult/ShiftAddDag 
-# src/ConstMult/IntConstMult 
+ src/ConstMult/ShiftAddOp 
+ src/ConstMult/ShiftAddDag 
+ src/ConstMult/IntConstMult 
 # src/ConstMult/IntConstMCM  
 # src/ConstMult/KCMTable
 # src/ConstMult/IntIntKCM 
@@ -323,7 +323,7 @@ src/ShiftReg
 # src/ConstMult/CRFPConstMult 
  src/ConstMult/FixRealKCM
 # src/ConstMult/FPRealKCM
-# src/ConstMult/IntConstDiv 
+ src/ConstMult/IntConstDiv 
 # src/ConstMult/FPConstDiv 
 
  

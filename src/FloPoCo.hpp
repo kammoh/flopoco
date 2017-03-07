@@ -123,7 +123,7 @@
 
 
 /* Constant multipliers and dividers ------------------------ */
-//#include "ConstMult/IntConstMult.hpp"
+#include "ConstMult/IntConstMult.hpp"
 //#include "ConstMult/IntConstMCM.hpp"
 //#include "ConstMult/IntIntKCM.hpp"
 #include "ConstMult/FixRealKCM.hpp"
@@ -131,8 +131,8 @@
 //#include "ConstMult/CRFPConstMult.hpp"
 //#include "ConstMult/FPRealKCM.hpp"
 
-// #include "ConstMult/IntConstDiv.hpp" // depends on intconstmut
-// #include "ConstMult/FPConstDiv.hpp"
+#include "ConstMult/IntConstDiv.hpp" // depends on intconstmut
+#include "ConstMult/FPConstDiv.hpp"
 
 /* FP composite operators */
 #include "FPComposite/FPLargeAcc.hpp"

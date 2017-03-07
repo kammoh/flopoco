@@ -31,7 +31,7 @@ namespace flopoco{
 	{
 	public:
 
-#define INTCONSTDIV_OLDTABLEINTERFACE 0 // 0 for master, 1 for newPipelineFramework
+#define INTCONSTDIV_OLDTABLEINTERFACE 0 // 1 for master, 0 for newPipelineFramework
 
 #if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
 

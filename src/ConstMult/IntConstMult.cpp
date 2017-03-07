@@ -244,7 +244,7 @@ namespace flopoco{
 							}
 							else { // Need to instantiate an IntAdder
 								use_pipelined_adder=true;
-								adder = new IntAdder(getTarget(), adder_size);
+								adder = new IntAdder(this, getTarget(), adder_size);
 								adder->changeName(getName() + "_" + sao->name + "_adder");
 								addSubComponent(adder);
 
@@ -501,7 +501,7 @@ namespace flopoco{
 				addInput("X", xsize);
 				addOutput("R", rsize);
 
-#if 1
+#if 1 // TODO Switch to the new bit heap framework if the #else code is ever plugged back
 				// adder tree, no bitheaps
 			 
 				// Build the implementation trees for the constant multiplier
@@ -582,6 +582,7 @@ namespace flopoco{
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
 #else
+				// TODO Switch to the new bit heap framework if this code is ever plugged back
 				//experimenting with bitheaps
 				double delay;
 				delete implementation;
