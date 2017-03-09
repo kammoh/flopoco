@@ -219,14 +219,14 @@ namespace flopoco{
 
 					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
-					setCycleFromSignal(iname, false);
-					syncCycleFromSignal(jname, false);
 
 					max_children_delay = max(idelay,jdelay);
 
 					// Now decide what kind of adder we will use, and compute the remaining delay
+
 					use_pipelined_adder=false;
-					if (isSequential()) {
+#if 0 // Code from previous pipeline framework, should be replaced with systematic IntAdders
+					if (false && isSequential()) {
 						// First case: using a plain adder fits within the current pipeline level
 						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
 						if(tentative_delay <= 1./getTarget()->frequency()) {
@@ -252,7 +252,7 @@ namespace flopoco{
 							}
 						}
 					}
-
+#endif
 					// Now generate the VHDL
 					if(shift==0) { // Add with no shift -- this shouldn't happen with current DAGs so the following code is mostly untested
 						if(op==Sub || op==RSub)
@@ -517,7 +517,7 @@ namespace flopoco{
 				REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
 				REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
 
-				ShiftAddDag* tries[4];
+				ShiftAddDag* tries[5];
 				tries[1]=implem_try_left;
 				tries[0]=implem_try_right;
 				tries[2]=implem_try_balanced;
@@ -1691,29 +1691,6 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-		if(index==-1) // The unit tests
-		{ 
-
-			for(int wIn=8; wIn<34; wIn+=1) 
-			{ // test various input widths
-				for(int d=3; d<=17; d+=2) 
-				{ // test various divisors
-					for(int arch=0; arch <2; arch++) 
-					{ // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
-						paramList.push_back(make_pair("wIn", to_string(wIn) ));	
-						paramList.push_back(make_pair("d", to_string(d) ));	
-						paramList.push_back(make_pair("arch", to_string(arch) ));
-						testStateList.push_back(paramList);
-						paramList.clear();
-					}
-				}
-			}
-		}
-		else     
-		{
-				// finite number of random test computed out of index
-		}	
 
 		return testStateList;
 	}
