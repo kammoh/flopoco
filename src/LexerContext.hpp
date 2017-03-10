@@ -35,13 +35,14 @@ public:
 	vector<triplet<string, string, int>> *dependenceTable;
 
 	LexMode *lexingMode;
+	LexMode *lexingModeOld;
 
 	bool *isLhsSet;
 
 public:
 	LexerContext(istream* is, ostream* os,
 			string *lhsName_, vector<string> *extraRhsNames_, vector<triplet<string, string, int>> *dependenceTable_,
-			LexMode *lexingMode_, bool *isLhsSet_) {
+			LexMode *lexingMode_, LexMode *lexingModeOld_, bool *isLhsSet_) {
 		init_scanner();
 		this->is = is;
 		this->os = os;
@@ -50,6 +51,7 @@ public:
 		this->extraRhsNames = extraRhsNames_;
 		this->dependenceTable = dependenceTable_;
 		this->lexingMode = lexingMode_;
+		this->lexingModeOld = lexingModeOld_;
 		this->isLhsSet = isLhsSet_;
 	}
 

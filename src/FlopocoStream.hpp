@@ -196,6 +196,7 @@ namespace flopoco{
 			vector<string> lexExtraRhsNames;
 			vector<triplet<string, string, int>> lexDependenceTable;
 			LexerContext::LexMode lexLexingMode;
+			LexerContext::LexMode lexLexingModeOld;
 			bool lexIsLhsSet;
 
 		protected:

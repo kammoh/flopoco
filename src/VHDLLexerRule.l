@@ -233,6 +233,7 @@ label					  ({identifier}{space_character}*":")
 	}
 	yyextra->extraRhsNames->clear();
 	*yyextra->lexingMode = LexerContext::unset;
+	*yyextra->lexingModeOld = LexerContext::unset;
 	*yyextra->lhsName = "";
 	
 	*yyextra->isLhsSet = false;
@@ -420,11 +421,13 @@ label					  ({identifier}{space_character}*":")
 	
 	if(*yyextra->lexingMode == LexerContext::comment)
 	{
-		*yyextra->lexingMode = LexerContext::unset;
+		*yyextra->lexingMode = *yyextra->lexingModeOld;
 		
+		/*
 		yyextra->extraRhsNames->clear();
 		*yyextra->lhsName = "";
 		*yyextra->isLhsSet = false;
+		*/
 	}
 }
 
@@ -464,6 +467,7 @@ label					  ({identifier}{space_character}*":")
 	// this is a comment
 	(*yyextra->os) << yytext;
 	
+	*yyextra->lexingModeOld = *yyextra->lexingMode;
 	*yyextra->lexingMode = LexerContext::comment;
 }
 
