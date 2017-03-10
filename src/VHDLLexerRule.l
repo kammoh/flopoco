@@ -195,8 +195,8 @@ label					  ({identifier}{space_character}*":")
 	//	to be in this case, the ';' was probably omitted
 	if(*yyextra->lexingMode == LexerContext::signalAssignment)
 	{
-		//throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
-		throw("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!");
+		throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
+		//throw("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!");
 	}
 	
 	if(*yyextra->lexingMode == LexerContext::unset)
@@ -233,6 +233,7 @@ label					  ({identifier}{space_character}*":")
 	}
 	yyextra->extraRhsNames->clear();
 	*yyextra->lexingMode = LexerContext::unset;
+	*yyextra->lexingModeOld = LexerContext::unset;
 	*yyextra->lhsName = "";
 	
 	*yyextra->isLhsSet = false;
@@ -310,8 +311,8 @@ label					  ({identifier}{space_character}*":")
 		
 		if(*yyextra->isLhsSet == true)
 		{
-			//throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
-			throw("Error: something went wrong during the first parsing of the VHDL code!");
+			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
+			//throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
 		*yyextra->isLhsSet = true;
 	}else if(*yyextra->lexingMode == LexerContext::signalAssignment)
@@ -359,8 +360,8 @@ label					  ({identifier}{space_character}*":")
 		
 		if(*yyextra->isLhsSet == true)
 		{
-			//throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
-			throw("Error: something went wrong during the first parsing of the VHDL code!");
+			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
+			//throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
 		*yyextra->isLhsSet = true;
 		
@@ -420,11 +421,7 @@ label					  ({identifier}{space_character}*":")
 	
 	if(*yyextra->lexingMode == LexerContext::comment)
 	{
-		*yyextra->lexingMode = LexerContext::unset;
-		
-		yyextra->extraRhsNames->clear();
-		*yyextra->lhsName = "";
-		*yyextra->isLhsSet = false;
+		*yyextra->lexingMode = *yyextra->lexingModeOld;
 	}
 }
 
@@ -464,6 +461,7 @@ label					  ({identifier}{space_character}*":")
 	// this is a comment
 	(*yyextra->os) << yytext;
 	
+	*yyextra->lexingModeOld = *yyextra->lexingMode;
 	*yyextra->lexingMode = LexerContext::comment;
 }
 
