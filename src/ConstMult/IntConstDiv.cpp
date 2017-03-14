@@ -157,9 +157,21 @@ namespace flopoco{
 	{
 		setCopyrightString("F. de Dinechin (2016)");
 		srcFileName="IntConstDiv";
+		std::ostringstream o;
 		d=1;
-		for (auto i: divisors)
-			d*=i;
+		o << "IntConstDiv_";
+		if(computeQuotient)
+			o << "Q";
+		if(computeRemainder)
+			o << "R";
+		o << "_";
+		for(unsigned int i=0; i<divisors.size(); i++) {
+			d*=divisors[i];
+			o << divisors[i];
+			if (i<divisors.size()-1)
+				o << "x";
+		}
+		
 		REPORT(INFO, "Composite division, d=" << d);
 
 		rSize = intlog2(d-1);
@@ -177,16 +189,10 @@ namespace flopoco{
 		}
 
 		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
-		std::ostringstream o;
 		if(!computeQuotient && !computeRemainder) {
 			THROWERROR("Neither quotient, neither remainder to compute: better die just now")
 		}
-		o << "IntConstDiv_";
-		if(computeQuotient)
-			o << "Q";
-		if(computeRemainder)
-			o << "R";
-		o << d << "_" << wIn << "_"  << architecture<< "_" << alpha ;
+		o << "_" << wIn << "_"  << architecture<< "_" << alpha ;
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);

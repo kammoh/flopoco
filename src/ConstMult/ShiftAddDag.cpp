@@ -38,21 +38,21 @@ namespace flopoco{
 
 		case Add:
 			if(i==NULL || j==NULL) {
-				throw string("ERROR in ShiftAddDag::computeConstant: Unexpected non-null pointer in Add\n");
+				throw string("ERROR in ShiftAddDag::computeConstant: Unexpected null pointer in Add\n");
 			}
 			return (i->n << s) +  j->n;
 			break;
 
 		case Sub:
 			if(i==NULL || j==NULL) {
-				throw string("ERROR in ShiftAddDag::computeConstant: Unexpected non-null pointer in Sub\n");
+				throw string("ERROR in ShiftAddDag::computeConstant: Unexpected null pointer in Sub\n");
 			}
 			return (i->n << s) -  j->n;
 			break;
 
 		case RSub:
 			if(i==NULL || j==NULL) {
-				throw string("ERROR in ShiftAddDag::computeConstant: Unexpected non-null pointer in RSub\n");
+				throw string("ERROR in ShiftAddDag::computeConstant: Unexpected null pointer in RSub\n");
 			}
 			return  j->n - (i->n << s) ;
 			break;
