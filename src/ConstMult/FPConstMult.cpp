@@ -708,7 +708,7 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FPConstMult::parse(Target* target, vector<string>& args)
+	OperatorPtr FPConstMult::parse(OperatorPtr parentOp, Target* target, vector<string>& args)
 	{
 		int wE_in, wE_out, wF_in, wF_out, cst_width;
 		string constant;
@@ -723,7 +723,7 @@ namespace flopoco{
 		return new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, cst_width, constant);
 	}
 
-	OperatorPtr FPConstMult::parseRational(Target* target, vector<string>& args)
+	OperatorPtr FPConstMult::parseRational(OperatorPtr parentOp, Target* target, vector<string>& args)
 	{
 		int wE_in, wE_out, wF_in, wF_out, a, b;
 

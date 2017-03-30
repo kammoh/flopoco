@@ -3093,14 +3093,14 @@ namespace flopoco{
 			try{
 				lhs = getSignalByName(it->first); // Was this signal declared since last time? 
 			}catch(string &e){
-				REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
+				//REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
 				unknownLHSName = true;
 			}
 
 			try{
 				rhs = getSignalByName(it->second); // or this one
 			}catch(string &e){
-				REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
+				//REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
 				unknownRHSName = true;
 			}
 
@@ -3134,14 +3134,14 @@ namespace flopoco{
 			try{
 			    lhs = getSignalByName(it->first);
 			}catch(string &e){
-			    REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
+				//REPORT(DEBUG, "Warning: detected unknown signal name on the left-hand side of an assignment: " << it->first);
 			    unknownLHSName = true;
 			}
 
 			try{
 			    rhs = getSignalByName(it->second);
 			}catch(string &e){
-			    REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
+				//REPORT(DEBUG, "Warning: detected unknown signal name on the right-hand side of an assignment: " << it->second);
 			    unknownRHSName = true;
 			}
 

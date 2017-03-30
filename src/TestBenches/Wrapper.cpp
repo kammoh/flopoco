@@ -58,7 +58,7 @@ namespace flopoco{
 				outPortMap (op, s->getName(), idext);
 			}
 			// Adding an attribute so that Vivado doesn't connect the IOs to IOBuff
-			addAttribute("buffer_type",  "string",  s->getName(), "none", true );
+			// addAttribute("buffer_type",  "string",  s->getName(), "none", true );
 		}
 		
 

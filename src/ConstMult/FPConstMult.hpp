@@ -79,8 +79,8 @@ namespace flopoco{
 
 		//Interface stuff
 		static void registerFactory(); // registers FPConstMult and FPConstMultRational
-		static OperatorPtr parse(Target* target, vector<string>& args);
-		static OperatorPtr parseRational(Target* target, vector<string>& args);
+		static OperatorPtr parse(OperatorPtr parentOp, Target* target, vector<string>& args);
+		static OperatorPtr parseRational(OperatorPtr parentOp, Target* target, vector<string>& args);
 	};
 
 }

@@ -45,7 +45,7 @@ namespace flopoco {
 		/**
 		 * get the maximum adder size for a given target period
 		 */
-		int getMaxAdderSizeForPeriod(double TargetPeriod);
+		static int getMaxAdderSizeForPeriod(Target* target, double TargetPeriod);
 
 		// User-interface stuff
 		/** Factory method */

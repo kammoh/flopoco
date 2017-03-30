@@ -14,6 +14,8 @@ namespace flopoco{
 	class IntDualAddSub : public Operator
 	{
 	public:
+		static const int SUBSUB = 0;
+		static const int ADDSUB = 1;
 		/**
 		 * The IntDualAddSub constructor
 		 * @param[in] target the target device
@@ -32,6 +34,8 @@ namespace flopoco{
 
 		void emulate(TestCase* tc);
 		void buildStandardTestCases(TestCaseList* tcl);
+		static TestList unitTest(int index);
+		
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
@@ -42,7 +46,7 @@ namespace flopoco{
 	protected:
 		int wIn_;                         /**< the width for X, Y and the results */
 		int opType_;					  /**< the operation type. if 0, op type is x-y y-x; if 1 op_type is x-y x+y */
-		string son_;			   	  /**< second output name; can be yMx or xPy */
+		string son;			   	  /**< second output name; can be yMx or xPy */
 
 	private:
 		int bufferedInputs;               /**< variable denoting an initial buffering of the inputs */

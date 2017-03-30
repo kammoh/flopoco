@@ -127,7 +127,7 @@
 //#include "ConstMult/IntConstMCM.hpp"
 //#include "ConstMult/IntIntKCM.hpp"
 #include "ConstMult/FixRealKCM.hpp"
-//#include "ConstMult/FPConstMult.hpp"
+#include "ConstMult/FPConstMult.hpp"
 //#include "ConstMult/CRFPConstMult.hpp"
 //#include "ConstMult/FPRealKCM.hpp"
 

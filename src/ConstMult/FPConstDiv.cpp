@@ -44,11 +44,12 @@ namespace flopoco{
 			wFOut=wFIn;
 		srcFileName="FPConstDiv";
 		ostringstream name;
-		name <<"FPConstDiv_"<<wEIn<<"_"<<wFIn<<"_"<<wEOut<<"_"<<wFOut<<"_"<<d<<"_";
+		name <<"FPConstDiv_"<<wEIn<<"_"<<wFIn<<"_"<<wEOut<<"_"<<wFOut<<"_"<<d<< "_"  << arch<<"_";
 		if(dExp>=0)
 			name<<dExp<<"_";
 		else
 			name<<"M"<<-dExp<<"_";
+		
 		if(getTarget()->isPipelined()) 
 			name << getTarget()->frequencyMHz() ;
 		else
