@@ -154,7 +154,6 @@ namespace flopoco
 			testsDone = false;
 			system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
 			opFact = UserInterface::getFactoryByName(*itOperator);
-
 			// First we run the unitTest for each tested Operator
 			if(doUnitTest)
 			{
@@ -309,24 +308,18 @@ namespace flopoco
 
 		map<string,string>::iterator itParam;
 
-		for(itParam = unitTestParam->begin(); itParam != unitTestParam->end(); ++itParam)
-		{
-			if(itParam->first.substr(0,1) == "w")
-			{
-				bitsSum += stoi(itParam->second);
-			}
-			if(itParam->first.find("In") != string::npos)
-			{
+		for(itParam = unitTestParam->begin(); itParam != unitTestParam->end(); ++itParam)	{
+			// We look for something that looks like an input 
+			//cerr << itParam->first << endl;
+			if( (itParam->first.substr(0,1) == "w")	|| (itParam->first.find("In") != string::npos)) {
 				bitsSum += stoi(itParam->second);
 			}
 		}
 
-		if(bitsSum >= 8)
-		{
+		if(bitsSum >= 8) {
 			testBench += "1000";
 		}
-		else
-		{
+		else	{
 			testBench += "-2";
 		}
 

@@ -196,7 +196,6 @@ label					  ({identifier}{space_character}*":")
 	if(*yyextra->lexingMode == LexerContext::signalAssignment)
 	{
 		throw(string("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!"));
-		//throw("something went wrong during the first parsing of the VHDL code!\nPlease check your VHDL code!");
 	}
 	
 	if(*yyextra->lexingMode == LexerContext::unset)
@@ -287,9 +286,11 @@ label					  ({identifier}{space_character}*":")
 
 {identifier} |
 {delayed_identifier} |
-{delayed_identifier2} |
-"("({space_character})*{identifier}(({space_character})*","({space_character})*{identifier})*({space_character})*")" {
-	//identified either "signal_name" or "(signal_name, signal_name...)"
+{delayed_identifier2} {
+	//identified either "signal_name"
+  // REMOVED BY FLORENT, it was parsing as $$(signal)$$ and I don't see the point
+  // or "(signal_name, signal_name...)" there was this rule
+  // "("({space_character})*{identifier}(({space_character})*","({space_character})*{identifier})*({space_character})*")"
 	//this can be either the left or the right hand side
 	//if the mode is unset, then this is the new left hand side
 	//	the mode itself is going to be set when encountering the "<=" symbol
@@ -312,7 +313,6 @@ label					  ({identifier}{space_character}*":")
 		if(*yyextra->isLhsSet == true)
 		{
 			throw(string("Error: something went wrong during the first parsing of the VHDL code!"));
-			//throw("Error: something went wrong during the first parsing of the VHDL code!");
 		}
 		*yyextra->isLhsSet = true;
 	}else if(*yyextra->lexingMode == LexerContext::signalAssignment)

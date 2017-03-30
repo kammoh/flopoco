@@ -47,7 +47,6 @@ namespace flopoco{
 		}
 		name << wIn;
 		setNameWithFreqAndUID(name.str());
-		useNumericStd();
 
 		// Set up the IO signals
 		addInput ("X"  , wIn_, true);
@@ -77,9 +76,9 @@ namespace flopoco{
 
 		if(totalPeriod <= targetPeriod)		{
 			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempRxMy", wIn)
-					 << " <= std_logic_vector(unsigned(X) - unsigned(Y));" <<endl;
+					 << " <= X + (not Y) + '1';" <<endl;
 			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempR"+son, wIn)
-					 <<" <= "<< (opType_==SUBSUB ? "std_logic_vector(unsigned(Y) - unsigned(X));" : "std_logic_vector(unsigned(X) + unsigned(Y));") << endl;
+					 <<" <= "<< (opType_==SUBSUB ? "Y + (not X) + '1';" : "X + Y;") << endl;
 			vhdl << tab << "XmY <= tempRxMy;" << endl;
 			vhdl << tab << son << " <= tempR" << son << ";" << endl;
 		}
@@ -124,11 +123,11 @@ namespace flopoco{
 				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1),
 															 join(s1, i),
 															 subAdderSize+1)
-						 << " <= std_logic_vector(unsigned('0' & X_" << i	<<	") + unsigned('0' & not Y_" << i << ") + unsigned(" << c1 << i << "));" << endl;
+						 << " <= ('0' & X_" << i	<<	") + ('0' & not Y_" << i << ") + " << c1 << i << ";" << endl;
 				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1),
 															 join(s2, i),
 															 subAdderSize+1)
-						 << " <= std_logic_vector(unsigned('0' & Y_" << i	<<	") + unsigned('0' & " << (opType==SUBSUB? "not":"") << " Y_" << i << ") + unsigned(" << c2 << i << " ) );" << endl;
+						 << " <= ('0' & Y_" << i	<<	") + ('0' & " << (opType==SUBSUB? "not":"") << " X_" << i << ") + " << c2 << i << ";" << endl;
 
 				vhdl << tab << declare(join(r1, i), subAdderSize) << " <= " << s1 << i	<<	range(subAdderSize-1,0) << ";" << endl;
 				vhdl << tab << declare(join(r2, i), subAdderSize) << " <= " << s2 << i	<<	range(subAdderSize-1,0) << ";" << endl;
@@ -175,7 +174,7 @@ namespace flopoco{
 		tc->addExpectedOutput("XmY", svRxMy);
 
 		mpz_class svR2;
-		if (opType_==0)
+		if (opType_== SUBSUB)
 			svR2=svY-svX;
 		else {
 			svR2=svX+svY;
@@ -216,8 +215,8 @@ namespace flopoco{
 			for(int wIn=5; wIn<100; wIn+=30) // test various input widths
 				{
 					for(int opType = 0; opType <2; opType++) {
-						paramList.push_back(make_pair("wIb",to_string(wIn)));
-						paramList.push_back(make_pair("opType",to_string(opType)));
+						paramList.push_back(make_pair("wIn", to_string(wIn)));
+						paramList.push_back(make_pair("opType", to_string(opType)));
 						testStateList.push_back(paramList);
 						paramList.clear();
 					}
