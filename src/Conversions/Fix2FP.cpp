@@ -111,7 +111,7 @@ namespace flopoco{
 			int maximalOutputValue = (MSB-LSB)>wF+4? MSB-LSB:wF+4;
 	
 			if(Signed){	
-				lzocs = new LZOCShifterSticky(target,inputWidth-1 , maximalOutputValue, intlog2(inputWidth-1), 0, -1);
+				lzocs = new LZOCShifterSticky(this, target,inputWidth-1 , maximalOutputValue, intlog2(inputWidth-1), 0, -1);
 				lzocs->changeName(getName()+"_LZOCS");
 
 				inPortMap  (lzocs, "I", "input2LZOC");
@@ -123,7 +123,7 @@ namespace flopoco{
 				sizeExponentValue=lzocs->getCountWidth();
 			}else{
 		
-				lzcs = new LZOCShifterSticky(target, inputWidth , maximalOutputValue, intlog2(inputWidth), 0, 0);
+				lzcs = new LZOCShifterSticky(this, target, inputWidth , maximalOutputValue, intlog2(inputWidth), 0, 0);
 				lzcs->changeName(getName()+"_LZCS");
 			
 				inPortMap  (lzcs, "I", "passedInput");
@@ -353,7 +353,7 @@ namespace flopoco{
 				setCycleFromSignal("input2LZOC");
 	
 				if(Signed){
-					lzocs		= new LZOCShifterSticky(target,inputWidth-1 , maximalOutputValue, intlog2(inputWidth-1), 0, -1);
+					lzocs		= new LZOCShifterSticky(this, target,inputWidth-1 , maximalOutputValue, intlog2(inputWidth-1), 0, -1);
 					lzocs->changeName(getName()+"_LZCS");
 					inPortMap  (lzocs, "I", "input2LZOC");
 					inPortMap	(lzocs,"OZb","signSignal");
@@ -363,7 +363,7 @@ namespace flopoco{
 	
 					sizeExponentValue=lzocs->getCountWidth();
 				}else{
-					lzcs = new LZOCShifterSticky(target, inputWidth , maximalOutputValue, intlog2(inputWidth), 0, 0);
+					lzcs = new LZOCShifterSticky(this, target, inputWidth , maximalOutputValue, intlog2(inputWidth), 0, 0);
 					lzcs->changeName(getName()+"_LZCS");
 					inPortMap  (lzcs, "I", "passedInput");
 					outPortMap (lzcs, "Count","temporalExponent");

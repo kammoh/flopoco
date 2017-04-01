@@ -79,7 +79,11 @@ namespace flopoco{
 	int Operator::uid = 0; 										//init of the uid static member of Operator
 	int verbose=0;
 
-	Operator::Operator(Target* target){
+	Operator::Operator(Target* target): Operator(nullptr, target){
+		REPORT(INFO, "Operator  constructor without parentOp is deprecated");
+	}
+	
+	Operator::Operator(Operator* parentOp, Target* target){
 		vhdl.setOperator(this);
 		stdLibType_                 = 0;						// unfortunately this is the historical default.
 		target_                     = target;
@@ -431,14 +435,14 @@ namespace flopoco{
 
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
-			REPORT(DEBUG, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");  
+			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");  
 			itStart = parentOp_->tmpInPortMap_.begin();
 			itEnd = parentOp_->tmpInPortMap_.end();
 		}else{
-			REPORT(DEBUG, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");  
+			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");  
 			itStart = parentOp_->tmpOutPortMap_.begin();
 			itEnd = parentOp_->tmpOutPortMap_.end();
-		}
+		} 
 
 		//check that portSignal exists on the parent operator's port map
 		for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
@@ -460,7 +464,7 @@ namespace flopoco{
 					<< " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
 		}
 
-		REPORT(DEBUG, "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );  
+		REPORT(FULL, portSignal->getName() << "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );  
 		//now we can connect the two signals
 		if(portSignal->type() == Signal::in)
 		{
@@ -751,7 +755,7 @@ namespace flopoco{
 		o << "entity " << uniqueName_ << " is" << endl;
 		if (ioList_.size() > 0)
 		{
-			o << tab << "port ( ";
+			o << tab << " port ( ";
 			if(isSequential()) {
 					// add clk, rst, etc. signals which are not member of iolist
 				if(hasClockEnable())
@@ -1995,7 +1999,10 @@ namespace flopoco{
 		//parse the input port mappings
 		parsePortMappings(instance, outPortMaps, 2);
 		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
-
+		for (auto i: parametersVector){
+			REPORT(DEBUG, i);
+		}
+			
 		//create the operator
 		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
 
@@ -2009,9 +2016,16 @@ namespace flopoco{
 	}
 
 
-	void Operator::parsePortMappings(OperatorPtr instance, string portMappings, int portTypes)
+	void Operator::parsePortMappings(OperatorPtr instance, string portMappings0, int portTypes)
 	{
-		if(portMappings!="") {
+		string portMappings="";
+		// First remove any space
+		for (unsigned int i=0; i<portMappings0.size(); i++) {
+			if((portMappings0[i] != ' ') && (portMappings0[i] != '\t')) {
+				portMappings += portMappings0[i];
+			}
+		}
+		if(portMappings0!="") {
 			// First tokenize using stack overflow code
 			std::vector<std::string> tokens;
 			std::size_t start = 0, end = 0;
@@ -2027,6 +2041,7 @@ namespace flopoco{
 					THROWERROR("Error: in newInstance: these port maps are not specified correctly: <" << portMappings<<">");
 				string portName = mapping.substr(0, sepPos);
 				string signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
+				REPORT(4, "port map " << portName << "=>" << signalName << " of type " << portTypes);
 				if(portTypes == 0)
 					inPortMap(instance, portName, signalName);
 				else if(portTypes == 1)
@@ -2620,6 +2635,7 @@ namespace flopoco{
 			//now get a new line to parse
 			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)+1-nextPos-2);
 
+			//REPORT(FULL, "processing " << workStr);
 			//extract the lhs_name
 			if(isSelectedAssignment == true)
 			{
@@ -2646,17 +2662,14 @@ namespace flopoco{
 			//	must remove the markings
 			//the rest of the code contains pairs of ??lhsName?? => $$rhsName$$ pairs
 			//	for which the helper signals must be removed and delays _dxxx must be added
-			auxPosition2 = workStr.find("port map");
-			if(auxPosition2 != string::npos)
-			{
+			auxPosition2 = workStr.find("port map"); // This is OK because this string can only be created by flopoco
+			if(auxPosition2 != string::npos)	{
 				//try to parse the names of the signals in the port mapping
-				if(workStr.find("?", auxPosition2) == string::npos)
-				{
+				if(workStr.find("?", auxPosition2) == string::npos) {
 					//empty port mapping
 					newStr << workStr.substr(auxPosition, workStr.size());
 				}
-				else
-				{
+				else 	{
 					//parse a list of ??lhsName?? => $$rhsName$$
 					//	or ??lhsName?? => 'x' or ??lhsName?? => "xxxx"
 					size_t tmpCurrentPos, tmpNextPos;
@@ -2910,8 +2923,11 @@ namespace flopoco{
 
 			//extract the rhsNames and annotate them find the position of the rhsName, and copy
 			// the vhdl code up to the rhsName in the new vhdl code buffer
-			if(workStr.find("select") == string::npos)
-			{
+			// There was a bug here  if one variable is had select in its name
+			// Took me 2hours to figure out
+			// Bug fixed by having the lexer add spaces around select (so no need to test for all the space/tab/enter possibilibits.
+			// I wonder how many such bugs remain
+			if(workStr.find(" select ") == string::npos	 )			{ 
 				tmpCurrentPos = lhsNameLength+2;
 				tmpNextPos = workStr.find('$', lhsNameLength+2);
 			}

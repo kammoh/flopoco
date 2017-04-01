@@ -23,7 +23,7 @@ namespace flopoco{
 		 * @param[in] opType:  if 1, compute X-Y and X+Y; if 0, compute X-Y and Y-X
 		 * @param[in] inputDelays the delays for each input
 		 **/
-		IntDualAddSub(Target* target, int wIn, int opType);
+		IntDualAddSub(Operator* parentOp, Target* target, int wIn, int opType);
 		/*IntDualAddSub(Target* target, int wIn);
 		  void cmn(Target* target, int wIn, map<string, double> inputDelays);*/
 

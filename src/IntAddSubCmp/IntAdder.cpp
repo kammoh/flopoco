@@ -36,14 +36,13 @@ using namespace std;
 namespace flopoco {
 
 	IntAdder::IntAdder (OperatorPtr parentOp, Target* target, int wIn_):
-		Operator (target), wIn ( wIn_ )
+		Operator (parentOp, target), wIn ( wIn_ )
 	{
 		srcFileName="IntAdder";
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		ostringstream name;
 		name << "IntAdder_" << wIn;
 		setNameWithFreqAndUID(name.str());
-		setParentOperator(parentOp);
 													
 		// Set up the IO signals
 		addInput  ("X"  , wIn, true);

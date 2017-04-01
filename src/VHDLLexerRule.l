@@ -6,6 +6,7 @@
 
 %{
 	#include "LexerContext.hpp"
+	#include "Operator.hpp"
 	#include <stdio.h>
 	#include <iostream>
 	#include <string.h>
@@ -243,6 +244,11 @@ label					  ({identifier}{space_character}*":")
 
 
 ({w}{h}{e}{n}) {
+// When can appear in the following situations:
+//   1/  with X select Y <=  toto when tata,
+//                     where we arive in selectedSignalAssignment mode
+//   2/  Y <=  toto when tata = '1' else    titi;
+//  where we arrive in signalAssignment
 	(*yyextra->os) << yytext;
 	
 	if(*yyextra->lexingMode != LexerContext::selectedSignalAssignment)
@@ -260,7 +266,7 @@ label					  ({identifier}{space_character}*":")
 
 
 ({s}{e}{l}{e}{c}{t}) {
-	(*yyextra->os) << yytext;
+	(*yyextra->os) << " select "; // we add two spaces and force lowercase to make the select keyword easier to identify from c++
 	
 	*yyextra->lexingMode = LexerContext::selectedSignalAssignment2;
 }
@@ -300,6 +306,10 @@ label					  ({identifier}{space_character}*":")
 	//	if in selectedSignalAssignment mode, then if the mode is unset this signal is stored and added later to the dependence table, else c.f. signalAssignment mode
 	//	for all other cases, just copy the code to the output stream and don't perform any other action
 	
+  try {yyextra->op->getSignalByName(yytext);}
+  catch(string &e){ 
+     //cerr << "identifier '" << yytext << "' is not a declared signal" << endl;
+			}
 	if(*yyextra->lexingMode == LexerContext::unset)
 	{
 		// this is the left hand side of the assignment

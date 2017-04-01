@@ -33,8 +33,8 @@ using namespace std;
 namespace flopoco{
 
 
-	Shifter::Shifter(Target* target, int wIn, int maxShift, ShiftDirection direction) :
-			Operator(target), wIn_(wIn), maxShift_(maxShift), direction_(direction)
+	Shifter::Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection direction) :
+		Operator(parentOp, target), wIn_(wIn), maxShift_(maxShift), direction_(direction)
 	{
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		srcFileName = "Shifters";
@@ -158,7 +158,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "maxShift", &maxShift);
 		UserInterface::parseBoolean(args, "dir", &dirArg);
 		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);
-		return new Shifter(target, wIn, maxShift, dir);
+		return new Shifter(parentOp, target, wIn, maxShift, dir);
 	}
 
 

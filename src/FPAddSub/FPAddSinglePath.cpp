@@ -164,7 +164,7 @@ namespace flopoco{
 		inPortMap  (rightShifter, "S", "shiftVal");
 		outPortMap (rightShifter, "R", "shiftedFracY");
 
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
+		rightShifter = new Shifter(this, target,wF+1,wF+3, Shifter::Right);
 		rightShifter->changeName(getName()+"_RightShifter");
 
 		vhdl << instance(rightShifter, "RightShifterComponent");
@@ -208,7 +208,7 @@ namespace flopoco{
 		outPortMap (lzocs, "Count","nZerosNew");
 		outPortMap (lzocs, "O","shiftedFrac");
 
-		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0);
+		lzocs = new LZOCShifterSticky(this, target, wF+5, wF+5, intlog2(wF+5), false, 0);
 
 		vhdl << instance(lzocs, "LZC_component");
 

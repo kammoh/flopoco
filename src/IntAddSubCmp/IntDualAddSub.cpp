@@ -30,8 +30,8 @@ using namespace std;
 
 namespace flopoco{
 
-	IntDualAddSub::IntDualAddSub(Target* target, int wIn, int opType):
-		Operator(target), wIn_(wIn), opType_(opType)
+	IntDualAddSub::IntDualAddSub(Operator* parentOp, Target* target, int wIn, int opType):
+		Operator(parentOp, target), wIn_(wIn), opType_(opType)
 	{
 		ostringstream name;
 		srcFileName="IntDualAddSub";
@@ -237,7 +237,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int opType;
 		UserInterface::parsePositiveInt(args, "opType", &opType);
-		return new IntDualAddSub(target, wIn, opType);
+		return new IntDualAddSub(parentOp, target, wIn, opType);
 	}
 
 	void IntDualAddSub::registerFactory(){

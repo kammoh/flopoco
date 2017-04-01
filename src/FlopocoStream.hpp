@@ -201,7 +201,7 @@ namespace flopoco{
 
 		protected:
 
-			Operator *op;
+			Operator *op=0;
 			bool codeParsed;
 			bool disabledParsing;
 	};

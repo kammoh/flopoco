@@ -112,7 +112,7 @@ namespace flopoco{
         vhdl << tab << declare("shiftedby", wShiftIn) <<  " <= " << rangeAssign(wShiftIn-wEI,0,"'0'") << " & eA1 when eA1" << of(wEI-1) << " = '0' else " << rangeAssign(wShiftIn-1,0,"'0'") << ";"<<endl;
 
       //FXP shifter mappings
-      FXP_shifter = new Shifter(target, wFI+1, wFO0+2, Shifter::Left);
+      FXP_shifter = new Shifter(this, target, wFI+1, wFO0+2, Shifter::Left);
 
       inPortMap (FXP_shifter, "X", "fA0");
       inPortMap (FXP_shifter, "S", "shiftedby");
