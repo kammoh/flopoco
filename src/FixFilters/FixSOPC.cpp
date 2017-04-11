@@ -189,7 +189,7 @@ namespace flopoco{
 
 		g = 0;
 		double maxErrorWithGuardBits=maxAbsError;
-		while (maxErrorWithGuardBits>(0.5-targetError)) {
+		while (maxErrorWithGuardBits>(targetError>0 ? targetError : 0.5)) {
 			g++;
 			maxErrorWithGuardBits /= 2.0;
 		}
