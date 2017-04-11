@@ -107,7 +107,7 @@ int main(int argc, char* argv[] )
 		FixFIR::registerFactory();
 		FixSOPC::registerFactory();
 		FixIIR::registerFactory();
-		//		FixSIF::registerFactory();
+		FixSIF::registerFactory();
 
 		// hidden for now
 		// Fix2DNorm::registerFactory();

@@ -76,6 +76,8 @@ namespace flopoco{
 		vector<int> m_y;             /**< the vector of MSBs of each y */
 		vector<int> l_y;             /**< the vector of LSBs of each y */
 
+		vector<string> err_y;        /**< the vector of max. abs. errors of each y */
+
 		vector<vector<string>> Z;    /**< the matrix of coefficients Z */
 
 	};

@@ -33,7 +33,7 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_) :
+	FixSOPC::FixSOPC(Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
 			Operator(target_),
 			msbIn(msbIn_),
 			lsbIn(lsbIn_),
@@ -41,6 +41,7 @@ namespace flopoco{
 			lsbOut(lsbOut_),
 			coeff(coeff_),
 			g(g_),
+			targetError(targetError_),
 			computeMSBOut(false)
 	{
 		n = coeff.size();
@@ -56,7 +57,7 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_) :
+	FixSOPC::FixSOPC(Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
 			Operator(target_),
 			maxAbsX(maxAbsX_),
 			lsbIn(lsbIn_),
@@ -64,6 +65,7 @@ namespace flopoco{
 			lsbOut(lsbOut_),
 			coeff(coeff_),
 			g(g_),
+			targetError(targetError_),
 			computeMSBOut(false)
 	{
 		n = coeff.size();
@@ -187,7 +189,7 @@ namespace flopoco{
 
 		g = 0;
 		double maxErrorWithGuardBits=maxAbsError;
-		while (maxErrorWithGuardBits>0.5) {
+		while (maxErrorWithGuardBits>(0.5-targetError)) {
 			g++;
 			maxErrorWithGuardBits /= 2.0;
 		}
