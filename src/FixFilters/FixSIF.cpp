@@ -127,13 +127,29 @@ namespace flopoco {
 		addComment("---------------------------------------------------------");
 		vhdl << endl;
 
-		//create the SOPCs computing the X signals
+		//create the SOPCs computing the Y signals
 		vhdl << endl;
 		addComment("---------------  SOPCs for the Y signals  ---------------");
 		for(int i=0; i<n_y; i++){
 			addComment(join("creating the sum of products for Y_", i));
+			//compute the max. abs error
+			// 	parse the coeffs from the string, with Sollya parsing
+			sollya_obj_t node;
+			mpfr_t err_y_parsed;
+			double err_y_parsed_d;
+
+			node = sollya_lib_parse_string(err_y[i].c_str());
+			// 	If conversion did not succeed (i.e. parse error)
+			if(node == 0)
+				THROWERROR(srcFileName << ": Unable to parse string " << err_y[i] << " as a numeric constant");
+
+			mpfr_init2(err_y_parsed, 10000);
+			sollya_lib_get_constant(err_y_parsed, node);
+			sollya_lib_clear_obj(node);
+			err_y_parsed_d = mpfr_get_d(err_y_parsed, GMP_RNDN);
+			mpfr_clear(err_y_parsed);
 			//create the SOPC specific to this y
-			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_y[i], l_y[i], Z[n_t+n_x+i], -1); // -1 means: faithful
+			fixSOPC = new FixSOPC(getTarget(), msbVector, lsbVector, m_y[i], l_y[i], Z[n_t+n_x+i], -1, err_y_parsed_d); // -1 means: faithful
 			fixSOPC->setCombinatorial();
 			addSubComponent(fixSOPC);
 			//connect the inputs of the SOPC
@@ -239,6 +255,7 @@ namespace flopoco {
 				l_x.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
 			}
 			//read the msb and lsb vector for y
+			//	and their corresponding maximum error
 			for(int i=0; i<n_y; i++)
 			{
 				//read a line of the matrix
@@ -249,6 +266,8 @@ namespace flopoco {
 				//extract the msb and lsb
 				m_y.push_back(stoi(line.substr(0, line.find(' '))));
 				l_y.push_back(stoi(line.substr(line.find(' ')+1, line.size()-line.find(' ')-1)));
+				//extract the error
+				err_y.push_back(line.substr(line.rfind(' ')+1, line.size()-line.rfind(' ')-1));
 			}
 			//read the matrix Z
 			for(int i=0; i<n_t+n_x+n_y; i++)
@@ -258,7 +277,7 @@ namespace flopoco {
 					THROWERROR("Error: parseCoeffFile: error while reading the " <<
 							"values of the Z matrix index " << i);
 				}
-				//split it to a vector of strigs
+				//split it to a vector of strings
 				vector<string> matLine;
 				stringstream ss(line);
 
