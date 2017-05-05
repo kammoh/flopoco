@@ -36,7 +36,7 @@ using namespace std;
 namespace flopoco {
 
 	FixIIR::FixIIR(Target* target, int lsbIn_, int lsbOut_,  vector<string> coeffb_, vector<string> coeffa_, double H_, double Heps_) :
-		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeffb(coeffb_), coeffa(coeffa_), H(H_)
+		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeffb(coeffb_), coeffa(coeffa_), H(H_), Heps(Heps_)
 	{
 		srcFileName="FixIIR";
 		setCopyrightString ( "Florent de Dinechin, Louis Beseme (2014)" );
@@ -97,12 +97,12 @@ namespace flopoco {
 
 			REPORT(INFO, "H not provided: computing worst-case peak gain");
 
-			if (!WCPG_tf(&H, coeffb_d, coeffa_d, n, m))
+			if (!WCPG_tf(&H, coeffb_d, coeffa_d, n, m, (int)0))
 				THROWERROR("Could not compute WCPG");
 			REPORT(INFO, "Worst-case peak gain is H=" << H);
 
 			double one_d[1] = {1.0}; 
-			if (!WCPG_tf(&Heps, one_d, coeffa_d, n, m))
+			if (!WCPG_tf(&Heps, one_d, coeffa_d, 1, m, (int)0))
 				THROWERROR("Could not compute WCPG");
 			REPORT(INFO, "Error amplification worst-case peak gain is Heps=" << Heps);
 			
