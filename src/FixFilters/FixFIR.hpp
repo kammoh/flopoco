@@ -62,6 +62,12 @@ namespace flopoco{
 		 */
 		void buildVHDL();
 
+
+		/**
+		 * @brief The method that does the common initialization work between the constructors
+		 */
+		void initFilter();
+
 		/**
 		 * @brief The method that does the bulk of operator construction, isolated to enable sub-classes such as FixHalfSine etc
 		 * 		  The case when the filter is symmetric

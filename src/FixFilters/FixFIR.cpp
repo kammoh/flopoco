@@ -24,39 +24,31 @@ namespace flopoco {
 	FixFIR::FixFIR(Target* target, int lsbInOut_, vector<string> coeff_, bool rescale_, map<string, double> inputDelays) :
 		Operator(target), lsbInOut(lsbInOut_), lsbIn(lsbInOut_), lsbOut(lsbInOut_), coeff(coeff_), isSymmetric(false), rescale(rescale_)
 	{
-		srcFileName="FixFIR";
-		setCopyrightString ( "Louis Besème, Florent de Dinechin (2014)" );
-
-		ostringstream name;
-		name << "FixFIR_uid" << getNewUId();
-		setNameWithFreqAndUID( name.str() );
-
-		buildVHDL();
+		initFilter();
 	};
 
 
 	FixFIR::FixFIR(Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, bool isSymmetric_, bool rescale_, map<string, double> inputDelays) :
 		Operator(target), lsbInOut(lsbIn_), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), isSymmetric(isSymmetric_), rescale(rescale_)
 	{
+		initFilter();
+	};
+
+
+	void FixFIR::initFilter(){
 		srcFileName="FixFIR";
-		setCopyrightString ( "Louis Besème, Florent de Dinechin (2014)" );
+		setCopyrightString ( "Louis Besème, Matei Istoan, Florent de Dinechin (2013-2017)" );
 
 		ostringstream name;
 		name << "FixFIR_uid" << getNewUId();
 		setNameWithFreqAndUID( name.str() );
 
-		if(isSymmetric)
-		{
-			buildVHDLSymmetric();
-		}else
-		{
-			buildVHDL();
-		}
-	};
-
+		buildVHDL();
+	}
 
 
 	// The method that does the work once coeff[] is known
+	//	with support for symmetric coefficients (if properly declared)
 	void FixFIR::buildVHDL(){
 		n=coeff.size();
 
@@ -79,205 +71,119 @@ namespace flopoco {
 
 		setCycle(0);
 
-		if (rescale) {
-			// Most of this code is copypasted from SOPC.
-			// parse the coeffs from the string, with Sollya parsing
-			mpfr_t sumAbsCoeff;
-			mpfr_init2 (sumAbsCoeff, 1-lsbIn);
-			mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
-
-			for (int i=0; i< n; i++)	{
-				mpfr_t absCoeff;
-				mpfr_init2 (absCoeff, veryLargePrec);
-				sollya_obj_t node;
-				node = sollya_lib_parse_string(coeff[i].c_str());
-				// If conversion did not succeed (i.e. parse error)
-				if(node == 0)	{
-					ostringstream error;
-					error << srcFileName << ": Unable to parse string " << coeff[i] << " as a numeric constant" << endl;
-					throw error.str();
-				}
-				mpfr_init2(absCoeff, veryLargePrec);
-				sollya_lib_get_constant(absCoeff, node);
-				sollya_lib_clear_obj(node);
-				// Accumulate the absolute values
-				mpfr_abs(absCoeff, absCoeff, GMP_RNDU);
-				mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
-				mpfr_clears(absCoeff, NULL);
-			}
-			// now sumAbsCoeff is the max value that the filter can take.
-			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU);
-			REPORT(INFO, "Scaling all the coefficients by 1/" << sumAbs);
-			mpfr_clears(sumAbsCoeff, NULL);
-
-			// now just replace each coeff with the scaled version
-			for (int i=0; i< n; i++)	{
-				ostringstream s;
-				s << "(" << coeff[i] << ")/" << setprecision(20) << sumAbs;
-				coeff[i] = s.str();
-			}
-		}
-
-
-		fixSOPC = new FixSOPC(getTarget(), lsbIn, lsbOut, coeff);
-
-		addSubComponent(fixSOPC);
-
-		for(int i=0; i<n; i++) {
-			inPortMap(fixSOPC, join("X",i), join("Y", i));
-		}
-
-		outPortMap(fixSOPC, "R", "Rtmp");
-
-		vhdl << instance(fixSOPC, "fixSOPC");
-		syncCycleFromSignal("Rtmp");
-
-		addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1,   true);
-		vhdl << "R <= Rtmp;" << endl;
-
-		// initialize stuff for emulate
-		for(int i=0; i<=n; i++) {
-			xHistory[i]=0;
-		}
-		currentIndex=0;
-	};
-
-
-	// The method that does the work once coeff[] is known,
-	//	in the case when the filter is symmetric
-	void FixFIR::buildVHDLSymmetric(){
-		n=coeff.size();
-
-		useNumericStd_Unsigned();
-		if(-lsbIn<1) {
-			THROWERROR("Can't build an architecture for this value of lsbIn: " << lsbIn)
-		}
-		addInput("X", 1-lsbIn, true);
-
-		ShiftReg *shiftReg = new ShiftReg(getTarget(), 1-lsbIn, n);
-
-		addSubComponent(shiftReg);
-		inPortMap(shiftReg, "X", "X");
-
-		for(int i = 0; i<n; i++) {
-			outPortMap(shiftReg, join("Xd", i), join("Y", i));
-		}
-
-		vhdl << instance(shiftReg, "shiftReg");
-
-		setCycle(0);
-
-		if (rescale) {
-			// Most of this code is copypasted from SOPC.
-			// parse the coeffs from the string, with Sollya parsing
-			mpfr_t sumAbsCoeff;
-			mpfr_init2 (sumAbsCoeff, 1-lsbIn);
-			mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
-
-			for (int i=0; i< n; i++)	{
-				mpfr_t absCoeff;
-				mpfr_init2 (absCoeff, veryLargePrec);
-				sollya_obj_t node;
-				node = sollya_lib_parse_string(coeff[i].c_str());
-				// If conversion did not succeed (i.e. parse error)
-				if(node == 0)	{
-					ostringstream error;
-					error << srcFileName << ": Unable to parse string " << coeff[i] << " as a numeric constant" << endl;
-					throw error.str();
-				}
-				mpfr_init2(absCoeff, veryLargePrec);
-				sollya_lib_get_constant(absCoeff, node);
-				sollya_lib_clear_obj(node);
-				// Accumulate the absolute values
-				mpfr_abs(absCoeff, absCoeff, GMP_RNDU);
-				mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
-				mpfr_clears(absCoeff, NULL);
-			}
-			// now sumAbsCoeff is the max value that the filter can take.
-			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU);
-			REPORT(INFO, "Scaling all the coefficients by 1/" << sumAbs);
-			mpfr_clears(sumAbsCoeff, NULL);
-
-			// now just replace each coeff with the scaled version
-			for (int i=0; i< n; i++)	{
-				ostringstream s;
-				s << "(" << coeff[i] << ")/" << setprecision(20) << sumAbs;
-				coeff[i] = s.str();
-			}
-		}
-
-		//compute the msbOut
-		mpfr_t sumAbsCoeff, absCoeff;
-		mpfr_init2 (sumAbsCoeff, veryLargePrec);
-		mpfr_init2 (absCoeff, veryLargePrec);
-		mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
-
-		for (int i=0; i< n; i++){
-			sollya_obj_t node;
-			node = sollya_lib_parse_string(coeff[i].c_str());
-			// If conversion did not succeed (i.e. parse error)
-			if(node == 0)	{
-				ostringstream error;
-				error << srcFileName << ": Unable to parse string " << coeff[i] << " as a numeric constant" << endl;
-				throw error.str();
-			}
-			mpfr_init2(absCoeff, veryLargePrec);
-			sollya_lib_get_constant(absCoeff, node);
-			sollya_lib_clear_obj(node);
-			// Accumulate the absolute values
-			mpfr_abs(absCoeff, absCoeff, GMP_RNDU);
-			mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
-		}
-
-		// now sumAbsCoeff is the max value that the SOPC can take.
-		double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU); // just to make the following loop easier
-		REPORT(DETAILED, "sumAbs=" << sumAbs);
+		double sumAbs;
 		int msbOut = 1;
-		while(sumAbs>=2.0){
-			sumAbs*=0.5;
-			msbOut++;
-		}
-		while(sumAbs<1.0){
-			sumAbs*=2.0;
-			msbOut--;
-		}
-		REPORT(INFO, "Computed msbOut=" << msbOut);
-		mpfr_clears(sumAbsCoeff, absCoeff, NULL);
 
-		//add the symmetric inputs before sending them to the SOPC
-		//	create a shortened set of coefficients, as well
-		vhdl << endl;
-		for(int i=0; i<n/2; i++)
+		if (rescale || isSymmetric) {
+			// Most of this code is copypasted from SOPC.
+			// parse the coeffs from the string, with Sollya parsing
+			mpfr_t sumAbsCoeff, absCoeff;
+			mpfr_init2 (sumAbsCoeff, 1-lsbIn);
+			mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
+
+			for (int i=0; i< n; i++)	{
+				mpfr_init2 (absCoeff, veryLargePrec);
+				sollya_obj_t node;
+				node = sollya_lib_parse_string(coeff[i].c_str());
+				// If conversion did not succeed (i.e. parse error)
+				if(node == 0)	{
+					ostringstream error;
+					error << srcFileName << ": Unable to parse string " << coeff[i] << " as a numeric constant" << endl;
+					throw error.str();
+				}
+				mpfr_init2(absCoeff, veryLargePrec);
+				sollya_lib_get_constant(absCoeff, node);
+				sollya_lib_clear_obj(node);
+				// Accumulate the absolute values
+				mpfr_abs(absCoeff, absCoeff, GMP_RNDU);
+				mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
+				mpfr_clears(absCoeff, NULL);
+			}
+			// now sumAbsCoeff is the max value that the filter can take.
+			sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU);
+
+			if(rescale){
+				REPORT(INFO, "Scaling all the coefficients by 1/" << sumAbs);
+				mpfr_clears(sumAbsCoeff, NULL);
+
+				// now just replace each coeff with the scaled version
+				for (int i=0; i< n; i++)	{
+					ostringstream s;
+					s << "(" << coeff[i] << ")/" << setprecision(20) << sumAbs;
+					coeff[i] = s.str();
+				}
+			}
+
+			if(isSymmetric){
+				// now sumAbsCoeff is the max value that the SOPC can take.
+				REPORT(DETAILED, "sumAbs=" << sumAbs);
+				msbOut = 1;
+				while(sumAbs>=2.0){
+					sumAbs*=0.5;
+					msbOut++;
+				}
+				while(sumAbs<1.0){
+					sumAbs*=2.0;
+					msbOut--;
+				}
+				REPORT(INFO, "Computed msbOut=" << msbOut);
+			}
+
+			mpfr_clear(sumAbsCoeff);
+		}
+
+		if(isSymmetric)
 		{
-			vhdl << tab << declare(join("YY", i),  1-lsbIn+1, true) << " <= "
-					<< "(Y" << i << "(" << 0-lsbIn << ") & Y" << i << ") + (Y" << n-i-1 << "(" << 0-lsbIn << ") & Y" << n-i-1 << ");" << endl;
-			coeffSymmetric.push_back(coeff[i]);
+			//add the symmetric inputs before sending them to the SOPC
+			//	create a shortened set of coefficients, as well
+			vhdl << endl;
+			for(int i=0; i<n/2; i++)
+			{
+				vhdl << tab << declare(join("YY", i),  1-lsbIn+1, true) << " <= "
+						<< "(Y" << i << "(" << 0-lsbIn << ") & Y" << i << ") + (Y" << n-i-1 << "(" << 0-lsbIn << ") & Y" << n-i-1 << ");" << endl;
+				coeffSymmetric.push_back(coeff[i]);
+			}
+			if(n%2 == 1)
+			{
+				vhdl << tab << declare(join("YY", n/2),  1-lsbIn+1, true) << " <= "
+						<< "(Y" << n/2 << "(" << 0-lsbIn << ") & Y" << n/2 << ");" << endl;
+				coeffSymmetric.push_back(coeff[n/2]);
+			}
+			vhdl << endl;
+
+			fixSOPC     = new FixSOPC(getTarget(), lsbIn, lsbOut, coeff);
+			fixSOPCSymm = new FixSOPC(getTarget(), vector<int>((n+1)/2, 1), vector<int>((n+1)/2, lsbIn), msbOut, lsbOut, coeffSymmetric);
+
+			addSubComponent(fixSOPCSymm);
+
+			for(int i=0; i<(n+1)/2; i++) {
+				inPortMap(fixSOPCSymm, join("X",i), join("YY", i));
+			}
+
+			outPortMap(fixSOPCSymm, "R", "Rtmp");
+
+			vhdl << instance(fixSOPCSymm, "fixSOPC");
+			syncCycleFromSignal("Rtmp");
+
+			addOutput("R", msbOut - lsbOut + 1, true);
+			vhdl << tab << "R <= Rtmp;" << endl;
+		}else{
+			fixSOPC = new FixSOPC(getTarget(), lsbIn, lsbOut, coeff);
+
+			addSubComponent(fixSOPC);
+
+			for(int i=0; i<n; i++) {
+				inPortMap(fixSOPC, join("X",i), join("Y", i));
+			}
+
+			outPortMap(fixSOPC, "R", "Rtmp");
+
+			vhdl << instance(fixSOPC, "fixSOPC");
+			syncCycleFromSignal("Rtmp");
+
+			addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1, true);
+			vhdl << "R <= Rtmp;" << endl;
 		}
-		if(n%2 == 1)
-		{
-			vhdl << tab << declare(join("YY", n/2),  1-lsbIn+1, true) << " <= "
-					<< "(Y" << n/2 << "(" << 0-lsbIn << ") & Y" << n/2 << ");" << endl;
-			coeffSymmetric.push_back(coeff[n/2]);
-		}
-		vhdl << endl;
-
-		fixSOPC     = new FixSOPC(getTarget(), lsbIn, lsbOut, coeff);
-		fixSOPCSymm = new FixSOPC(getTarget(), vector<int>((n+1)/2, 1), vector<int>((n+1)/2, lsbIn), msbOut, lsbOut, coeffSymmetric);
-
-		addSubComponent(fixSOPCSymm);
-
-		for(int i=0; i<(n+1)/2; i++) {
-			inPortMap(fixSOPCSymm, join("X",i), join("YY", i));
-		}
-
-		outPortMap(fixSOPCSymm, "R", "Rtmp");
-
-		vhdl << instance(fixSOPCSymm, "fixSOPC");
-		syncCycleFromSignal("Rtmp");
-
-		//addOutput("R", fixSOPCSymm->msbOut - fixSOPCSymm->lsbOut + 1,   true);
-		addOutput("R", msbOut - lsbOut + 1, true);
-		vhdl << tab << "R <= Rtmp;" << endl;
 
 		// initialize stuff for emulate
 		for(int i=0; i<=n; i++) {
@@ -285,6 +191,8 @@ namespace flopoco {
 		}
 		currentIndex=0;
 	};
+
+
 
 
 	FixFIR::~FixFIR(){
