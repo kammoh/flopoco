@@ -17,36 +17,48 @@ namespace flopoco {
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
 	FixFIR::FixFIR(Target* target, int lsbInOut_, bool rescale_) :
-		Operator(target), lsbInOut(lsbInOut_), rescale(rescale_)	{	}
+		Operator(target), lsbInOut(lsbInOut_), lsbOut(lsbInOut_), isSymmetric(false), rescale(rescale_)	{	}
 
 
 
 	FixFIR::FixFIR(Target* target, int lsbInOut_, vector<string> coeff_, bool rescale_, map<string, double> inputDelays) :
-		Operator(target), lsbInOut(lsbInOut_), coeff(coeff_), rescale(rescale_)
+		Operator(target), lsbInOut(lsbInOut_), lsbIn(lsbInOut_), lsbOut(lsbInOut_), coeff(coeff_), isSymmetric(false), rescale(rescale_)
 	{
+		initFilter();
+	};
+
+
+	FixFIR::FixFIR(Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, bool isSymmetric_, bool rescale_, map<string, double> inputDelays) :
+		Operator(target), lsbInOut(lsbIn_), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), isSymmetric(isSymmetric_), rescale(rescale_)
+	{
+		initFilter();
+	};
+
+
+	void FixFIR::initFilter(){
 		srcFileName="FixFIR";
-		setCopyrightString ( "Louis Besème, Florent de Dinechin (2014)" );
+		setCopyrightString ( "Louis Besème, Matei Istoan, Florent de Dinechin (2013-2017)" );
 
 		ostringstream name;
 		name << "FixFIR_uid" << getNewUId();
 		setNameWithFreqAndUID( name.str() );
 
 		buildVHDL();
-	};
-
+	}
 
 
 	// The method that does the work once coeff[] is known
+	//	with support for symmetric coefficients (if properly declared)
 	void FixFIR::buildVHDL(){
 		n=coeff.size();
 
 		useNumericStd_Unsigned();
-		if(-lsbInOut<1) {
-			THROWERROR("Can't build an architecture for this value of lsbInOut: " << lsbInOut)
+		if(-lsbIn<1) {
+			THROWERROR("Can't build an architecture for this value of lsbIn: " << lsbIn)
 		}
-		addInput("X", 1-lsbInOut, true);
+		addInput("X", 1-lsbIn, true);
 
-		ShiftReg *shiftReg = new ShiftReg(getTarget(), 1-lsbInOut, n);
+		ShiftReg *shiftReg = new ShiftReg(getTarget(), 1-lsbIn, n);
 
 		addSubComponent(shiftReg);
 		inPortMap(shiftReg, "X", "X");
@@ -59,15 +71,17 @@ namespace flopoco {
 
 		setCycle(0);
 
-		if (rescale) {
+		double sumAbs;
+		int msbOut = 1;
+
+		if (rescale || isSymmetric) {
 			// Most of this code is copypasted from SOPC.
 			// parse the coeffs from the string, with Sollya parsing
-			mpfr_t sumAbsCoeff;
-			mpfr_init2 (sumAbsCoeff, 1-lsbInOut);
+			mpfr_t sumAbsCoeff, absCoeff;
+			mpfr_init2 (sumAbsCoeff, 1-lsbIn);
 			mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
 
 			for (int i=0; i< n; i++)	{
-				mpfr_t absCoeff;
 				mpfr_init2 (absCoeff, veryLargePrec);
 				sollya_obj_t node;
 				node = sollya_lib_parse_string(coeff[i].c_str());
@@ -86,34 +100,90 @@ namespace flopoco {
 				mpfr_clears(absCoeff, NULL);
 			}
 			// now sumAbsCoeff is the max value that the filter can take.
-			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU);
-			REPORT(INFO, "Scaling all the coefficients by 1/" << sumAbs);
-			mpfr_clears(sumAbsCoeff, NULL);
+			sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU);
 
-			// now just replace each coeff with the scaled version
-			for (int i=0; i< n; i++)	{
-				ostringstream s;
-				s << "(" << coeff[i] << ")/" << setprecision(20) << sumAbs;
-				coeff[i] = s.str();
+			if(rescale){
+				REPORT(INFO, "Scaling all the coefficients by 1/" << sumAbs);
+				mpfr_clears(sumAbsCoeff, NULL);
+
+				// now just replace each coeff with the scaled version
+				for (int i=0; i< n; i++)	{
+					ostringstream s;
+					s << "(" << coeff[i] << ")/" << setprecision(20) << sumAbs;
+					coeff[i] = s.str();
+				}
 			}
+
+			if(isSymmetric){
+				// now sumAbsCoeff is the max value that the SOPC can take.
+				REPORT(DETAILED, "sumAbs=" << sumAbs);
+				msbOut = 1;
+				while(sumAbs>=2.0){
+					sumAbs*=0.5;
+					msbOut++;
+				}
+				while(sumAbs<1.0){
+					sumAbs*=2.0;
+					msbOut--;
+				}
+				REPORT(INFO, "Computed msbOut=" << msbOut);
+			}
+
+			mpfr_clear(sumAbsCoeff);
 		}
 
+		if(isSymmetric)
+		{
+			//add the symmetric inputs before sending them to the SOPC
+			//	create a shortened set of coefficients, as well
+			vhdl << endl;
+			for(int i=0; i<n/2; i++)
+			{
+				vhdl << tab << declare(join("YY", i),  1-lsbIn+1, true) << " <= "
+						<< "(Y" << i << "(" << 0-lsbIn << ") & Y" << i << ") + (Y" << n-i-1 << "(" << 0-lsbIn << ") & Y" << n-i-1 << ");" << endl;
+				coeffSymmetric.push_back(coeff[i]);
+			}
+			if(n%2 == 1)
+			{
+				vhdl << tab << declare(join("YY", n/2),  1-lsbIn+1, true) << " <= "
+						<< "(Y" << n/2 << "(" << 0-lsbIn << ") & Y" << n/2 << ");" << endl;
+				coeffSymmetric.push_back(coeff[n/2]);
+			}
+			vhdl << endl;
 
-		fixSOPC = new FixSOPC(getTarget(), lsbInOut, lsbInOut, coeff);
+			fixSOPC     = new FixSOPC(getTarget(), lsbIn, lsbOut, coeff);
+			fixSOPCSymm = new FixSOPC(getTarget(), vector<int>((n+1)/2, 1), vector<int>((n+1)/2, lsbIn), msbOut, lsbOut, coeffSymmetric);
 
-		addSubComponent(fixSOPC);
+			addSubComponent(fixSOPCSymm);
 
-		for(int i=0; i<n; i++) {
-			inPortMap(fixSOPC, join("X",i), join("Y", i));
+			for(int i=0; i<(n+1)/2; i++) {
+				inPortMap(fixSOPCSymm, join("X",i), join("YY", i));
+			}
+
+			outPortMap(fixSOPCSymm, "R", "Rtmp");
+
+			vhdl << instance(fixSOPCSymm, "fixSOPC");
+			syncCycleFromSignal("Rtmp");
+
+			addOutput("R", msbOut - lsbOut + 1, true);
+			vhdl << tab << "R <= Rtmp;" << endl;
+		}else{
+			fixSOPC = new FixSOPC(getTarget(), lsbIn, lsbOut, coeff);
+
+			addSubComponent(fixSOPC);
+
+			for(int i=0; i<n; i++) {
+				inPortMap(fixSOPC, join("X",i), join("Y", i));
+			}
+
+			outPortMap(fixSOPC, "R", "Rtmp");
+
+			vhdl << instance(fixSOPC, "fixSOPC");
+			syncCycleFromSignal("Rtmp");
+
+			addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1, true);
+			vhdl << "R <= Rtmp;" << endl;
 		}
-
-		outPortMap(fixSOPC, "R", "Rtmp");
-
-		vhdl << instance(fixSOPC, "fixSOPC");
-		syncCycleFromSignal("Rtmp");
-
-		addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1,   true);
-		vhdl << "R <= Rtmp;" << endl;
 
 		// initialize stuff for emulate
 		for(int i=0; i<=n; i++) {
@@ -121,6 +191,9 @@ namespace flopoco {
 		}
 		currentIndex=0;
 	};
+
+
+
 
 	FixFIR::~FixFIR(){
 	};
@@ -190,8 +263,12 @@ namespace flopoco {
 	};
 
 	OperatorPtr FixFIR::parseArguments(Target *target, vector<string> &args) {
-		int lsbInOut;
-		UserInterface::parseInt(args, "lsbInOut", &lsbInOut);
+		int lsbIn;
+		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		int lsbOut;
+		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		bool isSymm;
+		UserInterface::parseBoolean(args, "isSymmetric", &isSymm);
 		bool rescale;
 		UserInterface::parseBoolean(args, "rescale", &rescale);
 		vector<string> input;
@@ -205,7 +282,7 @@ namespace flopoco {
 				input.push_back( substr );
 			}
 
-		OperatorPtr tmpOp = new FixFIR(target, lsbInOut, input, rescale);
+		OperatorPtr tmpOp = new FixFIR(target, lsbIn, lsbOut, input, isSymm, rescale);
 
 		return tmpOp;
 		//return new FixFIR(target, lsbInOut, input, rescale);
@@ -216,7 +293,9 @@ namespace flopoco {
 											 "A fix-point Finite Impulse Filter generator.",
 											 "FiltersEtc", // categories
 											 "",
-											 "lsbInOut(int): integer size in bits;\
+											 "lsbIn(int): integer size in bits;\
+											 lsbOut(int): integer size in bits;\
+						isSymmetric(bool)=false: If true, if true, will use half the number of multipliers;\
                         rescale(bool)=false: If true, divides all coefficient by 1/sum(|coeff|);\
                         coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",

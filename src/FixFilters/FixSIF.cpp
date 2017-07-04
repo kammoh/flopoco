@@ -38,7 +38,7 @@ namespace flopoco {
 			setCycle(0, false);
 			declare(join("X_", i, "_next"), (m_x[i]-l_x[i]+1), true, Signal::registeredWithAsyncReset);
 			//create a temporary signal for X
-			declare(join("X_", i, "_int"), (m_x[i]-l_x[i]+1));
+//			declare(join("X_", i, "_int"), (m_x[i]-l_x[i]+1));
 			setCycle(1, false);
 			declare(join("X_", i), (m_x[i]-l_x[i]+1));
 		}
@@ -79,7 +79,8 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
+//				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
@@ -106,7 +107,8 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
+//				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
@@ -116,7 +118,7 @@ namespace flopoco {
 
 			//activate parsing
 			setSequential();
-			vhdl << tab << "X_" << i << "_int <= X_" << i << ";" << endl;
+//			vhdl << tab << "X_" << i << "_int <= X_" << i << ";" << endl;
 			setCycle(1, true);
 			vhdl << tab << "X_" << i << " <= X_" << i << "_next;" << endl;
 			setCycle(0, true);
@@ -157,7 +159,8 @@ namespace flopoco {
 				inPortMap(fixSOPC, join("X",j), join("T_", j));
 			}
 			for(int j=0; j<n_x; j++) {
-				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
+//				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j, "_int"));
+				inPortMap(fixSOPC, join("X",n_t+j), join("X_", j));
 			}
 			for(int j=0; j<n_u; j++) {
 				inPortMap(fixSOPC, join("X",n_t+n_x+j), join("U_", j));
