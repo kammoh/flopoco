@@ -515,7 +515,7 @@ namespace flopoco{
 				REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
 				REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
 
-				ShiftAddDag* tries[4];
+				ShiftAddDag* tries[5];
 				tries[1]=implem_try_left;
 				tries[0]=implem_try_right;
 				tries[2]=implem_try_balanced;
@@ -1681,5 +1681,45 @@ namespace flopoco{
 
 
 	}
+
+
+
+
+
+	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
+	TestList IntConstMult::unitTest(int index)
+	{
+		throw ("TestList IntConstDiv::unitTest : TODO, plz FIXME");
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+
+		return testStateList;
+	}
+
+
+
+	OperatorPtr IntConstMult::parseArguments(Target *target, vector<string> &args) {
+		int wIn;
+		string	n;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
+		UserInterface::parseString(args, "n", &n);
+		mpz_class nz(n); // TODO catch exceptions here?
+		return new IntConstMult(target, wIn, nz);
+	}
+
+	void IntConstMult::registerFactory(){
+		UserInterface::add("IntConstMult", // name
+			"Integer multiplier by a constant using a shift-and-add tree.",
+			"ConstMultDiv",
+											 "FixRealKCM,IntConstDiv", // seeAlso
+											 "wIn(int): input size in bits; \
+											 n(int): constant to multiply by",
+											 "An early version of this operator is described in <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
+											 IntConstMult::parseArguments,
+											 IntConstMult::unitTest
+											 ) ;
+	}
+
 
 }
