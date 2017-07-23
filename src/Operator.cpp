@@ -2452,6 +2452,10 @@ namespace flopoco{
 		return target_;
 	}
 
+	OperatorPtr Operator::getParentOp(){
+		return parentOp_;
+	}
+
 	string Operator::getUniqueName(){
 		return uniqueName_;
 	}

@@ -55,7 +55,7 @@ namespace flopoco{
 		mpz_class maxIn;
 
 		/**
-		 * The Table constructor
+		 * The obsolete Table constructor
 		 * @param[in] target the target device
 		 * @param[in] wIn    the with of the input in bits
 		 * @param[in] wOut   the with of the output in bits
@@ -74,9 +74,9 @@ namespace flopoco{
 		 * @param[in] minIn			minimal input value (default: smallest value in values)
 		 * @param[in] maxIn			maximal input value (default: largest value in values)
 		 */
-		Table(Target* target, vector<mpz_class> _values, int _wIn = -1, int _wOut = -1, string name="", int _logicTable = -1, int _minIn = -1, int _maxIn = -1);
+		Table(OperatorPtr parentOp, Target* target, vector<mpz_class> _values, int _wIn = -1, int _wOut = -1, string name="", int _logicTable = -1, int _minIn = -1, int _maxIn = -1);
 
-		Table(Target* target);
+		Table(OperatorPtr parentOp, Target* target);
 
 		virtual ~Table() {};
 

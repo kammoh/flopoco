@@ -1255,6 +1255,11 @@ public:
 	Target* getTarget();
 
 	/**
+	 * Return the target member
+	 */
+	OperatorPtr getParentOp();
+
+	/**
 	 * Return the operator's unique name
 	 */
 	string getUniqueName();
