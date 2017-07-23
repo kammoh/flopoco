@@ -12,7 +12,7 @@ if grep 'gtkwave' temp > /dev/null; then
 			message='nvc simulation succeeded'
 	else
 			echo $nvc
-			message='nvc simulation ERROR, command was '
+			message='nvc simulation ERROR'
 	fi
 else
 	message = 'VHDL not generated'

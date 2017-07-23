@@ -255,7 +255,7 @@ namespace flopoco{
 		vhdl << instance(rightShifter, "RightShifterComponent");
 
 		// compute sticky bit as the or of the shifted out bits during the alignment //
-		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF<<")) else '1';"<<endl;
+		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF+1<<")) else '1';"<<endl;
 
 		//pad fraction of Y [sign][shifted frac having inplicit 1][guard bits]
 		vhdl<<tab<< declare("fracYfar", wF+4) << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;

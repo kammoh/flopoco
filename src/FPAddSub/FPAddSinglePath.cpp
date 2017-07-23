@@ -175,7 +175,7 @@ namespace flopoco{
 		
 #if 1 // vivado compiles it very expensively
 		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky") 
-				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF) << ") else '1';"<<endl;
+				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF+1) << ") else '1';"<<endl;
 #else // ugly but old-school VHDL
 		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky")	<< " <= shiftedFracY(0) ";
 		for (int i=1; i<=wF; i++)
