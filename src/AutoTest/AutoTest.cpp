@@ -317,7 +317,7 @@ namespace flopoco
 		}
 
 		if(bitsSum >= 8) {
-			testBench += "1000";
+			testBench += "10000";
 		}
 		else	{
 			testBench += "-2";
