@@ -285,53 +285,9 @@ namespace flopoco{
 
 
 	void FPAddSinglePath::buildStandardTestCases(TestCaseList* tcl){
-		// Standard test cases may be architecture-specific, so we keep this method
-		// duplicated in FPAddSinglePath and FPAddDualPath
-		TestCase *tc;
-
-		// Regression tests
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::plusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", -4.375e1);
-		tc->addFPInput("Y", 4.375e1);
-		emulate(tc);
-		tcl->add(tc);
-
+		// use the generic one defined in FPAdd
+		// Although standard test cases may be architecture-specific, it can't hurt.
+		FPAdd::buildStandardTestCases(this, wE, wF, tcl);
 	}
 
 
