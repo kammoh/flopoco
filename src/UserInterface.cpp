@@ -298,7 +298,7 @@ namespace flopoco
 			s <<  "ghdl -r " << simlibs << op->getName() << " --vcd=" << op->getName() << ".vcd --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			s <<  "gtkwave " << op->getName() << ".vcd" << endl;
 			cerr << "To run the simulation using nvc, type the following in a shell prompt:" <<endl;
-			cerr <<  "nvc  -a " << outputFileName << "  -e " <<  op->getName() << "  -r " << "--wave=" << op->getName() << ".fst --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
+			cerr <<  "nvc  -a " << outputFileName << "  -e " <<  op->getName() << "  -r --exit-severity=failure " << "--wave=" << op->getName() << ".fst --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			cerr <<  "gtkwave " << op->getName() << ".fst" << endl;
 		}
 
