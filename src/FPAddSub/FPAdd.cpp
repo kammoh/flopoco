@@ -95,6 +95,13 @@ namespace flopoco{
 		op->emulate(tc);
 		tcl->add(tc);
 
+		// A generalization of this regression test
+		tc = new TestCase(op);
+		tc->addFPInput("X", 1);
+		tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
+		op->emulate(tc);
+		tcl->add(tc);
+
 	}
 
 
