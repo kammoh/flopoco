@@ -39,10 +39,10 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-  FPAddSinglePath::FPAddSinglePath(Target* target,
+  FPAddSinglePath::FPAddSinglePath(OperatorPtr parentOp, Target* target,
 				   int wE, int wF,
 				   bool sub) :
-		Operator(target), wE(wE), wF(wF), sub(sub) {
+		Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
 
 		srcFileName="FPAddSinglePath";
 
@@ -170,7 +170,7 @@ namespace flopoco{
 		//pad fraction of Y [overflow][shifted frac having inplicit 1][guard][round]
 		vhdl<<tab<< declare("fracYpad", wF+4)      << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
 		vhdl<<tab<< declare("EffSubVector", wF+4) << " <= ("<<wF+3<<" downto 0 => EffSub);"<<endl;
-		vhdl<<tab<< declare(getTarget()->localWireDelay(wF+4) + getTarget()->logicDelay(2), "fracYpadXorOp", wF+4)
+		vhdl<<tab<< declare(getTarget()->logicDelay(2), "fracYpadXorOp", wF+4)
 				<< " <= fracYpad xor EffSubVector;"<<endl;
 		//pad fraction of X [overflow][inplicit 1][fracX][guard bits]
 		vhdl<<tab<< declare("fracXpad", wF+4)      << " <= \"01\" & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
@@ -191,12 +191,7 @@ namespace flopoco{
 									"wIn=" + to_string(wF+5) + " wOut=" + to_string(wF+5) + " wCount=" + to_string(intlog2(wF+5)) + " computeSticky=false countType=0",
 									"I=>fracSticky",
 									"Count=>nZerosNew, O=>shiftedFrac");
-		//need to decide how much to add to the exponent
-		/*		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+2));*/
-		// 	vhdl << tab << declare("expPart",wE+2) << " <= (" << zg(wE+2-lzocs->getCountWidth(),0) <<" & nZerosNew) - 1;"<<endl;
-		//update exponent
 
-		//incremented exponent.
 		// pipeline: I am assuming the two additions can be merged in a row of luts but I am not sure
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
@@ -219,7 +214,6 @@ namespace flopoco{
 		vhdl << tab  << declare("zeros", wE+2+wF+1) << "  <= " <<  zg(wE+2+wF+1,0)<<";"<<endl;
 		
 		newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>needToRound","R=>RoundedExpFrac");
-		//		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;Cin=>addToRoundBit","RoundedExpFrac" );
 		
 		addComment("possible update to exception bits");
 		vhdl << tab << declare("upExc",2)<<" <= RoundedExpFrac"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;

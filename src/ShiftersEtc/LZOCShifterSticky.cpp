@@ -37,7 +37,7 @@ namespace flopoco{
 		srcFileName = "LZOCShifterSticky";
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2016)");
 
-		REPORT( INFO, "wIn="<<wIn << " wOut="<<wOut << " wCount="<<wCount << " computeSticky=" << computeSticky  << " countType=" << countType);
+		REPORT(DETAILED, "wIn="<<wIn << " wOut="<<wOut << " wCount="<<wCount << " computeSticky=" << computeSticky  << " countType=" << countType);
 
 		ostringstream name;
 		name << "L" << (countType_<0?"ZO":((countType_>0)?"O":"Z")) << "CShifter"

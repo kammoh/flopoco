@@ -180,9 +180,9 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "sub", &sub);
 		UserInterface::parseBoolean(args, "dualPath", &dualPath);
 		if(dualPath)
-			return new FPAddDualPath(target, wE, wF, sub);
+			return new FPAddDualPath(parentOp, target, wE, wF, sub);
 		else
-			return new FPAddSinglePath(target, wE, wF, sub);
+			return new FPAddSinglePath(parentOp, target, wE, wF, sub);
 	}
 
 	TestList FPAdd::unitTest(int index)

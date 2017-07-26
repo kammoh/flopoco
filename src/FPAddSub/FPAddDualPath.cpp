@@ -38,8 +38,8 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FPAddDualPath::FPAddDualPath(Target* target, int wE, int wF, bool sub) :
-		Operator(target), wE(wE), wF(wF),  sub(sub){
+	FPAddDualPath::FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub) :
+		Operator(parentOp, target), wE(wE), wF(wF),  sub(sub){
 
 		ostringstream name, synch, synch2;
 

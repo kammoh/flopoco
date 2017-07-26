@@ -26,7 +26,7 @@ namespace flopoco{
 		 * @param[in]		wE			the the with of the exponent for the f-p number X
 		 * @param[in]		wF			the the with of the fraction for the f-p number X
 		 */
-		FPAddDualPath(Target* target, int wE, int wF, bool sub=false);
+		FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
 		/**
 		 * FPAddDualPath destructor

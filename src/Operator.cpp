@@ -2002,7 +2002,6 @@ namespace flopoco{
 		for (auto i: parametersVector){
 			REPORT(DEBUG, i);
 		}
-			
 		//create the operator
 		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
 
@@ -2304,8 +2303,8 @@ namespace flopoco{
 								o << recTab << tab <<tab << tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 						}
 				}
-			if (isRecirculatory() || hasClockEnable())
-				o << tab << tab << tab << tab << "end if;" << endl;
+				if (isRecirculatory() || hasClockEnable())
+					o << tab << tab << tab << tab << "end if;" << endl;
 				o << tab << tab << tab << "end if;" << endl;
 				o << tab << tab <<"end process;" << endl;
 			}

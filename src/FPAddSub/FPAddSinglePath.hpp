@@ -25,7 +25,7 @@ namespace flopoco{
 		 * @param[in]		wE			the the with of the exponent
 		 * @param[in]		wF			the the with of the fraction
 		 */
-		FPAddSinglePath(Target* target, int wE, int wF, bool sub=false);
+		FPAddSinglePath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
 		/**
 		 * FPAddSinglePath destructor
