@@ -158,30 +158,14 @@ namespace flopoco{
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building right shifter");
 
-		Shifter* rightShifter = nullptr;
-#if 1
-		inPortMap  (rightShifter, "X", "fracY");
-		inPortMap  (rightShifter, "S", "shiftVal");
-		outPortMap (rightShifter, "R", "shiftedFracY");
-
-		rightShifter = new Shifter(this, target,wF+1,wF+3, Shifter::Right);
-		rightShifter->changeName(getName()+"_RightShifter");
-
-		vhdl << instance(rightShifter, "RightShifterComponent");
-#else
-		newInstance...
-#endif
-
+		newInstance("Shifter",
+								"RightShifterComponent",
+								"wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+3) + " dir=1",
+								"X=>fracY,S=>shiftVal",
+								"R=>shiftedFracY");
 		
-#if 1 // new style, more behavorial
 		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky") 
 				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF+1) << ") else '1';"<<endl;
-#else // ugly but old-school VHDL, vivado compiles it very expensively
-		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky")	<< " <= shiftedFracY(0) ";
-		for (int i=1; i<=wF; i++)
-			vhdl << " or shiftedFracY(" << i <<")";
-		vhdl << ";" <<endl;
-#endif
 		
 		//pad fraction of Y [overflow][shifted frac having inplicit 1][guard][round]
 		vhdl<<tab<< declare("fracYpad", wF+4)      << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
@@ -191,27 +175,22 @@ namespace flopoco{
 		//pad fraction of X [overflow][inplicit 1][fracX][guard bits]
 		vhdl<<tab<< declare("fracXpad", wF+4)      << " <= \"01\" & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
 
-		vhdl<<tab<< declare(getTarget()->logicDelay(2), "cInAddFar")
+		vhdl<<tab<< declare(getTarget()->logicDelay(2), "cInSigAdd")
 				<< " <= EffSub and not sticky; -- if we subtract and the sticky was one, some of the negated sticky bits would have absorbed this carry "<< endl;
 
 		//result is always positive.
 
-		newInstance("IntAdder", "fracAdder", join("wIn=",wF+4), "X=>fracXpad,Y=>fracYpadXorOp,Cin=>cInAddFar","R=>fracAddResult");
+		newInstance("IntAdder", "fracAdder", join("wIn=",wF+4), "X=>fracXpad,Y=>fracYpadXorOp,Cin=>cInSigAdd","R=>fracAddResult");
 		
 		//shift in place
-		vhdl << tab << declare("fracGRS",wF+5) << "<= fracAddResult & sticky; "<<endl;
+		vhdl << tab << declare("fracSticky",wF+5) << "<= fracAddResult & sticky; "<<endl;
 
-
-		LZOCShifterSticky* lzocs = nullptr;
-
-		inPortMap  (lzocs, "I", "fracGRS");
-		outPortMap (lzocs, "Count","nZerosNew");
-		outPortMap (lzocs, "O","shiftedFrac");
-
-		lzocs = new LZOCShifterSticky(this, target, wF+5, wF+5, intlog2(wF+5), false, 0);
-
-		vhdl << instance(lzocs, "LZC_component");
-
+		LZOCShifterSticky* lzocs = (LZOCShifterSticky*)
+			newInstance("LZOCShifterSticky",
+									"LZCAndShifter",
+									"wIn=" + to_string(wF+5) + " wOut=" + to_string(wF+5) + " wCount=" + to_string(intlog2(wF+5)) + " computeSticky=false countType=0",
+									"I=>fracSticky",
+									"Count=>nZerosNew, O=>shiftedFrac");
 		//need to decide how much to add to the exponent
 		/*		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+2));*/
 		// 	vhdl << tab << declare("expPart",wE+2) << " <= (" << zg(wE+2-lzocs->getCountWidth(),0) <<" & nZerosNew) - 1;"<<endl;
@@ -233,15 +212,13 @@ namespace flopoco{
 		vhdl<<tab<<declare("rnd")<<"<= shiftedFrac"<<of(3)<<";"<<endl;
 		vhdl<<tab<<declare("lsb")<<"<= shiftedFrac"<<of(4)<<";"<<endl;
 
-		//decide what to add to the guard bit
-		vhdl << tab << declare(getTarget()->logicDelay(4),"addToRoundBit")
-			//				<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
+		vhdl << tab << declare(getTarget()->logicDelay(4),"needToRound")
 				 <<"<= '1' when (rnd='1' and stk='1') or (rnd='1' and stk='0' and lsb='1')" << endl
 				 << "  else '0';"<<endl;
 
 		vhdl << tab  << declare("zeros", wE+2+wF+1) << "  <= " <<  zg(wE+2+wF+1,0)<<";"<<endl;
 		
-		newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>addToRoundBit","R=>RoundedExpFrac");
+		newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>needToRound","R=>RoundedExpFrac");
 		//		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;Cin=>addToRoundBit","RoundedExpFrac" );
 		
 		addComment("possible update to exception bits");
