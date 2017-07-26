@@ -148,7 +148,7 @@ namespace flopoco{
 					<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<");" << endl;
 		}
 		else if (wE==sizeRightShift) {
-			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
+ 			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
 		}
 		else 	{ //  wE< sizeRightShift
 			//vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
@@ -229,7 +229,7 @@ namespace flopoco{
 				 <<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
 				 <<tab<<tab<<"\"11\" when others;"<<endl;
 		vhdl<<tab<<declare(getTarget()->logicDelay(3),
-											 "excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;
+											 "excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1'  and not(excRt=\"11\")) else excRt2;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
 		vhdl<<tab<<declare(getTarget()->logicDelay(3), "signR2")
 				<< " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
