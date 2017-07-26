@@ -4,6 +4,13 @@ Overhaul of the BitHeap framework.
 Removing all operators that have not been ported to these new framework, they will hopefully slowly trickle back.
 
 ======================================================================
+Version 4.2
+Various bug fixes, including one rounding but in FPAddSinglePath.
+IntConstMult resurrected
+FixFIR now supports symmetric coefficients
+Autotest framework now using nvc from https://github.com/nickg/nvc
+
+======================================================================
 Version 4.1
 Operators: FixFIR and FixIIR, overhaul of FixRealKCM,
 FPAddSinglePathIEEE (supports subnormals etc)
