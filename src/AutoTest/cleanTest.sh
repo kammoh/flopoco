@@ -1,5 +1,5 @@
 rm -R TestResults/tmp
-nbTests=$(grep -c flopoco TestResults/$1/report)
+nbTests=$(grep -c './flopoco' TestResults/$1/report)
 nbErrors=$(grep -c ERROR TestResults/$1/report)
 nbVHDL=$(grep -c "VHDL generated"  TestResults/$1/report)
 nbSuccess=$((nbVHDL-nbErrors))
