@@ -39,7 +39,7 @@ namespace flopoco{
 		ostringstream name;
 		srcFileName="FixFunctionByTable";
 
-		name<<"FixFunctionByTable_";
+		name<<"FixFunctionByTable";
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin (2010-2014)");

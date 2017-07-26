@@ -249,17 +249,17 @@ namespace flopoco {
 
 		// TODO CHECK HERE
 		for (int i=0; i< n; i++)		{
-			mpfr_mul(t, xHistory[(currentIndex+i)%n], coeffb_mp[i], GMP_RNDN); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
+			mpfr_mul(t, xHistory[(currentIndex+i)%n], coeffb_mp[i], GMP_RNDZ); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
 			mpfr_add(s, s, t, GMP_RNDN); 							// same comment as above
 		}
 
 		for (int i=0; i<m; i++)		{
-			mpfr_mul(t, yHistory[(currentIndex +i+1)%(m+2)], coeffa_mp[i], GMP_RNDN); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
-			mpfr_sub(s, s, t, GMP_RNDN); 							// same comment as above
+			mpfr_mul(t, yHistory[(currentIndex +i+1)%(m+2)], coeffa_mp[i], GMP_RNDZ); 					// Here rounding possible, but precision used is ridiculously high so it won't matter
+			mpfr_sub(s, s, t, GMP_RNDZ); 							// same comment as above
 		}
 		mpfr_set(yHistory[(currentIndex  +0)%(m+2)], s, GMP_RNDN);
 
-#if 0 // debugging the emulate
+#if 1 // debugging the emulate
 		cout << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
 		cout << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
 		for (int i=0; i< n; i++)		{
@@ -290,7 +290,7 @@ namespace flopoco {
 		int wO = msbOut-lsbOut+1;
 		mpz_class rdz, ruz;
 		mpfr_get_z (rdz.get_mpz_t(), s, GMP_RNDD); 					// there can be a real rounding here
-#if 1 // to unplug the conversion that fails to see if it diverges further
+#if 0 // to unplug the conversion that fails to see if it diverges further
 		rdz=signedToBitVector(rdz, wO);
 		tc->addExpectedOutput ("R", rdz);
 

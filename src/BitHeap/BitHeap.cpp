@@ -2033,7 +2033,6 @@ namespace flopoco
 		{
 			if(getMaxHeight() == 1)
 				concatenateLSBColumns();
-
 			op->vhdl << tab << op->declare(join("CompressionResult", guid), (maxWeight+1)) << " <= '0'&" <<
 				join("tempR_bh", guid, "_", chunkDoneIndex-1);
 
@@ -2051,7 +2050,6 @@ namespace flopoco
 			stringstream inAdder0, inAdder1/*, outAdder*/;
 			int i;
 			int minIndex, maxIndex;
-
 			//determine the index of the column where the addition should start
 			//	not necessarly the minimum index line
 			minIndex = minWeight;
@@ -2151,6 +2149,7 @@ namespace flopoco
 				op->vhdl <<  " & " << join("tempR_bh", guid, "_", i);
 
 			op->vhdl << ";" << endl;
+			
 		}
 		else
 		{
@@ -2422,7 +2421,6 @@ namespace flopoco
 
 			op->vhdl << ";" << endl;
 		}
-
 	}
 
 
@@ -3065,7 +3063,7 @@ namespace flopoco
 
 		minWeight=w;
 
-		REPORT(DEBUG, "minWeight="<< minWeight);
+		REPORT(DEBUG, "in concatenateLSBColumns(): minWeight="<< minWeight);
 
 	}
 

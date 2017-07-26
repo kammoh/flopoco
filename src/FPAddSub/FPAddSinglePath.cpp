@@ -163,7 +163,7 @@
 		manageCriticalPath(target->localWireDelay() + target->lutDelay());//multiplexer
 		vhdl<<tab<<declare("expDiff",wE+1) << " <= eXmeY when swap = '0' else eYmeX;"<<endl;
 		manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(wE+1));
-		vhdl<<tab<<declare("shiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
+		vhdl<<tab<<declare("shiftedOut") << " <= '1' when (expDiff > "<<wF+2<<") else '0';"<<endl;
 		//shiftVal=the number of positions that fracY must be shifted to the right
 
 		//		cout << "********" << wE << " " <<  sizeRightShift  <<endl;
@@ -436,6 +436,13 @@
 					emulate(tc);
 					tcl->add(tc);
 
+					// This triggers a specific bug
+					tc = new TestCase(this);
+					tc->addFPInput("X", 1);
+					tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
+					emulate(tc);
+					tcl->add(tc);
+					
 				}
 
 
