@@ -23,44 +23,47 @@
 #include "utils.hpp"
 #include "Operator.hpp"
 #include "IntDualAddSub.hpp"
+#include "IntAdder.hpp"
 
 using namespace std;
 
 
 namespace flopoco{
 
-	IntDualAddSub::IntDualAddSub(Target* target, int wIn, int opType):
-		Operator(target), wIn_(wIn), opType_(opType)
+	IntDualAddSub::IntDualAddSub(Operator* parentOp, Target* target, int wIn, int opType):
+		Operator(parentOp, target), wIn_(wIn), opType_(opType)
 	{
 		ostringstream name;
 		srcFileName="IntDualAddSub";
-		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008-2010)");
+		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008-2017)");
 
-		if (opType==0) {
-			son_ = "yMx";
-			name << "IntDualAddSub_";
+		if (opType==SUBSUB) {
+			son = "YmX";
+			name << "IntDualSub_";
 		}
 		else {
-			son_ = "xPy";
+			son = "XpY";
 			name << "IntDualAddSub_";
 		}
 		name << wIn;
 		setNameWithFreqAndUID(name.str());
-		useNumericStd();
 
 		// Set up the IO signals
 		addInput ("X"  , wIn_, true);
 		addInput ("Y"  , wIn_, true);
-		addOutput("RxMy", wIn_, 1, true);
-		addOutput("R"+son_, wIn_, 1, true);
+		addOutput("XmY", wIn_, 1, true);
+		addOutput(son, wIn_, 1, true);
 
+
+
+		// Most of this code is taken from IntAdder: please track the IntAdder code in the future.
 		schedule();
 		double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
 		// What is the maximum lexicographic time of our inputs?
 		int maxCycle = 0;
 		double maxCP = 0.0;
 		for(auto i: ioList_) {
-			// REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 			if((i->getCycle() > maxCycle)
 					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
 				maxCycle = i->getCycle();
@@ -71,150 +74,92 @@ namespace flopoco{
 
 		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
-
-		//		if(totalPeriod <= targetPeriod)		{
-		if(true){ 
+		if(totalPeriod <= targetPeriod)		{
 			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempRxMy", wIn)
-					 << " <= std_logic_vector(unsigned(X) - unsigned(Y));" <<endl;
-			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempR"+son_, wIn)
-					 <<" <= "<< (opType_==0 ? "std_logic_vector(unsigned(Y) - unsigned(X));" : "std_logic_vector(unsigned(X) + unsigned(Y));") << endl;
-			vhdl << tab << "RxMy <= tempRxMy;" << endl;
-			vhdl << tab << "R" << son_ << " <= tempR" << son_ << ";" << endl;
+					 << " <= X + (not Y) + '1';" <<endl;
+			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempR"+son, wIn)
+					 <<" <= "<< (opType_==SUBSUB ? "Y + (not X) + '1';" : "X + Y;") << endl;
+			vhdl << tab << "XmY <= tempRxMy;" << endl;
+			vhdl << tab << son << " <= tempR" << son << ";" << endl;
 		}
 
 		else		{
-
-		}
-	}
-
-
-#if 0
 			
+			// Here we split into chunks.
+			double remainingSlack = targetPeriod-maxCP;
+			int firstSubAdderSize = IntAdder::getMaxAdderSizeForPeriod(getTarget(), remainingSlack) - 2;
+			int maxSubAdderSize = IntAdder::getMaxAdderSizeForPeriod(getTarget(), targetPeriod) - 2;
 
-		if (getTarget()->isPipelined()){
-			//compute the maximum input delay
-			maxInputDelay = 0;
-			map<string, double>::iterator iter;
-			for (iter = inputDelays.begin(); iter!=inputDelays.end();++iter)
-				if (iter->second > maxInputDelay)
-					maxInputDelay = iter->second;
-
-			REPORT(DETAILED, "Maximum input delay is "<<	maxInputDelay);
-
-			double	objectivePeriod;
-			objectivePeriod = 1/ getTarget()->frequency();
-
-			REPORT(DETAILED, "Objective period is "<< objectivePeriod<<" at an objective frequency of "<<getTarget()->frequency());
-
-			if (objectivePeriod<maxInputDelay){
-				//It is the responsability of the previous components to not have a delay larger than the period
-			  REPORT(INFO, "Warning, the combinatorial delay at the input of "<<this->getName()<<"is above limit");
-			  maxInputDelay = objectivePeriod;
-			}
-
-			if (((objectivePeriod - maxInputDelay) - getTarget()->lutDelay())<0)	{
-				bufferedInputs = 1;
-				maxInputDelay=0;
-				getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
-				nbOfChunks = ceil(double(wIn_)/double(chunkSize_));
-				cSize = new int[nbOfChunks+1];
-				cSize[nbOfChunks-1]=( ((wIn_%chunkSize_)==0)?chunkSize_:wIn_-(nbOfChunks-1)*chunkSize_);
-				for (int i=0;i<=nbOfChunks-2;i++)
-					cSize[i]=chunkSize_;
-			}
-			else{
-				int cS0;
-				bufferedInputs=0;
-				int maxInAdd;
-				getTarget()->suggestSlackSubaddSize(maxInAdd, wIn_, maxInputDelay);
-				//int maxInAdd = ceil(((objectivePeriod - maxInputDelay) - getTarget()->lutDelay())/getTarget()->carryPropagateDelay());
-				cS0 = (maxInAdd<=wIn_?maxInAdd:wIn_);
-				if ((wIn_-cS0)>0)
-					{
-						int newWIn = wIn_-cS0;
-						getTarget()->suggestSubaddSize(chunkSize_,newWIn);
-						nbOfChunks = ceil( double(newWIn)/double(chunkSize_));
-
-						cSize = new int[nbOfChunks+1];
-						cSize[0] = cS0;
-						cSize[nbOfChunks]=( (( (wIn_-cSize[0])%chunkSize_)==0)?chunkSize_:(wIn_-cSize[0])-(nbOfChunks-1)*chunkSize_);
-						for (int i=1;i<=nbOfChunks-1;i++)
-							cSize[i]=chunkSize_;
-						nbOfChunks++;
-					}
-				else{
-					nbOfChunks=1;
-					cSize = new int[1];
-					cSize[0] = cS0;
+			bool loop=true;
+			int subAdderSize=firstSubAdderSize;
+			int previousSubAdderSize;
+			int subAdderFirstBit = 0;
+			int i=0;
+			// name the signals once for all. operations are 1 and 2
+			string c1="Cin_XmY_";
+			string c2="Cin_"+son + "_";
+			string x1 = "X_";
+			string y2 = "Y_";
+			string y1 = "Y_";
+			string x2 = (opType==SUBSUB?"mX_":"X_");
+			string s1 = "S_XmY_";
+			string s2 = "S_"+son+"_";
+			string r1 = "t_XmY_";
+			string r2 = "t_"+son+"_";
+				
+			while(loop) {
+				REPORT(DETAILED, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
+				// Cin
+				if(subAdderFirstBit == 0)	{
+					vhdl << tab << declare(join(c1, 0)) << " <= '1';" << endl; // X-Y is a subtraction
+					vhdl << tab << declare(join(c2, 0)) << " <= " << (opType==SUBSUB? "'1'":"'0'" ) << ";" << endl; 
+				}else	 {
+					vhdl << tab << declare(join(c1, i)) << " <= " << join(s1, i-1) <<	of(previousSubAdderSize) << ";" << endl;
+					vhdl << tab << declare(join(c2, i)) << " <= " << join(s2, i-1) <<	of(previousSubAdderSize) << ";" << endl;
 				}
-			}
+				// operands
+				vhdl << tab << declare(join("X_", i), subAdderSize) << " <= X"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
+				vhdl << tab << declare(join("Y_", i), subAdderSize) << " <= Y"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
+				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1),
+															 join(s1, i),
+															 subAdderSize+1)
+						 << " <= ('0' & X_" << i	<<	") + ('0' & not Y_" << i << ") + " << c1 << i << ";" << endl;
+				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1),
+															 join(s2, i),
+															 subAdderSize+1)
+						 << " <= ('0' & Y_" << i	<<	") + ('0' & " << (opType==SUBSUB? "not":"") << " X_" << i << ") + " << c2 << i << ";" << endl;
 
-			REPORT(DETAILED, "Buffered Inputs "<<(bufferedInputs?"yes":"no"));
-			for (int i=nbOfChunks-1;i>=0;i--)
-				REPORT(DETAILED, "chunk size[" <<i<<"]="<<cSize[i]);
+				vhdl << tab << declare(join(r1, i), subAdderSize) << " <= " << s1 << i	<<	range(subAdderSize-1,0) << ";" << endl;
+				vhdl << tab << declare(join(r2, i), subAdderSize) << " <= " << s2 << i	<<	range(subAdderSize-1,0) << ";" << endl;
 
-
-			getOutDelayMap()["RxMy"] = getTarget()->adderDelay(cSize[nbOfChunks-1]);
-			getOutDelayMap()["R"+son_] = getTarget()->adderDelay(cSize[nbOfChunks-1]);
-			REPORT(DETAILED, "Last addition size is "<<cSize[nbOfChunks-1]<< " having a delay of "<<getTarget()->adderDelay(cSize[nbOfChunks-1]));
-
-			//VHDL generation
-
-			if(bufferedInputs)
-				nextCycle();
-
-			for (int i=0;i<nbOfChunks;i++){
-				int sum=0;
-				for (int j=0;j<=i;j++) sum+=cSize[j];
-				vhdl << tab << declare(join("sX",i), cSize[i], true ) << " <= X" << range(sum-1, sum-cSize[i]) << ";" << endl;
-				vhdl << tab << declare(join("sY",i), cSize[i], true ) << " <= Y" << range(sum-1, sum-cSize[i]) << ";" << endl;
-			}
-			for (int i=0;i<nbOfChunks; i++){
-				// subtraction
-				vhdl << tab << declare(join("xMy",i), cSize[i]+1, true) <<"  <= (\"0\" & sX"<<i<<") + (\"0\" & not(sY"<<i<<")) ";
-				if(i==0) // carry
-					vhdl << "+ '1';"<<endl;
+				// prepare next iteration
+				i++;
+				subAdderFirstBit += subAdderSize;
+				previousSubAdderSize = subAdderSize;
+				if (subAdderFirstBit==wIn)
+					loop=false;
 				else
-					vhdl << "+ " << join("xMy", i-1) << of(cSize[i-1]) << ";"<<endl;
-				// addition or subtraction depending on opType
-				if(opType){ //addition
-					vhdl << tab << declare(join("xPy",i), cSize[i]+1, true) << " <= (\"0\" & sY"<<i<<") + (\"0\" & sX"<<i<<")";
-					if(i>0)
-						vhdl << "+ " << join("xPy", i-1) << of(cSize[i-1]) << ";"<<endl;
-					else
-						vhdl << ";" <<endl;
-				}else{ // reverse subtraction
-					vhdl << tab << declare(join("yMx",i), cSize[i]+1, true) <<" <= (\"0\" & sY"<<i<<") + (\"0\" & not(sX"<<i<<"))";
-					if(i==0) // carry
-						vhdl << "+ '1';"<<endl;
-					else
-						vhdl << "+ " << join("yMx", i-1) << of(cSize[i-1]) << ";"<<endl;
-				}
-				if (i<nbOfChunks-1)
-					nextCycle();
+					subAdderSize = min(wIn-subAdderFirstBit, maxSubAdderSize);
 			}
+			int ifinal=i;
+			
+			vhdl << tab << "XmY <= ";
+			while(i>0)		{
+				i--;
+				vhdl << r1 << i << (i==0?" ":" & ");
+			}
+			vhdl << ";" << endl;
 
-			//assign output by composing the result for x - y
-			vhdl << tab << "RxMy <= ";
-			for (int i=nbOfChunks-1;i>=0;i--){
-				vhdl << "xMy" << i << range(cSize[i]-1,0);
-				if (i==0)
-					vhdl << ";" << endl;
-				else
-					vhdl << " & ";
+			i=ifinal;
+			vhdl << tab << son << " <= ";
+			while(i>0)		{
+				i--;
+				vhdl << r2 << i << (i==0?" ":" & ");
 			}
-
-			//assign output by composing the result for y - x or x + y
-			vhdl << tab << "R" << son_ << " <= ";
-			for (int i=nbOfChunks-1;i>=0;i--){
-				vhdl << son_ << i << range(cSize[i]-1,0);
-				if (i==0)
-					vhdl << ";" << endl;
-				else
-					vhdl << " & ";
-			}
+			vhdl << ";" << endl;
 		}
-#endif
+		//REPORT(DEBUG, "Exiting");
+	}
 
 
 	IntDualAddSub::~IntDualAddSub() {
@@ -226,17 +171,17 @@ namespace flopoco{
 		mpz_class svY = tc->getInputValue("Y");
 
 		mpz_class svRxMy = svX - svY;
-		tc->addExpectedOutput("RxMy", svRxMy);
+		tc->addExpectedOutput("XmY", svRxMy);
 
 		mpz_class svR2;
-		if (opType_==0)
+		if (opType_== SUBSUB)
 			svR2=svY-svX;
 		else {
 			svR2=svX+svY;
 			// Don't allow overflow
 			mpz_clrbit(svR2.get_mpz_t(),wIn_);
 		}
-		tc->addExpectedOutput("R"+son_, svR2);
+		tc->addExpectedOutput(son, svR2);
 	}
 
 
@@ -256,12 +201,43 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
+
+
+	TestList IntDualAddSub::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			
+			for(int wIn=5; wIn<100; wIn+=30) // test various input widths
+				{
+					for(int opType = 0; opType <2; opType++) {
+						paramList.push_back(make_pair("wIn", to_string(wIn)));
+						paramList.push_back(make_pair("opType", to_string(opType)));
+						testStateList.push_back(paramList);
+						paramList.clear();
+					}
+				}
+		}
+		else     
+			{
+				// finite number of random test computed out of index
+				// TODO ?
+			}	
+
+		return testStateList;
+	}
+
+	
 	OperatorPtr IntDualAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int opType;
-		UserInterface::parseStrictlyPositiveInt(args, "opType", &opType);
-		return new IntDualAddSub(target, wIn, opType);
+		UserInterface::parsePositiveInt(args, "opType", &opType);
+		return new IntDualAddSub(parentOp, target, wIn, opType);
 	}
 
 	void IntDualAddSub::registerFactory(){
@@ -272,7 +248,8 @@ namespace flopoco{
 											 "wIn(int): input size in bits;\
 opType(int): 1=compute X-Y and X+Y, 2=compute X-Y and Y-X;",
 											 "",
-											 IntDualAddSub::parseArguments
+											 IntDualAddSub::parseArguments,
+											 IntDualAddSub::unitTest
 											 ) ;
 
 	}

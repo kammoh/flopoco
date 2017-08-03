@@ -47,16 +47,16 @@ namespace flopoco{
 
 	
 	//standalone operator
-	FixRealKCM::FixRealKCM(Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
-							Operator(target),
-							parentOp(this),
-							signedInput(signedInput_),
-							msbIn(msbIn_),
-							lsbIn(lsbIn_),
-							lsbOut(lsbOut_),
-							constant(constant_),
-							targetUlpError(targetUlpError_),
-							addRoundBit(true)
+	FixRealKCM::FixRealKCM(OperatorPtr parentOp, Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
+		Operator(parentOp, target),
+		thisOp(this),
+		signedInput(signedInput_),
+		msbIn(msbIn_),
+		lsbIn(lsbIn_),
+		lsbOut(lsbOut_),
+		constant(constant_),
+		targetUlpError(targetUlpError_),
+		addRoundBit(true)
 	{
 		init();		 // check special cases, computes number of tables and errorInUlps.
 
@@ -81,7 +81,7 @@ namespace flopoco{
 			// The code here is different that the one for the bit heap constructor:
 			// In the stand alone case we must compute full negation.
 			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
-			int rTempSize = parentOp->getSignalByName(rTempName)->width();
+			int rTempSize = thisOp->getSignalByName(rTempName)->width();
 
 			if(negativeConstant) { // In this case msbOut was incremented in init()
 				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - ";
@@ -120,12 +120,12 @@ namespace flopoco{
 		vhdl << tab << "R <= OutRes" << range(msbOut-lsbOut+g, g) << ";" << endl;
 	}
 	
+
+
 	
-
-
-
+	//Constructor for the virtual KCM.
 	FixRealKCM::FixRealKCM(
-												 Operator* parentOp_, 
+												 Operator* thisOp_, 
 												 string multiplicandX,
 												 bool signedInput_,
 												 int msbIn_,
@@ -135,8 +135,8 @@ namespace flopoco{
 												 bool addRoundBit_,
 												 double targetUlpError_
 												 ):
-		Operator(parentOp_->getTarget()),
-		parentOp(parentOp_),
+		Operator(thisOp_->getParentOp(), thisOp_->getTarget()),
+		thisOp(thisOp_),
 		signedInput(signedInput_),
 		msbIn(msbIn_),
 		lsbIn(lsbIn_),
@@ -410,7 +410,7 @@ namespace flopoco{
 		if(constantIsPowerOfTwo)	{
 			// Create a signal that shifts it or truncates it into place
 			string rTempName = createShiftedPowerOfTwo(inputSignalName);
-			Signal* rTemp = parentOp->getSignalByName(rTempName);
+			Signal* rTemp = thisOp->getSignalByName(rTempName);
 
 			if(negativeConstant) {
 				rTemp->setFixSigned(false); // make it a signed signal
@@ -446,21 +446,21 @@ namespace flopoco{
 		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
 		REPORT(DETAILED,"Power of two, msbC=" << msbC << "     Shift left of " << shift << " bits");
 		// compute the product by the abs constant
-		parentOp->vhdl << tab << parentOp->declare(rTempName, rTempSize) << " <= ";
+		thisOp->vhdl << tab << thisOp->declare(rTempName, rTempSize) << " <= ";
 		// Still there are two cases: 
 		if(shift>=0) {  // Shift left; pad   THIS SEEMS TO WORK
-			parentOp->vhdl << inputSignalName << " & " << zg(shift);
+			thisOp->vhdl << inputSignalName << " & " << zg(shift);
 			// rtempsize= msbIn-lsbin+1   + shift  =   -lsbIn   + msbIn   +1   - (lsbOut-g -lsbIn +msbC)
 		}
 		else { // shift right; truncate
-			parentOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
+			thisOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
 		}
 #if 1 // This breaks the lexer, I keep it as a case study to fix it. TODO
-		parentOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
+		thisOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
 #else
 		ostringstream t;
 		t << "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
-		parentOp->vhdl <<  t.str();
+		thisOp->vhdl <<  t.str();
 #endif
 		return rTempName;
 	}
@@ -480,31 +480,32 @@ namespace flopoco{
 			}
 			else { // Build it and add its output to the bit heap
 				REPORT(DEBUG, "lsbIn=" << lsbIn);
-				parentOp->vhdl << tab << parentOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
+				thisOp->vhdl << tab << thisOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
 											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << ";"
 											 << "-- input address  m=" << m[i] << "  l=" << l[i]
 											 << endl;
 
 #if NEWTABLEINTERFACE
 				vector<mpz_class> tableContent = kcmTableContent(i);
-				Table* t = new Table(parentOp->getTarget(),
-														tableContent,
-														m[i] - l[i]+1, // wIn
-														m[i] + msbC  - lsbOut + g +1, //wOut TODO: the +1 could sometimes be removed
-														 join(parentOp->getName()+"_T",i), //name
-														1 // logicTable
-														);
+				Table* t = new Table(thisOp->getParentOp(),
+														 thisOp->getTarget(),
+														 tableContent,
+														 m[i] - l[i]+1, // wIn
+														 m[i] + msbC  - lsbOut + g +1, //wOut TODO: the +1 could sometimes be removed
+														 join(thisOp->getName()+"_T",i), //name
+														 1 // logicTable
+														 );
 				
 #else
 					
-				FixRealKCMTable* t = new FixRealKCMTable(parentOp->getTarget(), this, i);
-				parentOp->addSubComponent(t);
+				FixRealKCMTable* t = new FixRealKCMTable(thisOp->getTarget(), this, i);
+				thisOp->addSubComponent(t);
 #endif
-				parentOp->inPortMap (t , "X", sliceInName);
-				parentOp->outPortMap(t , "Y", sliceOutName);
-				parentOp->vhdl << parentOp->instance(t , instanceName);
+				thisOp->inPortMap (t , "X", sliceInName);
+				thisOp->outPortMap(t , "Y", sliceOutName);
+				thisOp->vhdl << thisOp->instance(t , instanceName);
 
-				Signal* sliceOut = parentOp->getSignalByName(sliceOutName);
+				Signal* sliceOut = thisOp->getSignalByName(sliceOutName);
 				int sliceOutWidth = sliceOut->width();
 
 				cerr << "***** Size of "<< sliceOutName << " is " << sliceOutWidth	 << " " << tableOutputSign[i] << endl;
@@ -673,14 +674,15 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "signedInput", &signedInput);
 		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealKCM(
-				target, 
-				signedInput,
-				msbIn,
-				lsbIn,
-				lsbOut,
-				constant, 
-				targetUlpError
-			);
+													parentOp,
+													target, 
+													signedInput,
+													msbIn,
+													lsbIn,
+													lsbOut,
+													constant, 
+													targetUlpError
+													);
 	}
 
 	void FixRealKCM::registerFactory()

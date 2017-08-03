@@ -8,17 +8,16 @@ namespace flopoco{
 
 
 	Compressor::Compressor(Target * target_, vector<int> heights_, bool compactView_)
-		: Operator(target_), heights(heights_), compactView(compactView_), compressorUsed(false)
+		: Operator(nullptr, target_), // for now, no parent
+			heights(heights_), compactView(compactView_), compressorUsed(false)
 	{
 		ostringstream name;
 		stringstream nm, xs;
-
 		//compressors are supposed to be combinatorial
 		setCombinatorial();
 
-		//for now, the compressor does not have a parent
-		setParentOperator(nullptr);
 
+		
 		//remove the zero columns at the lsb
 		while(heights[0] == 0)
 		{

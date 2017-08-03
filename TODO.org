@@ -198,6 +198,11 @@ Testbench
 ** fix the default getCycleFromSignal . 
 
 * Wanted operators
+** NormalCDF
+... exists in the branch statistical_ops, old framework.
+** FloatApprox
+... exists in the random branch
+** all in the random branch
 ** Multipartite (with HOTBM)
 ** Sum of n squares
 ** LUT-based integer comparators

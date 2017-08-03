@@ -44,6 +44,7 @@ namespace flopoco{
 		 * 							truncate the result
 		 */
 		FixRealKCM(
+							 OperatorPtr parentOp,
 							 Target* target, 
 							 bool signedInput, 
 							 int msbIn, 
@@ -55,7 +56,7 @@ namespace flopoco{
 
 		/**
 		  @brief A version of KCM that throws its results on an external bit heap. 
-			@param parentOp : operator frow which the KCM is a subentity
+			@param thisOp : operator frow which the KCM is a subentity
 			@param multiplicandX : signal which will be KCM input (must be a fixed-point signal)
 			@param lsbOut : desired output precision i.e. output least 
 								significant bit has a weight of 2^lsbOut
@@ -81,7 +82,7 @@ namespace flopoco{
 
 		 */
 		FixRealKCM(
-							 Operator* parentOp, 
+							 Operator* thisOp, 
 							 string multiplicandX,
 							 bool signedInput,
 							 int msbIn,
@@ -121,7 +122,7 @@ namespace flopoco{
 
 		static void registerFactory();
 		
-		Operator*	parentOp; 		/**< The operator which envelops this constant multiplier */
+		Operator*	thisOp; 		/**< The Operator for this constant multiplier (in the case of a virtual KCM added to a BitHeap within thisOp) */
 		bool signedInput;
 		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
 		int msbIn;

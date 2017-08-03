@@ -26,7 +26,7 @@ namespace flopoco{
 		 * @param[in] computeSticky Should the operator compute a sticky bit out of the shifted-out bits?
 		 * @param[in] countType 0: count zeroes, 1: count ones; -1: have a dynamic OZb input that tells what to count 
 		 */
-		LZOCShifterSticky(Target* target, int wIn, int wOut, int wCount, bool compute_sticky=false, const int countType=-1);
+		LZOCShifterSticky(OperatorPtr parentOp, Target* target, int wIn, int wOut, int wCount, bool compute_sticky=false, const int countType=-1);
 	
 		/** The LZOCShifterSticky destructor */
 		~LZOCShifterSticky();

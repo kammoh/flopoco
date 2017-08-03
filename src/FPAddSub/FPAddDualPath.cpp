@@ -38,8 +38,8 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FPAddDualPath::FPAddDualPath(Target* target, int wE, int wF, bool sub) :
-		Operator(target), wE(wE), wF(wF),  sub(sub){
+	FPAddDualPath::FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub) :
+		Operator(parentOp, target), wE(wE), wF(wF),  sub(sub){
 
 		ostringstream name, synch, synch2;
 
@@ -165,15 +165,24 @@ namespace flopoco{
 
 		// instanciate the box that computes X-Y and Y-X. Note that it could take its inputs before the swap (TODO ?)
 		REPORT(DETAILED, "Building close path dual mantissa subtraction box");
-		dualSubClose = new 	IntDualAddSub(target, wF + 3, 0);
+
+#if 1
+		newInstance("IntDualAddSub",
+								getName()+"_DualSubClose",
+								join("wIn=", wF+3) + " opType=0",
+								"X=>fracXClose1,Y=>fracYClose1",
+								"XmY=>fracRClosexMy, YmX=>fracRCloseyMx");
+
+#else
+		dualSubClose = new	IntDualAddSub(target, wF + 3, 0);
 		dualSubClose->changeName(getName()+"_DualSubClose");
 
-		inPortMap  (dualSubClose, "X", "fracXClose1");
-		inPortMap  (dualSubClose, "Y", "fracYClose1");
-		outPortMap (dualSubClose, "RxMy","fracRClosexMy");
-		outPortMap (dualSubClose, "RyMx","fracRCloseyMx");
+		inPortMap	 (dualSubClose, "X", "fracXClose1");
+		inPortMap	 (dualSubClose, "Y", "fracYClose1");
+		outPortMap (dualSubClose, "XmY","fracRClosexMy");
+		outPortMap (dualSubClose, "YmX","fracRCloseyMx");
 		vhdl << instance(dualSubClose, "DualSubO");
-
+#endif		
 		vhdl<<tab<< declare("fracSignClose") << " <= fracRClosexMy("<<wF+2<<");"<<endl;
 		vhdl<<tab<< declare("fracRClose1",wF+2) << " <= fracRClosexMy("<<wF+1<<" downto 0) when fracSignClose='0' else fracRCloseyMx("<<wF+1<<" downto 0);"<<endl;
 
@@ -184,16 +193,18 @@ namespace flopoco{
 			 << "fracSignClose);"<<endl;
 
 		// LZC + Shifting. The number of leading zeros are returned together with the shifted input
-		REPORT(DETAILED, "Building close path LZC + shifter");
-		lzocs = new LZOCShifterSticky(target, wF+2, wF+2, intlog2(wF+2), false, 0);
+		REPORT(DEBUG, "Building close path LZC + shifter");
 
-		lzocs->changeName(getName()+"_LZCShifter");
-
-		inPortMap  (lzocs, "I", "fracRClose1");
-		outPortMap (lzocs, "Count","nZerosNew");
-		outPortMap (lzocs, "O","shiftedFrac");
-		vhdl << instance(lzocs, "LZC_component");
-
+#if 0
+		newInstance("LZOCShifterSticky", getName()+"_LZCShifter", , ,);
+#else
+		lzocs = new LZOCShifterSticky(this, target, wF+2, wF+2, intlog2(wF+2), false, 0);
+		 lzocs->changeName(getName()+"_LZCShifter");
+		 inPortMap	(lzocs, "I", "fracRClose1");
+		 outPortMap (lzocs, "Count","nZerosNew");
+		 outPortMap (lzocs, "O","shiftedFrac");
+		 vhdl << instance(lzocs, "LZC_component");
+#endif
 		// NORMALIZATION
 
 		// shiftedFrac(0) is the round bit, shiftedFrac(1) is the parity bit,
@@ -236,7 +247,7 @@ namespace flopoco{
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building far path right shifter");
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
+		rightShifter = new Shifter(this, target,wF+1,wF+3, Shifter::Right);
 		rightShifter->changeName(getName()+"_RightShifter");
 		inPortMap  (rightShifter, "X", "fracNewY");
 		inPortMap  (rightShifter, "S", "shiftVal");
@@ -244,7 +255,7 @@ namespace flopoco{
 		vhdl << instance(rightShifter, "RightShifterComponent");
 
 		// compute sticky bit as the or of the shifted out bits during the alignment //
-		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF<<")) else '1';"<<endl;
+		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF+1<<")) else '1';"<<endl;
 
 		//pad fraction of Y [sign][shifted frac having inplicit 1][guard bits]
 		vhdl<<tab<< declare("fracYfar", wF+4) << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
@@ -261,13 +272,18 @@ namespace flopoco{
 
 		// perform carry in addition
 		REPORT(DETAILED, "Building far path adder");
-		fracAddFar = new IntAdder(this, target,wF+4);
-		fracAddFar->changeName(getName()+"_fracAddFar");
-		inPortMap  (fracAddFar, "X", "fracXfar");
-		inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
-		inPortMap  (fracAddFar, "Cin", "cInAddFar");
-		outPortMap (fracAddFar, "R","fracResultfar0");
-		vhdl << instance(fracAddFar, "fracAdderFar");
+		newInstance("IntAdder", getName()+"_fracAddFar",
+								join("wIn=", wF+4),
+								"X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar", "R=>fracResultfar0");
+
+
+		// fracAddFar = new IntAdder(this, target,wF+4);
+		// fracAddFar->changeName(getName()+"_fracAddFar");
+		// inPortMap  (fracAddFar, "X", "fracXfar");
+		// inPortMap  (fracAddFar, "Y", "fracYfarXorOp");
+		// inPortMap  (fracAddFar, "Cin", "cInAddFar");
+		// outPortMap (fracAddFar, "R","fracResultfar0");
+		// vhdl << instance(fracAddFar, "fracAdderFar");
 
 		vhdl<< tab << "-- 2-bit normalisation" <<endl;
 		vhdl<< tab << declare("fracResultFarNormStage", wF+4) << " <= fracResultfar0;"<<endl;
@@ -337,16 +353,25 @@ namespace flopoco{
 
 		REPORT(DETAILED, "Building final round adder");
 		// finalRoundAdd will add the mantissa concatenated with exponent, two bits reserved for possible under/overflow
-		finalRoundAdd = new IntAdder(this, target, wE + wF + 2);
-		finalRoundAdd->changeName(getName()+"_finalRoundAdd");
 
-		ostringstream zero;
-		zero<<"("<<1+wE+wF<<" downto 0 => '0') ";
-		inPortMap   (finalRoundAdd, "X", "resultBeforeRound");
-		inPortMapCst(finalRoundAdd, "Y", zero.str() );
-		inPortMap   (finalRoundAdd, "Cin", "round");
-		outPortMap  (finalRoundAdd, "R","resultRounded");
-		vhdl << instance(finalRoundAdd, "finalRoundAdder");
+		vhdl<<tab<< declare("zeroInput",2+wE+wF) << " <= " << zg(2+wE+wF)<< ";" <<endl;
+		
+		newInstance("IntAdder",
+								getName()+"_finalRoundAdd",
+								join("wIn=", wE + wF + 2),
+								"X=>resultBeforeRound,Y=>zeroInput,Cin=>round", "R=>resultRounded");
+
+		// ostringstream zero;
+		// zero<<"("<<1+wE+wF<<" downto 0 => '0') ";
+
+		// finalRoundAdd = new IntAdder(this, target, wE + wF + 2);
+		// finalRoundAdd->changeName(getName()+"_finalRoundAdd");
+
+		// inPortMap   (finalRoundAdd, "X", "resultBeforeRound");
+		// inPortMapCst(finalRoundAdd, "Y", zero.str() );
+		// inPortMap   (finalRoundAdd, "Cin", "round");
+		// outPortMap  (finalRoundAdd, "R","resultRounded");
+		// vhdl << instance(finalRoundAdd, "finalRoundAdder");
 
 
 		// We neglect the delay of the rest
@@ -421,54 +446,11 @@ namespace flopoco{
 
 
 	void FPAddDualPath::buildStandardTestCases(TestCaseList* tcl){
-		TestCase *tc;
-
-		// Regression tests
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 2.0);
-		tc->addFPInput("Y", -2.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::plusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
+		// use the generic one defined in FPAdd
+		FPAdd::buildStandardTestCases(this, wE, wF, tcl);
 	}
 
-
+ 
 
 	TestCase* FPAddDualPath::buildRandomTestCase(int i){
 		// use the generic one defined in FPAdd

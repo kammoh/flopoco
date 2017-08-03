@@ -219,14 +219,14 @@ namespace flopoco{
 
 					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
-					setCycleFromSignal(iname, false);
-					syncCycleFromSignal(jname, false);
 
 					max_children_delay = max(idelay,jdelay);
 
 					// Now decide what kind of adder we will use, and compute the remaining delay
+
 					use_pipelined_adder=false;
-					if (isSequential()) {
+#if 0 // Code from previous pipeline framework, should be replaced with systematic IntAdders
+					if (false && isSequential()) {
 						// First case: using a plain adder fits within the current pipeline level
 						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
 						if(tentative_delay <= 1./getTarget()->frequency()) {
@@ -252,7 +252,7 @@ namespace flopoco{
 							}
 						}
 					}
-
+#endif
 					// Now generate the VHDL
 					if(shift==0) { // Add with no shift -- this shouldn't happen with current DAGs so the following code is mostly untested
 						if(op==Sub || op==RSub)
@@ -508,47 +508,51 @@ namespace flopoco{
 				ShiftAddDag* implem_try_right = buildMultBoothTreeFromRight(n);
 				ShiftAddDag* implem_try_left = buildMultBoothTreeFromLeft(n);
 				ShiftAddDag* implem_try_balanced = buildMultBoothTreeToMiddle(n);
-				ShiftAddDag* implem_try_euclidean0 = buildEuclideanTree(n);
-				ShiftAddDag* implem_try_Shifts = buildMultBoothTreeSmallestShifts(n);
+				//				ShiftAddDag* implem_try_euclidean0 = buildEuclideanTree(n);
+				//ShiftAddDag* implem_try_Shifts = buildMultBoothTreeSmallestShifts(n);
 
 				REPORT (DETAILED,"Building from the left: cost="<<costF(implem_try_left)<<" surface="<<costF(implem_try_left,1)<<" latency="<<costF(implem_try_left,-1) );
 				REPORT (DETAILED,"Building from the right: cost="<<costF(implem_try_right)<<" surface="<<costF(implem_try_right,1)<<" latency="<<costF(implem_try_right,-1) );
 				REPORT (DETAILED,"Building balanced: cost="<<costF(implem_try_balanced)<<" surface="<<costF(implem_try_balanced,1)<<" latency="<<costF(implem_try_balanced,-1) );
-				REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
-				REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
+				//REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
+				//REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
 
-				ShiftAddDag* tries[4];
+				ShiftAddDag* tries[5];
 				tries[1]=implem_try_left;
 				tries[0]=implem_try_right;
 				tries[2]=implem_try_balanced;
-				tries[3]=implem_try_euclidean0;
-				tries[4]=implem_try_Shifts;
+
+				// The following tries were unplugged as they don't bring anything.
+				// Anyway the state of the art is Martin Kumm's thesis.
+				//tries[3]=implem_try_euclidean0;
+				//tries[4]=implem_try_Shifts;
 
 				// Build in implementation a tree for the constant multiplier
-				unsigned int position=find_best_implementation( tries, 4);
+				unsigned int position=find_best_implementation( tries, 3);
 				switch (position) {
 					case 1: implementation=implem_try_left;
 							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
 							delete implem_try_right;
 							delete implem_try_balanced;
-							delete implem_try_euclidean0;
-							delete implem_try_Shifts;
+							//delete implem_try_euclidean0;
+							//delete implem_try_Shifts;
 							break;
 					case 0: implementation=implem_try_right;
 							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the right was better");
 							delete implem_try_left;
 							delete implem_try_balanced;
-							delete implem_try_euclidean0;
-							delete implem_try_Shifts;
+							//delete implem_try_euclidean0;
+							//delete implem_try_Shifts;
 							break;
 					case 2: implementation=implem_try_balanced;
 							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" with balanced method was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_balanced,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_balanced,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
-							delete implem_try_euclidean0;
-							delete implem_try_Shifts;
+							///delete implem_try_euclidean0;
+							//delete implem_try_Shifts;
 							break;
-					case 3: implementation=implem_try_euclidean0;
+#if 0
+				case 3: implementation=implem_try_euclidean0;
 							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" with euclide 0 was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_euclidean0,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_euclidean0,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
@@ -562,6 +566,7 @@ namespace flopoco{
 							delete implem_try_balanced;
 							delete implem_try_euclidean0;
 							break;
+#endif
 					default:
 							throw string("Unknown error encountered");
 				}
@@ -1264,7 +1269,7 @@ namespace flopoco{
 			delete level;
 			delete shifts;
 		}
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(DETAILED,  "buildMultBoothTreeFromRight: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1315,7 +1320,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(DETAILED,  "buildMultBoothTreeFromLeft: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1403,7 +1408,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(DETAILED,  "buildMultBoothTreeToMiddle: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1691,29 +1696,6 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-		if(index==-1) // The unit tests
-		{ 
-
-			for(int wIn=8; wIn<34; wIn+=1) 
-			{ // test various input widths
-				for(int d=3; d<=17; d+=2) 
-				{ // test various divisors
-					for(int arch=0; arch <2; arch++) 
-					{ // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
-						paramList.push_back(make_pair("wIn", to_string(wIn) ));	
-						paramList.push_back(make_pair("d", to_string(d) ));	
-						paramList.push_back(make_pair("arch", to_string(arch) ));
-						testStateList.push_back(paramList);
-						paramList.clear();
-					}
-				}
-			}
-		}
-		else     
-		{
-				// finite number of random test computed out of index
-		}	
 
 		return testStateList;
 	}

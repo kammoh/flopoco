@@ -44,7 +44,6 @@ namespace flopoco{
 		dependenceTable.clear();
 		disabledParsing = false;
 		codeParsed = false;
-		op = nullptr;
 
 		//initialize the lexing context
 		lexLhsName = "";
@@ -115,9 +114,9 @@ namespace flopoco{
 	{
 		ostringstream vhdlO;
 		istringstream in(vhdlCodeBuffer.str());
-
+		
 		//instantiate the flex++ object  for lexing the buffer info
-		LexerContext* lexer = new LexerContext(&in, &vhdlO, &lexLhsName, &lexExtraRhsNames, &lexDependenceTable, &lexLexingMode, &lexLexingModeOld, &lexIsLhsSet);
+		LexerContext* lexer = new LexerContext(op, &in, &vhdlO, &lexLhsName, &lexExtraRhsNames, &lexDependenceTable, &lexLexingMode, &lexLexingModeOld, &lexIsLhsSet);
 
 		//call the FlexLexer++ on the buffer. The lexing output is
 		//	in the variable vhdlO. Additionally, a temporary table containing
@@ -186,7 +185,7 @@ namespace flopoco{
 		if(op == nullptr){
 			op = op_;
 		}else{
-			throw "Error: parent operator for vhdl stream already set.";
+			throw string("Error: parent operator for vhdl stream already set.");
 		}
 		return true;
 	}

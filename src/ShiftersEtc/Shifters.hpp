@@ -31,7 +31,7 @@ namespace flopoco{
 		 * @param[in]		maxShift	the maximum shift amount
 		 * @param[in]		direction	can be either Left of Right. Determines the shift direction
 		 **/
-		Shifter(Target* target, int wIn, int maxShift, ShiftDirection dir);
+		Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection dir);
 
 
 		/** Destructor */

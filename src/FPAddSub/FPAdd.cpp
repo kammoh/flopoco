@@ -35,6 +35,77 @@ namespace flopoco{
 		mpfr_clears(x, y, r, NULL);
 	}
 
+	void FPAdd::buildStandardTestCases(Operator* op, int wE, int wF, TestCaseList* tcl){
+		// Although standard test cases may be architecture-specific, it can't hurt to factor them here.
+		TestCase *tc;
+
+		// Regression tests
+		tc = new TestCase(op);
+		tc->addFPInput("X", 1.0);
+		tc->addFPInput("Y", -1.0);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", 2.0);
+		tc->addFPInput("Y", -2.0);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", 1.0);
+		tc->addFPInput("Y", FPNumber::plusDirtyZero);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", 1.0);
+		tc->addFPInput("Y", FPNumber::minusDirtyZero);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", FPNumber::plusInfty);
+		tc->addFPInput("Y", FPNumber::minusInfty);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", FPNumber::plusInfty);
+		tc->addFPInput("Y", FPNumber::plusInfty);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", FPNumber::minusInfty);
+		tc->addFPInput("Y", FPNumber::minusInfty);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(op);
+		tc->addFPInput("X", -4.375e1);
+		tc->addFPInput("Y", 4.375e1);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		// A regression test that breaks (6,10)
+		tc = new TestCase(op);
+		tc->addFPInput("X", 1.0081e6);
+		tc->addFPInput("Y", -2.1475e9);
+		op->emulate(tc);
+		tcl->add(tc);
+
+		// A generalization of this regression test.
+		// This bug has been here since the beginning.
+		tc = new TestCase(op);
+		tc->addFPInput("X", 1);
+		tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
+		op->emulate(tc);
+		tcl->add(tc);
+
+	}
+
+
 
 
 	TestCase* FPAdd::buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract){
@@ -109,9 +180,9 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "sub", &sub);
 		UserInterface::parseBoolean(args, "dualPath", &dualPath);
 		if(dualPath)
-			return new FPAddDualPath(target, wE, wF, sub);
+			return new FPAddDualPath(parentOp, target, wE, wF, sub);
 		else
-			return new FPAddSinglePath(target, wE, wF, sub);
+			return new FPAddSinglePath(parentOp, target, wE, wF, sub);
 	}
 
 	TestList FPAdd::unitTest(int index)

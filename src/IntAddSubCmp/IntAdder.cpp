@@ -36,14 +36,13 @@ using namespace std;
 namespace flopoco {
 
 	IntAdder::IntAdder (OperatorPtr parentOp, Target* target, int wIn_):
-		Operator (target), wIn ( wIn_ )
+		Operator (parentOp, target), wIn ( wIn_ )
 	{
 		srcFileName="IntAdder";
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		ostringstream name;
 		name << "IntAdder_" << wIn;
 		setNameWithFreqAndUID(name.str());
-		setParentOperator(parentOp);
 													
 		// Set up the IO signals
 		addInput  ("X"  , wIn, true);
@@ -69,11 +68,11 @@ namespace flopoco {
 		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)		{
-			REPORT(DEBUG, "1 " << getTarget()->adderDelay(wIn));
+			//REPORT(DEBUG, "1 " << getTarget()->adderDelay(wIn));
 			vhdl << tab << declare(getTarget()->adderDelay(wIn),"Rtmp", wIn); // just to use declare()
-			REPORT(DEBUG, "2");
+			//REPORT(DEBUG, "2");
 			vhdl << " <= X + Y + Cin;" << endl; 
-			REPORT(DEBUG, "3");
+			//REPORT(DEBUG, "3");
 			vhdl << tab << "R <= Rtmp;" << endl;
 
 		}
@@ -82,8 +81,8 @@ namespace flopoco {
 			
 			// Here we split into chunks.
 			double remainingSlack = targetPeriod-maxCP;
-			int firstSubAdderSize = getMaxAdderSizeForPeriod(remainingSlack) - 2;
-			int maxSubAdderSize = getMaxAdderSizeForPeriod(targetPeriod) - 2;
+			int firstSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), remainingSlack) - 2;
+			int maxSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), targetPeriod) - 2;
 
 			bool loop=true;
 			int subAdderSize=firstSubAdderSize;
@@ -121,14 +120,14 @@ namespace flopoco {
 			}
 			vhdl << ";" << endl;
 		}
-		REPORT(DEBUG, "Done");
+		//REPORT(DEBUG, "Exiting");
 
 	}
 
 
-	int IntAdder::getMaxAdderSizeForPeriod(double targetPeriod) {
+	int IntAdder::getMaxAdderSizeForPeriod(Target* target, double targetPeriod) {
 		int count = 10; // You have to add something eventually
-		while(getTarget()->adderDelay(count) < targetPeriod)
+		while(target->adderDelay(count) < targetPeriod)
 			count++;
 		return count-1;
 	}

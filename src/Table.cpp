@@ -110,8 +110,8 @@ namespace flopoco{
 
 
 
-	Table::Table(Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
-		Operator(target_),
+	Table::Table(OperatorPtr parentOp, Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
+		Operator(parentOp, target_),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";
@@ -259,8 +259,8 @@ namespace flopoco{
 
 
 
-	Table::Table(Target* target) :
-		Operator(target){
+	Table::Table(OperatorPtr parentOp, Target* target) :
+		Operator(parentOp, target){
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2010)");
 	}
 
@@ -291,7 +291,7 @@ namespace flopoco{
 			values_.push_back( (tmpMPZ*tmpMPZ+mpz_class(random())) % (mpz_class(1)<<wOut_) );
 		}
 
-		return new Table(target, values_, wIn_, wOut_, "", logicTable_);
+		return new Table(parentOp, target, values_, wIn_, wOut_, "", logicTable_);
 	}
 
 	//FOR TEST PURPOSES ONLY

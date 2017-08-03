@@ -319,12 +319,12 @@ src/ShiftReg
 # src/ConstMult/IntConstMCM  
 # src/ConstMult/KCMTable
 # src/ConstMult/IntIntKCM 
-# src/ConstMult/FPConstMult 
+ src/ConstMult/FPConstMult 
 # src/ConstMult/CRFPConstMult 
  src/ConstMult/FixRealKCM
 # src/ConstMult/FPRealKCM
  src/ConstMult/IntConstDiv 
-# src/ConstMult/FPConstDiv 
+ src/ConstMult/FPConstDiv 
 
  
 # Multiplication related --------------------------------------------

@@ -8,24 +8,28 @@
 
 using namespace std;
 using namespace flopoco;
+namespace flopoco {
+	class Operator;
+}
 
 class LexerContext {
 public:
 	typedef enum {
 		unset,
-		signalAssignment,
-		conditionalSignalAssignment,
+		signalAssignment, // after a <= 
+		conditionalSignalAssignment, // after a when 
 		selectedSignalAssignment,
 		selectedSignalAssignment2,
 		selectedSignalAssignment3,
-		variableAssignment,
-		instance,
-		instance2,
+		variableAssignment, 
+		instance,  // within a port map()
+		instance2, // item but in second parse
 		process,
 		caseStatement,
 		comment
 	} LexMode;
 
+	Operator* op;
 	void* scanner;
 	istream* is;
 	ostream* os;
@@ -40,9 +44,10 @@ public:
 	bool *isLhsSet;
 
 public:
-	LexerContext(istream* is, ostream* os,
+	LexerContext(Operator* op_, istream* is, ostream* os,
 			string *lhsName_, vector<string> *extraRhsNames_, vector<triplet<string, string, int>> *dependenceTable_,
 			LexMode *lexingMode_, LexMode *lexingModeOld_, bool *isLhsSet_) {
+		op=op_;
 		init_scanner();
 		this->is = is;
 		this->os = os;

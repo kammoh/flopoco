@@ -31,7 +31,7 @@ namespace flopoco{
 
 
 	TestBench::TestBench(Target* target, Operator* op, int n, bool fromFile):
-		Operator(target), op_(op), n_(n), fromFile_(fromFile)
+		Operator(nullptr, target), op_(op), n_(n), fromFile_(fromFile)
 	{
 		//set the parent operator to this operator
 		op->setParentOperator(this);

@@ -30,14 +30,14 @@ using namespace std;
 namespace flopoco{
 
 
-	LZOCShifterSticky::LZOCShifterSticky(Target* target, int wIn, int wOut, int wCount, bool computeSticky, const int countType) :
-		Operator(target), wIn_(wIn), wOut_(wOut), wCount_(wCount), computeSticky_(computeSticky), countType_(countType) {
+	LZOCShifterSticky::LZOCShifterSticky(OperatorPtr parentOp, Target* target, int wIn, int wOut, int wCount, bool computeSticky, const int countType) :
+		Operator(parentOp, target), wIn_(wIn), wOut_(wOut), wCount_(wCount), computeSticky_(computeSticky), countType_(countType) {
 
 		// -------- Parameter set up -----------------
 		srcFileName = "LZOCShifterSticky";
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2016)");
 
-		REPORT( INFO, "wIn="<<wIn << " wOut="<<wOut << " wCount="<<wCount << " computeSticky=" << computeSticky  << " countType=" << countType);
+		REPORT(DETAILED, "wIn="<<wIn << " wOut="<<wOut << " wCount="<<wCount << " computeSticky=" << computeSticky  << " countType=" << countType);
 
 		ostringstream name;
 		name << "L" << (countType_<0?"ZO":((countType_>0)?"O":"Z")) << "CShifter"
@@ -73,7 +73,7 @@ namespace flopoco{
 
 			// Delay evaluation.
 			// As we output the count bits, their computation will not be merged inside the shift
-			REPORT( INFO, "currSize="<<currLevSize);
+			//REPORT( DEBUG, "currSize="<<currLevSize);
 
 			double countBitDelay = getTarget()->fanoutDelay(currLevSize);
 			if (countType>=0)
@@ -161,7 +161,7 @@ namespace flopoco{
 			else
 				vhdl << tab << "Sticky <= sticky0;"<<endl;
 		}
-		REPORT( INFO, "Leaving LZOCShifterSticky");
+		REPORT( DEBUG, "Leaving LZOCShifterSticky");
 
 	}
 
@@ -231,7 +231,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wCount", &wCount);
 		UserInterface::parseBoolean(args, "computeSticky", &computeSticky);
 		UserInterface::parseInt(args, "countType", &countType);
-		return new LZOCShifterSticky(target, wIn, wOut, wCount, computeSticky, countType);
+		return new LZOCShifterSticky(parentOp, target, wIn, wOut, wCount, computeSticky, countType);
 	}
 
 

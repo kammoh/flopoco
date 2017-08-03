@@ -157,9 +157,21 @@ namespace flopoco{
 	{
 		setCopyrightString("F. de Dinechin (2016)");
 		srcFileName="IntConstDiv";
+		std::ostringstream o;
 		d=1;
-		for (auto i: divisors)
-			d*=i;
+		o << "IntConstDiv_";
+		if(computeQuotient)
+			o << "Q";
+		if(computeRemainder)
+			o << "R";
+		o << "_";
+		for(unsigned int i=0; i<divisors.size(); i++) {
+			d*=divisors[i];
+			o << divisors[i];
+			if (i<divisors.size()-1)
+				o << "x";
+		}
+		
 		REPORT(INFO, "Composite division, d=" << d);
 
 		rSize = intlog2(d-1);
@@ -177,16 +189,10 @@ namespace flopoco{
 		}
 
 		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
-		std::ostringstream o;
 		if(!computeQuotient && !computeRemainder) {
 			THROWERROR("Neither quotient, neither remainder to compute: better die just now")
 		}
-		o << "IntConstDiv_";
-		if(computeQuotient)
-			o << "Q";
-		if(computeRemainder)
-			o << "R";
-		o << d << "_" << wIn << "_"  << architecture<< "_" << alpha ;
+		o << "_" << wIn << "_"  << architecture<< "_" << alpha ;
 		setNameWithFreqAndUID(o.str());
 
 		addInput("X", wIn);
@@ -197,17 +203,17 @@ namespace flopoco{
 		if(computeRemainder)
 			addOutput("R", rSize);
 
-			int wInCurrent=wIn;
-			int currentDivProd=1;
-			int overallCostUp=0;
-			for(unsigned int i=0; i<divisors.size(); i++) {
-				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
-				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " should cost about " << cost << " LUTs");
-				currentDivProd *= divisors[i];
-				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
-				overallCostUp+=cost;
-			}
-			REPORT(INFO, "  Overall cost of composite division: " << overallCostUp << " LUTs");
+		int wInCurrent=wIn;
+		int currentDivProd=1;
+		int overallCostUp=0;
+		for(unsigned int i=0; i<divisors.size(); i++) {
+			cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
+			REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " should cost about " << cost << " LUTs");
+			currentDivProd *= divisors[i];
+			wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
+			overallCostUp+=cost;
+		}
+		REPORT(INFO, "  Overall cost of composite division: " << overallCostUp << " LUTs");
 #if 0
 			wInCurrent=wIn;
 			currentDivProd=1;
@@ -396,7 +402,7 @@ namespace flopoco{
 			double tableDelay=table->getOutputDelay("Y");
 #else // new Table interface
 			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
-			Table* table = new Table(target, tableContent, alpha+rSize, alpha+rSize );
+			Table* table = new Table(this, target, tableContent, alpha+rSize, alpha+rSize );
 			table->setNameWithFreq("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
 			table->setShared();
 #endif // deprecated overloading of Table method
@@ -469,7 +475,7 @@ namespace flopoco{
 			addSubComponent(table);
 #else  // deprecated overloading of Table method
 			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, rSize);
-			Table* table = new Table(target, tableContent, alpha, rho+rSize);
+			Table* table = new Table(this, target, tableContent, alpha, rho+rSize);
 			table->setShared();
 			table->setNameWithFreq("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 #endif  // deprecated overloading of Table method
@@ -523,7 +529,7 @@ namespace flopoco{
 
 #else  // deprecated overloading of Table method
 				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, rSize, rho);
-				Table* table = new Table(target, tableContent,
+				Table* table = new Table(this, target, tableContent,
 																 2*rSize, /* wIn*/
 																 (1<<(level-1))*alpha+rSize /*wOut*/  );
 				table->setShared();
@@ -736,11 +742,19 @@ namespace flopoco{
 		if(index==-1) // The unit tests
 			{ 
 
+#if 1
 				for(int wIn=8; wIn<34; wIn+=1) 
 					{ // test various input widths
 						for(int d=3; d<=17; d+=2) 
 							{ // test various divisors
-								for(int arch=0; arch <2; arch++) 
+								for(int arch=0; arch <2; arch++)
+#else // (for debugging)
+				for(int wIn=8; wIn<9; wIn+=1) 
+					{ // test various input widths
+						for(int d=3; d<=3; d+=2) 
+							{ // test various divisors
+								for(int arch=0; arch <2; arch++)
+#endif
 									{ // test various architectures // TODO FIXME TO TEST THE LINEAR ARCH, TOO
 										paramList.push_back(make_pair("wIn", to_string(wIn) ));	
 										paramList.push_back(make_pair("d", to_string(d) ));	

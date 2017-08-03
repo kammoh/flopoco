@@ -39,10 +39,10 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-  FPAddSinglePath::FPAddSinglePath(Target* target,
+  FPAddSinglePath::FPAddSinglePath(OperatorPtr parentOp, Target* target,
 				   int wE, int wF,
 				   bool sub) :
-		Operator(target), wE(wE), wF(wF), sub(sub) {
+		Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
 
 		srcFileName="FPAddSinglePath";
 
@@ -57,7 +57,7 @@ namespace flopoco{
 
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2010-2017)");
 
-		sizeRightShift = intlog2(wF+3);
+		sizeRightShift = intlog2(wF+3 );
 		REPORT(DEBUG, "sizeRightShift = " <<  sizeRightShift);
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
@@ -138,7 +138,7 @@ namespace flopoco{
 
 
 		vhdl<<tab<<declare(getTarget()->eqConstComparatorDelay(wE+1), "shiftedOut")
-				<< " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
+				<< " <= '1' when (expDiff > "<<wF+2<<") else '0';"<<endl;
 		//shiftVal=the number of positions that fracY must be shifted to the right
 
 		if (wE>sizeRightShift) {
@@ -148,7 +148,7 @@ namespace flopoco{
 					<< " when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<");" << endl;
 		}
 		else if (wE==sizeRightShift) {
-			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
+ 			vhdl<<tab<<declare("shiftVal", sizeRightShift) << " <= expDiff" << range(sizeRightShift-1,0) << ";" << endl ;
 		}
 		else 	{ //  wE< sizeRightShift
 			//vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " << zg(sizeRightShift-wE) << " & expDiff;" << endl;  // was CONV_STD_LOGIC_VECTOR(0,"<<sizeRightShift-wE <<") & expDiff;" <<	endl;
@@ -158,66 +158,40 @@ namespace flopoco{
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
 		REPORT(DETAILED, "Building right shifter");
 
-		Shifter* rightShifter = nullptr;
-#if 1
-		inPortMap  (rightShifter, "X", "fracY");
-		inPortMap  (rightShifter, "S", "shiftVal");
-		outPortMap (rightShifter, "R", "shiftedFracY");
-
-		rightShifter = new Shifter(target,wF+1,wF+3, Shifter::Right);
-		rightShifter->changeName(getName()+"_RightShifter");
-
-		vhdl << instance(rightShifter, "RightShifterComponent");
-#else
-		newInstance...
-#endif
-
+		newInstance("Shifter",
+								"RightShifterComponent",
+								"wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+3) + " dir=1",
+								"X=>fracY,S=>shiftVal",
+								"R=>shiftedFracY");
 		
-#if 1 // vivado compiles it very expensively
 		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky") 
-				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF) << ") else '1';"<<endl;
-#else // ugly but old-school VHDL
-		vhdl<<tab<< declare(getTarget()->eqConstComparatorDelay(wF+1), "sticky")	<< " <= shiftedFracY(0) ";
-		for (int i=1; i<=wF; i++)
-			vhdl << " or shiftedFracY(" << i <<")";
-		vhdl << ";" <<endl;
-#endif
+				<< " <= '0' when (shiftedFracY("<<wF<<" downto 0) = " << zg(wF+1) << ") else '1';"<<endl;
 		
 		//pad fraction of Y [overflow][shifted frac having inplicit 1][guard][round]
-		vhdl<<tab<< declare("fracYfar", wF+4)      << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
+		vhdl<<tab<< declare("fracYpad", wF+4)      << " <= \"0\" & shiftedFracY("<<2*wF+3<<" downto "<<wF+1<<");"<<endl;
 		vhdl<<tab<< declare("EffSubVector", wF+4) << " <= ("<<wF+3<<" downto 0 => EffSub);"<<endl;
-		vhdl<<tab<< declare(getTarget()->localWireDelay(wF+4) + getTarget()->logicDelay(2), "fracYfarXorOp", wF+4)
-				<< " <= fracYfar xor EffSubVector;"<<endl;
+		vhdl<<tab<< declare(getTarget()->logicDelay(2), "fracYpadXorOp", wF+4)
+				<< " <= fracYpad xor EffSubVector;"<<endl;
 		//pad fraction of X [overflow][inplicit 1][fracX][guard bits]
-		vhdl<<tab<< declare("fracXfar", wF+4)      << " <= \"01\" & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
+		vhdl<<tab<< declare("fracXpad", wF+4)      << " <= \"01\" & (newX("<<wF-1<<" downto 0)) & \"00\";"<<endl;
 
-		vhdl<<tab<< declare(getTarget()->logicDelay(2), "cInAddFar")
-				<< " <= EffSub and not sticky;"<< endl;//TODO understand why
+		vhdl<<tab<< declare(getTarget()->logicDelay(2), "cInSigAdd")
+				<< " <= EffSub and not sticky; -- if we subtract and the sticky was one, some of the negated sticky bits would have absorbed this carry "<< endl;
 
 		//result is always positive.
 
-		newInstance("IntAdder", "fracAdder", join("wIn=",wF+4), "X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar","R=>fracAddResult");
+		newInstance("IntAdder", "fracAdder", join("wIn=",wF+4), "X=>fracXpad,Y=>fracYpadXorOp,Cin=>cInSigAdd","R=>fracAddResult");
 		
 		//shift in place
-		vhdl << tab << declare("fracGRS",wF+5) << "<= fracAddResult & sticky; "<<endl;
+		vhdl << tab << declare("fracSticky",wF+5) << "<= fracAddResult & sticky; "<<endl;
 
+		LZOCShifterSticky* lzocs = (LZOCShifterSticky*)
+			newInstance("LZOCShifterSticky",
+									"LZCAndShifter",
+									"wIn=" + to_string(wF+5) + " wOut=" + to_string(wF+5) + " wCount=" + to_string(intlog2(wF+5)) + " computeSticky=false countType=0",
+									"I=>fracSticky",
+									"Count=>nZerosNew, O=>shiftedFrac");
 
-		LZOCShifterSticky* lzocs = nullptr;
-
-		inPortMap  (lzocs, "I", "fracGRS");
-		outPortMap (lzocs, "Count","nZerosNew");
-		outPortMap (lzocs, "O","shiftedFrac");
-
-		lzocs = new LZOCShifterSticky(target, wF+5, wF+5, intlog2(wF+5), false, 0);
-
-		vhdl << instance(lzocs, "LZC_component");
-
-		//need to decide how much to add to the exponent
-		/*		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+2));*/
-		// 	vhdl << tab << declare("expPart",wE+2) << " <= (" << zg(wE+2-lzocs->getCountWidth(),0) <<" & nZerosNew) - 1;"<<endl;
-		//update exponent
-
-		//incremented exponent.
 		// pipeline: I am assuming the two additions can be merged in a row of luts but I am not sure
 		vhdl << tab << declare("extendedExpInc",wE+2) << "<= (\"00\" & expX) + '1';"<<endl;
 
@@ -229,19 +203,17 @@ namespace flopoco{
 		//concatenate exponent with fraction to absorb the possible carry out
 		vhdl<<tab<<declare("expFrac",wE+2+wF+1)<<"<= updatedExp & shiftedFrac"<<range(wF+3,3)<<";"<<endl;
 
-		vhdl<<tab<<declare("stk")<<"<= shiftedFrac"<<of(1)<<" or shiftedFrac"<<of(0)<<";"<<endl;
-		vhdl<<tab<<declare("rnd")<<"<= shiftedFrac"<<of(2)<<";"<<endl;
-		vhdl<<tab<<declare("grd")<<"<= shiftedFrac"<<of(3)<<";"<<endl;
+		vhdl<<tab<<declare("stk")<<"<= shiftedFrac"<<of(2)<<" or shiftedFrac"<<of(1)<<" or shiftedFrac"<<of(0)<<";"<<endl;
+		vhdl<<tab<<declare("rnd")<<"<= shiftedFrac"<<of(3)<<";"<<endl;
 		vhdl<<tab<<declare("lsb")<<"<= shiftedFrac"<<of(4)<<";"<<endl;
 
-		//decide what to add to the guard bit
-		vhdl << tab << declare(getTarget()->logicDelay(4),"addToRoundBit")
-				<<"<= '0' when (lsb='0' and grd='1' and rnd='0' and stk='0')  else '1';"<<endl;
+		vhdl << tab << declare(getTarget()->logicDelay(4),"needToRound")
+				 <<"<= '1' when (rnd='1' and stk='1') or (rnd='1' and stk='0' and lsb='1')" << endl
+				 << "  else '0';"<<endl;
 
 		vhdl << tab  << declare("zeros", wE+2+wF+1) << "  <= " <<  zg(wE+2+wF+1,0)<<";"<<endl;
 		
-		newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>addToRoundBit","R=>RoundedExpFrac");
-		//		IntAdder *ra = IntAdder.newInstance(this, "X=>expFrac;Y=>zeros;Cin=>addToRoundBit","RoundedExpFrac" );
+		newInstance("IntAdder", "roundingAdder", join("wIn=",wE+2+wF+1), "X=>expFrac,Y=>zeros,Cin=>needToRound","R=>RoundedExpFrac");
 		
 		addComment("possible update to exception bits");
 		vhdl << tab << declare("upExc",2)<<" <= RoundedExpFrac"<<range(wE+wF+2,wE+wF+1)<<";"<<endl;
@@ -257,7 +229,7 @@ namespace flopoco{
 				 <<tab<<tab<<"\"10\" when \"0010\"|\"0110\"|\"1010\"|\"1110\"|\"0101\","<<endl
 				 <<tab<<tab<<"\"11\" when others;"<<endl;
 		vhdl<<tab<<declare(getTarget()->logicDelay(3),
-											 "excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1') else excRt2;"<<endl;
+											 "excR",2) << " <= \"00\" when (eqdiffsign='1' and EffSub='1'  and not(excRt=\"11\")) else excRt2;"<<endl;
 		// IEEE standard says in 6.3: if exact sum is zero, it should be +zero in RN
 		vhdl<<tab<<declare(getTarget()->logicDelay(3), "signR2")
 				<< " <= '0' when (eqdiffsign='1' and EffSub='1') else signR;"<<endl;
@@ -285,53 +257,9 @@ namespace flopoco{
 
 
 	void FPAddSinglePath::buildStandardTestCases(TestCaseList* tcl){
-		// Standard test cases may be architecture-specific, so we keep this method
-		// duplicated in FPAddSinglePath and FPAddDualPath
-		TestCase *tc;
-
-		// Regression tests
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::plusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", -4.375e1);
-		tc->addFPInput("Y", 4.375e1);
-		emulate(tc);
-		tcl->add(tc);
-
+		// use the generic one defined in FPAdd
+		// Although standard test cases may be architecture-specific, it can't hurt.
+		FPAdd::buildStandardTestCases(this, wE, wF, tcl);
 	}
 
 

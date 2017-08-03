@@ -83,10 +83,10 @@ int main(int argc, char* argv[] )
 		// IntSquarer::registerFactory();
 
 		IntConstMult::registerFactory(); // depends on BH, but in currently unplugged code
-		// FPConstMult::registerFactory();
+		FPConstMult::registerFactory();
 		// FPRealKCM::registerFactory();
 		IntConstDiv::registerFactory(); // depends on IntConstMult
-		// FPConstDiv::registerFactory();
+		FPConstDiv::registerFactory();
 		// FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();
 		// FixFunctionByPiecewisePoly::registerFactory();
