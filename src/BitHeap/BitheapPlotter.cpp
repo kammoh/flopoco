@@ -320,7 +320,7 @@ namespace flopoco
 
 		if(bit->type == BitType::compressed)
 		{
-#if 0 //remove pattern altogether for compressed bits
+#if COMPRESSED_BITS_PATTERN //enable/disable pattern altogether for compressed bits
 			fig << "<pattern id=\"diagonalHatchRightLeft\" patternUnits=\"userSpaceOnUse\" width=\"3\" height=\"3\">"
 					<< "<path d=\"M-1,1 l3,-3"
 					<< "M0,3 l3,-3"
@@ -331,7 +331,11 @@ namespace flopoco
 			fig << "<circle cx=\"" << turnaroundX - bit->weight*10 - 5 << "\""
 				<< " cy=\"" << offsetY - index*10 - 5 << "\""
 				<< " r=\"3\""
+#if COMPRESSED_BITS_PATTERN //enable/disable pattern altogether for compressed bits
+				<< " fill=\"url(#diagonalHatchRightLeft)\" stroke=\"black\" stroke-width=\"0.5\""
+#else
 				<< " fill=\"white\" stroke=\"black\" stroke-width=\"0.5\""
+#endif
 				<< " onmousemove=\"ShowTooltip(evt, \'" << bit->getName() << ", " << bit->signal->getCycle() << " : " << ci << "." << c1 << c2 << c3 << " ns\')\""
 				<< " onmouseout=\"HideTooltip(evt)\" />" << endl;
 		}

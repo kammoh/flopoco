@@ -153,7 +153,7 @@ namespace flopoco{
 			 * @param[in] tmpDependenceTable a vector of pairs which will be copied
 			 *            into the member variable dependenceTable
 			 */
-			void updateDependenceTable(vector<triplet<string, string, int>> tmpDependenceTable);
+			void updateDependenceTable(vector<triplet<string, string, int>> *tmpDependenceTable);
 
 			/**
 			 * Member function used to set the code resulted after a second parsing

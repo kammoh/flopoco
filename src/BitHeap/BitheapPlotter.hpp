@@ -23,6 +23,13 @@ All rights reserved.
 #include "Bit.hpp"
 
 
+//pattern fill for compressed bits
+//	COMPRESSED_BITS_PATTERN = 1 use pattern to fill drawings of compressed bits
+//	COMPRESSED_BITS_PATTERN = 0 fill drawings of compressed bits with white
+
+#define COMPRESSED_BITS_PATTERN 1
+
+
 namespace flopoco
 {
 
