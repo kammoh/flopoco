@@ -1694,12 +1694,12 @@ namespace flopoco{
 
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
 				o << "," << endl <<  tab << tab << "           ";
-
+			
 			o << it->first << " => " << it->second->getName();
 		}
-
+		
 		o << ");" << endl;
-
+		
 		//if this is a shared operator, then
 		//	check if this is the first time adding this global operator
 		//	to the operator list. If it isn't, then insert the copy, instead
@@ -1751,13 +1751,13 @@ namespace flopoco{
 		tmpInPortMap_.clear();
 		tmpOutPortMap_.clear();
 
-
+#if 0
 		//Floorplanning ------------------------------------------------
 		floorplan << manageFloorplan();
 		flpHelper->addToFlpComponentList(opCpy->getName());
 		flpHelper->addToInstanceNames(opCpy->getName(), instanceName);
 		//--------------------------------------------------------------
-
+#endif
 
 		return o.str();
 	}
@@ -1766,14 +1766,15 @@ namespace flopoco{
 	OperatorPtr Operator::newSharedInstance(Operator *originalOperator)
 	{
 		//create a new operator
-		Operator *newOp = new Operator(originalOperator->getTarget());
+		Operator *newOp = new Operator(this,  originalOperator->getTarget());
 
 		//deep copy the original operator
 		//	this should also connect the inputs/outputs of the new operator to the right signals
 		newOp->deepCloneOperator(originalOperator);
+		// but it unfortunately overwrites the parentOp 
+		newOp->setParentOperator(this);
 
 		//reconnect the inputs/outputs to the corresponding external signals
-		newOp->setParentOperator(this);
 		newOp->reconnectIOPorts(false);
 
 		//recreate the connection of the outputs and the corresponding dependences
@@ -3969,7 +3970,7 @@ namespace flopoco{
 		vector<Operator*> newOpList;
 		for(unsigned int i=0; i<op->getSubComponentList().size(); i++)
 		{
-			Operator* tmpOp = new Operator(op->getSubComponentList()[i]->getTarget());
+			Operator* tmpOp = new Operator(op, op->getSubComponentList()[i]->getTarget());
 
 			tmpOp->deepCloneOperator(op->getSubComponentList()[i]);
 			//add the new subcomponent to the subcomponent list

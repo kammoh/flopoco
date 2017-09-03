@@ -43,6 +43,7 @@ namespace flopoco{
 		srcFileName="TestBench";
 		setName("TestBench_" + op_->getName());
 
+		//		REPORT(LIST,"Test bench for "+ op_->getName());
 		//this part might actually need to be parsed
 //		setCombinatorial(); // this is a combinatorial operator
 
@@ -64,7 +65,7 @@ namespace flopoco{
 
 			if(s->type() == Signal::in) {
 				declare(s->getName(), s->width(), s->isBus());
-				schedule(true);
+			 	schedule(true);
 				inPortMap (op, s->getName(), s->getName());
 			}
 		}

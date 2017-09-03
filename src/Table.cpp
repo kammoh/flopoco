@@ -110,8 +110,8 @@ namespace flopoco{
 
 
 
-	Table::Table(OperatorPtr parentOp, Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
-		Operator(parentOp, target_),
+	Table::Table(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
+		Operator(parentOp_, target_),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";

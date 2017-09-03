@@ -94,8 +94,8 @@ namespace flopoco{
 	
 
 	
-	FPDiv::FPDiv(Target* target, int wE, int wF, int radix) :
-		Operator(target), wE(wE), wF(wF) {
+	FPDiv::FPDiv(OperatorPtr parentOp, Target* target, int wE, int wF, int radix) :
+		Operator(parentOp, target), wE(wE), wF(wF) {
 
 		int i;
 		ostringstream name;
@@ -865,7 +865,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		int radix;
 		UserInterface::parsePositiveInt(args, "radix", &radix);
-		return new FPDiv(target, wE, wF, radix);
+		return new FPDiv(parentOp, target, wE, wF, radix);
 	}
 
 	TestList FPDiv::unitTest(int index)
