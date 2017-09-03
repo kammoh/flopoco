@@ -55,6 +55,8 @@ namespace flopoco{
 		/* Overloading the Operator method */
 		void buildStandardTestCases(TestCaseList* tcl);
 
+		static TestList unitTest(int index);
+
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);

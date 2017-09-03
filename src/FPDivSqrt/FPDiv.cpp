@@ -868,6 +868,42 @@ namespace flopoco{
 		return new FPDiv(target, wE, wF, radix);
 	}
 
+	TestList FPDiv::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+
+			for(int wF=5; wF<53; wF+=1) // test various input widths
+			{
+				for(int radix = 4; radix <=8; radix +=4)
+				{
+					int wE = 6+(wF/10);
+					while(wE>wF)
+					{
+						wE -= 2;
+					}
+
+					paramList.push_back(make_pair("wF",to_string(wF)));
+					paramList.push_back(make_pair("wE",to_string(wE)));
+					paramList.push_back(make_pair("radix",to_string(radix)));
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
+			}
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+		return testStateList;
+	}
+
+
+	
 	void FPDiv::registerFactory(){
 		UserInterface::add("FPDiv", // name
 											 "A correctly rounded floating-point division.",
@@ -877,7 +913,9 @@ namespace flopoco{
 wF(int): mantissa size in bits; \
 radix(int)=0: Can be 0, 4 or 8. Default 0 means: let FloPoCo choose between 4 and 8. In your context, the other choice may have a better area/speed trade-offs;",
 											"The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-10,10], and a bit of prescaling.",
-											FPDiv::parseArguments
+											 FPDiv::parseArguments,
+											 FPDiv::unitTest
+
 											 ) ;
 
 	}

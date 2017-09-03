@@ -198,14 +198,14 @@ namespace flopoco{
 			{
 				for(int dualPath = 0; dualPath <2; dualPath++)
 				{
-					int nbByteWE = 6+(wF/10);
-					while(nbByteWE>wF)
+					int wE = 6+(wF/10);
+					while(wE>wF)
 					{
-						nbByteWE -= 2;
+						wE -= 2;
 					}
 
 					paramList.push_back(make_pair("wF",to_string(wF)));
-					paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+					paramList.push_back(make_pair("wE",to_string(wE)));
 					if(dualPath == 1)
 						paramList.push_back(make_pair("dualPath","true"));
 					else
