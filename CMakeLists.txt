@@ -362,7 +362,7 @@ src/FPComposite/FPLargeAcc
 src/FPComposite/LargeAccToFP 
 #src/FPComposite/FPDotProduct 
 #src/FPComposite/FP2DNorm
-
+src/IntAddSubCmp/IntAdderTree
 
 # Generic fixed-point function evaluators ---------------------------
  src/Table 
@@ -404,7 +404,7 @@ src/Tools/Point
 
 # Exp, Log and Power
 #src/ExpLog/FPExp
-# src/ExpLog/IterativeLog //depends on IntSquarer
+#src/ExpLog/IterativeLog //depends on IntSquarer
 #src/ExpLog/FPPow
 
 # If you want to add your operator, feel free
