@@ -45,22 +45,37 @@ namespace flopoco{
 
 	
 	//standalone operator
-	IntAdderTree::IntAdderTree(OperatorPtr parentOp, Target* target, int wIn_, int n_, bool signedInput_):
+	IntAdderTree::IntAdderTree(OperatorPtr parentOp, Target* target, unsigned int wIn_, unsigned int n_, bool signedInput_):
 		Operator(parentOp, target),
 		wIn(wIn_),
 		n(n_)
 	{
-		BitheapNew* bitHeap;
+		srcFileName="IntAdderTree";
+		setCopyrightString ( "Florent de Dinechin (2008-2016)" );
+		ostringstream name;
+		name << "IntAdderTree_" << wIn << "_" << n;
+		setNameWithFreqAndUID(name.str());
+
+		BitheapNew* bh;
 		wOut = wIn+intlog2(n);
-		bitHeap = new BitheapNew(this, wOut); // hopefully some day we get a fixed-point bit heap
+		addOutput("R", wOut);
+		bh = new BitheapNew(this, wOut, signedInput); 
+
+		for (unsigned int i=0; i<n; i++) {
+			string xi=join("X",i);
+			string ixi=join("iX",i);
+			addInput  (join("X",i)  , wIn, true);
+			vhdl << tab << declareFixPoint(ixi, signedInput, wIn-1, 0) << " <= " << (signedInput?"":"un")<< "signed(" << xi << ");" << endl; // simplest way to get signedness in the signal
+			bh->addSignal(ixi);
+		}
 
 
 		//compress the bitheap and produce the result
-		bitHeap->startCompression();
+		bh->startCompression();
 
 		// Retrieve the bits we want from the bit heap
 		vhdl << tab << declare("OutRes", wOut) << " <= " << 
-			bitHeap->getSumName() << range(wOut, 0) << ";" << endl; // This range is useful in case there was an overflow?
+			bh->getSumName() << ";" << endl; // This range is useful in case there was an overflow?
 
 		vhdl << tab << "R <= OutRes;" << endl;
 	}
@@ -75,6 +90,17 @@ namespace flopoco{
 	// to an int at the end.
 	void IntAdderTree::emulate(TestCase* tc)
 	{
+		// get the inputs from the TestCase
+		mpz_class result=0;
+		for(unsigned int i=0; i<n; i++) {
+			mpz_class xi = tc->getInputValue ( join("X",i) );
+			result += xi;
+		}
+			// Don't allow overflow: the output is modulo 2^wIn
+		result = result & ((mpz_class(1)<<wOut)-1);
+
+		// complete the TestCase with this expected output
+		tc->addExpectedOutput ( "R", result );
 	}
 
 
@@ -106,7 +132,7 @@ namespace flopoco{
 		UserInterface::add(
 				"IntAdderTree",
 				"A component adding n integers, bitheap based (as the name doesn't suggest). Output size is computed",
-				"",
+				"BasicInteger",
 				"",
 				"signedInput(bool): 0=unsigned, 1=signed; \
 			  n(int): number of inputs to add;\

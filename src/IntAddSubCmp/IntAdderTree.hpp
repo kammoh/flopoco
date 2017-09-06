@@ -17,8 +17,8 @@ namespace flopoco{
 		IntAdderTree(
 								 OperatorPtr parentOp,
 								 Target* target, 
-								 int wIn,
-								 int n,
+								 unsigned int wIn,
+								 unsigned int n,
 								 bool signedInput
 								 );
 		
@@ -33,10 +33,10 @@ namespace flopoco{
 		
 
 	private:
-		int wIn;
-		int n;
+		unsigned int wIn;
+		unsigned int n;
 		bool signedInput;
-		int wOut;
+		unsigned int wOut;
 	};
 
 }
