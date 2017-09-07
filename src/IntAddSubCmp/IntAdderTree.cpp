@@ -1,26 +1,16 @@
-// TODO: repair FixSOPC, FixIIR, FixComplexKCM
 /*
- * A faithful multiplier by a real constant, using a variation of the KCM method
+ * An adder of n integers, using a bit heap
  *
  * This file is part of the FloPoCo project developed by the Arenaire
  * team at Ecole Normale Superieure de Lyon
  * 
  * Authors : Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr
- * 			 3IF-Dev-Team-2015
  *
  * Initial software.
  * Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 
  * 2008-2011.
  * All rights reserved.
  */
-/*
-
-Remaining 1-ulp bug:
-flopoco verbose=3 IntAdderTree lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
-It is the limit case of removing one table altogether because it contributes nothng.
-I don't really understand
-
-*/
 
 
 
@@ -48,7 +38,8 @@ namespace flopoco{
 	IntAdderTree::IntAdderTree(OperatorPtr parentOp, Target* target, unsigned int wIn_, unsigned int n_, bool signedInput_):
 		Operator(parentOp, target),
 		wIn(wIn_),
-		n(n_)
+		n(n_),
+		signedInput(signedInput_)
 	{
 		srcFileName="IntAdderTree";
 		setCopyrightString ( "Florent de Dinechin (2008-2016)" );
@@ -84,17 +75,18 @@ namespace flopoco{
 
 
 	
-	// TODO manage correctly rounded cases, at least the powers of two
-	// To have MPFR work in fix point, we perform the multiplication in very
-	// large precision using RN, and the RU and RD are done only when converting
-	// to an int at the end.
 	void IntAdderTree::emulate(TestCase* tc)
 	{
 		// get the inputs from the TestCase
 		mpz_class result=0;
 		for(unsigned int i=0; i<n; i++) {
 			mpz_class xi = tc->getInputValue ( join("X",i) );
-			result += xi;
+			if(signedInput && (xi>>(wIn-1)==1) ) {
+				// TODO  
+			}
+			else{
+				result += xi;
+			}
 		}
 			// Don't allow overflow: the output is modulo 2^wIn
 		result = result & ((mpz_class(1)<<wOut)-1);
