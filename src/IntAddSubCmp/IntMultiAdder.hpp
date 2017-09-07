@@ -1,5 +1,5 @@
-#ifndef INTADDERTREE_HPP
-#define INTADDERTREE_HPP
+#ifndef INTMULTIADDE_HPP
+#define INTMULTIADDER_HPP
 #include "../Operator.hpp"
 #include "../BitHeap/BitheapNew.hpp"
 
@@ -7,19 +7,20 @@
 
 namespace flopoco{
 
-	class IntAdderTree : public Operator
+	class IntMultiAdder : public Operator
 	{
 	public:
 
 		/**
 		 * @brief 
 		 */
-		IntAdderTree(
+		IntMultiAdder(
 								 OperatorPtr parentOp,
 								 Target* target, 
 								 unsigned int wIn,
 								 unsigned int n,
-								 bool signedInput
+								 bool signedInput,
+								 unsigned int wOut=0
 								 );
 		
 

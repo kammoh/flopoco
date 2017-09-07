@@ -80,7 +80,7 @@
 #include "IntAddSubCmp/IntAdder.hpp" // includes several other .hpp
 #include "IntAddSubCmp/IntDualAddSub.hpp"
 #include "IntAddSubCmp/IntComparator.hpp"
-#include "IntAddSubCmp/IntAdderTree.hpp"
+#include "IntAddSubCmp/IntMultiAdder.hpp"
 
 // #include "IntAddSubCmp/IntAdderClassical.hpp"
 // #include "IntAddSubCmp/IntAdderAlternative.hpp"

@@ -297,6 +297,7 @@ src/ShiftReg
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
+src/IntAddSubCmp/IntMultiAdder
  
 # ---------- First generation of fast large adders ------------------------
 # src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
@@ -362,7 +363,6 @@ src/FPComposite/FPLargeAcc
 src/FPComposite/LargeAccToFP 
 #src/FPComposite/FPDotProduct 
 #src/FPComposite/FP2DNorm
-src/IntAddSubCmp/IntAdderTree
 
 # Generic fixed-point function evaluators ---------------------------
  src/Table 

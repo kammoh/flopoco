@@ -23,7 +23,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include "../utils.hpp"
-#include "IntAdderTree.hpp"
+#include "IntMultiAdder.hpp"
 
 using namespace std;
 
@@ -35,22 +35,27 @@ namespace flopoco{
 
 	
 	//standalone operator
-	IntAdderTree::IntAdderTree(OperatorPtr parentOp, Target* target, unsigned int wIn_, unsigned int n_, bool signedInput_):
+	IntMultiAdder::IntMultiAdder(OperatorPtr parentOp, Target* target, unsigned int wIn_, unsigned int n_, bool signedInput_, unsigned int wOut_):
 		Operator(parentOp, target),
 		wIn(wIn_),
 		n(n_),
 		signedInput(signedInput_)
 	{
-		srcFileName="IntAdderTree";
+		srcFileName="IntMultiAdder";
 		setCopyrightString ( "Florent de Dinechin (2008-2016)" );
 		ostringstream name;
-		name << "IntAdderTree_" << wIn << "_" << n;
+		name << "IntMultiAdder_" << wIn << "_" << n;
 		setNameWithFreqAndUID(name.str());
 
 		BitheapNew* bh;
-		wOut = wIn+intlog2(n);
-		addOutput("R", wOut);
+		if(wOut_==0){ //compute it
+			wOut = wIn+intlog2(n);
+		}
+		else{
+			wOut=wOut_;
+		}
 		REPORT(INFO, "wOut=" << wOut);
+		addOutput("R", wOut);
 		bh = new BitheapNew(this, wOut, signedInput); 
 
 		for (unsigned int i=0; i<n; i++) {
@@ -76,7 +81,7 @@ namespace flopoco{
 
 
 	
-	void IntAdderTree::emulate(TestCase* tc)
+	void IntMultiAdder::emulate(TestCase* tc)
 	{
 		// get the inputs from the TestCase
 		mpz_class result=0;
@@ -99,7 +104,7 @@ namespace flopoco{
 
 
 	
-	TestList IntAdderTree::unitTest(int index)
+	TestList IntMultiAdder::unitTest(int index)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
@@ -113,6 +118,11 @@ namespace flopoco{
 						paramList.push_back(make_pair("signedInput",to_string(s)));
 						paramList.push_back(make_pair("TestBench n=",to_string(1000)));
 						testStateList.push_back(paramList);
+
+						// same with wOut=wIn
+						paramList.push_back(make_pair("wOut",to_string(wIn)));
+						testStateList.push_back(paramList);
+
 						paramList.clear();
 
 					}
@@ -122,29 +132,31 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr IntAdderTree::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
+	OperatorPtr IntMultiAdder::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
-		int wIn, n;
+		int wIn, n, wOut;
 		bool signedInput;
 		UserInterface::parseInt(args, "wIn", &wIn);
 		UserInterface::parseInt(args, "n", &n);
 		UserInterface::parseBoolean(args, "signedInput", &signedInput);
-		return new IntAdderTree(parentOp, target, wIn, n, signedInput);
+		UserInterface::parseInt(args, "wOut", &wOut);
+		return new IntMultiAdder(parentOp, target, wIn, n, signedInput);
 	}
 
-	void IntAdderTree::registerFactory()
+	void IntMultiAdder::registerFactory()
 	{
 		UserInterface::add(
-				"IntAdderTree",
-				"A component adding n integers, bitheap based (as the name doesn't suggest). Output size is computed",
+				"IntMultiAdder",
+				"A component adding n integers, bitheap based. If wIn=1 it is also a population count",
 				"BasicInteger",
 				"",
 				"signedInput(bool): 0=unsigned, 1=signed; \
 			  n(int): number of inputs to add;\
-			  wIn(int): input size, in bits;",
+			  wIn(int): input size in bits;\
+			  wOut(int)=0: output size in bits -- if 0, wOut is computed to be large enough to represent the result;",
 				"",
-				IntAdderTree::parseArguments,
-				IntAdderTree::unitTest
+				IntMultiAdder::parseArguments,
+				IntMultiAdder::unitTest
 		);
 	}
 
