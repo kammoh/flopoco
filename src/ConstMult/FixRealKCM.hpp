@@ -44,7 +44,7 @@ namespace flopoco{
 		 * 							truncate the result
 		 */
 		FixRealKCM(
-							 OperatorPtr parentOp,
+							 OperatorPtr thisOp,
 							 Target* target, 
 							 bool signedInput, 
 							 int msbIn, 
@@ -82,7 +82,7 @@ namespace flopoco{
 
 		 */
 		FixRealKCM(
-							 Operator* thisOp, 
+							 Operator* parentOp, 
 							 string multiplicandX,
 							 bool signedInput,
 							 int msbIn,
@@ -122,7 +122,7 @@ namespace flopoco{
 
 		static void registerFactory();
 		
-		Operator*	thisOp; 		/**< The Operator for this constant multiplier (in the case of a virtual KCM added to a BitHeap within thisOp) */
+		Operator*	thisOp; 		/**< The Operator for this constant multiplier: either "this" in the case of a standalone op, or the operator that instnaciated its bitHeap in the case of a virtual KCM */
 		bool signedInput;
 		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
 		int msbIn;

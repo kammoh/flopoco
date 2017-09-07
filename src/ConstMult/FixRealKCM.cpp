@@ -1,4 +1,4 @@
-// TODO: repair FixSOPC, FixIIR, FixComplexKCM
+// TODO: repair FixFIR, FixIIR, FixComplexKCM
 /*
  * A faithful multiplier by a real constant, using a variation of the KCM method
  *
@@ -210,11 +210,16 @@ namespace flopoco{
 
 		// build the name
 		ostringstream name; 
+#if 0 // Do we really need all this noise when we don't even have the constant? We have uid anyway
 		name <<"FixRealKCM_"  << vhdlize(msbIn)
 				 << "_"  << vhdlize(lsbIn)
 				 <<	"_" << vhdlize(lsbOut)
 				 << "_" << vhdlize(constant)
 				 << (signedInput  ?"_signed" : "_unsigned");
+#else
+		name <<"FixRealKCM";
+#endif
+		
 		setNameWithFreqAndUID(name.str());
 
 		//compute the logarithm only of the constants
@@ -487,12 +492,18 @@ namespace flopoco{
 
 #if NEWTABLEINTERFACE
 				vector<mpz_class> tableContent = kcmTableContent(i);
+				string tablename;
+				if(thisOp==this) // non-virtual
+					tablename = join(getName()+"_T",i);
+				else
+					tablename = join(thisOp->getName()+"_"+getName()+"_T",i);
+					
 				Table* t = new Table(thisOp->getParentOp(),
 														 thisOp->getTarget(),
 														 tableContent,
 														 m[i] - l[i]+1, // wIn
 														 m[i] + msbC  - lsbOut + g +1, //wOut TODO: the +1 could sometimes be removed
-														 join(thisOp->getName()+"_T",i), //name
+														 tablename, //name
 														 1 // logicTable
 														 );
 				

@@ -69,7 +69,7 @@
 
 
 /* FixFilters ------------------------------------------------ */
-//#include "FixFilters/FixSOPC.hpp"
+#include "FixFilters/FixSOPC.hpp"
 //#include "FixFilters/FixFIR.hpp"
 //#include "FixFilters/FixHalfSine.hpp"
 //#include "FixFilters/FixIIR.hpp"

@@ -120,7 +120,7 @@ int main(int argc, char* argv[] )
 		// FixAtan2::registerFactory();
 		// //FixedComplexAdder::registerFactory();
 		// FixFIR::registerFactory();
-		// FixSOPC::registerFactory();
+		FixSOPC::registerFactory();
 		// FixIIR::registerFactory();
 
 		// hidden for now
