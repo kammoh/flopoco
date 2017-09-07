@@ -50,6 +50,7 @@ namespace flopoco{
 		BitheapNew* bh;
 		wOut = wIn+intlog2(n);
 		addOutput("R", wOut);
+		REPORT(INFO, "wOut=" << wOut);
 		bh = new BitheapNew(this, wOut, signedInput); 
 
 		for (unsigned int i=0; i<n; i++) {
@@ -82,14 +83,12 @@ namespace flopoco{
 		for(unsigned int i=0; i<n; i++) {
 			mpz_class xi = tc->getInputValue ( join("X",i) );
 			if(signedInput && (xi>>(wIn-1)==1) ) {
-				// TODO  
+				xi -= mpz_class(1)<<wIn; // two's complement
 			}
-			else{
-				result += xi;
-			}
+			result += xi;
 		}
 			// Don't allow overflow: the output is modulo 2^wIn
-		result = result & ((mpz_class(1)<<wOut)-1);
+		result = (result+(mpz_class(1)<<wOut)) & ((mpz_class(1)<<wOut)-1);
 
 		// complete the TestCase with this expected output
 		tc->addExpectedOutput ( "R", result );
@@ -105,7 +104,21 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
+		if(index==-1) 	{ // The unit tests
+			for (int n=2; n<=8; n++) {
+				for(int s=0; s<2; s++) {
+					for(int wIn=1+s; wIn<8; wIn++) { // 1+s because no 2's complement on 1 bit...
+						paramList.push_back(make_pair("wIn",to_string(wIn)));
+						paramList.push_back(make_pair("n",to_string(n)));
+						paramList.push_back(make_pair("signedInput",to_string(s)));
+						paramList.push_back(make_pair("TestBench n=",to_string(1000)));
+						testStateList.push_back(paramList);
+						paramList.clear();
+
+					}
+				}
+			}
+		}
 		return testStateList;
 	}
 
