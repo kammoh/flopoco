@@ -140,7 +140,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "n", &n);
 		UserInterface::parseBoolean(args, "signedInput", &signedInput);
 		UserInterface::parseInt(args, "wOut", &wOut);
-		return new IntMultiAdder(parentOp, target, wIn, n, signedInput);
+		return new IntMultiAdder(parentOp, target, wIn, n, signedInput, wOut);
 	}
 
 	void IntMultiAdder::registerFactory()
