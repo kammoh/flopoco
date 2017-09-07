@@ -89,6 +89,7 @@ namespace flopoco{
 		for (int x=0; x<(d<<alpha); x++){
 			int q = x/d;
 			int r = x%d;
+			//cerr << mpz_class( (q<<rSize) + r) << ", " ;
 			result.push_back(mpz_class( (q<<rSize) + r) );
 		}
 		return result;

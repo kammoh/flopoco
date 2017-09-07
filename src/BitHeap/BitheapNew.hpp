@@ -7,7 +7,7 @@
 
   Initial software.
   Copyright © INSA de Lyon, INRIA, CNRS, UCBL,
-  2012-2016.
+  2012-2017.
   All rights reserved.
 
 */
@@ -57,7 +57,6 @@ enum BitType : unsigned;
 		 * @brief The constructor for an signed/unsigned integer bitheap
 		 * @param op                the operator in which the bitheap is being built
 		 * @param width              the width (maximum weight of the heap, or number of columns) of the bitheap
-		 * @param isSigned          whether the bitheap is signed, or not (unsigned, by default)
 		 * @param name              a description of the heap that will be integrated into its unique name (empty by default)
 		 * @param compressionType	the type of compression applied to the bit heap:
 		 *								0 = using only compressors (default),
@@ -66,14 +65,13 @@ enum BitType : unsigned;
 		 *									addition tree at the end of the
 		 *									compression
 		 */
-		BitheapNew(Operator* op, unsigned width, bool isSigned = false, string name = "", int compressionType = COMPRESSION_TYPE);
+		BitheapNew(Operator* op, unsigned width, string name = "", int compressionType = COMPRESSION_TYPE);
 
 		/**
 		 * @brief The constructor for an signed/unsigned fixed-point bitheap
 		 * @param op                the operator in which the bitheap is being built
 		 * @param msb               the msb of the bitheap (maximum weight at which a bit can be inserted)
 		 * @param lsb               the lsb of the bitheap (minimum weight at which a bit can be inserted)
-		 * @param isSigned          whether the bitheap is signed, or not (unsigned, by default)
 		 * @param name              a description of the heap that will be integrated into its unique name (empty by default)
 		 * @param compressionType	the type of compression applied to the bit heap:
 		 *								0 = using only compressors (default),
@@ -82,7 +80,7 @@ enum BitType : unsigned;
 		 *									addition tree at the end of the
 		 *									compression
 		 */
-		BitheapNew(Operator* op, int msb, int lsb, bool isSigned = false, string name = "", int compressionType = COMPRESSION_TYPE);
+		BitheapNew(Operator* op, int msb, int lsb, string name = "", int compressionType = COMPRESSION_TYPE);
 
 
 		~BitheapNew();
@@ -329,16 +327,6 @@ enum BitType : unsigned;
 		string getName();
 
 		/**
-		 * @brief set if the bitheap is signed
-		 */
-		void setIsSigned(bool newIsSigned);
-
-		/**
-		 * @brief is the bitheap signed
-		 */
-		bool getIsSigned();
-
-		/**
 		 * @brief return a fresh uid for a bit of weight w
 		 * @param weight            the weight of the bit
 		 */
@@ -394,8 +382,6 @@ enum BitType : unsigned;
 		unsigned width;                              /**< The width of the bitheap */
 		int height;                                 /**< The current maximum height of any column of the bitheap */
 		string name;                                /**< The name of the bitheap */
-
-		bool isSigned;                              /**< Is the bitheap signed, or unsigned */
 
 	private:
 		Operator* op;

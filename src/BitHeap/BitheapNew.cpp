@@ -3,12 +3,11 @@
 
 namespace flopoco {
 
-	BitheapNew::BitheapNew(Operator* op_, unsigned width_, bool isSigned_, string name_, int compressionType_) :
+	BitheapNew::BitheapNew(Operator* op_, unsigned width_, string name_, int compressionType_) :
 		msb(width_-1), lsb(0),
 		width(width_),
 		height(0),
 		name(name_),
-		isSigned(isSigned_),
 		op(op_),
 		compressionType(compressionType_)
 	{
@@ -16,12 +15,11 @@ namespace flopoco {
 	}
 
 
-	BitheapNew::BitheapNew(Operator* op_, int msb_, int lsb_, bool isSigned_, string name_, int compressionType_) :
+	BitheapNew::BitheapNew(Operator* op_, int msb_, int lsb_, string name_, int compressionType_) :
 		msb(msb_), lsb(lsb_),
 		width(msb_-lsb_+1),
 		height(0),
 		name(name_),
-		isSigned(isSigned_),
 		op(op_),
 		compressionType(compressionType_)
 	{
@@ -306,7 +304,7 @@ namespace flopoco {
 
 		for(unsigned i=0; i<=width; i++)
 		{
-			vector<Bit*>::iterator it = bits[i].begin(), lastIt = it;
+			vector<Bit*>::iterator it = bits[i].begin();
 
 			//search for the bit
 			while(it != bits[i].end())
@@ -641,8 +639,6 @@ namespace flopoco {
 	{
 		if(op->getName() != bitheap->op->getName())
 			THROWERROR("Cannot merge bitheaps belonging to different operators!");
-		if(isSigned != bitheap->isSigned)
-			REPORT(DEBUG, "WARNING: merging bitheaps with different signedness");
 
 		//resize if necessary
 		if(width < bitheap->width)
@@ -748,18 +744,6 @@ namespace flopoco {
 	string BitheapNew::getName()
 	{
 		return name;
-	}
-
-
-	void BitheapNew::setIsSigned(bool newIsSigned)
-	{
-		isSigned = newIsSigned;
-	}
-
-
-	bool BitheapNew::getIsSigned()
-	{
-		return isSigned;
 	}
 
 
