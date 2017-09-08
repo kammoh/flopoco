@@ -54,9 +54,20 @@ namespace flopoco{
 		else{
 			wOut=wOut_;
 		}
+		if(wIn < 1+(signedInput?1:0)) {
+			THROWERROR("wIn too small");
+		}
+		if(wIn==1 && wOut==1) {
+			THROWERROR("There are more efficient ways of computing a parity... and this one turns out not to work at the moment.");
+		}
+
+		if(wIn>wOut) {
+			THROWERROR("wIn>wOut: I could build such a silly operator but I don't want to.");
+		}
+
 		REPORT(INFO, "wOut=" << wOut);
 		addOutput("R", wOut);
-		bh = new BitheapNew(this, wOut, signedInput); 
+		bh = new BitheapNew(this, wOut); 
 
 		for (unsigned int i=0; i<n; i++) {
 			string xi=join("X",i);
@@ -112,7 +123,7 @@ namespace flopoco{
 		if(index==-1) 	{ // The unit tests
 			for (int n=2; n<=8; n++) {
 				for(int s=0; s<2; s++) {
-					for(int wIn=1+s; wIn<8; wIn++) { // 1+s because no 2's complement on 1 bit...
+					for(int wIn=1+(s?1:0); wIn<8; wIn++) { // 1+s because no 2's complement on 1 bit...
 						paramList.push_back(make_pair("wIn",to_string(wIn)));
 						paramList.push_back(make_pair("n",to_string(n)));
 						paramList.push_back(make_pair("signedInput",to_string(s)));
@@ -120,9 +131,10 @@ namespace flopoco{
 						testStateList.push_back(paramList);
 
 						// same with wOut=wIn
-						paramList.push_back(make_pair("wOut",to_string(wIn)));
-						testStateList.push_back(paramList);
-
+						if (wIn>1) {
+							paramList.push_back(make_pair("wOut",to_string(wIn)));
+							testStateList.push_back(paramList);
+						}
 						paramList.clear();
 
 					}
