@@ -14,7 +14,6 @@ namespace flopoco{
 
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
-
 	FixSOPC::FixSOPC(Target* target_, int lsbIn_, int lsbOut_, vector<string> coeff_) :
 		Operator(target_),
 		lsbOut(lsbOut_),
@@ -203,7 +202,7 @@ namespace flopoco{
 				kcm[i]->addToBitHeap(bitHeap, g);
 			}
 
-			// The rounding bit is incorporated into the KCMs
+			// The rounding bit is incorporated into the KCMs. 
 
 			//compress the bitheap
 			bitHeap -> startCompression();
@@ -218,27 +217,29 @@ namespace flopoco{
 
 			// All the KCMs in parallel
 			for(int i=0; i< n; i++)	{
-				FixRealKCM* mult = new FixRealKCM(getTarget(), 
-						true, // signed
-						msbIn[i]-1, // input MSB,TODO one sign bit will be added by KCM because it has a non-standard interface. To be fixed someday
-						lsbIn[i], // input LSB weight
-						lsbOut-g, // output LSB weight -- the output MSB is computed out of the constant
-						coeff[i] // pass the string unmodified
-				);
+				FixRealKCM* mult = new FixRealKCM(this,
+																					getTarget(), 
+																					true, // signed
+																					msbIn[i]-1, // input MSB,TODO one sign bit will be added by KCM because it has a non-standard interface. To be fixed someday
+																					lsbIn[i], // input LSB weight
+																					lsbOut-g, // output LSB weight -- the output MSB is computed out of the constant
+																					coeff[i] // pass the string unmodified
+																					);
 				addSubComponent(mult);
 				inPortMap(mult,"X", join("X", i));
 				outPortMap(mult, "R", join("P", i));
 				vhdl << instance(mult, join("mult", i));
 			}
-			// Now advance to their output, and build a pipelined rake
-			syncCycleFromSignal("P0");
+			// Now build a pipelined rake
 			vhdl << tab << declare("S0", sumSize) << " <= " << zg(sumSize) << ";" << endl;
 			for(int i=0; i< n; i++)		{
 				//manage the critical path
-				manageCriticalPath(getTarget()->adderDelay(sumSize));
+				manageCriticalPath();
 				// Addition
 				int pSize = getSignalByName(join("P", i))->width();
-				vhdl << tab << declare(join("S", i+1), sumSize) << " <= " <<  join("S",i);
+				vhdl << tab << declare(getTarget()->adderDelay(sumSize),
+															 join("S", i+1), sumSize)
+						 << " <= " <<  join("S",i);
 				vhdl << " + (" ;
 				if(sumSize>pSize)
 					vhdl << "("<< sumSize-1 << " downto " << pSize<< " => "<< join("P",i) << of(pSize-1) << ")" << " & " ;
@@ -247,11 +248,11 @@ namespace flopoco{
 
 			// Rounding costs one more adder to add the half-ulp round bit.
 			// This could be avoided by pushing this bit in one of the KCM tables
-			syncCycleFromSignal(join("S", n));
-			manageCriticalPath(getTarget()->adderDelay(msbOut-lsbOut+1));
-			vhdl << tab << declare("R_int", sumSize+1) << " <= " <<  join("S", n) << range(sumSize-1, sumSize-(msbOut-lsbOut+1)-1) << " + (" << zg(sumSize) << " & \'1\');" << endl;
+			vhdl << tab << declare(getTarget()->adderDelay(sumSize+1),
+														 "R_int", sumSize+1)
+					 << " <= " <<  join("S", n) << range(sumSize-1, sumSize-(msbOut-lsbOut+1)-1) << " + (" << zg(sumSize) << " & \'1\');" << endl;
 			vhdl << tab << "R <= " <<  "R_int" << range(sumSize, 1) << ";" << endl;
-		}
+		} // end plain vhdl
 
 
 	};

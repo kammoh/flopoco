@@ -69,7 +69,7 @@
 
 
 /* FixFilters ------------------------------------------------ */
-//#include "FixFilters/FixSOPC.hpp"
+#include "FixFilters/FixSOPC.hpp"
 //#include "FixFilters/FixFIR.hpp"
 //#include "FixFilters/FixHalfSine.hpp"
 //#include "FixFilters/FixIIR.hpp"
@@ -80,6 +80,7 @@
 #include "IntAddSubCmp/IntAdder.hpp" // includes several other .hpp
 #include "IntAddSubCmp/IntDualAddSub.hpp"
 #include "IntAddSubCmp/IntComparator.hpp"
+#include "IntAddSubCmp/IntMultiAdder.hpp"
 
 // #include "IntAddSubCmp/IntAdderClassical.hpp"
 // #include "IntAddSubCmp/IntAdderAlternative.hpp"

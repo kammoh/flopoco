@@ -79,6 +79,7 @@ int main(int argc, char* argv[] )
 #endif
 		// IntComparator::registerFactory();
 		IntDualAddSub::registerFactory();
+		IntMultiAdder::registerFactory();
 		// IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
@@ -119,7 +120,7 @@ int main(int argc, char* argv[] )
 		// FixAtan2::registerFactory();
 		// //FixedComplexAdder::registerFactory();
 		// FixFIR::registerFactory();
-		// FixSOPC::registerFactory();
+		FixSOPC::registerFactory();
 		// FixIIR::registerFactory();
 
 		// hidden for now

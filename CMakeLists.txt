@@ -283,7 +283,7 @@ src/Conversions/Fix2FP
 # FixFilters ----------------------------------------------------------
 src/ShiftReg
 # the following still depends on old bit heap
-# src/FixFilters/FixSOPC
+ src/FixFilters/FixSOPC
 # src/FixFilters/FixFIR
 # src/FixFilters/FixHalfSine
 #  src/FixFilters/FixIIR # 
@@ -297,6 +297,7 @@ src/ShiftReg
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
+src/IntAddSubCmp/IntMultiAdder
  
 # ---------- First generation of fast large adders ------------------------
 # src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
@@ -363,7 +364,6 @@ src/FPComposite/LargeAccToFP
 #src/FPComposite/FPDotProduct 
 #src/FPComposite/FP2DNorm
 
-
 # Generic fixed-point function evaluators ---------------------------
  src/Table 
  src/DualTable 
@@ -404,7 +404,7 @@ src/Tools/Point
 
 # Exp, Log and Power
 #src/ExpLog/FPExp
-# src/ExpLog/IterativeLog //depends on IntSquarer
+#src/ExpLog/IterativeLog //depends on IntSquarer
 #src/ExpLog/FPPow
 
 # If you want to add your operator, feel free

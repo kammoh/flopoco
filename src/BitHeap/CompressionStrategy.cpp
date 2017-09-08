@@ -352,14 +352,15 @@ namespace flopoco{
 			//declare the adder
 			IntAdder* adder;
 
+			//create the adder
+			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
+
 			//create the port maps for the adder
 			bitheap->op->inPortMap(adder, "X", adderIn0Name.str());
 			bitheap->op->inPortMap(adder, "Y", adderIn1Name.str());
 			bitheap->op->inPortMap(adder, "Cin", adderCinName.str());
 			bitheap->op->outPortMap(adder, "R", adderOutName.str(), false);
 
-			//create the adder
-			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
 			//create the instance of the adder
 			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
@@ -729,8 +730,7 @@ namespace flopoco{
 		//create the signal containing the result of the bitheap compression
 		bitheap->op->vhdl << tab
 				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->width) << " <= ";
-		//add the chunks in reverse order
-		//	from msb to lsb
+		// the chunks in reverse order,	from msb to lsb
 		bitheap->op->vhdl << chunksDone[chunksDone.size()-1];
 		for(int i=(int)chunksDone.size()-2; i>=0; i--)
 			bitheap->op->vhdl << " & " << chunksDone[i];
