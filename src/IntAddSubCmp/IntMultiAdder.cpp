@@ -44,7 +44,7 @@ namespace flopoco{
 		srcFileName="IntMultiAdder";
 		setCopyrightString ( "Florent de Dinechin (2008-2016)" );
 		ostringstream name;
-		name << "IntMultiAdder_" << wIn << "_" << n;
+		name << "IntMultiAdder_"  << (signedInput?"S":"U") << wIn << "_" << n;
 		setNameWithFreqAndUID(name.str());
 
 		BitheapNew* bh;
