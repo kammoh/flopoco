@@ -58,6 +58,7 @@ namespace flopoco{
 		targetUlpError(targetUlpError_),
 		addRoundBit(true)
 	{
+		vhdl << "-- This operator multiplies by "<<constant << endl;
 		init();		 // check special cases, computes number of tables and errorInUlps.
 
 		// Now we have everything to compute g
@@ -460,7 +461,7 @@ namespace flopoco{
 		else { // shift right; truncate
 			thisOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
 		}
-#if 1 // This breaks the lexer, I keep it as a case study to fix it. TODO
+#if 1 // This used to break the lexer, I keep it as a case study to fix it. TODO
 		thisOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
 #else
 		ostringstream t;
