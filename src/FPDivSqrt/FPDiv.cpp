@@ -201,7 +201,7 @@ namespace flopoco{
 
 				// qui has a fanout of(wF+7), which we add to both its uses 
 				vhdl << tab << "with " << qi << range(1,0) << " select " << endl
-						 << tab << declare(getTarget()->adderDelay(wF+7)+getTarget()->localWireDelay(2*(wF+7)), wim1fulla.str(), wF+7) << " <= " << endl
+						 << tab << declare(getTarget()->adderDelay(wF+7)+getTarget()->fanoutDelay(2*(wF+7)), wim1fulla.str(), wF+7) << " <= " << endl
 						 << tab << tab << wipad.str() << " - (\"0000\" & prescaledfY)			when \"01\"," << endl
 						 << tab << tab << wipad.str() << " + (\"0000\" & prescaledfY)			when \"11\"," << endl
 						 << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")		when \"10\"," << endl
@@ -211,7 +211,7 @@ namespace flopoco{
 
 #if 0 // Splitting the following logic into two levels gives better synthesis results...
 				vhdl << tab << "with " << qi << range(3,1) << " select " << endl;
-				vhdl << tab << declare(getTarget()->adderDelay(wF+7)+getTarget()->localWireDelay(2*(wF+7)), wim1full.str(), wF+7) << " <= " << endl;
+				vhdl << tab << declare(getTarget()->adderDelay(wF+7)+getTarget()->fanoutDelay(2*(wF+7)), wim1full.str(), wF+7) << " <= " << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - (\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - (\"0\" & prescaledfY & \"000\")			when \"011\"," << endl;
 				vhdl << tab << tab << wim1fulla.str() << " + (\"00\" & prescaledfY & \"00\")			when \"110\" | \"101\"," << endl;
@@ -220,7 +220,7 @@ namespace flopoco{
 #else
 				string fYdec =join("fYdec", i-1);	//
 				vhdl << tab << "with " << qi << range(3,1) << " select " << endl
-						 << tab << declare(getTarget()->lutDelay()+getTarget()->localWireDelay(2*(wF+7)), fYdec, wF+7) << " <= " << endl
+						 << tab << declare(getTarget()->lutDelay()+getTarget()->fanoutDelay(2*(wF+7)), fYdec, wF+7) << " <= " << endl
 						 << tab << tab << "(\"00\" & prescaledfY & \"00\")			when \"001\" | \"010\" | \"110\"| \"101\"," << endl
 						 << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl
 						 << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
@@ -267,7 +267,7 @@ namespace flopoco{
 			vhdl << tab << declare(getTarget()->adderDelay(3*nDigit), "fR0", 3*nDigit) << " <= qP - qM;" << endl;
 
 			//The last +3 in computing nDigit is for this part
-			vhdl << tab << declare(getTarget()->localWireDelay(wF+6) + getTarget()->lutDelay(), "fR", wF+6) << " <= ";
+			vhdl << tab << declare(getTarget()->fanoutDelay(wF+6) + getTarget()->lutDelay(), "fR", wF+6) << " <= ";
 			if (wF % 3 == 1) //2 extra bit
 				vhdl << "fR0(" << 3*nDigit-1 << " downto 3) & (fR0(0) or fR0(1) or fR0(2)); " << endl;
 
@@ -326,7 +326,7 @@ namespace flopoco{
 			}
 			else THROWERROR("alpha="<< alpha << " is not an option");
 
-			selfunctiontable->setShared();
+			 selfunctiontable->setShared();
 
 			////////////////////// Main SRT loop, unrolled ///////////////////////
 
@@ -372,7 +372,7 @@ namespace flopoco{
 #if 1  // The following leads to higher frequency and higher resource usage: 
 					// For (8,23) on Virtex6 with ISE this gives 466Mhz, 1083 regs+ 1029 LUTs 
 					vhdl << tab << "with " << qi << " select" << endl;
-					vhdl << tab << tab << declare(getTarget()->localWireDelay(wF+4) + getTarget()->adderDelay(wF+4), qiTimesD.str(),wF+4)
+					vhdl << tab << tab << declare(getTarget()->fanoutDelay(wF+4) + getTarget()->adderDelay(wF+4), qiTimesD.str(),wF+4)
 							 << " <= "<< endl 
 							 << tab << tab << tab << "\"000\" & fY						when \"001\" | \"111\"," << endl
 							 << tab << tab << tab << "\"00\" & fY & \"0\"				when \"010\" | \"110\"," << endl
@@ -382,7 +382,7 @@ namespace flopoco{
 					// For (8,23) on Virtex6 with ISE this gives 345Mhz, 856 regs+ 1051 LUTs 
 					// Note that this option probably scales worse if we pipeline this addition  
 					vhdl << tab << "with " << qi << " select" << endl
-							 << tab << tab << declare(getTarget()->localWireDelay(wF+4) + getTarget()->lutDelay(), join("addendA",i),wF+4)
+							 << tab << tab << declare(getTarget()->fanoutDelay(wF+4) + getTarget()->lutDelay(), join("addendA",i),wF+4)
 							 << " <= " << endl 
 							 << tab << tab << tab << "\"000\" & fY            when \"001\" | \"111\" | \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')  when others;" << endl;
