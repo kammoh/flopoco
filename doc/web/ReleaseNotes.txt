@@ -4,7 +4,7 @@ Overhaul of the BitHeap framework.
 Removing all operators that have not been ported to these new framework, they will hopefully slowly trickle back.
 
 ======================================================================
-Version 4.2
+Version 4.1.2
 Various bug fixes, including one rounding but in FPAddSinglePath.
 IntConstMult resurrected
 FixFIR now supports symmetric coefficients
