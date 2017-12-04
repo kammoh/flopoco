@@ -99,7 +99,7 @@ namespace flopoco{
 		/** A wrapper for Sollya guessdegree */
 		static	void guessDegree(sollya_obj_t fS, sollya_obj_t rangeS, double targetAccuracy, int* degreeInfP, int* degreeSupP);
 
-		static OperatorPtr parseArguments(Target *target, vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
 
 		static void registerFactory();
 

@@ -50,7 +50,7 @@ namespace flopoco
 		name = bit->name;
 	}
 
-	WeightedBit::WeightedBit(WeightedBit* bit, int deathCycle,  double deathCP, string killerCompressor) {
+	WeightedBit::WeightedBit(WeightedBit* bit, int deathCycle_,  double deathCP_, string killerCompressor_) {
 		srcFileName="WeightedBit";
 		cycle = bit->cycle;
 		criticalPath = bit->criticalPath;
@@ -58,9 +58,9 @@ namespace flopoco
 		type = bit->type;
 		uid = bit->uid;
 		name = bit->name;
-		deathCycle =deathCycle;
-		deathCP = deathCP;
-		killerCompressor = killerCompressor;
+		deathCycle =deathCycle_;
+		deathCP = deathCP_;
+		killerCompressor = killerCompressor_;
 	}
 
 

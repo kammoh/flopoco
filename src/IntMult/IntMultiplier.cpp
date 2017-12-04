@@ -73,9 +73,6 @@
 #include "Operator.hpp"
 #include "IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
-#include "Targets/StratixII.hpp"
-#include "Targets/StratixIII.hpp"
-#include "Targets/StratixIV.hpp"
 #include "../BitHeap/Plotter.hpp"
 
 using namespace std;
@@ -95,7 +92,7 @@ namespace flopoco {
 
 
 	bool IntMultiplier::tabulatedMultiplierP(Target* target, int wX, int wY){
-		return (wX+wY <=  target->lutInputs()+2);
+		return (wX+wY <=  getTarget()->lutInputs()+2);
 	}
 
 	//TODO: function must add better handling of corner cases
@@ -221,10 +218,12 @@ namespace flopoco {
 		srcFileName="IntMultiplier";
 		setCopyrightString ( "Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012" );
 
-		cout << "*  ***************** gettarget()->useHardMultipliers() =" << getTarget()->useHardMultipliers() << endl;
-
-		//commented-out because the addition operators need the ieee_std_signed/unsigned libraries
+		
+		// the addition operators need the ieee_std_signed/unsigned libraries
 		useNumericStd();
+
+		REPORT(DEBUG, "Entering IntMultiplier standalone constructor for wX_=" <<  wX_  << ", wY_=" << wY_ << ", wOut_=" << wOut_);
+		REPORT(DEBUG, "   gettarget()->useHardMultipliers() =" << getTarget()->useHardMultipliers() );
 
 		if(wOut<0)
 		{
@@ -235,6 +234,7 @@ namespace flopoco {
 			REPORT(DETAILED, "wOut set to " << wOut);
 		}
 
+		parentOp=this;
 		// set the name of the multiplier operator
 		{
 			ostringstream name;
@@ -248,14 +248,11 @@ namespace flopoco {
 			REPORT(DEBUG, "Building " << name.str() );
 		}
 
-		
-		parentOp=this;
 		multiplierUid=parentOp->getNewUId();
 		xname="X";
 		yname="Y";
 
 		initialize();
-
 		int g = neededGuardBits(parentOp->getTarget(), wXdecl, wYdecl, wOut);
 		int possibleOutputs=1;
 		if(g>0)
@@ -494,7 +491,7 @@ namespace flopoco {
 
 			vhdl << tab << "-- then compress this height-1 bit heap by doing nothing" << endl;
 
-			outDelayMap[addUID("R")] = getCriticalPath();
+			getOutDelayMap()[addUID("R")] = getCriticalPath();
 			return;
 		}
 
@@ -585,7 +582,7 @@ namespace flopoco {
 		// Multiplications that fit directly into a DSP
 		int dspXSize, dspYSize;
 
-		parentOp->getTarget()->getDSPWidths(dspXSize, dspYSize, signedIO);
+		parentOp->getTarget()->getMaxDSPWidths(dspXSize, dspYSize, signedIO);
 
 		//correct the DSP sizes for Altera targets
 		if(parentOp->getTarget()->getVendor() == "Altera")
@@ -771,7 +768,7 @@ namespace flopoco {
 
 		if(parentOp->getTarget()->useHardMultipliers()){
 			REPORT(DETAILED,"in fillBitHeap(): using DSP blocks for multiplier implementation");
-			parentOp->getTarget()->getDSPWidths(wxDSP, wyDSP, signedIO);
+			parentOp->getTarget()->getMaxDSPWidths(wxDSP, wyDSP, signedIO);
 			REPORT(DETAILED,"in fillBitHeap(): starting tiling with DSPs");
 			buildTiling();
 		}
@@ -805,13 +802,13 @@ namespace flopoco {
 	/**************************************************************************/
 	void IntMultiplier::buildTiling()
 	{
-#if 1
-		int* multiplierWidth;
-		int size;
 
 		if( parentOp->getTarget()->getVendor() == "Altera")
 		{
 			REPORT(DEBUG, "in buildTiling(): will construct tiling for Altera targets");
+#if 0 // for history , remove it when it works
+		int* multiplierWidth;
+		int size;
 			if ( parentOp->getTarget()->getID()=="StratixII")
 			{
 				StratixII* t = (StratixII*) parentOp->getTarget();
@@ -839,7 +836,10 @@ namespace flopoco {
 
 			for(int i=0; i<size; i++)
 				multWidths.push_back(multiplierWidth[i]);
-
+#endif
+			// The following code works because on Alter we always have square mults
+			for(auto i: parentOp->getTarget() -> possibleDSPConfigs()) 
+				multWidths.push_back(i.first);
 			buildAlteraTiling(0, 0, wX, wY, 0, signedIO, signedIO);
 		}else
 		{
@@ -850,7 +850,6 @@ namespace flopoco {
 			else
 				buildXilinxTiling();
 		}
-#endif
 	}
 
 
@@ -932,7 +931,7 @@ namespace flopoco {
 		vhdl << tab << "-- buildheaplogiconly called for lsbX=" << lsbX << " lsbY=" << lsbY << " msbX="<< msbX << " msbY="<< msbY << endl;
 
 		int dx, dy;				// Here we need to split in small sub-multiplications
-		int li = target->lutInputs();
+		int li = getTarget()->lutInputs();
 
 		dx = li >> 1;
 		dy = li - dx;
@@ -1040,7 +1039,7 @@ namespace flopoco {
 								<< " <= " << addUID("y",blockUid) << "_" << iy << " & " << addUID("x",blockUid) <<"_" << ix << ";");
 
 						vhdl << tab << declare(XY(ix,iy,blockUid), dx+dy)
-							 << " <= " << addUID("y",blockUid) << "_" << iy << " & " << addUID("x",blockUid) << "_" << ix << ";" << endl;
+						     << " <= " << addUID("y",blockUid) << "_" << iy << " & " << addUID("x",blockUid) << "_" << ix << ";" << endl;
 
 						inPortMap(t, "X", XY(ix,iy,blockUid));
 						outPortMap(t, "Y", PP(ix,iy,blockUid));
@@ -1255,7 +1254,7 @@ namespace flopoco {
 	 * let r=(submultiplier area)/(DSP area); r is between 0 and 1
 	 * if r >= 1-t   then use a DSP for this block
 	 * So: t=0 means: any submultiplier that does not fill a DSP goes to logic
-	 *   t=1 means: any submultiplier, even very small ones, go to DSP
+     *   t=1 means: any submultiplier, even very small ones, go to DSP
 	*/
 
 	bool IntMultiplier::worthUsingOneDSP(int topX, int topY, int botX, int botY, int wxDSP, int wyDSP)
@@ -1286,16 +1285,16 @@ namespace flopoco {
 			REPORT(DEBUG, "in worthUsingOneDSP:   usable blockArea=" << usefulDSPArea << "   dspArea=" << totalDSPArea);
 
 			//checking according to ratio/area
-			if(usefulDSPArea >= (1.0-target->unusedHardMultThreshold())*totalDSPArea)
+			if(usefulDSPArea >= (1.0-getTarget()->unusedHardMultThreshold())*totalDSPArea)
 			{
 				REPORT(DEBUG, "in worthUsingOneDSP: "
-						<< usefulDSPArea << ">= (1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> worth using a DSP block");
+						<< usefulDSPArea << ">= (1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> worth using a DSP block");
 				return true;
 			}
 			else
 			{
 				REPORT(DEBUG, "in worthUsingOneDSP: "
-						<< usefulDSPArea << "< (1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> not worth using a DSP block");
+						<< usefulDSPArea << "< (1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> not worth using a DSP block");
 				return false;
 			}
 		}
@@ -1422,13 +1421,13 @@ namespace flopoco {
 		REPORT(DEBUG, "in worthUsingOneDSP:   intersectX1=" << intersectX1 << " intersectY1=" << intersectY1 << " intersectX2=" << intersectX2 << " intersectY2=" << intersectY2);
 
 		//test if the DSP DSPThreshold is satisfied
-		if(usefulDSPArea >= (1.0-target->unusedHardMultThreshold())*totalDSPArea)
+		if(usefulDSPArea >= (1.0-getTarget()->unusedHardMultThreshold())*totalDSPArea)
 		{
-			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << ">=(1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> WORTH using a DSP block");
+			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << ">=(1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> WORTH using a DSP block");
 			return true;
 		}else
 		{
-			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << "<(1.0-" << target->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> NOT worth using a DSP block");
+			REPORT(DEBUG, "in worthUsingOneDSP:   result of the test: " << usefulDSPArea << "<(1.0-" << getTarget()->unusedHardMultThreshold() << ")*" << totalDSPArea << " -> NOT worth using a DSP block");
 			return false;
 		}
 #endif
@@ -1500,11 +1499,11 @@ namespace flopoco {
 				//if both DSP dimensions are large enough, the DSP block might still fit the DSPThreshold
 				if(worthUsingOneDSP(blockTopX, blockTopY, blockBottomX, blockBottomY, dspSizeX, dspSizeY))
 				{
-					//target->unusedHardMultThreshold() fulfilled; search is over
+					//getTarget()->unusedHardMultThreshold() fulfilled; search is over
 					dspSizeNotFound = false;
 				}else
 				{
-					//target->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
+					//getTarget()->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
 					if(newMultIndex == multWidthsSize-1)
 					{
 						dspSizeNotFound = false;
@@ -1530,11 +1529,11 @@ namespace flopoco {
 
 					if(worthUsingOneDSP((tx<blockTopX ? blockTopX : tx), (ty<blockTopY ? blockTopY : ty), bx, by, dspSizeX, dspSizeY))
 					{
-						//target->unusedHardMultThreshold() fulfilled; search is over
+						//getTarget()->unusedHardMultThreshold() fulfilled; search is over
 						dspSizeNotFound = false;
 					}else
 					{
-						//target->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
+						//getTarget()->unusedHardMultThreshold() not fulfilled; pass on to the next smaller DSP size
 						if(newMultIndex == multWidthsSize-1)
 						{
 							dspSizeNotFound = false;
@@ -1836,7 +1835,7 @@ namespace flopoco {
 		{
 			widthXX			= wxDSP;
 			widthYY			= wyDSP;
-			horizontalDSP	= hor2;
+	 		horizontalDSP	= hor2;
 			verticalDSP		= ver2;
 			REPORT(DEBUG, "in buildXilinxTiling(): tiling using DSP blocks placed horizontally (wxDSP=" << wxDSP << ", wyDSP=" << wyDSP << ")");
 			REPORT(DEBUG, "in buildXilinxTiling():   using " << nrDSPvertical << " DSPs, "
@@ -2069,61 +2068,11 @@ namespace flopoco {
 		tcl->add(tc);
 	}
 
-	/**
-	* Method returning a vector containing values of the valid TestState ts up-to-dated
-	* it also update the multimap testMemory and increase the counter for the treated operator
-	**/
-	void IntMultiplier::nextTest ( TestState * ts ){
-		string opName = "IntMultiplier";
-
-		// establishment of the different values, pay attention to the order !!
-		do{
-			// pick a random num following a specific distribution
-			int wInX;
-			do{
-				float wInXf = pickRandomNum ( );
-				wInX = ceil ( wInXf );
-			} while ( wInX < 17 || wInX > 68 );
-			// modify the number pointed in the involved TestState
-			ts -> vectInt [ 0 ] = wInX;
-
-			int wInY;
-			do{
-				float wInYf = pickRandomNum ( );
-				wInY = ceil ( wInYf );
-			} while ( wInY < 17 || wInY > 68 );
-			ts -> vectInt [ 1 ] = wInY;
-
-			int wOut;
-			do{
-				float wOutf = pickRandomNum ( 0, 5, 3 );
-				wOut = ceil ( wOutf );
-			}while ( wOut > wInX || wOut > wInY );
-			ts -> vectInt [ 2 ] = wOut;
-
-			// Parametres non generes aleatoirement
-			int signedB = 0;
-			ts -> vectBool [ 0 ] = ( signedB == 1 );
-
-			float DSPThreshold = 1.0;
-			ts -> vectFloat [ 0 ] = DSPThreshold;
-
-			int enableSuperTiles = 0;
-			ts -> vectBool [ 1 ] = ( enableSuperTiles == 1 );
-
-
-		}while ( Operator::checkExistence ( *ts, opName ) );
-		// Add the operator to testMemory (used by checkExistence for verification)
-		Operator::testMemory.insert ( pair < string, TestState > ( opName, *ts) );
-		// increase the counter of the treated operator indicating how many tests have been done on it
-		ts -> counter++;
-	}
-
 
 
 
 	
-	OperatorPtr IntMultiplier::parseArguments(Target *target, std::vector<std::string> &args) {
+	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut ;
 		bool signedIO,superTile;
 		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);

@@ -1,0 +1,196 @@
+
+#include "Compressor.hpp"
+
+
+using namespace std;
+
+namespace flopoco{
+
+
+	Compressor::Compressor(Target * target_, vector<int> heights_, bool compactView_)
+		: Operator(nullptr, target_), // for now, no parent
+			heights(heights_), compactView(compactView_), compressorUsed(false)
+	{
+		ostringstream name;
+		stringstream nm, xs;
+		//compressors are supposed to be combinatorial
+		setCombinatorial();
+
+
+		
+		//remove the zero columns at the lsb
+		while(heights[0] == 0)
+		{
+			heights.erase(heights.begin());
+		}
+
+		name << "Compressor_";
+
+		//compute the size of the input and of the output
+		wIn = 0;
+		maxVal = 0;
+		for(int i=heights.size()-1; i>=0; i--)
+		{
+			wIn    += heights[i];
+			maxVal += intpow2(i) * heights[i];
+			name << heights[i];
+		}
+
+		wOut = intlog2(maxVal);
+
+		name << "_" << wOut;
+		setName(name.str());
+
+		//create the inputs
+		//	and the internal signal which concatenates all the inputs
+		for(int i=heights.size()-1; i>=0; i--)
+		{
+			//no need to create a signal for columns of height 0
+			if(heights[i] == 0)
+				continue;
+
+			addInput(join("X",i), heights[i]);
+
+			xs << "X" << i << " ";
+			if(i != 0)
+				xs << "& ";
+		}
+		//create the output
+		addOutput("R", wOut);
+		getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
+
+		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
+		vhdl << tab << "with X select R <= " << endl;
+
+		vector<vector<mpz_class>> values(1<<wOut);
+		//create the compressor
+		for(mpz_class i=0; i<(1 << wIn); i++)
+		{
+			mpz_class ppcnt = 0;
+			mpz_class ii = i;
+
+			//compute the compression result for the current input
+			for(unsigned j=0; j<heights.size(); j++)
+			{
+				ppcnt += popcnt( ii - ((ii>>heights[j]) << heights[j]) ) << j;
+				ii = ii >> heights[j];
+			}
+
+			//output the line, if not in compact mode
+			if(!compactView)
+			{
+				vhdl << tab << tab << "\"" << unsignedBinary(ppcnt, wOut) << "\" when \""
+						<< unsignedBinary(i, wIn) << "\", \n";
+			}else{
+				values[ppcnt.get_ui()].push_back(i);
+			}
+		}
+
+		//print the compressor, if in compact mode
+		if(compactView)
+		{
+			for(unsigned i=0; i<values.size(); i++)
+			{
+				if(values[i].size() > 0)
+				{
+					vhdl << tab << tab << "\"" << unsignedBinary(mpz_class(i), wOut) << "\" when \""
+							<< unsignedBinary(mpz_class(values[i][0]), wIn) << "\"";
+					for(unsigned j=1; j<values[i].size(); j++)
+					{
+						vhdl << " | \"" << unsignedBinary(mpz_class(values[i][j]), wIn) << "\"";
+					}
+					vhdl << "," << endl;
+				}
+			}
+		}
+
+		vhdl << tab << tab << "\"" << std::string(wOut, '-') << "\" when others;" << endl;
+
+		REPORT(DEBUG, "Generated " << name.str());
+	}
+
+
+	Compressor::~Compressor(){
+	}
+
+
+	unsigned Compressor::getColumnSize(int column)
+	{
+		if(column >= (signed)heights.size())
+			return 0;
+		else
+			return heights[column];
+	}
+
+	int Compressor::getOutputSize()
+	{
+		return wOut;
+	}
+
+	bool Compressor::markUsed()
+	{
+		compressorUsed = true;
+		return compressorUsed;
+	}
+
+	bool Compressor::markUnused()
+	{
+		compressorUsed = false;
+		return compressorUsed;
+	}
+
+
+	void Compressor::emulate(TestCase * tc)
+	{
+		mpz_class r = 0;
+
+		for(unsigned i=0; i<heights.size(); i++)
+		{
+			mpz_class sx = tc->getInputValue(join("X", i));
+			mpz_class p  = popcnt(sx);
+
+			r += p<<i;
+		}
+
+		tc->addExpectedOutput("R", r);
+	}
+
+
+	OperatorPtr Compressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		string in;
+		bool compactView_;
+		vector<int> heights_;
+
+		UserInterface::parseString(args, "columnHeights", &in);
+		UserInterface::parseBoolean(args, "compactView", &compactView_);
+
+		// tokenize the string, with ':' as a separator
+		stringstream ss(in);
+		while(ss.good())
+		{
+			string substr;
+
+			getline(ss, substr, ':');
+			heights_.insert(heights_.begin(), stoi(substr));
+		}
+
+		return new Compressor(target, heights_, compactView_);
+	}
+
+	void Compressor::registerFactory(){
+		UserInterface::add("Compressor", // name
+				"A basic compressor.",
+				"BasicInteger", // categories
+				"",
+				"columnHeights(string): colon-separated list of heights for the columns of the compressor, \
+in decreasing order of the weight. Example: columnHeights=\"2:3\"; \
+				compactView(bool)=false: whether the VHDL code is printed in a more compact way, or not",
+				"",
+				Compressor::parseArguments
+		) ;
+	}
+}
+
+
+
+

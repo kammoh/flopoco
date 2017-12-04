@@ -5,7 +5,7 @@
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
 
   Authors : Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr
-			Bogdan Pasca, Bogdan.Pasca@ens-lyon.org
+            Bogdan Pasca, Bogdan.Pasca@ens-lyon.org
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL, INSA-Lyon
@@ -27,33 +27,46 @@
 #include "FloPoCo.hpp"
 #include "utils.hpp"
 #include "main.hpp"
-#include "FPDivSqrt/Tools/NbBitsMin.cpp"
-#include "IntAddSubCmp/IntAdderSpecific.hpp"
-#include "IntAddSubCmp/IntAdderAlternative.hpp"
-#include "IntAddSubCmp/IntAdderClassical.hpp"
-#include "IntAddSubCmp/IntAdderShortLatency.hpp"
 
 using namespace std;
 using namespace flopoco;
+
 
 int main(int argc, char* argv[] )
 {
 	try {
 
-		Fix2FP::registerFactory();
-		FP2Fix::registerFactory();
-		InputIEEE::registerFactory();
-		OutputIEEE::registerFactory();
+		AutoTest::registerFactory();
+
+		Compressor::registerFactory();
+		BitheapTest::registerFactory();
+
+		// Florent has commented out all the operators for now.
+		// Uncomment them only to bring them up to the new framework.
+
+		// Fix2FP::registerFactory();
+		// FP2Fix::registerFactory();
+		// InputIEEE::registerFactory();
+		// OutputIEEE::registerFactory();
 
 		Shifter::registerFactory();
 		LZOC::registerFactory();
 		LZOCShifterSticky::registerFactory();
 
+		ShiftReg::registerFactory();
+
 		IntAdder::registerFactory();
-#if 0 // Plug them for debug purpose only
+		
+#if 0 // Plug them back some day
 		IntAdderClassical::registerFactory();
 		IntAdderAlternative::registerFactory();
 		IntAdderShortLatency::registerFactory();
+#endif
+		
+		//FOR TEST PURPOSES ONLY
+		Table::registerFactory();
+
+#if 0 // Plug them for debug purpose only
 		IntAdderSpecific::registerFactory();
 		LongIntAdderAddAddMuxGen1::registerFactory();
 		LongIntAdderAddAddMuxGen2::registerFactory();
@@ -64,49 +77,58 @@ int main(int argc, char* argv[] )
 		LongIntAdderMuxNetwork::registerFactory();
 		IntComparatorSpecific::registerFactory();
 #endif
-		IntComparator::registerFactory();
-		IntDualSub::registerFactory();
-		IntMultiplier::registerFactory();
-		IntSquarer::registerFactory();
+		// IntComparator::registerFactory();
+		IntDualAddSub::registerFactory();
+		IntMultiAdder::registerFactory();
+		// IntMultiplier::registerFactory();
+		// IntSquarer::registerFactory();
 
+		IntConstMult::registerFactory(); // depends on BH, but in currently unplugged code
 		FPConstMult::registerFactory();
-		FPRealKCM::registerFactory();
-		IntConstDiv::registerFactory();
+		// FPRealKCM::registerFactory();
+		IntConstDiv::registerFactory(); // depends on IntConstMult
 		FPConstDiv::registerFactory();
-		FixFunctionByTable::registerFactory();
-		FixFunctionBySimplePoly::registerFactory();
-		FixFunctionByPiecewisePoly::registerFactory();
-		FixFunctionByMultipartiteTable::registerFactory();
-		BasicPolyApprox::registerFactory();
-		PiecewisePolyApprox::registerFactory();
-		FixRealKCM::registerFactory();
+		// FixFunctionByTable::registerFactory();
+		// FixFunctionBySimplePoly::registerFactory();
+		// FixFunctionByPiecewisePoly::registerFactory();
+		// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH
+		// BasicPolyApprox::registerFactory();
+		// PiecewisePolyApprox::registerFactory();
+	  FixRealKCM::registerFactory();
 		TestBench::registerFactory();
+		Wrapper::registerFactory();
 		FPAdd::registerFactory();
-		FPAddSub::registerFactory();
-		FPAddDualPath::registerFactory();
-		FPAdd3Input::registerFactory();
-		FPAddSinglePath::registerFactory();
-		FPMult::registerFactory();
-		//FPMultKaratsuba::registerFactory();
-		FPSquare::registerFactory();
+		// FPAddSub::registerFactory();
+		// FPAdd3Input::registerFactory();
+		// FPAddSinglePath::registerFactory();
+		// FPMult::registerFactory();
+		// //FPMultKaratsuba::registerFactory();
+		// FPSquare::registerFactory();
 		FPDiv::registerFactory();
-		NbBitsMinRegisterFactory();
-		FPSqrt::registerFactory();
+		// FPDiv::NbBitsMinRegisterFactory();
+		// FPSqrt::registerFactory();
 
-		FPLargeAcc::registerFactory();
-		LargeAccToFP::registerFactory();
-		FPDotProduct::registerFactory();
-		
-		FPExp::registerFactory();
-		IterativeLog::registerFactory();
-		FPPow::registerFactory();
-		FixSinCos::registerFactory();
-		CordicSinCos::registerFactory();
-		FixAtan2::registerFactory();
-		//FixedComplexAdder::registerFactory();
-		FixFIR::registerFactory();
+		// FPLargeAcc::registerFactory();
+		// LargeAccToFP::registerFactory();
+		// FPDotProduct::registerFactory();
+
+		// FPExp::registerFactory();
+		// IterativeLog::registerFactory();
+		// FPPow::registerFactory();
+		// FixSinCos::registerFactory();
+		// CordicSinCos::registerFactory();
+		// FixAtan2::registerFactory();
+		// //FixedComplexAdder::registerFactory();
+		// FixFIR::registerFactory();
 		FixSOPC::registerFactory();
-		FixIIR::registerFactory();
+		// FixIIR::registerFactory();
+
+		// hidden for now
+		// Fix2DNorm::registerFactory();
+
+		// TargetModel::registerFactory();
+		// Uncomment me to play within FloPoCo operator development
+	  UserDefinedOperator::registerFactory();
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;
@@ -133,6 +155,7 @@ int main(int argc, char* argv[] )
 	int reLevel;
 	bool resourceEstimationDebug = false;
 	//-----------------------------------------------------------------
+
 
 	//------------------ Floorplanning --------------------------------
 	bool floorplanning = false;

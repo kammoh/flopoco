@@ -136,7 +136,7 @@ namespace flopoco {
 		vhdl << tab << "A <= "
 				 << tab << tab << "     qangle + finalZ  when finalAdd='1'" << endl
 				 << tab << tab << "else qangle - finalZ;" << endl;
-		outDelayMap["A"] = getCriticalPath();
+		getOutDelayMap()["A"] = getCriticalPath();
 	}
 
 
@@ -147,7 +147,7 @@ namespace flopoco {
 		manageCriticalPath( getTarget()->lutDelay() + getTarget()->localWireDelay());
 		vhdl << tab << declare("XorY", sizeXYR-1) << " <= XR" << range(sizeXYR-1,1) << " or YR" << range(sizeXYR-1,1) << ";" << endl;
 		// The LZC
-		LZOC* lzc = new	LZOC(getTarget(), sizeXYR-1, inDelayMap("XorY", getCriticalPath()));
+		LZOC* lzc = new	LZOC(getTarget(), sizeXYR-1);
 		addSubComponent(lzc);
 
 		inPortMap(lzc, "I", "XorY");
@@ -161,7 +161,7 @@ namespace flopoco {
 		//		setCriticalPath( lzc->getOutputDelay("O") );
 
 		// The two shifters are two instance of the same component
-		Shifter* lshift = new Shifter(getTarget(), sizeXYR, sizeXYR-1, Shifter::Left, inDelayMap("S", getCriticalPath()));
+		Shifter* lshift = new Shifter(getTarget(), sizeXYR, sizeXYR-1, Shifter::Left);
 		addSubComponent(lshift);
 
 		inPortMap(lshift, "S", "S");
@@ -265,12 +265,12 @@ namespace flopoco {
 		mpfr_get_z (az.get_mpz_t(), a, GMP_RNDD); // there can be a real rounding here
 		az -= mpz_class(6)<<(wOut-1);
 		az &= mask;
-		tc->addExpectedOutput ("A", az);
+ 		tc->addExpectedOutput ("A", az);
 
 		mpfr_get_z (az.get_mpz_t(), a, GMP_RNDU); // there can be a real rounding here
 		az -= mpz_class(6)<<(wOut-1);
 		az &= mask;
-		tc->addExpectedOutput ("A", az);
+ 		tc->addExpectedOutput ("A", az);
 
 		// clean up
 		mpfr_clears (x,y,a, NULL);
@@ -318,7 +318,7 @@ namespace flopoco {
 
 	}
 
-	OperatorPtr FixAtan2::parseArguments(Target *target, vector<string> &args) {		
+	OperatorPtr FixAtan2::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {		
 		int lsb, method;
 		UserInterface::parseInt(args, "lsb", &lsb);
 		UserInterface::parsePositiveInt(args, "method", &method);

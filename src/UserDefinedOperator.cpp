@@ -24,9 +24,16 @@ namespace flopoco {
 		   any number can be declared, you will have to modify 
 		   -> this function,  
 		   -> the prototype of this function (available in UserDefinedOperator.hpp)
-		   -> the lines in main.cpp where the command line arguments are parsed in order to generate this UserDefinedOperator
+		   ->  main.cpp to uncomment the RegisterFactory line
 		*/
-		/* In this constructor we are going to generate an operator that takes as input three bit vectors X,Y,Z of lenght param0, treats them as unsigned integers, sums them and then output the last param1 bit of the sum adding the first bit of the sum (most significant) in front of this output, all the vhdl code needed by this operator has to be generated in this function */
+		/* In this constructor we are going to generate an operator that 
+			 - takes as input three bit vectors X,Y,Z of lenght param0, 
+			 - treats them as unsigned integers, 
+			 - sums them 
+			 - and finally outputs the concatenation of the the most significant bit of the sum and its last param1 bits.
+			 Don't ask why
+
+			 All the vhdl code needed by this operator has to be generated in this constructor */
 
 		// definition of the source file name, used for info and error reporting using REPORT 
 		srcFileName="UserDefinedOperator";
@@ -68,13 +75,10 @@ namespace flopoco {
 		REPORT(INFO,"Declaration of UserDefinedOperator \n");
 
 		// more detailed message
-		ostringstream detailedMsg;
-		detailedMsg  << "this operator has received two parameters " << param0 << " and " << param1;
-		REPORT(DETAILED,detailedMsg.str());
+		REPORT(DETAILED, "this operator has received two parameters " << param0 << " and " << param1);
   
 		// debug message for developper
 		REPORT(DEBUG,"debug of UserDefinedOperator");
-
 
 
 		/* vhdl is the stream which receives all the vhdl code, some special functions are
@@ -84,19 +88,11 @@ namespace flopoco {
 
 		   Each code transmited to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
 		*/
-		vhdl << declare("T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
+		vhdl << declare(getTarget()->adderDelay(param0+1), "T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
+		vhdl << declare(getTarget()->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
 
-
-		/* declaring a new cycle, each variable used after this line will be delayed 
-		   with respect to his state in the precedent cycle
-		*/
-		nextCycle();
-		vhdl << declare("R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
-
-		/* the use(variable) is a deprecated function, that can still be encoutered 
-		   in old Flopoco's operators, simply use vhdl << "S" (flopoco will generate the correct delayed value as soon as a previous declare("S") exists */
 		// we first put the most significant bit of the result into R
-		vhdl << "S <= (R" << of(param0 +1) << " & ";
+		vhdl << tab << "S <= (R" << of(param0 +1) << " & ";
 		// and then we place the last param1 bits
 		vhdl << "R" << range(param1 - 1,0) << ");" << endl;
 	};
@@ -126,4 +122,32 @@ namespace flopoco {
 	void UserDefinedOperator::buildStandardTestCases(TestCaseList * tcl) {
 		// please fill me with regression tests or corner case tests!
 	}
+
+
+
+
+	OperatorPtr UserDefinedOperator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		int param0, param1;
+		UserInterface::parseInt(args, "param0", &param0); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
+		UserInterface::parseInt(args, "param1", &param1); 
+		return new UserDefinedOperator(target, param0, param1);
+	}
+	
+	void UserDefinedOperator::registerFactory(){
+		UserInterface::add("UserDefinedOperator", // name
+											 "An heavily commented example operator to start with FloPoCo.", // description, string
+											 "Miscellaneous", // category, from the list defined in UserInterface.cpp
+											 "", //seeAlso
+											 // Now comes the parameter description string.
+											 // Respect its syntax because it will be used to generate the parser and the docs
+											 // Syntax is: a semicolon-separated list of parameterDescription;
+											 // where parameterDescription is parameterName (parameterType)[=defaultValue]: parameterDescriptionString 
+											 "param0(int)=16: A first parameter, here used as the input size; \
+                        param1(int): A second parameter, here used as the output size",
+											 // More documentation for the HTML pages. If you want to link to your blog, it is here.
+											 "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
+											 UserDefinedOperator::parseArguments
+											 ) ;
+	}
+
 }//namespace

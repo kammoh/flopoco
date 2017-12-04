@@ -5,7 +5,6 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "TestState.hpp"
 
 #include "Operator.hpp"
 #include "IntMult//IntMultiplier.hpp"
@@ -37,12 +36,9 @@ namespace flopoco{
 		 */
 		void emulate(TestCase * tc);
 
-		// Static method used for tests on the Operator
-		static void nextTest ( TestState * ts );
-
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		static void registerFactory();
 

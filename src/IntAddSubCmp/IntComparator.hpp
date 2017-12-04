@@ -22,7 +22,7 @@ namespace flopoco{
 		 * @param[in] target the target device for this operator
 		 * @param[in] wIn the width of the mantissa input
 		 */
-		IntComparator(Target* target, int wIn, int criteria, bool constant, int constValue, map<string, double> inputDelays = emptyDelayMap);
+		IntComparator(Target* target, int wIn, int criteria, bool constant, int constValue);
 
 		/** The IntComparator destructor */
 		~IntComparator();
@@ -31,7 +31,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		static void registerFactory();
 

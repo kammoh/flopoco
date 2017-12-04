@@ -1,10 +1,29 @@
-Version 3.1
+Version 5.0-alpha0
+Overhaul of the pipelining framework.
+Overhaul of the BitHeap framework.
+Removing all operators that have not been ported to these new framework, they will hopefully slowly trickle back.
+
+======================================================================
+Version 4.1.2
+Various bug fixes, including one rounding but in FPAddSinglePath.
+IntConstMult resurrected
+FixFIR now supports symmetric coefficients
+Autotest framework now using nvc from https://github.com/nickg/nvc
+
+======================================================================
+Version 4.1
+Operators: FixFIR and FixIIR, overhaul of FixRealKCM,
+FPAddSinglePathIEEE (supports subnormals etc)
+Autotest that attempts to test as many relevant combinations of parameters as possible.
+
+======================================================================
+Version 4.0
 New command-line interface, and the associated framework changes.
 Multipartite tables.
 A lot of janitoring.
 
 ======================================================================
-Version 3.0
+Version 3.0 will never get out of beta
 Shifts to Sollya 4.0 library. Polynomial evaluator rewritten in the process.
 Reorganisation of the source code, better naming consistency.
 plainVHDL and unusedHardMultThreshold become framework-wide target options.
@@ -33,6 +52,10 @@ New operators:
     FixComplexAdder, FixComplexMultiplier: complex operators
     FPAddSub : fused adder+subtractor for e.g. butterfly structures
     FixSinCos, CordicSinCos, FixSinOrCos: variations on the trigs
+
+======================================================================
+Version 2.3.2
+This is a maintenance release, it adds a missing header that prevented compilation on recent gcc.
 
 ======================================================================
 Version 2.3.1

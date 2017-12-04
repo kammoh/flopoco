@@ -47,7 +47,7 @@ namespace flopoco
 	 @param[bool]	signedIn_	true if the input range is [-1,1)
 	 */
 	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(Target *target, string functionName_, int nbTables_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_, map<string, double> inputDelays):
-		Operator(target, inputDelayMap), nbTables(nbTables_)
+		Operator(target, inputDelays), nbTables(nbTables_)
 	{
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 
@@ -555,7 +555,7 @@ namespace flopoco
 
 
 
-	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string f;
 		bool signedIn;
 		int lsbIn, lsbOut, msbOut, nbTables;
@@ -582,7 +582,7 @@ msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
 signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise\
 ",
-											 
+
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
 											 FixFunctionByMultipartiteTable::parseArguments
 											 ) ;

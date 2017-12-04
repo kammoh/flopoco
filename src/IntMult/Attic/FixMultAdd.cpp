@@ -224,6 +224,7 @@ namespace flopoco {
 		op->vhdl << op->instance(f, instanceName);
 		op->vhdl << tab << op->declareFixPoint(rSignalName,f->signedIO, rMSB, rLSB) << " <= " <<  "signed(" << (join(rSignalName, "_slv")) << ");" << endl;
 #endif
+		return f;
 	}
 
 

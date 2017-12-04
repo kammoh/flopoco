@@ -50,7 +50,7 @@ namespace flopoco{
 
 
 		/*unpipelined IntAdder architecture FPGA specific primitives*/
-		if (target->getVendor() == "Xilinx"){
+		if (getTarget()->getVendor() == "Xilinx"){
 			declare("p",evenwIn/2,true);
 			declare("g",evenwIn/2,true);
 			declare("c",evenwIn/2,true);
@@ -164,7 +164,7 @@ namespace flopoco{
 		tc->addExpectedOutput("R", svR);
 	}
 
-	OperatorPtr IntComparatorSpecific::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntComparatorSpecific::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int type;

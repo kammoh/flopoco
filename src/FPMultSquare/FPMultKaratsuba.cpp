@@ -213,7 +213,7 @@ namespace flopoco{
 		mpfr_clears(x, y, r, NULL);
 	}
 
-	OperatorPtr FPMultKaratsuba::parseArguments(Target *target, const vector<string> &args) {
+	OperatorPtr FPMultKaratsuba::parseArguments(OperatorPtr parentOp, Target *target, const vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF_in;

@@ -12,7 +12,7 @@
 #include "ShiftAddDag.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 
-#include "BitHeap/BitHeap.hpp"
+#include "BitHeap/BitheapNew.hpp"
 
 /**
 	@brief Integer constant multiplication.
@@ -57,13 +57,26 @@ namespace flopoco{
 		ShiftAddDag* implementation;
 
 
+		int getArea(); 
 
+		
 
 		// Overloading the virtual functions of Operator
 
 		void emulate(TestCase* tc);
 		void buildStandardTestCases(TestCaseList* tcl);
 
+
+		/** Factory method that parses arguments and calls the constructor */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+
+		static TestList unitTest(int index);
+
+		/** Factory register method */ 
+		static void registerFactory();
+
+
+		
 		/** @brief Recodes input n; returns the number of non-zero bits */
 		int recodeBooth(mpz_class n, int* BoothCode);
 
@@ -96,7 +109,7 @@ namespace flopoco{
 		ShiftAddOp* buildEuclideanDag(const mpz_class n, ShiftAddDag* constant);
 		int prepareBoothTree(mpz_class &n, ShiftAddDag* &tree_try, ShiftAddOp** &level, ShiftAddOp* &result, ShiftAddOp* &MX, unsigned int* &shifts, int& nonZeroInBoothCode, int& globalshift);
 
-		BitHeap* bitheap;
+		BitheapNew* bitheap;
 	};
 }
 #endif

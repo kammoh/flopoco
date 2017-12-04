@@ -53,9 +53,15 @@ namespace flopoco {
 			void emulate(TestCase * tc);
 
 			/* function used to create Standard testCase defined by the developper */
-			void buildStandardTestCases(TestCaseList* tcl);
-		
-		private:
+		void buildStandardTestCases(TestCaseList* tcl);
+
+
+		/* Standard factory stuff */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target,	vector<string>& args );
+		static void registerFactory();
+
+
+	private:
 			void init();
 
 			bool signedInput;

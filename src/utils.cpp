@@ -1,14 +1,14 @@
 /*
   utility functions for FloPoCo
- 
+
   Author: Florent de Dinechin
- 
+
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
-  
+
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2010.
   All rights reserved.
 */
@@ -55,7 +55,7 @@ namespace flopoco{
 		}
 		po2 = ((mpz_class) 1)<<size;
 		number=x;
-		
+
 		for (int i = 0; i < size ; i++) {
 			po2 = po2>>1;
 			if (number >= po2) {
@@ -156,9 +156,9 @@ namespace flopoco{
 
 		// exponent
 		s << unsignedBinary(biased_exponent, wE);
-		
+
 		// significand
-	
+
 		mpfr_sub(mpx, mpx, one, GMP_RNDN);
 		for (int i=0; i<wF; i++) {
 			mpfr_mul(mpx, mpx, two, GMP_RNDN);
@@ -186,7 +186,7 @@ namespace flopoco{
 		mpfr_init2(x, mpfr_get_prec(xx));
 		mpfr_set(x,xx,GMP_RNDN);
 		mpfr_mul_2si(x, x, -lsb, GMP_RNDN); // exact
-		mpfr_get_z(h.get_mpz_t(), x,  GMP_RNDN); // rounding takes place here     
+		mpfr_get_z(h.get_mpz_t(), x,  GMP_RNDN); // rounding takes place here
 
 		if(h<0){
 			std::ostringstream o;
@@ -200,7 +200,7 @@ namespace flopoco{
 		result << unsignedBinary(h, size);
 		if(margins==0||margins==1)
 			result<<"\"";
-		return result.str(); 
+		return result.str();
 	}
 
 
@@ -213,7 +213,7 @@ namespace flopoco{
 		mpfr_init2(x, mpfr_get_prec(xx));
 		mpfr_set(x, xx, GMP_RNDN);
 		mpfr_mul_2si(x, x, -lsb, GMP_RNDN); // exact
-		mpfr_get_z(h.get_mpz_t(), x,  GMP_RNDN); // rounding takes place here     
+		mpfr_get_z(h.get_mpz_t(), x,  GMP_RNDN); // rounding takes place here
 
 		if(h<0){
 			h+= (mpz_class(1)) << size;
@@ -226,7 +226,7 @@ namespace flopoco{
 		if(margins==0||margins==1)
 			result<<"\"";
 
-		return result.str(); 
+		return result.str();
 	}
 
 
@@ -243,12 +243,12 @@ namespace flopoco{
 	// TODO remove this function
 	void printBinNum(ostream& o, uint64_t x, int size)
 	{
-		uint64_t po2 = ((uint64_t) 1)<<size; 
+		uint64_t po2 = ((uint64_t) 1)<<size;
 		char bit;
 
 		if(size>=64){
 			cerr << "\n printBinNum: size larger than 64" << endl;
-			exit(1);    
+			exit(1);
 		}
 
 		if ((x<0) || (x >= po2) ) {
@@ -269,7 +269,7 @@ namespace flopoco{
 	}
 
 	void printBinNumGMP(ostream& o, mpz_class x, int size){
-		mpz_class px;  
+		mpz_class px;
 		if(x<0) {
 			o<<"-";
 			px=-x;
@@ -303,7 +303,7 @@ namespace flopoco{
 	double intpow2(int power)
 	{
 		double x = 1.0;
-		if(power>0){ 
+		if(power>0){
 			for (int i = 0; i < power; i++)
 				x *= 2.0;
 		} else if(power<0) {
@@ -312,11 +312,11 @@ namespace flopoco{
 		}
 		return x;
 	}
-	
+
 	mpz_class mpzpow2(unsigned int power)
 	{
 		mpz_class x = 1;
-		if(power>0){ 
+		if(power>0){
 			for (unsigned int i = 0; i < power; i++)
 				x *= 2;
 		}
@@ -348,7 +348,7 @@ namespace flopoco{
 
 	int intlog(mpz_class base, mpz_class number)
 	{
-		mpz_class poBase = 1; 
+		mpz_class poBase = 1;
 		int result = 0;
 		while (poBase <= number) {
 			poBase *= base;
@@ -359,7 +359,7 @@ namespace flopoco{
 
 	int intlog2(mpz_class number)
 	{
-		mpz_class po2 = 1; 
+		mpz_class po2 = 1;
 		int result = 0;
 		while (po2 <= number) {
 			po2 *= 2;
@@ -484,7 +484,7 @@ namespace flopoco{
 			tmp = r;
 			o = o + (tmp<<(iterations*10));
 		}
-	
+
 		return o;
 	}
 #else
@@ -495,7 +495,7 @@ namespace flopoco{
 		return o;
 	}
 
-#endif 
+#endif
 
 	string zg(int n, int margins){
 		ostringstream left,full, right, zeros;
@@ -513,49 +513,49 @@ namespace flopoco{
 		case -1: return left.str();  break;
 		case  0: return full.str();  break;
 		case  1: return right.str(); break;
-		default: return full.str(); 
+		default: return full.str();
 		}
-	
+
 		//default (will not get here)
 		return "";
 	}
-	
+
 	string og(int n, int margins){
 		ostringstream left,full, right, ones;
 		int i;
-		
+
 		for (i=1; i<=n;i++)
 			ones<<"1";
-		
+
 		left<<"\""<<ones.str();
 		full<<left.str()<<"\"";
 		right<<ones.str()<<"\"";
-		
+
 		switch(margins){
 			case -2: return ones.str(); break;
 			case -1: return left.str();  break;
 			case  0: return full.str();  break;
 			case  1: return right.str(); break;
-			default: return full.str(); 
+			default: return full.str();
 		}
-		
+
 		//default (will not get here)
 		return "";
 	}
-	
+
 	int oneGenerator(int n)
 	{
 		int result;
-		
+
 		result = 0;
 		for(int i=0; i<n; i++)
 		{
 			result = (result<<1) + 1;
 		}
-		
+
 		return result;
 	}
-	
+
 
 	// Does not handle multi-byte encodings.
 	char vhdlizeChar(char c)
@@ -593,10 +593,10 @@ namespace flopoco{
 	{
 		string result(expr.size(), 0);
 		transform(expr.begin(), expr.end(), result.begin(), ptr_fun(vhdlizeChar));
-	
+
 		// Multiple consecutive underscores are forbidden in VHDL identifiers!
 		string::iterator newend = unique(result.begin(), result.end(), bothUnderscore);
-	
+
 		// Leading underscores and numbers are forbidden in VHDL identifiers!
 		//	if(isdigit(*result.begin()) || *result.begin() == '_')
 		//		*result.begin() = 'x';
@@ -619,7 +619,7 @@ namespace flopoco{
 	string vhdlize(int num)
 	{
 		ostringstream oss;
-		if (num<0) 
+		if (num<0)
 		  oss << "M" << (-num);
 		else
 		  oss << num;
@@ -628,25 +628,39 @@ namespace flopoco{
 
 	string mpz2string(mpz_class x)
 	{
-		return x.get_str(10);	
+		return x.get_str(10);
 	}
 
-	double getMaxInputDelays( map<string, double> inputDelays )
+	double getMaxInputDelays(map<string, double> inputDelays)
 	{
 		double maxInputDelay = 0;
 		map<string, double>::iterator iter;
 		for (iter = inputDelays.begin(); iter!=inputDelays.end();++iter)
 			if (iter->second > maxInputDelay)
 				maxInputDelay = iter->second;
-			
+
 		return maxInputDelay;
 	}
+
+	/*
+	double getMaxInputDelays( vector<Signal*> inputList )
+	{
+		double maxInputDelay = 0;
+
+		for (unsigned int i=0; i<inputList.size(); i++)
+			if ((inputList[i]->type() == Signal::in)
+					&& (inputList[i]->getCriticalPath() > maxInputDelay))
+				maxInputDelay = inputList[i]->getCriticalPath();
+
+		return maxInputDelay;
+	}
+	*/
 
 	string printInputDelays( map <string, double> inputDelays){
 		ostringstream o;
 		map<string, double>::iterator iter;
 		for (iter = inputDelays.begin(); iter!=inputDelays.end();++iter)
-			o << "The delay for " << iter->first << " is " << iter->second << ";   ";			
+			o << "The delay for " << iter->first << " is " << iter->second << ";   ";
 		return o.str();
 	}
 
@@ -654,15 +668,15 @@ namespace flopoco{
 		ostringstream o;
 		map<string, int>::iterator iter;
 		for (iter = inputDelays.begin(); iter!=inputDelays.end();++iter)
-			o  << endl << "   " << iter->first << " cycle " << iter->second;			
+			o  << endl << "   " << iter->first << " cycle " << iter->second;
 		return o.str();
 	}
-	
+
 	string printVectorContent( vector< pair<string, int> > table){
 		ostringstream o;
 		vector< pair<string, int> >::iterator iter;
 		for (iter = table.begin(); iter!=table.end();++iter)
-			o  << endl <<"   " << (*iter).first << " cycle " << (*iter).second;			
+			o  << endl <<"   " << (*iter).first << " cycle " << (*iter).second;
 		return o.str();
 	}
 
@@ -715,7 +729,7 @@ namespace flopoco{
 		stream << id << n << id2 << n2;
 		return stream.str();
 	}
-	
+
 	string join( std::string id, int n, std::string id2, int n2, std::string id3)
 	{
 		ostringstream stream;
@@ -723,7 +737,7 @@ namespace flopoco{
 		stream << id << n << id2 << n2 << id3;
 		return stream.str();
 	}
-	
+
 	string join( std::string id, int n, std::string id2, int n2, std::string id3, int n3)
 	{
 		ostringstream stream;
@@ -739,7 +753,7 @@ namespace flopoco{
 		stream << id << id2 << n2 << id3;
 		return stream.str();
 	}
-	
+
 	string join( std::string id, string n)
 	{
 		return id+n;
@@ -780,7 +794,7 @@ namespace flopoco{
 	string align( int left, string s, int right ){
 		ostringstream tmp;
 		tmp << "(" << (left>0?zg(left,0) + " & ":"") << s << (right>0?" & " +zg(right, 0):"") << ")";
-		return tmp.str(); 
+		return tmp.str();
 	}
 
 	string to_lowercase(const std::string& s){
@@ -789,7 +803,7 @@ namespace flopoco{
 		t += tolower(*i);
 		return t;
 	}
-	
+
 	map<string, double> inDelayMap(string s, double d){
 		map<string, double> m;
 		m[s] = d;
@@ -842,7 +856,7 @@ namespace flopoco{
 
 	string center(const string& str, char padchar, int width) {
     int len = str.length();
-    if(width < len) 
+    if(width < len)
 			return str;
     int diff = width - len;
     int pad1 = diff/2;

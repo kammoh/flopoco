@@ -11,10 +11,11 @@ namespace flopoco{
 	  
 		public:
 			/* Costructor : w is the input and output size; n is the number of taps */
-			ShiftReg(Target* target, int w, int n, map<string, double> inputDelays = emptyDelayMap); 
+			ShiftReg(Target* target, int w, int n); 
 
 			/* Destructor */
 			~ShiftReg();
+
 
 			// Below all the functions needed to test the operator
 			/* the emulate function is used to simulate in software the operator
@@ -23,6 +24,13 @@ namespace flopoco{
 
 			/* function used to create Standard testCase defined by the developper */
 			void buildStandardTestCases(TestCaseList* tcl);
+
+
+			/** Factory method that parses arguments and calls the constructor */
+			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+
+			/** Factory register method */
+			static void registerFactory();
 
 	  	private:
 			int w; // input and output size

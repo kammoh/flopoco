@@ -235,17 +235,17 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 						usage(argv[0],"extra");
 					}
 					// if previous options had changed it
-					target->setFrequency(oldTarget->frequency());
-					target->setUseHardMultipliers(oldTarget->getUseHardMultipliers());
+					getTarget()->setFrequency(oldTarget->frequency());
+					getTarget()->setUseHardMultipliers(oldTarget->getUseHardMultipliers());
 					if (oldTarget->isPipelined()) 
-						target->setPipelined();
+						getTarget()->setPipelined();
 					else 
-						target->setNotPipelined();
+						getTarget()->setNotPipelined();
 				}
 
 				else if (o == "pipeline") {
-					if(v=="yes") target->setPipelined();
-					else if(v=="no")  target->setNotPipelined();
+					if(v=="yes") getTarget()->setPipelined();
+					else if(v=="no")  getTarget()->setNotPipelined();
 					else {
 						cerr<<"ERROR: pipeline option should be yes or no,    got "<<v<<"."<<endl; 
 						usage(argv[0],"extra");
@@ -254,17 +254,17 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 				else if (o == "frequency") {
 					int freq = atoi(v.c_str());
 					if (freq>1 && freq<10000) {
-						target->setFrequency(1e6*(double)freq);
+						getTarget()->setFrequency(1e6*(double)freq);
 						if(verbose) 
-							cerr << "Frequency set to "<<target->frequency()<< " Hz" <<endl; 
+							cerr << "Frequency set to "<<getTarget()->frequency()<< " Hz" <<endl; 
 					}
 					else {
 						cerr<<"WARNING: frequency out of reasonible range, ignoring it."<<endl; 
 					}
 				}
 				else if (o == "DSP_blocks") {
-					if(v=="yes") target->setUseHardMultipliers(true);
-					else if(v=="no")  target->setUseHardMultipliers(false);
+					if(v=="yes") getTarget()->setUseHardMultipliers(true);
+					else if(v=="no")  getTarget()->setUseHardMultipliers(false);
 					else {
 						cerr<<"ERROR: DSP_blocks option should be yes or no,    got "<<v<<"."<<endl; 
 						usage(argv[0],"extra");
@@ -625,7 +625,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 			else {
 				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
 				cerr << "> IntAdder, wIn="<<wIn<<endl  ;
-				op = new IntAdder(target,wIn, inDelayMap("X",target->ffDelay() + target->localWireDelay()) );
+				op = new IntAdder(target,wIn, inDelayMap("X",getTarget()->ffDelay() + getTarget()->localWireDelay()) );
 				addOperator(oplist, op);
 			}    
 		}
@@ -669,12 +669,12 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 				int bufferedIn = atoi(argv[i++]);
 				double inputDelay = atof(argv[i++]);
 
-				cerr << "> IntAdder, wIn="<<wIn<<", frequency="<<target->frequency()<< " inputDelay="<<inputDelay<< endl  ;
+				cerr << "> IntAdder, wIn="<<wIn<<", frequency="<<getTarget()->frequency()<< " inputDelay="<<inputDelay<< endl  ;
 
 				map <string, double> delayMap;
 
 				if (bufferedIn){
-					delayMap["X"] = target->ffDelay() + target->localWireDelay() + 1.0e-25;
+					delayMap["X"] = getTarget()->ffDelay() + getTarget()->localWireDelay() + 1.0e-25;
 				}else{
 					delayMap["X"] = inputDelay;
 				}
@@ -713,7 +713,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 				int wIn = checkStrictlyPositive(argv[i++], argv[0]);
 				int N   = checkStrictlyPositive(argv[i++], argv[0]);
 				cerr << "> IntNAdder, wIn="<<wIn<<" N="<<N<<endl  ;
-				op = new IntNAdder(target, wIn, N, inDelayMap("X0",target->localWireDelay()));
+				op = new IntNAdder(target, wIn, N, inDelayMap("X0",getTarget()->localWireDelay()));
 				addOperator(oplist, op);
 			}    
 		}
@@ -778,7 +778,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 				if (g==1)
 					op = new LongIntAdderAddAddMuxGen1(target,wIn);
 				else if (g==2)
-					op = new LongIntAdderAddAddMuxGen2(target,wIn, inDelayMap("X",target->ffDelay() + target->localWireDelay() ));
+					op = new LongIntAdderAddAddMuxGen2(target,wIn, inDelayMap("X",getTarget()->ffDelay() + getTarget()->localWireDelay() ));
 				else 
 					throw "Generation parameter is either 1 or 2";
 				addOperator(oplist, op);
@@ -806,7 +806,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 				if (g==1)
 					op = new LongIntAdderCmpCmpAddGen1(target,wIn);
 				else if (g==2)
-					op = new LongIntAdderCmpCmpAddGen2(target,wIn, inDelayMap("X",target->ffDelay() + target->localWireDelay() ));
+					op = new LongIntAdderCmpCmpAddGen2(target,wIn, inDelayMap("X",getTarget()->ffDelay() + getTarget()->localWireDelay() ));
 				else 
 					throw "Generation parameter is either 1 or 2";
 				addOperator(oplist, op);
@@ -823,7 +823,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 				if (g==1)
 					op = new LongIntAdderCmpAddIncGen1(target,wIn);
 				else if (g==2)
-					op = new LongIntAdderCmpAddIncGen2(target,wIn, inDelayMap("X",target->ffDelay() + target->localWireDelay() ));
+					op = new LongIntAdderCmpAddIncGen2(target,wIn, inDelayMap("X",getTarget()->ffDelay() + getTarget()->localWireDelay() ));
 				else 
 					throw "Generation parameter is either 1 or 2";
 				addOperator(oplist, op);

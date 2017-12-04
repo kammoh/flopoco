@@ -39,8 +39,8 @@ namespace flopoco{
 		ostringstream name;
 		srcFileName="FixFunctionByTable";
 
-		name<<"FixFunctionByTable_"<<getNewUId();
-		setName(name.str());
+		name<<"FixFunctionByTable";
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin (2010-2014)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
@@ -63,7 +63,7 @@ namespace flopoco{
 		f->emulate(tc, true /* correct rounding */);
 	}
 
-	OperatorPtr FixFunctionByTable::parseArguments(Target *target, vector<string> &args)
+	OperatorPtr FixFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 	{
 		bool signedIn;
 		int lsbIn, msbOut, lsbOut;

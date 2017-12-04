@@ -5,7 +5,6 @@
 #include <gmpxx.h>
 #include "Operator.hpp"
 #include "IntConstDiv.hpp"
-#include "TestState.hpp"
 
 
 namespace flopoco{
@@ -14,7 +13,7 @@ namespace flopoco{
 	{
 	public:
 		/** @brief The generic constructor */
-		FPConstDiv(Target* target, int wEIn, int wFIn, int wEOut, int wFOut, int d, int dExp=0, int alpha=-1);
+		FPConstDiv(Target* target, int wEIn, int wFIn, int wEOut, int wFOut, int d, int dExp=0, int alpha=-1, int arch=0);
 
 
 		~FPConstDiv();
@@ -32,13 +31,11 @@ namespace flopoco{
 
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		/** Factory register method */ 
 		static void registerFactory();
 
-		/** @brief Static method used for tests on the Operator */
-		static void nextTest ( TestState * ts );
 
 	private:
 		int d; /**< The operator divides by d.2^dExp */

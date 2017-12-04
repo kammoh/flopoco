@@ -8,7 +8,6 @@
 #include "Operator.hpp"
 #include "Table.hpp"
 #include "BitHeap/BitHeap.hpp"
-#include "TestState.hpp"
 
 #include "IntMult//MultiplierBlock.hpp"
 
@@ -132,12 +131,9 @@ namespace flopoco {
 
 		void buildStandardTestCases(TestCaseList* tcl);
 		
-		// Static method used for tests on the Operator
-		static void nextTest ( TestState * ts );
-
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		/** Factory register method */ 
 		static void registerFactory();

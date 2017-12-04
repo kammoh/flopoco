@@ -62,11 +62,11 @@ namespace flopoco{
 		vhdl << tab << declare("expY", wEY_) << " <= Y"<< range(wEY_ + wFY_ -1, wFY_) << ";" << endl;
 
 		//Add exponents and substract bias
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wEX+2));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
 		vhdl << tab << declare("expSumPreSub", wEX_+2) << " <= (\"00\" & expX) + (\"00\" & expY);" << endl;
 		vhdl << tab << declare("bias", wEX_+2) << " <= CONV_STD_LOGIC_VECTOR(" << intpow2(wER-1)-1 << ","<<wEX_+2<<");"<< endl;
 
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(wEX+2));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
 		vhdl << tab << declare("expSum",wEX+2) << " <= expSumPreSub - bias;" << endl;
 		double exponentCriticalPath=getCriticalPath();
 
@@ -96,7 +96,6 @@ namespace flopoco{
 		                                                     false  /* roundCompensate*/);
 #endif
 
-		oplist.push_back(intmult_);
 
 		inPortMap( intmult_, "X", "sigX");
 		inPortMap( intmult_, "Y", "sigY");
@@ -128,7 +127,7 @@ namespace flopoco{
 
 			vhdl << tab<< declare("norm") << " <= sigProd" << of(sigProdSize -1) << ";"<<endl;
 
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wEX+2));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
 			double expPostNormCriticalPath=getCriticalPath();
 			vhdl << tab<< "-- exponent update"<<endl;
 			vhdl << tab<< declare("expPostNorm", wEX_+2) << " <= expSum + (" << zg(wEX_+1,0) << " & norm);"<<endl;
@@ -144,7 +143,7 @@ namespace flopoco{
 				vhdl << tab << declare("resSig", wFR_) << " <= sigProd" << range(wFX_+wFY_,0) << " & " <<   zg(1+wFR_ - (wFX_+wFY_+2) , 0)<<" when norm='1' else"<<endl;
 				vhdl << tab <<"                      sigProd" << range(wFX_+wFY_-1,0) << " & " << zg(1+wFR_ - (wFX_+wFY_+2) + 1 , 0) << ";"<<endl;
 
-				manageCriticalPath(target->localWireDelay() + target->lutDelay());
+				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 				vhdl << tab <<"with expPostNorm" << range(wER_+1, wER_) << " select"<<endl;
 				vhdl << tab << declare("excPostNorm",2) << " <=  \"01\"  when  \"00\","<<endl;
 				vhdl << tab <<"                            \"10\"             when \"01\", "<<endl;
@@ -159,7 +158,7 @@ namespace flopoco{
 			}
 			else{
 				vhdl << tab<< "-- significand normalization shift"<<endl;
-				manageCriticalPath(target->localWireDelay() + target->lutDelay());
+				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 				vhdl << tab << declare("sigProdExt", sigProdSize) << " <= sigProd" << range(sigProdSize-2, 0) << " & " << zg(1,0) <<" when norm='1' else"<<endl;
 				vhdl << tab << "                      sigProd" << range(sigProdSize-3, 0) << " & " << zg(2,0) << ";"<<endl;
 
@@ -171,10 +170,10 @@ namespace flopoco{
 					vhdl << tab << declare("sticky") << " <= sigProdExt" << of(wFX_+wFY + 1 - wFR) << ";" << endl;
 
 					if(wFX_+wFY + 1 - wFR>0) // otherwise the user has been stupid anyway
-						manageCriticalPath(target->localWireDelay() + target->eqConstComparatorDelay(sigProdSize-1 - wFR));
+						manageCriticalPath(getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(sigProdSize-1 - wFR));
 					vhdl << tab << declare("guard") << " <= '0' when sigProdExt" << range(wFX_+wFY + 1 - wFR - 1,0) << "=" << zg(wFX_+wFY + 1 - wFR - 1 +1,0) <<" else '1';" << endl;
 
-					manageCriticalPath(target->localWireDelay() + target->lutDelay());
+					manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 					vhdl << tab << declare("round") << " <= sticky and ( (guard and not(sigProdExt" << of(wFX_+wFY + 1 - wFR+1) <<")) or ("
 					     << "sigProdExt" << of(wFX_+wFY + 1 - wFR+1) << " ))  ;" << endl;
 				}
@@ -182,8 +181,7 @@ namespace flopoco{
 					{
 					vhdl << tab << declare("round") << " <= '1' ;" << endl;
 				}
-				IntAdder* intadd_ = new IntAdder(target, 2 + wER_ + wFR_, inDelayMap("X", getCriticalPath() ));
-				oplist.push_back(intadd_);
+				IntAdder* intadd_ = new IntAdder(target, 2 + wER_ + wFR_);
 
 				inPortMap    (intadd_, "X",   "expSig");
 				inPortMapCst (intadd_, "Y",   zg(2 + wER_ + wFR_,0));
@@ -273,60 +271,6 @@ namespace flopoco{
 		mpfr_clears(x, y, r, NULL);
 	}
 
-	/**
-	* Method returning a vector containing values of the valid TestState ts up-to-dated
-	* it also update the multimap testMemory and increase the counter for the treated operator
-	**/
-	void FPMult::nextTest ( TestState * ts ){
-		string opName = "FPMult";
-
-		// establishment of the different values, pay attention to the order !!
-		do{
-			// pick a random num following a specific distribution
-			float wEf = pickRandomNum ( );
-			int wE = ceil ( wEf );
-			// modify the number pointed in the involved TestState
-			ts -> vectInt [ 0 ] = wE;
-
-			int wF_in;
-			do{
-				float wF_inf = pickRandomNum ( 3.0*wE );
-				wF_in = ceil ( wF_inf );
-			}while ( wF_in <= wE );
-			ts -> vectInt [ 1 ] = wF_in;
-
-			int wF_out;
-			do{
-				float wF_outf = pickRandomNum ( 3.0*wE );
-				wF_out = ceil ( wF_outf );
-			}while ( wF_out <= wE );
-			ts -> vectInt [ 2 ] = wF_out;
-
-
-		}while (Operator::checkExistence ( *ts, opName ) );
-		// Add the operator to testMemory (used by checkExistence for verification)
-		Operator::testMemory.insert ( pair < string, TestState > ( opName, *ts ) );
-		// increase the counter of the treated operator indicating how many tests have been done on it
-		ts -> counter++;
-	}
-
-	OperatorPtr FPMult::parseArguments(Target *target, vector<string> &args) {
-		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
-		int wF_in;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF_in);
-		int wF_out;
-		UserInterface::parsePositiveInt(args, "wFout", &wF_out);
-#if 0 // These are really for internal use
-		bool norm;
-		UserInterface::parseBoolean(args, "norm", &norm);
-		bool correctRounding;
-		UserInterface::parseBoolean(args, "correctRounding", &correctRounding);
-#endif
-		if(wF_out==0)
-			wF_out=wF_in;
-		return new FPMult(target, wE, wF_in, wE, wF_in, wE, wF_out);
-	}
 
 	void FPMult::registerFactory(){
 		UserInterface::add("FPMult", // name

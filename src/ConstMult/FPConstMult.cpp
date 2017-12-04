@@ -90,7 +90,6 @@ namespace flopoco{
 			if(!mantissa_is_one) {
 				// sub component
 				icm = new IntConstMult(target, wF_in+1, cstIntSig);
-				oplist.push_back(icm);
 			}
 
 		}
@@ -174,6 +173,7 @@ namespace flopoco{
 			expUpdate--;
 		}
 		
+		REPORT(DEBUG, "fraction " << a_ << "/" << b_ << " rewritten as 2^" << expUpdate << "*" << a << "/" << b  );
 		if(b==1) {
 			throw("This fraction does not have an infinite binary representation -- not implemented yet");
 		}
@@ -204,7 +204,7 @@ namespace flopoco{
 			headerSize=intlog2(header);
 
 			cc = aa - header*bb; // remainder
-			REPORT(DEBUG, "fraction " << a_ << "/" << b_ << " rewritten as " << header << "+" << cc << "/" << bb );
+			REPORT(DEBUG, "fraction " << a << "/" << b << " rewritten as " << header << "+" << cc << "/" << bb );
 			// Now look for the order of 2 modulo bb
 			periodSize=1;
 			mpz_class twotoperiodSize=2;
@@ -282,7 +282,7 @@ namespace flopoco{
 			
 
 			cst_exp_when_mantissa_1_2 = mpfr_get_exp(mpfrC) - 1; //mpfr_get_exp() assumes significand in [1/2,1)  
-			cst_exp_when_mantissa_1_2 += expUpdate;
+			//			cst_exp_when_mantissa_1_2 += expUpdate;
 			cst_exp_when_mantissa_int = cst_exp_when_mantissa_1_2 - cstWidth;
 
 			// Do we have trailing zeroes in the pattern ?
@@ -298,7 +298,6 @@ namespace flopoco{
 
 
 			icm = new IntConstMult(target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
-			oplist.push_back(icm);
 
 		}
 		
@@ -367,7 +366,6 @@ namespace flopoco{
 		
 		if(!constant_is_zero && !mantissa_is_one) {
 			icm = new IntConstMult(target, wF_in+1, cstIntSig);
-			oplist.push_back(icm);
 		}
 			
 		
@@ -602,6 +600,7 @@ namespace flopoco{
 			vhdl << tab << declare("expfrac_rnd",   wE_out+1+wF_out) << " <= r_exp_br & r_frac;"<<endl;
 		} 
 		else {
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_out+1+wF_out+1));
 			vhdl << tab << declare("expfrac_br",   wE_out+1+wF_out+1) << " <= r_exp_br & shifted_frac;"<<endl;
 			// add the rounding bit //TODO: No  round to nearest here. OK for faithful. For CR, does this case ever appear?
 			vhdl << tab << declare("expfrac_rnd1",  wE_out+1+wF_out+1) << " <= (("<<wE_out+1+wF_out <<" downto 1 => '0') & '1') + expfrac_br;"<<endl;
@@ -686,36 +685,87 @@ namespace flopoco{
 		}
 	}
 
-	OperatorPtr FPConstMult::parse(Target* target, vector<string>& args)
+
+	
+	void FPConstMult::buildStandardTestCases(TestCaseList* tcl){
+		TestCase *tc;
+
+		tc = new TestCase(this); 
+		tc->addFPInput("X", 1.0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addFPInput("X", FPNumber::plusDirtyZero);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addFPInput("X", FPNumber::minusDirtyZero);
+		emulate(tc);
+		tcl->add(tc);
+	}
+
+
+	
+	OperatorPtr FPConstMult::parse(OperatorPtr parentOp, Target* target, vector<string>& args)
 	{
 		int wE_in, wE_out, wF_in, wF_out, cst_width;
 		string constant;
 
-		UserInterface::parsePositiveInt(args, "cst_width", &cst_width);
 		UserInterface::parseStrictlyPositiveInt(args, "wE_in", &wE_in);
 		UserInterface::parseStrictlyPositiveInt(args, "wE_out", &wE_out);
 		UserInterface::parseStrictlyPositiveInt(args, "wF_in", &wF_in);
 		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		UserInterface::parsePositiveInt(args, "cst_width", &cst_width);
 		UserInterface::parseString(args, "constant", &constant);
 
 		return new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, cst_width, constant);
+	}
+
+	OperatorPtr FPConstMult::parseRational(OperatorPtr parentOp, Target* target, vector<string>& args)
+	{
+		int wE_in, wE_out, wF_in, wF_out, a, b;
+
+		UserInterface::parseStrictlyPositiveInt(args, "wE_in", &wE_in);
+		UserInterface::parseStrictlyPositiveInt(args, "wE_out", &wE_out);
+		UserInterface::parseStrictlyPositiveInt(args, "wF_in", &wF_in);
+		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		UserInterface::parseStrictlyPositiveInt(args, "a", &a);
+		UserInterface::parseStrictlyPositiveInt(args, "b", &b);
+
+		return new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, a, b);
 	}
 
 	void FPConstMult::registerFactory()
 	{
 		UserInterface::add(
 					"FPConstMult", 
-					"Floating-point constant multiplier using the shift-and-add approach. The constant is provided as sign, integral significand and integral exponent",
+					"Floating-point constant multiplier using the shift-and-add approach.",
 					"ConstMultDiv",
 					"",
 					"wE_in(int): input exponent width;"
 					"wF_in(int): input significand part width;"
 					"wE_out(int): output exponent width;"
 					"wF_out(int): output significand width;"
-					"constant(string): constant in sollya formalism (e.g. \"cos(3*pi/2)\");"
+					"constant(string): constant in sollya formalism (e.g. \"cos(3*pi/2)\" or \"13176795b-22\");"
 					"cst_width(int)=0:constant precision. If set to zero, the actual width will be computed in order to get a faithful result.",
 					"An early version of the technique used is described in  <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
 					parse
+				);
+		UserInterface::add(
+					"FPConstMultRational", 
+					"Correctly rounded floating-point multiplier by a rational constant.",
+					"ConstMultDiv",
+					"",
+					"wE_in(int): input exponent width;"
+					"wF_in(int): input significand part width;"
+					"wE_out(int): output exponent width;"
+					"wF_out(int): output significand width;"
+					"a(int): numerator;"
+					"b(int): denominator",
+					"The technique used is described in  <a href=\"bib/flopoco.html#Dinechin2012-TCASII\">this article</a>.",
+					parseRational
 				);
 	}
 }

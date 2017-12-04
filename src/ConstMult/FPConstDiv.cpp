@@ -34,7 +34,7 @@ namespace flopoco{
 
 	// The expert version 
 
-	FPConstDiv::FPConstDiv(Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, int d_, int dExp_, int alpha_):
+	FPConstDiv::FPConstDiv(Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, int d_, int dExp_, int alpha_, int arch):
 		Operator(target), 
 		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), wFOut(wFOut_), d(d_), dExp(dExp_), alpha(alpha_)
 	{
@@ -44,13 +44,14 @@ namespace flopoco{
 			wFOut=wFIn;
 		srcFileName="FPConstDiv";
 		ostringstream name;
-		name <<"FPConstDiv_"<<wEIn<<"_"<<wFIn<<"_"<<wEOut<<"_"<<wFOut<<"_"<<d<<"_";
+		name <<"FPConstDiv_"<<wEIn<<"_"<<wFIn<<"_"<<wEOut<<"_"<<wFOut<<"_"<<d<< "_"  << arch<<"_";
 		if(dExp>=0)
 			name<<dExp<<"_";
 		else
 			name<<"M"<<-dExp<<"_";
-		if(target->isPipelined()) 
-			name << target->frequencyMHz() ;
+		
+		if(getTarget()->isPipelined()) 
+			name << getTarget()->frequencyMHz() ;
 		else
 			name << "comb";
 		uniqueName_ = name.str();
@@ -92,7 +93,7 @@ namespace flopoco{
 		addFPInput("X", wEIn, wFIn);
 		addFPOutput("R", wEOut, wFOut);
 
-		setCopyrightString("Florent de Dinechin (2007-2011)");
+		setCopyrightString("Florent de Dinechin (2007-2017)");
 
 		int gamma = intlog2(d);
 		int s = gamma-1;
@@ -104,7 +105,7 @@ namespace flopoco{
 		vhdl << tab << declare("x_exp", wEIn) << " <=  X("<<wEIn<<"+"<<wFIn<<"-1 downto "<<wFIn<<");"<<endl;
 		vhdl << tab << declare("x_sig", wFIn+1) << " <= '1' & X("<<wFIn-1 <<" downto 0);"<<endl;
 
-		manageCriticalPath(target->localWireDelay() + target->adderDelay(gamma+1));
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(gamma+1));
 		vhdl << tab << declare("Diffmd", gamma+1) << " <=  ('0' & x_sig" << range(wFIn, wFIn-gamma+1)<< ") - ('0' & CONV_STD_LOGIC_VECTOR(" << d << ", " << gamma <<")) ;" << endl;
 		vhdl << tab << declare("mltd") << " <=   Diffmd("<< gamma<<");" << endl;
 
@@ -114,7 +115,7 @@ namespace flopoco{
 		if(d*intpow2(dExp) >1.0) { // only underflow possible
 			vhdl <<endl << tab << "-- exponent processing. For this d we may only have underflow" << endl;
 			
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wEOut+1));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEOut+1));
 			vhdl << tab << declare("r_exp0", wEOut+1) << " <=  ('0' & x_exp) - ( CONV_STD_LOGIC_VECTOR(" << s+1+dExp << ", " << wEOut+1 <<")) + (not mltd);" << endl;
 			
 			vhdl << tab << declare("underflow") << " <=  r_exp0(" << wEOut << ");" << endl;
@@ -127,7 +128,7 @@ namespace flopoco{
 			{
 			vhdl <<endl << tab << "-- exponent processing. For this d we may only have overflow" << endl;
 			
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wEOut+1));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEOut+1));
 			vhdl << tab << declare("r_exp0", wEOut+1) << " <=  ('0' & x_exp) + ( CONV_STD_LOGIC_VECTOR(" << -(s+1+dExp) << ", " << wEOut+1 <<")) + (not mltd);" << endl;
 			
 			vhdl << tab << declare("overflow") << " <=  r_exp0(" << wEOut << ");" << endl;
@@ -146,13 +147,12 @@ namespace flopoco{
 		}
 		else {// Actual division
 			// mux = diffusion of the control signal + 1 LUT
-			manageCriticalPath(target->localWireDelay(wFIn) + target->lutDelay());
+			manageCriticalPath(getTarget()->localWireDelay(wFIn) + getTarget()->lutDelay());
 			vhdl << tab << declare("divIn0", intDivSize) << " <= '0' & x_sig & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
 			vhdl << tab << declare("divIn1", intDivSize) << " <= x_sig & '0' & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
 			vhdl << tab << declare("divIn", intDivSize) << " <= divIn1 when mltd='1' else divIn0;" << endl;
 			
-			icd = new IntConstDiv(target, intDivSize, d,   alpha, false, inDelayMap("X",target->localWireDelay()+getCriticalPath()));
-			oplist.push_back(icd);
+			icd = new IntConstDiv(target, intDivSize, d, alpha, arch);
 			
 			inPortMap  (icd, "X", "divIn");
 			outPortMap (icd, "Q","quotient");
@@ -233,55 +233,15 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
-	/**
-	* Method returning a vector containing values of the valid TestState ts up-to-dated
-	* it also update the multimap testMemory and increase the counter for the treated operator
-	**/
-	void FPConstDiv::nextTest ( TestState * ts ){
-		string opName = "FPConstDiv";
-
-		// establishment of the different values, pay attention to the order !!
-		do{
-			// pick a random num following a specific distribution
-			int wE;
-			do{
-				float wEf  = pickRandomNum ( );
-				wE = ceil ( wEf );
-			} while ( wE < 3 );
-			// modify the number pointed in the involved TestState
-			ts -> vectInt [ 0 ] = wE;
-
-			int wF;
-			do{
-				float wFf = pickRandomNum ( 3.0 * wE );
-				wF = ceil ( wFf );
-			}while ( wF <= wE );
-			ts -> vectInt [ 1 ] = wF;
-
-			int d;
-			do{
-				float df = pickRandomNum ( 0.0, 5, 3 );
-				d = ceil ( df );
-			}while ( d > 10 );
-			ts -> vectInt [ 2 ] = d;
-
-
-		}while ( Operator::checkExistence ( *ts, opName ) );
-		// Add the operator to testMemory (used by checkExistence for verification)
-		Operator::testMemory.insert ( pair < string, TestState > ( opName, *ts) );
-		// increase the counter of the treated operator indicating how many tests have been done on it
-		ts -> counter++;
-	}
-
-
-	OperatorPtr FPConstDiv::parseArguments(Target *target, vector<string> &args) {
-		int wE,wF, d, dExp, alpha;
+	OperatorPtr FPConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		int wE,wF, d, dExp, alpha, arch;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		UserInterface::parseStrictlyPositiveInt(args, "d", &d);
 		UserInterface::parseInt(args, "dExp", &dExp);
+		UserInterface::parsePositiveInt(args, "arch", &arch);
 		UserInterface::parseInt(args, "alpha", &alpha);
-		return new FPConstDiv(target, wE, wF,  wE,  wF, d,  dExp, alpha);
+		return new FPConstDiv(target, wE, wF,  wE,  wF, d,  dExp, alpha, arch);
 	}
 
 	void FPConstDiv::registerFactory(){
@@ -293,6 +253,7 @@ namespace flopoco{
                         wF(int): mantissa size in bits;  \
                         d(int): small integer to divide by;  \
                         dExp(int)=0: binary exponent of d (the operator will divide by d.2^dExp);  \
+											  arch(int)=0: architecture used for the mantissa IntConstDiv -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal; \
                         alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
 											 "Correct rounding to the nearest (if you want other rounding modes contact us). This operator is described in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>.",
 											 FPConstDiv::parseArguments

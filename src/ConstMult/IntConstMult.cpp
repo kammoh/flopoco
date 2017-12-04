@@ -132,7 +132,6 @@ namespace flopoco{
 
 
 
-
 	/**
 	 * Finds and returns the index of the best ShiftAddDag in an array considering the priority flag. 
 	 * If the flag is not set, we consider both latency and surface.
@@ -220,14 +219,14 @@ namespace flopoco{
 
 					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
-					setCycleFromSignal(iname, false);
-					syncCycleFromSignal(jname, false);
 
 					max_children_delay = max(idelay,jdelay);
 
 					// Now decide what kind of adder we will use, and compute the remaining delay
+
 					use_pipelined_adder=false;
-					if (isSequential()) {
+#if 0 // Code from previous pipeline framework, should be replaced with systematic IntAdders
+					if (false && isSequential()) {
 						// First case: using a plain adder fits within the current pipeline level
 						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
 						if(tentative_delay <= 1./getTarget()->frequency()) {
@@ -245,15 +244,15 @@ namespace flopoco{
 							}
 							else { // Need to instantiate an IntAdder
 								use_pipelined_adder=true;
-								adder = new IntAdder(getTarget(), adder_size);
+								adder = new IntAdder(this, getTarget(), adder_size);
 								adder->changeName(getName() + "_" + sao->name + "_adder");
-								oplist.push_back(adder);
+								addSubComponent(adder);
 
 								partial_delay =  (adder->getOutDelayMap())["R"]; //  getTarget()->adderDelay(adder->getLastChunkSize());
 							}
 						}
 					}
-
+#endif
 					// Now generate the VHDL
 					if(shift==0) { // Add with no shift -- this shouldn't happen with current DAGs so the following code is mostly untested
 						if(op==Sub || op==RSub)
@@ -465,6 +464,9 @@ namespace flopoco{
 
 
 
+	int IntConstMult::getArea() {
+		return ( compute_total_cost(implementation->result) );
+	}
 
 
 
@@ -481,7 +483,7 @@ namespace flopoco{
 
 			//C++ wrapper for GMP does not work properly on win32, using mpz2string
 			name <<"IntConstMult_"<<xsize<<"_"<<mpz2string(n);
-			setName(name.str());
+			setNameWithFreqAndUID(name.str());
 
 
 			if (!mpz_cmp_ui(n.get_mpz_t(),0)){
@@ -499,67 +501,72 @@ namespace flopoco{
 				addInput("X", xsize);
 				addOutput("R", rsize);
 
-#if 1
+#if 1 // TODO Switch to the new bit heap framework if the #else code is ever plugged back
 				// adder tree, no bitheaps
 			 
 				// Build the implementation trees for the constant multiplier
 				ShiftAddDag* implem_try_right = buildMultBoothTreeFromRight(n);
 				ShiftAddDag* implem_try_left = buildMultBoothTreeFromLeft(n);
 				ShiftAddDag* implem_try_balanced = buildMultBoothTreeToMiddle(n);
-				ShiftAddDag* implem_try_euclidean0 = buildEuclideanTree(n);
-				ShiftAddDag* implem_try_Shifts = buildMultBoothTreeSmallestShifts(n);
+				//				ShiftAddDag* implem_try_euclidean0 = buildEuclideanTree(n);
+				//ShiftAddDag* implem_try_Shifts = buildMultBoothTreeSmallestShifts(n);
 
 				REPORT (DETAILED,"Building from the left: cost="<<costF(implem_try_left)<<" surface="<<costF(implem_try_left,1)<<" latency="<<costF(implem_try_left,-1) );
 				REPORT (DETAILED,"Building from the right: cost="<<costF(implem_try_right)<<" surface="<<costF(implem_try_right,1)<<" latency="<<costF(implem_try_right,-1) );
 				REPORT (DETAILED,"Building balanced: cost="<<costF(implem_try_balanced)<<" surface="<<costF(implem_try_balanced,1)<<" latency="<<costF(implem_try_balanced,-1) );
-				REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
-				REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
+				//REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
+				//REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
 
-				ShiftAddDag* tries[4];
+				ShiftAddDag* tries[5];
 				tries[1]=implem_try_left;
 				tries[0]=implem_try_right;
 				tries[2]=implem_try_balanced;
-				tries[3]=implem_try_euclidean0;
-				tries[4]=implem_try_Shifts;
+
+				// The following tries were unplugged as they don't bring anything.
+				// Anyway the state of the art is Martin Kumm's thesis.
+				//tries[3]=implem_try_euclidean0;
+				//tries[4]=implem_try_Shifts;
 
 				// Build in implementation a tree for the constant multiplier
-				unsigned int position=find_best_implementation( tries, 4);
+				unsigned int position=find_best_implementation( tries, 3);
 				switch (position) {
 					case 1: implementation=implem_try_left;
-							REPORT( INFO,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
 							delete implem_try_right;
 							delete implem_try_balanced;
-							delete implem_try_euclidean0;
-							delete implem_try_Shifts;
+							//delete implem_try_euclidean0;
+							//delete implem_try_Shifts;
 							break;
 					case 0: implementation=implem_try_right;
-							REPORT( INFO,"Building "<<n.get_mpz_t()<<" from the right was better");
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the right was better");
 							delete implem_try_left;
 							delete implem_try_balanced;
-							delete implem_try_euclidean0;
-							delete implem_try_Shifts;
+							//delete implem_try_euclidean0;
+							//delete implem_try_Shifts;
 							break;
 					case 2: implementation=implem_try_balanced;
-							REPORT( INFO,"Building "<<n.get_mpz_t()<<" with balanced method was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_balanced,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_balanced,-1) );
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" with balanced method was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_balanced,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_balanced,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
-							delete implem_try_euclidean0;
-							delete implem_try_Shifts;
+							///delete implem_try_euclidean0;
+							//delete implem_try_Shifts;
 							break;
-					case 3: implementation=implem_try_euclidean0;
-							REPORT( INFO,"Building "<<n.get_mpz_t()<<" with euclide 0 was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_euclidean0,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_euclidean0,-1) );
+#if 0
+				case 3: implementation=implem_try_euclidean0;
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" with euclide 0 was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_euclidean0,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_euclidean0,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
 							delete implem_try_balanced;
 							delete implem_try_Shifts;
 							break;
 					case 4: implementation=implem_try_Shifts;
-							REPORT( INFO,"Building "<<n.get_mpz_t()<<" targetting smallest shifts was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_Shifts,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_Shifts,-1) );
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" targetting smallest shifts was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_Shifts,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_Shifts,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
 							delete implem_try_balanced;
 							delete implem_try_euclidean0;
 							break;
+#endif
 					default:
 							throw string("Unknown error encountered");
 				}
@@ -579,8 +586,8 @@ namespace flopoco{
 
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
-				outDelayMap["R"] = delay;
 #else
+				// TODO Switch to the new bit heap framework if this code is ever plugged back
 				//experimenting with bitheaps
 				double delay;
 				delete implementation;
@@ -627,7 +634,6 @@ namespace flopoco{
 
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << bitheap->getSumName() << range(rsize-1, 0) << ";" << endl;
-				outDelayMap["R"] = getCriticalPath();
 #endif // bitheap or not
 			}
 		}
@@ -650,7 +656,7 @@ namespace flopoco{
 				name << "M" << -j;
 			else
 				name << j;
-			setName(name.str());
+			setNameWithFreqAndUID(name.str());
 
 			//implementation = new ShiftAddDag(this);
 
@@ -716,7 +722,6 @@ namespace flopoco{
 
 			// copy the top of the DAG into variable R
 			vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
-			outDelayMap["R"] = delay;
 
 		}
 
@@ -1168,7 +1173,7 @@ namespace flopoco{
 		int nsize = intlog2(n);
 
 		if((mpz_class(1) << (nsize-1)) == n) { // n is a power of two
-			REPORT(INFO, "Power of two");
+			REPORT(DEBUG, "Power of two");
 			result= tree_try->provideShiftAddOp(Shift, tree_try->PX, intlog2(n)-1);
 			globalshift = nsize-1;
 			return 1;
@@ -1264,7 +1269,7 @@ namespace flopoco{
 			delete level;
 			delete shifts;
 		}
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(DETAILED,  "buildMultBoothTreeFromRight: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1315,7 +1320,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(DETAILED,  "buildMultBoothTreeFromLeft: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1403,7 +1408,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(DETAILED,  "buildMultBoothTreeToMiddle: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1682,4 +1687,42 @@ namespace flopoco{
 
 	}
 
+
+
+	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
+	TestList IntConstMult::unitTest(int index)
+	{
+		throw ("TestList IntConstDiv::unitTest : TODO, plz FIXME");
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+
+		return testStateList;
+	}
+
+
+
+	OperatorPtr IntConstMult::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		int wIn;
+		string	n;
+		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
+		UserInterface::parseString(args, "n", &n);
+		mpz_class nz(n); // TODO catch exceptions here?
+		return new IntConstMult(target, wIn, nz);
+	}
+
+	void IntConstMult::registerFactory(){
+		UserInterface::add("IntConstMult", // name
+			"Integer multiplier by a constant using a shift-and-add tree.",
+			"ConstMultDiv",
+											 "FixRealKCM,IntConstDiv", // seeAlso
+											 "wIn(int): input size in bits; \
+											 n(int): constant to multiply by",
+											 "An early version of this operator is described in <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
+											 IntConstMult::parseArguments,
+											 IntConstMult::unitTest
+											 ) ;
+	}
+
+	
 }

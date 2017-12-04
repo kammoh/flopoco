@@ -14,20 +14,14 @@ namespace flopoco{
 
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
-
-	FixSOPC::FixSOPC(
-			Target* target_, 
-			int lsbIn_,
-			int lsbOut_,
-			vector<string> coeff_
-		) : 
-			Operator(target_),
-			lsbOut(lsbOut_),
-			coeff(coeff_),
-			g(-1),
-			computeMSBOut(true),
-			computeGuardBits(true),
-			addFinalRoundBit(true)
+	FixSOPC::FixSOPC(Target* target_, int lsbIn_, int lsbOut_, vector<string> coeff_) :
+		Operator(target_),
+		lsbOut(lsbOut_),
+		coeff(coeff_),
+		g(-1),
+		computeMSBOut(true),
+		computeGuardBits(true),
+		addFinalRoundBit(true)
 	{
 		n = coeff.size();
 		for (int i=0; i<n; i++) {
@@ -38,15 +32,7 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(
-			Target* target_,
-			vector<int> msbIn_,
-			vector<int> lsbIn_,
-			int msbOut_,
-			int lsbOut_,
-			vector<string> coeff_,
-			int g_
-		) :
+	FixSOPC::FixSOPC(Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_) :
 			Operator(target_),
 			msbIn(msbIn_),
 			lsbIn(lsbIn_),
@@ -57,6 +43,9 @@ namespace flopoco{
 			computeMSBOut(false)
 	{
 		n = coeff.size();
+		for(int i=0; i<n; i++)
+			maxAbsX.push_back(intpow2(msbIn[i]));
+		
 		if (g==-1)
 			computeGuardBits=true;
 
@@ -66,6 +55,27 @@ namespace flopoco{
 	}
 
 
+	FixSOPC::FixSOPC(Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_) :
+			Operator(target_),
+			maxAbsX(maxAbsX_),
+			lsbIn(lsbIn_),
+			msbOut(msbOut_),
+			lsbOut(lsbOut_),
+			coeff(coeff_),
+			g(g_),
+			computeMSBOut(false)
+	{
+		n = coeff.size();
+		for(int i=0; i<n; i++)
+			msbIn.push_back(ceil(log2(maxAbsX[i])));
+		
+		if (g==-1)
+			computeGuardBits=true;
+
+		addFinalRoundBit = (g==0 ? false : true);
+
+		initialize();
+	}
 
 
 	FixSOPC::~FixSOPC()
@@ -73,67 +83,54 @@ namespace flopoco{
 		for (int i=0; i<n; i++) {
 			mpfr_clear(mpcoeff[i]);
 		}
+		// TODO destroy kcm[]
 	}
 
-	void FixSOPC::initialize()	{
+
+	void FixSOPC::initialize()
+	{
 		srcFileName="FixSOPC";
 
 		ostringstream name;
-		name << "FixSOPC_uid" << getNewUId(); 
-		setName(name.str()); 
+		name << "FixSOPC"; 
+		setNameWithFreqAndUID(name.str()); 
 	
-		setCopyrightString("Matei Istoan, Louis Besème,"
-				" Florent de Dinechin (2013-2015)");
+		setCopyrightString("Matei Istoan, Louis Besème, Florent de Dinechin (2013-2015)");
 		
 		for (int i=0; i< n; i++)
-		{
-			addInput(join("X",i), msbIn[i]-lsbIn[i]+1); 
-		}
+			addInput(join("X",i), msbIn[i]-lsbIn[i]+1);
+
 
 		//reporting on the filter
 		ostringstream clist;
+		clist << coeff[0];
 		for (int i=0; i< n; i++)
+			clist << " : " << coeff[i];
+		REPORT(INFO, "FixSOPC  lsbOut=" << lsbOut <<  " coeff=\"" << clist.str() << "\"" ) ;
+		
+		for (int i=0; i< n; i++) {
+			// parse the coeffs from the string, with Sollya parsing
+			sollya_obj_t node;
+
+			node = sollya_lib_parse_string(coeff[i].c_str());
+			// If conversion did not succeed (i.e. parse error)
+			if(node == 0)
+				THROWERROR(srcFileName << ": Unable to parse string " << coeff[i] << " as a numeric constant");
+
+			mpfr_init2(mpcoeff[i], veryLargePrec);
+			sollya_lib_get_constant(mpcoeff[i], node);
+			sollya_lib_clear_obj(node);
+		}
+
+		if(computeMSBOut)
 		{
-			clist << "    " << coeff[i] << ", ";
-		}
-		REPORT(INFO, "Building a " << n << "-tap FIR; lsbOut=" << lsbOut << 
-				" for coefficients " << clist.str());
-
-
-		if(computeGuardBits) {
-			// guard bits for a faithful result
-			g = intlog2(n-1);
-			REPORT(INFO, "g=" << g);
-		}
-
-
-		for (int i=0; i< n; i++)	{
-				// parse the coeffs from the string, with Sollya parsing
-				sollya_obj_t node;
-
-				node = sollya_lib_parse_string(coeff[i].c_str());
-				// If conversion did not succeed (i.e. parse error)
-				if(node == 0)	{
-						ostringstream error;
-						error << srcFileName << ": Unable to parse string " << 
-							coeff[i] << " as a numeric constant" << endl;
-						throw error.str();
-					}
-
-				mpfr_init2(mpcoeff[i], veryLargePrec);
-				sollya_lib_get_constant(mpcoeff[i], node);
-				sollya_lib_clear_obj(node);
-			}
-
-
-		if(computeMSBOut) {
 			mpfr_t sumAbsCoeff, absCoeff;
 			mpfr_init2 (sumAbsCoeff, veryLargePrec);
 			mpfr_init2 (absCoeff, veryLargePrec);
 			mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
 
-			for (int i=0; i< n; i++)	{
-			// Accumulate the absolute values
+			for (int i=0; i< n; i++){
+				// Accumulate the absolute values
 				mpfr_abs(absCoeff, mpcoeff[i], GMP_RNDU);
 				mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
 			}
@@ -142,104 +139,107 @@ namespace flopoco{
 			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU); // just to make the following loop easier
 			REPORT(INFO, "sumAbs=" << sumAbs);
 			msbOut=1;
-			while(sumAbs>=2.0)		{
-					sumAbs*=0.5;
-					msbOut++;
-				}
-			while(sumAbs<1.0)	{
-					sumAbs*=2.0;
-					msbOut--;
-				}
-			REPORT(INFO, "Worst-case weight of MSB of the result is " << msbOut);
+			while(sumAbs>=2.0){
+				sumAbs*=0.5;
+				msbOut++;
+			}
+			while(sumAbs<1.0){
+				sumAbs*=2.0;
+				msbOut--;
+			}
+			REPORT(INFO, "Computed msbOut=" << msbOut);
 			mpfr_clears(sumAbsCoeff, absCoeff, NULL);
 		}
 
 		addOutput("R", msbOut-lsbOut+1);
 
-		int sumSize = 1 + msbOut - lsbOut  + g ;
+		int sumSize = 1 + msbOut - lsbOut ;
 		REPORT(DETAILED, "Sum size is: "<< sumSize );
 
-		//compute the guard bits from the KCM mulipliers, and take the max
-		int guardBitsKCM = 0;
-		int lsbOutKCM = lsbOut-g; // we want each KCM to be faithful to this ulp
+
+		// Now call all the KCM constructors for lsbOut, 
+		//compute the guard bits and error for each, and deduce the overall guard bits.
+		vector<FixRealKCM*> kcm;
 		double targetUlpError = 1.0;
+		double maxAbsError=0;
 
 		for(int i=0; i<n; i++)		{
-			int wInKCM = msbIn[i]-lsbIn[i]+1-g;	//p bits + 1 sign bit
-
-			int temp = FixRealKCM::neededGuardBits(
-					getTarget(), 
-					wInKCM, 
-					targetUlpError,
-					coeff[i],
-					lsbIn[i],
-					lsbOut
-				);			
-
-			if(temp > guardBitsKCM)
-				guardBitsKCM = temp;
+			// instantiating a KCM object. This call does not build any VHDL but computes errorInUlps out of the tentative architecture for g=0.
+			FixRealKCM* m = new FixRealKCM(
+																		 this,                         // the enveloping operator
+																		 join("X",i), // input signal name
+																		 true,        // input is signed
+																		 msbIn[i],
+																		 lsbIn[i],
+																		 lsbOut,   // output LSB weight we want -- this is tentative
+																		 coeff[i], // pass the string unmodified
+																		 i==0,    //   the first KCM adds the round bit
+																		 targetUlpError
+																		 );
+			kcm.push_back(m);
+			double errorInUlps=m->getErrorInUlps();
+			maxAbsError += errorInUlps;
+			REPORT(DETAILED,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps << " ulp(s)")
 		}
 
-		sumSize += guardBitsKCM;
-		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize);
-
+		g = 0;
+		double maxErrorWithGuardBits=maxAbsError;
+		while (maxErrorWithGuardBits>0.5) {
+			g++;
+			maxErrorWithGuardBits /= 2.0;
+		}
+		sumSize += g;
+		REPORT(DETAILED,"Overall error is " << maxAbsError  << " ulps, which we will manage by adding " << g << " guard bits to the bit heap" );
+		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize << " bits.");
+		
 		if(!getTarget()->plainVHDL())
 		{
 			//create the bitheap that computes the sum
-			bitHeap = new BitHeap(this, sumSize);
+			bitHeap = new BitheapNew(this, sumSize);
 
-			for (int i=0; i<n; i++)	{
-				// Multiplication: instantiating a KCM object. It will add bits also to the right of lsbOutKCM
-				new FixRealKCM(
-						this,				// the envelopping operator
-						 getTarget(), 	// the target FPGA
-						 getSignalByName(join("X",i)),
-						 true, 		// signed
-						 msbIn[i], 	
-						 lsbIn[i], 		// input LSB weight
-						 lsbOutKCM, 		// output LSB weight -- the output MSB is computed out of the constant
-						 coeff[i], 	// pass the string unmodified
-						 bitHeap,	// pass the reference to the bitheap that will accumulate the intermediary products
-						 lsbOutKCM - guardBitsKCM 
-					 );
+			// actually generate the code
+			for(int i=0; i<n; i++)		{
+				kcm[i]->addToBitHeap(bitHeap, g);
 			}
 
+			// The rounding bit is incorporated into the KCMs. 
+
 			//compress the bitheap
-			bitHeap -> generateCompressorVHDL();
-			
+			bitHeap -> startCompression();
+
 			vhdl << tab << "R" << " <= " << bitHeap-> getSumName() << 
-				range(sumSize-1, g+guardBitsKCM) << ";" << endl;
-
+					range(sumSize-1, g) << ";" << endl;
 		}
-
 		else
 		{
-			 THROWERROR("Sorry, plainVHDL doesn't work at the moment for FixSOPC. Somebody has to fix it and remove this message" );
+			THROWERROR("Sorry, plainVHDL doesn't work at the moment for FixSOPC. Somebody has to fix it and remove this message" );
 			// Technically if you comment the line above it generates non-correct VHDL
 
 			// All the KCMs in parallel
 			for(int i=0; i< n; i++)	{
-				FixRealKCM* mult = new FixRealKCM(getTarget(), 
-						true, // signed
-						msbIn[i]-1, // input MSB,TODO one sign bit will be added by KCM because it has a non-standard interface. To be fixed someday
-						lsbIn[i], // input LSB weight
-						lsbOut-g, // output LSB weight -- the output MSB is computed out of the constant
-						coeff[i] // pass the string unmodified
-					);
+				FixRealKCM* mult = new FixRealKCM(this,
+																					getTarget(), 
+																					true, // signed
+																					msbIn[i]-1, // input MSB,TODO one sign bit will be added by KCM because it has a non-standard interface. To be fixed someday
+																					lsbIn[i], // input LSB weight
+																					lsbOut-g, // output LSB weight -- the output MSB is computed out of the constant
+																					coeff[i] // pass the string unmodified
+																					);
 				addSubComponent(mult);
 				inPortMap(mult,"X", join("X", i));
 				outPortMap(mult, "R", join("P", i));
 				vhdl << instance(mult, join("mult", i));
 			}
-			// Now advance to their output, and build a pipelined rake
-			syncCycleFromSignal("P0");
+			// Now build a pipelined rake
 			vhdl << tab << declare("S0", sumSize) << " <= " << zg(sumSize) << ";" << endl;
 			for(int i=0; i< n; i++)		{
 				//manage the critical path
-				manageCriticalPath(getTarget()->adderDelay(sumSize));
+				manageCriticalPath();
 				// Addition
 				int pSize = getSignalByName(join("P", i))->width();
-				vhdl << tab << declare(join("S", i+1), sumSize) << " <= " <<  join("S",i);
+				vhdl << tab << declare(getTarget()->adderDelay(sumSize),
+															 join("S", i+1), sumSize)
+						 << " <= " <<  join("S",i);
 				vhdl << " + (" ;
 				if(sumSize>pSize)
 					vhdl << "("<< sumSize-1 << " downto " << pSize<< " => "<< join("P",i) << of(pSize-1) << ")" << " & " ;
@@ -248,11 +248,11 @@ namespace flopoco{
 
 			// Rounding costs one more adder to add the half-ulp round bit.
 			// This could be avoided by pushing this bit in one of the KCM tables
-			syncCycleFromSignal(join("S", n));
-			manageCriticalPath(getTarget()->adderDelay(msbOut-lsbOut+1));
-			vhdl << tab << declare("R_int", sumSize+1) << " <= " <<  join("S", n) << range(sumSize-1, sumSize-(msbOut-lsbOut+1)-1) << " + (" << zg(sumSize) << " & \'1\');" << endl;
+			vhdl << tab << declare(getTarget()->adderDelay(sumSize+1),
+														 "R_int", sumSize+1)
+					 << " <= " <<  join("S", n) << range(sumSize-1, sumSize-(msbOut-lsbOut+1)-1) << " + (" << zg(sumSize) << " & \'1\');" << endl;
 			vhdl << tab << "R <= " <<  "R_int" << range(sumSize, 1) << ";" << endl;
-		}
+		} // end plain vhdl
 
 
 	};
@@ -318,7 +318,7 @@ namespace flopoco{
 		tc->addExpectedOutput ("R", results.second);
 	}
 
-	OperatorPtr FixSOPC::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixSOPC::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsbIn;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
@@ -344,7 +344,7 @@ namespace flopoco{
 											 "",
 											 "lsbIn(int): input's last significant bit;\
                         lsbOut(int): output's last significant bit;\
-                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=1.234567890123:sin(3*pi/8);",
+                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "",
 											 FixSOPC::parseArguments
 											 ) ;

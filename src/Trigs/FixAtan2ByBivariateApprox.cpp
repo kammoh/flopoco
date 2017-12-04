@@ -34,7 +34,6 @@ namespace flopoco {
 	FixAtan2ByBivariateApprox::FixAtan2ByBivariateApprox(Target* target_, int wIn_, int wOut_, int architectureType_, map<string, double> inputDelays_):
 		FixAtan2(target_, wIn_, wOut_, inputDelays_), architectureType(architectureType_)
 	{
-
 		srcFileName = "FixAtan2ByBivariateApprox";
 		setCopyrightString("Florent de Dinechin, Matei Istoan, 2014");
 		// build the name

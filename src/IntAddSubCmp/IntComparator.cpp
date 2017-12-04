@@ -30,8 +30,8 @@ using namespace std;
 namespace flopoco{
 
 
-	IntComparator::IntComparator(Target* target, int wIn, int criteria, bool constant, int constValue, map<string, double> inputDelays) :
-		Operator(target, inputDelays), wIn_(wIn), criteria_(criteria) {
+	IntComparator::IntComparator(Target* target, int wIn, int criteria, bool constant, int constValue) :
+		Operator(target), wIn_(wIn), criteria_(criteria) {
 
 		// -------- Parameter set up -----------------
 		srcFileName = "IntComaprator";
@@ -63,12 +63,11 @@ namespace flopoco{
 
 				//determine chunk size
 				int cs;
-				setCriticalPath(getMaxInputDelays(inputDelays));
-				if (!target->suggestSlackSubcomparatorSize(cs, wIn_, getCriticalPath() + target->localWireDelay() + getTarget()->ffDelay(), constant)){
+				if (!getTarget()->suggestSlackSubcomparatorSize(cs, wIn_, getCriticalPath() + getTarget()->localWireDelay() + getTarget()->ffDelay(), constant)){
 					REPORT(INFO, "Extra reg level inserted here!");
 					nextCycle();
 					setCriticalPath(0.0);
-					target->suggestSlackSubcomparatorSize(cs, wIn, target->localWireDelay() + getTarget()->ffDelay(), constant);
+					getTarget()->suggestSlackSubcomparatorSize(cs, wIn, getTarget()->localWireDelay() + getTarget()->ffDelay(), constant);
 				}
 				REPORT(INFO, "The suggested chunk size for the first splitting was:"<<cs);
 				//number of chunks
@@ -76,8 +75,8 @@ namespace flopoco{
 				if (k > 1){
 					//first checks in parallel all chunks for equality
 					REPORT(INFO, "Cp before "<<getCriticalPath());
-					REPORT(INFO, "comp delay = " << target->eqComparatorDelay(cs));
-					manageCriticalPath( target->eqComparatorDelay(cs) );
+					REPORT(INFO, "comp delay = " << getTarget()->eqComparatorDelay(cs));
+					manageCriticalPath( getTarget()->eqComparatorDelay(cs) );
 					REPORT(INFO, "Cp after"<< getCriticalPath());
 
 					for (int i=0; i<k; i++){
@@ -91,10 +90,10 @@ namespace flopoco{
 					int l = 0;
 					int ibits = k;
 					//determine number of chunks needed for this comparisson. In most cases this will be 1
-					if (!target->suggestSlackSubcomparatorSize(cs, ibits, getCriticalPath() + target->localWireDelay() + getTarget()->ffDelay(), true)){
+					if (!getTarget()->suggestSlackSubcomparatorSize(cs, ibits, getCriticalPath() + getTarget()->localWireDelay() + getTarget()->ffDelay(), true)){
 						nextCycle();
 						setCriticalPath(0.0);
-						target->suggestSlackSubcomparatorSize(cs, ibits, target->localWireDelay() + getTarget()->ffDelay(), true);
+						getTarget()->suggestSlackSubcomparatorSize(cs, ibits, getTarget()->localWireDelay() + getTarget()->ffDelay(), true);
 					}
 					REPORT(INFO, "The number of ibits is "<<ibits<<" cs="<<cs);
 					k = ( ibits % cs ==0? ibits/cs : ibits/cs + 1);
@@ -108,23 +107,23 @@ namespace flopoco{
 							else
 								vhdl << join("b",i,"l",l-1) << " & ";
 						}
-						manageCriticalPath(target->eqConstComparatorDelay(ibits));
+						manageCriticalPath(getTarget()->eqConstComparatorDelay(ibits));
 						for (int i=0; i<k; i++){
 							vhdl <<tab << declare(join("b",i,"l",l))<<" <= '1' when lev"<<l<<range(min((i+1)*cs-1,ibits-1),i*cs)
 							<<"="<< og(  min((i+1)*cs-1,ibits-1)+1 -i*cs ,0 )<<" else '0';"<<endl;
 						}
 
-						if (!target->suggestSlackSubcomparatorSize(cs, k, getCriticalPath() + target->localWireDelay() + getTarget()->ffDelay() , true)){
+						if (!getTarget()->suggestSlackSubcomparatorSize(cs, k, getCriticalPath() + getTarget()->localWireDelay() + getTarget()->ffDelay() , true)){
 							nextCycle();
 							setCriticalPath(0.0);
-							target->suggestSlackSubcomparatorSize(cs, k, 0.0 + target->localWireDelay() + getTarget()->ffDelay(), true);
+							getTarget()->suggestSlackSubcomparatorSize(cs, k, 0.0 + getTarget()->localWireDelay() + getTarget()->ffDelay(), true);
 						}
 						ibits = k;
 						k = ( ibits % cs ==0? ibits/cs : ibits/cs + 1);
 					}
 					//assign R
 					vhdl << tab << "R <= " <<join("b",0,"l",l)<<";"<<endl;
-					outDelayMap["R"] = getCriticalPath();
+					getOutDelayMap()["R"] = getCriticalPath();
 
 				}else{
 					//if we can do it all in one cycle
@@ -163,7 +162,7 @@ namespace flopoco{
 		tc->addExpectedOutput ( "R", svR );
 	}
 
-	OperatorPtr IntComparator::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr IntComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int criteria;
@@ -188,5 +187,5 @@ constValue(int): the value to compare to;",
 											 IntComparator::parseArguments
 											 ) ;
 
-	}
+}
 }

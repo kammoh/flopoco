@@ -337,7 +337,7 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr PiecewisePolyApprox::parseArguments(Target *target, vector<string> &args)
+	OperatorPtr PiecewisePolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 	{
 		string f;
 		double ta;

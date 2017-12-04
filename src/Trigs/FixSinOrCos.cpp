@@ -23,8 +23,8 @@ namespace flopoco{
 		ostringstream name;
 
 		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2008-2012)" );
-		if(target->isPipelined())
-			name << "FixSinOrCos_" << w <<"_f"<< target->frequencyMHz() << "_uid" << getNewUId();
+		if(getTarget()->isPipelined())
+			name << "FixSinOrCos_" << w <<"_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "FixSinOrCos_" << w << "_uid" << getNewUId();
 		setName( name.str() );
@@ -237,7 +237,7 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr FixSinOrCos::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixSinOrCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, degree;
 		UserInterface::parseStrictlyPositiveInt(args, "w", &w); 
 		UserInterface::parseInt(args, "degree", &degree);

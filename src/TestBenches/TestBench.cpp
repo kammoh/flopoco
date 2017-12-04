@@ -24,7 +24,6 @@
 #include "utils.hpp"
 #include "Operator.hpp"
 #include "TestBench.hpp"
-#include "FPDivSqrt/FPDiv.hpp"
 
 using namespace std;
 
@@ -32,39 +31,79 @@ namespace flopoco{
 
 
 	TestBench::TestBench(Target* target, Operator* op, int n, bool fromFile):
-		Operator(target), op_(op), n_(n)
+		Operator(nullptr, target), op_(op), n_(n), fromFile_(fromFile)
 	{
-		// This allows the op under test to know how long it is beeing tested.
+		//set the parent operator to this operator
+		op->setParentOperator(this);
+
+		// This allows the op under test to know how long it is being tested.
 		// useful only for testing the long acc, but who knows.
 		op->numberOfTests = n;
 
 		srcFileName="TestBench";
 		setName("TestBench_" + op_->getName());
 
-		setCombinatorial(); // this is a combinatorial operator
-		setCycle(0);
+		//		REPORT(LIST,"Test bench for "+ op_->getName());
+		//this part might actually need to be parsed
+//		setCombinatorial(); // this is a combinatorial operator
 
 		// initialization of flopoco random generator
 		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
 		//        maybe best to be placed in main.cpp ?
-                FloPoCoRandomState::init(n);
+		FloPoCoRandomState::init(n);
 		// Generate the standard and random test cases for this operator
 		op-> buildStandardTestCases(&tcl_);
-                // initialization of randomstate generator with the seed base on the number of
-                // randomtestcase to be generated
+		// initialization of randomstate generator with the seed base on the number of
+		// random testcase to be generated
 		if (!fromFile) op-> buildRandomTestCaseList(&tcl_, n);
 
 
 		// The instance
-		//  portmap inputs and outputs
-		string idext;
+		//  portmap for the inputs
 		for(int i=0; i < op->getIOListSize(); i++){
 			Signal* s = op->getIOListSignal(i);
-			if(s->type() == Signal::out)
-				outPortMap (op, s->getName(), s->getName());
+
 			if(s->type() == Signal::in) {
 				declare(s->getName(), s->width(), s->isBus());
+			 	schedule(true);
 				inPortMap (op, s->getName(), s->getName());
+			}
+		}
+		//  portmap for the outputs
+		//		first, determine the maximum output cycle
+		int maxOutputCycle = -1;
+		for(int i=0; i < op->getIOListSize(); i++){
+			if(op->getIOListSignal(i)->type() == Signal::out)
+				if(op->getIOListSignal(i)->getCycle() > maxOutputCycle)
+					maxOutputCycle = op->getIOListSignal(i)->getCycle();
+		}
+		//		map the outputs
+		for(int i=0; i < op->getIOListSize(); i++){
+			Signal* s = op->getIOListSignal(i);
+
+			if(s->type() == Signal::out)
+				outPortMap (op, s->getName(), join(s->getName(), "_int"));
+		}
+		//		the intermediary signals need to be scheduled
+		schedule(true);
+		//the port mappings have changed, so they must be updated
+		//	so must the schedule of the signal
+		op->reconnectIOPorts(true);
+		//		delay the outputs if necessary
+		for(int i=0; i < op->getIOListSize(); i++){
+			Signal* s = op->getIOListSignal(i);
+
+			if(s->type() == Signal::out)
+			{
+				Signal *s_int = getSignalByName(join(s->getName(), "_int"));
+				vhdl << tab << declare(s->getName(), s->width()) << " <= ";
+				if(s_int->getCycle() < maxOutputCycle)
+					vhdl << delay(s_int->getName(), maxOutputCycle-s_int->getCycle()) << ";" << endl;
+				else
+					vhdl << s_int->getName() << ";" << endl;
+				getSignalByName(s->getName())->copySignalParameters(getSignalByName(join(s->getName(), "_int")));
+				//schedule the currently processed output to update the lifespans
+				setSignalTiming(getSignalByName(s->getName()), true);
 			}
 		}
 		// add clk and rst
@@ -77,8 +116,9 @@ namespace flopoco{
 		if (op_->hasClockEnable()) {
 			vhdl << tab << declare("ce") << " <= '1';" << endl;
 		}
+
 		// The VHDL for the instance
-		vhdl << instance(op, "test");
+		vhdl << endl << instance(op, "test") << endl;
 
 
 		vhdl << tab << "-- Ticking clock signal" <<endl;
@@ -91,8 +131,16 @@ namespace flopoco{
 		vhdl << tab << "end process;" <<endl;
 		vhdl << endl;
 
-		if (fromFile) generateTestFromFile();
-		else generateTestInVhdl();
+
+		//the rest of the code does not need to be parsed, so parsing is disabled
+		setSequential();
+		vhdl.disableParsing(true);
+
+
+		if (fromFile)
+			generateTestFromFile();
+		else
+			generateTestInVhdl();
 	}
 
 
@@ -242,25 +290,26 @@ namespace flopoco{
 			vhdl << tab << tab << tab << "expected_size_"<< s->getName() << " := inline'Length;"<< endl; // the remainder is the vector of expected outputs: remember how long it is
 			vhdl << tab << tab << tab << "expected_"<< s->getName() << " := inline.all & (expected_size_"<< s->getName() << "+1 to 1000 => ' ');"<< endl; // because we have to pad it to 1000 chars
 			string expectedString = "expected_" +  s->getName() + "(1 to expected_size_" + s->getName() + ")"; //  will be used several times below, so better have a Single Source of Bug
-			vhdl << tab << tab << tab << "if possibilityNumber = 0 then" << endl; 
+			vhdl << tab << tab << tab << "if possibilityNumber = 0 then" << endl;
 			vhdl << tab << tab << tab << tab << "localErrorCounter := 0;" << endl;//read(inline,tmpChar);" << endl; // we consume the character between each outputs
 			vhdl << tab << tab << tab << "elsif possibilityNumber = 1 then " << endl;
 			vhdl << tab << tab << tab << tab << "read(inline ,V_"<< s->getName() << ");" << endl;
 			vhdl << tab << tab << tab << tab << "if ";
-			if (s->isFP()) { 
- 			vhdl << "not fp_equal(fp"<< s->width() << "'(" << s->getName() << ") ,to_stdlogicvector(V_" <<  s->getName() << "))";
-			} else if (s->isIEEE()) {  
+			if (s->isFP()) {
+				vhdl << "not fp_equal(fp"<< s->width() << "'(" << s->getName() << ") ,to_stdlogicvector(V_" <<  s->getName() << "))";
+			} else if (s->isIEEE()) {
 			    vhdl << "not fp_equal_ieee(" << s->getName() << " ,to_stdlogicvector(V_" <<  s->getName() << "),"<<s->wE()<<" , "<<s->wF()<<")";
-			} else if ((s->width() == 1) && (!s->isBus())) { 
+			} else if ((s->width() == 1) && (!s->isBus())) {
 				vhdl << "not (" << s->getName() << "= to_stdlogic(V_" << s->getName() << "))";
 			} else {
 				vhdl << "not (" << s->getName() << "= to_stdlogicvector(V_" << s->getName() << "))";
 			}
 			vhdl << " then " << endl;
-			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for " 
+			vhdl << tab << tab << tab << tab << tab << " errorCounter := errorCounter + 1;" << endl;
+			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for "
 					 << s->getName() << ": \" & lf & ";
 			vhdl << "\"  expected value: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;  
+			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
 			vhdl << tab << tab << tab << tab << "end if;" << endl;
 
 			vhdl << tab << tab << tab << "else" << endl;
@@ -284,7 +333,7 @@ namespace flopoco{
 			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for "
 					 << s->getName() << ": \" & lf & ";
 			vhdl << "\" expected values: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;  
+			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
 
 			vhdl << tab << tab << tab << tab << "end if;" << endl;
 			vhdl << tab << tab << tab << "end if;" << endl;
@@ -474,6 +523,15 @@ namespace flopoco{
 
 	void TestBench::outputVHDL(ostream& o, string name) {
 		licence(o,"Florent de Dinechin, Cristian Klein, Nicolas Brunie (2007-2010)");
+
+		//was part of constructor, but needs to be done here, after the operators have been scheduled
+		/*
+		if (fromFile_)
+			generateTestFromFile();
+		else
+			generateTestInVhdl();
+		*/
+
 		Operator::stdLibs(o);
 
 		outputVHDLEntity(o);
@@ -482,7 +540,7 @@ namespace flopoco{
 		// the operator to wrap
 		op_->outputVHDLComponent(o);
 		// The local signals
-		outputVHDLSignalDeclarations(o);
+		o << buildVHDLSignalDeclarations();
 
 		o << endl <<
 			tab << "-- FP compare function (found vs. real)\n" <<
@@ -498,73 +556,73 @@ namespace flopoco{
 			tab << "end;\n";
 
 
-                o << endl << endl << endl;
-                /* Generation of Vhdl function to parse file into std_logic_vector */
+		o << endl << endl << endl;
+		/* Generation of Vhdl function to parse file into std_logic_vector */
 
 
-                o << " -- converts std_logic into a character" << endl;
-                o << tab << "function chr(sl: std_logic) return character is" << endl
-                  << tab << tab << "variable c: character;" << endl
-                  << tab << "begin" << endl
-                  << tab << tab << "case sl is" << endl
-                  << tab << tab << tab << "when 'U' => c:= 'U';" << endl
-                  << tab << tab << tab << "when 'X' => c:= 'X';" << endl
-                  << tab << tab << tab << "when '0' => c:= '0';" << endl
-                  << tab << tab << tab << "when '1' => c:= '1';" << endl
-                  << tab << tab << tab << "when 'Z' => c:= 'Z';" << endl
-                  << tab << tab << tab << "when 'W' => c:= 'W';" << endl
-                  << tab << tab << tab << "when 'L' => c:= 'L';" << endl
-                  << tab << tab << tab << "when 'H' => c:= 'H';" << endl
-                  << tab << tab << tab << "when '-' => c:= '-';" << endl
-                  << tab << tab << "end case;" << endl
-                  << tab << tab << "return c;" << endl
-                  << tab <<  "end chr;" << endl;
+		o << " -- converts std_logic into a character" << endl;
+		o << tab << "function chr(sl: std_logic) return character is" << endl
+		  << tab << tab << "variable c: character;" << endl
+		  << tab << "begin" << endl
+		  << tab << tab << "case sl is" << endl
+		  << tab << tab << tab << "when 'U' => c:= 'U';" << endl
+		  << tab << tab << tab << "when 'X' => c:= 'X';" << endl
+		  << tab << tab << tab << "when '0' => c:= '0';" << endl
+		  << tab << tab << tab << "when '1' => c:= '1';" << endl
+		  << tab << tab << tab << "when 'Z' => c:= 'Z';" << endl
+		  << tab << tab << tab << "when 'W' => c:= 'W';" << endl
+		  << tab << tab << tab << "when 'L' => c:= 'L';" << endl
+		  << tab << tab << tab << "when 'H' => c:= 'H';" << endl
+		  << tab << tab << tab << "when '-' => c:= '-';" << endl
+		  << tab << tab << "end case;" << endl
+		  << tab << tab << "return c;" << endl
+		  << tab <<  "end chr;" << endl;
 
 
-				o << tab << "-- converts bit to std_logic (1 to 1)" << endl
-					<<	tab << "function to_stdlogic(b : bit) return std_logic is" << endl
-					<< tab << tab << " variable sl : std_logic;" << endl
-					<< tab << "begin" << endl
-					<< tab << tab << "case b is " << endl
-					<< tab << tab << tab << "when '0' => sl := '0';" << endl
-					<< tab << tab << tab << "when '1' => sl := '1';" << endl
-					<< tab << tab << "end case;" << endl
-					<< tab << tab << "return sl;" << endl
-					<< tab << "end to_stdlogic;" << endl;
+		o << tab << "-- converts bit to std_logic (1 to 1)" << endl
+			<<	tab << "function to_stdlogic(b : bit) return std_logic is" << endl
+			<< tab << tab << " variable sl : std_logic;" << endl
+			<< tab << "begin" << endl
+			<< tab << tab << "case b is " << endl
+			<< tab << tab << tab << "when '0' => sl := '0';" << endl
+			<< tab << tab << tab << "when '1' => sl := '1';" << endl
+			<< tab << tab << "end case;" << endl
+			<< tab << tab << "return sl;" << endl
+			<< tab << "end to_stdlogic;" << endl;
 
 
-                o << tab << "-- converts std_logic into a string (1 to 1)" << endl
-                  << tab << "function str(sl: std_logic) return string is" << endl
-                  << tab << " variable s: string(1 to 1);" << endl
-                  << tab << " begin" << endl
-                  << tab << tab << "s(1) := chr(sl);" << endl
-                  << tab << tab << "return s;" << endl
-                  << tab << "end str;" << endl;
+		o << tab << "-- converts std_logic into a string (1 to 1)" << endl
+		  << tab << "function str(sl: std_logic) return string is" << endl
+		  << tab << " variable s: string(1 to 1);" << endl
+		  << tab << " begin" << endl
+		  << tab << tab << "s(1) := chr(sl);" << endl
+		  << tab << tab << "return s;" << endl
+		  << tab << "end str;" << endl;
 
 
 
-                o << tab << "-- converts std_logic_vector into a string (binary base)" << endl
-                  << tab << "-- (this also takes care of the fact that the range of" << endl
-                  << tab << "--  a string is natural while a std_logic_vector may" << endl
-                  << tab << "--  have an integer range)" << endl
-                  << tab << "function str(slv: std_logic_vector) return string is" << endl
-                  << tab << tab << "variable result : string (1 to slv'length);" << endl
-                  << tab << tab << "variable r : integer;" << endl
-                  << tab << "begin" << endl
-                  << tab << tab << "r := 1;" << endl
-                  << tab << tab << "for i in slv'range loop" << endl
-                  << tab << tab << tab << "result(r) := chr(slv(i));" << endl
-                  << tab << tab << tab << "r := r + 1;" << endl
-                  << tab << tab << "end loop;" << endl
-                  << tab << tab << "return result;" << endl
-                  << tab << "end str;" << endl;
+		o << tab << "-- converts std_logic_vector into a string (binary base)" << endl
+		  << tab << "-- (this also takes care of the fact that the range of" << endl
+		  << tab << "--  a string is natural while a std_logic_vector may" << endl
+		  << tab << "--  have an integer range)" << endl
+		  << tab << "function str(slv: std_logic_vector) return string is" << endl
+		  << tab << tab << "variable result : string (1 to slv'length);" << endl
+		  << tab << tab << "variable r : integer;" << endl
+		  << tab << "begin" << endl
+		  << tab << tab << "r := 1;" << endl
+		  << tab << tab << "for i in slv'range loop" << endl
+		  << tab << tab << tab << "result(r) := chr(slv(i));" << endl
+		  << tab << tab << tab << "r := r + 1;" << endl
+		  << tab << tab << "end loop;" << endl
+		  << tab << tab << "return result;" << endl
+		  << tab << "end str;" << endl;
 
-              o << endl << endl << endl;
+		o << endl << endl << endl;
 
 
-                /* If op_ is an IEEE operator (IEEE input and output, we define) the function
-                 * fp_equal for the considered precision in the ieee case
-                 */
+		/* If op_ is an IEEE operator (IEEE input and output, we define) the function
+		 * fp_equal for the considered precision in the ieee case
+		 */
 		o << endl <<  // Fixed by Nicolas
 			tab << "-- test isZero\n" <<
 			tab << "function iszero(a : std_logic_vector) return boolean is\n" <<
@@ -611,8 +669,41 @@ namespace flopoco{
 				}
 		}
 
+		//prevent the code from being parsed (first round of parsing)
+		vhdl.disableParsing(true);
+
 		o << "begin\n";
+
+		//if the outputs of the tested operator are not synchronized
+		//	then registering and delaying the outputs might be necessary
+		bool opHasOutputsDesync = false;
+
+		for(unsigned i=0; i<op_->ioList_.size(); i++)
+		{
+			Signal *s = op_->getIOListSignal(i);
+
+			if(s->type() != Signal::out)
+				continue;
+
+			for(unsigned j=0; j<op_->ioList_.size(); j++)
+			{
+				Signal *t = op_->getIOListSignal(j);
+
+				if((t->type() == Signal::out) && (s->getName() != t->getName()) && (s->getCycle() != t->getCycle())){
+					opHasOutputsDesync = true;
+					break;
+				}
+			}
+
+			if(opHasOutputsDesync)
+				break;
+		}
+		if(opHasOutputsDesync == true)
+			o << buildVHDLRegisters() << endl;
+
+		//output the code of the
 		o << vhdl.str() << endl;
+
 		o << "end architecture;" << endl << endl;
 
 
@@ -626,18 +717,24 @@ namespace flopoco{
 
 
 
-	
-	
-	OperatorPtr TestBench::parseArguments(Target *target, vector<string> &args) {
+
+
+	OperatorPtr TestBench::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int n;
 		bool file;
+
 		if(UserInterface::globalOpList.empty()){
-			throw("ERROR: TestBench has no operator to wrap (it should come after the operator it wraps)");		
+			throw("ERROR: TestBench has no operator to wrap (it should come after the operator it wraps)");
 		}
+
 		UserInterface::parseInt(args, "n", &n);
 		UserInterface::parseBoolean(args, "file", &file);
 		Operator* toWrap = UserInterface::globalOpList.back();
-		return new TestBench(target, toWrap, n, file);
+		Operator* newOp = new TestBench(target, toWrap, n, file);
+		// the instance in newOp has added toWrap as a subcomponent of newOp,
+		// so we may remove it from globalOpList
+		//UserInterface::globalOpList.pop_back();
+		return newOp;
 	}
 
 	void TestBench::registerFactory(){
@@ -650,7 +747,7 @@ namespace flopoco{
 											 "",
 											 TestBench::parseArguments
 											 ) ;
-		
+
 	}
 
 }

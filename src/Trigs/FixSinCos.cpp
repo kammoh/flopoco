@@ -50,8 +50,8 @@ FixSinCos::SinCosTable::SinCosTable(Target* target_, int wIn_, int lsbOut_, int 
 	name << "SinCosTable_" << wIn << "_2x" << lsbOut;
 	if (g>0) 
 		name << "p" << g;
-	setName(name.str());
-	//	outDelayMap["Y"]=target->RMADelay();
+	setNameWithFreqAndUID(name.str());
+	//	outDelayMap["Y"]=getTarget()->RMADelay();
 }
 
 FixSinCos::SinCosTable::~SinCosTable(){
@@ -153,7 +153,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// definition of the name of the operator
 	ostringstream name;
 	name << "FixSinCos_" << w;
-	setNameWithFreq(name.str());
+	setNameWithFreqAndUID(name.str());
 
 	setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
 
@@ -178,16 +178,16 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// These are limits between small-precision cases for which we generate simpler architectures
 
 	// plain tabulation fits LUTs
-	bool wSmallerThanBorder1 = ( w <= target->lutInputs() );    
+	bool wSmallerThanBorder1 = ( w <= getTarget()->lutInputs() );    
 
 	//  table with quadrant reduction fits LUTs
-	bool wSmallerThanBorder2 = ( w-2 <= target->lutInputs() );   
+	bool wSmallerThanBorder2 = ( w-2 <= getTarget()->lutInputs() );   
 
 	// plain tabulation fits BlockRAM
-	bool wSmallerThanBorder3 = ( (w+1)*(mpz_class(2)<<(w+1)) <= target->sizeOfMemoryBlock() );
+	bool wSmallerThanBorder3 = ( (w+1)*(mpz_class(2)<<(w+1)) <= getTarget()->sizeOfMemoryBlock() );
 
 	//  table with quadrant reduction fits BlockRAM
-	bool wSmallerThanBorder4 = ( (w+1)*(mpz_class(2)<<(w+1-3)) <= target->sizeOfMemoryBlock() );
+	bool wSmallerThanBorder4 = ( (w+1)*(mpz_class(2)<<(w+1-3)) <= getTarget()->sizeOfMemoryBlock() );
 
 	bool usePlainTable = wSmallerThanBorder1 || (!wSmallerThanBorder2 && wSmallerThanBorder3);
 	bool usePlainTableWithQuadrantReduction = wSmallerThanBorder2 || (!wSmallerThanBorder3 && wSmallerThanBorder4);
@@ -204,13 +204,13 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 	// Let us compute wA such that these bits fit in a blockRAM
 	// but it depends on g, so we compute the various cases
 	int wAtemp=3;
-	while((mpz_class(2)<<wAtemp)*(w+1+gOrder1Arch) < target->sizeOfMemoryBlock()) wAtemp++; 
+	while((mpz_class(2)<<wAtemp)*(w+1+gOrder1Arch) < getTarget()->sizeOfMemoryBlock()) wAtemp++; 
 	int wAOrder1Arch = wAtemp--;
 	wAtemp=3;
-	while((mpz_class(2)<<wAtemp)*(w+1+gOrder2Arch) < target->sizeOfMemoryBlock()) wAtemp++; 
+	while((mpz_class(2)<<wAtemp)*(w+1+gOrder2Arch) < getTarget()->sizeOfMemoryBlock()) wAtemp++; 
 	int wAOrder2Arch = wAtemp--;
 	wAtemp=3;
-	while((mpz_class(2)<<wAtemp)*(w+1+gGeneric) < target->sizeOfMemoryBlock()) wAtemp++; 
+	while((mpz_class(2)<<wAtemp)*(w+1+gGeneric) < getTarget()->sizeOfMemoryBlock()) wAtemp++; 
 	int wAGeneric = wAtemp--;
 
 
@@ -352,7 +352,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 		int wYIn=w-2+g;
 		
 		addComment("Computing .25-Y :  we do a logic NOT, at a cost of 1 ulp");
-		manageCriticalPath(target->localWireDelay(w-2) + target->lutDelay());
+		manageCriticalPath(getTarget()->localWireDelay(w-2) + getTarget()->lutDelay());
 		vhdl << tab << declare ("Yneg", wYIn) << " <= ((not Y) & " << '"' << std::string (g, '1') << '"' << ") when O='1' "
 				 << "else (Y & " << '"' << std::string (g, '0') << '"' << ");" << endl;
 
@@ -379,14 +379,13 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 		int wZ=w-wA+g; // see alignment below. Actually w-2-wA+2  (-2 because Q&O bits, +2 because mult by Pi)
 
 		pi_mult = new FixRealKCM (target,
-									false,    // signedInput
-									-2-wA-1,  // msbIn
-									-w-g,     // lsbIn
-									-w-g ,    // lsbOut
-									"pi",     // constant
-									1.0,      // targetUlpError
-									pi_mult_inputDelays);
-		oplist.push_back (pi_mult);
+															false,    // signedInput
+															-2-wA-1,  // msbIn
+															-w-g,     // lsbIn
+															-w-g ,    // lsbOut
+															"pi",     // constant
+															1.0);      // targetUlpError
+		addSubComponent (pi_mult);
 		inPortMap (pi_mult, "X", "Y_red");
 		outPortMap (pi_mult, "R", "Z");
 		int wZz=getSignalByName("Z")->width();
@@ -493,7 +492,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			// we have no truncated squarer as of now
 			/*IntSquarer *sqr_z;
 				sqr_z = new IntSquarer (target, wZ);
-				oplist.push_back (sqr_z);
+				addSubComponent (sqr_z);
 				inPortMap (sqr_z, "X", "Z");
 				outPortMap (sqr_z, "R", "Z2o2_ext");
 				vhdl << instance (sqr_z, "sqr_z");
@@ -509,7 +508,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			vhdl << tab << "-- First truncate the inputs of the multiplier to the precision of the output" << endl;
 			vhdl << tab << declare("Z_truncToZ2", wZ2o2) << " <= Z" << range(wZ-1, wZ-wZ2o2) << ";" << endl;
 			sqr_z = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false,  sqr_z_inputDelays);
-			oplist.push_back (sqr_z);
+			addSubComponent (sqr_z);
 			inPortMap (sqr_z, "Y", "Z_truncToZ2");
 			inPortMap (sqr_z, "X", "Z_truncToZ2");
 			outPortMap (sqr_z, "R", "Z2o2");
@@ -534,13 +533,13 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 																						-3,  //  msbOut
 																						-wZ3o6-2); // lsbOut
 				z3o6Table -> changeName(getName() + "_Z3o6Table");
-				oplist.push_back (z3o6Table);
+				addSubComponent (z3o6Table);
 				inPortMap (z3o6Table, "X", "Z_truncToZ3o6");
 				outPortMap (z3o6Table, "Y", "Z3o6");
 				vhdl << instance (z3o6Table, "z3o6Table");
 				syncCycleFromSignal("Z3o6");
 
-				manageCriticalPath(target->adderDelay(wZ));
+				manageCriticalPath(getTarget()->adderDelay(wZ));
 				vhdl << tab << declare ("SinZ", wZ) << " <= Z - Z3o6;" << endl;
 				setSignalDelay("SinZ", getCriticalPath());
 				
@@ -554,7 +553,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 																				-wA-1, // msbOut_ = 0,
 																				-w-g, // lsbout
 																				false);
-				oplist.push_back (fsp);
+				addSubComponent (fsp);
 				inPortMap (fsp, "X", "Z");
 				outPortMap(fsp, "R", "SinZ");
 				vhdl << instance (fsp, "ZminusZ3o6");
@@ -597,7 +596,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			vhdl << tab << declare("CosPiA_truncToZ2o2", wZ2o2) << " <= CosPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
 			IntMultiplier *c_out_2;
 			c_out_2 = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false);
-			oplist.push_back (c_out_2);
+			addSubComponent (c_out_2);
 			inPortMap (c_out_2, "X", "Z2o2");
 			inPortMap (c_out_2, "Y", "CosPiA_truncToZ2o2");
 			outPortMap (c_out_2, "R", "Z2o2CosPiA");
@@ -627,7 +626,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			IntMultiplier *c_out_3;
 			
 			c_out_3 = new IntMultiplier (target, wZ, wZ, wZ, false);
-			oplist.push_back (c_out_3);
+			addSubComponent (c_out_3);
 			inPortMap (c_out_3, "Y", "SinPiA_truncToZ");
 			inPortMap (c_out_3, "X", "SinZ");
 			outPortMap (c_out_3, "R", "SinZSinPiA");
@@ -637,14 +636,14 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			nextCycle();
 
 			// TODO: critical path supposed suboptimal (but don't know how to fix)
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("CosZCosPiA_plus_rnd", w+g)
 					 << " <= CosPiA - Z2o2CosPiA;" << endl;
 
 			syncCycleFromSignal ("SinZSinPiA");
 			nextCycle();
 
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("C_out_rnd_aux", w+g)
 			<< " <= CosZCosPiA_plus_rnd - SinZSinPiA;" << endl;
 
@@ -763,7 +762,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			vhdl << tab << declare("SinPiA_truncToZ2o2", wZ2o2) << " <= SinPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
 			IntMultiplier *s_out_2;
 			s_out_2 = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false);
-			oplist.push_back (s_out_2);
+			addSubComponent (s_out_2);
 			inPortMap (s_out_2, "X", "Z2o2");
 			inPortMap (s_out_2, "Y", "SinPiA_truncToZ2o2");
 			outPortMap (s_out_2, "R", "Z2o2SinPiA");
@@ -782,7 +781,7 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			
 			IntMultiplier *s_out_3;
 			s_out_3 = new IntMultiplier (target, wZ, wZ, wZ, false);
-			oplist.push_back (s_out_3);
+			addSubComponent (s_out_3);
 			inPortMap (s_out_3, "X", "SinZ");
 			inPortMap (s_out_3, "Y", "CosPiA_truncToSinZ");
 			outPortMap (s_out_3, "R", "SinZCosPiA");
@@ -792,14 +791,14 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 			setCycleFromSignal ("Z2o2SinPiA");
 			nextCycle();
 			
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("CosZSinPiA_plus_rnd", w+g)
 					 << " <= SinPiA - Z2o2SinPiA;" << endl;
 			
 			syncCycleFromSignal ("SinZCosPiA");
 			nextCycle();
 			
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(w+g));
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
 			vhdl << tab << declare ("S_out_rnd_aux", w+g)
 					 << " <= CosZSinPiA_plus_rnd + SinZCosPiA;" << endl;
 
@@ -854,9 +853,11 @@ FixSinCos::FixSinCos(Target * target, int w_):Operator(target), w(w_){
 
 
 FixSinCos::~FixSinCos(){
+#if 0
 	if(scT) free(scT);
 	if(pi_mult) free(pi_mult);
 	mpfr_clears (scale, constPi, NULL);		
+#endif
 };
 
 
@@ -966,7 +967,7 @@ void FixSinCos::buildStandardTestCases(TestCaseList * tcl)
 
 }
 
-OperatorPtr FixSinCos::parseArguments(Target *target, vector<string> &args) {
+OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 	int lsb;
 	UserInterface::parseInt(args, "lsb", &lsb); 
 	return new FixSinCos(target, -lsb); // TODO we want to expose the constructor parameters in the new  interface, so this "-" is a bug

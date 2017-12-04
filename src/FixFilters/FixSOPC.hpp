@@ -4,7 +4,7 @@
 #include "Operator.hpp"
 #include "utils.hpp"
 
-#include "BitHeap/BitHeap.hpp"
+#include "BitHeap/BitheapNew.hpp"
 
 /*  All flopoco operators and utility functions are declared within
   the flopoco namespace.
@@ -24,6 +24,8 @@ namespace flopoco{
 		FixSOPC(Target* target, int lsbIn, int lsbOut, vector<string> coeff);
 
 
+
+
 		/**
 		 * @brief Generic constructor for inputs in various formats and/or for splitting a SOPC into several ones, etc.
 		 * msbOut must be provided.
@@ -34,6 +36,22 @@ namespace flopoco{
 		 */
 		FixSOPC(Target* target, vector<int> msbIn, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1);
 
+
+
+
+				/**
+		 * @brief Generic constructor for inputs in various formats and/or for splitting a SOPC into several ones, etc.
+		 * msbOut must be provided.
+		 * This version deduces msbIn from maxX. It leads to finer optimization in FixIIR
+		 * @param g
+		 *			If g=-1, the number of needed guard bits will be computed for a faithful result, and a final round bit added in position lsbOut-1.
+		 *			If g=0, the architecture will have no guard bit, no final round bit will be added. The architecture will not be faithful.
+		 *			If g>0, the provided number of guard bits will be used and a final round bit added in position lsbOut-1.
+		 */
+		FixSOPC(Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1);
+
+
+		
 		/** @brief destructor */
 		~FixSOPC();
 
@@ -51,12 +69,13 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static void registerFactory();
 
 	protected:
 		int n;							        /**< number of products, also size of the vectors coeff, msbIn and lsbIn */
-		vector<int> msbIn;			    /**< MSB weights of the inputs */
+		vector<double> maxAbsX;			/**< max absolute value of each input */
+		vector<int> msbIn;			    /**< MSB weights of the inputs (redundant with maxX) */
 		vector<int> lsbIn;			    /**< LSB weights of the inputs */
 	public: // readable by FIR etc
 		int msbOut;							    /**< MSB weight of the output, may be computed out of the constants (depending on the constructor used) */
@@ -71,7 +90,7 @@ namespace flopoco{
 		bool computeMSBOut;     /** <*/
 		bool computeGuardBits;     /** <*/
 		bool addFinalRoundBit;     /** <*/
-		BitHeap* bitHeap;    			 /**< The heap of weighted bits that will be used to do the additions */
+		BitheapNew* bitHeap;    			 /**< The heap of weighted bits that will be used to do the additions */
 	};
 
 

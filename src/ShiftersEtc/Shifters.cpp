@@ -1,13 +1,13 @@
 /*
   A barrel shifter for FloPoCo
- 
+
   Authors: Florent de Dinechin, Bogdan Pasca
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
-  
+
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2010.
   All rights reserved.
 
@@ -33,11 +33,11 @@ using namespace std;
 namespace flopoco{
 
 
-	Shifter::Shifter(Target* target, int wIn, int maxShift, ShiftDirection direction, map<string, double> inputDelays) :
-		Operator(target, inputDelays), wIn_(wIn), maxShift_(maxShift), direction_(direction) {
-	
+	Shifter::Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection direction) :
+		Operator(parentOp, target), wIn_(wIn), maxShift_(maxShift), direction_(direction)
+	{
+		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		srcFileName = "Shifters";
-		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2011)" );	
 		ostringstream name;
 		if(direction_==Left) name <<"LeftShifter_";
 		else                 name <<"RightShifter_";
@@ -46,88 +46,70 @@ namespace flopoco{
 
 		
 		REPORT(DETAILED, " wIn="<<wIn<<" maxShift="<<maxShift<<" direction="<< (direction == Right?  "RightShifter": "LeftShifter") );
-		
+
 		// -------- Parameter set up -----------------
 		wOut_         = wIn_ + maxShift_;
 		wShiftIn_     = intlog2(maxShift_);
-		maxInputDelay_ = getMaxInputDelays(inputDelays); 
 
 		addInput ("X", wIn_);
-		addInput ("S", wShiftIn_);  
+		addInput ("S", wShiftIn_);
 		addOutput("R", wOut_);
 
-		vhdl << tab << declare("level0",wIn_  ) << "<= X;" <<endl;
-		vhdl << tab << declare("ps", wShiftIn_) << "<= S;" <<endl;
-	
-		
-#if 0 // Can't understand the following
-		// local variables
-		int    lastRegLevel = -1;
-		int    unregisteredLevels = 0;
-		int    dep = 0;
-		setCriticalPath( getMaxInputDelays( inputDelays) );
-		for (int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
-			//compute current level delay
-			unregisteredLevels = currentLevel - lastRegLevel;
-			if ( intpow2(unregisteredLevels-1) > wIn_+currentLevel+1 ) 
-				dep = wIn + currentLevel + unregisteredLevels;
-			else
-				dep = intpow2(unregisteredLevels-1);
-						
-			double wireD = target->localWireDelay(2*wIn);//the delay is unusually high
-			REPORT(DEBUG, " wire delay is " << wireD << " and unregisteredLevels="<<unregisteredLevels);
-			if (manageCriticalPath(
-														 intlog( mpz_class(target->lutInputs()/2),
-																			mpz_class(dep)) * target->lutDelay()
-														 + (intlog( mpz_class(target->lutInputs()/2),
-																				mpz_class(dep))-1) * target->localWireDelay()+ wireD)){
-				lastRegLevel = currentLevel;
-				REPORT(DEBUG, tab << "REG LEVEL current delay is:" << getCriticalPath());
-			}
-//			vhdl << "--Estimated delay is:" << getCriticalPath() << endl;
-			if (currentLevel<wShiftIn_-1)	
-				setCriticalPath(0.0);
-#endif
+		//vhdl << tab << declare(getTarget()->localWireDelay(), "level0", wIn_) << "<= X;" << endl;
+		vhdl << tab << declare("level0", wIn_) << "<= X;" << endl;
+		//vhdl << tab << declare(getTarget()->localWireDelay(), "ps", wShiftIn_) << "<= S;" << endl;
+		vhdl << tab << declare("ps", wShiftIn_) << "<= S;" << endl;
 
-			if(true || target->lutInputs()<6) { // levels are not grouped
-				for (int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
-					int stageWidth= wIn+intpow2(currentLevel+1)-1;
-					double delay = target->localWireDelay(stageWidth) // diffusion of the selection signal
-						+ target->lutDelay() ;   // the mux
-					manageCriticalPath(delay);
-					ostringstream currentLevelName, nextLevelName;
-					currentLevelName << "level"<<currentLevel;
-					nextLevelName << "level"<<currentLevel+1;
-					if (direction==Right){
-						vhdl << tab << declare(nextLevelName.str(),  stageWidth ) 
-								 <<"<=  ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') & "<<currentLevelName.str()<<" when ps";
-						if (wShiftIn_ > 1) 
-							vhdl << "(" << currentLevel << ")";
-						vhdl << " = '1' else "
-								 << tab << currentLevelName.str() <<" & ("<<intpow2(currentLevel)-1<<" downto 0 => '0');"<<endl;
-					}else{
-						vhdl << tab << declare(nextLevelName.str(),  stageWidth )
-								 << "<= " << currentLevelName.str() << " & ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') when ps";
-						if (wShiftIn_>1) 
-							vhdl << "(" << currentLevel<< ")";
-						vhdl << "= '1' else "
-								 << tab <<" ("<<intpow2(currentLevel)-1<<" downto 0 => '0') & "<< currentLevelName.str() <<";"<<endl;
-					}
-				}
-			
-		}
-		//update the output slack
-		outDelayMap["R"] = getCriticalPath();
-		REPORT(DETAILED, "Delay at output " << getCriticalPath() );
+		// Pipelining
+		// The theory is that the number of shift levels that the tools should be able to pack in a row of LUT-k is ceil((k-1)/2)
+		// Actually there are multiplexers in CLBs etc that can also be used, so let us keep it simple at k/2. It works on Virtex6, TODO test on Stratix.
+		int levelPerLut = (getTarget()->lutInputs()-1)/2; // this is a floor so it is the same as the formula above
+		REPORT(DETAILED, "Trying to pack " << levelPerLut << " levels in a row of LUT" << getTarget()->lutInputs())
+		int levelInLut=0;
+		double levelDelay;
+		double totalDelay=0; // for reporting
 		
-	
+		for(int currentLevel=0; currentLevel<wShiftIn_; currentLevel++){
+			levelInLut ++;
+			if (levelInLut >= levelPerLut) {
+				levelDelay=getTarget()->logicDelay() + getTarget()->fanoutDelay(wIn+intpow2(currentLevel+1)-1);
+				totalDelay += levelDelay;
+				REPORT(DETAILED, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
+				levelInLut=0;
+			}
+			else // this level incurs no delay
+				levelDelay=0;
+			
+			REPORT (DEBUG, "delay of level " << currentLevel <<" is " << levelDelay); 
+			ostringstream currentLevelName, nextLevelName;
+			currentLevelName << "level"<<currentLevel;
+			nextLevelName << "level"<<currentLevel+1;
+			if (direction==Right){
+				vhdl << tab << declare(levelDelay,
+															 nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
+					  <<"<=  ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') & "<<currentLevelName.str()<<" when ps";
+				if (wShiftIn_ > 1)
+					vhdl << "(" << currentLevel << ")";
+				vhdl << " = '1' else "
+					  << tab << currentLevelName.str() <<" & ("<<intpow2(currentLevel)-1<<" downto 0 => '0');"<<endl;
+			}else{
+				vhdl << tab << declare(levelDelay, nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
+					  << "<= " << currentLevelName.str() << " & ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') when ps";
+				if (wShiftIn_>1)
+					vhdl << "(" << currentLevel<< ")";
+				vhdl << "= '1' else "
+					  << tab <<" ("<<intpow2(currentLevel)-1<<" downto 0 => '0') & "<< currentLevelName.str() <<";"<<endl;
+			}
+
+		}
+
 		ostringstream lastLevelName;
 		lastLevelName << "level"<<wShiftIn_;
 		if (direction==Right)
 			vhdl << tab << "R <= "<<lastLevelName.str()<<"("<< wIn + intpow2(wShiftIn_)-1-1 << " downto " << wIn_ + intpow2(wShiftIn_)-1 - wOut_ <<");"<<endl;
 		else
 			vhdl << tab << "R <= "<<lastLevelName.str()<<"("<< wOut_-1 << " downto 0);"<<endl;
-		
+
 	}
 
 	Shifter::~Shifter() {
@@ -142,12 +124,12 @@ namespace flopoco{
 
 		mpz_class shiftedInput = sx;
 		int i;
-	
+
 		if (direction_==Left){
 			mpz_class shiftAmount = ss;
 			for (i=0;i<shiftAmount;i++)
 				shiftedInput=shiftedInput*2;
-		
+
 			for (i= wIn_+intpow2(wShiftIn_)-1-1; i>=wOut_;i--)
 				if ( mpzpow2(i) <= shiftedInput )
 					shiftedInput-=mpzpow2(i);
@@ -167,20 +149,20 @@ namespace flopoco{
 		tc->addExpectedOutput("R", sr);
 	}
 
-	
 
-	OperatorPtr Shifter::parseArguments(Target *target, std::vector<std::string> &args) {
+
+	OperatorPtr Shifter::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn, maxShift;
 		bool dirArg;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		UserInterface::parseStrictlyPositiveInt(args, "maxShift", &maxShift);
 		UserInterface::parseBoolean(args, "dir", &dirArg);
-		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);		
-		return new Shifter(target, wIn, maxShift, dir);
+		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);
+		return new Shifter(parentOp, target, wIn, maxShift, dir);
 	}
 
 
-	
+
 	void Shifter::registerFactory(){
 		UserInterface::add("Shifter", // name
 											 "A classical barrel shifter. The output size is computed.",
@@ -190,7 +172,7 @@ namespace flopoco{
 											 "", // no particular extra doc needed
 											 Shifter::parseArguments
 											 ) ;
-		
+
 	}
 
 

@@ -131,7 +131,7 @@ namespace flopoco{
 		//check alpha, and set it properly if necessary
 		if(alpha == -1)
 		{
-			alpha = target->lutInputs() - gamma;
+			alpha = getTarget()->lutInputs() - gamma;
 
 			if (alpha<1)
 			{
@@ -149,8 +149,8 @@ namespace flopoco{
 		else
 			o << "ConstDiv3ForSinPoly_";
 		o << d << "_" << vhdlize(wIn) << "_"  << vhdlize(alpha) << "_" << vhdlize(nbZeros) << "zeros_";
-		if(target->isPipelined())
-			o << vhdlize(target->frequencyMHz());
+		if(getTarget()->isPipelined())
+			o << vhdlize(getTarget()->frequencyMHz());
 		else
 			o << "comb";
 		uniqueName_ = o.str();
@@ -180,7 +180,6 @@ namespace flopoco{
 		EuclideanDiv3Table* table;
 		table = new EuclideanDiv3Table(target, d, alpha, gamma, nbZeros, false);
 		useSoftRAM(table);
-		oplist.push_back(table);
 		//double tableDelay = table->getOutputDelay("Y");
 
 		string ri, xi, ini, outi, qi;
@@ -192,7 +191,7 @@ namespace flopoco{
 		for (int i=k-1; i>0; i--)
 		{
 			//manageCriticalPath(tableDelay);
-			manageCriticalPath(target->lutDelay());
+			manageCriticalPath(getTarget()->lutDelay());
 
 			xi = join("x", i);
 			if(i==k-1 && rem!=0)
@@ -227,11 +226,10 @@ namespace flopoco{
 		{
 			table = new EuclideanDiv3Table(target, d, alpha, gamma, nbZeros, true);
 			useSoftRAM(table);
-			oplist.push_back(table);
 			//tableDelay = table->getOutputDelay("Y");
 
 			//manageCriticalPath(tableDelay);
-			manageCriticalPath(target->lutDelay());
+			manageCriticalPath(getTarget()->lutDelay());
 
 			xi = join("x", 0);
 			vhdl << tab << declare(xi, alpha, true) << " <= X" << range(alpha-1, 0) << ";" << endl;
@@ -269,13 +267,13 @@ namespace flopoco{
 
 			vhdl << tab << "Q <= tempQ" << range(qSize-1, 0)  << ";" << endl;
 
-			outDelayMap["Q"] = getCriticalPath();
+			getOutDelayMap()["Q"] = getCriticalPath();
 		}
 
 		// This ri is r_0
 		vhdl << tab << "R <= " << ri << ";" << endl;
 
-		outDelayMap["R"] = getCriticalPath();
+		getOutDelayMap()["R"] = getCriticalPath();
 	}
 
 	ConstDiv3ForSinPoly::~ConstDiv3ForSinPoly()

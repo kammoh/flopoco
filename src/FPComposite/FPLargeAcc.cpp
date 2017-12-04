@@ -115,7 +115,7 @@ namespace flopoco{
 
 		/* set-up carry-save parameters */		
 		int chunkSize_;
-		target->suggestSlackSubaddSize(chunkSize_ , sizeAcc_, target->localWireDelay() + target->lutDelay());
+		getTarget()->suggestSlackSubaddSize(chunkSize_ , sizeAcc_, getTarget()->localWireDelay() + getTarget()->lutDelay());
 		REPORT( DEBUG, "Addition chunk size in FPLargeAcc is:"<<chunkSize_);
 		 
 		int nbOfChunks    = ceil(double(sizeAcc_)/double(chunkSize_));
@@ -136,7 +136,7 @@ namespace flopoco{
 		}
 
 		setCriticalPath( getMaxInputDelays(inputDelays));
-		manageCriticalPath( target->localWireDelay() + target->adderDelay(wEX+1)); 
+		manageCriticalPath( getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+1)); 
 
 		/* declaring the underflow and overflow conditions of the input X. 
 		these two flags are used to reparameter the accumulator following a test
@@ -149,8 +149,7 @@ namespace flopoco{
 		mpz_class exp_offset = E0X_+LSBA_;
 		vhdl << tab << declare("shiftVal",wEX_+1) << " <= (\"0\" & expX) - CONV_STD_LOGIC_VECTOR("<< exp_offset <<","<<  wEX_+1<<");" << endl;
 
-		shifter_ = new Shifter(target, (forDotProd?wFX_+wFY+2:wFX_+1), maxShift_, Shifter::Left, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
-		oplist.push_back(shifter_);
+		shifter_ = new Shifter(this, target, (forDotProd?wFX_+wFY+2:wFX_+1), maxShift_, Shifter::Left);
 
 		inPortMap   (shifter_, "X", "fracX");
 		inPortMapCst(shifter_, "S", "shiftVal"+range(shifter_->getShiftInWidth() - 1,0));
@@ -607,7 +606,7 @@ namespace flopoco{
 		return tc;
 	}
 	
-	OperatorPtr FPLargeAcc::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPLargeAcc::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wEX, wFX, MaxMSBX, MSBA, LSBA;
 		UserInterface::parseStrictlyPositiveInt(args, "wEX", &wEX); 
 		UserInterface::parseStrictlyPositiveInt(args, "wFX", &wFX);

@@ -29,7 +29,7 @@ namespace flopoco {
 
 		ostringstream name;
 		name << "FixFIR_uid" << getNewUId();
-		setNameWithFreq( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		buildVHDL();
 	};
@@ -189,7 +189,7 @@ namespace flopoco {
 #endif
 	};
 
-	OperatorPtr FixFIR::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixFIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsbInOut;
 		UserInterface::parseInt(args, "lsbInOut", &lsbInOut);
 		bool rescale;
@@ -205,7 +205,10 @@ namespace flopoco {
 				input.push_back( substr );
 			}
 
-		return new FixFIR(target, lsbInOut, input, rescale);
+		OperatorPtr tmpOp = new FixFIR(target, lsbInOut, input, rescale);
+
+		return tmpOp;
+		//return new FixFIR(target, lsbInOut, input, rescale);
 	}
 
 	void FixFIR::registerFactory(){
@@ -215,7 +218,7 @@ namespace flopoco {
 											 "",
 											 "lsbInOut(int): integer size in bits;\
                         rescale(bool)=false: If true, divides all coefficient by 1/sum(|coeff|);\
-                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=1.234567890123:sin(3*pi/8)",
+                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
 											 FixFIR::parseArguments
 											 ) ;

@@ -32,9 +32,7 @@ INCLUDE(CPack)
 #Compilation flags
 #SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
-#SET(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -pthread -O2")
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall -pthread -O2")
-#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
 #SET(CMAKE_CXX_FLAGS_DEBUG "-pg -Wall")
 # Do you want an executable of 30MB ?
 SET(CMAKE_BUILD_TYPE DEBUG)
@@ -95,11 +93,32 @@ ELSE (MPFR_FOUND)
     MESSAGE(FATAL_ERROR "Could not find MPFR.\nOn Debian-based systems type: 'sudo apt-get install libmpfr-dev'")
 ENDIF (MPFR_FOUND)
 
+
+FIND_PATH(WCPG_H
+	  wcpg.h
+	  DOC "Path of wcpg.h, the include file for GNU MPFR library"
+		)
+
+FIND_LIBRARY(WCPG_LIB
+	NAMES wcpg
+	DOC "Directory of the WCPG library"
+	)
+
+IF (WCPG_H AND WCPG_LIB)
+    SET(WCPG_FOUND TRUE)
+ENDIF (WCPG_H AND WCPG_LIB)
+
+IF ( WCPG_FOUND )
+	MESSAGE ( STATUS "Found WCPG : ${WCPG_H} ${WCPG_LIB}" )
+  ADD_DEFINITIONS(-DHAVE_WCPG)
+ELSE ( WCPG_FOUND )
+	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator" )
+ENDIF ( WCPG_FOUND )
+
+
 ADD_DEFINITIONS(-DHAVE_LNS)
 
-# Create target for the lexer
- ADD_CUSTOM_TARGET(VHDLLexer echo "Creating VHDLLexer.c VHDLLexer.h")
-
+#
 # Create custom command for flex++/lex (note the outputs)
 FIND_PROGRAM(FLEXPP_EXECUTABLE
 	NAMES flex
@@ -139,12 +158,11 @@ ELSE(BISON_EXECUTABLE)
 ENDIF(BISON_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	SOURCE src/FPExpressions/ExpressionParser.y
+	OUTPUT ExpressionParser.cpp
 	COMMAND ${BISON_EXECUTABLE}
 	ARGS -y -d --defines=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.h --output=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.cpp --name-prefix=FlopocoExpression
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
-	TARGET ExpressionParser
-	OUTPUTS ExpressionParser.cpp)
+)
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED)
 
@@ -279,6 +297,7 @@ src/ShiftReg
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
+src/IntAddSubCmp/IntMultiAdder
 
 # ---------- First generation of fast large adders ------------------------
 # src/IntAddSubCmp/LongIntAdderAddAddMuxGen1
@@ -452,4 +471,3 @@ TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
 
 #add_subdirectory(src/random)
 #target_link_libraries(FloPoCoLib flopoco_random_lib)
-

@@ -3,11 +3,11 @@
 
  This file is part of the FloPoCo project developed by the Arenaire
  team at Ecole Normale Superieure de Lyon
-  
+
  Author : Bogdan Pasca, Bogdan.Pasca@ens-lyon.org
 
  Initial software.
- Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
  2008-2010.
   All rights reserved.
 */
@@ -37,7 +37,7 @@ namespace flopoco{
 
 		/* Convert the input string into a sollya evaluation tree */
 		sollya_obj_t node;
-		node = sollya_lib_parse_string(constant.c_str());	
+		node = sollya_lib_parse_string(constant.c_str());
 		/* If  parse error throw an exception */
 		if (sollya_lib_obj_is_error(node))
 			{
@@ -58,18 +58,18 @@ namespace flopoco{
 		REPORT(DEBUG, "Constant exponent is " << mpfr_get_exp(mpC) );
 
 		// build the name
-		ostringstream name; 
+		ostringstream name;
 		name <<"FPRealKCM_" << vhdlize(wE)  << "_" << vhdlize(wF) << "_" << vhdlize(constant);
 		setName(name.str());
-				
+
 		int iExp = mpfr_get_exp(mpC);// - 1;
-		
+
 		addFPInput("X", wE, wF);
 		addFPOutput("R", wE, wF, 2); //faithful result
 
 
-		vhdl << tab << declare("exc",2) << "<= X" << range(wE+wF+2, wE+wF+1)<<";"<<endl;
-		vhdl << tab << declare("sign") << "<= X" << of(wE + wF) << ";" << endl;
+		vhdl << tab << declare("exc",2) << "<= X"<<range(wE+wF+2, wE+wF+1)<<";"<<endl;
+		vhdl << tab << declare("sign") << "<= X"<<of(wE+wF)<<";"<<endl;
 
 		vhdl << tab << declare("fracX",wF+1) << " <= \"1\" & X"<<range(wF-1,0)<<";"<<endl;
 		vhdl << tab << declare("eX",wE) << " <= X"<<range(wE+wF-1, wF)<<";"<<endl;
@@ -90,45 +90,44 @@ namespace flopoco{
 					-wF+iExp-1, 
 					constant
 				);
-			oplist.push_back(frkcm);
-	
-			inPortMap(frkcm, "X", "fracX");
-			outPortMap(frkcm, "R", "fracMultRes");
-			vhdl << tab << instance( frkcm, "ConstMultKCM") << endl;
-			syncCycleFromSignal("fracMultRes");
-			setCriticalPath(frkcm->getOutputDelay("R"));
-		
-			//get number of bits of output
-			//normalize
-			vhdl << tab << declare("norm") << " <= fracMultRes"<<of(wF+1)<<";"<<endl;
-		
-			manageCriticalPath(target->localWireDelay() + target->adderDelay(wE+2));
-			vhdl << tab << declare("nf",wF) << " <= fracMultRes"<<range(wF-1,0)<<" when norm='0' else fracMultRes"<<range(wF,1)<<";"<<endl;
+
+		inPortMap(frkcm, "X", "fracX");
+		outPortMap(frkcm, "R", "fracMultRes");
+		vhdl << tab << instance( frkcm, "ConstMultKCM") << endl;
+		syncCycleFromSignal("fracMultRes");
+		setCriticalPath(frkcm->getOutputDelay("R"));
+
+		//get number of bits of output
+		//normalize
+		vhdl << tab << declare("norm") << " <= fracMultRes"<<of(wF+1)<<";"<<endl;
+
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE+2));
+		vhdl << tab << declare("nf",wF) << " <= fracMultRes"<<range(wF-1,0)<<" when norm='0' else fracMultRes"<<range(wF,1)<<";"<<endl;
 		}
 
 		//update exponent
 		vhdl << tab << declare("expOp1",wE+2) << " <= CONV_STD_LOGIC_VECTOR("<<iExp-1<<","<<wE+2<<");"<<endl;
 		vhdl << tab << declare("finalExp",wE+2) << " <= (\"00\" & eX) + expOp1 + norm;"<<endl;
-		
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << "with finalExp"<<range(wE+1,wE)<<" select "<<endl;
 		vhdl << tab << declare("excUpdated", 2) << " <= exc when \"00\","<<endl;
 		vhdl << tab << tab << "\"00\" when \"10\"|\"11\","<<endl;
 		vhdl << tab << tab << "\"10\" when \"01\","<<endl;
 		vhdl << tab << tab << " exc when others;"<<endl;
-		
-		manageCriticalPath(target->localWireDelay() + target->lutDelay());
+
+		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 		vhdl << tab << "with exc select "<<endl;
 		vhdl << tab << declare("excUpdated2", 2) << " <= exc when \"00\"|\"10\"|\"11\","<<endl;
 		vhdl << tab << tab << " excUpdated when \"01\","<<endl;
 		vhdl << tab << tab << " exc when others;"<<endl;
-		
+
 		vhdl << tab << "R <= excUpdated2 & sign & finalExp"<<range(wE-1,0)<<" & nf;"<<endl;
-		outDelayMap["R"] = getCriticalPath();
+		getOutDelayMap()["R"] = getCriticalPath();
 	}
 
 	FPRealKCM::~FPRealKCM() {
-		// TODO 
+		// TODO
 	}
 
 
@@ -137,7 +136,7 @@ namespace flopoco{
 	void FPRealKCM::emulate(TestCase* tc){
 		/* Get I/O values */
 		mpz_class svX = tc->getInputValue("X");
-		
+
 		/* Compute correct value */
 		FPNumber fpx(wE, wF);
 		fpx = svX;
@@ -150,16 +149,16 @@ namespace flopoco{
 		fpx.getMPFR(x);
 		mpfr_mul(ru, x, c, GMP_RNDU);
 		mpfr_mul(rd, x, c, GMP_RNDD);
-		
-		// Set outputs 
+
+		// Set outputs
 		FPNumber  fprd(wE, wF, rd);
 		mpz_class svRd = fprd.getSignalValue();
 		tc->addExpectedOutput("R", svRd);
-		
+
 		FPNumber  fpru(wE, wF, ru);
 		mpz_class svRu = fpru.getSignalValue();
 		tc->addExpectedOutput("R", svRu);
-		
+
 		// clean up
 		mpfr_clears(x, c, rd, ru, NULL);
 	}
@@ -178,7 +177,7 @@ namespace flopoco{
 		UserInterface::parseString(args, "constant", &constant);
 		return new FPRealKCM(target, wE, wF, constant);
 	}
-	
+
 	void FPRealKCM::registerFactory(void)
 	{
 		UserInterface::add(

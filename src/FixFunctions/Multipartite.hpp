@@ -20,7 +20,7 @@ namespace flopoco
 	class Multipartite
 	{
 		public:
-
+		const string uniqueName_=""; // for REPORT to work
 			//---------------------------------------------------------------------------- Constructors/Destructor
 
 			Multipartite(FixFunction *f_, int m_, int alpha_, int beta_, vector<int> gammai_, vector<int> betai_, FixFunctionByMultipartiteTable* mpt_);

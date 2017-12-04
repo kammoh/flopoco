@@ -48,7 +48,7 @@ namespace flopoco{
 		mpz_class sInt2C2(mpz_class X, int width);
 		
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		/** Factory register method */ 
 		static void registerFactory();

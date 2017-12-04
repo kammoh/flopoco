@@ -37,6 +37,17 @@ using namespace std;
 
 namespace flopoco{
 
+	/* TODO for the brave
+		 In many cases, we have some of the sigma_i who have a constant sign (see the reports).
+		 This info is stored in sigmaSign, and currently unused.
+		 In such cases, we could get back to reducing x to unsigned, and get back to fully unsigned arithmetic, at least in some of the steps.
+		 There is probably a market for that.
+		 This needs to be done cleanly (i.e. without bloating the code/making it unreadable)
+		 Maybe we should wait for power-of-two segmentation
+
+	 */
+
+	
 	/* Error analysis:
 		 Target error is exp2(lsbOut).
 		 Final rounding may entail up to exp2(lsbOut-1).
@@ -52,47 +63,9 @@ namespace flopoco{
 	
 #define DEBUGVHDL 0
 
-	FixFunctionByPiecewisePoly::CoeffTable::CoeffTable(Target* target, int wIn, int wOut, PiecewisePolyApprox* polyApprox_, bool addFinalRoundBit_, int finalRoundBitPos_) :
-		Table(target, wIn, wOut), polyApprox(polyApprox_), addFinalRoundBit(addFinalRoundBit_), finalRoundBitPos(finalRoundBitPos_)
-	{
-		srcFileName="FixFunctionByPiecewisePoly::CoeffTable";
-		ostringstream name; 
-		name <<"CoeffTable_" << wIn << "_" << wOut << "_" << getNewUId();
-		setName(name.str());
-		// outDelayMap["Y"] = target->RAMDelay(); // is this useful?
-	}
 
-
-	mpz_class FixFunctionByPiecewisePoly::CoeffTable::function(int x){
-		mpz_class z=0;
-		int currentShift=0;
-		for(int i=polyApprox->degree; i>=0; i--) {
-			mpz_class coeff = polyApprox-> getCoeff(x, i); // coeff of degree i from poly number x
-			if (polyApprox->coeffSigns[i] != 0) {// sign is constant among all the coefficients: remove it from here, it will be added back as a constant in the VHDL
-				mpz_class mask = (mpz_class(1)<<(polyApprox->MSB[i] - polyApprox->LSB) ) - 1; // size is msb-lsb+1
-				coeff = coeff & mask; 
-			}
-			z += coeff << currentShift; // coeff of degree i from poly number x
-			// REPORT(DEBUG, "i=" << i << "   z=" << unsignedBinary(z, 64));
-			if(i==0 && addFinalRoundBit){ // coeff of degree 0
-				z += mpz_class(1)<<(currentShift + finalRoundBitPos - polyApprox->LSB); // add the round bit
-				//REPORT(DEBUG, "i=" << i << " + z=" << unsignedBinary(z, 64));
-				// This may entail an overflow of z, in the case -tiny -> +tiny, e.g. first polynomial of atan
-				// This is OK modulo 2^wOut (two's complement), but will break the vhdl output of Table: fix it here.
-				z = z & ((mpz_class(1)<<wOut) -1);
-				// REPORT(INFO, "Adding final round bit at position " << finalRoundBitPos-polyApprox->LSB);
-			}
-			currentShift +=  polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0? 1: 0);
-		}
-		return z;
-	}
-
-
-
-
-
-	FixFunctionByPiecewisePoly::FixFunctionByPiecewisePoly(Target* target, string func, int lsbIn, int msbOut, int lsbOut, int degree_, bool finalRounding_, double approxErrorBudget_, map<string, double> inputDelays):
-		Operator(target, inputDelays), degree(degree_), finalRounding(finalRounding_), approxErrorBudget(approxErrorBudget_){
+	FixFunctionByPiecewisePoly::FixFunctionByPiecewisePoly(Target* target, string func, int lsbIn_, int msbOut_, int lsbOut_, int degree_, bool finalRounding_, double approxErrorBudget_, map<string, double> inputDelays):
+		Operator(target, inputDelays), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_), finalRounding(finalRounding_), approxErrorBudget(approxErrorBudget_){
 
 		if(finalRounding==false){
 			THROWERROR("FinalRounding=false not implemented yet" );
@@ -113,7 +86,7 @@ namespace flopoco{
 		REPORT(DETAILED, "Entering: FixFunctionByPiecewisePoly \"" << func << "\" " << lsbIn << " " << msbOut << " " << lsbOut << " " << degree);
  		int wX=-lsbIn;
 		addInput("X", wX);
-		int outputSize = msbOut-lsbOut+1; // TODO finalRounding would impact this line
+		int outputSize = msbOut-lsbOut+1; 
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
 
@@ -121,7 +94,6 @@ namespace flopoco{
 			REPORT(DETAILED, "Degree 0: building a simple table");
 			FixFunctionByTable* table=new FixFunctionByTable(target, func, false, lsbIn, msbOut, lsbOut);
 			addSubComponent(table);
-
 			inPortMap(table, "X", "X");
 			outPortMap(table, "Y", "YR");
 			vhdl << instance(table, "simpleTable") << endl;
@@ -132,37 +104,31 @@ namespace flopoco{
 			if(degree==1){ // For degree 1, MultiPartite could work better
 			REPORT(INFO, "Degree 1: You should consider using FixFunctionByMultipartiteTable");
 			}
+
+			
 			// Build the polynomial approximation
 			double targetAcc= approxErrorBudget*pow(2, lsbOut);
 			REPORT(INFO, "Computing polynomial approximation for target accuracy "<< targetAcc);
 			polyApprox = new PiecewisePolyApprox(func, targetAcc, degree);
-			int alpha =  polyApprox-> alpha; // coeff table input size 
-
-			// Resize its MSB to the one input by the user. This is useful for functions that "touch" a power of two and may thus overflow by one bit.
+			alpha =  polyApprox-> alpha; // coeff table input size 
+			
+			// Resize its MSB to the one input by the user. 
 			for (int i=0; i<(1<<alpha); i++) {
-				// REPORT(DEBUG, "i=" << i << "   coeff 0 before resizing: " <<   polyApprox -> poly[i] -> coeff[0] ->getBitVector());
 				polyApprox -> poly[i] -> coeff[0] -> changeMSB(msbOut);
-				// REPORT(DEBUG, "i=" << i << "   coeff 0 after resizing: " <<   polyApprox -> poly[i] -> coeff[0] ->getBitVector());
 			}
 			polyApprox -> MSB[0] = msbOut;
 
-			// Store it in a table
-			int polyTableOutputSize=0;
-			for (int i=0; i<=degree; i++) {
-				polyTableOutputSize += polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0? 1 : 0);
-			} 
-			REPORT(DETAILED, "Poly table input size  = " << alpha);
-			REPORT(DETAILED, "Poly table output size = " << polyTableOutputSize);
+			// Build the coefficient table out of the vector of polynomials. This is also where we add the final rounding bit
+			buildCoeffTable();
+			GenericTable* coeffTable = new GenericTable(target, alpha, polyTableOutputSize, coeffTableVector); 
+			addSubComponent(coeffTable);
 
+			// What remains of the error budget for the evaluation phase ?
 			double roundingErrorBudget=exp2(lsbOut-1)-polyApprox->approxErrorBound;
 			REPORT(INFO, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << polyApprox->approxErrorBound
 						 << " hence rounding error budget = "<< roundingErrorBudget );
-		 			
-			// This is where we add the final rounding bit
-			FixFunctionByPiecewisePoly::CoeffTable* coeffTable = new CoeffTable(target, alpha, polyTableOutputSize, polyApprox,
-																					finalRounding, lsbOut-1 /*position of the round bit*/) ;
-			addSubComponent(coeffTable);
 
+			// The VHDL that splits the input into A and Z
 			vhdl << tab << declare("A", alpha)  << " <= X" << range(wX-1, wX-alpha) << ";" << endl;
 			vhdl << tab << declare("Z", wX-alpha)  << " <= X" << range(wX-alpha-1, 0) << ";" << endl;
 			vhdl << tab << declare("Zs", wX-alpha)  << " <= (not Z(" << wX-alpha-1 << ")) & Z" << range(wX-alpha-2, 0) << "; -- centering the interval" << endl;
@@ -172,7 +138,7 @@ namespace flopoco{
 			vhdl << instance(coeffTable, "coeffTable") << endl;
 
 			syncCycleFromSignal("Coeffs");
-
+			// Split the table output into each coefficient
 			int currentShift=0;
 			for(int i=polyApprox->degree; i>=0; i--) {
 				int actualSize = polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0 ? 1 : 0);
@@ -184,11 +150,18 @@ namespace flopoco{
 				currentShift += actualSize;
 			}
 
-			// Here I wish I could plug more parallel evaluators. Hence the interface.
-
-			// First compute the size of the intermediate terms sigma_i
-			computeSigmaSignsAndMSBs();
 			
+			// What follows is related to Horner evaluator
+			// Here I wish I could plug other (more parallel) evaluators. 
+
+			//  compute the size of the intermediate terms sigma_i  (Horner-specific)  
+			computeSigmaSignsAndMSBs(); // TODO make it a method of FixHornerEvaluator?
+
+			// the previous has computed the min value of msbOut.
+			if(msbOut<sigmaMSB[0])
+				REPORT(0, "WARNING: msbOut is set to " << msbOut << " but I compute that it should be " << sigmaMSB[0]);
+
+
 			REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
 			// This builds an architecture such as eps_finalround < 2^(lsbOut-1) and eps_round<2^(lsbOut-2)
 #if 0 // This constructor computes sigma and msbs only out of the formats
@@ -219,6 +192,48 @@ namespace flopoco{
 
 
 
+
+	
+	void FixFunctionByPiecewisePoly::buildCoeffTable() {
+		// First compute the table output size
+		polyTableOutputSize=0;
+		for (int i=0; i<=degree; i++) {
+			polyTableOutputSize += polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0? 1 : 0);
+		} 
+		REPORT(DETAILED, "Poly table input size  = " << alpha);
+		REPORT(DETAILED, "Poly table output size = " << polyTableOutputSize);
+
+		int x;
+		for(x=0; x<(1<<alpha); x++) {
+			mpz_class z=0;
+			int currentShift=0;
+			for(int i=polyApprox->degree; i>=0; i--) {
+				mpz_class coeff = polyApprox-> getCoeff(x, i); // coeff of degree i from poly number x
+				if (polyApprox->coeffSigns[i] != 0) {// sign is constant among all the coefficients: remove it from here, it will be added back as a constant in the VHDL
+					mpz_class mask = (mpz_class(1)<<(polyApprox->MSB[i] - polyApprox->LSB) ) - 1; // size is msb-lsb+1
+					coeff = coeff & mask; 
+				}
+				z += coeff << currentShift; // coeff of degree i from poly number x
+				// REPORT(DEBUG, "i=" << i << "   z=" << unsignedBinary(z, 64));
+				if(i==0 && finalRounding){ // coeff of degree 0
+					int finalRoundBitPos = lsbOut-1;
+					z += mpz_class(1)<<(currentShift + finalRoundBitPos - polyApprox->LSB); // add the round bit
+					//REPORT(DEBUG, "i=" << i << " + z=" << unsignedBinary(z, 64));
+					// This may entail an overflow of z, in the case -tiny -> +tiny, e.g. first polynomial of atan
+					// This is OK modulo 2^wOut (two's complement), but will break the vhdl output of Table: fix it here.
+					z = z & ((mpz_class(1)<<polyTableOutputSize) -1);
+					// REPORT(INFO, "Adding final round bit at position " << finalRoundBitPos-polyApprox->LSB);
+				}
+				currentShift +=  polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0? 1: 0);
+			}
+			coeffTableVector.push_back(z);
+		}
+
+	}
+
+
+
+	
 	
 
 	void FixFunctionByPiecewisePoly::computeSigmaSignsAndMSBs(){
@@ -310,7 +325,7 @@ namespace flopoco{
 		for (int j=degree; j>=0; j--) {
 			REPORT(DETAILED, "Horner step " << j << ":   sigmaSign = " << sigmaSign[j] << " \t sigmaMSB = " << sigmaMSB[j]);
 		}	
-						 
+
 	}
 
 	
@@ -351,7 +366,7 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsbIn, msbOut, lsbOut, d;
 		string f;
 		double approxErrorBudget;

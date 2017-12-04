@@ -123,7 +123,6 @@ namespace flopoco {
 
 			// copy the top of the DAG into variable Ri
 			vhdl << endl << tab << "R" << i << " <= " << bitheap->getSumName() << range(rsizes[i]-1, 0) << ";" << endl;
-			outDelayMap[join("R", i)] = getCriticalPath();
 		}
 
 	}

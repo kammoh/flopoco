@@ -12,7 +12,7 @@
 #include "../ShiftersEtc/LZOCShifterSticky.hpp"
 #include "../TestBenches/FPNumber.hpp"
 #include "../IntAddSubCmp/IntAdder.hpp"
-#include "../IntAddSubCmp/IntDualSub.hpp"
+#include "../IntAddSubCmp/IntDualAddSub.hpp"
 
 namespace flopoco{
 
@@ -26,7 +26,7 @@ namespace flopoco{
 		 * @param[in]		wE			the the with of the exponent for the f-p number X
 		 * @param[in]		wF			the the with of the fraction for the f-p number X
 		 */
-		FPAddDualPath(Target* target, int wE, int wF, bool sub=false);
+		FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
 		/**
 		 * FPAddDualPath destructor
@@ -38,11 +38,6 @@ namespace flopoco{
 		void buildStandardTestCases(TestCaseList* tcl);
 		TestCase* buildRandomTestCase(int i);
 
-		// User-interface stuff
-		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
-
-		static void registerFactory();
 
 
 	private:
@@ -57,7 +52,7 @@ namespace flopoco{
 		/** The integer adder object for subtraction in the close path */
 		IntAdder *fracSubClose;
 		/** The dual subtractor for the close path */
-		IntDualSub *dualSubClose;
+		IntDualAddSub *dualSubClose;
 		/** The fraction adder for the far path */
 		IntAdder *fracAddFar;
 		/** The adder that does the final rounding */

@@ -23,8 +23,8 @@ namespace flopoco{
 		else
 			useStdLogicUnsigned();
 
-		if(target->isPipelined())
-			name << "OldFixedComplexMultiplier_" << wI << "_" << wO << "_f"<< target->frequencyMHz() << "_uid" << getNewUId();
+		if(getTarget()->isPipelined())
+			name << "OldFixedComplexMultiplier_" << wI << "_" << wO << "_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "OldFixedComplexMultiplier_" << wI << "_" << wO << "_uid" << getNewUId();
 		setName( name.str() );
@@ -67,7 +67,7 @@ namespace flopoco{
 			syncCycleFromSignal("XiYr", true);
 			
 			// invert the sign of XiYi to obtain a subtraction
-			manageCriticalPath(target->localWireDelay(wO) + target->lutDelay());
+			manageCriticalPath(getTarget()->localWireDelay(wO) + getTarget()->lutDelay());
 			
 			vhdl << tab << declare("neg_XiYi", wO) << " <= XiYi xor (" << wO-1 << " downto 0 => \'1\');" << endl;
 			
@@ -141,7 +141,7 @@ namespace flopoco{
 				syncCycleFromSignal("K2", false);
 				syncCycleFromSignal("K3", false);
 				
-				manageCriticalPath(target->localWireDelay(wO) + target->lutDelay());
+				manageCriticalPath(getTarget()->localWireDelay(wO) + getTarget()->lutDelay());
 			
 				vhdl << tab << declare("neg_K3", wO) << " <= K3 xor (" << wO-1 << " downto 0 => \'1\');" << endl;
 			

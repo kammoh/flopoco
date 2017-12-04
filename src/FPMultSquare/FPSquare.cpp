@@ -59,7 +59,6 @@ namespace flopoco{
 
 		//instantiate an IntSquarer
 		IntSquarer *sqr = new IntSquarer(target,wFX_+1);
-		oplist.push_back(sqr);
 
 		inPortMap(sqr, "X", "frac");
 		outPortMap(sqr, "R", "sqrFrac");
@@ -100,7 +99,7 @@ namespace flopoco{
 		}else{
 			//rounding will be needed
 			setCriticalPath(0.0);
-			manageCriticalPath( target->localWireDelay() + target->eqConstComparatorDelay(2*(wFX+1)-(wFR+3)));
+			manageCriticalPath( getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(2*(wFX+1)-(wFR+3)));
 			vhdl << tab << declare("sticky") << "<='0' when sqrFrac" << range( 2*(wFX+1)-(wFR+3)-1,0)<<"="<<zg(2*(wFX+1)-(wFR+3),0) << "else '1';"<<endl;
 			vhdl << tab << declare("guard") << " <= sqrFrac" << of(2*(wFX+1)-(wFR+3))<<" when sqrFrac" << of(2*(wFX+1)-1)<<"='0' else "
 				 << "sqrFrac" << of(2*(wFX+1)-(wFR+3)+1) << ";"<< endl;
@@ -113,8 +112,7 @@ namespace flopoco{
 			vhdl << tab << tab << "sqrFrac" << range(2*(wFX_+1)-3,2*(wFX_+1)-3+1-wFR) << ";" << endl;
 
 			//the rounding phase
-			IntAdder* add = new IntAdder(target, wE+2 + wFR, inDelayMap("X", target->localWireDelay() + getCriticalPath()));
-			oplist.push_back(add);
+			IntAdder* add = new IntAdder(target, wE+2 + wFR);
 
 			vhdl << tab << declare("concatExpFrac", wE+2 + wFR) << " <= extExp & finalFrac;" << endl;
 			vhdl << tab << declare("addCin") << " <= (guard and sticky) or (fracULP and guard and not(sticky));"<<endl;
@@ -132,7 +130,7 @@ namespace flopoco{
 
 			vhdl << tab << declare ("excConcat",4) << " <= exc & postRound" << range(wE+2 + wFR-1,wE+2 + wFR-2) << ";" <<endl;
 
-			manageCriticalPath(target->localWireDelay() + target->lutDelay());
+			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 			//exception bits
 			vhdl << tab << "with excConcat select " << endl;
 			vhdl << tab << declare("excR",2) << "<=""\"00\" when \"0000\"," << endl;
@@ -188,38 +186,8 @@ namespace flopoco{
 		mpfr_clears(x,r, NULL);
 	}
 
-	/**
-	* Method returning a vector containing values of the valid TestState ts up-to-dated
-	* it also update the multimap testMemory and increase the counter for the treated operator
-	**/
-	void FPSquare::nextTest ( TestState * ts ){
-		string opName = "FPSquare";
 
-		// establishment of the different values, pay attention to the order !!
-		do{
-			// pick a random num following a specific distribution
-			float wEf  = pickRandomNum ( );
-			int wE = ceil ( wEf );
-			// modify the number pointed in the involved TestState
-			ts -> vectInt [ 0 ] = wE;
-
-			float wFinf = pickRandomNum ( 3.0 * wE );
-			int wFin = ceil ( wFinf );
-			ts -> vectInt [ 1 ] = wFin;
-
-			float wFoutf = pickRandomNum ( 0.0, 5, 3 );
-			int wFout = ceil ( wFoutf );
-			ts -> vectInt [ 2 ] = wFout;
-
-
-		}while ( Operator::checkExistence ( *ts, opName ) );
-		// Add the operator to testMemory (used by checkExistence for verification)
-		Operator::testMemory.insert ( pair < string, TestState > ( opName, *ts) );
-		// increase the counter of the treated operator indicating how many tests have been done on it
-		ts -> counter++;
-	}
-
-	OperatorPtr FPSquare::parseArguments(Target *target, vector<string> &args) {
+	OperatorPtr FPSquare::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF_in;
