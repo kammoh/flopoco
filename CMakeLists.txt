@@ -32,7 +32,9 @@ INCLUDE(CPack)
 #Compilation flags
 #SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall -pthread")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall -pthread -O2")
 #SET(CMAKE_CXX_FLAGS_DEBUG "-pg -Wall")
 # Do you want an executable of 30MB ?
 SET(CMAKE_BUILD_TYPE DEBUG)

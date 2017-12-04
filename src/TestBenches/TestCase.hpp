@@ -59,7 +59,7 @@ namespace flopoco{
 		 * Adds an input in the FloPoCo FP format for this TestCase
 		 * @param s The signal which will value the given value
 		 * @param x the value which will be assigned to the signal, provided as a double.
-		 * (use this method with care, typically only for values such as 1.0 which are representable whatever wE or wF) 
+		 * (use this method with care, typically only for values such as 1.0 which are representable whatever wE or wF)
 		 */
 		void addFPInput(string s, double x);
 
@@ -81,7 +81,7 @@ namespace flopoco{
 		 * Adds an input in the IEEE FP format for this TestCase
 		 * @param s The signal which will value the given value
 		 * @param x the value which will be assigned to the signal, provided as a double.
-		 * (use this method with care) 
+		 * (use this method with care)
 		 */
 		void addIEEEInput(string s, double x);
 
@@ -160,7 +160,7 @@ namespace flopoco{
 		map<string, vector<mpz_class> >   outputs;
 
 		string comment;
-                int intId;                      /* integer identifiant of the test case */ 
+                int intId;                      /* integer identifiant of the test case */
 
 	};
 
@@ -176,7 +176,7 @@ namespace flopoco{
 		 * @see TestCase
 		 */
 		TestCaseList();
-	
+
 		/** Destructor */
 		~TestCaseList();
 
@@ -185,6 +185,12 @@ namespace flopoco{
 		 * @param t TestCase to add
 		 */
 		void add(TestCase* t);
+
+		/**
+		 * Adds all the TestCases from another TestCaseList to this TestCaseList.
+		 * @param t TestCase to add
+		 */
+		void add(TestCaseList* tcl);
 
 		/**
 		 * Get the number of TestCase-es contained in this TestCaseList.

@@ -21,7 +21,7 @@ The algo should be:
 
 1/ if a bit heap bh is involved, the constructors perform all the bh->addBit() but do not call generateCompressorVHDL().
    They still use bh->getSumName.
-   This leaves holes in the DAG corresponding to the vhdl stream 
+   This leaves holes in the DAG corresponding to the vhdl stream
 
 2/ When schedule is called, it does all what it can (current code is OK for that).
    if some outputs are not scheduled
@@ -31,24 +31,24 @@ The algo should be:
       b/ generateCompressorTree for this BH.
          This adds code to the vhdl stream of this operator: it will need to be re-parsed
       c/ call schedule recursively.
-   
 
-For Martin: 
-- Before generateCompressorVHDL is called, we will have the lexicographic timing 
+
+For Martin:
+- Before generateCompressorVHDL is called, we will have the lexicographic timing
   (i.e. cycle + delay within a cycle) for all the bits that are input to the bit heap.
   We really want Martin's algos to manage that.
-  Keep in mind the typical case of a large multiplier: it adds 
-      bits from its DSP blocks (arrive after 2 or 3 cycles) 
+  Keep in mind the typical case of a large multiplier: it adds
+      bits from its DSP blocks (arrive after 2 or 3 cycles)
       to bits from the logic-based multipliers (arrive at cycle 0 after a small delay)
   Real-world bit heaps (e.g. sin/cos or exp or log) have even more complex, difficult to predict BH structures.
-  
+
 - Martin's algorithms compute cycles + delays. Two options to exploit this information:
-    a/ ignore the cycles, just have each signal declared with a delay in the compressor trees, 
+    a/ ignore the cycles, just have each signal declared with a delay in the compressor trees,
        and let Matei's scheduler re-compute cycles that will hopefully match those computed by Martin
     b/ let Martin directly hack the cycles and delays into the DAG -- probably much more code.
-  I vote for a/ 
+  I vote for a/
 
-- The BitHeap will be simplified, all the timing information will be removed: 
+- The BitHeap will be simplified, all the timing information will be removed:
    it is now in the Signals (once they have been scheduled).
   So the actual interface to provide to Martin is not yet fixed.
 
@@ -82,7 +82,7 @@ namespace flopoco{
 	Operator::Operator(Target* target): Operator(nullptr, target){
 		REPORT(INFO, "Operator  constructor without parentOp is deprecated");
 	}
-	
+
 	Operator::Operator(Operator* parentOp, Target* target){
 		vhdl.setOperator(this);
 		stdLibType_                 = 0;						// unfortunately this is the historical default.
@@ -435,14 +435,14 @@ namespace flopoco{
 
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
-			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");  
+			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
 			itStart = parentOp_->tmpInPortMap_.begin();
 			itEnd = parentOp_->tmpInPortMap_.end();
 		}else{
-			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");  
+			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");
 			itStart = parentOp_->tmpOutPortMap_.begin();
 			itEnd = parentOp_->tmpOutPortMap_.end();
-		} 
+		}
 
 		//check that portSignal exists on the parent operator's port map
 		for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
@@ -464,7 +464,7 @@ namespace flopoco{
 					<< " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
 		}
 
-		REPORT(FULL, portSignal->getName() << "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );  
+		REPORT(FULL, portSignal->getName() << "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );
 		//now we can connect the two signals
 		if(portSignal->type() == Signal::in)
 		{
@@ -510,7 +510,7 @@ namespace flopoco{
 			schedule(false);
 	}
 
-	
+
 	void Operator::markOperatorUnscheduled()
 	{
 		setIsOperatorScheduled(false);
@@ -689,7 +689,7 @@ namespace flopoco{
 		return parentOp_;
 	}
 
-	
+
 	int Operator::getIOListSize() const{
 		return ioList_.size();
 	}
@@ -842,13 +842,13 @@ namespace flopoco{
 		o<<"--------------------------------------------------------------------------------"<<endl;
 	}
 
-	
+
 	void Operator::pipelineInfo(std::ostream& o){
 		if(isSequential())
 			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl <<endl;
 		else
 			o << "-- combinatorial"  <<endl <<endl;
-		
+
 	}
 
 
@@ -927,20 +927,20 @@ namespace flopoco{
 
 	void Operator::setPipelineDepth()
 	{
-		int maxInputCycle, maxOutputCycle;
+		int minInputCycle, maxOutputCycle;
 		bool firstInput = true, firstOutput = true;
 
 		for(unsigned int i=0; i<ioList_.size(); i++)
 		{
 			if(firstInput && (ioList_[i]->type() == Signal::in))
 			{
-				maxInputCycle = ioList_[i]->getCycle();
+				minInputCycle = ioList_[i]->getCycle();
 				firstInput = false;
 				continue;
 			}
-			if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() > maxInputCycle))
+			if((ioList_[i]->type() == Signal::in) && (ioList_[i]->getCycle() < minInputCycle))
 			{
-				maxInputCycle = ioList_[i]->getCycle();
+				minInputCycle = ioList_[i]->getCycle();
 				continue;
 			}
 
@@ -963,7 +963,7 @@ namespace flopoco{
 				REPORT(INFO, "WARNING: setPipelineDepth(): this operator's outputs are NOT SYNCHRONIZED!");
 		}
 
-		pipelineDepth_ = maxOutputCycle-maxInputCycle;
+		pipelineDepth_ = maxOutputCycle - minInputCycle;
 	}
 
 	void Operator::outputFinalReport(ostream& s, int level) {
@@ -1127,7 +1127,7 @@ namespace flopoco{
 		return -1;
 	}
 
-	
+
 	void Operator::setCriticalPath(double delay)
 	{
 		REPORT(0, "WARNING: function setCriticalPath() is deprecated  and no longer has any effect!");
@@ -1694,12 +1694,12 @@ namespace flopoco{
 
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
 				o << "," << endl <<  tab << tab << "           ";
-			
+
 			o << it->first << " => " << it->second->getName();
 		}
-		
+
 		o << ");" << endl;
-		
+
 		//if this is a shared operator, then
 		//	check if this is the first time adding this global operator
 		//	to the operator list. If it isn't, then insert the copy, instead
@@ -1751,13 +1751,13 @@ namespace flopoco{
 		tmpInPortMap_.clear();
 		tmpOutPortMap_.clear();
 
-#if 0
+
 		//Floorplanning ------------------------------------------------
 		floorplan << manageFloorplan();
 		flpHelper->addToFlpComponentList(opCpy->getName());
 		flpHelper->addToInstanceNames(opCpy->getName(), instanceName);
 		//--------------------------------------------------------------
-#endif
+
 
 		return o.str();
 	}
@@ -1766,15 +1766,14 @@ namespace flopoco{
 	OperatorPtr Operator::newSharedInstance(Operator *originalOperator)
 	{
 		//create a new operator
-		Operator *newOp = new Operator(this,  originalOperator->getTarget());
+		Operator *newOp = new Operator(originalOperator->getTarget());
 
 		//deep copy the original operator
 		//	this should also connect the inputs/outputs of the new operator to the right signals
 		newOp->deepCloneOperator(originalOperator);
-		// but it unfortunately overwrites the parentOp 
-		newOp->setParentOperator(this);
 
 		//reconnect the inputs/outputs to the corresponding external signals
+		newOp->setParentOperator(this);
 		newOp->reconnectIOPorts(false);
 
 		//recreate the connection of the outputs and the corresponding dependences
@@ -2196,7 +2195,7 @@ namespace flopoco{
 		attributes_[attributeName] = attributeType;
 		pair<string,string> p = make_pair(attributeName,object);
 		attributesValues_[p] = value;
-		attributesAddSignal_[attributeName] = addSignal; 
+		attributesAddSignal_[attributeName] = addSignal;
 	}
 
 
@@ -2361,7 +2360,7 @@ namespace flopoco{
 
 
 	void Operator::outputClock_xdc(){
-		ofstream file; 
+		ofstream file;
 
 		// For Vivado
 		file.open("/tmp/clock.xdc", ios::out);
@@ -2388,7 +2387,7 @@ namespace flopoco{
 #endif
 	}
 
-	
+
 	void Operator::buildStandardTestCases(TestCaseList* tcl) {
 		// Each operator should overload this method. If not, it is mostly harmless but deserves a warning.
 		cerr << "WARNING: No standard test cases implemented for this operator" << endl;
@@ -2399,12 +2398,26 @@ namespace flopoco{
 
 	void Operator::buildRandomTestCaseList(TestCaseList* tcl, int n){
 		TestCase *tc;
+		//measure the time
+		struct timespec start, finish;
+		double elapsed;
+
+		//start measuring time
+		clock_gettime(CLOCK_MONOTONIC, &start);
+
 		// Generate test cases using random input numbers
 		for (int i = 0; i < n; i++) {
 			// TODO free all this memory when exiting TestBench
 			tc = buildRandomTestCase(i);
 			tcl->add(tc);
 		}
+
+		//measured time
+		clock_gettime(CLOCK_MONOTONIC, &finish);
+
+		elapsed = (finish.tv_sec - start.tv_sec);
+		elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+		REPORT(DEBUG, "Time taken for generating the testcases:" << elapsed);
 	}
 
 	TestCase* Operator::buildRandomTestCase(int i){
@@ -2425,6 +2438,165 @@ namespace flopoco{
 		// add to the test case list
 		return tc;
 	}
+
+
+
+
+	void Operator::buildRandomTestCaseListParallel(TestCaseList* tcl, int n){
+		//create as many threads as there are processors
+		size_t numCPU = sysconf(_SC_NPROCESSORS_ONLN);
+		//numCPU = 1;
+		pthread_t thread[numCPU];
+		pthread_attr_t attr;
+		int returnedStatus;
+		void *status;
+		//a data structure for the information needed by the threads
+		struct threadData *threadDataArray[numCPU*64];
+		int *ttt = new int(0), *tttt = new int(1);
+		TestCaseList *tclArray[numCPU*64];
+		//measure time v2
+		struct timespec start, finish;
+		double elapsed;
+
+		//start measuring the setup time
+		clock_gettime(CLOCK_MONOTONIC, &start);
+
+		//initialize the mutex
+		//mutexLock = PTHREAD_MUTEX_INITIALIZER;
+
+		//create the threads detachable
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+		pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS);
+		pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
+
+		pthread_setconcurrency(numCPU);
+
+		//create the threads that create the testcases
+		REPORT(DEBUG, "Creating the parallel threads for testcase generation");
+		for(size_t i=0; i<numCPU; i++){
+			REPORT(DEBUG, "Creating thread " << i);
+			//initialize the data to pass to the thread
+			threadDataArray[i*64] = new threadData;
+			threadDataArray[i*64]->op = this;
+			threadDataArray[i*64]->startIndex = i * (n/numCPU);
+			threadDataArray[i*64]->stopIndex = (i+1) * (n/numCPU) - 1;
+			tclArray[i*64] = new TestCaseList();
+			threadDataArray[i*64]->tcl = tclArray[i*64];
+			//threadDataArray[i].tcl = tcl;
+			returnedStatus = pthread_create(&thread[i], &attr, buildRandomTestCaseParallel_helper, (void *)threadDataArray[i*64]);
+			if(returnedStatus){
+				printf("ERROR; return code from pthread_create() is %d\n", returnedStatus);
+				exit(-1);
+			}
+		}
+		REPORT(DEBUG, "Created " << numCPU << " thread(s)");
+
+		//measured the setup time
+		clock_gettime(CLOCK_MONOTONIC, &finish);
+
+		elapsed = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+		REPORT(DEBUG, "Time taken for thread setup:" << elapsed);
+
+		//start measuring the time spent waiting for the joins
+		clock_gettime(CLOCK_MONOTONIC, &start);
+
+		//free the attribute
+		pthread_attr_destroy(&attr);
+		//wait for the threads to finish
+		REPORT(DEBUG, "Joining with the created threads");
+		for(size_t i=0; i<numCPU; i++){
+			returnedStatus = pthread_join(thread[i], &status);
+			if(returnedStatus){
+				printf("ERROR; return code from pthread_join() is %d\n", returnedStatus);
+				exit(-1);
+			}
+			REPORT(DEBUG, "Joined thread " << i);
+		}
+		//free the memory for the thread data
+		for(size_t i=0; i<numCPU; i++){
+			free(threadDataArray[i*64]);
+		}
+
+		//start measuring the time spent waiting for the joins
+		clock_gettime(CLOCK_MONOTONIC, &finish);
+
+		elapsed = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+		REPORT(DEBUG, "Time spent waiting for the joins:" << elapsed);
+
+		//start measuring the time spent reassembling the results
+		clock_gettime(CLOCK_MONOTONIC, &start);
+
+		//extract the testcases created by the threads
+		REPORT(DEBUG, "Extracting the testcases generated by the threads");
+		for(size_t i=0; i<numCPU; i++){
+			tcl->add(tclArray[i*64]);
+			REPORT(DEBUG, "Extracted the testcases generated by the thread " << i);
+		}
+
+		//start measuring the time spent reassembling the results
+		clock_gettime(CLOCK_MONOTONIC, &finish);
+
+		elapsed = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+		REPORT(DEBUG, "Time spent reassembling the data from the threads:" << elapsed);
+
+	}
+
+
+	void* Operator::buildRandomTestCaseParallel_helper(void* context){
+		//struct threadData *localContext = (struct threadData *)context;
+		struct threadData *localContext = (struct threadData *)context;
+
+		(localContext->op)->buildRandomTestCaseParallel(context);
+
+		//exit the thread
+		pthread_exit(NULL);
+	}
+
+
+	void* Operator::buildRandomTestCaseParallel(void* args){
+		struct threadData *localContext = (struct threadData *)args;
+		size_t startIndex = localContext->startIndex;
+		size_t stopIndex = localContext->stopIndex;
+		TestCaseList *tcl = localContext->tcl;
+		size_t nbTestCases = stopIndex-startIndex+1;
+		//measure time v2
+		struct timespec start, finish;
+		double elapsed;
+
+		REPORT(DEBUG, "Thread " << pthread_self() << " started");
+
+		//start measuring the time spent reassembling the results
+		clock_gettime(CLOCK_MONOTONIC, &start);
+
+		// Generate test cases using random input numbers
+		//for(size_t i = startIndex; i <= stopIndex; i++) {
+		for(size_t i = 0; i < nbTestCases; i++) {
+			// TODO free all this memory when exiting TestBench
+			TestCase *tc;
+			tc = buildRandomTestCase(i);
+			//ensure unique access to the resource
+			//pthread_mutex_lock(&mutexLock);
+			tcl->add(tc);
+			//pthread_mutex_unlock(&mutexLock);
+		}
+
+		//end measuring the time spent reassembling the results
+		clock_gettime(CLOCK_MONOTONIC, &finish);
+
+		elapsed = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+		//REPORT(DEBUG, "Thread " << pthread_self() << " ended and computed for " << elapsed_secs);
+		REPORT(DEBUG, "Thread " << pthread_self() << " ended and computed for " << elapsed);
+
+		return NULL;
+	}
+
+
+
 
 	map<string, double> Operator::getInputDelayMap(){
 		map<string, double> inputDelayMap;
@@ -2509,8 +2681,8 @@ namespace flopoco{
 		return numberOfOutputs_;
 	}
 
-	map<string, Signal*> Operator::getSignalMap(){
-		return signalMap_;
+	map<string, Signal*>* Operator::getSignalMap(){
+		return &signalMap_;
 	}
 
 	map<string, pair<string, string> > Operator::getConstants(){
@@ -2627,7 +2799,7 @@ namespace flopoco{
 		//	this also triggers the code's parsing, if necessary
 		oldStr = vhdl.str();
 
-		//iterate through the old code, one statement at the time
+		//iterate through the old code, one statement at a time
 		// code that doesn't need to be modified: goes directly to the new vhdl code buffer
 		// code that needs to be modified: ?? should be removed from lhs_name, $$ should be removed from rhs_name,
 		//		delays of the type rhs_name_dxxx should be added for the right-hand side signals
@@ -2649,7 +2821,6 @@ namespace flopoco{
 			//now get a new line to parse
 			workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)+1-nextPos-2);
 
-			//REPORT(FULL, "processing " << workStr);
 			//extract the lhs_name
 			if(isSelectedAssignment == true)
 			{
@@ -2941,7 +3112,7 @@ namespace flopoco{
 			// Took me 2hours to figure out
 			// Bug fixed by having the lexer add spaces around select (so no need to test for all the space/tab/enter possibilibits.
 			// I wonder how many such bugs remain
-			if(workStr.find(" select ") == string::npos	 )			{ 
+			if(workStr.find(" select ") == string::npos	 )			{
 				tmpCurrentPos = lhsNameLength+2;
 				tmpNextPos = workStr.find('$', lhsNameLength+2);
 			}
@@ -3121,7 +3292,7 @@ namespace flopoco{
 			bool unknownLHSName = false, unknownRHSName = false;
 
 			try{
-				lhs = getSignalByName(it->first); // Was this signal declared since last time? 
+				lhs = getSignalByName(it->first); // Was this signal declared since last time?
 			}catch(string &e){
 				REPORT(DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it->first);
 				unknownLHSName = true;
@@ -3191,7 +3362,7 @@ namespace flopoco{
 				{
 					if(signalsToSchedule[i]->getName() == lhs->getName())
 						lhsPresent = true;
-					// Commented out 
+					// Commented out
 					// if(signalsToSchedule[i]->getName() == rhs->getName())
 					// 	rhsPresent = true;
 				}
@@ -3274,7 +3445,7 @@ namespace flopoco{
 
 			return;
 		}
-		
+
 		//schedule each of the signals on the list of signals to be scheduled
 		for(auto i: signalsToSchedule)
 		{
@@ -3294,7 +3465,7 @@ namespace flopoco{
 	}
 
 
-	
+
 	void Operator::scheduleSignal(Signal *targetSignal, bool forceReschedule)
 	{
 		//TODO: add more checks here
@@ -3448,7 +3619,7 @@ namespace flopoco{
 #else //ASSUME_NO_RETIMING
 			targetSignal->setCriticalPath(targetSignal->getCriticalPathContribution());
 #endif
-			
+
 		}else
 		{
 			targetSignal->setCycle(maxCycle);
@@ -3873,7 +4044,7 @@ namespace flopoco{
 		numberOfOutputs_            = op->getNumberOfOutputs();
 		isSequential_               = op->isSequential();
 		pipelineDepth_              = op->getPipelineDepth();
-		signalMap_                  = op->getSignalMap();
+		signalMap_                  = *op->getSignalMap();
 		constants_                  = op->getConstants();
 		attributes_                 = op->getAttributes();
 		types_                      = op->getTypes();
@@ -3970,7 +4141,7 @@ namespace flopoco{
 		vector<Operator*> newOpList;
 		for(unsigned int i=0; i<op->getSubComponentList().size(); i++)
 		{
-			Operator* tmpOp = new Operator(op, op->getSubComponentList()[i]->getTarget());
+			Operator* tmpOp = new Operator(op->getSubComponentList()[i]->getTarget());
 
 			tmpOp->deepCloneOperator(op->getSubComponentList()[i]);
 			//add the new subcomponent to the subcomponent list
