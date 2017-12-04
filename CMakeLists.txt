@@ -28,11 +28,13 @@ SET(CPACK_PACKAGE_VERSION_MINOR "9")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 
 INCLUDE(CPack)
-# 
+#
 #Compilation flags
 #SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -pthread -O2")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall -pthread -O2")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
 #SET(CMAKE_CXX_FLAGS_DEBUG "-pg -Wall")
 # Do you want an executable of 30MB ?
 SET(CMAKE_BUILD_TYPE DEBUG)
@@ -114,14 +116,14 @@ ENDIF(FLEXPP_EXECUTABLE)
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions)
 
 ADD_CUSTOM_COMMAND(
-	SOURCE src/VHDLLexerRule.l
-	COMMAND ${FLEXPP_EXECUTABLE} 
-	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-	TARGET VHDLLexer
-	OUTPUTS VHDLLexer.cpp VHDLLexer.hpp)
+		OUTPUT VHDLLexer.cpp
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+		COMMAND ${FLEXPP_EXECUTABLE}
+		ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+		             )
 
-SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
+ #SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED)
 
 
 # Create custom command for bison/yacc (note the outputs)
@@ -144,7 +146,7 @@ ADD_CUSTOM_COMMAND(
 	TARGET ExpressionParser
 	OUTPUTS ExpressionParser.cpp)
 
-SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED) 
+SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED)
 
 # Create custom command for flex/lex (note the outputs)
 FIND_PROGRAM(FLEX_EXECUTABLE
@@ -159,12 +161,12 @@ ELSE(FLEX_EXECUTABLE)
 ENDIF(FLEX_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	SOURCE src/FPExpressions/ExpressionScanner.l
-	COMMAND ${FLEX_EXECUTABLE} 
-	ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
-    ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
-	TARGET ExpressionScanner
-	OUTPUTS ExpressionScanner.cpp)
+	OUTPUT VHDLLexer.cpp
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+	COMMAND ${FLEXPP_EXECUTABLE}
+	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+		)
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
@@ -175,59 +177,79 @@ ADD_LIBRARY(FloPoCoLib STATIC
 #               FRAMEWORK
 #--------------------------------------------------------------------
 
- src/FloPoCo.hpp
+# src/FloPoCo.hpp
  src/Operator
  src/UserInterface
  src/Signal
  src/utils
  src/FlopocoStream
- src/TestState
- VHDLLexer
- 
- # Resource Estimation related ---------------------------------------
- src/Tools/ResourceEstimationHelper
- 
+ VHDLLexer # generated from .l
+
+ src/Instance
+
+# Resource Estimation related ---------------------------------------
+  src/Tools/ResourceEstimationHelper
+
  # Floorplanning related ---------------------------------------------
  src/Tools/FloorplanningHelper
 
  # Targets -----------------------------------------------------------
  src/Targets/DSP
- src/Target 
- 
- src/Targets/Spartan3 
- src/Targets/Virtex4 
- src/Targets/Virtex5 
- src/Targets/Virtex6 
- 
- src/Targets/StratixII 
- src/Targets/StratixIII 
- src/Targets/StratixIV
+ src/Target
+ #src/TargetModel
+
+# src/Targets/Spartan3
+# src/Targets/Virtex4
+# src/Targets/Virtex5
+ src/Targets/Virtex6
+ src/Targets/Zynq7000
+ src/Targets/Kintex7
+
+# src/Targets/StratixII
+# src/Targets/StratixIII
+# src/Targets/StratixIV
  src/Targets/StratixV
- 
- src/Targets/CycloneII 
- src/Targets/CycloneIII 
- src/Targets/CycloneIV 
- src/Targets/CycloneV 
+
+ #src/Targets/CycloneII
+ #src/Targets/CycloneIII
+ #src/Targets/CycloneIV
+ #src/Targets/CycloneV
+
+# AutoTest ------------------------------------------------------------
+src/AutoTest/AutoTest
 
 # TestBench-related -------------------------------------------------
  src/TestBenches/TestCase
  src/TestBenches/FPNumber
  src/TestBenches/IEEENumber
  src/TestBenches/Wrapper
- src/TestBenches/TestBench 
+ src/TestBenches/TestBench
+
 
 
 # Bit heap  ------------------------------------------------
- src/BitHeap/BitHeap
- src/BitHeap/WeightedBit
- src/BitHeap/Plotter
+# src/BitHeap/BitHeap
+# src/BitHeap/WeightedBit
+# src/BitHeap/Plotter
+
+ src/BitHeap/Bit
+ src/BitHeap/Compressor
+ src/BitHeap/BitheapNew
+ src/BitHeap/CompressionStrategy
+ src/BitHeap/BitheapPlotter
+
+ src/BitHeap/BitheapTest
 
 
 #--------------------------------------------------------------------
-#               OPERATORS          
+#               OPERATORS
 #--------------------------------------------------------------------
+
+src/UserDefinedOperator
+
 #src/OperatorPipeline/OperatorPipeline
 #src/FPExpressions/ExpressionParserData
+
 
 
 # Conversions ----------------------------------------------------
@@ -237,61 +259,63 @@ src/Conversions/FP2Fix
 src/Conversions/Fix2FP
 
 # Shifters/LZOC ----------------------------------------------------
- src/ShiftersEtc/LZOC 
+ src/ShiftersEtc/LZOC
  src/ShiftersEtc/LZOCShifterSticky
  src/ShiftersEtc/Shifters
 
 # FixFilters ----------------------------------------------------------
- src/ShiftReg
+src/ShiftReg
+# the following still depends on old bit heap
  src/FixFilters/FixSOPC
- src/FixFilters/FixFIR
- src/FixFilters/FixHalfSine
- src/FixFilters/FixIIR
+# src/FixFilters/FixFIR
+# src/FixFilters/FixHalfSine
+#  src/FixFilters/FixIIR #
 
 
 # pipelined Integer addition -------------------------------------------------
- src/IntAddSubCmp/IntAdder  
- src/IntAddSubCmp/IntAdderClassical 
- src/IntAddSubCmp/IntAdderAlternative 
- src/IntAddSubCmp/IntAdderShortLatency
+ src/IntAddSubCmp/IntAdder
+# src/IntAddSubCmp/IntAdderClassical
+# src/IntAddSubCmp/IntAdderAlternative
+# src/IntAddSubCmp/IntAdderShortLatency
  src/IntAddSubCmp/IntComparator
- src/IntAddSubCmp/IntDualSub
+ src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
- 
+src/IntAddSubCmp/IntMultiAdder
+
 # ---------- First generation of fast large adders ------------------------
- src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
- src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1 
- src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen1
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1
+# src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
 
 # ---------- Second Generation of fast large adders -----------------------
- src/IntAddSubCmp/IntAdderSpecific 
- src/IntAddSubCmp/IntComparatorSpecific 
- src/IntAddSubCmp/CarryGenerationCircuit 
- src/IntAddSubCmp/LongIntAdderAddAddMuxGen2 
- src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2 
- src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
- src/IntAddSubCmp/LongIntAdderMuxNetwork
+# src/IntAddSubCmp/IntAdderSpecific
+# src/IntAddSubCmp/IntComparatorSpecific
+# src/IntAddSubCmp/CarryGenerationCircuit
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen2
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2
+# src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
+# src/IntAddSubCmp/LongIntAdderMuxNetwork
 
 # Constant multiplications and divisions
- src/ConstMult/ShiftAddOp 
- src/ConstMult/ShiftAddDag 
+ src/ConstMult/ShiftAddOp
+ src/ConstMult/ShiftAddDag
  src/ConstMult/IntConstMult
- src/ConstMult/IntConstMCM  
- src/ConstMult/KCMTable
- src/ConstMult/IntIntKCM 
- src/ConstMult/FPConstMult 
- src/ConstMult/CRFPConstMult 
+# src/ConstMult/IntConstMCM
+# src/ConstMult/KCMTable
+# src/ConstMult/IntIntKCM
+ src/ConstMult/FPConstMult
+# src/ConstMult/CRFPConstMult
  src/ConstMult/FixRealKCM
- src/ConstMult/FPRealKCM
- src/ConstMult/IntConstDiv 
- src/ConstMult/FPConstDiv 
+# src/ConstMult/FPRealKCM
+ src/ConstMult/IntConstDiv
+ src/ConstMult/FPConstDiv
 
- 
+
 # Multiplication related --------------------------------------------
- src/IntMult/IntMultiplier
- src/IntMult/FixMultAdd
- src/IntMult/MultiplierBlock
- src/IntMult/IntSquarer
+# src/IntMult/IntMultiplier
+# src/IntMult/FixMultAdd
+src/IntMult/MultiplierBlock
+# src/IntMult/IntSquarer
 
 # Complex numbers ---------------------------------------------------
 src/Complex/FixComplexKCM
@@ -302,81 +326,85 @@ src/Complex/FixComplexKCM
  src/FPAddSub/FPAdd
  src/FPAddSub/FPAddDualPath
  src/FPAddSub/FPAddSinglePath
- src/FPAddSub/FPAdd3Input
+# src/FPAddSub/FPAdd3Input
  src/FPAddSub/FPAddSub
 
 # Floating-point multipliers and squarers
- src/FPMultSquare/FPMult
+# src/FPMultSquare/FPMult
 #  src/FPMultSquare/FPMultKaratsuba # See TODO
- src/FPMultSquare/FPSquare
+# src/FPMultSquare/FPSquare
 
 # Floating-point dividers and square roots
-src/FPDivSqrt/SelFunctionTable
 src/FPDivSqrt/FPDiv
 src/FPDivSqrt/FPSqrt
-src/FPDivSqrt/Tools/NbBitsMin
+#src/FPDivSqrt/Tools/NbBitsMin
 # src/FPDivSqrt/FPSqrtPoly # Resurrect some day?
 
 
 # Composite operators
-src/FPComposite/FPLargeAcc 
-src/FPComposite/LargeAccToFP 
-src/FPComposite/FPDotProduct 
-src/FPComposite/FP2DNorm
-
+src/FPComposite/FPLargeAcc
+src/FPComposite/LargeAccToFP
+#src/FPComposite/FPDotProduct
+#src/FPComposite/FP2DNorm
 
 # Generic fixed-point function evaluators ---------------------------
- src/Table 
- src/DualTable 
+ src/Table
+ src/DualTable
 
  src/FixConstant
 
  src/FixFunctions/FixFunction
  src/FixFunctions/FixFunctionByTable
- src/FixFunctions/BasicPolyApprox
- src/FixFunctions/PiecewisePolyApprox
- src/FixFunctions/FixHornerEvaluator
- src/FixFunctions/FixFunctionBySimplePoly
- src/FixFunctions/FixFunctionByPiecewisePoly
+ #src/FixFunctions/BasicPolyApprox
+ #src/FixFunctions/PiecewisePolyApprox
+ #src/FixFunctions/FixHornerEvaluator
+ #src/FixFunctions/FixFunctionBySimplePoly
+ #src/FixFunctions/FixFunctionByPiecewisePoly
 
  src/FixFunctions/GenericTable
  src/FixFunctions/BipartiteTable
- src/FixFunctions/Multipartite
- src/FixFunctions/FixFunctionByMultipartiteTable
+# src/FixFunctions/Multipartite
+# src/FixFunctions/FixFunctionByMultipartiteTable
 # src/FixFunctions/QuineMcCluskey
 
 # Trigonometric functions ------------------------------------------
 src/Trigs/ConstDiv3ForSinPoly
-src/Trigs/FixSinPoly
-src/Trigs/FixSinCos
-src/Trigs/CordicSinCos
+#src/Trigs/FixSinPoly
+# src/Trigs/FixSinCos
+# src/Trigs/CordicSinCos
 # src/Trigs/CordicSinOrCos
-src/Trigs/FixAtan2
-src/Trigs/FixAtan2ByCORDIC
-src/Trigs/FixAtan2ByRecipMultAtan
-src/Trigs/FixAtan2ByBivariateApprox
+# src/Trigs/FixAtan2
+ src/Trigs/FixAtan2ByCORDIC
+#src/Trigs/FixAtan2ByRecipMultAtan
+#src/Trigs/FixAtan2ByBivariateApprox
 src/Trigs/Atan2Table
+
+#src/Trigs/Fix2DNorm
+
+
 src/Tools/Plane
 src/Tools/Point
 
 # Exp, Log and Power
-src/ExpLog/FPExp
-src/ExpLog/IterativeLog
-src/ExpLog/FPPow
+#src/ExpLog/FPExp
+#src/ExpLog/IterativeLog //depends on IntSquarer
+#src/ExpLog/FPPow
+
+# If you want to add your operator, feel free
+src/UserDefinedOperator
 )
+
+TARGET_LINK_LIBRARIES(
+  FloPoCoLib
+  mpfr gmp gmpxx xml2 mpfi
+  )
 
 IF (SOLLYA_LIB)
 TARGET_LINK_LIBRARIES(
   FloPoCoLib
-  mpfr gmp gmpxx xml2 mpfi ${SOLLYA_LIB}
-  )
-ELSE (SOLLYA_LIB)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib 
-  mpfr gmp gmpxx xml2 mpfi
-  )
+  ${SOLLYA_LIB}
+	)
 ENDIF (SOLLYA_LIB)
-SET(FLOPOCO_LIB FloPoCoLib)
 
 IF (PYTHON_LIB)
 TARGET_LINK_LIBRARIES(
@@ -384,15 +412,22 @@ TARGET_LINK_LIBRARIES(
   ${PYTHON_LIB}
   )
 ENDIF (PYTHON_LIB)
-SET (FLOPOCO_LIB FloPoCoLib)
+
+IF (WCPG_FOUND)
+TARGET_LINK_LIBRARIES(
+  FloPoCoLib
+  ${WCPG_LIB}
+  )
+ENDIF (WCPG_FOUND)
+
 
 ADD_EXECUTABLE(flopoco
- src/main 
+ src/main
 )
 
 TARGET_LINK_LIBRARIES(
-  flopoco  
-	${FLOPOCO_LIB}
+  flopoco
+	FloPoCoLib
   )
 
 # unplugged for now to speed up compilation, to revive some day
@@ -400,7 +435,7 @@ TARGET_LINK_LIBRARIES(
 # src/main_soaktest
 #)
 #TARGET_LINK_LIBRARIES(
-#  flopoco_soaktest  
+#  flopoco_soaktest
 #	${FLOPOCO_LIB}
 #)
 
@@ -417,5 +452,6 @@ TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
 
 
 
-add_subdirectory(src/random)
-target_link_libraries(FloPoCoLib flopoco_random_lib)
+#add_subdirectory(src/random)
+#target_link_libraries(FloPoCoLib flopoco_random_lib)
+
