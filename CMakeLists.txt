@@ -116,14 +116,14 @@ ENDIF(FLEXPP_EXECUTABLE)
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions)
 
 ADD_CUSTOM_COMMAND(
-		OUTPUT VHDLLexer.cpp
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-		COMMAND ${FLEXPP_EXECUTABLE}
-		ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-		             )
+	OUTPUT VHDLLexer.cpp
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+	COMMAND ${FLEXPP_EXECUTABLE}
+	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+		)
 
- #SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED)
+#SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED)
 
 
 # Create custom command for bison/yacc (note the outputs)
@@ -161,12 +161,11 @@ ELSE(FLEX_EXECUTABLE)
 ENDIF(FLEX_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT VHDLLexer.cpp
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-	COMMAND ${FLEXPP_EXECUTABLE}
-	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-		)
+	OUTPUT ExpressionScanner.cpp
+	COMMAND ${FLEX_EXECUTABLE}
+	ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp
+    ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
+	)
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
@@ -280,7 +279,6 @@ src/ShiftReg
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
-src/IntAddSubCmp/IntMultiAdder
 
 # ---------- First generation of fast large adders ------------------------
 # src/IntAddSubCmp/LongIntAdderAddAddMuxGen1
