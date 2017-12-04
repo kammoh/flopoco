@@ -386,14 +386,14 @@ namespace flopoco{
 		for(unsigned int i=0; i<(parentOp_->getSignalList()).size(); i++)
 			if(parentOp_->getSignalList()[i]->getName() == name_)
 				parentOp_->getSignalList().erase(parentOp_->getSignalList().begin()+i);
-		parentOp_->getSignalMap().erase(name_);
+		parentOp_->getSignalMap()->erase(name_);
 
 		//change the signal's parent operator
 		setParentOp(newParentOp);
 
 		//add the signal to the new parent's signal list
 		parentOp_->signalList_.push_back(this);
-		parentOp_->getSignalMap()[name_] = this;
+		(*(parentOp_->getSignalMap()))[name_] = this;
 	}
 
 	string Signal::toVHDLType() {
