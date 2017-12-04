@@ -280,10 +280,7 @@ src/ShiftReg
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
-<<<<<<< Updated upstream
 src/IntAddSubCmp/IntMultiAdder
-=======
->>>>>>> Stashed changes
 
 # ---------- First generation of fast large adders ------------------------
 # src/IntAddSubCmp/LongIntAdderAddAddMuxGen1
