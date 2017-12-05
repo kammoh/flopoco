@@ -11,7 +11,7 @@ namespace flopoco{
 
 	public:
 		/** @brief Constructor ; you must use bitheap in case of negative coefficient*/
-		FixIIR(Target* target, int lsbIn, int msbOut, int lsbOut, vector<string> coeffb, vector<string> coeffa, double H=0.0);
+		FixIIR(Target* target, int lsbIn, int lsbOut, vector<string> coeffb, vector<string> coeffa, double H=0.0, double Heps=0.0);
 
 		/** @brief Destructor */
 		~FixIIR();
@@ -28,7 +28,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 		static void registerFactory();
 
 	private:
@@ -39,30 +39,21 @@ namespace flopoco{
 		vector<string> coeffa;			/**< the a_i coefficients as strings */
 		double H;						/**< Worst case peak gain of this filter */
 		double Heps;						/**< Worst case peak gain of the error filter */
-		int n;							/**< number of taps on the numerator */
-		int m;							/**< number of taps on the denominator */
-
-		BitHeap* bitHeapB;    			/**< The bit heap for the FIR part */
-		BitHeap* bitHeapA;    			/**< The bit heap for the recursive part */
-
-		int g;							/**< number of guard bits */
-		int wO;							/**< width of the result */
+		uint32_t n;							/**< number of taps on the numerator */
+		uint32_t m;							/**< number of taps on the denominator */
+		int g;							/**< number of guard bits used for the IIR -- more are used inside the SOPC */
 
 	private:
 		int hugePrec;
-		// TODO All arrays or all mallocs below,
 
-		mpfr_t mpcoeffb[10000];			/**< the absolute values of the coefficients as MPFR numbers */
-		bool coeffsignb[10000];			/**< the signs of the coefficients */
-		mpfr_t mpcoeffa[10000];			/**< the absolute values of the coefficients as MPFR numbers */
-		bool coeffsigna[10000];			/**< the signs of the coefficients */
-		double *coeffb_d;           /**< version of coeffb as C-style arrays of double, because WCPG needs it this way */
-		double *coeffa_d;           /**< version of coeffa as C-style arrays of double, because WCPG needs it this way */
+		mpfr_t* coeffb_mp;			/**< the coefficients as MPFR numbers */
+		mpfr_t* coeffa_mp;			/**< the coefficients as MPFR numbers */
+		mpfr_t* xHistory; // history of x used by emulate
+		mpfr_t* yHistory; // history of y (result) used by emulate
+		double* coeffb_d;           /**< version of coeffb as C-style arrays of double, because WCPG needs it this way */
+		double* coeffa_d;           /**< version of coeffa as C-style arrays of double, because WCPG needs it this way */
 
-		mpz_class xHistory[10000]; // history of x used by emulate
-		int currentIndexA;
-		int currentIndexB;
-		mpfr_t yHistory[10000]; // history of y (result) used by emulate
+		uint64_t currentIndex;       // used for round-robin access to the history 
 
 
 	};
