@@ -112,7 +112,7 @@ IF ( WCPG_FOUND )
 	MESSAGE ( STATUS "Found WCPG : ${WCPG_H} ${WCPG_LIB}" )
   ADD_DEFINITIONS(-DHAVE_WCPG)
 ELSE ( WCPG_FOUND )
-	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator" )
+	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator. To download it: git clone https://scm.gforge.inria.fr/anonscm/git/metalibm/wcpg.git" )
 ENDIF ( WCPG_FOUND )
 
 
