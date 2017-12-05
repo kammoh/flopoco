@@ -12,6 +12,10 @@
 #include <float.h>
 #include <utility>
 
+#include <pthread.h>
+#include <ctime>
+#include <time.h>
+
 #include "Target.hpp"
 #include "Signal.hpp"
 
@@ -31,6 +35,13 @@ namespace flopoco {
  	typedef Operator* OperatorPtr;
  	typedef vector<vector<pair<string,string>>> TestList;
  	typedef TestList (*unitTest_func_t)(int);
+
+ 	struct threadData{
+ 		Operator *op;
+ 		size_t startIndex;
+ 		size_t stopIndex;
+ 		TestCaseList *tcl;
+ 	};
 }
 
 #include "UserInterface.hpp"
@@ -50,7 +61,7 @@ namespace flopoco {
 #define INNER_SEPARATOR "................................................................................"
 #define DEBUG_SEPARATOR "________________________________________________________________________________"
 #define OUTER_SEPARATOR "################################################################################"
-#define REPORT(level, stream) {if ((level)<=(UserInterface::verbose)){ cerr << "> " << srcFileName << " " << uniqueName_ <<": " << stream << endl;}else{}} 
+#define REPORT(level, stream) {if ((level)<=(UserInterface::verbose)){ cerr << "> " << srcFileName << " " << uniqueName_ <<": " << stream << endl;}else{}}
 #define THROWERROR(stream) {{ostringstream o; o << " ERROR in " << uniqueName_ << " (" << srcFileName << "): " << stream << endl; throw o.str();}}
 
 
@@ -209,7 +220,7 @@ public:
 	// One option is that fixed-point I/Os should always be plain std_logic_vectors.
 	// It just makes the framework simpler, and anyway typing is managed internally
 	// FP I/O need to be typed to manage the testbenches, e.g. FP equality does
-	// not resume to equality on the bit vectors.  
+	// not resume to equality on the bit vectors.
 	// This is not the case for fixed-point
 	// (comment by F de Dinechin)
 
@@ -503,7 +514,7 @@ public:
 	 * DEPRECATED
 	 * Set the current cycle and the critical path. It may increase or decrease current cycle.
 	 * @param name is the signal name. It must have been defined before.
-	 * @param criticalPath is the critical path delay associated to this 
+	 * @param criticalPath is the critical path delay associated to this
 	 * 		  signal: typically getDelay(name)
 	 * @param report is a boolean, if true it will report the cycle
 	 */
@@ -588,9 +599,9 @@ public:
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal (optional, default 1)
-	 * @param isbus: a signal of width 1 is declared as std_logic when false, 
+	 * @param isbus: a signal of width 1 is declared as std_logic when false,
 	 * 				 as std_logic_vector when true (optional, default false)
-	 * @param regType: the registring type of this signal. See also the Signal 
+	 * @param regType: the registring type of this signal. See also the Signal
 	 * 				   Class for more info
 	 * @param incomplete declaration: whether only part of the signal parameters are specified,
 	 * 									and the rest are specified later
@@ -691,7 +702,7 @@ public:
 	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false, bool incompleteDeclaration = false);
 
 	/**
-	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
+	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp.
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
 	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
@@ -702,7 +713,7 @@ public:
 	string declareTable(string name, int width, std::string tableAttributes = "", bool incompleteDeclaration = false);
 
 	/**
-	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
+	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp.
 	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
@@ -834,7 +845,7 @@ public:
 	OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
 
-private:	
+private:
 	/**
 	 * Parse a string containing port mappings for a new instance of an operator
 	 * and add the corresponding port mappings to the parent operator.
@@ -922,6 +933,39 @@ public:
 	 * @return TestCase*
 	 */
 	virtual TestCase* buildRandomTestCase(int i);
+
+
+
+	/**
+	 * Generate Random Test case identified by an integer, in parallel. There is a default
+	 * implementation using a uniform random generator, but most
+	 * operators are not exercised efficiently using such a
+	 * generator. For instance, in FPAdd, the random number generator
+	 * should be biased to favor exponents which are relatively close
+	 * so that an effective addition takes place.
+	 * This function create a new TestCase (to be free after use)
+	 * See FPExp.cpp for an example of overloading this method.
+	 * @param i the identifier of the test case to be generated
+	 * @return TestCase*
+	 */
+	virtual void* buildRandomTestCaseParallel(void* args);
+
+	/**
+	 * Helper function for the buildRandomTestCaseParallel method, so as to be
+	 * able to call it when creating a new thread
+	 * @param context the Operator object that creates the threads
+	 */
+	static void* buildRandomTestCaseParallel_helper(void* context);
+
+	pthread_mutex_t mutexLock;
+
+	/**
+	 * Append standard test cases to a test case list, in parallel. Standard test
+	 * cases are operator-dependent and should include any specific
+	 * corner cases you may think of. Never mind removing a standard test case because you think it is no longer useful!
+	 * @param tcl a TestCaseList
+	 */
+	virtual void buildRandomTestCaseListParallel(TestCaseList* tcl, int n);
 
 
 
@@ -1016,7 +1060,7 @@ public:
 	/** writes a clock.xdc file in /tmp, to be used by vivado_runsyn */
 	void outputClock_xdc();
 
-	
+
 
 	/**
 	 * Returns true if the operator needs a recirculation signal
@@ -1210,7 +1254,7 @@ public:
 	 * By default, reports the pipeline depth, but feel free to overload
 	 * it if you have anything useful to tell to the end user
 	*/
-	virtual void outputFinalReport(ostream& s, int level);	
+	virtual void outputFinalReport(ostream& s, int level);
 
 
 	/**
@@ -1281,7 +1325,7 @@ public:
 
 	int getNumberOfOutputs();
 
-	map<string, Signal*> getSignalMap();
+	map<string, Signal*>* getSignalMap();
 
 	map<string, pair<string, string> > getConstants();
 
@@ -1796,7 +1840,7 @@ public:
 	 * 		- count registers added due to pipelining framework
 	 * 		- count input/output ports
 	 * 		- count resources in subcomponents
-	 * Should not be used together with the manual estimation functions 
+	 * Should not be used together with the manual estimation functions
 	 * addWireCount, addPortCount, addComponentResourceCount!
 	 * @return the string describing the performed operation
 	 */
@@ -1965,7 +2009,7 @@ protected:
 
 private:
 	Target*                target_;                         /**< The target on which the operator will be deployed */
-	Operator*              parentOp_;                       /**< The parent operator (i.e. the operator inside which this operator is a subcomponent)  */
+	Operator*              parentOp_;                       /**< The parent operator (i.e. inside which this operator is a subcomponent) containing this operator */
 	int                    stdLibType_;                     /**< 0 will use the Synopsys ieee.std_logic_unsigned, -1 uses std_logic_signed, 1 uses ieee numeric_std  (preferred) */
 	int                    numberOfInputs_;                 /**< The number of inputs of the operator */
 	int                    numberOfOutputs_;                /**< The number of outputs of the operator */

@@ -28,11 +28,13 @@ SET(CPACK_PACKAGE_VERSION_MINOR "9")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 
 INCLUDE(CPack)
-# 
+#
 #Compilation flags
 #SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall -pthread")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall -pthread -O2")
 #SET(CMAKE_CXX_FLAGS_DEBUG "-pg -Wall")
 # Do you want an executable of 30MB ?
 SET(CMAKE_BUILD_TYPE DEBUG)
@@ -137,12 +139,12 @@ INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src
 ADD_CUSTOM_COMMAND(
 	OUTPUT VHDLLexer.cpp
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-	COMMAND ${FLEXPP_EXECUTABLE} 
-	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp 
+	COMMAND ${FLEXPP_EXECUTABLE}
+	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
 		)
 
-#SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
+#SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED)
 
 
 # Create custom command for bison/yacc (note the outputs)
@@ -164,7 +166,7 @@ ADD_CUSTOM_COMMAND(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
 )
 
-SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED) 
+SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED)
 
 # Create custom command for flex/lex (note the outputs)
 FIND_PROGRAM(FLEX_EXECUTABLE
@@ -180,8 +182,8 @@ ENDIF(FLEX_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT ExpressionScanner.cpp
-	COMMAND ${FLEX_EXECUTABLE} 
-	ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
+	COMMAND ${FLEX_EXECUTABLE}
+	ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp
     ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
 	)
 
@@ -201,36 +203,36 @@ ADD_LIBRARY(FloPoCoLib STATIC
  src/utils
  src/FlopocoStream
  VHDLLexer # generated from .l
- 
+
  src/Instance
- 
+
 # Resource Estimation related ---------------------------------------
   src/Tools/ResourceEstimationHelper
- 
+
  # Floorplanning related ---------------------------------------------
  src/Tools/FloorplanningHelper
 
  # Targets -----------------------------------------------------------
  src/Targets/DSP
- src/Target 
+ src/Target
  #src/TargetModel
- 
-# src/Targets/Spartan3 
-# src/Targets/Virtex4 
-# src/Targets/Virtex5 
- src/Targets/Virtex6 
- src/Targets/Zynq7000 
- src/Targets/Kintex7 
- 
-# src/Targets/StratixII 
-# src/Targets/StratixIII 
+
+# src/Targets/Spartan3
+# src/Targets/Virtex4
+# src/Targets/Virtex5
+ src/Targets/Virtex6
+ src/Targets/Zynq7000
+ src/Targets/Kintex7
+
+# src/Targets/StratixII
+# src/Targets/StratixIII
 # src/Targets/StratixIV
  src/Targets/StratixV
- 
- #src/Targets/CycloneII 
- #src/Targets/CycloneIII 
- #src/Targets/CycloneIV 
- #src/Targets/CycloneV 
+
+ #src/Targets/CycloneII
+ #src/Targets/CycloneIII
+ #src/Targets/CycloneIV
+ #src/Targets/CycloneV
 
 # AutoTest ------------------------------------------------------------
 src/AutoTest/AutoTest
@@ -240,7 +242,7 @@ src/AutoTest/AutoTest
  src/TestBenches/FPNumber
  src/TestBenches/IEEENumber
  src/TestBenches/Wrapper
- src/TestBenches/TestBench 
+ src/TestBenches/TestBench
 
 
 
@@ -248,18 +250,18 @@ src/AutoTest/AutoTest
 # src/BitHeap/BitHeap
 # src/BitHeap/WeightedBit
 # src/BitHeap/Plotter
- 
+
  src/BitHeap/Bit
  src/BitHeap/Compressor
  src/BitHeap/BitheapNew
  src/BitHeap/CompressionStrategy
  src/BitHeap/BitheapPlotter
- 
+
  src/BitHeap/BitheapTest
 
 
 #--------------------------------------------------------------------
-#               OPERATORS          
+#               OPERATORS
 #--------------------------------------------------------------------
 
 src/UserDefinedOperator
@@ -276,7 +278,7 @@ src/Conversions/FP2Fix
 src/Conversions/Fix2FP
 
 # Shifters/LZOC ----------------------------------------------------
- src/ShiftersEtc/LZOC 
+ src/ShiftersEtc/LZOC
  src/ShiftersEtc/LZOCShifterSticky
  src/ShiftersEtc/Shifters
 
@@ -286,48 +288,48 @@ src/ShiftReg
  src/FixFilters/FixSOPC
 # src/FixFilters/FixFIR
 # src/FixFilters/FixHalfSine
-#  src/FixFilters/FixIIR # 
+#  src/FixFilters/FixIIR #
 
 
 # pipelined Integer addition -------------------------------------------------
- src/IntAddSubCmp/IntAdder  
-# src/IntAddSubCmp/IntAdderClassical 
-# src/IntAddSubCmp/IntAdderAlternative 
+ src/IntAddSubCmp/IntAdder
+# src/IntAddSubCmp/IntAdderClassical
+# src/IntAddSubCmp/IntAdderAlternative
 # src/IntAddSubCmp/IntAdderShortLatency
  src/IntAddSubCmp/IntComparator
  src/IntAddSubCmp/IntDualAddSub
  src/IntAddSubCmp/BasicCompressor
 src/IntAddSubCmp/IntMultiAdder
- 
+
 # ---------- First generation of fast large adders ------------------------
-# src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
-# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1 
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen1
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1
 # src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
 
 # ---------- Second Generation of fast large adders -----------------------
-# src/IntAddSubCmp/IntAdderSpecific 
-# src/IntAddSubCmp/IntComparatorSpecific 
-# src/IntAddSubCmp/CarryGenerationCircuit 
-# src/IntAddSubCmp/LongIntAdderAddAddMuxGen2 
-# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2 
+# src/IntAddSubCmp/IntAdderSpecific
+# src/IntAddSubCmp/IntComparatorSpecific
+# src/IntAddSubCmp/CarryGenerationCircuit
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen2
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2
 # src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
 # src/IntAddSubCmp/LongIntAdderMuxNetwork
 
 # Constant multiplications and divisions
- src/ConstMult/ShiftAddOp 
- src/ConstMult/ShiftAddDag 
- src/ConstMult/IntConstMult 
-# src/ConstMult/IntConstMCM  
+ src/ConstMult/ShiftAddOp
+ src/ConstMult/ShiftAddDag
+ src/ConstMult/IntConstMult
+# src/ConstMult/IntConstMCM
 # src/ConstMult/KCMTable
-# src/ConstMult/IntIntKCM 
- src/ConstMult/FPConstMult 
-# src/ConstMult/CRFPConstMult 
+# src/ConstMult/IntIntKCM
+ src/ConstMult/FPConstMult
+# src/ConstMult/CRFPConstMult
  src/ConstMult/FixRealKCM
 # src/ConstMult/FPRealKCM
- src/ConstMult/IntConstDiv 
- src/ConstMult/FPConstDiv 
+ src/ConstMult/IntConstDiv
+ src/ConstMult/FPConstDiv
 
- 
+
 # Multiplication related --------------------------------------------
 # src/IntMult/IntMultiplier
 # src/IntMult/FixMultAdd
@@ -359,15 +361,15 @@ src/FPDivSqrt/FPSqrt
 
 
 # Composite operators
-src/FPComposite/FPLargeAcc 
-src/FPComposite/LargeAccToFP 
-#src/FPComposite/FPDotProduct 
+src/FPComposite/FPLargeAcc
+src/FPComposite/LargeAccToFP
+#src/FPComposite/FPDotProduct
 #src/FPComposite/FP2DNorm
 
 # Generic fixed-point function evaluators ---------------------------
- src/Table 
- src/DualTable 
- 
+ src/Table
+ src/DualTable
+
  src/FixConstant
 
  src/FixFunctions/FixFunction
@@ -380,7 +382,7 @@ src/FPComposite/LargeAccToFP
 
  src/FixFunctions/GenericTable
  src/FixFunctions/BipartiteTable
-# src/FixFunctions/Multipartite 
+# src/FixFunctions/Multipartite
 # src/FixFunctions/FixFunctionByMultipartiteTable
 # src/FixFunctions/QuineMcCluskey
 
@@ -412,7 +414,7 @@ src/UserDefinedOperator
 )
 
 TARGET_LINK_LIBRARIES(
-  FloPoCoLib 
+  FloPoCoLib
   mpfr gmp gmpxx xml2 mpfi
   )
 
@@ -439,12 +441,12 @@ ENDIF (WCPG_FOUND)
 
 
 ADD_EXECUTABLE(flopoco
- src/main 
+ src/main
 )
- 
+
 TARGET_LINK_LIBRARIES(
-  flopoco  
-	FloPoCoLib 
+  flopoco
+	FloPoCoLib
   )
 
 # unplugged for now to speed up compilation, to revive some day
@@ -452,7 +454,7 @@ TARGET_LINK_LIBRARIES(
 # src/main_soaktest
 #)
 #TARGET_LINK_LIBRARIES(
-#  flopoco_soaktest  
+#  flopoco_soaktest
 #	${FLOPOCO_LIB}
 #)
 

@@ -14,6 +14,14 @@ namespace flopoco{
                 tc->setId(v.size()-1); // on enregistre comme identifiant la position du TestCase
 	}
 
+	void TestCaseList::add(TestCaseList* tcl){
+		int nbTestcases = tcl->getNumberOfTestCases();
+
+		for(int i=0; i<nbTestcases; i++){
+			add(tcl->getTestCase(i));
+		}
+	}
+
 	int TestCaseList::getNumberOfTestCases(){
 		return v.size();
 	}
@@ -48,12 +56,12 @@ namespace flopoco{
 	void TestCase::addInput(string name, mpz_class v)
 	{
 		Signal* s = op_->getSignalByName(name);
-		if (v >= (mpz_class(1) << s->width())) 
+		if (v >= (mpz_class(1) << s->width()))
 			throw string("ERROR in TestCase::addInput, signal value out of range");
 		if (v<0) {
-			if (v < - (mpz_class(1) << s->width())) 
+			if (v < - (mpz_class(1) << s->width()))
 				throw string("ERROR in TestCase::addInput, negative signal value out of range");
-			v += (mpz_class(1) << s->width()); 
+			v += (mpz_class(1) << s->width());
 		}
 		inputs[name] = v;
 	}
@@ -64,7 +72,7 @@ namespace flopoco{
 		Signal* s = op_->getSignalByName(name);
 		if(!s->isFP()) {
 			throw string("TestCase::addFPInput: Cannot convert FPNumber::SpecialValue to non-FP signal");
-		} 
+		}
 		int wE=s->wE();
 		int wF=s->wF();
 		FPNumber  fpx(wE, wF,v);
@@ -78,7 +86,7 @@ namespace flopoco{
 		Signal* s = op_->getSignalByName(name);
 		if(!s->isFP()) {
 			throw string("TestCase::addFPInput: Cannot convert a double into non-FP signal");
-		} 
+		}
 		int wE=s->wE();
 		int wF=s->wF();
 		FPNumber  fpx(wE, wF);
@@ -92,12 +100,12 @@ namespace flopoco{
 		Signal* s = op_->getSignalByName(name);
 		if(!s->isFP()) {
 			throw string("TestCase::addFPInput: Cannot convert a FPNumber into non-FP signal");
-		} 
+		}
 		int wE, wF;
 		x->getPrecision(wE, wF);
 		if((s->wE() != wE) || (s->wF() !=wF)) {
 			throw string("TestCase::addFPInput(string, FPNumber): size of provided FPNumber does not match");
-		} 
+		}
 		mpz_class mpx = x->getSignalValue();
 
 		inputs[name] = mpx;
@@ -108,7 +116,7 @@ namespace flopoco{
 		Signal* s = op_->getSignalByName(name);
 		if(!s->isIEEE()) {
 			throw string("TestCase::addIEEEInput: Cannot convert IEEENumber::SpecialValue to non-FP signal");
-		} 
+		}
 		int wE=s->wE();
 		int wF=s->wF();
 		IEEENumber  fpx(wE, wF,v);
@@ -122,7 +130,7 @@ namespace flopoco{
 		Signal* s = op_->getSignalByName(name);
 		if(!s->isIEEE()) {
 			throw string("TestCase::addIEEEInput: Cannot convert a double into non-FP signal");
-		} 
+		}
 		int wE=s->wE();
 		int wF=s->wF();
 		IEEENumber  fpx(wE, wF);
@@ -138,7 +146,7 @@ namespace flopoco{
 		Signal* s = op_->getSignalByName(name);
 		if(!s->isIEEE()) {
 			throw string("TestCase::addIEEEInput: Cannot convert a double into non-FP signal");
-		} 
+		}
 		mpz_class mpx = in.getSignalValue();
 		inputs[name] = mpx;
 	}
@@ -155,26 +163,26 @@ namespace flopoco{
 	void TestCase::addExpectedOutput(string name, mpz_class v)
 	{
 		Signal* s = op_->getSignalByName(name);
-	
+
 		//TODO Check if we have already too many values for this output
                   //std::cout << "signal width : " << s->width() << std::endl;
-		if (v >= (mpz_class(1) << s->width())){ 
+		if (v >= (mpz_class(1) << s->width())){
 			ostringstream e;
 			e << "ERROR in TestCase::addExpectedOutput, signal value " << v << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
 				throw e.str();
 		}
 		if (v<0) {
-			if (v < - (mpz_class(1) << s->width())){ 
+			if (v < - (mpz_class(1) << s->width())){
 				ostringstream e;
 				e << "ERROR in TestCase::addExpectedOutput, negative signal value " << v << " out of range " << - (mpz_class(1) << s->width()) << " .. " << (mpz_class(1) << s->width())-1;
 				throw e.str();
-			} 
-			v += (mpz_class(1) << s->width()); 
+			}
+			v += (mpz_class(1) << s->width());
 		}
 		outputs[name].push_back(v);
 	}
 
- 
+
 	string TestCase::getInputVHDL(string prepend)
 	{
 		ostringstream o;
@@ -238,7 +246,7 @@ namespace flopoco{
 		ostringstream o;
 
 		o << prepend;
-	
+
 	/* Iterate through input signals */
 		for (map<string, mpz_class>::iterator it = inputs.begin(); it != inputs.end(); it++)
 			{
@@ -253,7 +261,7 @@ namespace flopoco{
 				string signame = it->first;
 				o << signame << "=" ;
 				vector<mpz_class> vs = it->second;
-				
+
 				/* Iterate through possible output values */
 				for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
 					{
@@ -278,7 +286,7 @@ namespace flopoco{
                 for (list<string>::iterator it = IOorderOutput.begin();it != IOorderOutput.end(); it++) {
 			Signal* s = op_->getSignalByName(*it);
 			vector<mpz_class> vs = outputs[*it];
-			
+
                         o << vs.size() << " ";
 			/* Iterate through possible output values */
 			for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
@@ -303,11 +311,11 @@ namespace flopoco{
 		return comment;
 	}
 
-        void TestCase::setId(int id) { 
+        void TestCase::setId(int id) {
                 intId = id;
         }
 
-        int TestCase::getId() { 
+        int TestCase::getId() {
                 return intId;
         }
 
@@ -319,4 +327,4 @@ namespace flopoco{
         return msg.str();
       }
 }
-        
+
