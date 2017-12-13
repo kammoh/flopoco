@@ -1,6 +1,59 @@
 TODO file for FloPoCo
 
 * Version 5
+** cleanup of the pipeline framework
+2 use cases from Kassel:
+ - we want to call optimal bit-heap scheduling algorithms, which will not be ASAP.
+- we want to generate optimal adder DAGs, also not ASAP.
+In both case, we want to provide to these algorithms the schedule of all the inputs.
+  Typical case of the bit heap of a large multiplier: it adds 
+     - bits from its DSP blocks (arrive after 2 or 3 cycles) 
+     - bits from the logic-based multipliers (arrive at cycle 0 after a small delay)
+  Real-world bit heaps (e.g. sin/cos or exp or log) have even more complex, difficult to predict BH structures.
+
+We want a robust solution that works for these use cases.
+Current version 5 is not robust, not efficient (it reschedules all the time) and overengineered WRT to these use cases.
+
+Hypotheses:
+H0: schedule is always called on the top-level operator.
+  Even an explicit call to schedule() in a sub-component will schedule its top-level 
+H1: default schedule will always be ASAP. 
+  A call to schedule() does what it can, then stops.
+H2: schedule() does not reschedule anything: if a signal is already scheduled, it is skipped.
+H3: shared operators are exclusively sub-cycle LUT-like operators (use cases so far: compressors, LUT-based mults in IntMultiplier)
+  They define (possibly explicitely) the delay(s) between their input and output, but need not be scheduled. 
+
+Schedule is called implicitely after the constructor of the top-level operator.
+It may be called explicity by some code, in particular bit heap compression.
+This somehow constraints the order of writing operator constructor code, but it is OK.
+ 
+The algo should be:
+
+If a bit heap bh is involved, the constructor
+1/ perform all the bh->addBit(),
+2/ explicitely calls schedule(),  which is supposed to schedule all the inputs 
+	(this constrains constructor code order)
+3/ calls generateCompressorVHDL(), which we delegate to Kassel.
+Kassel compute their optimal architecture + schedule, and add it to the VHDL stream already scheduled
+so that thanks to H2 it will remain (and not be rescheduled ASAP)
+
+For Martin: 
+- Before generateCompressorVHDL is called, we will have the lexicographic timing 
+  (i.e. cycle + delay within a cycle) for all the bits that are input to the bit heap.
+  We really want Martin's algos to manage that.
+  
+- Martin's algorithms compute cycles + delays. Two options to exploit this information:
+    a/ ignore the cycles, just have each signal declared with a delay in the compressor trees, 
+       and hope the ASAP scheduler re-computes cycles that will  match those computed by Martin
+    b/ let Martin directly hack the cycles and delays into the DAG -- probably much more code.
+	I would vote for a/, but as Martin also minimizes registers, we should go for b/ 
+To discuss.
+
+- The BitHeap should be simplified, all the timing information should be removed: 
+   it is now in the Signals (once they have been scheduled).
+  So the actual interface to provide to Martin is not yet fixed.
+
+
 ** Target -> parentOp
 Idea: currently each operator constructor takes a Target as first arg.
 We should systematically add a second constructor 
@@ -141,11 +194,9 @@ a test programme iterates through the operators, testing them one by one for var
 add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
 The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
 * Janitoring
+*** replace inPortMap and outPortMap by the modern interface newInstance()
+		See FPAddSinglePath for examples
 *** Replace pointers with smart pointers
-*** replace inPortMap and outPortMap by an additional argument to instance()
-This argument should be a vector of "formal:effective" strings
-inPortMap and outPortMap should be made private to Operator
-
 *** gradually convert everything to standard lib arithmetic, getting rid of the synopsis ones.
 *** TargetFactory
 *** uniformize name construction 
