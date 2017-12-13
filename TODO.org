@@ -10,9 +10,12 @@ In both case, we want to provide to these algorithms the schedule of all the inp
      - bits from its DSP blocks (arrive after 2 or 3 cycles) 
      - bits from the logic-based multipliers (arrive at cycle 0 after a small delay)
   Real-world bit heaps (e.g. sin/cos or exp or log) have even more complex, difficult to predict BH structures.
+1 use case from Lyon: pipelined adders (should know the schedule of the inputs to 
 
 We want a robust solution that works for these use cases.
-Current version 5 is not robust, not efficient (it reschedules all the time) and overengineered WRT to these use cases.
+Current version 5 (hereafter refered to as Matei's code) is not efficient (it reschedules all the time) and overengineered WRT to these use cases.
+Only drawback of the solution proposed below WRT Matei's code: it requires explicit calls to schedule() in some situations.
+I consider this a good thing, it gives control.
 
 Hypotheses:
 H0: schedule is always called on the top-level operator.
@@ -35,7 +38,7 @@ If a bit heap bh is involved, the constructor
 	(this constrains constructor code order)
 3/ calls generateCompressorVHDL(), which we delegate to Kassel.
 Kassel compute their optimal architecture + schedule, and add it to the VHDL stream already scheduled
-so that thanks to H2 it will remain (and not be rescheduled ASAP)
+so that (thanks to H2) it will remain (and not be rescheduled ASAP)
 
 For Martin: 
 - Before generateCompressorVHDL is called, we will have the lexicographic timing 
