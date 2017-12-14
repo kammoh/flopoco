@@ -56,7 +56,14 @@ To discuss.
    it is now in the Signals (once they have been scheduled).
   So the actual interface to provide to Martin is not yet fixed.
 
-
+** Plan for bringup
+*** Shifter for basic pipeline
+*** IntAdder for explicit call to schedule()
+*** FPAdd for simple subcomponents
+*** FPDiv for low complexity shared subcomponents
+*** FixRealKCM for simple bit heap
+*** FixFIR and FixIIR for large bit heaps
+*** IntMult... sigh, some day 
 ** Target -> parentOp
 Idea: currently each operator constructor takes a Target as first arg.
 We should systematically add a second constructor 
