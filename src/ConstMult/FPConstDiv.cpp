@@ -105,18 +105,14 @@ namespace flopoco{
 		vhdl << tab << declare("x_exp", wEIn) << " <=  X("<<wEIn<<"+"<<wFIn<<"-1 downto "<<wFIn<<");"<<endl;
 		vhdl << tab << declare("x_sig", wFIn+1) << " <= '1' & X("<<wFIn-1 <<" downto 0);"<<endl;
 
-		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(gamma+1));
-		vhdl << tab << declare("Diffmd", gamma+1) << " <=  ('0' & x_sig" << range(wFIn, wFIn-gamma+1)<< ") - ('0' & CONV_STD_LOGIC_VECTOR(" << d << ", " << gamma <<")) ;" << endl;
+		vhdl << tab << declare(getTarget()->adderDelay(gamma+1), "Diffmd", gamma+1) << " <=  ('0' & x_sig" << range(wFIn, wFIn-gamma+1)<< ") - ('0' & CONV_STD_LOGIC_VECTOR(" << d << ", " << gamma <<")) ;" << endl;
 		vhdl << tab << declare("mltd") << " <=   Diffmd("<< gamma<<");" << endl;
 
-		int mltdCycle=getCurrentCycle();
-		double mltdCP=getCriticalPath();
 
 		if(d*intpow2(dExp) >1.0) { // only underflow possible
 			vhdl <<endl << tab << "-- exponent processing. For this d we may only have underflow" << endl;
 			
-			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEOut+1));
-			vhdl << tab << declare("r_exp0", wEOut+1) << " <=  ('0' & x_exp) - ( CONV_STD_LOGIC_VECTOR(" << s+1+dExp << ", " << wEOut+1 <<")) + (not mltd);" << endl;
+			vhdl << tab << declare(getTarget()->adderDelay(wEOut+1), "r_exp0", wEOut+1) << " <=  ('0' & x_exp) - ( CONV_STD_LOGIC_VECTOR(" << s+1+dExp << ", " << wEOut+1 <<")) + (not mltd);" << endl;
 			
 			vhdl << tab << declare("underflow") << " <=  r_exp0(" << wEOut << ");" << endl;
 			vhdl << tab << declare("r_exp", wEOut) << " <=  r_exp0" << range(wEOut-1, 0) << ";" << endl;
@@ -128,8 +124,7 @@ namespace flopoco{
 			{
 			vhdl <<endl << tab << "-- exponent processing. For this d we may only have overflow" << endl;
 			
-			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEOut+1));
-			vhdl << tab << declare("r_exp0", wEOut+1) << " <=  ('0' & x_exp) + ( CONV_STD_LOGIC_VECTOR(" << -(s+1+dExp) << ", " << wEOut+1 <<")) + (not mltd);" << endl;
+			vhdl << tab << declare(getTarget()->adderDelay(wEOut+1), "r_exp0", wEOut+1) << " <=  ('0' & x_exp) + ( CONV_STD_LOGIC_VECTOR(" << -(s+1+dExp) << ", " << wEOut+1 <<")) + (not mltd);" << endl;
 			
 			vhdl << tab << declare("overflow") << " <=  r_exp0(" << wEOut << ");" << endl;
 			vhdl << tab << declare("r_exp", wEOut) << " <=  r_exp0" << range(wEOut-1, 0) << ";" << endl;
@@ -139,18 +134,15 @@ namespace flopoco{
 			}
 
 		// Back to where we were after the computation of mldt
-		setCycle(mltdCycle); 
-		setCriticalPath(mltdCP);
 		vhdl <<endl << tab << "-- significand processing"<<endl;
 		if(mantissaIsOne) {
 			vhdl << tab << declare("r_frac", wFOut) << " <= x_sig;"<<endl;
 		}
 		else {// Actual division
 			// mux = diffusion of the control signal + 1 LUT
-			manageCriticalPath(getTarget()->localWireDelay(wFIn) + getTarget()->lutDelay());
 			vhdl << tab << declare("divIn0", intDivSize) << " <= '0' & x_sig & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
 			vhdl << tab << declare("divIn1", intDivSize) << " <= x_sig & '0' & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
-			vhdl << tab << declare("divIn", intDivSize) << " <= divIn1 when mltd='1' else divIn0;" << endl;
+			vhdl << tab << declare(getTarget()->lutDelay(), "divIn", intDivSize) << " <= divIn1 when mltd='1' else divIn0;" << endl;
 			
 			icd = new IntConstDiv(target, intDivSize, d, alpha, arch);
 			
@@ -158,9 +150,6 @@ namespace flopoco{
 			outPortMap (icd, "Q","quotient");
 			outPortMap (icd, "R","remainder");
 			vhdl << instance(icd, "sig_div");
-			
-			setCycleFromSignal("remainder"); 
-			setCriticalPath(icd->getOutputDelay("R"));
 			
 			vhdl << tab << declare("r_frac", wFOut) << " <= quotient" << range(wFOut-1, 0) << ";"<<endl;
 			

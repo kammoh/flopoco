@@ -246,7 +246,7 @@ namespace flopoco{
 		compressorIONames << compressor->getName() << "_bh"
 				<< bitheap->guid << "_uid" << instanceUID << "_Out";
 		bitheap->op->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
-		bitheap->op->outPortMap(compressor, "R", compressorIONames.str(), false);
+		bitheap->op->outPortMap(compressor, "R", compressorIONames.str());
 
 		//create the compressor
 		//	this will be a global component, so set is as shared
@@ -359,7 +359,7 @@ namespace flopoco{
 			bitheap->op->inPortMap(adder, "X", adderIn0Name.str());
 			bitheap->op->inPortMap(adder, "Y", adderIn1Name.str());
 			bitheap->op->inPortMap(adder, "Cin", adderCinName.str());
-			bitheap->op->outPortMap(adder, "R", adderOutName.str(), false);
+			bitheap->op->outPortMap(adder, "R", adderOutName.str());
 
 
 			//create the instance of the adder

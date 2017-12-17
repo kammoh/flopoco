@@ -8,7 +8,7 @@
   Authors: Maxime Christ, Jeremie Detrey, Florent de Dinechin
 
   Initial software.
-  Copyright Â© ENS-Lyon, INRIA, CNRS, UCBL,
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2015.
   All rights reserved.
 
@@ -40,7 +40,7 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 	// TODO replace all these pow(2, ...) with something safer.
-
+	
 	vector<mpz_class> FPDiv::selFunctionTable(double dMin, double dMax, int nbBitD, int nbBitW, int alpha, int radix, int wIn, int wOut) {
 		double rho = ((double)alpha)/(radix-1);
 
@@ -48,22 +48,22 @@ namespace flopoco{
 		for (int x=0; x<(1<<wIn); x++) {
 
 			mpz_class result;
-
+					
 			int w = (x>>nbBitD);	 //separating w and d (together in x)
 			int d = x - (w<<nbBitD);
 			int wneg = (w >> (nbBitW-1)) << (nbBitW-1); //getting the sign bit
 			w -= 2*wneg; //switching frhom two's complement to decimal representation, more convenient for upcoming computation
-
+					
 			int decimalResult;
 			int nbBitK = ceil(log2(alpha)+1); //Nb of bit for the entire part of w
 			double realw = w/pow(2, nbBitW-nbBitK);
-
+					
 			double hPitch = pow(2, -nbBitD)*(dMax-dMin);
 			double vPitch = pow(2, -nbBitW+nbBitK);
-
+					
 			double uSlope, lSlope;
 			int uCorrecter, lCorrecter;
-
+					
 
 			for(int k = -alpha; k <= alpha; k++)		{
 				uSlope = k+rho;
@@ -82,18 +82,18 @@ namespace flopoco{
 			}
 
 
-			if(decimalResult < 0)
+			if(decimalResult < 0)	
 				decimalResult+=(pow(2, nbBitK)); //switch to two's complement
-
+						
 			result = mpz_class(decimalResult);
 
 			t.push_back(result);
 		}
 		return t;
 	}
+	
 
-
-
+	
 	FPDiv::FPDiv(OperatorPtr parentOp, Target* target, int wE, int wF, int radix) :
 		Operator(parentOp, target), wE(wE), wF(wF) {
 
@@ -103,12 +103,12 @@ namespace flopoco{
 
 		srcFileName="FPDiv";
 		name<<"FPDiv_"<<wE<<"_"<<wF;
-		setNameWithFreq(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		if(radix !=0  && radix!=4 && radix !=8) {
 			THROWERROR("Got radix = " << radix << ". Only possible choices for radix are 0, 4 or 8" );
 		}
-
+		
 		if(radix==0){ // 0 means "let FloPoCo choose"
 			if( (getTarget()->lutInputs() <= 4) || (!getTarget()->isPipelined()))
 				radix=4;
@@ -121,7 +121,7 @@ namespace flopoco{
 		addFPInput ("X", wE, wF);
 		addFPInput ("Y", wE, wF);
 		addFPOutput("R", wE, wF);
-
+			
 
 		vhdl << tab << declare("fX",wF+1) << " <= \"1\" & X(" << wF-1 << " downto 0);" << endl;
 		vhdl << tab << declare("fY",wF+1) << " <= \"1\" & Y(" << wF-1 << " downto 0);" << endl;
@@ -132,7 +132,7 @@ namespace flopoco{
 		vhdl << tab << declare(getTarget()->lutDelay(), "sR") << " <= X(" << wE+wF << ") xor Y(" << wE+wF<< ");" << endl;
 		vhdl << tab << "-- early exception handling " <<endl;
 		vhdl << tab << declare("exnXY",4) << " <= X(" << wE+wF+2 << " downto " << wE+wF+1  << ") & Y(" << wE+wF+2 << " downto " << wE+wF+1 << ");" <<endl;
-
+		
 		vhdl << tab << "with exnXY select" <<endl
 				 << tab << tab << declare(getTarget()->lutDelay(),"exnR0", 2) << " <= " << endl
 				 << tab << tab << tab << "\"01\"	 when \"0101\",										-- normal" <<endl
@@ -140,7 +140,7 @@ namespace flopoco{
 				 << tab << tab << tab << "\"10\"	 when \"0100\" | \"1000\" | \"1001\", -- overflow" <<endl
 				 << tab << tab << tab << "\"11\"	 when others;										-- NaN" <<endl;
 
-
+		
 		/*****************************RADIX 8 SRT **********************************************/
 		if(radix==8)
 		{
@@ -196,10 +196,10 @@ namespace flopoco{
 				outPortMap(selfunctiontable , "Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str());
 				REPORT(DEBUG, "After table instance " << i);
-
+				
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
-				// qui has a fanout of(wF+7), which we add to both its uses
+				// qui has a fanout of(wF+7), which we add to both its uses 
 				vhdl << tab << "with " << qi << range(1,0) << " select " << endl
 						 << tab << declare(getTarget()->adderDelay(wF+7)+getTarget()->fanoutDelay(2*(wF+7)), wim1fulla.str(), wF+7) << " <= " << endl
 						 << tab << tab << wipad.str() << " - (\"0000\" & prescaledfY)			when \"01\"," << endl
@@ -225,7 +225,7 @@ namespace flopoco{
 						 << tab << tab << "(\"0\" & prescaledfY & \"000\")			when \"011\"| \"100\"," << endl
 						 << tab << tab << rangeAssign(wF+6,0,"'0'") << "when others;" << endl;
 				REPORT(DEBUG, "After with2 ");
-
+				
 				vhdl << tab << "with " << qi << of(3) << " select" << endl; // Remark here: seli(6)==qi(3) but it we get better results using the latter.
 				vhdl << tab << declare(getTarget()->adderDelay(wF+7), wim1full.str(), wF+7) << " <= " << endl;
 				vhdl << tab << tab << wim1fulla.str() << " - " << fYdec << "			when '0'," << endl;
@@ -294,9 +294,9 @@ namespace flopoco{
 
 
 
+		
 
-
-		else
+		else 
 			/*****************************RADIX 4 SRT **********************************************/
 		//TODO : the old version is using 5-input's LUTs, try to fit in 4-input's LUTs (same as above : select qA and qB and make a 2-levels addition)
 		{
@@ -304,7 +304,7 @@ namespace flopoco{
 			// -------- Parameter set up -----------------
 			nDigit = (wF+6) >> 1;
 
-
+			
 			vhdl << tab << " -- compute 3Y" << endl;
 
 			vhdl << tab << declare(getTarget()->adderDelay(wF+3), "fYTimes3",wF+3)
@@ -361,40 +361,40 @@ namespace flopoco{
 				else // alpha==2
 					vhdl << tab << declare(seli.str(),9) << " <= " << wi.str() << range( wF+2, wF-3) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					//vhdl << tab << declare(seli.str(),10) << " <= " << wi.str() << range( wF+2, wF-4) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
-
+					
 				inPortMap (selfunctiontable , "X", seli.str());
 				outPortMap(selfunctiontable , "Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str());
 				vhdl << endl;
 
 				if(alpha==3) {
-					// Two options for radix 4. More experiments are needed, the best is probably target-dependent
-#if 1  // The following leads to higher frequency and higher resource usage:
-					// For (8,23) on Virtex6 with ISE this gives 466Mhz, 1083 regs+ 1029 LUTs
+					// Two options for radix 4. More experiments are needed, the best is probably target-dependent 
+#if 1  // The following leads to higher frequency and higher resource usage: 
+					// For (8,23) on Virtex6 with ISE this gives 466Mhz, 1083 regs+ 1029 LUTs 
 					vhdl << tab << "with " << qi << " select" << endl;
 					vhdl << tab << tab << declare(getTarget()->fanoutDelay(wF+4) + getTarget()->adderDelay(wF+4), qiTimesD.str(),wF+4)
-							 << " <= "<< endl
+							 << " <= "<< endl 
 							 << tab << tab << tab << "\"000\" & fY						when \"001\" | \"111\"," << endl
 							 << tab << tab << tab << "\"00\" & fY & \"0\"				when \"010\" | \"110\"," << endl
 							 << tab << tab << tab << "\"0\" & fYTimes3				when \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')	when others;" << endl<< endl;
-#else // Recompute 3Y locally to save the registers: the LUT is used anyway (wrong! on Virtex6 ISE finds a MUX)
-					// For (8,23) on Virtex6 with ISE this gives 345Mhz, 856 regs+ 1051 LUTs
-					// Note that this option probably scales worse if we pipeline this addition
+#else // Recompute 3Y locally to save the registers: the LUT is used anyway (wrong! on Virtex6 ISE finds a MUX) 
+					// For (8,23) on Virtex6 with ISE this gives 345Mhz, 856 regs+ 1051 LUTs 
+					// Note that this option probably scales worse if we pipeline this addition  
 					vhdl << tab << "with " << qi << " select" << endl
 							 << tab << tab << declare(getTarget()->fanoutDelay(wF+4) + getTarget()->lutDelay(), join("addendA",i),wF+4)
-							 << " <= " << endl
+							 << " <= " << endl 
 							 << tab << tab << tab << "\"000\" & fY            when \"001\" | \"111\" | \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')  when others;" << endl;
 
 					vhdl << tab << "with " << qi << " select" << endl
-							 << tab << tab << declare(join("addendB",i),wF+4) << " <= "<< endl
+							 << tab << tab << declare(join("addendB",i),wF+4) << " <= "<< endl 
 							 << tab << tab << tab << "\"00\" & fY & \"0\"       when \"010\" | \"110\"| \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')  when others;" << endl;
-
+					
 					vhdl << tab << tab << declare(getTarget()->adderDelay(wF+4), qiTimesD.str(),wF+4)
 							 << " <= " << join("addendA",i) << " + " << join("addendB",i) << ";"<< endl << endl;
-#endif
+#endif				
 
 					vhdl << tab << declare(wipad.str(), wF+4) << " <= " << wi.str() << " & \"0\";" << endl;
 					vhdl << tab << "with " << qi << "(2) select" << endl;
@@ -407,11 +407,11 @@ namespace flopoco{
 				else {
 					vhdl << tab << "with " << qi << " select" << endl;
 					// no delay for qiTimesD, it should be merged in the following addition
-					vhdl << tab << tab << declare(qiTimesD.str(),wF+4) << " <= "<< endl
+					vhdl << tab << tab << declare(qiTimesD.str(),wF+4) << " <= "<< endl 
 							 << tab << tab << tab << "\"000\" & fY						 when \"001\" | \"111\"," << endl
 							 << tab << tab << tab << "\"00\" & fY & \"0\"			 when \"010\" | \"110\"," << endl
 							 << tab << tab << tab << "(" << wF+3 << " downto 0 => '0')	 when others;" << endl << endl;
-
+					
 					vhdl << tab << declare(wipad.str(), wF+4) << " <= " << wi.str() << " & \"0\";" << endl;
 
 					vhdl << tab << "with " << qi << "(2) select" << endl
@@ -481,7 +481,7 @@ namespace flopoco{
 		vhdl << tab << "-- final rounding" <<endl;
 		vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
 				 << "expR1 & fRn1(" <<(radix==4?wF+1:wF+2) << " downto " << (radix==4?2:3)<< ") ;" << endl;
-
+		
 		vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
 				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
 
@@ -811,7 +811,7 @@ namespace flopoco{
 		cout<<"Cost of this configuration = "<<res<<endl;
 		return res/flopocoCost;
 	}
-
+	
 	void FPDiv::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
@@ -873,8 +873,8 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-
-		if(index==-1)
+		
+		if(index==-1) 
 		{ // The unit tests
 
 			for(int wF=5; wF<53; wF+=1) // test various input widths
@@ -895,15 +895,15 @@ namespace flopoco{
 				}
 			}
 		}
-		else
+		else     
 		{
 				// finite number of random test computed out of index
-		}
+		}	
 		return testStateList;
 	}
 
 
-
+	
 	void FPDiv::registerFactory(){
 		UserInterface::add("FPDiv", // name
 											 "A correctly rounded floating-point division.",

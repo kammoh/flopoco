@@ -19,7 +19,7 @@ namespace flopoco {
 
 		ostringstream name;
 		name << "ShiftReg_"<< w_ << "_uid" << getNewUId();
-		setNameWithFreq( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		addInput("X", w, true);
 

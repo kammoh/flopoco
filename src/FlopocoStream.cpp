@@ -42,7 +42,6 @@ namespace flopoco{
 		vhdlCode.str("");
 		vhdlCodeBuffer.str("");
 		dependenceTable.clear();
-		disabledParsing = false;
 		codeParsed = false;
 
 		//initialize the lexing context
@@ -60,7 +59,7 @@ namespace flopoco{
 
 	string FlopocoStream::str(){
 		if(!codeParsed)
-			flush();
+			flushAndParseAndBuildDependencyTable();
 		return vhdlCode.str();
 	}
 
@@ -73,84 +72,63 @@ namespace flopoco{
 	}
 
 
-	void FlopocoStream::flush(){
+
+
+	void FlopocoStream::flushAndParseAndBuildDependencyTable(){
 		ostringstream bufferCode;
-		string currentCode = vhdlCodeBuffer.str();
 
-		//parse the buffer if it is not empty
-		if(vhdlCodeBuffer.str() != string(""))
-		{
-			//scan the code buffer and build the dependence table and annotate the code
-			bufferCode.str("");
-
-			//parse the code, if required
-			if(disabledParsing){
-				bufferCode << vhdlCodeBuffer.str();
-				codeParsed = true;
-				vhdlCodeBuffer.str("");
-			}
-			else{
-				bufferCode << parseCode();
-			}
-			// TODO REMOVE
-			// cerr << "BUFFER " << bufferCode.str() << endl;
-			
-			//fix the dependence table, to the correct content type 
-			cleanupDependenceTable();
-
-			//the newly processed code is appended to the existing one
-			vhdlCode << bufferCode.str();
-
-			//launch the scheduling, if required
-			if(!disabledParsing){
-				op->schedule(!op->isOperatorScheduled());
-			}
-
+		if(op->noParseNoSchedule()) {
+			vhdlCode << vhdlCodeBuffer.str();			
+			codeParsed = true;
+			vhdlCodeBuffer.str("");
 		}
-	}
-
-
-	string FlopocoStream::parseCode()
-	{
-		ostringstream vhdlO;
-		istringstream in(vhdlCodeBuffer.str());
+		else {
+			//parse the buffer if it is not empty
+			if(vhdlCodeBuffer.str() != string(""))
+				{
+					//scan the code buffer and build the dependence table and annotate the code
+					bufferCode.str("");
+					
+					//parse the code, if required
+					istringstream in(vhdlCodeBuffer.str());
 		
-		//instantiate the flex++ object  for lexing the buffer info
-		LexerContext* lexer = new LexerContext(op, &in, &vhdlO, &lexLhsName, &lexExtraRhsNames, &lexDependenceTable, &lexLexingMode, &lexLexingModeOld, &lexIsLhsSet);
+					//instantiate the flex++ object  for lexing the buffer info
+					LexerContext* lexer = new LexerContext(op, &in, &bufferCode, &lexLhsName, &lexExtraRhsNames, &lexDependenceTable, &lexLexingMode, &lexLexingModeOld, &lexIsLhsSet);
+					
+					//call the FlexLexer++ on the buffer. The lexing output is
+					//	in the variable bufferCode. Additionally, a temporary table lexer->dependenceTable 
+					//	containing the triplets <lhsName, rhsName, delay> is created
+					try
+						{
+							lexer->lex();
+						}catch(string &e)
+						{
+							cerr << "Lexing failed: " << e << endl;
+							cerr << "on the following VHDL code:" << vhdlCodeBuffer.str() << endl;
+							exit(1);
+						}
 
-		//call the FlexLexer++ on the buffer. The lexing output is
-		//	in the variable vhdlO. Additionally, a temporary table containing
-		//	the triplets <lhsName, rhsName, delay> is created
-		try
-		{
-			lexer->lex();
-		}catch(string &e)
-		{
-			cerr << "Lexing failed: " << e << endl;
-			cerr << "The VHDL code to parse:" << vhdlCodeBuffer.str() << endl;
-			exit(1);
+					//the temporary table is used to update the dependence table  member of FlopocoStream
+					//	this also empties the lexer's dependence table
+					vector<triplet<string, string, int>>::iterator iter;
+					for(iter=  lexer->dependenceTable->begin(); iter!=lexer->dependenceTable->end();  ++iter){
+						dependenceTable.push_back(make_triplet(iter->first, iter->second, iter->third));
+					}
+					lexer->dependenceTable -> clear();
+					// updateDependenceTable();
+					
+					//set the flag for code parsing and reset the vhdl code buffer
+					codeParsed = true;
+					vhdlCodeBuffer.str("");
+					//fix the dependence table in case of (rhs1, rhs2) <= ... 
+					cleanupDependenceTable();
+
+					//the newly processed code is appended to the existing one
+					vhdlCode << bufferCode.str();
+				}
 		}
-
-		//the temporary table is used to update the member of FlopocoStream
-		//	this also empties the lexer's dependence table
-		updateDependenceTable(lexer->dependenceTable);
-
-		//set the flag for code parsing and reset the vhdl code buffer
-		codeParsed = true;
-		vhdlCodeBuffer.str("");
-		//the annotated string is returned
-		return vhdlO.str();
 	}
 
-
-	void FlopocoStream::updateDependenceTable(vector<triplet<string, string, int>> *tmpDependenceTable){
-		vector<triplet<string, string, int>>::iterator iter;
-
-		for(iter = tmpDependenceTable->begin(); iter!=tmpDependenceTable->end();++iter){
-			dependenceTable.push_back(make_triplet(iter->first, iter->second, iter->third));
-		}
-		tmpDependenceTable->clear();
-	}
 
 
 	void FlopocoStream::setSecondLevelCode(string code){
@@ -166,14 +144,6 @@ namespace flopoco{
 	}
 
 
-	void FlopocoStream::disableParsing(bool s){
-		disabledParsing = s;
-	}
-
-
-	bool FlopocoStream::isParsing(){
-		return !disabledParsing;
-	}
 
 
 	bool FlopocoStream::isEmpty(){
@@ -201,7 +171,7 @@ namespace flopoco{
 			string rhsName = dependenceTable[i].second;
 			string newRhsName;
 			int rhsDelay = 0;
-
+			// cerr << "Dependency "<< lhsName << " " << rhsName << endl;
 			//remove the possible parentheses around the rhsName
 			if(rhsName.find("(") != string::npos)
 			{

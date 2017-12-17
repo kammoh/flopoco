@@ -6,15 +6,12 @@
 #endif
 
 #include <vector>
+#include <set>
 #include <map>
 #include <memory>
 #include <gmpxx.h>
 #include <float.h>
 #include <utility>
-
-#include <pthread.h>
-#include <ctime>
-#include <time.h>
 
 #include "Target.hpp"
 #include "Signal.hpp"
@@ -35,13 +32,6 @@ namespace flopoco {
  	typedef Operator* OperatorPtr;
  	typedef vector<vector<pair<string,string>>> TestList;
  	typedef TestList (*unitTest_func_t)(int);
-
- 	struct threadData{
- 		Operator *op;
- 		size_t startIndex;
- 		size_t stopIndex;
- 		TestCaseList *tcl;
- 	};
 }
 
 #include "UserInterface.hpp"
@@ -61,7 +51,7 @@ namespace flopoco {
 #define INNER_SEPARATOR "................................................................................"
 #define DEBUG_SEPARATOR "________________________________________________________________________________"
 #define OUTER_SEPARATOR "################################################################################"
-#define REPORT(level, stream) {if ((level)<=(UserInterface::verbose)){ cerr << "> " << srcFileName << " " << uniqueName_ <<": " << stream << endl;}else{}}
+#define REPORT(level, stream) {if ((level)<=(UserInterface::verbose)){ cerr << "> " << srcFileName << " " << uniqueName_ <<": " << stream << endl;}else{}} 
 #define THROWERROR(stream) {{ostringstream o; o << " ERROR in " << uniqueName_ << " (" << srcFileName << "): " << stream << endl; throw o.str();}}
 
 
@@ -152,13 +142,23 @@ public:
 	void addToGlobalOpList(Operator *op);
 
 	/**
-	 * Parse the vhdl code for this operator and its children.
+	 * Apply the schedule computed by schedule() to the VHDL stream.
+	 * This is a recursive function that calls itself on all the subcomponents.
+	 * The actual work is performed by doApplySchedule()
 	 * @param parseType decide whether to perform the first, or the second parse
 	 * 		  1=first parse (default), 2=second parse
 	 */
-	void parseVHDL();
+	void applySchedule();
+
+	/**
+	 * Second level parsing of the VHDL code
+	 * This function should not be called before the signals are scheduled
+	 *
+	 */
+	void doApplySchedule();
 
 
+	
 	/**
 	 * Generates the code for a list of operators and all their subcomponents
 	 */
@@ -220,7 +220,7 @@ public:
 	// One option is that fixed-point I/Os should always be plain std_logic_vectors.
 	// It just makes the framework simpler, and anyway typing is managed internally
 	// FP I/O need to be typed to manage the testbenches, e.g. FP equality does
-	// not resume to equality on the bit vectors.
+	// not resume to equality on the bit vectors.  
 	// This is not the case for fixed-point
 	// (comment by F de Dinechin)
 
@@ -294,7 +294,6 @@ public:
 	 */
 	void addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues=1);
 
-
 	/**
 	 * Connect a I/O signal that has just been created to the corresponding
 	 * signal in the parent operator.
@@ -302,25 +301,6 @@ public:
 	 * @param connectionName the name of the signal part of the parent operator that is connected to ioSignal
 	 */
 	void connectIOFromPortMap(Signal *ioSignal);
-
-
-	/**
-	 * Reconnect the input and output ports of the operator to signals in the parent operator.
-	 * The scheduling must consequently be restarted.
-	 */
-	void reconnectIOPorts(bool restatSchedule = true);
-
-
-	/**
-	 * Mark the operator and its subcomponents as not having been scheduled
-	 */
-	void markOperatorUnscheduled();
-
-
-	/**
-	 * Mark the operator and its subcomponents as having been scheduled
-	 */
-	void markOperatorScheduled();
 
 
 	/**
@@ -433,64 +413,6 @@ public:
 	 */
 
 	/**
-	 * DEPRECATED
-	 * Define the current cycle, and resets the critical path
-	 * @param the new value of the current cycle
-	 */
-	void setCycle(int cycle, bool report=true) ;
-
-	/**
-	 * DEPRECATED
-	 * Return the current cycle
-	 * @return the current cycle
-	 */
-	int getCurrentCycle();
-
-	/**
-	 * DEPRECATED
-	 * Advance the current cycle by 1, and resets the critical path
-	 * @param the new value of the current cycle
-	 */
-	void nextCycle(bool report=true) ;
-
-	/**
-	 * DEPRECATED
-	 * Define the current cycle, and reset the critical path
-	 * @param the new value of the current cycle
-	 */
-	void previousCycle(bool report=true) ;
-
-#if 1
-	/**
-	 * DEPRECATED
-	 * Return the critical path of the current cycle so far
-	 */
-	double getCriticalPath() ;
-
-	/**
-	 * DEPRECATED
-	 * Set or reset the critical path of the current cycle
-	 */
-	void setCriticalPath(double delay) ;
-
-	/**
-	 * DEPRECATED
-	 * Adds to the critical path of the current stage, and insert a pipeline stage if needed
-	 * @param the delay to add to the critical path of current pipeline stage
-	 */
-	void addToCriticalPath(double delay) ;
-#endif
-	/**
-	 * DEPRECATED
-	 * Add @delay to the critical path, advancing the pipeline stages, if needed.
-	 * This is the delay corresponding to the signals which follow in the operator constructor
-	 * @param delay the delay to be added to the critical path
-	 * @param report whether comments about pipelining operations are to be added as comments in the generated code
-	 */
-	bool manageCriticalPath(double delay=0.0, bool report=true);
-
-
-	/**
 	 * Return the critical path delay associated to a given output of the operator
 	 * @param the name of the output
 	 */
@@ -501,28 +423,6 @@ public:
 	 *@return the maximum delay of the inputs list
 	 */
 	//double getMaxInputDelays(vector<Signal*> inputList);
-
-	/**
-	 * DEPRECATED
-	 * Set the current cycle to that of a signal and reset the critical path. It may increase or decrease current cycle.
-	 * @param name is the signal name. It must have been defined before
-	 * @param report is a boolean, if true it will report the cycle
-	 */
-	void setCycleFromSignal(string name, bool report=true) ;
-
-	/**
-	 * DEPRECATED
-	 * Set the current cycle and the critical path. It may increase or decrease current cycle.
-	 * @param name is the signal name. It must have been defined before.
-	 * @param criticalPath is the critical path delay associated to this
-	 * 		  signal: typically getDelay(name)
-	 * @param report is a boolean, if true it will report the cycle
-	 */
-	void setCycleFromSignal(string name, double criticalPath, bool report=true) ;
-	// TODO: FIXME
-	// param criticalPath is the critical path delay associated to this signal: typically getDelay(name)
-	// Shouldn't this be the default behavior?
-	// Check current use and fix.
 
 
 	/**
@@ -545,48 +445,6 @@ public:
 
 
 	/**
-	 * DEPRECATED
-	 * Advance the current cycle to that of a signal. It may only increase current cycle. To synchronize
-	 * two or more signals, first call setCycleFromSignal() on the
-	 * first, then syncCycleFromSignal() on the remaining ones. It
-	 * will synchronize to the latest of these signals.
-	 * @param name is the signal name. It must have been defined before
-	 * @param report is a boolean, if true it will report the cycle
-	 */
-	bool syncCycleFromSignal(string name, bool report=true) ;
-
-	/**
-	 * DEPRECATED
-	 * advance the current cycle to that of a signal, updating critical paths.
-	 * @param name is the signal name. It must have been defined before
-	 * @param criticalPath is a double, the critical path already consumed up to the signal passed as first argument.
-	 *
-	 * We have three cases:
-	 * 	1/ currentCycle > name.cycle, then do nothing
-	 * 	2/ currentCycle < name.cycle, then advance currentCycle to name.cycle, and set the current critical path to criticalPath
-	 * 	3/ currentCycle = name.cycle: set critical path to the max of the two critical paths.
-	 */
-	bool syncCycleFromSignal(string name, double criticalPath, bool report=true) ;
-
-
-	/**
-	 * DEPRECATED
-	 * Sets the delay of the signal with the name given by first argument
-	 * @param name the name of the signal
-	 * @param delay the delay to be associated with the name
-	 */
-	void setSignalDelay(string name, double delay);
-
-	/**
-	 * DEPRECATED
-	 * Returns the delay on the signal with the name denoted by the argument
-	 * @param name signal Name
-	 * @return delay of this signal
-	 */
-	double getSignalDelay(string name);
-
-
-	/**
 	 * Functions modifying Signals
 	 * These methods belong to the Signal class. Unfortunately, having them in the Signal class
 	 * creates a circular dependency, so they are now in Operators, seeing as this is the only place
@@ -599,9 +457,9 @@ public:
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal (optional, default 1)
-	 * @param isbus: a signal of width 1 is declared as std_logic when false,
+	 * @param isbus: a signal of width 1 is declared as std_logic when false, 
 	 * 				 as std_logic_vector when true (optional, default false)
-	 * @param regType: the registring type of this signal. See also the Signal
+	 * @param regType: the registring type of this signal. See also the Signal 
 	 * 				   Class for more info
 	 * @param incomplete declaration: whether only part of the signal parameters are specified,
 	 * 									and the rest are specified later
@@ -702,7 +560,7 @@ public:
 	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false, bool incompleteDeclaration = false);
 
 	/**
-	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp.
+	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
 	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
@@ -713,7 +571,7 @@ public:
 	string declareTable(string name, int width, std::string tableAttributes = "", bool incompleteDeclaration = false);
 
 	/**
-	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp.
+	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
 	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
 	 * @param name is the name of the signal
 	 * @param width is the width of the signal
@@ -764,16 +622,6 @@ public:
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
 
 
-#if 1
-	/**
-	 * Use a signal on the Right
-	 * @param name is the name of the signal
-	 * @return name
-	 */
-	string use(string name);
-
-	string use(string name, int delay);
-#endif
 
 	/**
 	 * Declare an output mapping for an instance of a sub-component
@@ -781,7 +629,7 @@ public:
 	 * @param op is a pointer to the subcomponent
 	 * @param componentPortName is the name of the port on the component
 	 * @param actualSignalName is the name of the signal in This mapped to this port
-	 * @param newSignal_ (by default true), defined whether or not actualSignalName has to be declared as a new signal by outPortMap
+	 * @param newSignal (by default true), defined whether or not actualSignalName has to be declared as a new signal by outPortMap
 	 * @return name
 	 */
 	void outPortMap(Operator* op, string componentPortName, string actualSignalName, bool newSignal = true);
@@ -806,9 +654,10 @@ public:
 	 * Returns the VHDL for an instance of a sub-component.
 	 * @param op represents the operator to be port mapped
 	 * @param instanceName is the name of the instance as a label
+	 * @param outputWarning is a flag, to be removed eventually, that warns that this method shouldn't be called directly from constructor code
 	 * @return name
 	 */
-	string instance(Operator* op, string instanceName);
+	string instance(Operator* op, string instanceName, bool outputWarning=true);
 
 	/**
 	 * Create a new copy of a shared operator
@@ -845,7 +694,7 @@ public:
 	OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
 
-private:
+private:	
 	/**
 	 * Parse a string containing port mappings for a new instance of an operator
 	 * and add the corresponding port mappings to the parent operator.
@@ -936,47 +785,18 @@ public:
 
 
 
-	/**
-	 * Generate Random Test case identified by an integer, in parallel. There is a default
-	 * implementation using a uniform random generator, but most
-	 * operators are not exercised efficiently using such a
-	 * generator. For instance, in FPAdd, the random number generator
-	 * should be biased to favor exponents which are relatively close
-	 * so that an effective addition takes place.
-	 * This function create a new TestCase (to be free after use)
-	 * See FPExp.cpp for an example of overloading this method.
-	 * @param i the identifier of the test case to be generated
-	 * @return TestCase*
-	 */
-	virtual void* buildRandomTestCaseParallel(void* args);
-
-	/**
-	 * Helper function for the buildRandomTestCaseParallel method, so as to be
-	 * able to call it when creating a new thread
-	 * @param context the Operator object that creates the threads
-	 */
-	static void* buildRandomTestCaseParallel_helper(void* context);
-
-	pthread_mutex_t mutexLock;
-
-	/**
-	 * Append standard test cases to a test case list, in parallel. Standard test
-	 * cases are operator-dependent and should include any specific
-	 * corner cases you may think of. Never mind removing a standard test case because you think it is no longer useful!
-	 * @param tcl a TestCaseList
-	 */
-	virtual void buildRandomTestCaseListParallel(TestCaseList* tcl, int n);
-
-
-
 
 
  /*****************************************************************************/
  /*     From this point, we have methods that are not needed in normal use    */
  /*****************************************************************************/
 
-
-
+	/**
+		 Only for very specific operators such as TestBench or Wrapper for which we just want the VHDL to get through untouched
+	 */
+	void setNoParseNoSchedule();
+	bool noParseNoSchedule();
+		
 
 	/**
 	 * Append random test cases to a test case list. There is a default
@@ -1060,7 +880,7 @@ public:
 	/** writes a clock.xdc file in /tmp, to be used by vivado_runsyn */
 	void outputClock_xdc();
 
-
+	
 
 	/**
 	 * Returns true if the operator needs a recirculation signal
@@ -1254,7 +1074,7 @@ public:
 	 * By default, reports the pipeline depth, but feel free to overload
 	 * it if you have anything useful to tell to the end user
 	*/
-	virtual void outputFinalReport(ostream& s, int level);
+	virtual void outputFinalReport(ostream& s, int level);	
 
 
 	/**
@@ -1264,35 +1084,9 @@ public:
 	int getPipelineDepth();
 
 	/**
-	 * Set the pipeline depth
-	 * Should not be used for operators without memory
-	 * @param d the pipeline depth
+	 * Computes pipeline depth after scheduling, for this operator and all its subcomponents
 	 */
-	void setPipelineDepth(int d);
-
-	/**
-	 * Set the pipeline depth, automatically, as the maximum cycle of the outputs
-	 */
-	void setPipelineDepth();
-
-	/**
-	 * Return the input delay map
-	 * @return the input map containing the signal -> delay associations
-	 */
-	map<string, double> getInputDelayMap();
-
-	/**
-	 * Return the output delay map
-	 * @return the output map containing the signal -> delay associations
-	 */
-	map<string, double> getOutDelayMap();
-
-	/**
-	 * Return the declare table
-	 * @return the map containing the signal -> declaration cycle
-	 */
-	map<string, int> getDeclareTable();
-
+	void computePipelineDepths();
 	/**
 	 * Return the target member
 	 */
@@ -1315,17 +1109,11 @@ public:
 
 	vector<Signal*> getTestCaseSignals();
 
-	map<string, string> getPortMap();
-
 	string getSrcFileName();
 
 	int getOperatorCost();
 
-	int getNumberOfInputs();
-
-	int getNumberOfOutputs();
-
-	map<string, Signal*>* getSignalMap();
+	map<string, Signal*> getSignalMap();
 
 	map<string, pair<string, string> > getConstants();
 
@@ -1366,14 +1154,6 @@ public:
 
 	FlopocoStream* getFlopocoVHDLStream();
 
-	/**
-	 * Second level parsing of the VHDL code
-	 * This function should not be called before the signals are scheduled
-	 *
-	 * WARNING: this function has as a precondition that the signals should be scheduled
-	 */
-	void parse2();
-
 
 	/**
 	 * Return the functional delay, in cycles, between two signals.
@@ -1405,43 +1185,21 @@ public:
 	 * WARNING: This function should only be called after the vhdl code
 	 * 			has been parsed (the first parse)
 	 */
-	void extractSignalDependences();
+	void moveDependenciesToSignalGraph();
 
 
 
 	/**
-	 * Start the scheduling for this operator.
-	 * Try to schedule all the inputs, and then launch the scheduling for the
-	 * rest of the internal signals of the operator.
-	 * @param forceReschedule if set to true, then the schedule is
-	 *        force-started for all the nodes, even if they have been previously scheduled
-	 *        WARNING: this may result in exponential run-times for circuits with signals
-	 *                 that have high fan-outs
+	 * Performs as much as possible of an ASAP scheduling for the root operator of this operator.
 	 */
-	void schedule(bool forceReschedule = true);
-
-	/**
-	 * Try to schedule the signal targetSignal. The signal can be schedules only
-	 * if all of its predecessors have been already scheduled. The function will
-	 * also trigger the scheduling of its children, if targetSignal has any.
-	 * @param targetSignal the signal to be scheduled
-	 * @param forceReschedule if set to true, then the schedule is
-	 *        force-started for all the nodes, even if they have been previously scheduled
-	 *        WARNING: this may result in exponential run-times for circuits with signals
-	 *                 that have high fan-outs
-	 */
-	void scheduleSignal(Signal *targetSignal, bool forceReschedule = false);
+	void schedule();
 
 	/**
 	 * Set the timing of a signal.
 	 * Used also to share code between the different timing methods.
 	 * @param targetSignal the signal to be scheduled
-	 * @param forceReschedule if set to true, then the schedule is
-	 *        force-started for all the nodes, even if they have been previously scheduled
-	 *        WARNING: this may result in exponential run-times for circuits with signals
-	 *                 that have high fan-outs
 	 */
-	void setSignalTiming(Signal* targetSignal, bool forceReschedule = false);
+	void setSignalTiming(Signal* targetSignal);
 
 
 	/**
@@ -1840,7 +1598,7 @@ public:
 	 * 		- count registers added due to pipelining framework
 	 * 		- count input/output ports
 	 * 		- count resources in subcomponents
-	 * Should not be used together with the manual estimation functions
+	 * Should not be used together with the manual estimation functions 
 	 * addWireCount, addPortCount, addComponentResourceCount!
 	 * @return the string describing the performed operation
 	 */
@@ -1959,68 +1717,50 @@ public:
 	 */
 	std::string createFloorplan();
 
+
+
+	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////Attributes
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
 	vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
+	map<string, map<string, string>> instancePortMaps;    /**< The port maps for each instance */     
+	
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
-	vector<Signal*>        ioList_;                         /**< The list of I/O signals of the operator */
+	vector<Signal*>        ioList_;                 /**< The list of I/O signals of the operator */
+	FlopocoStream          vhdl;                    /**< The internal stream to which the constructor will build the VHDL code */
 
-	FlopocoStream          vhdl;                            /**< The internal stream to which the constructor will build the VHDL code */
-	int                    numberOfTests;                   /**< The number of tests, set by TestBench before this operator is tested */
-
-
-	std::ostringstream dotDiagram;                          /**< The internal stream to which the drawing methods will output */
-
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	////////////Variables used for resource estimations
 	std::ostringstream 	resourceEstimate;                   /**< The log of resource estimations made by the user */
 	std::ostringstream 	resourceEstimateReport;             /**< The final report of resource estimations made by the user */
-
 	ResourceEstimationHelper* reHelper;                     /**< Performs all the necessary operations for resource estimation */
-
 	bool reActive;                                          /**< Shows if any resource estimation operations have been performed */
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	////////////Variables used for floorplanning
 	std::ostringstream 			floorplan;                  /**< Stream containing the floorplanning operations */
-
 	FloorplanningHelper*		flpHelper;                  /**< Tools for floorplanning */
-	/////////////////////////////////////////////////////////////////////////////////////////////////
+	int                    numberOfTests;                   /**< The number of tests, set by TestBench before this operator is tested. Useful for operators with state */
 
 protected:
+	string              srcFileName;                       /**< Used to debug and report.  */
 	string              uniqueName_;                        /**< By default, a name derived from the operator class and the parameters */
-	string 				architectureName_;                  /**< Name of the operator architecture */
+	string 				      architectureName_;                  /**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_;                   /**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
 
-	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-	string               srcFileName;                       /**< Used to debug and report.  */
 	int                  myuid;                             /**< Unique id>*/
 	int                  cost;                              /**< The cost of the operator depending on different metrics */
 
 
 private:
 	Target*                target_;                         /**< The target on which the operator will be deployed */
-	Operator*              parentOp_;                       /**< The parent operator (i.e. inside which this operator is a subcomponent) containing this operator */
+	Operator*              parentOp_;                       /**< The parent operator (i.e. the operator inside which this operator is a subcomponent)  */
 	int                    stdLibType_;                     /**< 0 will use the Synopsys ieee.std_logic_unsigned, -1 uses std_logic_signed, 1 uses ieee numeric_std  (preferred) */
-	int                    numberOfInputs_;                 /**< The number of inputs of the operator */
-	int                    numberOfOutputs_;                /**< The number of outputs of the operator */
 	bool                   isSequential_;                   /**< True if the operator needs a clock signal*/
 	int                    pipelineDepth_;                  /**< The pipeline depth of the operator. 0 for combinatorial circuits */
-	map<string, Signal*>   signalMap_;                      /**< A container of tuples for recovering the signal based on it's name */
+	map<string, Signal*>   signalMap_;                      /**< A dictionary of signals, for recovering a signal based on it's name */
 	map<string, pair<string, string>> constants_;           /**< The list of constants of the operator: name, <type, value> */
 	map<string, string>    attributes_;                     /**< The list of attribute declarations (name, type) */
-	map<string, bool>    attributesAddSignal_;            /**< Vivado requires to add :signal, I have to read a VHDL book to understand how to do this cleany */
-	map<string, string>    types_;                          /**< The list of type declarations (name, type) */
 	map<pair<string,string>, string >  attributesValues_;   /**< attribute values <attribute name, object (component, signal, etc)> ,  value> */
+	map<string, bool>      attributesAddSignal_;            /**< Vivado requires to add :signal, I have to read a VHDL book to understand how to do this cleany */
+	map<string, string>    types_;                          /**< The list of type declarations (name, type) */
 	bool                   hasRegistersWithoutReset_;       /**< True if the operator has registers without a reset */
 	bool                   hasRegistersWithAsyncReset_;     /**< True if the operator has registers having an async reset */
 	bool                   hasRegistersWithSyncReset_;      /**< True if the operator has registers having a synch reset */
@@ -2031,19 +1771,24 @@ private:
 
 	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
-	int		               hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
+	int		                 hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 
+	// TODO get rid of the following three flags and all the associated methods?
 	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not */
 	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled */
 	bool                   isOperatorDrawn_;                /**< Flag to show whether this operator has already been drawn, or not */
 
+	bool                   noParseNoSchedule_;              /**< Flag instructing the VHDL to go through unchanged */
 	bool                   isUnique_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
 	bool                   uniquenessSet_;                  /**< Ensure single access to isUnique_ */
 
-	vector<Signal*>        signalsToSchedule;               /**< The list of signals that have been modified by the just-parsed VHDL instructions and from which the scheduler needs to be restarted */
 	vector<triplet<string, string, int>> unresolvedDependenceTable;   /**< The list of dependence relations which contain on either the lhs or rhs an (still) unknown name */
+	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
+	set<Signal*> alreadyScheduled;                          /**< only used by a top-level operator: the set of signals that are already scheduled. */
 
+	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 };
 
 

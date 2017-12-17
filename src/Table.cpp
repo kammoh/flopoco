@@ -115,7 +115,7 @@ namespace flopoco{
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";
-		setNameWithFreq(_name);
+		setNameWithFreqAndUID(_name);
 
 		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
@@ -160,7 +160,7 @@ namespace flopoco{
 		}
 
 		if(_name == "")
-			setNameWithFreq(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
+			setNameWithFreqAndUID(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
 
 		// Set up the IO signals
 		addInput("X", wIn, true);

@@ -153,6 +153,12 @@ class Operator;
 		const std::string& getName() const;
 
 		/**
+		 * Returns the name of the signal with the uid of its parentOp in front
+		 * @return the name of the signal
+		 */
+		std::string getUniqueName();
+
+		/**
 		 * Return a reference to the parent operator
 		 */
 		Operator* parentOp() const;
@@ -266,6 +272,10 @@ class Operator;
 		 * Returns the type of the signal
 		 */
 		SignalType type() const;
+
+
+
+		/*********Methods related to the signal graph ************/
 
 		/**
 		 * Returns the list of predecessors
@@ -449,7 +459,7 @@ class Operator;
 		/**
 		 * Return the value of hasBeenScheduled
 		 */
-		bool getHasBeenScheduled();
+		bool hasBeenScheduled();
 
 		/**
 		 * Set the new value of hasBeenScheduled

@@ -6,7 +6,7 @@
 #include <set>
 
 #include <iostream>
-
+// TODO: testDependences is fragile
 namespace flopoco
 {
 

@@ -90,15 +90,14 @@ namespace flopoco{
 		vhdl << tab << declare("Y1", sizeY) << " <= '0' & YRS & " << zg(sizeY-(wIn-1)-1) << ";" <<endl;			
 		stage=1; 
  
-		manageCriticalPath( getTarget()->adderDelay(sizeX));
 		vhdl << tab << "--- Iteration " << stage << " : sign is known positive ---" << endl;
 		vhdl << tab << declare(join("YShift", stage), sizeX) << " <= " << rangeAssign(sizeX-1, sizeX-stage, "'0'") << " & Y" << stage << range(sizeX-1, stage) << ";" << endl;
-		vhdl << tab << declare(join("X", stage+1), sizeX) << " <= " 
+		vhdl << tab << declare(getTarget()->adderDelay(sizeX), join("X", stage+1), sizeX) << " <= " 
 				 << join("X", stage) << " + " << join("YShift", stage) << " ;" << endl;
 		
 		vhdl << tab << declare(join("XShift", stage), sizeY) << " <= " << zg(stage) << " & X" << stage << range(sizeY-1, stage) << ";" <<endl;			
-		vhdl << tab << declare(join("Y", stage+1), sizeY) << " <= " 
-				 << join("Y", stage) << " - " << join("XShift", stage) << " ;" << endl;
+		vhdl << tab << declare(getTarget()->adderDelay(sizeY), join("Y", stage+1), sizeY) << " <= " 
+				 << join( "Y", stage) << " - " << join("XShift", stage) << " ;" << endl;
 		
 
 		//create the constant signal for the arctan
@@ -121,7 +120,6 @@ namespace flopoco{
 			// Invariant: sizeX-sizeY = stage-2
 			vhdl << tab << "--- Iteration " << stage << " ---" << endl;
 			
-			manageCriticalPath( getTarget()->localWireDelay(sizeX+1) + getTarget()->adderDelay(max(sizeX,sizeZ)) );
 			vhdl << tab << declare(join("sgnY", stage))  << " <= " <<  join("Y", stage)  <<  of(sizeY-1) << ";" << endl;
 			
 			if(-2*stage+1 >= -wIn+1-gXY) { 
@@ -129,7 +127,8 @@ namespace flopoco{
 						 << " <= " << rangeAssign(sizeX-1, sizeX -(sizeX-sizeY+stage), join("sgnY", stage))   
 						 << " & Y" << stage << range(sizeY-1, stage) << ";" << endl;
 				
-				vhdl << tab << declare(join("X", stage+1), sizeX) << " <= " 
+				vhdl << tab << declare(getTarget()->fanoutDelay(sizeX+1) + getTarget()->adderDelay(max(sizeX,sizeZ)),
+															 join("X", stage+1), sizeX) << " <= " 
 						 << join("X", stage) << " - " << join("YShift", stage) << " when " << join("sgnY", stage) << "=\'1\'     else "
 						 << join("X", stage) << " + " << join("YShift", stage) << " ;" << endl;
 			}
@@ -162,9 +161,7 @@ namespace flopoco{
 			// manageCriticalPath( getTarget()->localWireDelay(w+1) + getTarget()->adderDelay(w+1) // actual CP delay
 			//                     - (getTarget()->localWireDelay(sizeZ+1) + getTarget()->adderDelay(sizeZ+1))); // CP delay that was already added
 		
-		manageCriticalPath( getTarget()->localWireDelay(wOut+1) + getTarget()->adderDelay(2) );
-
-		vhdl << tab << declare("finalZ", wOut) << " <= Z" << stage << of(sizeZ-1) << " & Z" << stage << range(sizeZ-1, sizeZ-wOut+1) << "; -- sign-extended and rounded" << endl;
+		vhdl << tab << declare(getTarget()->adderDelay(2), "finalZ", wOut) << " <= Z" << stage << of(sizeZ-1) << " & Z" << stage << range(sizeZ-1, sizeZ-wOut+1) << "; -- sign-extended and rounded" << endl;
 
 		buildQuadrantReconstruction();
 	};

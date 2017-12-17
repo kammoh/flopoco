@@ -79,7 +79,7 @@
 /* regular pipelined integer adder/ adder+subtracter --------- */
 #include "IntAddSubCmp/IntAdder.hpp" // includes several other .hpp
 #include "IntAddSubCmp/IntDualAddSub.hpp"
-#include "IntAddSubCmp/IntComparator.hpp"
+//#include "IntAddSubCmp/IntComparator.hpp"
 #include "IntAddSubCmp/IntMultiAdder.hpp"
 
 // #include "IntAddSubCmp/IntAdderClassical.hpp"
@@ -111,7 +111,7 @@
 #include "FPAddSub/FPAddDualPath.hpp"
 #include "FPAddSub/FPAddSinglePath.hpp"
 // #include "FPAddSub/FPAdd3Input.hpp"
-#include "FPAddSub/FPAddSub.hpp"
+// #include "FPAddSub/FPAddSub.hpp"
 
 /* Floating-point multiplier variants-------------------------- */
 //#include "FPMultSquare/FPMult.hpp"
@@ -124,20 +124,20 @@
 
 
 /* Constant multipliers and dividers ------------------------ */
-#include "ConstMult/IntConstMult.hpp"
+// #include "ConstMult/IntConstMult.hpp"
 //#include "ConstMult/IntConstMCM.hpp"
 //#include "ConstMult/IntIntKCM.hpp"
 #include "ConstMult/FixRealKCM.hpp"
-#include "ConstMult/FPConstMult.hpp"
+//#include "ConstMult/FPConstMult.hpp"
 //#include "ConstMult/CRFPConstMult.hpp"
 //#include "ConstMult/FPRealKCM.hpp"
 
-#include "ConstMult/IntConstDiv.hpp" // depends on intconstmut
-#include "ConstMult/FPConstDiv.hpp"
+//#include "ConstMult/IntConstDiv.hpp" // depends on intconstmut
+//#include "ConstMult/FPConstDiv.hpp"
 
 /* FP composite operators */
-#include "FPComposite/FPLargeAcc.hpp"
-#include "FPComposite/LargeAccToFP.hpp"
+// #include "FPComposite/FPLargeAcc.hpp"
+// #include "FPComposite/LargeAccToFP.hpp"
 // #include "FPComposite/FPDotProduct.hpp"
 
 
@@ -168,10 +168,10 @@
 //#include "ExpLog/FPPow.hpp"
 
 
-#include "Conversions/Fix2FP.hpp"
-#include "Conversions/FP2Fix.hpp"
-#include "Conversions/InputIEEE.hpp"
-#include "Conversions/OutputIEEE.hpp"
+//#include "Conversions/Fix2FP.hpp"
+//#include "Conversions/FP2Fix.hpp"
+//#include "Conversions/InputIEEE.hpp"
+//#include "Conversions/OutputIEEE.hpp"
 
 // AutoTest
 #include "AutoTest/AutoTest.hpp"
