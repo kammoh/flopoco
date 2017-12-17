@@ -19,7 +19,8 @@ I consider this a good thing, it gives control.
 
 Hypotheses:
 H0: schedule is always called on the top-level operator.
-  Even an explicit call to schedule() in a sub-component will schedule its top-level 
+  Even an explicit call to schedule() in a sub-component will schedule its top-level
+  Beware: Wrapper and TestBench should not be parent operators of the operators they wrap, so as not to modify the schedule. 
 H1: default schedule will always be ASAP. 
   A call to schedule() does what it can, then stops.
 H2: schedule() does not reschedule anything: if a signal is already scheduled, it is skipped.
@@ -55,6 +56,11 @@ To discuss.
 - The BitHeap should be simplified, all the timing information should be removed: 
    it is now in the Signals (once they have been scheduled).
   So the actual interface to provide to Martin is not yet fixed.
+
+TODO for Florent:
+I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
+   it should be initialized to false, then set once to true forever.
+Check that Signal::incompleteDeclaration is useful  
 
 ** Plan for bringup
 *** Shifter for basic pipeline
