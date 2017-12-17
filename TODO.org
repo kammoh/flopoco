@@ -57,32 +57,30 @@ To discuss.
    it is now in the Signals (once they have been scheduled).
   So the actual interface to provide to Martin is not yet fixed.
 
-TODO for Florent:
-I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
+** TODOs for Florent:
+
+The constant signals are currently all scheduled to cycle 0.
+This is stupid: once the schedule is done (all the outputs of the top-level are scheduled).
+they should be rescheduled ALAP (time zero, cyle= min of the successors)
+
+Apart from that, I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
    it should be initialized to false, then set once to true forever.
+
 Check that Signal::incompleteDeclaration is useful  
 
+
 ** Plan for bringup
-*** Shifter for basic pipeline
-*** IntAdder for explicit call to schedule()
-*** FPAdd for simple subcomponents
+*** Shifter for basic pipeline: DONE
+*** IntAdder for explicit call to schedule(): DONE
+*** FPAdd for simple subcomponents : DONE
 *** FPDiv for low complexity shared subcomponents
 *** FixRealKCM for simple bit heap
+*** ALAP rescheduling for constant signals
 *** FixFIR and FixIIR for large bit heaps
 *** IntMult... sigh, some day 
-** Target -> parentOp
-Idea: currently each operator constructor takes a Target as first arg.
-We should systematically add a second constructor 
-that takes an Operator* parentOp, and copies the Target* from it.
-The historical constructor should set parentOp to nullptr 
-  (this is what Operator(Target*) dies
-and only be invoked from  UserInterface.
-All the constructors called from operators should call the new constructor.
-
-Testbench: IntAdder and the other subcomponents of FPAdder
-
 ** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
+THIS INCLUDES WRITING ITS AUTOTEST
 
 	IntConstMult: still need to 
 	1/ add the delays 
@@ -97,28 +95,10 @@ Testbench: IntAdder and the other subcomponents of FPAdder
 		FP2Fix
 		InputIEEE
 		OutputIEEE
-		LZOC
-
-		IntAdder
-
-		IntAdderClassical
-		IntAdderAlternative
-		IntAdderShortLatency
 
 		//FOR TEST PURPOSES ONLY
 		Table
 
-#if 0 // Plug them for debug purpose only
-		IntAdderSpecific
-		LongIntAdderAddAddMuxGen1
-		LongIntAdderAddAddMuxGen2
-		LongIntAdderCmpAddIncGen1
-		LongIntAdderCmpAddIncGen2
-		LongIntAdderCmpCmpAddGen1
-		LongIntAdderCmpCmpAddGen2
-		LongIntAdderMuxNetwork
-		IntComparatorSpecific
-#endif
 		IntComparator
 		IntDualSub
 		IntMultiplier
