@@ -1833,8 +1833,9 @@ namespace flopoco{
 
 
 	
-	// Comment by F2D: this code is suspected to be OK except for the handling of functional delays
-	//TODO: this function should not be called before the operator's signals are scheduled
+	// Comment by F2D: this whas parse2().
+	// This code is suspected to be OK except for the handling of functional delays
+	// It could probably be simplified 
 	void Operator::doApplySchedule()
 	{
 		ostringstream newStr;
@@ -1843,8 +1844,8 @@ namespace flopoco{
 		int count, lhsNameLength, rhsNameLength;
 		bool unknownLHSName = false, unknownRHSName = false;
 
-		REPORT(DEBUG, "Starting second-level parsing for operator " << srcFileName);
-		REPORT(FULL, "vhdl stream before doApplySchedule(): " << endl << vhdl.str());
+		REPORT(DEBUG, "doApplySchedule(): entering for operator " << srcFileName);
+		REPORT(FULL, "doApplySchedule: vhdl stream after first lexing " << endl << vhdl.str());
 		//reset the new vhdl code buffer
 		newStr.str("");
 
@@ -1902,7 +1903,7 @@ namespace flopoco{
 			//	for which the helper signals must be removed and delays _dxxx must be added
 			auxPosition2 = workStr.find("port map"); // This is OK because this string can only be created by flopoco
 			if(auxPosition2 != string::npos)	{
-				REPORT(DEBUG, "This is an instance");
+				REPORT(DEBUG, "doApplySchedule: found instance: " << lhsName)//workStr.substr(auxPosition, auxPosition2));
 				//try to parse the names of the signals in the port mapping
 				if(workStr.find("?", auxPosition2) == string::npos) {
 					//empty port mapping
@@ -1973,60 +1974,9 @@ namespace flopoco{
 
 						//copy rhsName to the new vhdl buffer
 						//	annotate it if necessary
-#if 1 // commented out because it only works after scheduling
 							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
 							    << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
 
-#else
-						if((lhsName != "clk") && (lhsName != "rst") && !(singleQuoteSep || doubleQuoteSep))
-						{
-							//obtain the rhs signal
-							rhsSignal = getSignalByName(rhsName);
-							lhsSignal = getSignalByName(lhsName);
-							REPORT(DEBUG, "lhsName=" << lhsName << " rhsName=" << rhsName);
-							// Now we have a bunch of lhs=formal => rhs=actual
-							// Two cases: 
-							//	either lhs is an input to the subcomponent, in which case , obtain the lhs signal from the list of successors of the rhs signal
-
-							    //if lhs is an output, look on the predecessors list
-							    for(size_t i=0; i<rhsSignal->successors()->size(); i++)
-							    	if((rhsSignal->successor(i)->getName() == lhsName)
-							    			//the lhs signal must be the input of a subcomponent
-							    			&& (rhsSignal->parentOp()->getName() != rhsSignal->successor(i)->parentOp()->getName()))
-							    	{
-							    		lhsSignal = rhsSignal->successor(i);
-							    		break;
-							    	}
-							    //if the first lookup did not succeed, then lhs is an output,
-							    //	so look for it in the predecessor list of rhs
-							    if(lhsSignal == NULL)
-							    {
-							    	for(size_t i=0; i<rhsSignal->predecessors()->size(); i++)
-							    		if((rhsSignal->predecessor(i)->getName() == lhsName)
-							    				//the lhs signal must be the input of a subcomponent
-							    				&& (rhsSignal->parentOp()->getName() != rhsSignal->predecessor(i)->parentOp()->getName()))
-							    		{
-							    			lhsSignal = rhsSignal->predecessor(i);
-							    			break;
-							    		}
-							    }
-							newStr << rhsName;
-							//output signals do not need to be delayed
-							if(lhsSignal->type() != Signal::out)
-							{
-								if(getTarget()->isPipelined() && !unknownLHSName
-										&& (lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal) > 0))
-								{
-								  newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal));
-								}
-							}
-						} else
-						{
-							//this signal is clk, rst or a constant
-							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
-							    << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
-						}
-#endif 
 
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
@@ -2246,7 +2196,7 @@ namespace flopoco{
 
 		vhdl.setSecondLevelCode(newStr.str());
 
-		REPORT(DEBUG, "Finished second-level parsing of VHDL code for operator " << srcFileName);
+		REPORT(DEBUG, "doApplySchedule: finished " << srcFileName);
 	}
 
 
