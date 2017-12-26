@@ -143,7 +143,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addInput, signal " << name << " seems to already exist");
+			THROWERROR("In addInput, signal " << name << " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -171,7 +171,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addOutput, signal " << name<< " seems to already exist");
+			THROWERROR("In addOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -203,7 +203,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addFixInput, signal " << name<< " seems to already exist");
+			THROWERROR("In addFixInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -224,7 +224,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addFixOutput, signal " << name<< " seems to already exist");
+			THROWERROR("In addFixOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -248,7 +248,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addFPInput, signal " << name<< " seems to already exist");
+			THROWERROR("In addFPInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -266,7 +266,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addFPOutput, signal " << name<< " seems to already exist");
+			THROWERROR("In addFPOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -289,7 +289,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addIEEEInput, signal " << name<< " seems to already exist");
+			THROWERROR("In addIEEEInput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -308,7 +308,7 @@ namespace flopoco{
 		//search if the signal has already been declared
 		if (signalMap_.find(name) != signalMap_.end()) {
 			//if yes, signal the error
-			THROWERROR("ERROR in addIEEEOutput, signal " << name<< " seems to already exist");
+			THROWERROR("In addIEEEOutput, signal " << name<< " seems to already exist");
 		}
 
 		//create a new signal for the input
@@ -343,7 +343,7 @@ namespace flopoco{
 
 		//check that portSignal is really an I/O signal
 		if((portSignal->type() != Signal::in) && (portSignal->type() != Signal::out))
-			THROWERROR("Error: signal " << portSignal->getName() << " is not an input or output signal");
+			THROWERROR("Signal " << portSignal->getName() << " is not an input or output signal");
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
@@ -365,13 +365,13 @@ namespace flopoco{
 		}
 		//check if any match was found in the port mappings
 		if(connectionSignal == nullptr)
-			THROWERROR("Error: I/O port " << portSignal->getName() << " of operator " << getName()
+			THROWERROR("I/O port " << portSignal->getName() << " of operator " << getName()
 					<< " is not connected to any signal of parent operator " << parentOp_->getName());
 		//sanity check: verify that the signal that was found is actually part of the parent operator
 		try{
 			parentOp_->getSignalByName(connectionSignal->getName());
 		}catch(string &e){
-			THROWERROR("Error: signal " << connectionSignal->getName()
+			THROWERROR("Signal " << connectionSignal->getName()
 					<< " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
 		}
 
@@ -405,7 +405,7 @@ namespace flopoco{
 		//search for the signal in the list of signals
 		if(signalMap_.find(name) == signalMap_.end()) {
 			//signal not found, throw an error
-			THROWERROR("ERROR in getSignalByName, signal " << name << " not declared");
+			THROWERROR("In getSignalByName, signal " << name << " not declared");
 		}
 		//signal found, return the reference to it
 		return signalMap_[name];
@@ -426,7 +426,7 @@ namespace flopoco{
 		//search for the stripped signal name
 		if(signalMap_.find(n) == signalMap_.end()){
 			//signal not found, throw an error
-			THROWERROR("ERROR in getDelayedSignalByName, signal " << name << " not declared");
+			THROWERROR("In getDelayedSignalByName, signal " << name << " not declared");
 		}
 		return signalMap_[n];
 	}
@@ -496,7 +496,7 @@ namespace flopoco{
 
 	OperatorPtr Operator::setParentOperator(OperatorPtr parentOp){
 		if(parentOp_ != nullptr)
-			THROWERROR("Error: parent operator already set for operator " << getName());
+			THROWERROR("Parent operator already set for operator " << getName());
 		parentOp_ = parentOp;
 
 		return parentOp_;
@@ -742,7 +742,7 @@ namespace flopoco{
 			try {
 				s = getSignalByName(name);
 			}catch(string &e) {
-				THROWERROR("): ERROR in getCycleFromSignal, " << endl << tab << e);
+				THROWERROR("In getCycleFromSignal, " << endl << tab << e);
 			}
 
 			if(s->getCycle() < 0){
@@ -764,7 +764,7 @@ namespace flopoco{
 			s = getSignalByName(name);
 		}
 		catch(string &e) {
-			THROWERROR("): ERROR in getCPFromSignal, " << endl << tab << e);
+			THROWERROR("In getCPFromSignal, " << endl << tab << e);
 		}
 
 		return s->getCriticalPath();
@@ -778,7 +778,7 @@ namespace flopoco{
 			s = getSignalByName(name);
 		}
 		catch(string &e) {
-			THROWERROR("): ERROR in getCPContributionFromSignal, " << endl << tab << e);
+			THROWERROR("In getCPContributionFromSignal, " << endl << tab << e);
 		}
 
 		return s->getCriticalPathContribution();
@@ -797,7 +797,7 @@ namespace flopoco{
 				signal = ioList_[i];
 			}
 		if(signal == NULL)
-			THROWERROR("Error: getOutputDelay(): signal " << s << " not found" << endl);
+			THROWERROR("In getOutputDelay(): signal " << s << " not found" << endl);
 
 		return signal->getCriticalPath();
 	}
@@ -819,7 +819,7 @@ namespace flopoco{
 
 		// check the signal doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR("ERROR in declare(), signal " << name << " already exists" << endl);
+			THROWERROR("In declare(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -841,7 +841,7 @@ namespace flopoco{
 
 		// check the signals doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR("ERROR in declareFixPoint(), signal " << name << " already exists" << endl);
+			THROWERROR("In declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -868,7 +868,7 @@ namespace flopoco{
 
 		// check the signals doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR("ERROR in declareFixPoint(), signal " << name << " already exists" << endl);
+			THROWERROR("In declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -900,7 +900,7 @@ namespace flopoco{
 
 		// check the signals doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR("ERROR in declareFixPoint(), signal " << name << " already exists" << endl);
+			THROWERROR("In declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
@@ -1023,10 +1023,10 @@ namespace flopoco{
 
 		//check that the number of delay cycles is a positive integer
 		if(nbDelayCycles < 0)
-			THROWERROR("Error in delay(): trying to add a negative number of delay cycles:" << nbDelayCycles);
+			THROWERROR("In delay(): trying to add a negative number of delay cycles:" << nbDelayCycles);
 		//check that the signal exists
 		if(!isSignalDeclared(signalName))
-			THROWERROR("Error in delay(): trying to delay a signal that does not yet exist:" << signalName);
+			THROWERROR("In delay(): trying to delay a signal that does not yet exist:" << signalName);
 
 		if(delayType == SignalDelayType::pipeline)
 			result << signalName << "^" << nbDelayCycles;
@@ -1041,7 +1041,7 @@ namespace flopoco{
 
 		// check if the signal already exists, when we're supposed to create a new signal
 		if(newSignal && (signalMap_.find(actualSignalName) !=  signalMap_.end())) {
-			THROWERROR("ERROR in outPortMap(): signal " << actualSignalName << " already exists");
+			THROWERROR("In outPortMap(): signal " << actualSignalName << " already exists");
 		}
 
 		//check if the signal connected to the port exists, and return it if so
@@ -1061,7 +1061,7 @@ namespace flopoco{
 				s = getSignalByName(actualSignalName);
 			}
 			catch(string &e2) {
-				THROWERROR("ERROR in outPortMap(): " << e2);
+				THROWERROR("In outPortMap(): " << e2);
 			}
 		}
 
@@ -1079,7 +1079,7 @@ namespace flopoco{
 			s = getSignalByName(actualSignalName);
 		}
 		catch(string &e2) {
-			THROWERROR("ERROR in inPortMap(): " << e2);
+			THROWERROR("In inPortMap(): " << e2);
 		}
 
 		// add the mapping to the input mapping list of Op
@@ -1166,7 +1166,7 @@ namespace flopoco{
 			//if the port is not connected to a signal in the parent operator,
 			//	then we cannot continue
 			if(!isSignalMapped)
-				THROWERROR("ERROR in instance() while trying to create a new instance of "
+				THROWERROR("In instance() while trying to create a new instance of "
 						<< op->getName() << " called " << instanceName << ": input/output "
 						<< i->getName() << " is not mapped to anything" << endl);
 		}
@@ -1323,7 +1323,7 @@ namespace flopoco{
 			for(auto& mapping: tokens) {
 				size_t sepPos = mapping.find("=>");
 				if(sepPos == string::npos)
-					THROWERROR("Error: in newInstance: these port maps are not specified correctly: <" << portMappings<<">");
+					THROWERROR("In newInstance: these port maps are not specified correctly: <" << portMappings<<">");
 				string portName = mapping.substr(0, sepPos);
 				string signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
 				REPORT(4, "port map " << portName << "=>" << signalName << " of type " << portTypes);
@@ -2226,7 +2226,7 @@ namespace flopoco{
 		if(isLhsPredecessor == false)
 			return 0;// was the following throwerror
 			
-			THROWERROR("Error in getFunctionalDelay: trying to obtain the functional delay between signal "
+			THROWERROR("In getFunctionalDelay: trying to obtain the functional delay between signal "
 					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
 		return 0;
 	}
@@ -2255,7 +2255,7 @@ namespace flopoco{
 		}
 
 		if(isLhsPredecessor == false)
-			THROWERROR("Error in getPipelineDelay: trying to obtain the pipeline delay between signal "
+			THROWERROR("In getPipelineDelay: trying to obtain the pipeline delay between signal "
 					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
 		return 0;
 	}
@@ -2281,7 +2281,7 @@ namespace flopoco{
 		}
 
 		if(isLhsPredecessor == false)
-			THROWERROR("Error in getDelay: trying to obtain the delay between signal "
+			THROWERROR("In getDelay: trying to obtain the delay between signal "
 					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
 		return 0;
 	}
@@ -2722,7 +2722,7 @@ namespace flopoco{
 			file << tabs << "subgraph cluster_" << getName() << "\n";
 		}else
 		{
-			THROWERROR("drawDotDiagram: error: unhandled mode=" << mode);
+			THROWERROR("In drawDotDiagram: unhandled mode=" << mode);
 		}
 
 		file << tabs << "{\n";
@@ -2996,7 +2996,7 @@ namespace flopoco{
 			s = getSignalByName(name);
 		}
 		catch(string &e){
-			THROWERROR("ERROR in signExtend, " << e);
+			THROWERROR("In signExtend, " << e);
 		}
 
 		//get the signals's width
@@ -3027,7 +3027,7 @@ namespace flopoco{
 			s = getSignalByName(name);
 		}
 		catch(string &e){
-			THROWERROR("ERROR in zeroExtend, " << e);
+			THROWERROR("In zeroExtend, " << e);
 		}
 
 		//get the signals's width
@@ -3375,7 +3375,7 @@ namespace flopoco{
 	bool Operator::setShared(){
 		if((uniquenessSet_ == true) && (isUnique_ == true))
 		{
-			THROWERROR("error in setShared(): the function has already been called; for integrity reasons only one call is allowed");
+			THROWERROR("In setShared(): the function has already been called; for integrity reasons only one call is allowed");
 		}else
 		{
 			isUnique_ = false;

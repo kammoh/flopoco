@@ -58,17 +58,6 @@ To discuss.
   So the actual interface to provide to Martin is not yet fixed.
 
 ** TODOs for Florent:
-
-The constant signals are currently all scheduled to cycle 0.
-This is stupid: once the schedule is done (all the outputs of the top-level are scheduled).
-they should be rescheduled ALAP (time zero, cyle= min of the successors)
-
-Apart from that, I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
-   it should be initialized to false, then set once to true forever.
-
-Check that Signal::incompleteDeclaration is useful  
-
-
 ** Plan for bringup
 *** Shifter for basic pipeline: DONE
 *** IntAdder for explicit call to schedule(): DONE
@@ -78,6 +67,19 @@ Check that Signal::incompleteDeclaration is useful
 *** ALAP rescheduling for constant signals
 *** FixFIR and FixIIR for large bit heaps
 *** IntMult... sigh, some day 
+** Small things
+*** constant signal scheduling
+The constant signals are currently all scheduled to cycle 0.
+This is stupid: once the schedule is done (all the outputs of the top-level are scheduled).
+they should be rescheduled ALAP (time zero, cyle= min of the successors)
+
+*** Signal::hasBeenScheduled_
+Apart from that, I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
+   it should be initialized to false, then set once to true forever.
+
+*** Check that Signal::incompleteDeclaration is useful  
+
+
 ** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
 THIS INCLUDES WRITING ITS AUTOTEST
