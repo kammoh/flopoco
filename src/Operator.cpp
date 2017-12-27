@@ -333,8 +333,8 @@ namespace flopoco{
 		/// REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
 
 		//TODO: add more checks here
-		//if this is a global operator, then there is nothing to be done
-		if(parentOp_ == nullptr)
+		//if this is a global operator or a shared instance, then there is nothing to be done
+		if(parentOp_ == nullptr || this->isShared() )
 			return;
 
 		Signal *connectionSignal = nullptr; // connectionSignal is the actual signal connected to portSignal
@@ -1250,10 +1250,6 @@ namespace flopoco{
 		return o.str();
 	}
 
-
-	OperatorPtr Operator::newSharedInstance(Operator *originalOperator)	{
-		THROWERROR("Some code called newSharedInstance(), it deserves to die");
-	}
 
 
 	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)

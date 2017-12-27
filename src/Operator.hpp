@@ -660,25 +660,6 @@ public:
 	string instance(Operator* op, string instanceName, bool outputWarning=true);
 
 	/**
-	 * Create a new copy of a shared operator
-	 * @param originalOperator represents the original instance of the operator
-	 * @return the new instance
-	 */
-	OperatorPtr newSharedInstance(Operator *originalOperator);
-
-	/**
-	 * Create the schedule for a shared instance
-	 * @param op the instance to schedule
-	 * @parm originalOperator the original instance
-	 * @param forceReschedule if set to true, then the schedule is
-	 *        force-started for all the nodes, even if they have been previously scheduled
-	 *        WARNING: this may result in exponential run-times for circuits with signals
-	 *                 that have high fan-outs
-	 */
-	void scheduleSharedInstance(Operator *op, Operator *originalOperator, bool forceReschedule);
-
-
-	/**
 	 * Create a new instance of an operator inside the current containing operator
 	 * @patam opName the type of operator being instantiated
 	 * @param instanceName the name of the instance being created (label compulsory in VHDL)

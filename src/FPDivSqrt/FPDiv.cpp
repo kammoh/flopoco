@@ -174,7 +174,6 @@ namespace flopoco{
 
 			vector<mpz_class> tableContent = selFunctionTable(0.75, 1.0, 2, 5, 7, 8, 7, 4);
 			Table* selfunctiontable = new Table(this, target, tableContent,7,4);
-			selfunctiontable->setShared();
 
 			for(i=nDigit-1; i>=1; i--) {
 
