@@ -18,7 +18,7 @@ In FloPoCo, each instance is associated with a unique Operator.
 The same Operator can not be reused in two instances.
 The scheduler works on the operator graph assuming this, and it makes life easier. 
 
-One exception is "shared" instances.
+One exception is "shared" or "atomic" Operators.
  - they are meant for very simple, unpipelined operators: compressors, small tables in IntConstDiv or FPDiv;
  - unfortunately they tend to have quite large VHDL, especially the tables. 
  - the scheduler shouldn't even need to know if an instance is shared or not.
@@ -79,8 +79,7 @@ namespace flopoco{
 
 		isOperatorDrawn_            = false;
 
-		isUnique_                   = true;
-		uniquenessSet_              = false;
+		isShared_                   = false;
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
@@ -1131,33 +1130,28 @@ namespace flopoco{
 	string Operator::instance(Operator* op, string instanceName, bool outputWarning){
 		ostringstream o;
 
-
 		if(outputWarning) {
 			REPORT(INFO, "instance() is deprecated, please use newInstance() instead");
 		};
 		
-
-		//checking that all the signals are covered
-		for(auto i: *(op->getIOList()))
-		{
+		// First, I/O sanity check: check that all the signals are connected
+		for(auto i: *(op->getIOList())) 	{
 			bool isSignalMapped = false;
 			map<string, Signal*>::iterator iterStart, iterStop;
 
 			//set the start and stop values for the iterators, for either the input,
 			//	or the output temporary port map, depending on the signal type
-			if(i->type() == Signal::in)
-			{
+			if(i->type() == Signal::in)	{
 				iterStart = tmpInPortMap_.begin();
 				iterStop = tmpInPortMap_.end();
-			}else{
+			}
+			else{
 				iterStart = tmpOutPortMap_.begin();
 				iterStop = tmpOutPortMap_.end();
 			}
 
-			for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)
-			{
-				if(it->first == i->getName())
-				{
+			for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)	{
+				if(it->first == i->getName())		{
 					//mark the signal as connected
 					isSignalMapped = true;
 					break;
@@ -1166,12 +1160,14 @@ namespace flopoco{
 
 			//if the port is not connected to a signal in the parent operator,
 			//	then we cannot continue
-			if(!isSignalMapped)
+			if(!isSignalMapped) {
 				THROWERROR("In instance() while trying to create a new instance of "
 						<< op->getName() << " called " << instanceName << ": input/output "
 						<< i->getName() << " is not mapped to anything" << endl);
-		}
+			}
+		} // End of the I/O sanity check
 
+		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
 		o << tab << tab << "port map ( ";
@@ -1190,9 +1186,10 @@ namespace flopoco{
 		}
 
 		//build the code for the inputs
-		for(map<string, Signal*>::iterator it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
-		{
-			string rhsString;
+		map<string, Signal*>::iterator it;
+		string rhsString;
+
+		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)		{
 
 			if((it != tmpInPortMap_.begin()) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
@@ -1211,7 +1208,7 @@ namespace flopoco{
 		}
 
 		//build the code for the outputs
-		for(map<string, Signal*>::iterator it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
 		{
 			//the signal connected to the output might be an incompletely declared signal,
 			//	so its information must be completed and it must be properly connected now
@@ -1222,9 +1219,9 @@ namespace flopoco{
 				//mark the signal as completely declared
 				it->second->setIncompleteDeclaration(false);
 				//connect the port to the corresponding signal
-				//	for unique instances
-				if(op->isUnique())
-				{
+				if(op->isShared()){ // clone signals 
+				}
+				else {	 	// unique instances
 					it->second->addPredecessor(op->getSignalByName(it->first));
 					op->getSignalByName(it->first)->addSuccessor(it->second);
 				}
@@ -3108,8 +3105,7 @@ namespace flopoco{
 		isOperatorImplemented_      = op->isOperatorImplemented();
 		isOperatorDrawn_            = op->isOperatorDrawn();
 
-		isUnique_                   = op->isUnique();
-		uniquenessSet_              = op->uniquenessSet_;
+		isShared_                   = op->isShared();
 
 		resourceEstimate.str(op->resourceEstimate.str());
 		resourceEstimateReport.str(op->resourceEstimateReport.str());
@@ -3369,25 +3365,13 @@ namespace flopoco{
 	}
 
 
-	bool Operator::setShared(){
-		if((uniquenessSet_ == true) && (isUnique_ == true))
-		{
-			THROWERROR("In setShared(): the function has already been called; for integrity reasons only one call is allowed");
-		}else
-		{
-			isUnique_ = false;
-			uniquenessSet_ = true;
-
-			return isUnique_;
-		}
+	void Operator::setShared(){
+		isShared_ = true;
 	}
 
-	bool Operator::isUnique(){
-		return isUnique_;
-	}
 
 	bool Operator::isShared(){
-		return !isUnique_;
+		return isShared_;
 	}
 
 

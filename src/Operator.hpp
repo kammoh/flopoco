@@ -1284,11 +1284,8 @@ public:
 
 	/**
 	 * Set the operator to be reused in the design
-	 * NOTE: USE ONLY FOR SMALL COMBINATORIAL OPERATORS;
-	 * 		SUCH AN OPERATOR SHOULD NOT BE PIPELINED
-	 * @return the new value of isUnique_
 	 */
-	bool setShared();
+	void setShared();
 
 	/**
 	 * Is this operator a unique component?
@@ -1761,8 +1758,7 @@ private:
 	bool                   isOperatorDrawn_;                /**< Flag to show whether this operator has already been drawn, or not */
 
 	bool                   noParseNoSchedule_;              /**< Flag instructing the VHDL to go through unchanged */
-	bool                   isUnique_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
-	bool                   uniquenessSet_;                  /**< Ensure single access to isUnique_ */
+	bool                   isShared_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
 
 	vector<triplet<string, string, int>> unresolvedDependenceTable;   /**< The list of dependence relations which contain on either the lhs or rhs an (still) unknown name */
 	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
