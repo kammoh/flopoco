@@ -1108,6 +1108,7 @@ namespace flopoco{
 		//create a new signal for constant input
 		s = new Signal(this, join(actualSignal, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
 
+		// TODO the following bit of code should move to Signal, for Signal::constant signals
 		//set the timing for the constant signal, at cycle 0, criticalPath 0, criticalPathContribution 0
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
