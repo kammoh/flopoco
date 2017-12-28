@@ -344,6 +344,7 @@ namespace flopoco{
 	}
 
 
+	
 	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
 		/// REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
@@ -404,15 +405,17 @@ namespace flopoco{
 			connectionSignal->addPredecessor(portSignal, 0);
 		}
 
+#if 0
 		// TODO Check this is useful
 		//if the port was connected to a signal automatically created,
 		//	then copy the details of the port to the respective signal
-		if(connectionSignal->getIncompleteDeclaration() == true)
+		if(connectionSignal->incompleteDeclaration())
 		{
 			connectionSignal->copySignalParameters(portSignal);
 			connectionSignal->setIncompleteDeclaration(false);
 			connectionSignal->setCriticalPathContribution(0.0);
 		}
+ #endif
 	}
 
 
@@ -853,12 +856,12 @@ namespace flopoco{
 	}
 
 
-	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, bool incompleteDeclaration){
-		return declareFixPoint(0.0, name, isSigned, MSB, LSB, regType, incompleteDeclaration);
+	string Operator::declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
+		return declareFixPoint(0.0, name, isSigned, MSB, LSB, regType);
 	}
 
 
-	string Operator::declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType, bool incompleteDeclaration){
+	string Operator::declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType){
 		Signal* s;
 
 		// check the signals doesn't already exist
@@ -869,7 +872,7 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, isSigned, MSB, LSB);
 
-		initNewSignal(s, criticalPathContribution, regType, incompleteDeclaration);
+		initNewSignal(s, criticalPathContribution, regType, false);
 
 		//set the flag for a fixed-point signal
 		s->setIsFix(true);
@@ -880,12 +883,12 @@ namespace flopoco{
 	}
 
 
-	string Operator::declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat, bool incompleteDeclaration){
-		return declareFloatingPoint(0.0, name, wE, wF, regType, ieeeFormat, incompleteDeclaration);
+	string Operator::declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat){
+		return declareFloatingPoint(0.0, name, wE, wF, regType, ieeeFormat);
 	}
 
 
-	string Operator::declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat, bool incompleteDeclaration){
+	string Operator::declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType, const bool ieeeFormat){
 		Signal* s;
 
 		// check the signals doesn't already exist
@@ -896,7 +899,7 @@ namespace flopoco{
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, wE, wF, ieeeFormat);
 
-		initNewSignal(s, criticalPathContribution, regType, incompleteDeclaration);
+		initNewSignal(s, criticalPathContribution, regType, false);
 
 		s->setIsFix(false);
 		//set the flag for a floating-point signal
@@ -910,34 +913,6 @@ namespace flopoco{
 		return name;
 	}
 
-
-	std::string Operator::declareTable(string name, int width, std::string tableAttributes, bool incompleteDeclaration)
-	{
-		return declareTable(0.0, name, width, tableAttributes, incompleteDeclaration);
-	}
-
-	std::string Operator::declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes, bool incompleteDeclaration)
-	{
-		Signal* s;
-
-		// check the signals doesn't already exist
-		if(signalMap_.find(name) !=  signalMap_.end()) {
-			THROWERROR("In declareFixPoint(), signal " << name << " already exists" << endl);
-		}
-
-		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(this, name, Signal::table, width, tableAttributes);
-
-		initNewSignal(s, criticalPathContribution, Signal::table, incompleteDeclaration);
-
-		// set all flag types to false
-		s->setIsFix(false);
-		s->setIsFP(false);
-		s->setIsIEEE(false);
-
-
-		return name;
-	}
 
 
 	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType, bool incompleteDeclaration)
@@ -1231,9 +1206,9 @@ namespace flopoco{
 		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++) {
 			Signal* actual = it->second;
 			string formalName = it->first;
-			//the signal connected to the output might be an incompletely declared signal,
+			//the signal connected to the output should be an incompletely declared signal,
 			//	so its information must be completed and it must be properly connected now
-			if(actual->getIncompleteDeclaration() == true)
+			if(actual->incompleteDeclaration())
 			{
 				//copy the details from the output port
 				actual->copySignalParameters(op->getSignalByName(formalName));

@@ -299,8 +299,9 @@ public:
 	void addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues=1);
 
 	/**
+	 * Called by addInput(), addOutput(), etc.
 	 * Connect a I/O signal that has just been created to the corresponding
-	 * signal in the parent operator.
+	 * signal in the parent operator, extracted from the current tmpIOPortMap.
 	 * @param ioSignal the newly created I/O
 	 * @param connectionName the name of the signal part of the parent operator that is connected to ioSignal
 	 */
@@ -521,7 +522,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
+	string declareFixPoint(string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire);
 
 	/**
 	 * Declares a fixed-point signal on the Left Hand Side of a VHDL assignment
@@ -535,7 +536,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
+	string declareFixPoint(double criticalPathContribution, string name, const bool isSigned, const int MSB, const int LSB, Signal::SignalType regType = Signal::wire);
 
 
 	/**
@@ -548,7 +549,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false, bool incompleteDeclaration = false);
+	string declareFloatingPoint(string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false);
 
 	/**
 	 * Declares a floating-point signal on the Left Hand Side of a VHDL assignment
@@ -561,35 +562,12 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false, bool incompleteDeclaration = false);
-
-	/**
-	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
-	 * @param name is the name of the signal
-	 * @param width is the width of the signal
-	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
-	 * @param incomplete declaration: whether only part of the signal parameters are specified,
-	 * 									and the rest are specified later
-	 * @return name
-	 */
-	string declareTable(string name, int width, std::string tableAttributes = "", bool incompleteDeclaration = false);
-
-	/**
-	 * Declares a signal that is a VHDL table. See a generic example in Table.cpp. 
-	 * @param criticalPathContribution is the delay that the signal being declared adds to the critical path
-	 * @param name is the name of the signal
-	 * @param width is the width of the signal
-	 * @param tableAttributes: the VHDL code used to declare and initialize the table (if needed)
-	 * @param incomplete declaration: whether only part of the signal parameters are specified,
-	 * 									and the rest are specified later
-	 * @return name
-	 */
-	string declareTable(double criticalPathContribution, string name, int width, std::string tableAttributes = "", bool incompleteDeclaration = false);
-
+	string declareFloatingPoint(double criticalPathContribution, string name, const int wE, const int wF, Signal::SignalType regType = Signal::wire, const bool ieeeFormat=false);
 
 	/**
 	 * Initialize a newly declared signal.
 	 * Method used to share code between the declare functions
+   * TODO should probably be refactored in Signakl
 	 * @param s the newly declared signal
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info

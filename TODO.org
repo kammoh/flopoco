@@ -100,7 +100,7 @@ they should be rescheduled ALAP (time zero, cyle= min of the successors)
 Apart from that, I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
    it should be initialized to false, then set once to true forever.
 
-
+*** Re-check table attributes for 7 series; update Table, probably refactor this into Target 
 ** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
 THIS INCLUDES WRITING ITS AUTOTEST
@@ -227,6 +227,7 @@ List of operators that would most benefit from it:
 The most used, i.e. IntAdder, Shifters, etc
 *** rename pow2, intpow2 etc as exp2
 *** doxygen: exclude unplugged operators
+*** See table attributes above
 * Bit heap and multipliers
 ** rewrite BitHeap with fixed-point support and better compression (see Kumm papers and uni_kassel branch)
 ** pipeline virtual IntMult

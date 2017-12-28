@@ -449,7 +449,7 @@ class Operator;
 		/**
 		 * Returns the value of incompleteDeclaration
 		 */
-		bool getIncompleteDeclaration();
+		bool incompleteDeclaration();
 
 		/**
 		 * Sets the value of incompleteDeclaration

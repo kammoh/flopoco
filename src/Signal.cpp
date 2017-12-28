@@ -172,7 +172,7 @@ namespace flopoco{
 		criticalPath_ = originalSignal->getCriticalPath();
 		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
 		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
-		incompleteDeclaration_ = originalSignal->getIncompleteDeclaration();
+		incompleteDeclaration_ = originalSignal->incompleteDeclaration_;
 		hasBeenScheduled_ = false;
 		hasBeenDrawn_ = false;
 
@@ -532,7 +532,7 @@ namespace flopoco{
 	}
 
 
-	bool Signal::getIncompleteDeclaration(){
+	bool Signal::incompleteDeclaration(){
 		return incompleteDeclaration_;
 	}
 

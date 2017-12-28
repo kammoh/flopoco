@@ -125,8 +125,8 @@ namespace flopoco{
 			REPORT(DEBUG, "WARNING: wIn value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
-		}else if(((unsigned)1<<wIn) < values.size())
-		{
+		}
+		else if(((unsigned)1<<wIn) < values.size()) {
 			REPORT(DEBUG, "WARNING: wIn set to a value lower than the number of values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
@@ -136,8 +136,7 @@ namespace flopoco{
 		mpz_class maxValue = values[0], minValue = values[0];
 		
 		//this assumes that the values stored in the values array are all positive
-		for(unsigned int i=0; i<values.size(); i++)
-		{
+		for(unsigned int i=0; i<values.size(); i++)		{
 			if(values[i] < 0)
 				THROWERROR("Error in table: value stored in table is negative: " << values[i] << endl);
 			if(maxValue < values[i])
@@ -151,8 +150,8 @@ namespace flopoco{
 			REPORT(DEBUG, "WARNING: wOut value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
-		}else if(wOut < intlog2(maxValue))
-		{
+		}
+		else if(wOut < intlog2(maxValue))  {
 			REPORT(DEBUG, "WARNING: wOut value set to a value lower than the size of the values which are to be written in the table.");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
@@ -243,7 +242,10 @@ namespace flopoco{
 		}
 		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
 
-		vhdl << tab << "with X select " << declareTable(cpDelay, "Y0", wOut, tableAttributes) << " <= " << endl;
+		
+		vhdl << tab << "with X select " << declare(cpDelay, "Y0", wOut) << " <= " << endl;;
+		getSignalByName("Y0") -> setTableAttributes(tableAttributes);
+		
 		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
 			vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
 		vhdl << tab << tab << "\"";
