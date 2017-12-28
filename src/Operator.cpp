@@ -818,21 +818,21 @@ namespace flopoco{
 		return signal->getCriticalPath();
 	}
 
-	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType, bool incompleteDeclaration) {
-		return declare(0.0, name, width, isbus, regType, incompleteDeclaration);
+	string Operator::declare(string name, const int width, bool isbus, Signal::SignalType regType) {
+		return declare(0.0, name, width, isbus, regType);
 	}
 
-	string Operator::declare(string name, Signal::SignalType regType, bool incompleteDeclaration) {
-		return declare(0.0, name, 1, false, regType, incompleteDeclaration);
+	string Operator::declare(string name, Signal::SignalType regType) {
+		return declare(0.0, name, 1, false, regType);
 	}
 
-	string Operator::declare(double criticalPathContribution, string name, Signal::SignalType regType, bool incompleteDeclaration) {
-		return declare(criticalPathContribution, name, 1, false, regType, incompleteDeclaration);
+	string Operator::declare(double criticalPathContribution, string name, Signal::SignalType regType) {
+		return declare(criticalPathContribution, name, 1, false, regType);
 	}
 
-	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType, bool incompleteDeclaration) {
+	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType) {
 		Signal* s;
-
+		bool incompleteDeclaration;
 		// check the signal doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
 			THROWERROR("In declare(), signal " << name << " already exists" << endl);
@@ -840,6 +840,12 @@ namespace flopoco{
 
 		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
 		s = new Signal(this, name, regType, width, isbus);
+
+		if(width==-1)
+			incompleteDeclaration=true;
+		else
+			incompleteDeclaration=false;
+
 		// initialize the rest of its attributes
 		initNewSignal(s, criticalPathContribution, regType, incompleteDeclaration);
 
@@ -1068,8 +1074,7 @@ namespace flopoco{
 			//	this will be an incomplete signal, as we cannot know the exact details of the signal yet
 			//	the rest of the information will be completed by addOutput, which has the rest of the required information
 			//	and add it to the list of signals to be scheduled
-			declare(actualSignalName, -1, false);
-			getSignalByName(actualSignalName)->setIncompleteDeclaration(true);
+			declare(actualSignalName, -1); // -1 for incomplete declaration
 			s = getSignalByName(actualSignalName);
 		}else
 		{
@@ -1223,18 +1228,22 @@ namespace flopoco{
 		}
 
 		//build the code for the outputs
-		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
-		{
+		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++) {
+			Signal* actual = it->second;
+			string formalName = it->first;
 			//the signal connected to the output might be an incompletely declared signal,
 			//	so its information must be completed and it must be properly connected now
-			if(it->second->getIncompleteDeclaration() == true)
+			if(actual->getIncompleteDeclaration() == true)
 			{
 				//copy the details from the output port
-				it->second->copySignalParameters(op->getSignalByName(it->first));
+				actual->copySignalParameters(op->getSignalByName(formalName));
 				//mark the signal as completely declared
 				it->second->setIncompleteDeclaration(false);
 				//connect the port to the corresponding signal
-				if(op->isShared()){ // clone signals 
+				if(op->isShared()){ // shared instance: clone the IO signals of the instance 
+					// if the subcomponent is shared,
+					// clone its IO signals in the signal graph, along with the dependencies
+					// Signal cloneOfFormal = new Signal(op->getSignalByName(it->first));
 				}
 				else {	 	// unique instances
 					it->second->addPredecessor(op->getSignalByName(it->first));
@@ -1254,10 +1263,6 @@ namespace flopoco{
 
 		//add the operator to the subcomponent list/map (and possibly to globalOpList)
 		addSubComponent(op);
-		if(op->isShared()) {// if the subcomponent is shared,
-			// clone its IO signals in the signal graph, along with the dependencies
-			// Signal cloneOfFormal = new Signal(op->getSignalByName(it->first));
-			}
 
 		//clear the port mappings
 		tmpInPortMap_.clear();
@@ -2394,11 +2399,11 @@ namespace flopoco{
 	
 	void Operator::schedule()
 	{
-		if(noParseNoSchedule_)
+		if(noParseNoSchedule_) // for TestBench and Wrapper
 			return;
 
 		REPORT(DEBUG, "schedule(): Entering schedule() of operator " << getName());
-		//extract the dependences between the operator's internal signals
+		// move the dependences extracted by the lexer to the operator's internal signals
 		moveDependenciesToSignalGraph();
 		// schedule from the root parent op
 		if(parentOp_ != nullptr) {
@@ -2406,7 +2411,7 @@ namespace flopoco{
 			parentOp_ ->schedule();
 		}
 		else { // We are the root parent op
-			REPORT(DEBUG, "schedule(): It seems I am the root Operator, starting scheduling");
+			REPORT(DEBUG, "schedule(): It seems I am a root Operator, starting scheduling");
 			
 			// Algorithm initialization 
 			size_t numberScheduled;
@@ -2574,9 +2579,9 @@ namespace flopoco{
 		//compute the cycle and the critical path for the node itself from
 		//	the maximum cycle and critical path of the predecessors
 		maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
-		//check if the signal needs to pass to the next cycle,
-		//	due to its critical path contribution
-		if(maxCriticalPath + targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
+		//check if the signal needs to pass to the next cycle, due to its critical path contribution
+		// except for shared operators which shouldn't advance the cycle
+		if(!isShared() &&  maxCriticalPath + targetSignal->getCriticalPathContribution() > maxTargetCriticalPath)
 		{
 			double totalDelay = maxCriticalPath + targetSignal->getCriticalPathContribution();
 

@@ -460,7 +460,7 @@ public:
 	/**
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
 	 * @param name is the name of the signal
-	 * @param width is the width of the signal (optional, default 1)
+	 * @param width is the width of the signal (optional, default 1; value -1 means: incomplete declaration, see Signal.hpp)
 	 * @param isbus: a signal of width 1 is declared as std_logic when false, 
 	 * 				 as std_logic_vector when true (optional, default false)
 	 * @param regType: the registring type of this signal. See also the Signal 
@@ -469,7 +469,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
+	string declare(string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire);
 
 	/**
 	 * Declares a signal appearing on the Left Hand Side of a VHDL assignment
@@ -483,7 +483,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(double criticalPathContribution, string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
+	string declare(double criticalPathContribution, string name, const int width, bool isbus=true, Signal::SignalType regType = Signal::wire);
 
 	/**
 	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
@@ -494,7 +494,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(string name, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
+	string declare(string name, Signal::SignalType regType = Signal::wire);
 
 	/**
 	 * Declares a signal of length 1 as in the previous declare() function, but as std_logic by default
@@ -507,7 +507,7 @@ public:
 	 * 									and the rest are specified later
 	 * @return name
 	 */
-	string declare(double criticalPathContribution, string name, Signal::SignalType regType = Signal::wire, bool incompleteDeclaration = false);
+	string declare(double criticalPathContribution, string name, Signal::SignalType regType = Signal::wire);
 
 
 	/**
