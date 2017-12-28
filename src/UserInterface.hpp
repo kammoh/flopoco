@@ -47,9 +47,6 @@ namespace flopoco
 		/** parse all the operators passed on the command-line */
 		static void buildAll(int argc, char* argv[]);
 
-		/** starts the scheduling on the operators */
-		static void schedule();
-
 		/** starts the dot diagram plotter on the operators */
 		static void drawDotDiagram();
 

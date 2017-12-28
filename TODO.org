@@ -228,6 +228,8 @@ The most used, i.e. IntAdder, Shifters, etc
 *** rename pow2, intpow2 etc as exp2
 *** doxygen: exclude unplugged operators
 *** See table attributes above
+*** remove Operator::signalList, replace it with signalMap altogether
+(this must be considered carefully, we have several lists)
 * Bit heap and multipliers
 ** rewrite BitHeap with fixed-point support and better compression (see Kumm papers and uni_kassel branch)
 ** pipeline virtual IntMult

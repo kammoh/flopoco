@@ -1120,7 +1120,24 @@ namespace flopoco{
 	}
 
 
+	/*
+		The logic of instance really depends on the sharedness.
 
+		*** If the subcomponent is unique/not shared, the following order is expected (and ensured by newInstance)
+		1/ schedule the actual inputs 
+		2/ build the tmpPortMapList
+		3/ call the constructor of the subcomponents
+		3.1/ its addInput() and addOutput recovers the IO maping from tmpPortMapList. 
+         For the outputs, the actuals are incompleteDeclarations
+		3.2/ its signal graph is built
+		4/ the declaration of the output signals is finalized by instance()
+
+		*** If the subcomponent is shared, the following order is expected
+		1/ call the constructor, put this operator in the globalOpList, schedule it
+		2/ build  the tmpPortMapList
+		3/ clone the subcomponent's IO signal, and clone the relevant IO dependency.
+
+	 */
 
 
 	string Operator::instance(Operator* op, string instanceName, bool outputWarning){
@@ -1163,6 +1180,11 @@ namespace flopoco{
 			}
 		} // End of the I/O sanity check
 
+		if(op->isShared() && !op->isOperatorScheduled()) {
+			op->schedule();
+			op->applySchedule();
+		}
+		
 		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
@@ -1183,49 +1205,72 @@ namespace flopoco{
 		//build the code for the inputs
 		map<string, Signal*>::iterator it;
 		string rhsString;
-
+		vector<Signal*> inputCloneList;
+		
 		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)		{
-
+			Signal* actual = it->second; // the connexion here is actual -> formal
+			string formalName = it->first; // ... with actual in this and formal in op
+			Signal* formal=op->getSignalByName(formalName);
 			if((it != tmpInPortMap_.begin()) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 
 			// The following code assumes that the IO is declared as standard_logic_vector
 			// If the actual parameter is a signed or unsigned, we want to automatically convert it
-			if(it->second->type() == Signal::constant){
-				rhsString = it->second->getName().substr(0, it->second->getName().find("_cst"));
-			}else if(it->second->isFix()){
-				rhsString = std_logic_vector(it->second->getName());
+			if(actual->type() == Signal::constant){
+				rhsString = actual->getName().substr(0, actual->getName().find("_cst"));
+			}else if(actual->isFix()){
+				rhsString = std_logic_vector(actual->getName());
 			}else{
-				rhsString = it->second->getName();
+				rhsString = actual->getName();
 			}
 
 			o << it->first << " => " << rhsString;
+			if(op->isShared()){ // shared instance: clone the input signal of op, then connect it. 
+				string cloneName = declare(0.0, 
+																	 formal->getName()+"copy"+to_string(getNewUId()),
+																	 formal->width()); // The other parameters are OK
+				Signal* cloneOfFormal = getSignalByName(cloneName);
+				inputCloneList.push_back(cloneOfFormal);
+				cloneOfFormal->addPredecessor(actual);
+				actual->addSuccessor(cloneOfFormal);
+				REPORT(0, "instance():  "<< op->getUniqueName() << " cloning formal "<< formal->getUniqueName() << " as " << cloneOfFormal->getUniqueName() << " of predecessor " << actual->getUniqueName()) ; 
+			}
 		}
 
 		//build the code for the outputs
 		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++) {
-			Signal* actual = it->second;
-			string formalName = it->first;
+			Signal* actual = it->second; // the connexion here is formal -> actual
+			string formalName = it->first; // ... with actual in this and formal in op
+			Signal* formal=op->getSignalByName(formalName);
+
 			//the signal connected to the output should be an incompletely declared signal,
 			//	so its information must be completed and it must be properly connected now
-			if(actual->incompleteDeclaration())
-			{
+			if(actual->incompleteDeclaration())		{
 				//copy the details from the output port
 				actual->copySignalParameters(op->getSignalByName(formalName));
-				//mark the signal as completely declared
-				it->second->setIncompleteDeclaration(false);
-				//connect the port to the corresponding signal
-				if(op->isShared()){ // shared instance: clone the IO signals of the instance 
-					// if the subcomponent is shared,
-					// clone its IO signals in the signal graph, along with the dependencies
-					// Signal cloneOfFormal = new Signal(op->getSignalByName(it->first));
+				it->second->setIncompleteDeclaration(false); //mark the signal as completely declared
+				
+				if(op->isShared()){ // shared instance: clone the output signal of op, then connect it. 
+					string cloneName = declare(formal->getCriticalPath(), // this is OK after schedule
+																		 formal->getName()+"copy"+to_string(getNewUId()),
+																		 formal->width()); // The other parameters are OK
+					Signal* cloneOfFormal = getSignalByName(cloneName);
+					REPORT(0, "instance() : "<< op->getUniqueName() << ": cloning formal "<< formal->getUniqueName() << " as " << cloneOfFormal->getUniqueName() << " of successor " << actual->getUniqueName()) ; 
+					for (auto i: inputCloneList) {
+						i->addSuccessor(cloneOfFormal);
+						cloneOfFormal->addPredecessor(i);
+						REPORT(0, "   added dependency "<< i->getUniqueName() << " -> "<<  cloneOfFormal->getUniqueName()
+									 << " with critical path contribution " <<  cloneOfFormal->getCriticalPathContribution() ) ; 
+					}
+					actual->addPredecessor(cloneOfFormal);
+					cloneOfFormal->addSuccessor(actual);
 				}
-				else {	 	// unique instances
-					it->second->addPredecessor(op->getSignalByName(it->first));
-					op->getSignalByName(it->first)->addSuccessor(it->second);
+				else {	 	// unique instances: just connect both signals in the dependency graph
+					actual->addPredecessor(formal);
+					formal->addSuccessor(actual);
 				}
 				//the new signal doesn't add anything to the critical path
-				it->second->setCriticalPathContribution(0.0);
+				actual->setCriticalPathContribution(0.0);
 			}
 
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
@@ -1837,7 +1882,7 @@ namespace flopoco{
 		int count, lhsNameLength, rhsNameLength;
 		bool unknownLHSName = false, unknownRHSName = false;
 
-		REPORT(DEBUG, "doApplySchedule(): entering for operator " << srcFileName);
+		REPORT(DEBUG, "doApplySchedule(): entering operator " << getName());
 		REPORT(FULL, "doApplySchedule: vhdl stream after first lexing " << endl << vhdl.str());
 		//reset the new vhdl code buffer
 		newStr.str("");
@@ -2189,7 +2234,7 @@ namespace flopoco{
 
 		vhdl.setSecondLevelCode(newStr.str());
 
-		REPORT(DEBUG, "doApplySchedule: finished " << srcFileName);
+		REPORT(DEBUG, "doApplySchedule: finished " << getName());
 	}
 
 
@@ -2374,14 +2419,14 @@ namespace flopoco{
 	
 	void Operator::schedule()
 	{
-		if(noParseNoSchedule_) // for TestBench and Wrapper
+		if(noParseNoSchedule_ || isOperatorScheduled_) // for TestBench and Wrapper
 			return;
 
 		REPORT(DEBUG, "schedule(): Entering schedule() of operator " << getName());
 		// move the dependences extracted by the lexer to the operator's internal signals
 		moveDependenciesToSignalGraph();
 		// schedule from the root parent op
-		if(parentOp_ != nullptr) {
+		if(parentOp_ != nullptr && !isShared()) {
 			REPORT(DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
 			parentOp_ ->schedule();
 		}
@@ -2443,11 +2488,10 @@ namespace flopoco{
 						}
 					}
 					if(allPredecessorsScheduled) {
-						REPORT(DEBUG, "schedule(): :) " << candidate->getUniqueName() << " can now be scheduled");
-
 						setSignalTiming(candidate); // also marks it as scheduled
-						
 						alreadyScheduled.insert(candidate);
+						REPORT(DEBUG, "schedule(): :) " << candidate->getUniqueName()
+									 << " has been scheduled at lexicographic time (" << candidate->getCycle() << ", " << candidate->getCriticalPath() <<")"  );
 			
 						for(auto i : *candidate->successors()) {
 							if(i.first->hasBeenScheduled() == false) {
@@ -2473,6 +2517,7 @@ namespace flopoco{
 			}
 			if(unscheduledOutputs.size()==0) { 
 				// Success! All outputs are scheduled
+				isOperatorScheduled_=true;
 				computePipelineDepths();	 // also for the subcomponents
 			}
 			else{ // Some outputs unscheduled, report them
@@ -2819,9 +2864,11 @@ namespace flopoco{
 
 			//draw the subcomponents of this operator
 			file << "\n" << tabs << "//subcomponents of operator " << this->getName() << "\n";
-			for(int i=0; (unsigned int)i<subComponentList_.size(); i++)
-				subComponentList_[i]->drawDotDiagram(file, 2, dotDrawingMode, tabs);
-
+			for(auto i: subComponentList_) {
+			 	if(!i->isShared()) {
+					i->drawDotDiagram(file, 2, dotDrawingMode, tabs);
+				}
+			}
 			file << "\n";
 
 			//draw the out connections of each input of this operator

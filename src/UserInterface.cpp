@@ -221,8 +221,6 @@ namespace flopoco
 	/* The recursive method */
 	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file)
 	{
-		string srcFileName = "Operator.cpp"; // for REPORT
-
 		for(auto i: oplist) {
 			try
 			{
@@ -234,18 +232,9 @@ namespace flopoco
 
 				//output the vhdl code to file
 
-#if 0// commented by Florent, WTF?
-				//	for global operators, this is done only once
-				if(!i->isOperatorImplemented())
-				{
-					i->outputVHDL(file);
-					i->setIsOperatorImplemented(true);
-				}
-					
-#else
 				i->outputVHDL(file);
-#endif
-			}catch (std::string &s)
+
+		 }catch (std::string &s)
 			{
 				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
 			}
@@ -481,7 +470,6 @@ namespace flopoco
 					// Schedule it
 					op->schedule();
 					op->applySchedule();
-
 				}
 			}
 		}catch(std::string &s){
@@ -495,10 +483,6 @@ namespace flopoco
 		}
 	}
 
-
-	void UserInterface::schedule() {
-		// Te be refilled some day
-	}
 
 
 	void UserInterface::drawDotDiagram() {
