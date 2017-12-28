@@ -114,8 +114,12 @@ public:
 		functional,         /**< the inserted register is a functional delay */
 	} SignalDelayType;
 
+
+	
 	/**
 	 * Add a sub-operator to this operator
+	 All the operators in the subCompontentList will be declared in the VHDL.
+	 The shared operators are also added to UserInterface::globalOpList
 	 */
 	void addSubComponent(Operator* op);
 

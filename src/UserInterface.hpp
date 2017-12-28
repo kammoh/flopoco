@@ -90,14 +90,17 @@ namespace flopoco
 		/** Provide a string with the full documentation.*/
 		static string getFullDoc();
 
-		/** add an operator to the global (first-level) list, which is stored in its Target (not really its place, sorry).
+		/** add an operator to the global (first-level) list.
 				This method should be called by
 				1/ the main / top-level, or
-				2/ for sub-components that are really basic operators,
+				2/ for "shared" sub-components that are really basic operators,
 				expected to be used several times, *in a way that is independent of the context/timing*.
-				Typical example is a table designed to fit in a LUT or parallel row of LUTs
+				Typical example is a table designed to fit in a LUT, such as compressors etc.
+				Such shared components are identified by their name. 
+				If several components want to add the same shared component, only the first is added.
+				Subsequent attempts to add a shared component with the same name instead return a pointer to the one in globalOpList.
 		*/
-		static void addToGlobalOpList(OperatorPtr op);
+		static OperatorPtr addToGlobalOpList(OperatorPtr op);
 
 
 		/** generates the code for operators in oplist, and all their subcomponents */

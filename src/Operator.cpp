@@ -121,10 +121,27 @@ namespace flopoco{
 
 
 	void Operator::addSubComponent(OperatorPtr op) {
-		subComponentList_.push_back(op);
-
-		REPORT(0, "WARNING: function addSubComponent() is deprecated! It seems it is still used for " << op->getName());
-	}
+		// Check it is already present
+		OperatorPtr alreadyPresent=nullptr;
+		for (auto i: subComponentList_){
+			if( op->getName() == i->getName() ) {
+				alreadyPresent=i;
+				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
+			}
+		}
+		
+		if(alreadyPresent) {
+			if( op->isShared() )
+				return;
+			else
+				THROWERROR("addSubComponent(): an operator named " << op->getName() << " already exists" );
+		}
+		else{
+			subComponentList_.push_back(op);
+			if(op->isShared() )
+				UserInterface::addToGlobalOpList(op);
+		}
+	} 
 
 
 	OperatorPtr Operator::getSubComponent(string name){
@@ -494,7 +511,7 @@ namespace flopoco{
 	}
 
 	OperatorPtr Operator::setParentOperator(OperatorPtr parentOp){
-		if(parentOp_ != nullptr)
+		if(parentOp_ != nullptr && parentOp != nullptr) // The second test is to allow reset to nullptr
 			THROWERROR("Parent operator already set for operator " << getName());
 		parentOp_ = parentOp;
 
@@ -1125,13 +1142,12 @@ namespace flopoco{
 
 
 
-	
-	// TODO complete rework
+
 	string Operator::instance(Operator* op, string instanceName, bool outputWarning){
 		ostringstream o;
 
-		if(outputWarning) {
-			REPORT(INFO, "instance() is deprecated, please use newInstance() instead");
+		if(outputWarning && ! op->isShared()) {
+			REPORT(INFO, "instance() is deprecated except for shared operators, please use newInstance() instead");
 		};
 		
 		// First, I/O sanity check: check that all the signals are connected
@@ -1173,8 +1189,7 @@ namespace flopoco{
 		o << tab << tab << "port map ( ";
 
 		// build vhdl and erase portMap_
-		if(op->isSequential())
-		{
+		if(op->isSequential())	{
 			o << "clk  => clk" << "," << endl
 			  << tab << tab << "           rst  => rst";
 			if (op->isRecirculatory()) {
@@ -1237,8 +1252,12 @@ namespace flopoco{
 
 		o << ");" << endl;
 
-		//add the operator to the subcomponent list/map
-		subComponentList_.push_back(op);
+		//add the operator to the subcomponent list/map (and possibly to globalOpList)
+		addSubComponent(op);
+		if(op->isShared()) {// if the subcomponent is shared,
+			// clone its IO signals in the signal graph, along with the dependencies
+			// Signal cloneOfFormal = new Signal(op->getSignalByName(it->first));
+			}
 
 		//clear the port mappings
 		tmpInPortMap_.clear();

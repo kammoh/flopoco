@@ -190,17 +190,26 @@ namespace flopoco
 
 
 
-	void UserInterface::addToGlobalOpList(OperatorPtr op) {
-		bool alreadyPresent=false;
-		// We assume all the operators added to GlobalOpList are unpipelined.
+	OperatorPtr UserInterface::addToGlobalOpList(OperatorPtr op) {
+		OperatorPtr alreadyPresent=nullptr;
 		for (auto i: UserInterface::globalOpList){
 			if( op->getName() == i->getName() ) {
-				alreadyPresent=true;
+				alreadyPresent=i;
 				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
 			}
 		}
-		if(!alreadyPresent)
+		if(alreadyPresent) {
+			return alreadyPresent;
+		}
+		else {
 			UserInterface::globalOpList.push_back(op);
+			// If this component was created as a sub-component, we need to set its parentOp to null
+			op->setParentOperator(nullptr);
+			// make sure it is scheduled
+			op->schedule();
+			op->applySchedule();
+			return op;
+		}
 	}
 
 
