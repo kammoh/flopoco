@@ -214,33 +214,34 @@ namespace flopoco
 
 
 	void UserInterface::outputVHDLToFile(ofstream& file){
-		outputVHDLToFile(UserInterface::globalOpList, file);
+		set<string> alreadyOutput; // to avoid redundant output
+		outputVHDLToFile(UserInterface::globalOpList, file, alreadyOutput);
 	}
 
 
 	/* The recursive method */
-	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file)
+	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file, set<string> &alreadyOutput )
 	{
+
 		for(auto i: oplist) {
-			try
-			{
+			try		{
 				// check for subcomponents
 				if(! i->getSubComponentListR().empty() ){
 					//recursively call to print subcomponents
-					outputVHDLToFile(i->getSubComponentListR(), file);
+					outputVHDLToFile(i->getSubComponentListR(), file, alreadyOutput);
 				}
 
-				//output the vhdl code to file
-
-				i->outputVHDL(file);
-
-		 }catch (std::string &s)
-			{
+				//output the vhdl code to file if it was not done already
+				if(alreadyOutput.find(i->getName())==alreadyOutput.end()) {
+					i->outputVHDL(file);
+					alreadyOutput.insert(i->getName());
+				}
+			}
+			catch (std::string &s)	{
 				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
 			}
 		}
 		oplist.back()->outputClock_xdc();
-
 	}
 
 

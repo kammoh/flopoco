@@ -62,35 +62,14 @@ To discuss.
 *** Shifter for basic pipeline: DONE
 *** IntAdder for explicit call to schedule(): DONE
 *** FPAdd for simple subcomponents : DONE
-*** FPDiv for low complexity shared subcomponents
+*** FPDiv for low complexity shared subcomponents DONE
 *** FixRealKCM for simple bit heap
 *** ALAP rescheduling for constant signals
 *** FixFIR and FixIIR for large bit heaps
 *** IntMult... sigh, some day 
-** Shared instances
-*** Non shared instances
-The subcomponent must have the schedule information for its inputs at the beginning of the constructor. 
-For this, 
-- newInstance() first builds the IO map, then calls the constructor.
-- The constructor calls addInput() which calls connectIOFromPortMap(s): 
-  this recovers the IO map and thus performs the formal/actual IO connection.
-- from there the subcomponent may call schedule() if it needs to take time-dependent decisions.
-*** Shared instances
-Current practice is: first call the constructor  (currently fails at the addInput)
-then call inPortMap, outPortMap and instance() many times.
-The constructor of a shared instance knows it is shared.
-  TODO Question: how to allow Tables that are shared and tables that are not.
-  Current answer: logicTable=true => shared.
-  Indeed, logicTable=false => blockRAM => multicycle read and write 
 
-For shared instances,
-  addInput shouldn't call connectIOFromPortMap
-  the schedule should be called, explicitely or not, at the end of the constructor
-  It should define a delay matrix from inputs to outputs, e.g. just define the predecessor/sucessor lists
-  instance() should do the IO connexion: just clone the IO signals of the subcomponent (and their pred/successor list) then connect them to actual IOs.
-  and generate the vhdl.
-TODO newSharedInstance(entityName) would be nice to have some day
 ** Small things
+*** call schedule() in instance()
 *** constant signal scheduling
 The constant signals are currently all scheduled to cycle 0.
 This is stupid: once the schedule is done (all the outputs of the top-level are scheduled).

@@ -100,18 +100,18 @@ namespace flopoco
 		static OperatorPtr addToGlobalOpList(OperatorPtr op);
 
 
-		/** generates the code for operators in oplist, and all their subcomponents */
-		static void outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file);
-
 		/** generates the code for operators in globalOpList, and all their subcomponents */
 		static void outputVHDLToFile(ofstream& file);
 
+		/** generates the code for operators in oplist, and all their subcomponents */
+		static void outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file, set<string> &alreadyOutput);
 
-		/** generates the dot code for operators in oplist, and all their subcomponents */
-		static void outputDotToFile(vector<OperatorPtr> &oplist, ofstream& file);
 
 		/** generates the dot code for operators in globalOpList, and all their subcomponents */
 		static void outputDotToFile(ofstream& file);
+
+		/** generates the dot code for operators in oplist, and all their subcomponents */
+		static void outputDotToFile(vector<OperatorPtr> &oplist, ofstream& file);
 
 
 	private:
