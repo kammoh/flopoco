@@ -1206,11 +1206,12 @@ namespace flopoco{
 		map<string, Signal*>::iterator it;
 		string rhsString;
 		vector<Signal*> inputCloneList;
+		vector<Signal*> inputActualList;
 		
 		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)		{
 			Signal* actual = it->second; // the connexion here is actual -> formal
 			string formalName = it->first; // ... with actual in this and formal in op
-			Signal* formal=op->getSignalByName(formalName);
+			//			Signal* formal=op->getSignalByName(formalName);
 			if((it != tmpInPortMap_.begin()) || op->isSequential())
 				o << "," << endl <<  tab << tab << "           ";
 
@@ -1225,7 +1226,9 @@ namespace flopoco{
 			}
 
 			o << it->first << " => " << rhsString;
-			if(op->isShared()){ // shared instance: clone the input signal of op, then connect it. 
+			if(op->isShared()){
+#if 0
+				// shared instance: clone the input signal of op, then connect it. 
 				string cloneName = declare(0.0, 
 																	 formal->getName()+"copy"+to_string(getNewUId()),
 																	 formal->width()); // The other parameters are OK
@@ -1233,7 +1236,11 @@ namespace flopoco{
 				inputCloneList.push_back(cloneOfFormal);
 				cloneOfFormal->addPredecessor(actual);
 				actual->addSuccessor(cloneOfFormal);
-				REPORT(0, "instance():  "<< op->getUniqueName() << " cloning formal "<< formal->getUniqueName() << " as " << cloneOfFormal->getUniqueName() << " of predecessor " << actual->getUniqueName()) ; 
+				REPORT(DEBUG, "instance() of shared component  "<< op->getUniqueName() << ": cloning formal "<< formal->getUniqueName() << " as " << cloneOfFormal->getUniqueName() << " of predecessor " << actual->getUniqueName()) ;
+#else
+				// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
+				inputActualList.push_back(actual);
+#endif
 			}
 		}
 
@@ -1248,29 +1255,24 @@ namespace flopoco{
 			if(actual->incompleteDeclaration())		{
 				//copy the details from the output port
 				actual->copySignalParameters(op->getSignalByName(formalName));
-				it->second->setIncompleteDeclaration(false); //mark the signal as completely declared
-				
-				if(op->isShared()){ // shared instance: clone the output signal of op, then connect it. 
-					string cloneName = declare(formal->getCriticalPath(), // this is OK after schedule
-																		 formal->getName()+"copy"+to_string(getNewUId()),
-																		 formal->width()); // The other parameters are OK
-					Signal* cloneOfFormal = getSignalByName(cloneName);
-					REPORT(0, "instance() : "<< op->getUniqueName() << ": cloning formal "<< formal->getUniqueName() << " as " << cloneOfFormal->getUniqueName() << " of successor " << actual->getUniqueName()) ; 
-					for (auto i: inputCloneList) {
-						i->addSuccessor(cloneOfFormal);
-						cloneOfFormal->addPredecessor(i);
-						REPORT(0, "   added dependency "<< i->getUniqueName() << " -> "<<  cloneOfFormal->getUniqueName()
-									 << " with critical path contribution " <<  cloneOfFormal->getCriticalPathContribution() ) ; 
+				actual->setIncompleteDeclaration(false); //mark the signal as completely declared
+				if(op->isShared()){ // shared instance:  directly connect the inputs to the actual output in the dependency graph
+					actual->setCriticalPathContribution(formal->getCriticalPath()); // this is OK because the subcomponent has been scheduled
+					REPORT(DEBUG, "instance() of a shared component. CP of "<< actual->getUniqueName() << " is " << actual->getCriticalPathContribution());
+					for (auto i: inputActualList) {
+						i->addSuccessor(actual);
+						actual->addPredecessor(i);
+						REPORT(FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  actual->getUniqueName()
+									 << " with critical path contribution " <<  actual->getCriticalPathContribution() ) ; 
 					}
-					actual->addPredecessor(cloneOfFormal);
-					cloneOfFormal->addSuccessor(actual);
+										
 				}
 				else {	 	// unique instances: just connect both signals in the dependency graph
 					actual->addPredecessor(formal);
 					formal->addSuccessor(actual);
+					//the new signal doesn't add anything to the critical path
+					actual->setCriticalPathContribution(0.0);
 				}
-				//the new signal doesn't add anything to the critical path
-				actual->setCriticalPathContribution(0.0);
 			}
 
 			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
@@ -1941,7 +1943,11 @@ namespace flopoco{
 			//	for which the helper signals must be removed and delays _dxxx must be added
 			auxPosition2 = workStr.find("port map"); // This is OK because this string can only be created by flopoco
 			if(auxPosition2 != string::npos)	{
-				REPORT(DEBUG, "doApplySchedule: found instance: " << lhsName)//workStr.substr(auxPosition, auxPosition2));
+				string instanceName=lhsName;
+				OperatorPtr subop = getSubComponent(instanceName);
+				if(subop==nullptr)
+					THROWERROR("doApplySchedule(): " << instanceName << " does not seem to be a subcomponent of " << getName());
+				REPORT(DEBUG, "doApplySchedule: found instance: " << instanceName);//workStr.substr(auxPosition, auxPosition2));
 				//try to parse the names of the signals in the port mapping
 				if(workStr.find("?", auxPosition2) == string::npos) {
 					//empty port mapping
@@ -1956,66 +1962,80 @@ namespace flopoco{
 					newStr << workStr.substr(auxPosition, workStr.find("?", auxPosition2)-auxPosition);
 
 					tmpCurrentPos = workStr.find("?", auxPosition2);
-					while(tmpCurrentPos != string::npos)
-					{
+					while(tmpCurrentPos != string::npos)	{
 						bool singleQuoteSep = false, doubleQuoteSep = false;
-
-						unknownLHSName = false;
-						unknownRHSName = false;
-
+						bool rhsIsSignal=false;
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
 						lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
-
+						
 						//copy lhsName (the formal input/output) to the new vhdl buffer
 						newStr << lhsName;
-
+						
 						//copy the code up to the next rhsName to the new vhdl buffer
 						tmpCurrentPos = tmpNextPos+2;
 						tmpNextPos = workStr.find("$", tmpCurrentPos);
-
+						
 						//check for constant as rhs name
-						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)
-						{
+						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)	{
 							tmpNextPos = workStr.find("\'", tmpCurrentPos);
 							singleQuoteSep = true;
-						}else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)
-						{
+						}
+						else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)  {
 							tmpNextPos = workStr.find("\"", tmpCurrentPos);
 							doubleQuoteSep = true;
 						}
 
 						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
-
+						
 						//extract a rhsName
 						//	this might be a constant
-						if(singleQuoteSep)
-						{
+						if(singleQuoteSep) {
 							//a 1-bit constant
 							tmpCurrentPos = tmpNextPos+1;
 							tmpNextPos = workStr.find("\'", tmpCurrentPos);
-						}else if(doubleQuoteSep)
-						{
+						}
+						else if(doubleQuoteSep) {
 							//a multiple bit constant
 							tmpCurrentPos = tmpNextPos+1;
 							tmpNextPos = workStr.find("\"", tmpCurrentPos);
-						}else
-						{
+						}
+						else {
 							//a regular signal name
 							tmpCurrentPos = tmpNextPos+2;
 							tmpNextPos = workStr.find("$", tmpCurrentPos);
+							rhsIsSignal = true;
 						}
 						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
-						rhsSignal = NULL;
-						lhsSignal = NULL;
+						//						rhsSignal = NULL;
+						//						lhsSignal = NULL;
 
 						//copy rhsName to the new vhdl buffer
-						//	annotate it if necessary
-							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
-							    << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+						newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
+									 << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
 
-
+						try {
+							//	delay it if necessary, i.e. if it is a shared instance with a dependency to a later signal
+							if(getTarget()->isPipelined()
+								 && rhsIsSignal // rhs is not a constant
+								 && subop->isShared() // otherwise the dependency graph takes care of all the pipelining
+								 && subop->getSignalByName(lhsName)->type() == Signal::in
+								 ) {// the lhs is a input of the subcomponent
+								// In this case, we have in the dep graph the dependencies (actualIn->actualOut): extract the first one
+								Signal* subopInput = getSignalByName(rhsName);
+								Signal* subopOutput = getSignalByName(rhsName)->successor(0);
+								REPORT(DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
+								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle() + getFunctionalDelay(subopInput, subopOutput); 
+								if( deltaCycle> 0)
+									newStr << "_d" << vhdlize(deltaCycle);
+							}
+						}
+						catch(string &e) {
+							REPORT(FULL, "doApplySchedule caught " << e); 
+						}
+					
+					
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
 
@@ -2931,7 +2951,7 @@ namespace flopoco{
 	  stream << tabs << nodeName << "__" << node->parentOp()->getName() << " ";
 
 	  //output the node's properties
-	  stream << "[ label=\"" << nodeName << "\\n" << node->getCriticalPathContribution() << "\\n(" << node->getCycle() << ", "
+	  stream << "[ label=\"" << nodeName << "\\n" << "dT = " << node->getCriticalPathContribution() << "\\n(" << node->getCycle() << ", "
 	      << node->getCriticalPath() << ")\"";
 	  stream << ", shape=box, color=black";
 	  stream << ", style" << ((node->type() == Signal::in || node->type() == Signal::out) ? "=\"bold, filled\"" : "=filled");
