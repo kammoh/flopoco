@@ -1,6 +1,8 @@
 TODO file for FloPoCo
-
+https://xkcd.com/844/
 * Version 5
+** install: 
+*** wcpg: need f2c libblas-dev liblapack-dev
 ** cleanup of the pipeline framework
 2 use cases from Kassel:
  - we want to call optimal bit-heap scheduling algorithms, which will not be ASAP.
