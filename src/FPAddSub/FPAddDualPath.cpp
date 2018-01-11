@@ -130,7 +130,7 @@ namespace flopoco{
 		}
 
 		// compute EffSub as (signA xor signB) at cycle 1
-		vhdl<<tab<<declare(getTarget()->lutDelay() + getTarget()-> localWireDelay(),
+		vhdl<<tab<<declare(getTarget()->lutDelay(),
 											 "EffSub")
 				<< " <= newX("<<wE+wF<<") xor newY("<<wE+wF<<");"<<endl;
 
@@ -166,23 +166,12 @@ namespace flopoco{
 		// instanciate the box that computes X-Y and Y-X. Note that it could take its inputs before the swap (TODO ?)
 		REPORT(DETAILED, "Building close path dual mantissa subtraction box");
 
-#if 1
 		newInstance("IntDualAddSub",
 								getName()+"_DualSubClose",
 								join("wIn=", wF+3) + " opType=0",
 								"X=>fracXClose1,Y=>fracYClose1",
 								"XmY=>fracRClosexMy, YmX=>fracRCloseyMx");
 
-#else
-		dualSubClose = new	IntDualAddSub(target, wF + 3, 0);
-		dualSubClose->changeName(getName()+"_DualSubClose");
-
-		inPortMap	 (dualSubClose, "X", "fracXClose1");
-		inPortMap	 (dualSubClose, "Y", "fracYClose1");
-		outPortMap (dualSubClose, "XmY","fracRClosexMy");
-		outPortMap (dualSubClose, "YmX","fracRCloseyMx");
-		vhdl << instance(dualSubClose, "DualSubO");
-#endif		
 		vhdl<<tab<< declare("fracSignClose") << " <= fracRClosexMy("<<wF+2<<");"<<endl;
 		vhdl<<tab<< declare("fracRClose1",wF+2) << " <= fracRClosexMy("<<wF+1<<" downto 0) when fracSignClose='0' else fracRCloseyMx("<<wF+1<<" downto 0);"<<endl;
 
@@ -195,16 +184,12 @@ namespace flopoco{
 		// LZC + Shifting. The number of leading zeros are returned together with the shifted input
 		REPORT(DEBUG, "Building close path LZC + shifter");
 
-#if 0
-		newInstance("LZOCShifterSticky", getName()+"_LZCShifter", , ,);
-#else
-		lzocs = new LZOCShifterSticky(this, target, wF+2, wF+2, intlog2(wF+2), false, 0);
-		 lzocs->changeName(getName()+"_LZCShifter");
-		 inPortMap	(lzocs, "I", "fracRClose1");
-		 outPortMap (lzocs, "Count","nZerosNew");
-		 outPortMap (lzocs, "O","shiftedFrac");
-		 vhdl << instance(lzocs, "LZC_component");
-#endif
+		lzocs=(LZOCShifterSticky*) newInstance("LZOCShifterSticky",
+											getName()+"_LZCShifter",
+											"countType=0" + join(" wIn=", wF+2) + join(" wOut=", wF+2) + join(" wCount=", intlog2(wF+2) ),
+											"I=>fracRClose1",
+											"Count=>nZerosNew,O=>shiftedFrac"
+											);
 		// NORMALIZATION
 
 		// shiftedFrac(0) is the round bit, shiftedFrac(1) is the parity bit,
@@ -246,14 +231,15 @@ namespace flopoco{
 		vhdl<<tab<< declare("fracNewY",wF+1) << " <= '1' & newY("<<wF-1<<" downto 0);"<<endl;
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
-		REPORT(DETAILED, "Building far path right shifter");
-		rightShifter = new Shifter(this, target,wF+1,wF+3, Shifter::Right);
-		rightShifter->changeName(getName()+"_RightShifter");
-		inPortMap  (rightShifter, "X", "fracNewY");
-		inPortMap  (rightShifter, "S", "shiftVal");
-		outPortMap (rightShifter, "R","shiftedFracY");
-		vhdl << instance(rightShifter, "RightShifterComponent");
-
+		REPORT(DEBUG, "Building far path right shifter");
+		{
+			ostringstream args;
+			string inputs, outputs;
+			args << "wIn=" << wF+1 << " maxShift=" << wF+3 << " dir=1";
+			inputs = "X=>fracNewY, S=>shiftVal";
+			outputs = "R=>shiftedFracY";
+			newInstance("Shifter", "RightShifterComponent", args.str(), inputs, outputs);
+		}
 		// compute sticky bit as the or of the shifted out bits during the alignment //
 		vhdl<<tab<< declare("sticky") << " <= '0' when (shiftedFracY("<<wF<<" downto 0)=CONV_STD_LOGIC_VECTOR(0,"<<wF+1<<")) else '1';"<<endl;
 
@@ -337,7 +323,7 @@ namespace flopoco{
 		//=========================================================================|
 		vhdl<<endl<<"-- Synchronization of both paths --"<<endl;
 
-		double muxDelay= getTarget()->lutDelay() + getTarget()->localWireDelay(); // estimated delay so far (one mux)
+		double muxDelay= getTarget()->lutDelay(); // estimated delay so far (one mux)
 		// select between the results of the close or far path as the result of the operation
 		vhdl<<tab<< "with selectClosePath select"<<endl;
 		vhdl<<tab<< declare(muxDelay, "resultBeforeRound", wE+1 + wF+1)
@@ -390,7 +376,7 @@ namespace flopoco{
 		vhdl<<tab<< declare("UnderflowOverflow",2) << " <= resultRounded"<<range( wE+1+wF, wE+wF)<<";"<<endl;
 
 		vhdl<<tab<< "with UnderflowOverflow select"<<endl;
-		vhdl<<tab<< declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "resultNoExn",wE+wF+3)
+		vhdl<<tab<< declare(getTarget()->lutDelay(), "resultNoExn",wE+wF+3)
 				<< "("<<wE+wF+2<<" downto "<<wE+wF+1<<") <=   (not zeroFromClose) & \"0\" when \"01\", -- overflow"<<endl;
 		vhdl<<tab<< "                              \"00\" when \"10\" | \"11\",  -- underflow"<<endl;
 		vhdl<<tab<< "                              \"0\" &  not zeroFromClose  when others; -- normal "<<endl;
@@ -400,21 +386,21 @@ namespace flopoco{
 		vhdl<<tab<< declare("syncExnXY", 4) << " <= sdExnXY;"<<endl;
 		vhdl<<tab<< "-- Exception bits of the result" << endl;
 		vhdl<<tab<< "with syncExnXY select -- remember that ExnX > ExnY "<<endl;
-		vhdl<<tab<<tab<< declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "exnR",2)
+		vhdl<<tab<<tab<< declare(getTarget()->lutDelay(), "exnR",2)
 				<<" <= resultNoExn("<<wE+wF+2<<" downto "<<wE+wF+1<<") when \"0101\","<<endl;
 		vhdl<<tab<<tab<< "        \"1\" & syncEffSub          when \"1010\","<<endl;
 		vhdl<<tab<<tab<< "        \"11\"                      when \"1110\","<<endl;
 		vhdl<<tab<<tab<< "        syncExnXY(3 downto 2)     when others;"<<endl;
 		vhdl<<tab<< "-- Sign bit of the result" << endl;
 		vhdl<<tab<< "with syncExnXY select"<<endl;
-		vhdl<<tab<<tab<<declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "sgnR")
+		vhdl<<tab<<tab<<declare(getTarget()->lutDelay(), "sgnR")
 				<< " <= resultNoExn("<<wE+wF<<")         when \"0101\","<<endl;
 		vhdl<<tab<< "           syncX("<<wE+wF<<") and syncSignY when \"0000\","<<endl;
 		vhdl<<tab<< "           syncX("<<wE+wF<<")               when others;"<<endl;
 
 		vhdl<<tab<< "-- Exponent and significand of the result" << endl;
 		vhdl<<tab<< "with syncExnXY select  "<<endl;
-		vhdl<<tab<<tab<< declare(getTarget()->lutDelay() + getTarget()->localWireDelay(), "expsigR", wE+wF)
+		vhdl<<tab<<tab<< declare(getTarget()->lutDelay(), "expsigR", wE+wF)
 				<< " <= resultNoExn("<<wE+wF-1<<" downto 0)   when \"0101\" ,"<<endl;
 		vhdl<<tab<<tab<< "           syncX("<<wE+wF-1<<" downto  0)        when others; -- 0100, or at least one NaN or one infty "<<endl;
 
