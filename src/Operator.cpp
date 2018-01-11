@@ -1180,8 +1180,10 @@ namespace flopoco{
 			}
 		} // End of the I/O sanity check
 
-		if(op->isShared() && !op->isOperatorScheduled()) {
+		if(!op->isOperatorScheduled()) {
 			op->schedule();
+		}
+		if(op->isShared()) {
 			op->applySchedule();
 		}
 		
@@ -1875,7 +1877,7 @@ namespace flopoco{
 	
 	// Comment by F2D: this whas parse2().
 	// This code is suspected to be OK except for the handling of functional delays
-	// It could probably be simplified 
+	// It could probably be simplified: it is a lexer
 	void Operator::doApplySchedule()
 	{
 		ostringstream newStr;
@@ -1890,7 +1892,6 @@ namespace flopoco{
 		newStr.str("");
 
 		//set the old code to the vhdl code stored in the FlopocoStream
-		//	this also triggers the code's parsing, if necessary
 		oldStr = vhdl.str();
 
 		//iterate through the old code, one statement at the time
@@ -2432,9 +2433,18 @@ namespace flopoco{
 
 	}
 
-
-
-
+	void  Operator::markConstantSignalsScheduled(set<Signal*> & alreadyScheduled) {
+			for(auto i: signalList_)	{
+				if (i->predecessors()->size()==0) {
+					alreadyScheduled.insert(i);
+					i->setHasBeenScheduled(true);					
+				}
+			}
+			// and do the same recursively for all subcomponents
+			for(auto op: subComponentList_)	{
+				op->markConstantSignalsScheduled(alreadyScheduled);
+			}
+	}
 
 	
 	void Operator::schedule()
@@ -2452,8 +2462,10 @@ namespace flopoco{
 		}
 		else { // We are the root parent op
 			REPORT(DEBUG, "schedule(): It seems I am a root Operator, starting scheduling");
+
 			
-			// Algorithm initialization 
+			// Algorithm initialization
+			// We need a global list of all the signals of the graph
 			size_t numberScheduled;
 			set<Signal*> successorsFront;
 			// restate that inputs  are already scheduled for good measure (recall that we are in the top level)
@@ -2464,13 +2476,7 @@ namespace flopoco{
 				}
 			}
 			// restate that signals without predecessors (e.g. toto <= "010101"; ) are already scheduled for good measure (recall that we are in the top level)
-			// Here ASAP is clearly weaker than ALAP : potential TODO.				
-			for(auto i: signalList_)	{
-				if (i->predecessors()->size()==0) {
-					alreadyScheduled.insert(i);
-					i->setHasBeenScheduled(true);					
-				}
-			}
+			markConstantSignalsScheduled(alreadyScheduled);
 			// then build the current wavefront (new successors may have been added to already scheduled signals)
 			for(auto i: alreadyScheduled)	{
 				for(auto successor : *i->successors()) {
@@ -2502,8 +2508,9 @@ namespace flopoco{
 					//check if all the signal's predecessors have been scheduled
 					bool allPredecessorsScheduled = true;
 					for(auto i : *candidate->predecessors()) {
-						if(i.first->hasBeenScheduled() == false) {
-							REPORT(DEBUG, "schedule():   " << candidate->getUniqueName() << " cannot be scheduled because of predecessor " << i.first->getUniqueName());
+						Signal* pred=i.first;
+						if(pred->hasBeenScheduled() == false) {
+							REPORT(DEBUG, "schedule():   " << candidate->getUniqueName() << " cannot be scheduled because of predecessor " << pred->getUniqueName());
 							allPredecessorsScheduled = false;
 						}
 					}
@@ -2512,7 +2519,9 @@ namespace flopoco{
 						alreadyScheduled.insert(candidate);
 						REPORT(DEBUG, "schedule(): :) " << candidate->getUniqueName()
 									 << " has been scheduled at lexicographic time (" << candidate->getCycle() << ", " << candidate->getCriticalPath() <<")"  );
-			
+
+						nextIterationFront.erase(candidate);// it may have been already added to nextIterationFront in this iteration
+						
 						for(auto i : *candidate->successors()) {
 							if(i.first->hasBeenScheduled() == false) {
 								REPORT(DEBUG, "schedule():     " << i.first->getUniqueName() << " added to the wavefront");
@@ -3443,13 +3452,14 @@ namespace flopoco{
 
 	void Operator::applySchedule()
 	{
-		// trigger the second VHDL parsing step. Works for sequential and combinatorial operators as well
-		doApplySchedule();
-
-		// recursive call for the operator's subcomponents
-		for(auto it: subComponentList_)
-		{
-			it->applySchedule();
+		// launch the second VHDL parsing step. Works for sequential and combinatorial operators as well
+		if(!isOperatorApplyScheduleDone_) {
+			isOperatorApplyScheduleDone_=true; 
+			doApplySchedule();
+			// recursive call for the operator's subcomponents
+			for(auto it: subComponentList_) {
+					it->applySchedule();
+				}
 		}
 	}
 

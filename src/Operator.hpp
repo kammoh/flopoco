@@ -1150,7 +1150,8 @@ public:
 	 */
 	void moveDependenciesToSignalGraph();
 
-
+	/* auxillary recursive function */
+	void markConstantSignalsScheduled(set<Signal*> & alreadyScheduled);
 
 	/**
 	 * Performs as much as possible of an ASAP scheduling for the root operator of this operator.
@@ -1733,10 +1734,10 @@ private:
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
 	int		                 hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
-
-	// TODO get rid of the following three flags and all the associated methods?
-	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented, or not */
-	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled */
+	// small TODO: rename 
+	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled, mostly to avoid redundant work */
+	bool                   isOperatorApplyScheduleDone_;    /**< Flag to show whether this operator has already passed applySchedule, mostly to avoid redundant work */
+	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented (down to VHDL output) */
 	bool                   isOperatorDrawn_;                /**< Flag to show whether this operator has already been drawn, or not */
 
 	bool                   noParseNoSchedule_;              /**< Flag instructing the VHDL to go through unchanged */
