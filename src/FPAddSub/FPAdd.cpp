@@ -194,24 +194,21 @@ namespace flopoco{
 		if(index==-1) 
 		{ // The unit tests
 
-			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{
-				for(int dualPath = 0; dualPath <2; dualPath++)
-				{
-					int wE = 6+(wF/10);
-					while(wE>wF)
-					{
-						wE -= 2;
+			for(int wF=5; wF<53; wF+=1) {
+				for(int dualPath = 0; dualPath <2; dualPath++)	{
+					for(int sub = 0; sub <2; sub++)	{
+						int wE = 6+(wF/10);
+						while(wE>wF)
+							wE -= 2;
+					
+						paramList.push_back(make_pair("wF",to_string(wF)));
+						paramList.push_back(make_pair("wE",to_string(wE)));
+						paramList.push_back(make_pair("sub",to_string(sub)));
+						paramList.push_back(make_pair("dualPath",to_string(dualPath)));
+						testStateList.push_back(paramList);
+						paramList.clear();
 					}
-
-					paramList.push_back(make_pair("wF",to_string(wF)));
-					paramList.push_back(make_pair("wE",to_string(wE)));
-					if(dualPath == 1)
-						paramList.push_back(make_pair("dualPath","true"));
-					else
-						paramList.push_back(make_pair("dualPath","false"));
-					testStateList.push_back(paramList);
-					paramList.clear();
+					
 				}
 			}
 		}

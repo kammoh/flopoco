@@ -73,10 +73,10 @@ namespace flopoco{
 		vhdl<<tab<<declare("inY",wE+wF+3) << " <= Y;"<<endl;
 
 		// signal which indicates whether or not the exception bits of X are greater or equal than/to the exception bits of Y
-		vhdl<<tab<<declare(getTarget()->logicDelay(6), "exceptionXSuperiorY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") >= inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
+		vhdl<<tab<<declare(getTarget()->adderDelay(wE+1), "exceptionXSuperiorY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") >= inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
 
 		// signal which indicates whether or not the exception bits of X are equal to the exception bits of Y
-		vhdl<<tab<<declare(getTarget()->logicDelay(6), "exceptionXEqualY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") = inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
+		vhdl<<tab<<declare("exceptionXEqualY") << " <= '1' when inX("<<wE+wF+2<<" downto "<<wE+wF+1<<") = inY("<<wE+wF+2<<" downto "<<wE+wF+1<<") else '0';"<<endl;
 
 		// make the difference between the exponents of X and Y; expX - expY = expX + not(expY) + 1
 		// pad exponents with sign bit
@@ -91,14 +91,14 @@ namespace flopoco{
 
 		string pmY="inY";
 		if ( sub ) {
-			vhdl << tab << declare("mY",wE+wF+3)   << " <= inY" << range(wE+wF+2,wE+wF+1) << " & not(inY"<<of(wE+wF)<<") & inY" << range(wE+wF-1,0) << ";"<<endl;
+			vhdl << tab << declare(getTarget()->logicDelay(), "mY",wE+wF+3)   << " <= inY" << range(wE+wF+2,wE+wF+1) << " & not(inY"<<of(wE+wF)<<") & inY" << range(wE+wF-1,0) << ";"<<endl;
 			pmY = "mY";
 		}
 
 		// depending on the value of swap, assign the corresponding values to the newX and newY signals
-		vhdl<<tab<<declare(getTarget()->logicDelay(), "newX",wE+wF+3) << " <= " << pmY << " when swap = '1' else inX;"<<endl;
-		vhdl<<tab<<declare(getTarget()->logicDelay(), "newY",wE+wF+3) << " <= inX when swap = '1' else " << pmY << ";"<<endl;
-		vhdl<<tab<<declare(getTarget()->logicDelay(), "exponentDifference",wE) << " <= " << "exponentDifferenceYX"
+		vhdl<<tab<<declare("newX",wE+wF+3) << " <= " << pmY << " when swap = '1' else inX;"<<endl;
+		vhdl<<tab<<declare("newY",wE+wF+3) << " <= inX when swap = '1' else " << pmY << ";"<<endl;
+		vhdl<<tab<<declare("exponentDifference",wE) << " <= " << "exponentDifferenceYX"
 			 << " when swap = '1' else exponentDifferenceXY("<<wE-1<<" downto 0);"<<endl;
 
 
