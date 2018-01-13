@@ -56,7 +56,7 @@ namespace flopoco
 		bool allOpTest = false;
 		bool testsDone = false;
 
-		if(opName == "All")
+		if(opName == "All" || opName == "all")
 		{
 			doUnitTest = true;
 			doRandomTest = true;
@@ -84,8 +84,7 @@ namespace flopoco
 				// We get the operators' names to add them in the testedOperator set
 			unsigned nbFactory = UserInterface::getFactoryCount();
 
-			for (unsigned i=0; i<nbFactory ; i++)
-			{
+			for (unsigned i=0; i<nbFactory ; i++)	{
 				opFact = UserInterface::getFactoryByIndex(i);
 				if(opFact->name() != "AutoTest")
 					testedOperator.insert(opFact->name());
@@ -97,7 +96,7 @@ namespace flopoco
 			testedOperator.insert(opFact->name());
 
 				// Do we check for dependences ?
-			if(testDependences)		
+			if(testDependences)		// All this has never been properly tested, I don't remember why it is here at all
 			{
 					// Find all the dependences of the Operator opName
 					// Add dependences to the set testedOperator
@@ -149,83 +148,61 @@ namespace flopoco
 
 
 		// For each tested Operator, we run a number of tests defined in the Operator's unitTest method
-		for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
-		{
+		for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)	{
 			testsDone = false;
 			system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
 			opFact = UserInterface::getFactoryByName(*itOperator);
 			// First we run the unitTest for each tested Operator
-			if(doUnitTest)
-			{
-
+			if(doUnitTest)			{
 				unitTestList.clear();
 				unitTestList = opFact->unitTestGenerator(-1);
-
 				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
-				if(unitTestList.size() != 0 )
-				{
+				if(unitTestList.size() != 0 )		{
 					testsDone = true;
 					//For every Test
-					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
-					{
+					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)	{
 						// Create the flopoco command corresponding to the test
 						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
 						commandLineTestBench = "";
-
 						unitTestParam.clear();
-
-									// Fetch all parameters and default values for readability
+						// Fetch all parameters and default values for readability
 						paramNames = opFact->param_names();
-						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
-						{
+						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)					{
 							string defaultValue = opFact->getDefaultParamVal((*itParam));
 							unitTestParam.insert(make_pair((*itParam),defaultValue));
 						}
 
 						// For every Param
-						for(itUnitTest = (*itUnitTestList).begin(); itUnitTest != (*itUnitTestList).end(); ++itUnitTest)
-						{
+						for(itUnitTest = (*itUnitTestList).begin(); itUnitTest != (*itUnitTestList).end(); ++itUnitTest)						{
 							itMap = unitTestParam.find((*itUnitTest).first);
-
-							if( itMap != unitTestParam.end())
-							{
+							
+							if( itMap != unitTestParam.end())				{
 								itMap->second = (*itUnitTest).second;
 							}
-							else if ((*itUnitTest).first == "TestBench n=")
-							{
+							else if ((*itUnitTest).first == "TestBench n="){
 								commandLineTestBench = " TestBench n=" + (*itUnitTest).second;
 							}
-							else
-							{
+							else	{
 								unitTestParam.insert(make_pair((*itUnitTest).first,(*itUnitTest).second));
 							}
 						}
-
-						if(commandLineTestBench == "")
-						{
+						if(commandLineTestBench == "")		{
 							//TODO
 							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
 						}
-
-						for(itMap = unitTestParam.begin(); itMap != unitTestParam.end(); itMap++)
-						{
+						for(itMap = unitTestParam.begin(); itMap != unitTestParam.end(); itMap++)			{
 							commandLine += " " + itMap->first + "=" + itMap->second;
 						}
-
 						system((commandLine + commandLineTestBench).c_str());	
-
 					}
 				}
-				else
-				{
+				else				{
 					cout << "No unitTest method defined" << endl;
 				}
 			}
-
+			
 			// Then we run random Tests for each tested Operator
-			if(doRandomTest)
-			{
-
+			if(doRandomTest)		{
 				unitTestList.clear();
 				unitTestParam.clear();
 				unitTestList = opFact->unitTestGenerator(0);
@@ -243,7 +220,7 @@ namespace flopoco
 
 						unitTestParam.clear();
 
-									// Fetch all parameters and default values for readability
+						// Fetch all parameters and default values for readability
 						paramNames = opFact->param_names();
 						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
 						{
@@ -289,11 +266,10 @@ namespace flopoco
 					cout << "No unitTest method defined" << endl;
 				}
 			}
-
-			if(testsDone)
-			{
+			
+			if(testsDone)	{
 			// Clean all temporary file
-				system(("src/AutoTest/cleanTest.sh " + (*itOperator)).c_str());
+				system(("src/AutoTest/cleanOpTest.sh " + (*itOperator)).c_str());
 			}
 		}
 
