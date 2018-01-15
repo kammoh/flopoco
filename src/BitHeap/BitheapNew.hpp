@@ -52,7 +52,9 @@ enum BitType : unsigned;
 
 		//the compression strategy needs access to the bitheap
 		friend class CompressionStrategy;
-
+		friend class FirstFittingCompressionStrategy;
+		friend class ParandehAfsharCompressionStrategy;
+		friend class MaxEfficiencyCompressionStrategy;
 		/**
 		 * @brief The constructor for an signed/unsigned integer bitheap
 		 * @param op                the operator in which the bitheap is being built
@@ -136,7 +138,7 @@ enum BitType : unsigned;
 		/**
 		 * @brief add to the bitheap a signal
 		 * @param signal            the signal being added
-		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap. 
+		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap.
 		 *                          (by default 0)
 		 The signedness will be read from the signal itself
 		 */
@@ -144,9 +146,9 @@ enum BitType : unsigned;
 
 
 		/**
-		 * @brief subtract a signal from the bitheap 
-		 * @param signal            the signal 
-		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap. 
+		 * @brief subtract a signal from the bitheap
+		 * @param signal            the signal
+		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap.
 		 *                          (by default 0)
 		 The signedness will be read from the signal itself
 		 */
@@ -375,6 +377,7 @@ enum BitType : unsigned;
 		void drawConfiguration(int offsetY);
 
 		void drawBit(int cnt, int w, int turnaroundX, int offsetY, int c);
+
 
 	public:
 		int msb;                                    /**< The maximum weight a bit can have inside the bitheap */

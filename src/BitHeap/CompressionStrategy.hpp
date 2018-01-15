@@ -11,6 +11,7 @@
 #include "BitHeap/Compressor.hpp"
 #include "BitHeap/BitheapNew.hpp"
 #include "BitHeap/BitheapPlotter.hpp"
+#include "BitHeap/Solution.hpp"
 
 #include "IntAddSubCmp/IntAdder.hpp"
 
@@ -19,7 +20,7 @@ namespace flopoco
 
 class Bit;
 class Compressor;
-class BitheapNew;
+//class BitheapNew;
 class IntAdder;
 class BitheapPlotter;
 
@@ -43,7 +44,13 @@ class BitheapPlotter;
 		 */
 		void startCompression();
 
+
 	protected:
+
+		/**
+		 * Uses an algorithm, which decides how the compression is being done
+		 */
+		virtual void compressionAlgorithm() = 0;
 
 		/**
 		 * @brief start a new round of compression of the bitheap using compressors
@@ -62,6 +69,15 @@ class BitheapPlotter;
 		 * @param weight the weight of the lsb column of bits
 		 */
 		void applyCompressor(vector<Bit*> bitVector, Compressor* compressor, int weight);
+
+		/**
+		 * @brief apply a compressor to the column given as parameter. Can handle
+		 * 		  multiple outputbits per column as well as unused inputs.
+		 * @param bitVector the bits to compress. First dimension is the column
+		 * @param compressor the compressor used for compression
+		 * @param weight the weight of the lsb column of bits
+		 */
+		void applyCompressor(vector<vector<Bit*> > bitVector, Compressor* compressor, int weight);
 
 		/**
 		 * @brief applies an adder with wIn = msbColumn-lsbColumn+1;
@@ -145,11 +161,97 @@ class BitheapPlotter;
 		 */
 		void concatenateChunks();
 
-	private:
+
+		/**
+		 * @brief fills orderedBits dependent on the frequency and the compression delay (and therefore the stagesPerCycle)
+		*/
+		void orderBitsByColumnAndStage();
+
+		/**
+		 * @brief orders possibleCompressors by compressionRatio.
+		 */
+
+		void orderCompressorsByCompressionEfficiency();
+
+		/**
+		 * @brief fills bitAmount with the number of bits at that position (stage and column).
+		 */
+		void fillBitAmounts();
+
+		/**
+		 * @brief returns compression efficiency, if the compressor is placed at this stage and column.
+		 * @param stage the stage where the compressor shoould be placed
+		 * @param column the column where the compressor should be placed
+		 * @param compressor the pointer to the basicCompressor
+		 * @param middleLength if the compressor is variable, the middlelength specifies how many of the
+		 * 		mid-parts are there. If compressor is of type combinatorial or vendor-specific, middlepart
+		 * 		must be 0.
+		 */
+
+		double getCompressionEfficiency(unsigned int stage, unsigned int column, BasicCompressor* compressor, unsigned int middleLength = 0);
+
+		/**
+		 * @brief places the compressor. Does not generate VHDL. It just sets the corresponding bitAmounts
+		 * 		right and adds this compressor to the solution.
+		 * @param stage the stage where the compressor is placed
+		 * @param column the column where the compressor is placed
+		 * @param compressor the pointer to the basicCompressor
+		 * @param middleLength if the compressor is variable, the middlelength specifies how many of the
+		 * 		mid-parts are there. If compressor is of type combinatorial or vendor-specific, middlepart
+		 * 		must be 0.
+		 */
+		void placeCompressor(unsigned int stage, unsigned int column, BasicCompressor* compressor, unsigned int middleLength = 0);
+
+
+		/**
+		 *	@brief Returns the stage of arrival for a given bit.
+		 */
+		unsigned int getStageOfArrivalForBit(Bit* bit);
+
+		/**
+		 * @brief prints the current bitAmounts for all stages and columns
+		 */
+		void printBitAmounts();
+
+
+		/**
+		 *	@brief puts the reimaing bits from stage s to the next
+		 	stage by adding a delay. Sets also the cycle right.
+			@param s specifies the stage were the bits will be put into the next stage
+		 */
+		void putRemainingBitsIntoNextStage(unsigned int s);
+
+		/**
+		 *	@brief puts bits into the next cycle if their criticalPath is bigger than the the maximal
+		 *  arrivaltime of the last stage in a cycle
+		 */
+		void setCycleRight();
+
+		/**
+		 * @brief all compressors specified in the solution will be used (vhdl code will be generated)
+		 */
+		void applyAllCompressorsFromSolution();
+
+
+		/**
+		 *	@brief checks if the algorithm which places the compressors is finished (a stage where
+		 		the	final adder can be used has been reached). Works on the data of bitAmount
+			@param adderHeight what is the adderHeigt of the final adder (e.g. 2 or 3)
+			@param stage specifies in which stage the check for the final adder should be done. To pass
+				this test there are no bits in other stages allowed
+		 */
+		bool checkAlgorithmReachedAdder(unsigned int adderHeight, unsigned int stage);
+
+		vector<vector<vector<Bit*> > > orderedBits; /**< The bits of the bitheap ordered by stages. First dimension is the stage, second the column */
+
+		vector<vector<int> > bitAmount; 			/**< Amount of bits in each stage and column. The compressionstrategyies (currently FirstFitting does not) work on this bitAmount, and if a solution is finished, the compressors will be used. */
+
+		Solution solution;
+
 		BitheapNew *bitheap;                        /**< The bitheap this compression strategy belongs to */
 		BitheapPlotter *bitheapPlotter;             /**< The bitheap plotter for this bitheap compression */
 
-		vector<Compressor*> possibleCompressors;    /**< All the possible compressors that can be used for compressing the bitheap */
+		vector<BasicCompressor*> possibleCompressors;    /**< All the possible compressors that can be used for compressing the bitheap */
 
 		unsigned compressionDoneIndex;              /**< The index in the range msb-lsb up to which the compression is completed */
 		vector<string> chunksDone;                  /**< The vector containing the chunks of the compression result */
@@ -161,6 +263,9 @@ class BitheapPlotter;
 		int guid;
 		string srcFileName;
 		string uniqueName_;
+
+
+
 	};
 }
 

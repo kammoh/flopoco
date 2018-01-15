@@ -2269,6 +2269,7 @@ namespace flopoco{
 				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser)
 						|| (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration))
 					if(s->getLifeSpan() > 0) {
+						cout << s->getName() << " has a lifespan of " << s->getLifeSpan() << endl;
 						for(int j=1; j <= s->getLifeSpan(); j++)
 							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 					}
@@ -4606,5 +4607,3 @@ namespace flopoco{
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
-
-

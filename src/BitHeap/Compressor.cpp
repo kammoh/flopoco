@@ -1,15 +1,171 @@
 
 #include "Compressor.hpp"
-
+#include <string>
 
 using namespace std;
 
 namespace flopoco{
 
+	BasicCompressor::BasicCompressor(Target * target_, vector<int> heights_, float area_, bool compactView_, string type_): target(target_), heights(heights_), area(area_), compactView(compactView_), type(type_)
+	{
+		//compute the size of the input and of the output
+		int wIn = 0;
+		int maxVal = 0;
+		for(int i=heights.size()-1; i>=0; i--)
+		{
+			wIn    += heights[i];
+			maxVal += intpow2(i) * heights[i];
+		}
 
-	Compressor::Compressor(Target * target_, vector<int> heights_, bool compactView_)
+		wOut = intlog2(maxVal);
+
+		//setting up outHeights
+		outHeights.resize(wOut, 1);
+		compressor = nullptr;
+	}
+/*
+	BasicCompressor::~BasicCompressor(){
+		if(compressor != nullptr){
+			delete compressor;
+		}
+	}
+*/
+	BasicCompressor::~BasicCompressor(){
+	}
+
+	Compressor* BasicCompressor::getCompressor(){
+		if(type.compare("combinatorial") == 0){
+			if(compressor != nullptr){
+				return compressor;
+			}
+			else{
+				compressor = new Compressor(target, heights, area, compactView);
+				compressor->setShared();
+				return compressor;
+			}
+		}
+	}
+
+	double BasicCompressor::getEfficiency(unsigned int middleLength){
+		if(type.compare("variable") != 0){
+			int inputBits = 0;
+			int outputBits = 0;
+			double ratio = 0.0;
+			for(unsigned int j = 0; j < heights.size(); j++){
+				inputBits += heights[j];
+			}
+			for(unsigned int j = 0; j < outHeights.size(); j++){
+				outputBits += outHeights[j];
+			}
+			ratio = (double)inputBits - (double)outputBits;
+			if(area != 0.0){
+				ratio /= (double)area;
+			}
+			else{
+				//area (and therefore cost) is zero. Therefore set ratio to zero.
+				ratio = 0.0;
+			}
+			return ratio;
+		}
+		else{
+			//TODO
+			return 0.0;
+		}
+	}
+
+	unsigned int BasicCompressor::getHeights(unsigned int middleLength){
+		if(type.compare("variable") != 0){
+			return heights.size();
+		}
+		else{
+			//TODO
+			return 0;
+		}
+	}
+
+	unsigned int BasicCompressor::getOutHeights(unsigned int middleLength){
+		if(type.compare("variable") != 0){
+			return outHeights.size();
+		}
+		else{
+			//TODO
+			return 0;
+		}
+	}
+
+	unsigned int BasicCompressor::getHeightsAtColumn(unsigned int column, unsigned int middleLength){
+		if(type.compare("variable") != 0){
+			if(column >= heights.size()){
+				return 0;
+			}
+			else{
+				return heights[column];
+			}
+		}
+		else{
+			//TODO
+			return 0;
+		}
+	}
+
+	unsigned int BasicCompressor::getOutHeightsAtColumn(unsigned int column, unsigned int middleLength){
+		if(type.compare("variable") != 0){
+			if(column >= outHeights.size()){
+				return 0;
+			}
+			else{
+				return outHeights[column];
+			}
+		}
+		else{
+			//TODO
+			return 0;
+		}
+	}
+
+	float BasicCompressor::getArea(unsigned int middleLength){
+		if(type.compare("variable") != 0){
+			return area;
+		}
+		else{
+			//TODO
+			return 0.0;
+		}
+	}
+
+
+	// returns string of the inputs/outputs of the compressor. E.g. the fulladder would be
+	// (3;2), a compressor with six inputs at column i, six outputs at column i+2 and 5 outputs
+	// is represented as (6,0,6;5)
+	string BasicCompressor::getStringOfIO(){
+		if(type.compare("variable") != 0){
+			ostringstream out;
+			out.str("");
+			out << "(";
+			for(unsigned int c = heights.size(); c > 0; c--){
+				out << heights[c - 1];
+				if(c - 1 != 0){
+					out << ",";
+				}
+			}
+			out << ";";
+			unsigned int outputBits = 0;
+			for(unsigned int c = 0; c < outHeights.size(); c++){
+				outputBits += outHeights[c];
+			}
+			out << outputBits << ")";
+			return out.str();
+		}
+		else{
+			//TODO
+			return "variable_compressor";
+		}
+	}
+
+
+	Compressor::Compressor(Target * target_, vector<int> heights_, float area_, bool compactView_)
 		: Operator(nullptr, target_), // for now, no parent
-			heights(heights_), compactView(compactView_), compressorUsed(false)
+			heights(heights_), area(area_), compactView(compactView_), compressorUsed(false)
 	{
 		ostringstream name;
 		stringstream nm, xs;
@@ -17,7 +173,6 @@ namespace flopoco{
 		setCombinatorial();
 
 
-		
 		//remove the zero columns at the lsb
 		while(heights[0] == 0)
 		{
@@ -37,6 +192,9 @@ namespace flopoco{
 		}
 
 		wOut = intlog2(maxVal);
+
+		//setting up outHeights
+		outHeights.resize(wOut, 1);
 
 		name << "_" << wOut;
 		setName(name.str());
@@ -190,7 +348,3 @@ in decreasing order of the weight. Example: columnHeights=\"2:3\"; \
 		) ;
 	}
 }
-
-
-
-

@@ -103,7 +103,7 @@ class BitheapNew;
 		 * @brief get the name of a bit
 		 */
 		string getName();
-		
+
 		/**
 		 * @brief Return the compressor that compressed this bit
 		 */

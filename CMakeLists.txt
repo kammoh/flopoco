@@ -256,9 +256,13 @@ src/AutoTest/AutoTest
  src/BitHeap/BitheapNew
  src/BitHeap/CompressionStrategy
  src/BitHeap/BitheapPlotter
-
+ src/BitHeap/Solution
+ 
  src/BitHeap/BitheapTest
 
+ src/BitHeap/FirstFittingCompressionStrategy
+ src/BitHeap/ParandehAfsharCompressionStrategy
+ src/BitHeap/MaxEfficiencyCompressionStrategy
 
 #--------------------------------------------------------------------
 #               OPERATORS

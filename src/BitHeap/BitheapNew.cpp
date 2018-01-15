@@ -1,5 +1,8 @@
 
 #include "BitheapNew.hpp"
+#include "BitHeap/FirstFittingCompressionStrategy.hpp"
+#include "BitHeap/ParandehAfsharCompressionStrategy.hpp"
+#include "BitHeap/MaxEfficiencyCompressionStrategy.hpp"
 
 namespace flopoco {
 
@@ -130,7 +133,7 @@ namespace flopoco {
 
 
 
-	
+
 	void BitheapNew::insertBitInColumn(Bit* bit, unsigned columnNumber)
 	{
 		vector<Bit*>::iterator it = bits[columnNumber].begin();
@@ -289,7 +292,7 @@ namespace flopoco {
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range ("<< msb << ", " << lsb << ")  in markBit");
-	
+
 		if(number >= bits[weight-lsb].size())
 			THROWERROR("Column with weight=" << weight << " only contains "
 					<< bits[weight].size() << " bits, but bit number=" << number << " is to be marked");
@@ -472,9 +475,9 @@ namespace flopoco {
 		Signal* s = op->getSignalByName(signalName);
 		int sMSB = s->MSB();
 		int sLSB = s->LSB();
-	
+
 		// No error reporting here: the current situation is that addBit will ignore bits thrown out of the bit heap (with a warning)
-	
+
 		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
 			REPORT(0,"WARNING: addSignal(): " << signalName << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
@@ -501,7 +504,7 @@ namespace flopoco {
 				}
 			}
 		}
-			
+
 		else{ // unsigned
 			if(!op->getSignalByName(signalName)->isBus())
 				addBit(shift,signalName);
@@ -511,7 +514,7 @@ namespace flopoco {
 				}
 			}
 		}
-		
+
 		isCompressed = false;
 	}
 
@@ -523,12 +526,12 @@ namespace flopoco {
 		Signal* s = op->getSignalByName(signalName);
 		int sMSB = s->MSB();
 		int sLSB = s->LSB();
-		
+
 		// No error reporting here: the current situation is that addBit will ignore bits thrown out of the bit heap (with a warning)
-		
+
 		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
 			REPORT(0,"WARNING: subtractSignal(): " << signalName << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
-		
+
 		// If the bit vector is of width 1, the following loop is empty.
 		for(int w=sLSB; w<=sMSB; w++) {
 			addBit(w+shift,	 "not(" + signalName + of(w-sLSB) + ")"  );
@@ -544,7 +547,7 @@ namespace flopoco {
 
 
 
-	
+
 	void BitheapNew::resizeBitheap(unsigned newWidth, int direction)
 	{
 		if((direction != 0) && (direction != 1))
@@ -666,7 +669,9 @@ namespace flopoco {
 	{
 		//create a new compression strategy, if one isn't present already
 		if(compressionStrategy == nullptr)
-			compressionStrategy = new CompressionStrategy(this);
+			compressionStrategy = new FirstFittingCompressionStrategy(this);
+			//compressionStrategy = new ParandehAfsharCompressionStrategy(this);
+			//compressionStrategy = new MaxEfficiencyCompressionStrategy(this);
 		//start the compression
 		compressionStrategy->startCompression();
 		//mark the bitheap compressed
@@ -821,20 +826,3 @@ namespace flopoco {
 
 
 } /* namespace flopoco */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
