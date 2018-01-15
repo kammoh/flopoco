@@ -8,7 +8,7 @@
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
-  2008-2010.
+  2008-2017.
   All rights reserved.
 
  */
@@ -33,9 +33,9 @@ namespace flopoco{
 	TestBench::TestBench(Target* target, Operator* op, int n, bool fromFile):
 		Operator(nullptr, target), op_(op), n_(n), fromFile_(fromFile)
 	{
-		//set the parent operator to this operator
-		op->setParentOperator(this);
-
+		//We do not set the parent operator to this operator
+		setNoParseNoSchedule();
+		
 		// This allows the op under test to know how long it is being tested.
 		// useful only for testing the long acc, but who knows.
 		op->numberOfTests = n;
@@ -43,9 +43,7 @@ namespace flopoco{
 		srcFileName="TestBench";
 		setName("TestBench_" + op_->getName());
 
-		//this part might actually need to be parsed
-//		setCombinatorial(); // this is a combinatorial operator
-		vhdl.disableParsing(true);
+		//		REPORT(LIST,"Test bench for "+ op_->getName());
 
 		// initialization of flopoco random generator
 		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
@@ -56,66 +54,22 @@ namespace flopoco{
 		// initialization of randomstate generator with the seed base on the number of
 		// random testcase to be generated
 		if (!fromFile) op-> buildRandomTestCaseList(&tcl_, n);
-		//enable the following line if you want to have tests generated in parallel
-		//if (!fromFile) op-> buildRandomTestCaseListParallel(&tcl_, n);
 
 
-		// create the signals to connect to the the inputs/outputs
+		// The instance
+		//  portmap for the inputs and outputs
 		for(int i=0; i < op->getIOListSize(); i++){
 			Signal* s = op->getIOListSignal(i);
-
-			if((s->type() == Signal::in) || (s->type() == Signal::out)) {
-				Signal* s_new = new Signal(s);
-				s_new->setParentOp(this);
-				s_new->setType(Signal::wire);
-				if(s->type() == Signal::in)
-				{
-					s_new->addSuccessor(s, 0);
-					s->addPredecessor(s_new, 0);
-				}else{
-					s_new->addPredecessor(s, 0);
-					s->addSuccessor(s_new, 0);
-					//this is a temporary signal, as we might need
-					//	to pipeline the outputs to synchronize them
-					s_new->setName(join(s->getName(), "_int"));
-				}
-				s_new->setHasBeenScheduled(true);
-				// add the signal to the signal list and singal map
-				signalList_.push_back(s_new);
-				(*getSignalMap())[s_new->getName()] = s_new;
+		
+			if(s->type() == Signal::in) {
+				declare(s->getName(), s->width(), s->isBus());
+				inPortMap (op, s->getName(), s->getName());
 			}
+			if(s->type() == Signal::out)
+				outPortMap (op, s->getName(), s->getName());
 		}
-		//  delay the outputs if necessary
-		//		first, determine the maximum output cycle
-		int maxOutputCycle = -1;
-		for(int i=0; i < op->getIOListSize(); i++){
-			if(op->getIOListSignal(i)->type() == Signal::out)
-				if(op->getIOListSignal(i)->getCycle() > maxOutputCycle)
-					maxOutputCycle = op->getIOListSignal(i)->getCycle();
-		}//		delay the outputs if necessary
-		for(int i=0; i < op->getIOListSize(); i++){
-			if(op->getIOListSignal(i)->type() == Signal::out)
-			{
-				Signal* s = getSignalByName(join(op->getIOListSignal(i)->getName(), "_int"));
 
-				Signal* s_new = new Signal(s);
-				s_new->setName(op->getIOListSignal(i)->getName());
-				s_new->setParentOp(this);
-				s_new->setType(Signal::wire);
-				s_new->addPredecessor(s, 0);
-				s->addSuccessor(s_new, 0);
-				s_new->setHasBeenScheduled(true);
-				// add the signal to the signal list and singal map
-				signalList_.push_back(s_new);
-				(*getSignalMap())[s_new->getName()] = s_new;
-
-				vhdl << tab << s_new->getName() << " <= ";
-				if(s->getCycle() < maxOutputCycle)
-					vhdl << delay(s->getName(), maxOutputCycle-s->getCycle()) << ";" << endl;
-				else
-					vhdl << s->getName() << ";" << endl;
-			}
-		}
+		
 		// add clk and rst
 		declare("clk");
 		declare("rst");
@@ -128,10 +82,8 @@ namespace flopoco{
 		}
 
 		// The VHDL for the instance
-		//vhdl << endl << instance(op, "test") << endl;
-		vhdl << endl << instanceSimple(op, "test") << endl;
-
-
+		vhdl << endl << instance(op, "test", false) << endl;
+		subComponentList_.clear(); // it is unfortunately set by instance()
 
 		vhdl << tab << "-- Ticking clock signal" <<endl;
 		vhdl << tab << "process" <<endl;
@@ -143,11 +95,7 @@ namespace flopoco{
 		vhdl << tab << "end process;" <<endl;
 		vhdl << endl;
 
-
-		//the rest of the code does not need to be parsed, so parsing is disabled
 		setSequential();
-		vhdl.disableParsing(true);
-
 
 		if (fromFile)
 			generateTestFromFile();
@@ -159,55 +107,6 @@ namespace flopoco{
 
 
 
-	string TestBench::instanceSimple(Operator* op, string instanceName){
-		ostringstream o;
-
-		o << tab << instanceName << ": " << op->getName();
-		o << endl;
-		o << tab << tab << "port map ( ";
-
-		// build vhdl
-		if(op->isSequential())
-		{
-			o << "clk  => clk" << "," << endl
-					<< tab << tab << "           rst  => rst";
-			if (op->isRecirculatory()) {
-				o << "," << endl << tab << tab << "           stall_s => stall_s";
-			};
-			if (op->hasClockEnable()) {
-				o << "," << endl << tab << tab << "           ce => ce";
-			};
-		}
-
-		//build the code for the inputs
-		for(auto inSignal : op->ioList_)
-		{
-			string rhsString;
-
-			if((op->signalList_.size() > 1) || op->isSequential())
-				o << "," << endl <<  tab << tab << "           ";
-
-			// The following code assumes that the IO is declared as standard_logic_vector
-			// If the actual parameter is a signed or unsigned, we want to automatically convert it
-			if(inSignal->type() == Signal::constant){
-				rhsString = inSignal->getName().substr(0, inSignal->getName().find("_cst"));
-			}else if(inSignal->isFix()){
-				rhsString = std_logic_vector(inSignal->getName());
-			}else{
-				rhsString = inSignal->getName();
-			}
-
-			if(inSignal->type() == Signal::out)
-				o << inSignal->getName() << " => " << rhsString << "_int";
-			else
-				o << inSignal->getName() << " => " << rhsString;
-		}
-
-		o << ");" << endl;
-
-		return o.str();
-	}
-
 
 
 
@@ -215,15 +114,15 @@ namespace flopoco{
 	 * increasing the VHDL compilation time
 	 */
 	void TestBench::generateTestFromFile() {
-		// we reordonate the Signal in order to put all the output
-		// TODO :could be clean by using two list, directly retrieved from the operator
 		vector<Signal*> inputSignalVector;
 		vector<Signal*> outputSignalVector;
 
 		for(int i=0; i < op_->getIOListSize(); i++){
 			Signal* s = op_->getIOListSignal(i);
-			if (s->type() == Signal::out) outputSignalVector.push_back(s);
-			else if (s->type() == Signal::in) inputSignalVector.push_back(s);
+			if (s->type() == Signal::out)
+				outputSignalVector.push_back(s);
+			else if (s->type() == Signal::in)
+				inputSignalVector.push_back(s);
 		};
 
 		// declration of test time
@@ -295,7 +194,7 @@ namespace flopoco{
 		 * the result with the output
 		 * in case of a pipelined operator we have to wait the complete latency of all the operator
 		 * that means all the pipeline stages each step
-		 * TODO : interlace the inputs / outputs in order to avoid this wait
+		 * TODO : entrelaced the inputs / outputs in order to avoid this wait
 		 */
 		vhdl << tab << tab << tab << " -- verifying the corresponding output" << endl;
 		vhdl << tab << tab << tab << "process" << endl;
@@ -324,12 +223,12 @@ namespace flopoco{
 		vhdl << tab << "begin" << endl;
 
 		vhdl << tab << tab << tab << " wait for 10 ns;" << endl; // wait for reset signal to finish
-		currentOutputTime += 10;
+		currentOutputTime += 10;		
 		if (op_->getPipelineDepth() > 0){
 			vhdl << tab << tab << "wait for "<< op_->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 			currentOutputTime += op_->getPipelineDepth()*10;
 		} else {
-			vhdl << tab << tab << "wait for "<< 2 <<" ns; -- wait for pipeline to flush" <<endl;
+			vhdl << tab << tab << "wait for "<< 2 <<" ns; -- no pipeline here" <<endl;
 			currentOutputTime += 2;
 		};
 
@@ -437,27 +336,7 @@ namespace flopoco{
 			*/
 			TestCaseList *tcl = new TestCaseList();
 
-			//measure the time taken to generate the tests
-			//time at the start of generation
-			//clock_t tStart = clock();
-			struct timespec start;
-			clock_gettime(CLOCK_MONOTONIC, &start);
-
 			op_->buildRandomTestCaseList(tcl, n_);
-			//op_->buildRandomTestCaseListParallel(tcl, n_);
-
-			//time at the start of generation
-			//clock_t tEnd = clock();
-			//double elapsed_secs = double(tEnd - tStart) / CLOCKS_PER_SEC;
-			struct timespec finish;
-			clock_gettime(CLOCK_MONOTONIC, &finish);
-
-			double elapsed = (finish.tv_sec - start.tv_sec) + (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
-
-			//REPORT(DEBUG, "Time taken to generate the testcases:" << elapsed_secs);
-			REPORT(DEBUG, "Time taken to generate the testcases:" << elapsed);
-
-
 			for (int i = 0; i < n_; i++) {
 				TestCase* tc = tcl->getTestCase(i);
 				if (fileOut) fileOut << tc->generateInputString(IOorderInput,IOorderOutput);
@@ -566,7 +445,7 @@ namespace flopoco{
 			currentOutputTime += op_->getPipelineDepth()*10;
 		}
 		else{
-			vhdl << tab << tab << "wait for "<< 2 <<" ns; -- wait for pipeline to flush" <<endl;
+			vhdl << tab << tab << "wait for "<< 2 <<" ns; -- no pipeline here" <<endl;
 			currentOutputTime += 2;
 		}
 		for (int i = 0; i < tcl_.getNumberOfTestCases(); i++) {
@@ -750,8 +629,6 @@ namespace flopoco{
 				}
 		}
 
-		//prevent the code from being parsed (first round of parsing)
-		vhdl.disableParsing(true);
 
 		o << "begin\n";
 
@@ -791,21 +668,10 @@ namespace flopoco{
 	}
 
 
-	void TestBench::outputFinalReport(ostream& s, int level) {
-
-		s << "Entity " << uniqueName_ << endl;
-		if(this->op_->getPipelineDepth()!=0)
-			s << tab << "Tested operator pipeline depth = " << op_->getPipelineDepth() << endl;
-		else
-			s << tab << "Not pipelined"<< endl;
-	}
-
-
-
-	/** Return the total simulation time*/
-	int TestBench::getSimulationTime(){
-		return simulationTime;
-	}
+		/** Return the total simulation time*/
+		int TestBench::getSimulationTime(){
+			return simulationTime;
+		}
 
 
 

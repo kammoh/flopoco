@@ -171,7 +171,7 @@ namespace flopoco{
 		stringstream nm, xs;
 		//compressors are supposed to be combinatorial
 		setCombinatorial();
-
+		setShared();
 
 		//remove the zero columns at the lsb
 		while(heights[0] == 0)

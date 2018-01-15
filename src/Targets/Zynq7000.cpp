@@ -111,7 +111,7 @@ namespace flopoco{
 				 C'est n'importe quoi.
 
 			*/
-		double delay= fanoutConstant_*fanout;
+		double delay= fanoutConstant_*(fanout); // and this is also completely random
 		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
 		return delay;
 		
@@ -259,11 +259,11 @@ namespace flopoco{
 			
 			if (aux <= 4)	
 				cost = p*lutInputs_*(aux-2)*(aux-1)/2-(padX*cx*(cx+1)+padY*aux*(aux+1))/2; // registered partial products without zero paddings
-				else
-					cost = p*lutInputs_*3 + p*lutInputs_*(aux-4)-(padX*(cx+1)+padY*(aux+1)); // registered partial products without zero paddings including SRLs
+			else
+				cost = p*lutInputs_*3 + p*lutInputs_*(aux-4)-(padX*(cx+1)+padY*(aux+1)); // registered partial products without zero paddings including SRLs
 		}
 		else if (r > 0.5) // 2/3 of the IntNAdder operands have p concatenated partial products
-		{
+			{
 			aux = (halfLut-1)*cx; // number of operands having p concatenated chunks
 			
 			if (halfLut*cx <= 4)
@@ -313,7 +313,7 @@ namespace flopoco{
 		else
 			cost += cx*cy*lutInputs_; // LUT cost for small multiplications 
 			
-			return cost*5/8;
+		return cost*5/8;
 	};
 	
 	

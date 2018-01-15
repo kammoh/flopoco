@@ -455,12 +455,7 @@ namespace flopoco{
 		//plot the bitheap
 		bitheapPlotter->plotBitHeap();
 	}
-/*
-	void CompressionStrategy::compressionAlgorithm()
-	{
-		REPORT(DEBUG, "in compressionAlgorithm, father class");
-	}
-*/
+
 	bool CompressionStrategy::compress(double delay, Bit *soonestCompressibleBit)
 	{
 		bool compressionPerformed = false;
@@ -556,12 +551,10 @@ namespace flopoco{
 		compressorIONames.str("");
 		compressorIONames << compressor->getName() << "_bh"
 				<< bitheap->guid << "_uid" << instanceUID << "_Out";
-		bitheap->op->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
-		bitheap->op->outPortMap(compressor, "R", compressorIONames.str(), false);
+		// Following line commented by F2D: outPortMap does the declaration
+		// bitheap->op->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
+		bitheap->op->outPortMap(compressor, "R", compressorIONames.str());
 
-		//create the compressor
-		//	this will be a global component, so set is as shared
-		compressor->setShared();
 		//create the compressor instance
 		bitheap->op->vhdl << bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
 
@@ -783,24 +776,34 @@ namespace flopoco{
 			bitheap->op->vhdl << tab << bitheap->op->declare(adderCinName.str())
 					<< " <= " << adderCin.str() << ";" << endl;
 			bitheap->op->vhdl << endl;
-			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
 
 			//declare the adder
 			IntAdder* adder;
 
 			//create the adder
+#if 0
+			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
 			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
 			//create the port maps for the adder
 			bitheap->op->inPortMap(adder, "X", adderIn0Name.str());
 			bitheap->op->inPortMap(adder, "Y", adderIn1Name.str());
 			bitheap->op->inPortMap(adder, "Cin", adderCinName.str());
-			bitheap->op->outPortMap(adder, "R", adderOutName.str(), false);
+			bitheap->op->outPortMap(adder, "R", adderOutName.str());
 
 
 			//create the instance of the adder
 			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
+#else
+			bitheap->op->newInstance("IntAdder",
+															 "bitheapFinalAdd_bh"+to_string(bitheap->guid),
+															 "wIn=" + to_string(bitheap->msb-adderStartIndex+1+1),
+															 "X=>"+ adderIn0Name.str()
+															 + ",Y=>"+adderIn1Name.str()
+															 + ",Cin=>" + adderCinName.str(),
+															 "R=>"+ adderOutName.str()   );
 
+#endif
 			//add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex, 0)));
 		}

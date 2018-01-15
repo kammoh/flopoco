@@ -1,6 +1,8 @@
 TODO file for FloPoCo
-
+https://xkcd.com/844/
 * Version 5
+** install: 
+*** wcpg: need f2c libblas-dev liblapack-dev
 ** cleanup of the pipeline framework
 2 use cases from Kassel:
  - we want to call optimal bit-heap scheduling algorithms, which will not be ASAP.
@@ -19,7 +21,8 @@ I consider this a good thing, it gives control.
 
 Hypotheses:
 H0: schedule is always called on the top-level operator.
-  Even an explicit call to schedule() in a sub-component will schedule its top-level 
+  Even an explicit call to schedule() in a sub-component will schedule its top-level
+  Beware: Wrapper and TestBench should not be parent operators of the operators they wrap, so as not to modify the schedule. 
 H1: default schedule will always be ASAP. 
   A call to schedule() does what it can, then stops.
 H2: schedule() does not reschedule anything: if a signal is already scheduled, it is skipped.
@@ -56,27 +59,32 @@ To discuss.
    it is now in the Signals (once they have been scheduled).
   So the actual interface to provide to Martin is not yet fixed.
 
+** TODOs for Florent:
 ** Plan for bringup
-*** Shifter for basic pipeline
-*** IntAdder for explicit call to schedule()
-*** FPAdd for simple subcomponents
-*** FPDiv for low complexity shared subcomponents
-*** FixRealKCM for simple bit heap
+*** Shifter for basic pipeline: DONE
+*** IntAdder for explicit call to schedule(): DONE
+*** FPAdd for simple subcomponents : DONE
+*** FPDiv for low complexity shared subcomponents DONE
+*** FixRealKCM for simple bit heap DONE
 *** FixFIR and FixIIR for large bit heaps
+*** ALAP rescheduling for constant signals
 *** IntMult... sigh, some day 
-** Target -> parentOp
-Idea: currently each operator constructor takes a Target as first arg.
-We should systematically add a second constructor 
-that takes an Operator* parentOp, and copies the Target* from it.
-The historical constructor should set parentOp to nullptr 
-  (this is what Operator(Target*) dies
-and only be invoked from  UserInterface.
-All the constructors called from operators should call the new constructor.
 
-Testbench: IntAdder and the other subcomponents of FPAdder
+** Small things
+*** call schedule() in instance()
+*** constant signal scheduling
+The constant signals are currently all scheduled to cycle 0.
+This is stupid: once the schedule is done (all the outputs of the top-level are scheduled).
+they should be rescheduled ALAP (time zero, cyle= min of the successors)
 
+*** Signal::hasBeenScheduled_
+Apart from that, I hope to remove most accesses to Signal::hasBeenScheduled_ that allow to re-schedule a signal:
+   it should be initialized to false, then set once to true forever.
+
+*** Re-check table attributes for 7 series; update Table, probably refactor this into Target 
 ** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
+THIS INCLUDES WRITING ITS AUTOTEST
 
 	IntConstMult: still need to 
 	1/ add the delays 
@@ -91,28 +99,10 @@ Testbench: IntAdder and the other subcomponents of FPAdder
 		FP2Fix
 		InputIEEE
 		OutputIEEE
-		LZOC
-
-		IntAdder
-
-		IntAdderClassical
-		IntAdderAlternative
-		IntAdderShortLatency
 
 		//FOR TEST PURPOSES ONLY
 		Table
 
-#if 0 // Plug them for debug purpose only
-		IntAdderSpecific
-		LongIntAdderAddAddMuxGen1
-		LongIntAdderAddAddMuxGen2
-		LongIntAdderCmpAddIncGen1
-		LongIntAdderCmpAddIncGen2
-		LongIntAdderCmpCmpAddGen1
-		LongIntAdderCmpCmpAddGen2
-		LongIntAdderMuxNetwork
-		IntComparatorSpecific
-#endif
 		IntComparator
 		IntDualSub
 		IntMultiplier
@@ -218,6 +208,9 @@ List of operators that would most benefit from it:
 The most used, i.e. IntAdder, Shifters, etc
 *** rename pow2, intpow2 etc as exp2
 *** doxygen: exclude unplugged operators
+*** See table attributes above
+*** remove Operator::signalList, replace it with signalMap altogether
+(this must be considered carefully, we have several lists)
 * Bit heap and multipliers
 ** rewrite BitHeap with fixed-point support and better compression (see Kumm papers and uni_kassel branch)
 ** pipeline virtual IntMult

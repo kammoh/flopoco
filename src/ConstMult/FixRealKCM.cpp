@@ -313,7 +313,7 @@ namespace flopoco{
 			numberOfTables++;
 		}
 		tableInLSB=lsbIn;
-		
+
 		// For the last table we just check if is not of size 1
 		if(tableInLSB==tableInMSB && numberOfTables>0) {
 			// better enlarge the previous table
@@ -324,7 +324,7 @@ namespace flopoco{
 			l.push_back(tableInLSB);
 			numberOfTables++;			
 		}
-
+		
 		// Are the table outputs signed? We compute this information here in order to avoid having constant bits added to the bit heap.
 		// The chunk input to tables of index i>0 is always an unsigned number, so their output will be constant, fixed by the sign of 
 		for (int i=0; i<numberOfTables; i++) {
@@ -480,12 +480,13 @@ namespace flopoco{
 			string instanceName = join(getName() + "_Table", i); // Should be unique in a bit heap if each KCM got a UID.
 
 			// Now that we have g we may compute if it has useful output bits
-			int tableOutSize = m[i] + msbC  - lsbOut + g +1;
-			if(tableOutSize<=0) {
-				REPORT(DETAILED, "Warning: Table " << i << " was contributing nothing to the bit heap and has been discarded")
+			int tableOutSize = m[i] + msbC  - lsbOut + g +1; // TODO: the +1 could sometimes be removed
+			if(tableOutSize<=0) {  
+				REPORT(DETAILED, " *** Table " << i << " was contributing nothing to the bit heap and has been discarded");
+				// The remaining autotest last-bit bug is here.	
 			}
 			else { // Build it and add its output to the bit heap
-				REPORT(DEBUG, "lsbIn=" << lsbIn);
+				// REPORT(DEBUG, "lsbIn=" << lsbIn);
 				thisOp->vhdl << tab << thisOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
 											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << ";"
 											 << "-- input address  m=" << m[i] << "  l=" << l[i]
@@ -503,7 +504,7 @@ namespace flopoco{
 														 thisOp->getTarget(),
 														 tableContent,
 														 m[i] - l[i]+1, // wIn
-														 m[i] + msbC  - lsbOut + g +1, //wOut TODO: the +1 could sometimes be removed
+														 tableOutSize, //wOut
 														 tablename, //name
 														 1 // logicTable
 														 );
@@ -741,7 +742,7 @@ namespace flopoco{
 			mpz_class result;
 			mpfr_t mpR, mpX;
 
-			mpfr_init2(mpR, 10*wOut);
+			mpfr_init2(mpR, 10000);
 			mpfr_init2(mpX, 2*wIn); //To avoid mpfr bug if wIn = 1
 		                       
 			mpfr_set_si(mpX, x, GMP_RNDN); // should be exact

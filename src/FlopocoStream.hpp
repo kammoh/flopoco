@@ -56,7 +56,7 @@ namespace flopoco{
 			output.vhdlCodeBuffer << c;
 			output.codeParsed = false;
 			if(c == ';')
-				output.flush();
+				output.flushAndParseAndBuildDependencyTable();
 			return output;
 		}
 
@@ -64,7 +64,7 @@ namespace flopoco{
 			output.vhdlCodeBuffer << s;
 			output.codeParsed = false;
 			if(s.find(';') != s.npos)
-				output.flush();
+				output.flushAndParseAndBuildDependencyTable();
 			return output;
 		}
 
@@ -73,7 +73,7 @@ namespace flopoco{
 			output.codeParsed = false;
 			string str(s);
 			if(str.find(';') != str.npos)
-				output.flush();
+				output.flushAndParseAndBuildDependencyTable();
 			return output;
 		}
 
@@ -82,7 +82,7 @@ namespace flopoco{
 			output.codeParsed = false;
 			string str(s);
 			if(str.find(';') != str.npos)
-				output.flush();
+				output.flushAndParseAndBuildDependencyTable();
 			return output;
 		}
 
@@ -90,7 +90,7 @@ namespace flopoco{
 			output.vhdlCodeBuffer << fs.vhdlCode.str();
 			output.codeParsed = false;
 			if(fs.vhdlCode.str().find(';') != fs.vhdlCode.str().npos)
-				output.flush();
+				output.flushAndParseAndBuildDependencyTable();
 			return output;
 		}
 
@@ -133,27 +133,15 @@ namespace flopoco{
 			 * Function used to flush the buffer
 			 * 	- save the code in the temporary buffer
 			 * 	- parse the code from the temporary buffer and add it to the stream
-			 * 	- build the dependenceTree and annotate the code
-			 */
-			void flush();
-
-			/**
-			 * Parse the VHDL code in the buffer.
 			 * Extract the dependencies between the signals.
 			 * Annotate the signal names, for the second phase. All signals on the right-hand side of signal assignments
 			 * will be transformed from signal_name to $$signal_name$$.
 			 * The name of the left-hand side signal is annotated to ??lhs_name??.
-			 * @return the string containing the parsed and annotated VHDL code
+			 * 	- build the dependenceTable and annotate the code
+			 We build a dependency table, not yet the final signal graph, so that it is possible to declare a signal only after using it.
 			 */
-			string parseCode();
+			void flushAndParseAndBuildDependencyTable();
 
-			/**
-			 * The dependenceTable created by the lexer is used to update a
-			 * dependenceTable contained locally as a member variable of FlopocoStream.
-			 * @param[in] tmpDependenceTable a vector of pairs which will be copied
-			 *            into the member variable dependenceTable
-			 */
-			void updateDependenceTable(vector<triplet<string, string, int>> *tmpDependenceTable);
 
 			/**
 			 * Member function used to set the code resulted after a second parsing
@@ -167,10 +155,6 @@ namespace flopoco{
 			 */
 			vector<triplet<string, string, int>> getDependenceTable();
 
-
-			void disableParsing(bool s);
-
-			bool isParsing();
 
 			bool isEmpty();
 
@@ -203,7 +187,6 @@ namespace flopoco{
 
 			Operator *op=0;
 			bool codeParsed;
-			bool disabledParsing;
 	};
 }
 #endif

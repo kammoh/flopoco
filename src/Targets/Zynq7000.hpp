@@ -68,7 +68,7 @@ namespace flopoco{
 		const double carry4Delay_ = 0.114e-9;    /**< The delay of the fast carry chain */
 		const double ffDelay_ = 0.518e-9;       /**< The delay of a flip-flop, without any routing  (cut from vivado timing report)*/
 		const double adderConstantDelay_  = 0.532e-9 + 0.222e-9; /**< includes a LUT delay and the initial and final carry4delays*/
-		const double fanoutConstant_ = 2e-9/65 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65 */
+		const double fanoutConstant_ = 2e-9/200 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 2e-9 for fo=200 */
 		const double typicalLocalRoutingDelay_ = 0.5e-9;
 		const double DSPMultiplierDelay_ = 0; // TODO
 		const double RAMDelay_ = 0; // TODO

@@ -463,7 +463,7 @@ namespace flopoco{
 		if(signalName.empty())
 			increment = count;
 		else{
-			Signal* s = (*parentOp->getSignalMap())[signalName];
+			Signal* s = (parentOp->getSignalMap())[signalName];
 
 			increment = s->width();
 			estimatedSignalNames.push_back(signalName);
@@ -482,7 +482,7 @@ namespace flopoco{
 		if(portName.empty())
 			increment = count;
 		else{
-			Signal* s = (*parentOp->getSignalMap())[portName];
+			Signal* s = (parentOp->getSignalMap())[portName];
 
 			increment = s->width();
 			estimatedPortNames.push_back(portName);

@@ -61,16 +61,15 @@ namespace flopoco{
 			currDigit.str(""); currDigit << "digit" << i ;
 			currLevel.str(""); currLevel << "level" << i;
 			nextLevel.str(""); nextLevel << "level" << i-1;
-			manageCriticalPath( intlog(mpz_class(getTarget()->lutInputs()), intpow2(i-1)) * getTarget()->lutDelay() + intlog(mpz_class(getTarget()->lutInputs()), intpow2(i-1))* getTarget()->localWireDelay() );
+			double levelDelay = intlog(mpz_class(getTarget()->lutInputs()), intpow2(i-1)) * getTarget()->lutDelay();
 
-			vhdl << tab <<declare(currDigit.str()) << "<= '1' when " << currLevel.str() << "("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<") = "
+			vhdl << tab <<declare(levelDelay, currDigit.str()) << "<= '1' when " << currLevel.str() << "("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<") = "
 				  <<"("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<" => sozb)"
 				  << " else '0';"<<endl;
 
 			if (i>1){
-				manageCriticalPath( getTarget()->lutDelay() + (1 + (double(intpow2(i-1))/double(100)) )*getTarget()->localWireDelay());
-
-				vhdl << tab << declare(nextLevel.str(),intpow2(i-1)) << "<= "<<currLevel.str() << "("<<intpow2(i-1)-1<<" downto 0) when " << currDigit.str()<<"='1' "
+				double levelDelay =  getTarget()->lutDelay();
+				vhdl << tab << declare(levelDelay, nextLevel.str(),intpow2(i-1)) << "<= "<<currLevel.str() << "("<<intpow2(i-1)-1<<" downto 0) when " << currDigit.str()<<"='1' "
 					  <<"else "<<currLevel.str()<<"("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<");"<<endl;
 			}
 		}

@@ -55,7 +55,10 @@ namespace flopoco{
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(width-1), LSB_(0),
-		isSigned_(false), isBus_(isBus) {
+		isSigned_(false), isBus_(isBus)
+	{
+		predecessors_.clear();
+		successors_.clear();
 	}
 
 	// constant signal
@@ -70,6 +73,8 @@ namespace flopoco{
 		width_ = intlog2(fabs(constValue_));
 		MSB_=width_-1;
 		isSigned_ = constValue_ < 0;
+		predecessors_.clear();
+		successors_.clear();
 	}
 
 
@@ -82,6 +87,8 @@ namespace flopoco{
 		wE_(0), wF_(0), MSB_(width-1), LSB_(0),
 		isSigned_(false), isBus_(false)
 	{
+		predecessors_.clear();
+		successors_.clear();
 	}
 
 
@@ -94,6 +101,8 @@ namespace flopoco{
 		wE_(0), wF_(0), MSB_(MSB), LSB_(LSB),
 		isSigned_(isSigned), isBus_(true)
 	{
+		predecessors_.clear();
+		successors_.clear();
 	}
 
 	// floating point constructor
@@ -110,6 +119,8 @@ namespace flopoco{
 			isFP_   = false;
 			isIEEE_ = true;
 		}
+		predecessors_.clear();
+		successors_.clear();
 	}
 
 	Signal::Signal(Signal* originalSignal)
@@ -161,7 +172,7 @@ namespace flopoco{
 		criticalPath_ = originalSignal->getCriticalPath();
 		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
 		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
-		incompleteDeclaration_ = originalSignal->getIncompleteDeclaration();
+		incompleteDeclaration_ = originalSignal->incompleteDeclaration_;
 		hasBeenScheduled_ = false;
 		hasBeenDrawn_ = false;
 
@@ -179,6 +190,12 @@ namespace flopoco{
 
 	const string& Signal::getName() const {
 		return name_;
+	}
+
+	string Signal::getUniqueName() {
+		ostringstream s;
+		s << "uid" <<  parentOp_->getuid() << ":" << name_;
+		return s.str();
 	}
 
 	Operator* Signal::parentOp() const {return parentOp_;}
@@ -386,14 +403,14 @@ namespace flopoco{
 		for(unsigned int i=0; i<(parentOp_->getSignalList()).size(); i++)
 			if(parentOp_->getSignalList()[i]->getName() == name_)
 				parentOp_->getSignalList().erase(parentOp_->getSignalList().begin()+i);
-		parentOp_->getSignalMap()->erase(name_);
+		parentOp_->getSignalMap().erase(name_);
 
 		//change the signal's parent operator
 		setParentOp(newParentOp);
 
 		//add the signal to the new parent's signal list
 		parentOp_->signalList_.push_back(this);
-		(*(parentOp_->getSignalMap()))[name_] = this;
+		parentOp_->getSignalMap()[name_] = this;
 	}
 
 	string Signal::toVHDLType() {
@@ -515,7 +532,7 @@ namespace flopoco{
 	}
 
 
-	bool Signal::getIncompleteDeclaration(){
+	bool Signal::incompleteDeclaration(){
 		return incompleteDeclaration_;
 	}
 
@@ -524,7 +541,7 @@ namespace flopoco{
 	}
 
 
-	bool Signal::getHasBeenScheduled(){
+	bool Signal::hasBeenScheduled(){
 		return hasBeenScheduled_;
 	}
 

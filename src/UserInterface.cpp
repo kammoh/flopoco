@@ -133,13 +133,21 @@ namespace flopoco
 				return v;
 			}();
 
+
+
+	
 	void UserInterface::main(int argc, char* argv[]) {
 		try {
 			sollya_lib_init();
 			initialize();
+			
+			// TODO refactor more elegantly
+
+			// This creates all the Operators and the dependency graph.
 			buildAll(argc, argv);
+
 			drawDotDiagram();
-			schedule();
+			
 			outputVHDL();
 			finalReport(cerr);
 			sollya_lib_close();
@@ -180,60 +188,60 @@ namespace flopoco
 	vector<OperatorPtr>  UserInterface::globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 
 
-	// This should be obsoleted soon. It is there only because random_main needs it
-	void addOperator(OperatorPtr op) {
-		UserInterface::globalOpList.push_back(op);
-	}
 
 
-
-	void UserInterface::addToGlobalOpList(OperatorPtr op) {
-		bool alreadyPresent=false;
-		// We assume all the operators added to GlobalOpList are unpipelined.
+	OperatorPtr UserInterface::addToGlobalOpList(OperatorPtr op) {
+		OperatorPtr alreadyPresent=nullptr;
 		for (auto i: UserInterface::globalOpList){
 			if( op->getName() == i->getName() ) {
-				alreadyPresent=true;
+				alreadyPresent=i;
 				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
 			}
 		}
-		if(!alreadyPresent)
+		if(alreadyPresent) {
+			return alreadyPresent;
+		}
+		else {
 			UserInterface::globalOpList.push_back(op);
+			// If this component was created as a sub-component, we need to set its parentOp to null
+			op->setParentOperator(nullptr);
+			// make sure it is scheduled
+			op->schedule();
+			op->applySchedule();
+			return op;
+		}
 	}
 
 
 	void UserInterface::outputVHDLToFile(ofstream& file){
-		outputVHDLToFile(UserInterface::globalOpList, file);
+		set<string> alreadyOutput; // to avoid redundant output
+		outputVHDLToFile(UserInterface::globalOpList, file, alreadyOutput);
 	}
 
 
 	/* The recursive method */
-	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file)
+	void UserInterface::outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file, set<string> &alreadyOutput )
 	{
-		string srcFileName = "Operator.cpp"; // for REPORT
 
 		for(auto i: oplist) {
-			try
-			{
+			try		{
 				// check for subcomponents
 				if(! i->getSubComponentListR().empty() ){
 					//recursively call to print subcomponents
-					outputVHDLToFile(i->getSubComponentListR(), file);
+					outputVHDLToFile(i->getSubComponentListR(), file, alreadyOutput);
 				}
 
-				//output the vhdl code to file
-				//	for global operators, this is done only once
-				if(!i->isOperatorImplemented())
-				{
+				//output the vhdl code to file if it was not done already
+				if(alreadyOutput.find(i->getName())==alreadyOutput.end()) {
 					i->outputVHDL(file);
-					i->setIsOperatorImplemented(true);
+					alreadyOutput.insert(i->getName());
 				}
-			}catch (std::string &s)
-			{
+			}
+			catch (std::string &s)	{
 				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
 			}
 		}
 		oplist.back()->outputClock_xdc();
-
 	}
 
 
@@ -452,14 +460,17 @@ namespace flopoco
 				if (fp==NULL){
 					throw( "Can't find the operator factory for " + opName) ;
 				}
+				// Call the constructor at last (through the factory)
 				OperatorPtr op = fp->parseArguments(nullptr, target, opParams);
 				if(op!=NULL)	{// Some factories don't actually create an operator
 					if(entityName!="") {
 						op->changeName(entityName);
 						entityName="";
 					}
-					//cerr << "Adding operator" << endl;
-					addOperator(op);
+					UserInterface::globalOpList.push_back(op);
+					// Schedule it
+					op->schedule();
+					op->applySchedule();
 				}
 			}
 		}catch(std::string &s){
@@ -473,17 +484,6 @@ namespace flopoco
 		}
 	}
 
-
-	void UserInterface::schedule() {
-		//mark the operators as having been scheduled
-		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
-			UserInterface::globalOpList[i]->markOperatorScheduled();
-		}
-		//all that is left is to start the second code parse
-		for(unsigned int i=0; i<UserInterface::globalOpList.size(); i++){
-			UserInterface::globalOpList[i]->parseVHDL();
-		}
-	}
 
 
 	void UserInterface::drawDotDiagram() {

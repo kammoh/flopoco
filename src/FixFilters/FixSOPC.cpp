@@ -233,8 +233,6 @@ namespace flopoco{
 			// Now build a pipelined rake
 			vhdl << tab << declare("S0", sumSize) << " <= " << zg(sumSize) << ";" << endl;
 			for(int i=0; i< n; i++)		{
-				//manage the critical path
-				manageCriticalPath();
 				// Addition
 				int pSize = getSignalByName(join("P", i))->width();
 				vhdl << tab << declare(getTarget()->adderDelay(sumSize),

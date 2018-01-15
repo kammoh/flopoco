@@ -74,12 +74,6 @@ namespace flopoco{
 				vhdl << tab << s->getName() << " <= " << delay(idext) << ";" << endl;
 			}
 		}
-
-		// reschedule the outputs
-		for(int i=0; i<op->getIOListSize(); i++){
-			if(op->getIOListSignal(i)->type() == Signal::out)
-				scheduleSignal(op->getIOListSignal(i), true);
-		}
 	}
 
 	Wrapper::~Wrapper() {

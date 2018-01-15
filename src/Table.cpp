@@ -29,7 +29,7 @@ namespace flopoco{
 	int Table::double2input(double x){
 		throw string("Error, double2input is being used and has not been overriden");
 	}
-
+	
 	double Table::input2double(int x) {
 		throw string("Error, input2double is being used and has not been overriden");
 	}
@@ -73,6 +73,16 @@ namespace flopoco{
 		}
 		setCopyrightString("Florent de Dinechin, Matei Istoan (2007-2016)");
 
+		if(_logicTable==1)
+			logicTable=true;
+		else if (_logicTable==-1)
+			logicTable=false;
+		else { // the constructor should decide
+			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
+			if(!logicTable)
+				REPORT(DETAILED, "This table will be implemented in memory blocks");
+		}
+		
 		// Set up the IO signals
 		addInput ("X"  , wIn, true);
 		addOutput ("Y"  , wOut, 1, true);
@@ -93,29 +103,18 @@ namespace flopoco{
 			full=false;
 		if (wIn > 10)
 		  REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
-
-
-		if(_logicTable==1)
-			logicTable=true;
-		else if (_logicTable==-1)
-			logicTable=false;
-		else { // the constructor should decide
-			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
-			if(!logicTable)
-				REPORT(DETAILED, "This table will be implemented in memory blocks");
-		}
-
-
 	}
 
 
+	
 
 	Table::Table(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
 		Operator(parentOp_, target_),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
 	{
 		srcFileName = "Table";
-		setNameWithFreq(_name);
+		setNameWithFreqAndUID(_name);
+		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2018)");
 
 		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
@@ -126,8 +125,8 @@ namespace flopoco{
 			REPORT(DEBUG, "WARNING: wIn value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
-		}else if(((unsigned)1<<wIn) < values.size())
-		{
+		}
+		else if(((unsigned)1<<wIn) < values.size()) {
 			REPORT(DEBUG, "WARNING: wIn set to a value lower than the number of values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
@@ -135,10 +134,9 @@ namespace flopoco{
 
 		//determine the lowest and highest values stored in the table
 		mpz_class maxValue = values[0], minValue = values[0];
-
+		
 		//this assumes that the values stored in the values array are all positive
-		for(unsigned int i=0; i<values.size(); i++)
-		{
+		for(unsigned int i=0; i<values.size(); i++)		{
 			if(values[i] < 0)
 				THROWERROR("Error in table: value stored in table is negative: " << values[i] << endl);
 			if(maxValue < values[i])
@@ -152,17 +150,35 @@ namespace flopoco{
 			REPORT(DEBUG, "WARNING: wOut value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
-		}else if(wOut < intlog2(maxValue))
-		{
+		}
+		else if(wOut < intlog2(maxValue))  {
 			REPORT(DEBUG, "WARNING: wOut value set to a value lower than the size of the values which are to be written in the table.");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
 		}
 
+		// if this is just a Table
 		if(_name == "")
-			setNameWithFreq(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
+			setNameWithFreqAndUID(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
 
-		// Set up the IO signals
+		//checks for logic table
+		if(_logicTable == 0)
+			logicTable = false;
+		else if(_logicTable == 1)
+			logicTable = true;
+		else
+			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
+
+		// Sanity check: the table is built using a RAM, but is underutilized
+		if(!logicTable
+				&& ((wIn <= getTarget()->lutInputs())  ||  (wOut*(mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock())))
+			REPORT(0, "Warning: the table is built using a RAM block, but is underutilized");
+
+		// Logic tables are shared by default, large tables are unique because they can have a multi-cycle schedule.
+		if(logicTable)
+			setShared();
+
+		// Set up the IO signals -- this must come after the setShared()
 		addInput("X", wIn, true);
 		addOutput("Y", wOut, 1, true);
 
@@ -190,22 +206,11 @@ namespace flopoco{
 
 		//user warnings
 		if(wIn > 10)
-			REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
+			REPORT(FULL, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
 
-		//checks for logic table
-		if(_logicTable == 0)
-			logicTable = false;
-		else if(_logicTable == 1)
-			logicTable = true;
-		else
-			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
-		if(!logicTable
-				&& ((wIn <= getTarget()->lutInputs())  ||  (wOut*(mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock())))
-			//the table is built using a RAM, but is underutilized
-			REPORT(0, "Warning: the table is built using a RAM block, but is underutilized");
 
 		//create the code for the table
-		REPORT(FULL,"Table.cpp: Filling the table");
+		REPORT(DEBUG,"Table.cpp: Filling the table");
 		std::string tableAttributes;
 
 		//set the table attributes
@@ -237,7 +242,10 @@ namespace flopoco{
 		}
 		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
 
-		vhdl << tab << "with X select " << declareTable(cpDelay, "Y0", wOut, tableAttributes) << " <= " << endl;
+		
+		vhdl << tab << "with X select " << declare(cpDelay, "Y0", wOut) << " <= " << endl;;
+		getSignalByName("Y0") -> setTableAttributes(tableAttributes);
+		
 		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
 			vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
 		vhdl << tab << tab << "\"";
@@ -245,15 +253,13 @@ namespace flopoco{
 			vhdl << "-";
 		vhdl <<  "\" when others;" << endl;
 
-		if((logicTable == false) && (cpDelay < (double)(1.0/getTarget()->frequency())))
+		if((!logicTable) && (cpDelay < (double)(1.0/getTarget()->frequency())))
 		{
-			cerr << "Warning: critical path of table increased by 1 cycle, in order to insure implementation as Block RAM" << endl;
+			REPORT(FULL,"Warning: delaying output by 1 cycle to allow implementation as Block RAM" << endl);
 			vhdl << tab << "Y <= " << delay("Y0", 1) << ";" << endl;
 		}
 		else
 			vhdl << tab << "Y <= Y0;" << endl;
-
-		//		getSignalByName("Y0")->setCriticalPathContribution(cpDelay);
 	}
 
 
@@ -261,7 +267,7 @@ namespace flopoco{
 
 	Table::Table(OperatorPtr parentOp, Target* target) :
 		Operator(parentOp, target){
-		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2010)");
+		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2018)");
 	}
 
 
