@@ -8,7 +8,6 @@ namespace flopoco
 {
 
 class BitheapNew;
-//class CompressionStrategy;
 
 	class FirstFittingCompressionStrategy : public CompressionStrategy
 	{

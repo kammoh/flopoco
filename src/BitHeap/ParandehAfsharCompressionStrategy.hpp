@@ -8,7 +8,6 @@ namespace flopoco
 {
 
 class BitheapNew;
-//class CompressionStrategy;
 
 	class ParandehAfsharCompressionStrategy : public CompressionStrategy
 	{

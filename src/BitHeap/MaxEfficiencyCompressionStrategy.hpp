@@ -8,7 +8,6 @@ namespace flopoco
 {
 
 class BitheapNew;
-//class CompressionStrategy;
 
 	class MaxEfficiencyCompressionStrategy : public CompressionStrategy
 	{
@@ -18,9 +17,6 @@ class BitheapNew;
 		 * A basic constructor for a compression strategy
 		 */
 		MaxEfficiencyCompressionStrategy(BitheapNew *bitheap);
-
-
-
 
 
 	private:

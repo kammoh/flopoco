@@ -36,6 +36,7 @@ namespace flopoco{
 
 		//new solution
 		solution = Solution();
+		solution.setSolutionStatus(BitheapSolutionStatus::HEURISTIC_PARTIAL);
 
 		//generates the compressor tree. Works only on bitAmount, compressors will be put into solution
 		maxEfficiencyAlgorithm();

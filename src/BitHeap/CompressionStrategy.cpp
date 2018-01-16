@@ -312,7 +312,9 @@ namespace flopoco{
 			}
 		}
 
-		//both tests went succesfull
+		//mark solution as done
+		solution.markSolutionAsComplete();
+		//both tests were succesfull
 		return true;
 	}
 
@@ -477,11 +479,8 @@ namespace flopoco{
 
 				while(compressorBitVector.size() > 0)
 				{
-					REPORT(DEBUG, "before applying compressor");
 					Compressor* realCompressor = possibleCompressors[i]->getCompressor();
-					REPORT(DEBUG, "after getCompressor");
 					applyCompressor(compressorBitVector, realCompressor, bitheap->lsb+j);
-					REPORT(DEBUG, "after applying compressor");
 					compressorBitVector.clear();
 					compressorBitVector = canApplyCompressor(j, i, soonestCompressibleBit, delay);
 					compressionPerformed = true;

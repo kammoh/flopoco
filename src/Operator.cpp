@@ -16,11 +16,11 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 
 In FloPoCo, each instance is associated with a unique Operator.
 The same Operator can not be reused in two instances.
-The scheduler works on the operator graph assuming this, and it makes life easier. 
+The scheduler works on the operator graph assuming this, and it makes life easier.
 
 One exception is "shared" or "atomic" Operators.
  - they are meant for very simple, unpipelined operators: compressors, small tables in IntConstDiv or FPDiv;
- - unfortunately they tend to have quite large VHDL, especially the tables. 
+ - unfortunately they tend to have quite large VHDL, especially the tables.
  - the scheduler shouldn't even need to know if an instance is shared or not.
  - the Operator itself is replicated in the operator graph, flagged as "shared".
  - this means the VHDL is replicated, too. It would be nice if it was lexed only once, though, and replicated thereafter.
@@ -60,7 +60,7 @@ namespace flopoco{
 	Operator::Operator(Target* target): Operator(nullptr, target){
 		REPORT(INFO, "Operator  constructor without parentOp is deprecated");
 	}
-	
+
 	Operator::Operator(Operator* parentOp, Target* target){
 		vhdl.setOperator(this);
 		stdLibType_                 = 0;						// unfortunately this is the historical default.
@@ -129,7 +129,7 @@ namespace flopoco{
 				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
 			}
 		}
-		
+
 		if(alreadyPresent) {
 			if( op->isShared() )
 				return;
@@ -141,7 +141,7 @@ namespace flopoco{
 			if(op->isShared() )
 				UserInterface::addToGlobalOpList(op);
 		}
-	} 
+	}
 
 
 	OperatorPtr Operator::getSubComponent(string name){
@@ -168,7 +168,7 @@ namespace flopoco{
 
 		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
-		//add the signal to the signal dictionary 
+		//add the signal to the signal dictionary
 		signalMap_[name] = s;
 
 		//connect the signal just created, if this is a subcomponent
@@ -344,7 +344,7 @@ namespace flopoco{
 	}
 
 
-	
+
 	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
 		/// REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
@@ -419,7 +419,7 @@ namespace flopoco{
 	}
 
 
-	
+
 	Signal* Operator::getSignalByName(string name) {
 		//search for the signal in the list of signals
 		if(signalMap_.find(name) == signalMap_.end()) {
@@ -680,13 +680,13 @@ namespace flopoco{
 		o<<"--------------------------------------------------------------------------------"<<endl;
 	}
 
-	
+
 	void Operator::pipelineInfo(std::ostream& o){
 		if(isSequential())
 			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl <<endl;
 		else
 			o << "-- combinatorial"  <<endl <<endl;
-		
+
 	}
 
 
@@ -1124,10 +1124,10 @@ namespace flopoco{
 		The logic of instance really depends on the sharedness.
 
 		*** If the subcomponent is unique/not shared, the following order is expected (and ensured by newInstance)
-		1/ schedule the actual inputs 
+		1/ schedule the actual inputs
 		2/ build the tmpPortMapList
 		3/ call the constructor of the subcomponents
-		3.1/ its addInput() and addOutput recovers the IO maping from tmpPortMapList. 
+		3.1/ its addInput() and addOutput recovers the IO maping from tmpPortMapList.
          For the outputs, the actuals are incompleteDeclarations
 		3.2/ its signal graph is built
 		4/ the declaration of the output signals is finalized by instance()
@@ -1146,7 +1146,7 @@ namespace flopoco{
 		if(outputWarning && ! op->isShared()) {
 			REPORT(INFO, "instance() is deprecated except for shared operators, please use newInstance() instead");
 		};
-		
+
 		// First, I/O sanity check: check that all the signals are connected
 		for(auto i: *(op->getIOList())) 	{
 			bool isSignalMapped = false;
@@ -1186,7 +1186,7 @@ namespace flopoco{
 		if(op->isShared()) {
 			op->applySchedule();
 		}
-		
+
 		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
@@ -1209,7 +1209,7 @@ namespace flopoco{
 		string rhsString;
 		vector<Signal*> inputCloneList;
 		vector<Signal*> inputActualList;
-		
+
 		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)		{
 			Signal* actual = it->second; // the connexion here is actual -> formal
 			string formalName = it->first; // ... with actual in this and formal in op
@@ -1230,8 +1230,8 @@ namespace flopoco{
 			o << it->first << " => " << rhsString;
 			if(op->isShared()){
 #if 0
-				// shared instance: clone the input signal of op, then connect it. 
-				string cloneName = declare(0.0, 
+				// shared instance: clone the input signal of op, then connect it.
+				string cloneName = declare(0.0,
 																	 formal->getName()+"copy"+to_string(getNewUId()),
 																	 formal->width()); // The other parameters are OK
 				Signal* cloneOfFormal = getSignalByName(cloneName);
@@ -1265,9 +1265,9 @@ namespace flopoco{
 						i->addSuccessor(actual);
 						actual->addPredecessor(i);
 						REPORT(FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  actual->getUniqueName()
-									 << " with critical path contribution " <<  actual->getCriticalPathContribution() ) ; 
+									 << " with critical path contribution " <<  actual->getCriticalPathContribution() ) ;
 					}
-										
+
 				}
 				else {	 	// unique instances: just connect both signals in the dependency graph
 					actual->addPredecessor(formal);
@@ -1513,7 +1513,7 @@ namespace flopoco{
 		attributes_[attributeName] = attributeType;
 		pair<string,string> p = make_pair(attributeName,object);
 		attributesValues_[p] = value;
-		attributesAddSignal_[attributeName] = addSignal; 
+		attributesAddSignal_[attributeName] = addSignal;
 	}
 
 
@@ -1587,7 +1587,6 @@ namespace flopoco{
 				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser)
 						|| (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration))
 					if(s->getLifeSpan() > 0) {
-						cout << s->getName() << " has a lifespan of " << s->getLifeSpan() << endl;
 						for(int j=1; j <= s->getLifeSpan(); j++)
 							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 					}
@@ -1679,7 +1678,7 @@ namespace flopoco{
 
 
 	void Operator::outputClock_xdc(){
-		ofstream file; 
+		ofstream file;
 
 		// For Vivado
 		file.open("/tmp/clock.xdc", ios::out);
@@ -1706,7 +1705,7 @@ namespace flopoco{
 #endif
 	}
 
-	
+
 	void Operator::buildStandardTestCases(TestCaseList* tcl) {
 		// Each operator should overload this method. If not, it is mostly harmless but deserves a warning.
 		cerr << "WARNING: No standard test cases implemented for this operator" << endl;
@@ -1875,7 +1874,7 @@ namespace flopoco{
 
 
 
-	
+
 	// Comment by F2D: this whas parse2().
 	// This code is suspected to be OK except for the handling of functional delays
 	// It could probably be simplified: it is a lexer
@@ -1970,14 +1969,14 @@ namespace flopoco{
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
 						lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
-						
+
 						//copy lhsName (the formal input/output) to the new vhdl buffer
 						newStr << lhsName;
-						
+
 						//copy the code up to the next rhsName to the new vhdl buffer
 						tmpCurrentPos = tmpNextPos+2;
 						tmpNextPos = workStr.find("$", tmpCurrentPos);
-						
+
 						//check for constant as rhs name
 						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)	{
 							tmpNextPos = workStr.find("\'", tmpCurrentPos);
@@ -1989,7 +1988,7 @@ namespace flopoco{
 						}
 
 						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
-						
+
 						//extract a rhsName
 						//	this might be a constant
 						if(singleQuoteSep) {
@@ -2028,16 +2027,16 @@ namespace flopoco{
 								Signal* subopInput = getSignalByName(rhsName);
 								Signal* subopOutput = getSignalByName(rhsName)->successor(0);
 								REPORT(DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
-								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle() + getFunctionalDelay(subopInput, subopOutput); 
+								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle() + getFunctionalDelay(subopInput, subopOutput);
 								if( deltaCycle> 0)
 									newStr << "_d" << vhdlize(deltaCycle);
 							}
 						}
 						catch(string &e) {
-							REPORT(FULL, "doApplySchedule caught " << e); 
+							REPORT(FULL, "doApplySchedule caught " << e);
 						}
-					
-					
+
+
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
 
@@ -2171,7 +2170,7 @@ namespace flopoco{
 			// Took me 2hours to figure out
 			// Bug fixed by having the lexer add spaces around select (so no need to test for all the space/tab/enter possibilibits.
 			// I wonder how many such bugs remain
-			if(workStr.find(" select ") == string::npos	 )			{ 
+			if(workStr.find(" select ") == string::npos	 )			{
 				tmpCurrentPos = lhsNameLength+2;
 				tmpNextPos = workStr.find('$', lhsNameLength+2);
 			}
@@ -2263,7 +2262,7 @@ namespace flopoco{
 
 
 
-	
+
 	int Operator::getFunctionalDelay(Signal *rhsSignal, Signal *lhsSignal)
 	{
 		bool isLhsPredecessor = false;
@@ -2285,7 +2284,7 @@ namespace flopoco{
 
 		if(isLhsPredecessor == false)
 			return 0;// was the following throwerror
-			
+
 			THROWERROR("In getFunctionalDelay: trying to obtain the functional delay between signal "
 					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
 		return 0;
@@ -2294,7 +2293,7 @@ namespace flopoco{
 
 
 
-	
+
 	int Operator::getPipelineDelay(Signal *rhsSignal, Signal *lhsSignal)
 	{
 		bool isLhsPredecessor = false;
@@ -2360,7 +2359,7 @@ namespace flopoco{
 			bool unknownLHSName = false, unknownRHSName = false;
 
 			try{
-				lhs = getSignalByName(it->first); // Was this signal declared since last time? 
+				lhs = getSignalByName(it->first); // Was this signal declared since last time?
 			}catch(string &e){
 				// REPORT(DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it->first);
 				unknownLHSName = true;
@@ -2425,7 +2424,7 @@ namespace flopoco{
 
 		//clear the current partial dependence table
 		vhdl.dependenceTable.clear();
-		
+
 		//start the parsing of the dependence table for the subcomponents
 		for(unsigned int i=0; i<subComponentList_.size(); i++)
 		{
@@ -2438,7 +2437,7 @@ namespace flopoco{
 			for(auto i: signalList_)	{
 				if (i->predecessors()->size()==0) {
 					alreadyScheduled.insert(i);
-					i->setHasBeenScheduled(true);					
+					i->setHasBeenScheduled(true);
 				}
 			}
 			// and do the same recursively for all subcomponents
@@ -2447,7 +2446,7 @@ namespace flopoco{
 			}
 	}
 
-	
+
 	void Operator::schedule()
 	{
 		if(noParseNoSchedule_ || isOperatorScheduled_) // for TestBench and Wrapper
@@ -2464,7 +2463,7 @@ namespace flopoco{
 		else { // We are the root parent op
 			REPORT(DEBUG, "schedule(): It seems I am a root Operator, starting scheduling");
 
-			
+
 			// Algorithm initialization
 			// We need a global list of all the signals of the graph
 			size_t numberScheduled;
@@ -2473,7 +2472,7 @@ namespace flopoco{
 			for(auto i: ioList_)	{
 				if (i->type()==Signal::in) {
 					alreadyScheduled.insert(i); // TODO refactor into one call setScheduled(Signal*)
-					i->setHasBeenScheduled(true);					
+					i->setHasBeenScheduled(true);
 				}
 			}
 			// restate that signals without predecessors (e.g. toto <= "010101"; ) are already scheduled for good measure (recall that we are in the top level)
@@ -2488,7 +2487,7 @@ namespace flopoco{
 
 			numberScheduled=0;
 			// The main loop only tries to schedule signals in the wavefront
-			while(alreadyScheduled.size() > numberScheduled) { 
+			while(alreadyScheduled.size() > numberScheduled) {
 				// Things are still moving
 				numberScheduled = alreadyScheduled.size();
 				set<Signal*> nextIterationFront;
@@ -2496,14 +2495,14 @@ namespace flopoco{
 				// REPORTING
 				{
 					ostringstream s1,s2;
-					for(auto i: successorsFront) 
+					for(auto i: successorsFront)
 						s1 << i->getUniqueName() << " ";
 					REPORT(DEBUG, "schedule(): current wavefront is " << s1.str());
-					for(auto i: alreadyScheduled) 
+					for(auto i: alreadyScheduled)
 						s2 << i->getUniqueName() << " ";
 					REPORT(DEBUG, "schedule(): currently scheduled: " << s2.str());
 				}
-				
+
 				for(auto candidate: successorsFront) {
 					// Can we schedule this candidate?
 					//check if all the signal's predecessors have been scheduled
@@ -2522,7 +2521,7 @@ namespace flopoco{
 									 << " has been scheduled at lexicographic time (" << candidate->getCycle() << ", " << candidate->getCriticalPath() <<")"  );
 
 						nextIterationFront.erase(candidate);// it may have been already added to nextIterationFront in this iteration
-						
+
 						for(auto i : *candidate->successors()) {
 							if(i.first->hasBeenScheduled() == false) {
 								REPORT(DEBUG, "schedule():     " << i.first->getUniqueName() << " added to the wavefront");
@@ -2538,14 +2537,14 @@ namespace flopoco{
 				successorsFront = nextIterationFront;
 			} // end main while loop
 
-			set<string> unscheduledOutputs; 
+			set<string> unscheduledOutputs;
 			for(auto i: ioList_)	{
 				if (i->type()==Signal::out) {
-					if(!i->hasBeenScheduled()) 
+					if(!i->hasBeenScheduled())
 						unscheduledOutputs.insert(i->getName());
 				}
 			}
-			if(unscheduledOutputs.size()==0) { 
+			if(unscheduledOutputs.size()==0) {
 				// Success! All outputs are scheduled
 				isOperatorScheduled_=true;
 				computePipelineDepths();	 // also for the subcomponents
@@ -2561,12 +2560,12 @@ namespace flopoco{
 
 
 
-	
-	
 
 
 
-	
+
+
+
 	// This is NOT a recursive function
 	void Operator::setSignalTiming(Signal* targetSignal)
 	{
@@ -2653,7 +2652,7 @@ namespace flopoco{
 #else //ASSUME_NO_RETIMING
 			targetSignal->setCriticalPath(targetSignal->getCriticalPathContribution());
 #endif
-			
+
 		}else
 		{
 			targetSignal->setCycle(maxCycle);
@@ -2675,10 +2674,10 @@ namespace flopoco{
 
 
 
-	
+
 	void Operator::computePipelineDepths()
 	{
-		// first compute it for the subcomponents 
+		// first compute it for the subcomponents
 		for(auto i: subComponentList_) {
 			i-> computePipelineDepths();
 		}
@@ -2756,8 +2755,8 @@ namespace flopoco{
 
 
 
-	
-	
+
+
 	void Operator::drawDotDiagram(ofstream& file, int mode, std::string dotDrawingMode, std::string tabs)
 	{
 		bool mustDrawCompact = true;
@@ -3455,7 +3454,7 @@ namespace flopoco{
 	{
 		// launch the second VHDL parsing step. Works for sequential and combinatorial operators as well
 		if(!isOperatorApplyScheduleDone_) {
-			isOperatorApplyScheduleDone_=true; 
+			isOperatorApplyScheduleDone_=true;
 			doApplySchedule();
 			// recursive call for the operator's subcomponents
 			for(auto it: subComponentList_) {

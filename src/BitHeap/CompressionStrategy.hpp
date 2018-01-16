@@ -20,7 +20,6 @@ namespace flopoco
 
 class Bit;
 class Compressor;
-//class BitheapNew;
 class IntAdder;
 class BitheapPlotter;
 
@@ -48,7 +47,7 @@ class BitheapPlotter;
 	protected:
 
 		/**
-		 * Uses an algorithm, which decides how the compression is being done
+		 * @brief Uses an algorithm, which decides how the compression is being done
 		 */
 		virtual void compressionAlgorithm() = 0;
 
