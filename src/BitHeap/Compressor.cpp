@@ -40,7 +40,6 @@ namespace flopoco{
 			}
 			else{
 				compressor = new Compressor(target, heights, area, compactView);
-				compressor->setShared();
 				return compressor;
 			}
 		}
@@ -170,7 +169,7 @@ namespace flopoco{
 		ostringstream name;
 		stringstream nm, xs;
 		//compressors are supposed to be combinatorial
-		setCombinatorial();
+		//setCombinatorial();
 		setShared();
 
 		//remove the zero columns at the lsb
@@ -215,10 +214,10 @@ namespace flopoco{
 		}
 		//create the output
 		addOutput("R", wOut);
-		getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
-
+		//getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
+		double cpDelay = getTarget()->tableDelay(wIn, wOut, true);
 		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
-		vhdl << tab << "with X select R <= " << endl;
+		vhdl << tab << "with X select " << declare(cpDelay, "R0", wOut) << " <= " << endl;
 
 		vector<vector<mpz_class>> values(1<<wOut);
 		//create the compressor
@@ -264,6 +263,8 @@ namespace flopoco{
 
 		vhdl << tab << tab << "\"" << std::string(wOut, '-') << "\" when others;" << endl;
 
+		vhdl << tab << "R <= R0;" << endl;
+		getSignalByName("R") -> setCriticalPath(cpDelay);
 		REPORT(DEBUG, "Generated " << name.str());
 	}
 

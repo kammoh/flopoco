@@ -780,20 +780,6 @@ namespace flopoco{
 			IntAdder* adder;
 
 			//create the adder
-#if 0
-			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
-			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
-
-			//create the port maps for the adder
-			bitheap->op->inPortMap(adder, "X", adderIn0Name.str());
-			bitheap->op->inPortMap(adder, "Y", adderIn1Name.str());
-			bitheap->op->inPortMap(adder, "Cin", adderCinName.str());
-			bitheap->op->outPortMap(adder, "R", adderOutName.str());
-
-
-			//create the instance of the adder
-			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
-#else
 			bitheap->op->newInstance("IntAdder",
 															 "bitheapFinalAdd_bh"+to_string(bitheap->guid),
 															 "wIn=" + to_string(bitheap->msb-adderStartIndex+1+1),
@@ -802,7 +788,6 @@ namespace flopoco{
 															 + ",Cin=>" + adderCinName.str(),
 															 "R=>"+ adderOutName.str()   );
 
-#endif
 			//add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex, 0)));
 		}

@@ -402,7 +402,7 @@ class Operator;
 		/*                  Methods related to scheduling              */
 
 
-		/** Defines the schedule of a signal and marks it as scheduled  */
+		/** Defines the schedule of a signal and marks it as scheduled. Throws an error if the bit has been scheduled already  */
 		void setSchedule(int cycle, double criticalPathWithinCycle);
 		
 		/**

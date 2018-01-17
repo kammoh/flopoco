@@ -492,7 +492,6 @@ namespace flopoco{
 											 << "-- input address  m=" << m[i] << "  l=" << l[i]
 											 << endl;
 
-#if NEWTABLEINTERFACE
 				vector<mpz_class> tableContent = kcmTableContent(i);
 				string tablename;
 				if(thisOp==this) // non-virtual
@@ -509,11 +508,6 @@ namespace flopoco{
 														 1 // logicTable
 														 );
 				
-#else
-					
-				FixRealKCMTable* t = new FixRealKCMTable(thisOp->getTarget(), this, i);
-				thisOp->addSubComponent(t);
-#endif
 				thisOp->inPortMap (t , "X", sliceInName);
 				thisOp->outPortMap(t , "Y", sliceOutName);
 				thisOp->vhdl << thisOp->instance(t , instanceName);
