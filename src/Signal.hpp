@@ -397,6 +397,14 @@ class Operator;
 		std::string toVHDLDeclaration();
 
 
+
+
+		/*                  Methods related to scheduling              */
+
+
+		/** Defines the schedule of a signal and marks it as scheduled  */
+		void setSchedule(int cycle, double criticalPathWithinCycle);
+		
 		/**
 		 * Sets the cycle at which the signal is active
 		 */

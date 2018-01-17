@@ -498,6 +498,13 @@ namespace flopoco{
 		return o.str();
 	}
 
+	void Signal::setSchedule(int cycle, double criticalPathWithinCycle){
+		cycle_ = cycle;
+		criticalPath_ = criticalPathWithinCycle;
+		hasBeenScheduled_ = true;
+	}
+
+
 	void Signal::setCycle(int cycle) {
 		cycle_ = cycle;
 	}
