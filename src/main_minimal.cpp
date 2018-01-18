@@ -22,19 +22,12 @@
 
 */
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <string>
-#include <cstdlib>
 
 
 #include "FloPoCo.hpp" 
 
 
-using namespace std;
 using namespace flopoco;
-
 
 
 
@@ -43,6 +36,7 @@ int main(int argc, char* argv[] )
 
 	Target* target = new Virtex6();
 
+	target -> setFrequency(200e6); // 200MHz
 	int wE = 9;
 	int wF = 33;
 
@@ -51,7 +45,8 @@ int main(int argc, char* argv[] )
 		UserInterface::initialize();
 		
 		Operator*	op = new FPAddSinglePath(nullptr, target, wE, wF);
-		op->schedule();
+		// if we want pipeline we need to add the two following lines
+		op->schedule(); 
 		op->applySchedule();
 		
 		ofstream file;
