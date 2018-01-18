@@ -607,14 +607,13 @@ public:
 
 	/**
 	 * Declare an output mapping for an instance of a sub-component
-	 * Also declares the local signal implicitly, with width taken from the component
+	 * Also declares the local signal implicitly, taking its width from the component
 	 * @param op is a pointer to the subcomponent
 	 * @param componentPortName is the name of the port on the component
 	 * @param actualSignalName is the name of the signal in This mapped to this port
-	 * @param newSignal (by default true), defined whether or not actualSignalName has to be declared as a new signal by outPortMap
 	 * @return name
 	 */
-	void outPortMap(Operator* op, string componentPortName, string actualSignalName, bool newSignal = true);
+	void outPortMap(Operator* op, string componentPortName, string actualSignalName);
 
 
 	/**

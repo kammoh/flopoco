@@ -670,7 +670,7 @@ namespace flopoco {
 		//create a new compression strategy, if one isn't present already
 		if(compressionStrategy == nullptr)
 			compressionStrategy = new FirstFittingCompressionStrategy(this);
-			//compressionStrategy = new ParandehAfsharCompressionStrategy(this);
+		compressionStrategy = new ParandehAfsharCompressionStrategy(this);
 			//compressionStrategy = new MaxEfficiencyCompressionStrategy(this);
 		//start the compression
 		compressionStrategy->startCompression();

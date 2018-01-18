@@ -635,7 +635,7 @@ namespace flopoco{
 			vectorName.str("");
 			vectorName << compressor->getName() << "_bh" << bitheap->guid << "_uid"
 					<< instanceUID << "_Out" << (tempHeight - 1);
-			bitheap->op->declare(vectorName.str(), lastOccurence + 1, (lastOccurence + 1 > 1));
+			//			bitheap->op->declare(vectorName.str(), lastOccurence + 1, (lastOccurence + 1 > 1));
 
 			//check if there are more than one outputVectors in total
 			bool singleOutputVector = true;
@@ -646,13 +646,13 @@ namespace flopoco{
 				}
 			}
 			if(singleOutputVector == true){
-				bitheap->op->outPortMap(compressor, "R", vectorName.str(), false);
+				bitheap->op->outPortMap(compressor, "R", vectorName.str());
 			}
 			else{
 				ostringstream tempR;
 				tempR.str("");
 				tempR << "R" << (tempHeight - 1);
-				bitheap->op->outPortMap(compressor, tempR.str(), vectorName.str(), false);
+				bitheap->op->outPortMap(compressor, tempR.str(), vectorName.str());
 			}
 
 			//create the compressor
