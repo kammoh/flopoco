@@ -27,6 +27,7 @@ namespace flopoco{
 
 	Target::Target()   {
 			generateFigures_=false;
+            useTargetOptimizations_=true;
 			lutInputs_         = 4;
 			hasHardMultipliers_= true;
 			hasFastLogicTernaryAdders_ = false;
@@ -116,12 +117,23 @@ namespace flopoco{
 		return generateFigures_;
 	}
 
-	void  Target::setGenerateFigures(bool b)
-	{
-	  generateFigures_ = b;
-	}
+    void  Target::setGenerateFigures(bool b)
+    {
+      generateFigures_ = b;
+    }
 
-	bool Target::hasHardMultipliers(){
+    bool  Target::useTargetOptimizations()
+    {
+      return useTargetOptimizations_;
+    }
+
+
+    void  Target::setUseTargetOptimizations(bool b)
+    {
+      useTargetOptimizations_ = b;
+    }
+
+    bool Target::hasHardMultipliers(){
 		return hasHardMultipliers_ ;
 	}
 

@@ -31,9 +31,10 @@ namespace flopoco
 	bool   UserInterface::clockEnable;
 	bool   UserInterface::useHardMult;
 	bool   UserInterface::plainVHDL;
-	bool   UserInterface::generateFigures;
-	double UserInterface::unusedHardMultThreshold;
-	int    UserInterface::resourceEstimation;
+    bool   UserInterface::generateFigures;
+    double UserInterface::unusedHardMultThreshold;
+    bool   UserInterface::useTargetOptimizations;
+    int    UserInterface::resourceEstimation;
 	bool   UserInterface::floorplanning;
 	bool   UserInterface::reDebug;
 	bool   UserInterface::flpDebug;
@@ -60,8 +61,9 @@ namespace flopoco
 		v.push_back(make_pair("FiltersEtc", "Filters and FFTs"));
 		v.push_back(make_pair("TestBenches", "Test Benches"));
 		v.push_back(make_pair("AutoTest", "AutoTest"));
-		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
-		return v;
+        v.push_back(make_pair("Primitives", "Highly target optimized primitive operators"));
+        v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
+        return v;
 	}();
 
 	const vector<string> UserInterface::known_fpgas = []()->vector<string>{
@@ -104,7 +106,8 @@ namespace flopoco
 				v.push_back(option_t("clockEnable", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
-				v.push_back(option_t("useHardMults", values));
+                v.push_back(option_t("useHardMults", values));
+                v.push_back(option_t("useTargetOptimizations", values));
 
 				//free options, using an empty vector of values
 				values.clear();
@@ -174,7 +177,8 @@ namespace flopoco
 		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
-		parseBoolean(args, "floorplanning", &floorplanning, true);
+        parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
+        parseBoolean(args, "floorplanning", &floorplanning, true);
 		parseBoolean(args, "reDebug", &reDebug, true );
 		parseString(args, "dependencyGraph", &depGraphDrawing, true);
 		//	parseBoolean(args, "", &  );
@@ -455,6 +459,7 @@ namespace flopoco
 				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
 				target->setPlainVHDL(plainVHDL);
 				target->setGenerateFigures(generateFigures);
+                target->setUseTargetOptimizations(useTargetOptimizations);
 				// Now build the operator
 				OperatorFactoryPtr fp = getFactoryByName(opName);
 				if (fp==NULL){
@@ -734,7 +739,8 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+        s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>:    use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+        s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;

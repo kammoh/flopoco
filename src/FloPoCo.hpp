@@ -235,5 +235,14 @@ use withing matrix-multiplication scenarios ------------------ */
 #include "LNS/LogSinCos.hpp"
 #endif // 0
 
+/* Primitive components -------------------------------- */
+#include "PrimitiveComponents/GenericAddSub.hpp"
+#include "PrimitiveComponents/GenericMult.hpp"
+#include "PrimitiveComponents/GenericMux.hpp"
+#include "PrimitiveComponents/GenericLut.hpp"
+#include "PrimitiveComponents/Xilinx/Xilinx_GenericAddSub.hpp"
+#include "PrimitiveComponents/Xilinx/Xilinx_GenericMux.hpp"
+#include "PrimitiveComponents/Xilinx/Xilinx_Comparator.hpp"
+#include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
 
 #endif //FLOPOCO_HPP

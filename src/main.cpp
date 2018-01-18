@@ -129,6 +129,11 @@ int main(int argc, char* argv[] )
 		// TargetModel::registerFactory();
 		// Uncomment me to play within FloPoCo operator development
 	  UserDefinedOperator::registerFactory();
+
+      Xilinx_GenericAddSub::registerFactory();
+      Xilinx_Comparator::registerFactory();
+      Xilinx_TernaryAdd_2State::registerFactory();
+
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;

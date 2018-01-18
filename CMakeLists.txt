@@ -337,6 +337,13 @@ src/IntAddSubCmp/IntMultiAdder
 # src/IntMult/FixMultAdd
 src/IntMult/MultiplierBlock
 # src/IntMult/IntSquarer
+src/IntMult/BaseMultiplier
+#src/IntMult/BaseMultiplier2xk
+#src/IntMult/BaseMultiplierCollection
+#src/IntMult/BaseMultiplierDSP
+#src/IntMult/BaseMultiplierDSPSuperTilesXilinx
+#src/IntMult/BaseMultiplierLUT
+
 
 # Complex numbers ---------------------------------------------------
 src/Complex/FixComplexKCM
@@ -402,7 +409,32 @@ src/Trigs/Atan2Table
 
 #src/Trigs/Fix2DNorm
 
+# Primitive Components ----------------------------------------------
+src/PrimitiveComponents/BooleanEquation
+src/PrimitiveComponents/GenericLut
+src/PrimitiveComponents/Primitive
+src/PrimitiveComponents/GenericAddSub
+src/PrimitiveComponents/GenericMux
 
+src/PrimitiveComponents/Xilinx/Xilinx_Primitive
+src/PrimitiveComponents/Xilinx/Xilinx_LUT_compute
+src/PrimitiveComponents/Xilinx/Xilinx_CARRY4
+src/PrimitiveComponents/Xilinx/Xilinx_LUT5
+src/PrimitiveComponents/Xilinx/Xilinx_LUT6
+src/PrimitiveComponents/Xilinx/Xilinx_MUXF7
+src/PrimitiveComponents/Xilinx/Xilinx_MUXF8
+src/PrimitiveComponents/Xilinx/Xilinx_FDCE
+src/PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder
+src/PrimitiveComponents/Xilinx/Xilinx_Comparator
+src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub
+src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub_slice
+src/PrimitiveComponents/Xilinx/Xilinx_GenericMux
+src/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
+src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State
+src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice
+#
+#src/PrimitiveComponents/Altera/Altera_LCELL
+#
 src/Tools/Plane
 src/Tools/Point
 
