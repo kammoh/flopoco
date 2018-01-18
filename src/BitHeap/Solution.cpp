@@ -115,6 +115,33 @@ namespace flopoco{
 		return comps[stage].size();
 	}
 
+	vector<unsigned int> Solution::getEmptyInputsByStage(unsigned int stage){
+		if(stage > emptyInputs.size()){
+			vector<unsigned int> emptyVector;
+			return emptyVector;
+		}
+		else{
+			return emptyInputs[stage];
+		}
+	}
+
+	void Solution::setEmptyInputsByRemainingBits(unsigned int stage, vector<int> remainingBits){
+		if(emptyInputs.size() <= stage){
+			emptyInputs.resize(stage + 1);
+		}
+		vector<unsigned int> tempVector; //contains the new values
+		for(unsigned int c = 0; c < remainingBits.size(); c++){
+			if(remainingBits[c] >= 0){
+				tempVector.push_back(0);
+			}
+			else if(remainingBits[c] < 0){
+				int amount = remainingBits[c] * (-1);
+				tempVector.push_back((unsigned int) amount);
+			}
+		}
+		emptyInputs[stage] = tempVector;
+	}
+
 	BitheapSolutionStatus Solution::getSolutionStatus(){
 		return status;
 	}

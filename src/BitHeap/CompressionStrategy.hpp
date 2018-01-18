@@ -201,6 +201,11 @@ class BitheapPlotter;
 		 */
 		void placeCompressor(unsigned int stage, unsigned int column, BasicCompressor* compressor, unsigned int middleLength = 0);
 
+		/**
+		 *	@brief calls setHasBeenScheduled() for all the bits in the vector
+		 *	@param bitVector the vector of bits which should be set to scheduled
+		 */
+		void setScheduleOfBits(vector<vector<Bit*> > bitVector);
 
 		/**
 		 *	@brief Returns the stage of arrival for a given bit.
@@ -211,20 +216,6 @@ class BitheapPlotter;
 		 * @brief prints the current bitAmounts for all stages and columns
 		 */
 		void printBitAmounts();
-
-
-		/**
-		 *	@brief puts the reimaing bits from stage s to the next
-		 	stage by adding a delay. Sets also the cycle right.
-			@param s specifies the stage were the bits will be put into the next stage
-		 */
-		void putRemainingBitsIntoNextStage(unsigned int s);
-
-		/**
-		 *	@brief puts bits into the next cycle if their criticalPath is bigger than the the maximal
-		 *  arrivaltime of the last stage in a cycle
-		 */
-		void setCycleRight();
 
 		/**
 		 * @brief all compressors specified in the solution will be used (vhdl code will be generated)

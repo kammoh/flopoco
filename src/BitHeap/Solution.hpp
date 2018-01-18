@@ -71,6 +71,19 @@ namespace flopoco
 		 */
 		BitheapSolutionStatus getSolutionStatus();
 
+		/**
+		 *	@brief sets the emptyInputs of a certain stage by the remainingBits
+		 *	@param stage the stage were the emptyInputs should been set
+		 *	@param remainingBits is the vector of remainingBits.
+		 */
+		void setEmptyInputsByRemainingBits(unsigned int stage, vector<int> remainingBits);
+
+		/**
+		 *	@brief returns for the given stage the amount of empty inputs for every column
+		 *	@param stage the stage for which the empty inputs should be given
+		 */
+		vector<unsigned int> getEmptyInputsByStage(unsigned int stage);
+
 	private:
 
 		/* Entry is the struct which specifies compressors in a solution*/
@@ -88,6 +101,8 @@ namespace flopoco
 			third is a vector of all compressors*/
 		vector<vector<vector<Entry> > > comps;
 
+		/** specifies, how many inputs of the compressors at this stage and columns are equals zero */
+		vector<vector<unsigned int> > emptyInputs;
 
 		BitheapSolutionStatus status;
 

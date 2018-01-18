@@ -1,6 +1,6 @@
 
 #include "CompressionStrategy.hpp"
-
+#include <limits>
 
 using namespace std;
 
@@ -44,9 +44,11 @@ namespace flopoco{
 		REPORT(DEBUG, "in orderBitsByColumnAndStage")
 		double objectiveDelay = 1.0/bitheap->op->getTarget()->frequency();
 
+		bitheap->op->schedule();
+
 		//first get the minimal cycle and maximum cycle and delay
-		unsigned int minCycle = 0 - 1;
-		unsigned int maxCycle = 0;
+		int minCycle = std::numeric_limits<int>::max();
+		int maxCycle = 0;
 		double minDelay = 1.0;
 		double maxDelay = -1.0;
 		Bit* minBit;
@@ -78,7 +80,7 @@ namespace flopoco{
 		}
 		REPORT(DEBUG, "max is cycle " << maxCycle << " with delay " << maxDelay);
 		REPORT(DEBUG, "min is cycle " << minCycle << " with delay " << minDelay);
-		REPORT(DEBUG, "minBit is " << minBit << " and maxBit is " << maxBit);
+		REPORT(DEBUG, "minBit is " << minBit->signal->getName() << " and maxBit is " << maxBit->signal->getName());
 
 		REPORT(DEBUG, "objectiveDelay = " << objectiveDelay);
 		REPORT(DEBUG, "compressionDelay = " << compressionDelay);
@@ -179,6 +181,9 @@ namespace flopoco{
 	}
 
 	void CompressionStrategy::printBitAmounts(){
+		if(DEBUG == 0){
+			return;
+		}
 		//first find max value length and maxcolumn
 		unsigned int maxValueDigits = 1;
 		unsigned int maxColumn = 1;
@@ -237,29 +242,45 @@ namespace flopoco{
 	void CompressionStrategy::applyAllCompressorsFromSolution(){
 		REPORT(DEBUG, "applying all compressors");
 
-		for(unsigned int cb = 0; cb < bitheap->bits.size(); cb++){
-			for(unsigned int k = 0; k < bitheap->bits[cb].size(); k++){
-				Bit* bit = bitheap->bits[cb][k];
-			}
-		}
-		for(unsigned int s = 0; s < bitAmount.size(); s++){
+		for(unsigned int s = 0; s < bitAmount.size() - 1; s++){
+			//get the zeros of this column
+			vector<unsigned int> emptyInputs = solution.getEmptyInputsByStage(s);
 			for(unsigned int c = 0; c < bitheap->width; c++){	//drop all compressors which start > MSB
 				vector<pair<BasicCompressor*, unsigned int> > tempVector;
 				tempVector = solution.getCompressorsAtPosition(s, c);
+				REPORT(DEBUG, "at stage " << s << " and column " << c << " there are " << tempVector.size() << " compressors");
 				for(unsigned int j = 0; j < tempVector.size(); j++){
+					REPORT(DEBUG, "applying compressor " << tempVector[j].first->getStringOfIO());
 					//applyCompressor
 					Compressor* realCompressor = tempVector[j].first->getCompressor(); 	//TODO: consider middleLength
-					unsigned int middleLength = tempVector[j].second;
+					//unsigned int middleLength = tempVector[j].second;
 					vector<vector<Bit*> > tempBitVector;
 					tempBitVector.resize(realCompressor->heights.size());
 					//fill Bitvectors
 					for(unsigned int cTemp = 0; cTemp < realCompressor->heights.size(); cTemp++){
+
 						int maxBitsToCompress = realCompressor->heights[cTemp];
+						REPORT(DEBUG, "at cTemp " << cTemp << " realCompresor->heights[cTemp] is " << realCompressor->heights[cTemp] << " and emptyInputs[c + cTemp] " << emptyInputs[c + cTemp]);
+						//handle empty inputs
+						if(maxBitsToCompress > 0 && emptyInputs[c + cTemp] > 0){
+							if(emptyInputs[c + cTemp] >= (unsigned int) maxBitsToCompress){
+								//there are more or the same amount of remaining empty inputs in this column than inputs of this compressor at this column
+								//therefore set all the inputs of the compressor to zero
+								emptyInputs[c + cTemp] -= (unsigned int) maxBitsToCompress;
+								maxBitsToCompress = 0;
+							}
+							else{
+								//some of the inputs of the compressor should be set to zero.
+								maxBitsToCompress -= (int) emptyInputs[c + cTemp];
+								emptyInputs[c + cTemp] = 0;
+							}
+						}
+						REPORT(DEBUG, "after emptyInputs maxBitsToCompress is " << maxBitsToCompress);
 						unsigned int bitsFound = 0;
 						for(unsigned int k = 0; k < bitheap->bits[c + cTemp].size(); k++){
-							if(bitsFound < maxBitsToCompress){
+							if(bitsFound < (unsigned) maxBitsToCompress){
 								Bit* tempBit = bitheap->bits[c + cTemp][k];
-								if(tempBit->type == BitType::free && getStageOfArrivalForBit(tempBit) == s){
+								if(tempBit->type == BitType::free){
 									bitsFound++;
 									tempBitVector[cTemp].push_back(tempBit);
 								}
@@ -269,27 +290,22 @@ namespace flopoco{
 					applyCompressor(tempBitVector, realCompressor, c);
 				}
 			}
-			putRemainingBitsIntoNextStage(s);
+			//plotter here?
+
 			bitheap->removeCompressedBits();
+
+			bitheap->markBitsForCompression();
 		}
 		concatenateLSBColumns();
-	}
 
-	void CompressionStrategy::putRemainingBitsIntoNextStage(unsigned int s){
 		for(unsigned int c = 0; c < bitheap->bits.size(); c++){
-			for(unsigned int j = 0; j < bitheap->bits[c].size(); j++){
-				Bit* bit = bitheap->bits[c][j];
-				if(bit->type == BitType::free){
-					if(getStageOfArrivalForBit(bit) == s){
-						double cp = bit->signal->getCriticalPath();
-						cp += compressionDelay;
-						bit->signal->setCriticalPath(cp);
-					}
-				}
+			if(bitheap->bits[c].size() > 2){
+				THROWERROR("in column " << c << " are more than two bits (" << bitheap->bits[c].size() << ") for the final adder ");
 			}
 		}
-		setCycleRight();
 	}
+
+
 
 	bool CompressionStrategy::checkAlgorithmReachedAdder(unsigned int adderHeight, unsigned int stage){
 		if(stage >= bitAmount.size()){
@@ -342,27 +358,7 @@ namespace flopoco{
 		return stage;
 	}
 
-	void CompressionStrategy::setCycleRight(){
-		//if the critical path of a signal exceeds the boundary of the last stage in this cycle, we have to
-		//put this bit into the next cycle. e.g. if the boundaries are 2*10^-10 and 5*10^-10 and a signal has the critical path of 6*10^-10, put it into the next cycle
 
-		double objectiveDelay = 1.0/bitheap->op->getTarget()->frequency();
-		vector<double> boundaries;
-		double maxDelay = objectiveDelay - compressionDelay;
-		for(unsigned int c = 0; c < bitheap->bits.size(); c++){
-			for(unsigned int j = 0; j < bitheap->bits[c].size(); j++){
-				Bit* bit = bitheap->bits[c][j];
-				if(bit->type == BitType::free){
-					double tempCriticalPath = bit->signal->getCriticalPath();
-					if(tempCriticalPath > maxDelay){
-						bit->signal->updateLifeSpan(bit->signal->getLifeSpan() + 1);
-						//bit->signal->setCycle(bit->signal->getCycle() + 1);
-						bit->signal->setCriticalPath(0.0);
-					}
-				}
-			}
-		}
-	}
 
 	void CompressionStrategy::orderCompressorsByCompressionEfficiency(){
 		vector<double> compressionRatio;
@@ -395,9 +391,7 @@ namespace flopoco{
 
 	void CompressionStrategy::startCompression()
 	{
-		bool bitheapCompressed = false;
 		double delay;
-		unsigned int colorCount = 0;
 
 		// Add the constant bits
 		REPORT(DEBUG, "Adding the constant bits");
@@ -577,17 +571,8 @@ namespace flopoco{
 		vector<string> compressorInputs;
 		ostringstream inputName, vectorName;
 		int instanceUID = Operator::getNewUId();
-		unsigned int count = 0;
 
-		bool bitVectorIsEmpty = true;
-		for(unsigned int c = 0; c < inputBits.size(); c++){
-			if(inputBits[c].size() > 0){
-				bitVectorIsEmpty = false;
-			}
-		}
-		if(bitVectorIsEmpty){
-			THROWERROR("Bit vector to compress is empty in applyCompressor");
-		}
+
 		if(compressor == nullptr){
 			THROWERROR("Compressor empty in applyCompressor");
 		}
@@ -595,7 +580,7 @@ namespace flopoco{
 		//inputs for compressor
 		for(unsigned int c = 0; c < compressor->heights.size(); c++){
 			inputName.str("");
-			for(unsigned int i = 0; i < compressor->heights[c]; i++){
+			for(unsigned int i = 0; i < (unsigned) compressor->heights[c]; i++){
 				if(i == 0){
 					if(inputBits[c].size() > i){
 						inputName << inputBits[c][i]->getName();
@@ -638,7 +623,7 @@ namespace flopoco{
 			//does this height occures in the compressor
 			int lastOccurence = -1;
 			for(unsigned int c = 0; c < compressor->outHeights.size(); c++){
-				if(compressor->outHeights[c] >= tempHeight){
+				if((unsigned) compressor->outHeights[c] >= tempHeight){
 					lastOccurence = c;
 				}
 			}
@@ -671,14 +656,14 @@ namespace flopoco{
 			}
 
 			//create the compressor
-			compressor->setShared();
 			bitheap->op->vhdl << bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
 
 			//add the outputBits to the bitheap
-			for(unsigned int c = 0; c <= lastOccurence; c++){
-				if(c + weight < bitheap->width && compressor->outHeights[c] >= tempHeight){
+			for(unsigned int c = 0; c <= (unsigned) lastOccurence; c++){
+				if(c + weight < bitheap->width && (unsigned)compressor->outHeights[c] >= tempHeight){
 					bitheap->addBit(c + weight, vectorName.str() + of(c));
 				}
+				bitheap->markBits(bitheap->op->getSignalByName(vectorName.str()), BitType::justAdded, weight);
 			}
 
 		}
@@ -689,8 +674,9 @@ namespace flopoco{
 				bitheap->markBit(inputBits[c][i], BitType::compressed);
 			}
 		}
+		compressor->markUsed();
 
-		setCycleRight();
+
 	}
 
 
@@ -714,19 +700,15 @@ namespace flopoco{
 			//add the first bits to the adder inputs
 			if(compressionDoneIndex <= bitheap->width)
 			{
-				cout << "bitheap->bits.size() is " << bitheap->bits.size() << " and bitheap->bits[bitheap->width-1].size() is " << bitheap->bits[bitheap->width-1].size() << endl;
 				if(bitheap->bits[bitheap->width-1].size() > 1)
 				{
-					cout << " case >1" << endl;
 					adderIn0 << bitheap->bits[bitheap->width-1][0]->getName();
 					adderIn1 << bitheap->bits[bitheap->width-1][1]->getName();
 				}else if(bitheap->bits[bitheap->width-1].size() > 0)
 				{
-					cout << "case > 0 (==1)" << endl;
 					adderIn0 << bitheap->bits[bitheap->width-1][0]->getName();
 					adderIn1 << "\"0\"";
 				}else{
-					cout << "case == 0" << endl;
 					adderIn0 << "\"0\"";
 					adderIn1 << "\"0\"";
 				}
@@ -780,6 +762,20 @@ namespace flopoco{
 			IntAdder* adder;
 
 			//create the adder
+#if 0
+			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
+			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
+
+			//create the port maps for the adder
+			bitheap->op->inPortMap(adder, "X", adderIn0Name.str());
+			bitheap->op->inPortMap(adder, "Y", adderIn1Name.str());
+			bitheap->op->inPortMap(adder, "Cin", adderCinName.str());
+			bitheap->op->outPortMap(adder, "R", adderOutName.str());
+
+
+			//create the instance of the adder
+			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
+#else
 			bitheap->op->newInstance("IntAdder",
 															 "bitheapFinalAdd_bh"+to_string(bitheap->guid),
 															 "wIn=" + to_string(bitheap->msb-adderStartIndex+1+1),
@@ -788,6 +784,7 @@ namespace flopoco{
 															 + ",Cin=>" + adderCinName.str(),
 															 "R=>"+ adderOutName.str()   );
 
+#endif
 			//add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex, 0)));
 		}

@@ -48,9 +48,7 @@ namespace flopoco{
 
 	void ParandehAfsharCompressionStrategy::parandehAfshar(){
 		REPORT(DEBUG, " in parandehAfsahr algorithm");
-		double threshold = 0.0;
 
-		bool exit = false;
 		unsigned int s = 0;
 		while(true){
 
@@ -89,10 +87,8 @@ namespace flopoco{
 						}
 					}
 					used[currentMaxColumn] = true;
-					//cout << "currentMaxColumn is " << currentMaxColumn << " and maxSize is " << maxSize << endl;
 					if(maxSize > 0){
 						pair<BasicCompressor*, int> tempResult = ParandehAfsharSearch(s, currentMaxColumn);
-						//cout << "compressor is " << tempResult.first << " and middlePart is " << tempResult.second << endl;
 						if(tempResult.first != nullptr && tempResult.second >= 0){
 							found = true;
 							result = tempResult;
@@ -121,6 +117,7 @@ namespace flopoco{
 					bitAmount[s + 1][c] += bitAmount[s][c];
 					bitAmount[s][c] = 0;
 				}
+				solution.setEmptyInputsByRemainingBits(s, bitAmount[s]);
 			}
 
 			//check if we are finished
@@ -150,9 +147,7 @@ namespace flopoco{
 		for(unsigned int i = 0; i < possibleCompressors.size(); i++){
 			double achievedEfficiencyCurrentLeft = getCompressionEfficiency(stage, column, possibleCompressors[i]);
 			double achievedEfficiencyCurrentRight = -1.0;
-			//cout << "column is " << column << " and possibleCompressors[i]->getHeights is " << possibleCompressors[i]->getHeights() << endl;
 			int rightStartPoint = column - (possibleCompressors[i]->getHeights() - 1);
-			//cout << "right StartPoint is " << rightStartPoint << endl;
 			if(rightStartPoint >= 0){
 				achievedEfficiencyCurrentRight = getCompressionEfficiency(stage, rightStartPoint, possibleCompressors[i]);
 			}
@@ -182,12 +177,11 @@ namespace flopoco{
 		if(found == true){
 			result.first = compressor;
 			result.second = resultColumn;
-			cout << "returning compressor " << compressor->getStringOfIO() << " and resultColumn " << resultColumn << " with achievedEfficiencyBest is " << achievedEfficiencyBest << endl;
+			REPORT(DEBUG, "returning compressor " << compressor->getStringOfIO() << " and resultColumn " << resultColumn << " with achievedEfficiencyBest is " << achievedEfficiencyBest);
 		}
 		else{
 			result.first = nullptr;
 			result.second = -1;
-			cout << "found no compressor " << endl;
 		}
 		return result;
 

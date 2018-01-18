@@ -55,7 +55,6 @@ namespace flopoco{
 				bitAmount.resize(bitAmount.size() + 1);
 				bitAmount[bitAmount.size() - 1].resize(bitAmount[bitAmount.size() - 2].size(), 0);
 			}
-			cout << "after resizing bitAmounts, bitAmount.size() is " << bitAmount.size() << endl;
 			//before we start this stage, check if compression is done
 			if(checkAlgorithmReachedAdder(2, s)){
 				break;
@@ -98,8 +97,6 @@ namespace flopoco{
 						}
 						columnsAlreadyChecked++;
 					}
-					//cout << "found is " << found << endl;
-					//cout << "achievedEfficiencyBest = " << achievedEfficiencyBest << " and best efficiency of compressor is " << currentCompressor->getEfficiency() << endl;
 				}
 				if(found){
 					REPORT(DEBUG, "placed compressor " << compressor->getStringOfIO() << " in stage " << s << " and column " << column);
@@ -113,6 +110,7 @@ namespace flopoco{
 					bitAmount[s + 1][c] += bitAmount[s][c];
 					bitAmount[s][c] = 0;
 				}
+				solution.setEmptyInputsByRemainingBits(s, bitAmount[s]);
 			}
 			REPORT(DEBUG, "finished stage " << s);
 			s++;
