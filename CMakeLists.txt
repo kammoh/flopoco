@@ -288,9 +288,9 @@ src/UserDefinedOperator
 src/ShiftReg
 # the following still depends on old bit heap
  src/FixFilters/FixSOPC
-# src/FixFilters/FixFIR
-# src/FixFilters/FixHalfSine
-#  src/FixFilters/FixIIR # 
+ src/FixFilters/FixFIR
+ src/FixFilters/FixHalfSine
+# src/FixFilters/FixIIR # 
 
 
 # pipelined Integer addition -------------------------------------------------

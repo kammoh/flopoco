@@ -57,7 +57,6 @@ namespace flopoco {
 
 		vhdl << instance(shiftReg, "shiftReg");
 
-		setCycle(0);
 
 		if (rescale) {
 			// Most of this code is copypasted from SOPC.
@@ -110,7 +109,6 @@ namespace flopoco {
 		outPortMap(fixSOPC, "R", "Rtmp");
 
 		vhdl << instance(fixSOPC, "fixSOPC");
-		syncCycleFromSignal("Rtmp");
 
 		addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1,   true);
 		vhdl << "R <= Rtmp;" << endl;

@@ -32,7 +32,7 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_) :
+	FixSOPC::FixSOPC(Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
 			Operator(target_),
 			msbIn(msbIn_),
 			lsbIn(lsbIn_),
@@ -40,6 +40,7 @@ namespace flopoco{
 			lsbOut(lsbOut_),
 			coeff(coeff_),
 			g(g_),
+			targetError(targetError_),
 			computeMSBOut(false)
 	{
 		n = coeff.size();
@@ -55,7 +56,7 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_) :
+	FixSOPC::FixSOPC(Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
 			Operator(target_),
 			maxAbsX(maxAbsX_),
 			lsbIn(lsbIn_),
@@ -63,6 +64,7 @@ namespace flopoco{
 			lsbOut(lsbOut_),
 			coeff(coeff_),
 			g(g_),
+			targetError(targetError_),
 			computeMSBOut(false)
 	{
 		n = coeff.size();
@@ -96,17 +98,15 @@ namespace flopoco{
 		setNameWithFreqAndUID(name.str()); 
 	
 		setCopyrightString("Matei Istoan, Louis Besème, Florent de Dinechin (2013-2015)");
-		
+
+
+		//reporting on the command line
+		REPORT(DETAILED, "FixSOPC  lsbOut=" << lsbOut << "   g=" << g) ;
+		for (int i=0; i< n; i++)
+			REPORT(DETAILED, "i=" << i << "  coeff=" << coeff[i] << "  msbIn=" << msbIn[i] << "  lsbIn=" << lsbIn[i]);
+
 		for (int i=0; i< n; i++)
 			addInput(join("X",i), msbIn[i]-lsbIn[i]+1);
-
-
-		//reporting on the filter
-		ostringstream clist;
-		clist << coeff[0];
-		for (int i=0; i< n; i++)
-			clist << " : " << coeff[i];
-		REPORT(INFO, "FixSOPC  lsbOut=" << lsbOut <<  " coeff=\"" << clist.str() << "\"" ) ;
 		
 		for (int i=0; i< n; i++) {
 			// parse the coeffs from the string, with Sollya parsing
@@ -137,7 +137,7 @@ namespace flopoco{
 
 			// now sumAbsCoeff is the max value that the SOPC can take.
 			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU); // just to make the following loop easier
-			REPORT(INFO, "sumAbs=" << sumAbs);
+			REPORT(DETAILED, "sumAbs=" << sumAbs);
 			msbOut=1;
 			while(sumAbs>=2.0){
 				sumAbs*=0.5;
@@ -149,6 +149,9 @@ namespace flopoco{
 			}
 			REPORT(INFO, "Computed msbOut=" << msbOut);
 			mpfr_clears(sumAbsCoeff, absCoeff, NULL);
+		}
+		else {
+			REPORT(INFO, "Provided msbOut=" << msbOut);
 		}
 
 		addOutput("R", msbOut-lsbOut+1);
@@ -184,7 +187,7 @@ namespace flopoco{
 
 		g = 0;
 		double maxErrorWithGuardBits=maxAbsError;
-		while (maxErrorWithGuardBits>0.5) {
+		while (maxErrorWithGuardBits>(targetError>0 ? targetError : 0.5)) {
 			g++;
 			maxErrorWithGuardBits /= 2.0;
 		}
@@ -351,7 +354,7 @@ namespace flopoco{
 
 	// please fill me with regression tests or corner case tests
 	void FixSOPC::buildStandardTestCases(TestCaseList * tcl) {
-
+		// TODO add the inputs that entail the max of the outputs 
 #if 0
 		TestCase *tc;
 		// first few cases to check emulate()
