@@ -92,7 +92,7 @@ namespace flopoco{
 						if(tempResult.first != nullptr && tempResult.second >= 0){
 							found = true;
 							result = tempResult;
-							REPORT(DEBUG, " found compressor");
+							REPORT(DEBUG, " found compressor " << tempResult.first->getStringOfIO() << " with efficiency " << tempResult.second);
 						}
 					}
 					if(found){
