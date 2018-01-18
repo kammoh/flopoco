@@ -1262,6 +1262,7 @@ namespace flopoco{
 					actual->setCriticalPathContribution(formal->getCriticalPath()); // this is OK because the subcomponent has been scheduled
 					REPORT(DEBUG, "instance() of a shared component. CP of "<< actual->getUniqueName() << " is " << actual->getCriticalPathContribution());
 					for (auto i: inputActualList) {
+						i->addSuccessor(actual);
 						actual->addPredecessor(i);
 						REPORT(FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  actual->getUniqueName()
 									 << " with critical path contribution " <<  actual->getCriticalPathContribution() ) ;
@@ -3441,6 +3442,7 @@ namespace flopoco{
 
 	void Operator::setShared(){
 		isShared_ = true;
+		isSequential_ = true; // shared operators must be combinatorial
 	}
 
 
