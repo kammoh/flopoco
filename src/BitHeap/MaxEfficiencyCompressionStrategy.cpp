@@ -51,13 +51,16 @@ namespace flopoco{
 
 		unsigned int s = 0;
 		while(true){
-			while(bitAmount.size() <= s + 1){
-				bitAmount.resize(bitAmount.size() + 1);
-				bitAmount[bitAmount.size() - 1].resize(bitAmount[bitAmount.size() - 2].size(), 0);
-			}
+
 			//before we start this stage, check if compression is done
 			if(checkAlgorithmReachedAdder(2, s)){
 				break;
+			}
+
+			//make sure there is the stage s+1 with the same amount of columns as s
+			while(bitAmount.size() <= s + 1){
+				bitAmount.resize(bitAmount.size() + 1);
+				bitAmount[bitAmount.size() - 1].resize(bitAmount[bitAmount.size() - 2].size(), 0);
 			}
 
 			bool found = true;
@@ -113,6 +116,7 @@ namespace flopoco{
 				solution.setEmptyInputsByRemainingBits(s, bitAmount[s]);
 			}
 			REPORT(DEBUG, "finished stage " << s);
+			printBitAmounts();
 			s++;
 		}
 

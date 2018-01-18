@@ -181,7 +181,7 @@ namespace flopoco{
 	}
 
 	void CompressionStrategy::printBitAmounts(){
-		if(DEBUG == 0){
+		if(UserInterface::verbose < DEBUG){
 			return;
 		}
 		//first find max value length and maxcolumn
@@ -242,9 +242,14 @@ namespace flopoco{
 	void CompressionStrategy::applyAllCompressorsFromSolution(){
 		REPORT(DEBUG, "applying all compressors");
 
+		unsigned int colorCount = 0; //for bitheapPlotter
 		for(unsigned int s = 0; s < bitAmount.size() - 1; s++){
 			//get the zeros of this column
 			vector<unsigned int> emptyInputs = solution.getEmptyInputsByStage(s);
+			//get bits for plotter
+			Bit *soonestBit, *soonestCompressibleBit;
+			soonestBit = getSoonestBit(0, bitheap->width - 1);
+			soonestCompressibleBit = getSoonestCompressibleBit(0, bitheap->width-1, compressionDelay);
 			for(unsigned int c = 0; c < bitheap->width; c++){	//drop all compressors which start > MSB
 				vector<pair<BasicCompressor*, unsigned int> > tempVector;
 				tempVector = solution.getCompressorsAtPosition(s, c);
@@ -290,11 +295,17 @@ namespace flopoco{
 					applyCompressor(tempBitVector, realCompressor, c);
 				}
 			}
-			//plotter here?
+			//assume that in every stage we compress bits
+			colorCount++;
+			bitheap->colorBits(BitType::justAdded, colorCount);
+			bitheapPlotter->takeSnapshot(soonestBit, soonestCompressibleBit);
 
 			bitheap->removeCompressedBits();
-
 			bitheap->markBitsForCompression();
+
+			bitheapPlotter->takeSnapshot(soonestBit, soonestCompressibleBit);
+
+			REPORT(DEBUG, "finished stage " << s << " of " << bitAmount.size() - 1);
 		}
 		concatenateLSBColumns();
 
