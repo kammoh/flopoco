@@ -341,6 +341,7 @@ namespace flopoco
 
 
 	void UserInterface::initialize(){
+		registerFactories();
 		// Initialize all the command-line options
 		verbose=1;
 		outputFileName="flopoco.vhdl";

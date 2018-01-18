@@ -47,17 +47,13 @@ int main(int argc, char* argv[] )
 	int wF = 33;
 
 	try{
-		// TODO this should be automatic
-		Shifter::registerFactory();
-		LZOC::registerFactory();
-		LZOCShifterSticky::registerFactory();
-		ShiftReg::registerFactory();
-		IntAdder::registerFactory();
-		FPAdd::registerFactory();
+ 
+		UserInterface::initialize();
 		
 		Operator*	op = new FPAddSinglePath(nullptr, target, wE, wF);
 		op->schedule();
 		op->applySchedule();
+		
 		ofstream file;
 		file.open("FPAdd.vhdl", ios::out);
 		
