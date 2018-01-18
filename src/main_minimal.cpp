@@ -3,9 +3,10 @@
 
   In the FloPoCo distribution it is built into executable fpadder_example
 
-  To compile it independently, do something like this:
-  gcc -c -I$FLOPOCO_DIR/src main_minimal.cpp
-  gcc -L$FLOPOCO_DIR -pg -Wall main_minimal.o  -o fpadder_example -lFloPoCo -lmpfr -lgmp -lgmpxx -lxml2 -lmpfi /usr/local/lib/libsollya.so 
+  To compile it independently, do something like this (from Flopoco root dir): 
+  
+	g++ -c -I./src src/main_minimal.cpp 
+  g++ -L. -pg -Wall main_minimal.o  -o fpadder_example -lFloPoCo /usr/local/lib/libsollya.so -lmpfr  -lgmpxx -lgmp -lmpfi -lxml2 
 
 
 
@@ -40,23 +41,37 @@ using namespace flopoco;
 int main(int argc, char* argv[] )
 {
 
-	Target* target = new Virtex4();
+	Target* target = new Virtex6();
 
 	int wE = 9;
 	int wF = 33;
-	
-	Operator*	op = new FPAddSinglePath(target, wE, wF);
-	
-	ofstream file;
-	file.open("FPAdd.vhdl", ios::out);
-	
-	op->outputVHDLToFile(file);
 
-	file.close();
+	try{
+		// TODO this should be automatic
+		Shifter::registerFactory();
+		LZOC::registerFactory();
+		LZOCShifterSticky::registerFactory();
+		ShiftReg::registerFactory();
+		IntAdder::registerFactory();
+		FPAdd::registerFactory();
+		
+		Operator*	op = new FPAddSinglePath(nullptr, target, wE, wF);
+		op->schedule();
+		op->applySchedule();
+		ofstream file;
+		file.open("FPAdd.vhdl", ios::out);
+		
+		op->outputVHDLToFile(file);
+		
+		file.close();
 	
 	
-	cerr << endl<<"Final report:"<<endl;
-	op->outputFinalReport(0);
+		cerr << endl<<"Final report:"<<endl;
+		op->outputFinalReport(cout, 0);
+	}
+	catch(string &e){
+		cerr << "FloPoCo raised the following exception: " << e << endl;
+	}
 	return 0;
 }
 

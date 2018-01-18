@@ -188,7 +188,7 @@ ADD_CUSTOM_COMMAND(
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
 
-ADD_LIBRARY(FloPoCoLib STATIC
+ADD_LIBRARY(FloPoCo STATIC
 
 #--------------------------------------------------------------------
 #               FRAMEWORK
@@ -416,27 +416,27 @@ src/UserDefinedOperator
 )
 
 TARGET_LINK_LIBRARIES(
-  FloPoCoLib 
+  FloPoCo 
   mpfr gmp gmpxx xml2 mpfi
   )
 
 IF (SOLLYA_LIB)
 TARGET_LINK_LIBRARIES(
-  FloPoCoLib
+  FloPoCo
   ${SOLLYA_LIB}
 	)
 ENDIF (SOLLYA_LIB)
 
 IF (PYTHON_LIB)
 TARGET_LINK_LIBRARIES(
-  FloPoCoLib
+  FloPoCo
   ${PYTHON_LIB}
   )
 ENDIF (PYTHON_LIB)
 
 IF (WCPG_FOUND)
 TARGET_LINK_LIBRARIES(
-  FloPoCoLib
+  FloPoCo
   ${WCPG_LIB}
   )
 ENDIF (WCPG_FOUND)
@@ -448,7 +448,7 @@ ADD_EXECUTABLE(flopoco
  
 TARGET_LINK_LIBRARIES(
   flopoco  
-	FloPoCoLib 
+	FloPoCo 
   )
 
 # unplugged for now to speed up compilation, to revive some day
@@ -474,4 +474,4 @@ TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
 
 
 #add_subdirectory(src/random)
-#target_link_libraries(FloPoCoLib flopoco_random_lib)
+#target_link_libraries(FloPoCo flopoco_random_lib)

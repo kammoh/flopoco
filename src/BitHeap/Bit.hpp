@@ -4,9 +4,9 @@
 #include <string>
 #include <iostream>
 
-#include "src/utils.hpp"
+#include "utils.hpp"
 
-#include "src/Signal.hpp"
+#include "Signal.hpp"
 #include "Compressor.hpp"
 #include "BitheapNew.hpp"
 
