@@ -6,7 +6,7 @@ using namespace std;
 
 namespace flopoco{
 
-	BasicCompressor::BasicCompressor(Target * target_, vector<int> heights_, float area_, bool compactView_, string type_): target(target_), heights(heights_), area(area_), compactView(compactView_), type(type_)
+	BasicCompressor::BasicCompressor(Target * target_, vector<int> heights_, float area_, string type_, bool compactView_): target(target_), heights(heights_), area(area_), type(type_), compactView(compactView_)
 	{
 		//compute the size of the input and of the output
 		int wIn = 0;
@@ -42,6 +42,10 @@ namespace flopoco{
 				compressor = new Compressor(target, heights, area, compactView);
 				return compressor;
 			}
+		}
+		else{
+			//TODO cases targetSpecific and variable
+			return nullptr;
 		}
 	}
 

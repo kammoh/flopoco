@@ -115,6 +115,66 @@ ELSE ( WCPG_FOUND )
 	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator" )
 ENDIF ( WCPG_FOUND )
 
+# dectect if scalp is available
+FIND_PATH(SCALP_H
+          ScaLP/Solver.h
+	  HINTS "/opt/scalp/include"
+	  DOC "Path of main header of scalp"
+)
+FIND_LIBRARY(SCALP_LIB
+        NAMES libScaLP.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP main library")
+
+FIND_LIBRARY(SCALP_CPLEX_LIB
+        NAMES libScaLP-CPLEX.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for cplex solver backend")
+
+FIND_LIBRARY(SCALP_GUROBI_LIB
+        NAMES libScaLP-Gurobi.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for Gurobi solver backend")
+
+FIND_LIBRARY(SCALP_SCIP_LIB
+        NAMES libScaLP-SCIP.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for SCIP solver backend")
+
+FIND_LIBRARY(SCALP_LPSOLVE_LIB
+        NAMES libScaLP-LPSOLVE.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for LPSOLVE solver backend")
+
+IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
+    SET(SCALP_FOUND TRUE)
+ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
+
+
+SET(SCALP_INCLUDE_DIRS ${SCALP_H})
+IF (SCALP_FOUND)
+	ADD_DEFINITIONS(-DHAVE_SCALP)
+    set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
+	IF (SCALP_CPLEX_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_CPLEX_LIB})
+	ENDIF (SCALP_CPLEX_LIB)
+	IF (SCALP_GUROBI_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_GUROBI_LIB})
+	ENDIF (SCALP_GUROBI_LIB)
+	
+	IF (SCALP_SCIP_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_SCIP_LIB})
+	ENDIF (SCALP_SCIP_LIB)
+	
+	IF (SCALP_LPSOLVE_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
+	ENDIF (SCALP_LPSOLVE_LIB)
+	
+	MESSAGE(STATUS "Found SCALP: ${SCALP_INCLUDE_DIRS} ${SCALP_LIB}")
+	MESSAGE(STATUS "      Using the following ILP Solvers: ${SCALP_LIBS}")  
+ELSE (SCALP_FOUND)
+	MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (${SCALP_INCLUDE_DIRS} ${SCALP_LIB})")
+ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
 
@@ -132,7 +192,7 @@ ELSE(FLEXPP_EXECUTABLE)
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions)
+INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${SCALP_INCLUDE_DIRS})
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT VHDLLexer.cpp
@@ -475,6 +535,12 @@ TARGET_LINK_LIBRARIES(
   )
 ENDIF (WCPG_FOUND)
 
+IF (SCALP_FOUND)
+TARGET_LINK_LIBRARIES(
+  FloPoCo
+  ${SCALP_LIBS}
+  )
+ENDIF (SCALP_FOUND)
 
 ADD_EXECUTABLE(flopoco
  src/main 
