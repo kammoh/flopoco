@@ -127,10 +127,6 @@ namespace flopoco{
 				break;
 			}
 
-			//new stage to bitAmount
-			bitAmount.resize(bitAmount.size() + 1);
-			//new stage has as many columns as previous stage
-			bitAmount[bitAmount.size() - 1].resize(bitAmount[bitAmount.size() - 2].size());
 			s++;
 		}
 
