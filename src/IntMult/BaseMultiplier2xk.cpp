@@ -103,8 +103,8 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Target* target, bool isSignedX, bool is
         inPortMapCst(cur_lut, "i4","'0'");
         inPortMapCst(cur_lut, "i5","'1'");
 
-        outPortMap(cur_lut,"o5","cc_di" + of(i),false);
-        outPortMap(cur_lut,"o6","cc_s" + of(i),false);
+        outPortMap(cur_lut,"o5","cc_di" + of(i));
+        outPortMap(cur_lut,"o6","cc_s" + of(i));
 
         vhdl << cur_lut->primitiveInstance( join("lut",i), this ) << endl;
     }
@@ -121,8 +121,8 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Target* target, bool isSignedX, bool is
         }
         inPortMap( cur_cc, "di", "cc_di" + range( i * 4 + 3, i * 4 ) );
         inPortMap( cur_cc, "s", "cc_s" + range( i * 4 + 3, i * 4 ) );
-        outPortMap( cur_cc, "co", "cc_co" + range( i * 4 + 3, i * 4 ), false);
-        outPortMap( cur_cc, "o", "cc_o" + range( i * 4 + 3, i * 4 ), false);
+        outPortMap( cur_cc, "co", "cc_co" + range( i * 4 + 3, i * 4 ));
+        outPortMap( cur_cc, "o", "cc_o" + range( i * 4 + 3, i * 4 ));
 
         stringstream cc_name;
         cc_name << "cc_" << i;

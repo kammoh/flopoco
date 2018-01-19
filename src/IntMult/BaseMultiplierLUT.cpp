@@ -88,7 +88,7 @@ BaseMultiplierLUTOp::BaseMultiplierLUTOp(Target* target, bool isSignedX, bool is
 
     addSubComponent(bmlt);
     inPortMap(bmlt, "X", "YX");
-    outPortMap(bmlt, "Y", "R", false);
+    outPortMap(bmlt, "Y", "R");
 
     vhdl << instance(bmlt, "BaseMultiplierLUTTable");
 

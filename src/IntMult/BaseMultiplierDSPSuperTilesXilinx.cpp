@@ -235,7 +235,7 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Target*
 
     if(pipelineDSPs) //ToDo: decide on target frequency whether to pipeline or not (and how depth)
     {
-        nextCycle();
+//        nextCycle(); //!!
     }
 
     declare("T",wR);

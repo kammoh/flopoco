@@ -337,11 +337,11 @@ src/IntAddSubCmp/IntMultiAdder
 src/IntMult/MultiplierBlock
 # src/IntMult/IntSquarer
 src/IntMult/BaseMultiplier
-#src/IntMult/BaseMultiplier2xk
-#src/IntMult/BaseMultiplierCollection
-#src/IntMult/BaseMultiplierDSP
-#src/IntMult/BaseMultiplierDSPSuperTilesXilinx
-#src/IntMult/BaseMultiplierLUT
+src/IntMult/BaseMultiplier2xk
+src/IntMult/BaseMultiplierCollection
+src/IntMult/BaseMultiplierDSP
+src/IntMult/BaseMultiplierDSPSuperTilesXilinx
+src/IntMult/BaseMultiplierLUT
 
 
 # Complex numbers ---------------------------------------------------
