@@ -9,7 +9,7 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "UserDefinedOperator.hpp"
+#include "TutorialOperator.hpp"
 
 using namespace std;
 namespace flopoco {
@@ -17,13 +17,13 @@ namespace flopoco {
 
 
 
-	UserDefinedOperator::UserDefinedOperator(Target* target, int param0_, int param1_) : Operator(target), param0(param0_), param1(param1_) {
-		/* constructor of the UserDefinedOperator
+	TutorialOperator::TutorialOperator(Target* target, int param0_, int param1_) : Operator(target), param0(param0_), param1(param1_) {
+		/* constructor of the TutorialOperator
 		   Target is the targeted FPGA : Stratix, Virtex ... (see Target.hpp for more informations)
 		   param0 and param1 are some parameters declared by this Operator developpers, 
 		   any number can be declared, you will have to modify 
 		   -> this function,  
-		   -> the prototype of this function (available in UserDefinedOperator.hpp)
+		   -> the prototype of this function (available in TutorialOperator.hpp)
 		   ->  main.cpp to uncomment the RegisterFactory line
 		*/
 		/* In this constructor we are going to generate an operator that 
@@ -36,12 +36,12 @@ namespace flopoco {
 			 All the vhdl code needed by this operator has to be generated in this constructor */
 
 		// definition of the source file name, used for info and error reporting using REPORT 
-		srcFileName="UserDefinedOperator";
+		srcFileName="TutorialOperator";
 
 		// definition of the name of the operator
 		ostringstream name;
-		name << "UserDefinedOperator_" << param0 << "_" << param1;
-		setName(name.str());
+		name << "TutorialOperator_" << param0 << "_" << param1;
+		setName(name.str()); // See also setNameWithFrequencyAndUID()
 		// Copyright 
 		setCopyrightString("ACME and Co 2010");
 
@@ -55,30 +55,29 @@ namespace flopoco {
 		addInput ("X" , param0);
 		addInput ("Y" , param0);
 		addInput ("Z" , param0);
-		addFullComment(" addFullComment for a large comment ");
-		addComment("addComment for small left-aligned comment");
-
 		// declaring output
 		addOutput("S" , param1);
 
+		addFullComment("Start of vhdl generation"); // this will be a large, centered comment in the VHDL
+
+
 
 		/* Some piece of information can be delivered to the flopoco user if  the -verbose option is set
-		   [eg: flopoco -verbose=0 UserDefinedOperator 10 5 ]
+		   [eg: flopoco -verbose=0 TutorialOperator 10 5 ]
 		   , by using the REPORT function.
 		   There is three level of details
 		   -> INFO for basic information ( -verbose=1 )
-		   -> DETAILED for complete information, includes the INFO level ( -verbose=2 )
-		   -> DEBUG for complete and debug information, to be used for getting information 
-		   during the debug step of operator development, includes the INFO and DETAILED levels ( -verbose=3 )
+		   -> DETAILED for complete information for the user of the operator (includes the INFO level) ( -verbose=2 )
+		   -> DEBUG for complete and debug information, to be used during operator development (includes the INFO and DETAILED levels) ( -verbose=3 )
 		*/
 		// basic message
-		REPORT(INFO,"Declaration of UserDefinedOperator \n");
+		REPORT(INFO,"Declaration of TutorialOperator \n");
 
 		// more detailed message
 		REPORT(DETAILED, "this operator has received two parameters " << param0 << " and " << param1);
   
 		// debug message for developper
-		REPORT(DEBUG,"debug of UserDefinedOperator");
+		REPORT(DEBUG,"debug of TutorialOperator");
 
 
 		/* vhdl is the stream which receives all the vhdl code, some special functions are
@@ -88,17 +87,22 @@ namespace flopoco {
 
 		   Each code transmited to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
 		*/
-		vhdl << declare(getTarget()->adderDelay(param0+1), "T", param0+1) << " <= ('0' & X) + ('O' & Y);" << endl;
-		vhdl << declare(getTarget()->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
+		vhdl <<tab<< declare(
+										getTarget()->adderDelay(param0+1),  // contribution to the critical path of this VHDL operation
+										"T",                                // signal name (will be returned by declare() and placed in the vhdl stream)
+										param0+1)                           // signal size, in bits
+				 << " <= ('0' & X) + ('O' & Y);" << endl;
+		vhdl << tab << declare(getTarget()->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
 
-		// we first put the most significant bit of the result into R
+		addComment("first put the most significant bit of the result into R"); // addComment for small left-aligned comment
 		vhdl << tab << "S <= (R" << of(param0 +1) << " & ";
-		// and then we place the last param1 bits
-		vhdl << "R" << range(param1 - 1,0) << ");" << endl;
+		addComment("then place the last param1 bits"); 
+		vhdl << tab << "R" << range(param1 - 1,0) << ");" << endl;
+		addFullComment("End of vhdl generation"); // this will be a large, centered comment in the VHDL
 	};
 
 	
-	void UserDefinedOperator::emulate(TestCase * tc) {
+	void TutorialOperator::emulate(TestCase * tc) {
 		/* This function will be used when the TestBench command is used in the command line
 		   we have to provide a complete and correct emulation of the operator, in order to compare correct output generated by this function with the test input generated by the vhdl code */
 		/* first we are going to format the entries */
@@ -119,22 +123,22 @@ namespace flopoco {
 	}
 
 
-	void UserDefinedOperator::buildStandardTestCases(TestCaseList * tcl) {
+	void TutorialOperator::buildStandardTestCases(TestCaseList * tcl) {
 		// please fill me with regression tests or corner case tests!
 	}
 
 
 
 
-	OperatorPtr UserDefinedOperator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr TutorialOperator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int param0, param1;
 		UserInterface::parseInt(args, "param0", &param0); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
 		UserInterface::parseInt(args, "param1", &param1); 
-		return new UserDefinedOperator(target, param0, param1);
+		return new TutorialOperator(target, param0, param1);
 	}
 	
-	void UserDefinedOperator::registerFactory(){
-		UserInterface::add("UserDefinedOperator", // name
+	void TutorialOperator::registerFactory(){
+		UserInterface::add("TutorialOperator", // name
 											 "An heavily commented example operator to start with FloPoCo.", // description, string
 											 "Miscellaneous", // category, from the list defined in UserInterface.cpp
 											 "", //seeAlso
@@ -146,7 +150,7 @@ namespace flopoco {
                         param1(int): A second parameter, here used as the output size",
 											 // More documentation for the HTML pages. If you want to link to your blog, it is here.
 											 "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
-											 UserDefinedOperator::parseArguments
+											 TutorialOperator::parseArguments
 											 ) ;
 	}
 

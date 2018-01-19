@@ -116,8 +116,8 @@ void UserInterface::registerFactories()
 		// Fix2DNorm::registerFactory();
 
 		// TargetModel::registerFactory();
-		// Uncomment me to play within FloPoCo operator development
-	  UserDefinedOperator::registerFactory();
+		// For new developers to play within FloPoCo operator development
+	  TutorialOperator::registerFactory();
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;

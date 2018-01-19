@@ -44,7 +44,7 @@ namespace flopoco {
 	// Reporting levels
 #define LIST 0       // information necessary to the user of FloPoCo
 #define INFO 1       // information useful to the user of FloPoCo
-#define DETAILED 2   // information that shows how the algorithm works
+#define DETAILED 2   // information that shows how the algorithm works, useful to inquisitive users
 #define DEBUG 3      // debug info, useful mostly to developers
 #define FULL 4       // pure noise
 

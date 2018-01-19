@@ -352,7 +352,7 @@ namespace flopoco
 		unusedHardMultThreshold=0.7;
 
 		depGraphFileName = "flopoco.dot";
-		depGraphDrawing = "no";
+		depGraphDrawing = "full";
 
 	}
 
