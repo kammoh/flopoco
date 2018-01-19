@@ -267,8 +267,6 @@ src/AutoTest/AutoTest
 #               OPERATORS          
 #--------------------------------------------------------------------
 
-src/UserDefinedOperator
-
 #src/OperatorPipeline/OperatorPipeline
 #src/FPExpressions/ExpressionParserData
 
@@ -445,7 +443,7 @@ src/Tools/Point
 #src/ExpLog/FPPow
 
 # If you want to add your operator, feel free
-src/UserDefinedOperator
+src/TutorialOperator
 )
 
 TARGET_LINK_LIBRARIES(
