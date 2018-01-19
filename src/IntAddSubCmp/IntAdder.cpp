@@ -50,7 +50,6 @@ namespace flopoco {
 		addInput  ("Cin");
 		addOutput ("R"  , wIn, 1 , true);
 
-		schedule();
 		double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
 		// What is the maximum lexicographic time of our inputs?
 		int maxCycle = 0;

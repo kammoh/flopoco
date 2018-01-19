@@ -1291,6 +1291,9 @@ namespace flopoco{
 		string portName, signalName, mapping;
 
 		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
+
+		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
+
 		//parse the parameters
 		parametersVector.push_back(opName);
 		while(!parameters.empty())
