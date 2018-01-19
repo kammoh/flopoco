@@ -115,6 +115,10 @@ void UserInterface::registerFactories()
 		// hidden for now
 		// Fix2DNorm::registerFactory();
 
+        Xilinx_GenericAddSub::registerFactory();
+        Xilinx_Comparator::registerFactory();
+        Xilinx_TernaryAdd_2State::registerFactory();
+
 		// TargetModel::registerFactory();
 		// Uncomment me to play within FloPoCo operator development
 	  UserDefinedOperator::registerFactory();

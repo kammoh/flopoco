@@ -345,7 +345,7 @@ namespace flopoco
 
 
 	void UserInterface::initialize(){
-		registerFactories();
+        registerFactories();  //implemented in Factories.cpp
 		// Initialize all the command-line options
 		verbose=1;
 		outputFileName="flopoco.vhdl";
