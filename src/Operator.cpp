@@ -431,25 +431,6 @@ namespace flopoco{
 	}
 
 
-	// ??? TODO
-	Signal* Operator::getDelayedSignalByName(string name) {
-		//remove the '^xx' from the signal name, if it exists,
-		//and then check if the signal is in the signal map
-		string n;
-		//check if this is the name of a delayed signal
-		if(name.find('^') != string::npos){
-			n = name.substr(0, name.find('^'));
-		}else{
-			n = name;
-		}
-		//search for the stripped signal name
-		if(signalMap_.find(n) == signalMap_.end()){
-			//signal not found, throw an error
-			THROWERROR("In getDelayedSignalByName, signal " << name << " not declared");
-		}
-		return signalMap_[n];
-	}
-
 
 	vector<Signal*> Operator::getSignalList(){
 		return signalList_;
@@ -1014,7 +995,11 @@ namespace flopoco{
 	}
 
 
-	string Operator::delay(string signalName, int nbDelayCycles, SignalDelayType delayType)
+
+
+	
+	// TODO rename into something else
+	string Operator::delay(string signalName, int nbDelayCycles)
 	{
 		ostringstream result;
 
@@ -1024,11 +1009,8 @@ namespace flopoco{
 		//check that the signal exists
 		if(!isSignalDeclared(signalName))
 			THROWERROR("In delay(): trying to delay a signal that does not yet exist:" << signalName);
-
-		if(delayType == SignalDelayType::pipeline)
-			result << signalName << "^" << nbDelayCycles;
-		else
-			result << signalName << "^^" << nbDelayCycles;
+		
+		result << signalName << "^" << nbDelayCycles;
 		return result.str();
 	}
 
@@ -2067,11 +2049,10 @@ namespace flopoco{
 			}
 
 			//this could be a user-defined name
-			try
-			{
+			try			{
 			    lhsSignal = getSignalByName(lhsName);
-			}catch(string &e)
-			{
+			}
+			catch(string &e)	{
 			    lhsSignal = NULL;
 			    unknownLHSName = true;
 			}
@@ -2080,8 +2061,7 @@ namespace flopoco{
 			//	with signal_name select... etc
 			//	the problem is there is a signal belonging to the right hand side
 			//	on the left-hand side, before the left hand side signal, which breaks the regular flow
-			if(isSelectedAssignment == true)
-			{
+			if(isSelectedAssignment == true)		{
 				//extract the first rhs signal name
 				tmpCurrentPos = 0;
 				tmpNextPos = workStr.find('$');
@@ -2090,27 +2070,22 @@ namespace flopoco{
 
 				//remove the possible parentheses around the rhsName
 				string newRhsName = rhsName;
-				if(rhsName.find("(") != string::npos)
-				{
+				if(rhsName.find("(") != string::npos)	{
 					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
 				}
 				//this could also be a delayed signal name
-				try{
+				if(newRhsName.find('^') != string::npos){
+					string delay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
+					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
+					REPORT(0, "doApplySchedule: Found funct. delayed signal  : " << newRhsName );
+					// getSignalByName(newRhsName) -> updateLifeSpan()
+				}
+
+				try			{
 					rhsSignal = getSignalByName(newRhsName);
-				}catch(string &e){
-					try{
-						rhsSignal = getDelayedSignalByName(newRhsName);
-						//extract the name
-						rhsName = rhsName.substr(0, newRhsName.find('^'));
-					}catch(string e2){
-					    //THROWERROR("Error in doApplySchedule(): signal " << newRhsName << " not found:" << e2);
-					    //this is a user-defined name
-					    rhsSignal = NULL;
-					    unknownRHSName = true;
-					}
-				}catch(...){
-					//THROWERROR("Error in doApplySchedule(): signal " << newRhsName << " not found:");
-					//this is a user-defined name
+				}
+				catch(...){
+					//this i must be user-defined name
 					rhsSignal = NULL;
 					unknownRHSName = true;
 				}
@@ -2183,31 +2158,26 @@ namespace flopoco{
 				rhsNameLength = rhsName.size();
 				//remove the possible parentheses around the rhsName
 				string newRhsName = rhsName;
-				if(rhsName.find("(") != string::npos)
-				{
+				if(rhsName.find("(") != string::npos)	{
 					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
 				}
-
 				//this could also be a delayed signal name
-				try{
-					rhsSignal = getSignalByName(newRhsName);
-				}catch(string &e){
-					try{
-						rhsSignal = getDelayedSignalByName(newRhsName);
-						//extract the name
-						rhsName = rhsName.substr(0, newRhsName.find('^'));
-					}catch(string e2){
-						//THROWERROR("Error in doApplySchedule(): signal " << newRhsName << " not found:" << e2);
-						//this is a user-defined name
-						rhsSignal = NULL;
-						unknownRHSName = true;
-					}
-				}catch(...){
-				    //THROWERROR("Error in doApplySchedule(): signal " << newRhsName << " not found:");
-				    //this is a user-defined name
-				    rhsSignal = NULL;
-				    unknownRHSName = true;
+				if(newRhsName.find('^') != string::npos){
+					string delay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
+					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
+					REPORT(0, "doApplySchedule: Found funct. delayed signal 2  : " << newRhsName << " delay:" << delay );
+					// getSignalByName(newRhsName) -> updateLifeSpan()
 				}
+
+				try			{
+					rhsSignal = getSignalByName(newRhsName);
+				}
+				catch(...){
+					//this i must be user-defined name
+					rhsSignal = NULL;
+					unknownRHSName = true;
+				}
+
 
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
@@ -2982,9 +2952,10 @@ namespace flopoco{
 
 	      stream << tabs << nodeName << "__" << node->parentOp()->getName() << " -> "
 		   << nodeParentName << "__" << node->successor(i)->parentOp()->getName() << " [";
-	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
-	      stream << " label=" << max(0, node->successorPair(i)->second);
-	      stream << " ];\n";
+	      stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward ";
+				// Removed by F2D: never-used functional delays 
+				//	      stream << " label=" << max(0, node->successorPair(i)->second);
+				stream << " ];\n";
 	  }
 
 	  return stream.str();
@@ -3005,7 +2976,7 @@ namespace flopoco{
 
 		stream << tabs << sourceNodeName << "__" << (source!=NULL ? source->parentOp()->getName() : this->getName()) << " -> "
 				<< sinkNodeName << "__" << (sink!=NULL ? sink->parentOp()->getName() : this->getName()) << " [";
-		stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward, ";
+		stream << " arrowhead=normal, arrowsize=1.0, arrowtail=normal, color=black, dir=forward";
 		if((source != NULL) && (sink != NULL))
 			stream << " label=" << max(0, sink->getCycle()-source->getCycle());
 		stream << " ];\n";

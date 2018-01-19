@@ -46,7 +46,7 @@ namespace flopoco {
 		}
 		addInput("X", 1-lsbInOut, true);
 
-		ShiftReg *shiftReg = new ShiftReg(getTarget(), 1-lsbInOut, n);
+		ShiftReg *shiftReg = new ShiftReg(getParentOp(), getTarget(), 1-lsbInOut, n);
 
 		addSubComponent(shiftReg);
 		inPortMap(shiftReg, "X", "X");

@@ -140,7 +140,7 @@ namespace flopoco {
 		setSequential();
 		getTarget()->setPipelined(true);
 		// The shift registers
-		ShiftReg *inputShiftReg = new ShiftReg(getTarget(), 1-lsbIn, n);
+		ShiftReg *inputShiftReg = new ShiftReg(parentOp, getTarget(), 1-lsbIn, n);
 		addSubComponent(inputShiftReg);
 		inPortMap(inputShiftReg, "X", "X");
 		for (uint32_t i = 0; i<n; i++) {
@@ -149,7 +149,7 @@ namespace flopoco {
 		vhdl << instance(inputShiftReg, "inputShiftReg");
 
 		vhdl << tab << declare("YinternalLoopback", msbOut-lsbExt+1) << " <= Yinternal;" << endl; // just so that the inportmap finds it  
-		ShiftReg *outputShiftReg = new ShiftReg(getTarget(), msbOut-lsbExt+1, m+1);
+		ShiftReg *outputShiftReg = new ShiftReg(parentOp, getTarget(), msbOut-lsbExt+1, m+1);
 		addSubComponent(outputShiftReg);
 		inPortMap(outputShiftReg, "X", "YinternalLoopback");
 		for (uint32_t i = 0; i<m; i++) {
