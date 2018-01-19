@@ -119,6 +119,7 @@ void UserInterface::registerFactories()
 		Xilinx_Comparator::registerFactory();
 		Xilinx_TernaryAdd_2State::registerFactory();
 		XilinxGPC::registerFactory();
+		XilinxFourToTwoCompressor::registerFactory();
 
 		// TargetModel::registerFactory();
 		// Uncomment me to play within FloPoCo operator development

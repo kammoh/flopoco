@@ -5,15 +5,33 @@ using namespace std;
 
 namespace flopoco{
 
-XilinxGPC::XilinxGPC(Target * target, vector<int> heights) : Compressor(target, heights, -1.0)
+XilinxGPC::XilinxGPC(Target * target, vector<int> heights) : Compressor(target)
 {
-    /*
-    addInput("X0", 6);
-    addInput("X2", 6);
-    addOutput("R", 5);
+    this->heights = heights;
+    ostringstream name;
+
+    //compressors are supposed to be combinatorial
+    setCombinatorial();
+    setShared();
+
+    //remove the zero columns at the lsb
+    while(heights[0] == 0)
+    {
+        heights.erase(heights.begin());
+    }
+
+    setWordSizes();
+    createInputsAndOutputs();
+
+    //set name:
+    name << "XilinxGPC_";
+    for(int i=heights.size()-1; i>=0; i--)
+        name << heights[i];
+
+    name << "_" << wOut;
+    setName(name.str());
 
     vhdl << tab << "R <= (others => '0');" << endl;
-    */
 }
 
 OperatorPtr XilinxGPC::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)

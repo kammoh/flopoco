@@ -262,6 +262,7 @@ src/AutoTest/AutoTest
  src/BitHeap/FirstFittingCompressionStrategy
  src/BitHeap/ParandehAfsharCompressionStrategy
  src/BitHeap/MaxEfficiencyCompressionStrategy
+# src/BitHeap/VariableColumnCompressor
 
 #--------------------------------------------------------------------
 #               OPERATORS          
@@ -432,6 +433,7 @@ src/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
 src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State
 src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice
 src/PrimitiveComponents/Xilinx/XilinxGPC
+src/PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor
 #
 #src/PrimitiveComponents/Altera/Altera_LCELL
 #

@@ -34,6 +34,11 @@ namespace flopoco
 		 */
 		Compressor(Target * target, vector<int> heights, float area = 0.0, bool compactView = false);
 
+        /*!
+         * An empty constructor, needed to derive from this class without generating code
+         */
+        Compressor(Target *target);
+
 		/**
 		 * Destructor
 		 */
@@ -78,7 +83,11 @@ namespace flopoco
 		int wOut;                           /**< size of the output */
 		float area;							/**< size of the compressor in LUT-equivalents */
 
-	private:
+    protected:
+
+        void setWordSizes();
+        void createInputsAndOutputs();
+
 		int maxVal;                         /**< the maximum value that the compressor can count up to */
 		bool compactView;                   /**< print the VHDL in a more compact way, or not */
 		bool compressorUsed;                /**< whether this compressor has been used for a compression, or not */
