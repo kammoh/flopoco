@@ -2001,7 +2001,7 @@ namespace flopoco{
 								Signal* subopOutput = getSignalByName(rhsName)->successor(0);
 														
 								REPORT(DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
-								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle() + getFunctionalDelay(subopInput, subopOutput);
+								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle();
 								if( deltaCycle> 0)
 									newStr << "_d" << vhdlize(deltaCycle);
 							}
@@ -2057,7 +2057,7 @@ namespace flopoco{
 			    unknownLHSName = true;
 			}
 
-			//check for selected signal assignments
+			//check for "select" signal assignments
 			//	with signal_name select... etc
 			//	the problem is there is a signal belonging to the right hand side
 			//	on the left-hand side, before the left hand side signal, which breaks the regular flow
@@ -2073,14 +2073,7 @@ namespace flopoco{
 				if(rhsName.find("(") != string::npos)	{
 					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
 				}
-				//this could also be a delayed signal name
-				if(newRhsName.find('^') != string::npos){
-					string delay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
-					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
-					REPORT(0, "doApplySchedule: Found funct. delayed signal  : " << newRhsName );
-					// getSignalByName(newRhsName) -> updateLifeSpan()
-				}
-
+				// No functional register possible here
 				try			{
 					rhsSignal = getSignalByName(newRhsName);
 				}
@@ -2092,10 +2085,12 @@ namespace flopoco{
 
 				//output the rhs signal name
 				newStr << rhsName;
-				if(getTarget()->isPipelined() && !unknownLHSName  && !unknownRHSName
-						&& (lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal) > 0))
-					newStr << "_d" << vhdlize(lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal));
 
+				if(getTarget()->isPipelined() && !unknownLHSName  && !unknownRHSName) {
+					int deltaCycle = lhsSignal->getCycle()-rhsSignal->getCycle();
+					if( deltaCycle> 0)
+						newStr << "_d" << vhdlize(deltaCycle);
+				}
 				//copy the code up until the lhs signal name
 				tmpCurrentPos = tmpNextPos+2;
 				tmpNextPos = workStr.find('?', tmpCurrentPos);
@@ -2141,10 +2136,7 @@ namespace flopoco{
 				tmpCurrentPos = lhsNameLength+2;
 				tmpNextPos = workStr.find('$', lhsNameLength+2);
 			}
-			while(tmpNextPos != string::npos)
-			{
-				int cycleDelay;
-
+			while(tmpNextPos != string::npos)	{
 				unknownRHSName = false;
 
 				//copy into the new vhdl stream the code that doesn't need to be modified
@@ -2162,11 +2154,13 @@ namespace flopoco{
 					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
 				}
 				//this could also be a delayed signal name
+				int delay=0;
 				if(newRhsName.find('^') != string::npos){
-					string delay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
+					string sdelay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
 					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
-					REPORT(0, "doApplySchedule: Found funct. delayed signal 2  : " << newRhsName << " delay:" << delay );
-					// getSignalByName(newRhsName) -> updateLifeSpan()
+					REPORT(0, "doApplySchedule: Found funct. delayed signal 2  : " << newRhsName << " delay:" << sdelay );
+					delay=stoi(sdelay);
+					getSignalByName(newRhsName) -> updateLifeSpan(delay);
 				}
 
 				try			{
@@ -2181,12 +2175,12 @@ namespace flopoco{
 
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
-				if(!unknownLHSName && !unknownRHSName)
-				  cycleDelay = lhsSignal->getCycle()-rhsSignal->getCycle()+getFunctionalDelay(rhsSignal, lhsSignal);
 				newStr << rhsName;
-				if(getTarget()->isPipelined() && !unknownLHSName && !unknownRHSName && (cycleDelay>0))
-					newStr << "_d" << vhdlize(cycleDelay);
-
+				if(getTarget()->isPipelined() && !unknownLHSName && !unknownRHSName) {
+				  int deltaCycle = lhsSignal->getCycle() - rhsSignal->getCycle();
+					if(deltaCycle>0)
+						newStr << "_d" << vhdlize(deltaCycle);
+				}
 				//find the next rhsName, if there is one
 				tmpCurrentPos = tmpNextPos + rhsNameLength + 2;
 				tmpNextPos = workStr.find('$', tmpCurrentPos);
@@ -2224,33 +2218,6 @@ namespace flopoco{
 
 
 
-
-	int Operator::getFunctionalDelay(Signal *rhsSignal, Signal *lhsSignal)
-	{
-		bool isLhsPredecessor = false;
-
-		for(size_t i=0; i<lhsSignal->predecessors()->size(); i++)
- 		{
-			pair<Signal*, int> newPair = *lhsSignal->predecessorPair(i);
-
-			if(newPair.first->getName() == rhsSignal->getName())
-			{
-				isLhsPredecessor = true;
-
-				if(newPair.second < 0)
-					return (-1)*newPair.second;
-				else
-					return 0;
-			}
-		}
-
-		if(isLhsPredecessor == false)
-			return 0;// was the following throwerror
-
-			THROWERROR("In getFunctionalDelay: trying to obtain the functional delay between signal "
-					<< rhsSignal->getName() << " and signal " << lhsSignal->getName() << " which are not directly connected");
-		return 0;
-	}
 
 
 

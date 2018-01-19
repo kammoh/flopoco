@@ -1103,13 +1103,6 @@ public:
 
 
 	/**
-	 * Return the functional delay, in cycles, between two signals.
-	 * @param rhsSignal the signal on the right-hand side of the assignment
-	 * @param lhsSignal the signal on the left-hand side of the assignment
-	 */
-	int getFunctionalDelay(Signal *rhsSignal, Signal *lhsSignal);
-
-	/**
 	 * Return the pipeline delay, in cycles, between two signals.
 	 * @param rhsSignal the signal on the right-hand side of the assignment
 	 * @param lhsSignal the signal on the left-hand side of the assignment
