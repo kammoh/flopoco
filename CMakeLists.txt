@@ -286,12 +286,11 @@ src/TutorialOperator
  src/ShiftersEtc/Shifters
 
 # FixFilters ----------------------------------------------------------
-src/ShiftReg
-# the following still depends on old bit heap
+ src/ShiftReg
  src/FixFilters/FixSOPC
  src/FixFilters/FixFIR
  src/FixFilters/FixHalfSine
-# src/FixFilters/FixIIR # 
+ src/FixFilters/FixIIR 
 
 
 # pipelined Integer addition -------------------------------------------------

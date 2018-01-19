@@ -3,7 +3,6 @@
 
 #include "Operator.hpp"
 #include "utils.hpp"
-#include "BitHeap/BitHeap.hpp"
 
 namespace flopoco{
 
@@ -11,7 +10,7 @@ namespace flopoco{
 
 	public:
 		/** @brief Constructor ; you must use bitheap in case of negative coefficient*/
-		FixIIR(Target* target, int lsbIn, int lsbOut, vector<string> coeffb, vector<string> coeffa, double H=0.0, double Heps=0.0);
+		FixIIR(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeffb, vector<string> coeffa, double H=0.0, double Heps=0.0);
 
 		/** @brief Destructor */
 		~FixIIR();
@@ -28,7 +27,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static void registerFactory();
 
 	private:

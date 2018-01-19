@@ -10,8 +10,8 @@ using namespace std;
 namespace flopoco{
 
 
-	FixHalfSine::FixHalfSine(Target* target, int lsb_, int N_) :
-		FixFIR(target, lsb_, true /*rescale*/),    N(N_)
+	FixHalfSine::FixHalfSine(OperatorPtr parentOp, Target* target, int lsb_, int N_) :
+		FixFIR(parentOp, target, lsb_, true /*rescale*/),    N(N_)
 	{
 		srcFileName="FixHalfSine";
 		

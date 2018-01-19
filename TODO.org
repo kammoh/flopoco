@@ -66,7 +66,7 @@ To discuss.
 *** FPAdd for simple subcomponents : DONE
 *** FPDiv for low complexity shared subcomponents DONE
 *** FixRealKCM for simple bit heap DONE
-*** FixFIR and FixIIR for large bit heaps
+*** FixFIR and FixIIR for large bit heaps + functional delays
 *** ALAP rescheduling for constant signals
 *** IntMult... sigh, some day 
 
@@ -82,6 +82,8 @@ Apart from that, I hope to remove most accesses to Signal::hasBeenScheduled_ tha
    it should be initialized to false, then set once to true forever.
 
 *** Re-check table attributes for 7 series; update Table, probably refactor this into Target 
+*** In the dot output, package shared components into dotted boxes (subgraph cluster_)
+... doesn't seem that simple
 ** List of operators to port to the new pipeline framework
 	Remove an operator from the list below when it is done.
 THIS INCLUDES WRITING ITS AUTOTEST
@@ -148,7 +150,7 @@ THIS INCLUDES WRITING ITS AUTOTEST
 		FixIIR
 
 		UserDefinedOperator
- 
+		
 * Release-critical (current regressions):
 ** FPPipeline
 ** lut_rng
@@ -194,6 +196,7 @@ a test programme iterates through the operators, testing them one by one for var
 add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
 The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
 * Janitoring
+*** rename BitheapNew into BitHeap	
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
 *** Replace pointers with smart pointers

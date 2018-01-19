@@ -21,10 +21,10 @@ namespace flopoco{
 		 *						If rescale=true, all the coefficients are rescaled by 1/sum(|coeffs|).
 		 * This way the output is also in [-1,1], output size is equal to input size, and the output signal makes full use of the output range.
 		*/
-		FixFIR(Target* target, int lsbInOut, vector<string> coeff, bool rescale=false, map<string, double> inputDelays = emptyDelayMap);
+		FixFIR(OperatorPtr parentOp, Target* target, int lsbInOut, vector<string> coeff, bool rescale=false, map<string, double> inputDelays = emptyDelayMap);
 
 		/** @brief empty constructor, to be called by subclasses */
-		FixFIR(Target* target, int lsbInOut, bool rescale=false);
+		FixFIR(OperatorPtr parentOp, Target* target, int lsbInOut, bool rescale=false);
 
 		/** @brief Destructor */
 		~FixFIR();

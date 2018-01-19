@@ -210,6 +210,7 @@ TODO
 \section{Frequency-directed pipeline}
 
 The  pipeline framework  is implemented mostly in the \texttt{Operator} and \texttt{Signal} classes, and we refer the reader to the source code for the full  details.
+More details can also be found in \cite{istoan:hal-01373937}.
 
 \subsection{VHDL generation for a simple component}
 
@@ -220,7 +221,8 @@ This pass builds  a signal graph, an example of which is shown on Figure~\ref{fi
 (it was obtained in \texttt{flopoco.dot} by the command
 \verb!./flopoco Shifter wIn=8 maxshift=8 dir=1! )
 
-In this graph, the nodes are signal identifiers, and the edges show signal dependencies, \emph{i.e.} which signal is computed out of which signal. 
+In this graph, the nodes are signals (of the FloPoCo \texttt{Signal} class), and the edges are signal dependencies, \emph{i.e.} which signal is computed out of which signal.
+Technically, the graph is built by defining predecessors and successors of each \texttt{Signal}.
 
 The operations between the signals are not kept in this graph: they are kept in the \texttt{vhdl} stream.
   However, their latency (passed as first optional argument to  \texttt{declare()}) is used to label each signal.
@@ -282,270 +284,71 @@ This process is performed by the \verb!Operator::applySchedule()! method.
 The final step adds to the VHDL stream constructed from previous step all the declarations (entities, signals, etc) as well as the shift registers that delay signals.
 It is performed by the \verb!Operator::outputVHDL()! method.
 
-\subsection{Subcomponents}
+\subsection{Subcomponents and instance}
 
-The scheduling (step \ref{sec:scheduling} above) is performed by default after the constructor has finished (so the signal graph is complete).
-However, it can be invoked on 
-
-
-
-
-
-
+Now consider the more complex situation of a component that include other subcomponents.
+There are two distinct situations:
+\begin{itemize}
+\item either the subcomponent is used only once, in which case we want to schedule it in its context.
+  This is the default situation.
+  An extensive example of a complex component built by assembling simpler ones is \texttt{FPAddSub/FPAddSinglePath}.
   
-\iffalse 
-\item Every signal declared through \verb!addInput! or \verb!declare!
-  has a \verb!cycle! attribute, which represents the cycle at which
-  this signal is active. It is 0 for the inputs, and for signals
-  declared through \verb!declare()! it is \verb!currentCycle!  at the
-  time \verb!declare! was invoked.
-
-\item Every signal also possesses an attribute \verb!lifeSpan! which
-  indicates how many cycles it will need to be delayed. This attribute
-  is initialized to 0, then possibly increased by each time the signal is used.
-  When the \verb!lifeSpan! of a signal \verb!X!  is
-  greater than zero, \verb!outputVHDL()! will create \verb!lifeSpan!
-  new signals \verb!X_d1!, \verb!X_d2! and so on, and insert registers
-  between them. In other words, \verb!X_d2! will hold the value of
-  \verb!X! delayed by 2 cycles.
-
-\item FloPoCo scans the VHDL and looks for right-hand side occurrences
-  of declared signals. For instance, in the line after the
-  \verb!nextCycle!, it finds \verb!X! and \verb!T!. For such signals, it does the following. First,
-  it compares \verb!currentCycle! and the
-  \verb!cycle! declared for \verb!X!, which we note \verb!X.cycle!.
-  \begin{itemize}\item 
-    If they are equal, or if \verb!-pipeline=no!, \verb!X! is written to the VHDL untouched.
-  \item If \verb!currentCycle! $<$ \verb!X.cycle!, FloPoCo emits an error message complaining that \verb!X! is being
-    used before the cycle at which it is defined.
-  \item If \verb!currentCycle! $>$ \verb!X.cycle!, FloPoCo delays
-    signal \verb!X! by n=\verb!currentCycle!$-$\verb!X.cycle!
-    cycles. Technically, it just replaces, in the output VHDL,
-    \verb!X! with \verb!X_dn!. It also updates \verb!X.lifeSpan! to be
-    at least equal to n.
-  \end{itemize}
-\item All the needed signals will be declared in the output VHDL based
-  on the \verb!lifeSpan! information.
+\item Or, the subcomponent is used many times (a typical example is the compressor in a bit heap), in which case all the instances will necessarily share the same schedule.
+  In FloPoCo, we add a constraint in this case: such operators remain very small and thus shall not be pipelined.
+  This covers 100\% of the uses case so far.
+  Such components have to be declared shared by calling \texttt{Operator::setShared()}.
 \end{itemize}
-\fi
 
-This whole scheme is actually run in two passes so that
-\verb!currentCycle! may be moved forth and back in the FloPoCo code, which is useful in some situations.
+In the following we detail these two cases and what happens under the hood in terms of scheduling.
 
-This scheme gracefully degrades to a
-combinatorial operator. It also automatically adapts to random
-insertions and suppressions of synchronization barriers. Typically,
-one synthesizes an operator, and decides to break the critical path by
-inserting a synchronisation barrier in it. This may be as simple as
-inserting a single \verb!nextCycle()! in the code. FloPoCo takes care of the rest.
 
-It is also possible to have \verb!if!s before some of the
-\verb!nextCycle()!, so that the pipeline adapts to the frequency, the
-operator generic parameters, etc. See \verb!IntAdder! for an example.
-However, starting with version 2.1.0 a finer-grain procedure for pipelining 
-operators is introduced and will be explained section \ref{sec:finegrain}.
+\subsubsection{Unique instances}
+In this case, the entity of the subcomponent is used in only one VHDL instance.
 
-Some more notes:
+FloPoCo provides for this case a single method, \verb!Operator::newInstance()!.
+Its inputs are those provided on the command-line interface, therefore this method will only work for operators which implement the factory methods.
+It returns a pointer to the newly created \texttt{Operator}.
+
+In terms of VHDL, \verb!Operator::newInstance()! creates both the entity of the subcomponent (by calling its constructor) and an instance of this entity in the \texttt{vhdl} stream of the current buffer.
+
+Let us now see what happens in terms of scheduling and pipelining.
 \begin{itemize}
-\item The second parameter of \verb!declare()!, the signal width, is
-  optional and defaults to 1 (a \verb!std_logic! signal).
+\item In the signal graph, \verb!Operator::newInstance()! connects the actual signals to the subcomponent ports, with simple wires (no delay added to the critical path).
+  The \texttt{flopoco.dot} output shows a box around the signals of the subcomponent, but there is one single graph linking \texttt{Signal} objects.
 
-\item Other functions allow to manipulate \verb!currentCycle!
-  \begin{itemize}
-  \item 
-    \verb!setCycle(int n)! sets \verb!currentCycle! to  $n$.  
-  \item \verb!setCycleFromSignal(string s)!  
-    sets the \verb!currentCycle! to the \verb!cycle! of the signal
-    whose name is given as an argument (going back if needed),
-  \item 
-    \verb!syncCycleFromSignal(string s)! is similar to the previous but may only advance
-    \verb!currentCycle!. It allows to synchronise several
-    signals by setting \verb!currentCycle! to the max of their
-    \verb!cycle!.
+\item It is useful that the constructor of the subcomponent may take decisions based on the schedule of its inputs (example: the \texttt{IntAdder} pipelined integer splits its inputs depending on their critical path).
+  Therefore, \verb!Operator::newInstance()! calls \verb!Operator::schedule()! (step \ref{sec:scheduling} above).
 
-See \verb!FPAddSinglePath! or \verb!FPLog! for examples of
-  such synchronisations. 
-  \end{itemize}
+  Since there is only one big signal graph, \verb!Operator::schedule()! first gets to the root of the component hierarchy, before actually computing the schedule, starting from the inputs of this root.
 
-All these functions have an optional boolean
-  second argument which, if true, inserts in the generated VHDL a
-  comment ``-- entering cycle n''.
+\item It is important to understand that \verb!Operator::schedule()! can be invoked on an incomplete graph.
+  In such an ASAP scheduling, the schedule of a signal is only defined by the schedule of its predecessors: once it is computed, it will no longer change, so \verb!Operator::schedule()! may be called several times. It will be called by default after the end of the constructor of a root operator (so the signal graph is complete).
 
-
-\item If our toy example, is part of a larger circuit such that X is
-  itself delayed, the pipeline will adapt to that.
-
+\item All this probably works best (only works?) if the VHDL is written in the natural order, from inputs to outputs... 
 \end{itemize}
 
 
-\subsection{Pipeline with sub-components}
+  \begin{figure}
+    \includegraphics[height=\textheight]{Fig/depgraphFPAddPipelined}
+		\centering
+		\caption{S-Graph for a pipelined FPAddSinglePath operator. Zoom on the Shifter component and observe that it has been pipelined for its context.}
+		\label{fig:depgraphFPAdd}
+	\end{figure}    
 
-We now show how to replace the + and * with FloPoCo pipelined
-operators. These operators support frequency-directed pipelining,
-which means that the resulting MAC will also have its pipeline depth
-automatically computed from the user-supplied frequency (the
-\texttt{-frequency} option of the command-line).
+\subsubsection{Shared instances}
 
-\begin{verbatim}
-(...)
-	// vhdl << declare("T", 64) << " <= Y * Z;" << endl;
-	IntMultiplier *my_mult = new IntMultiplier(target, 32, 32);
-	oplist.push_back(my_mult); // some day this will be an addOperator method
-	inPortMap   (my_mult, "X", "Y"); // formal, actual
-	inPortMap   (my_mult, "Y", "Z");
-	outPortMap  (my_mult, "R","T");
-	vhdl << instance(my_mult, "my_mult"); // 2nd param is the VHDL instance name
+Shared instances present two differences:
+\begin{enumerate}
+\item The constructor of the subcomponent must be called only once.
+\item The instances themselves must be somehow replicated in the signal graph.
+\end{enumerate}
+The solution chosen is to replace \emph{in the signal graph} instances with links between the inputs and outputs.
+Each output is labeled with a critical path contribution,   equal to the critical path of this output in the instance.
 
-	// advance to the cycle of the result
-	syncCycleFromSignal("T"); 
-	// pipelined operators do not have a register on the output 
-	nextCycle();
+This is performed under the hood by the \verb!Operator::inPortMap()!, \verb!Operator::outPortMap()! and \verb!Operator::instance()! methods.
 
-	// vhdl << "R <= X + T;" << endl;
-	IntAdder *my_adder = new IntAdder(target, 64);
-	oplist.push_back(my_adder);
-	inPortMap   (my_adder, "X", "X");
-	inPortMap   (my_adder, "Y", "T");
-	inPortMapCst(my_adder, "Cin", "0"); -- carry in
-	outPortMap  (my_adder, "R","RR");
-	vhdl << instance(my_adder, "my_add");
+The simplest example of shared instances is currently \texttt{FPDivSqrt/FPDiv}.
 
-	// advance to the cycle of the result
-	syncCycleFromSignal("RR"); 
-   vhdl << "R <= RR;" << endl; 
-(...)
-\end{verbatim}
-
-
-And that's it. In the code above, an \verb!inPortMap()! does the same
-job as an occurrence of signal on the right-hand side, and an
-\verb!outPortMap()! does the same job as a \verb!declare()!, although
-it doesn't need a signal width since it can read it from the
-sub-component. \verb!instance()! also has the side effect that
-\verb!outputVHDL()! will declare this component in the VHDL header of
-\verb!MAC!.
-
-
-\subsection{Frequency-directed pipelining}
-\label{sec:finegrain}
-
-The command line of FloPoCo supports specifying the desired frequency
-of the generated operators by using the \verb!-frequency! option. The
-philosophy behind is to generate the smallest (in terms of resource
-usage) and the shorter latency operator given this frequency
-specification (\texttt{-frequency} command-line option) for a given
-target (\texttt{-target} command-line option).
-
-A fixed pipeline can be easily obtained using the
-\verb!nextCycle()! function previously introduced. As suggested before, frequency
-directed pipelining can be accomplished by  conditional statements around the 
-\verb!nextCycle()!. The following methodology does 
-exactly that, but in a generic and (hopefully) future-proof way. 
-
-Let's go back to our basic MAC example (the one without
-components). Looking at the critical path it is clear that it goes
-through a multiplication and then an addition. Before emitting the
-code of an operation that will increase the critical path (in our
-example, the multiplication) we want to evaluate in advance what the
-critical path becomes if we add to it the delay of this
-operation. There are two cases:
-\begin{itemize}
-\item the new delay is greater than $1/f$. This means that it will be
-  impossible to perform these two operations in the same cycle while
-  ensuring proper operation at frequency $f$. In this case a
-  \verb!nextCycle()!  must be called to insert a
-  synchronisation barrier. This resets the critical path delay, which becomes  the
-  delay of the operation after the barrier (the multiplication in this
-  example).
-\item this new critical path delay is smaller than the target period
-  ($1/f$). In this case we just have to perform some bookkeeping: the
-  critical path delay is incremented with the operation delay.
-\end{itemize}
-
-The FloPoCo command that does it all is
-\verb!manageCriticalPath(double delay)!. It must be placed before each
-block of code that generates some hardware on the critical path --
-there is some designer expertise here.
-
-The augmented FloPoCo code would look something like:
-
-\begin{verbatim}
-   setCriticalPath(0.0);
-   manageCriticalPath( target->DSPMultiplierDelay() );
-   vhdl << declare("T", 64) << " <= Y * Z;" << endl;
-   manageCriticalPath( target->adderDelay(64) );
-   vhdl << "R <= X + T ;" << endl;
-\end{verbatim}
-
-Note that the delay passed to \texttt{manageCriticalPath()} should be
-evaluated, whenever possible, using methods of the \texttt{Target}
-class. This ensure that this pipelining work is done once for all the possible targets. 
-
-
-\subsection{Sub-cycle pipelining (optional)}
-
-A working pipeline using sub-components is typically obtained by
-placing synchronization barriers on the inputs and outputs. However,
-it is often an overkill: most of the times, the previous approach
-leaves the output cycle not fully consumed. Also, sometimes, one wants
-to perform only a very simple, low-delay operation on the inputs.
-
-
-For such cases, operators can optionally :
-\begin{itemize}
-	\item receive a list of delays on the inputs ( ("X",1.5e-9),("Y",1.2e-9) ) representing
-	the combinatorial delays already present on these signals.
-	\item report the combinatorial delay on the output signals ("R", 2.0e-9).
-\end{itemize}
-
-Using this information, the sub-component constructor can properly
-adjust the pipeline for the given frequency.  Here is full example. The input
-delays are given in the variable named \verb!inputDelays!. 
-
-\begin{verbatim}
-   setCriticalPath( getMaxInputDelays(inputDelays)  );
-   manageCriticalPath( target->DSPMultiplierDelay() );
-   vhdl << declare("T", 64) << " <= Y * Z;" << endl;
-   manageCriticalPath( target->adderDelay(64) );
-   vhdl << "R <= X + T ;" << endl;
-   outDelayMap["R"] = getCriticalPath(); //returns the current delay on the critical path
-\end{verbatim}
-
-In the case of the second, component-based design, the code becomes:
-
-\begin{verbatim}
-	setCriticalPath( getMaxInputDelays(inputDelays)  );
-	// vhdl << declare("T", 64) << " <= Y * Z;" << endl;
-	IntMultiplier *my_mult = new IntMultiplier(target, 32, 32, inDelayMap("X",getCriticalPath()));
-	oplist.push_back(my_mult); // some day this will be an addOperator method
-	inPortMap   (my_mult, "X", "Y"); // formal, actual
-	inPortMap   (my_mult, "Y", "Z");
-	outPortMap  (my_mult, "R","T");
-	vhdl << instance(my_mult, "my_mult"); // 2nd param is the VHDL instance name
-
-	// advance to the cycle of the result
-	syncCycleFromSignal("T"); 
-	setCriticalPath( my_mult->getOutputDelay("R") );
-	
-	// vhdl << "R <= X + T;" << endl;
-	IntAdder *my_adder = new IntAdder(target, 64, inDelayMap("X",getCriticalPath()));
-	oplist.push_back(my_adder);
-	inPortMap   (my_adder, "X", "X");
-	inPortMap   (my_adder, "Y", "T");
-	inPortMapCst(my_adder, "Cin", "0"); -- carry in
-	outPortMap  (my_adder, "R","RR");
-	vhdl << instance(my_adder, "my_add");
-
-	// advance to the cycle of the result
-	syncCycleFromSignal("RR"); 
-	setCriticalPath( my_adder->getOutputDelay("R") );
-	
-   vhdl << "R <= RR;" << endl; 
-   outDelayMap["R"] = getCriticalPath();
-\end{verbatim}
-
-For more information, check FPExp for example, and
-don't hesitate to contact us.
 
 
 \section{Test bench generation}\label{sec:test-bench-gener}
@@ -670,5 +473,32 @@ Here, it is often useful to add
 a comment to a test case using \texttt{\small addComment}: these comments
 will show up in the VHDL generated by \texttt{\small TestBench}.
 
+
+
+
+
+\section{Bit heaps}
+TODO!
+
+In between, see the articles \cite{DinIstSer2013-FPL-BitHeap} for general principles, and the articles \cite{kz14a,kz14b} for details on bit heap compression techniques.
+
+Some operators that can add to the bit heap have two constructors:
+\begin{itemize}
+\item one standalone, classical;
+  
+\item one virtual, for merging this operator and others within a single bit heap belonging to a larger operator.
+
+\end{itemize}
+
+In the latter case, the typical arithmetic flow requires to first perform some error analysis to determine a number of guard bits to add to the bit heap.
+This must be done before any vhdl generation.
+If we want to delegate some of this error analysis to the subcomponents, then either it must be implemented in some static method of the Operator, or the constructor must delay the actual VHDL output to another method.
+
+For an example of this in practice, see \texttt{FixFilters/FixSOPC}.
+
+
+\bibliographystyle{IEEEtran}
+% argument is your BibTeX string definitions and bibliography database(s)
+\bibliography{../web/bib/flopoco.bib,../web/bib/flopoco-users.bib}
 
 \end{document}

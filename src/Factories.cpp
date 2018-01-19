@@ -108,9 +108,9 @@ void UserInterface::registerFactories()
 		// CordicSinCos::registerFactory();
 		// FixAtan2::registerFactory();
 		// //FixedComplexAdder::registerFactory();
-		// FixFIR::registerFactory();
 		FixSOPC::registerFactory();
-		// FixIIR::registerFactory();
+	  FixFIR::registerFactory();
+		FixIIR::registerFactory();
 
 		// hidden for now
 		// Fix2DNorm::registerFactory();

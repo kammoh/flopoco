@@ -16,13 +16,13 @@ namespace flopoco {
 
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
-	FixFIR::FixFIR(Target* target, int lsbInOut_, bool rescale_) :
-		Operator(target), lsbInOut(lsbInOut_), rescale(rescale_)	{	}
+	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbInOut_, bool rescale_) :
+		Operator(parentOp, target), lsbInOut(lsbInOut_), rescale(rescale_)	{	}
 
 
 
-	FixFIR::FixFIR(Target* target, int lsbInOut_, vector<string> coeff_, bool rescale_, map<string, double> inputDelays) :
-		Operator(target), lsbInOut(lsbInOut_), coeff(coeff_), rescale(rescale_)
+	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbInOut_, vector<string> coeff_, bool rescale_, map<string, double> inputDelays) :
+		Operator(parentOp, target), lsbInOut(lsbInOut_), coeff(coeff_), rescale(rescale_)
 	{
 		srcFileName="FixFIR";
 		setCopyrightString ( "Louis Besème, Florent de Dinechin (2014)" );
@@ -203,7 +203,7 @@ namespace flopoco {
 				input.push_back( substr );
 			}
 
-		OperatorPtr tmpOp = new FixFIR(target, lsbInOut, input, rescale);
+		OperatorPtr tmpOp = new FixFIR(parentOp, target, lsbInOut, input, rescale);
 
 		return tmpOp;
 		//return new FixFIR(target, lsbInOut, input, rescale);
