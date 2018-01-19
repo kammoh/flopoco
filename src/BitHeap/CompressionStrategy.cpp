@@ -261,14 +261,11 @@ namespace flopoco{
 					//unsigned int middleLength = tempVector[j].second;
 					vector<vector<Bit*> > tempBitVector;
 					tempBitVector.resize(realCompressor->heights.size());
-					REPORT(DEBUG, "realCompressor->heights.size() is " << realCompressor->heights.size());
-					REPORT(DEBUG, "tempBitVector.size() is " << tempBitVector.size());
 					//fill Bitvectors
 					//note c is the starting column of the compressor in the bitheap. cTemp is the column within the compressor
 					for(unsigned int cTemp = 0; cTemp < realCompressor->heights.size(); cTemp++){
 
 						int maxBitsToCompress = realCompressor->heights[cTemp];
-						REPORT(DEBUG, "at cTemp " << cTemp << " realCompresor->heights[cTemp] is " << realCompressor->heights[cTemp] << " and emptyInputs[c + cTemp] " << emptyInputs[c + cTemp]);
 						//handle empty inputs
 						if(maxBitsToCompress > 0 && emptyInputs[c + cTemp] > 0){
 							if(emptyInputs[c + cTemp] >= (unsigned int) maxBitsToCompress){
@@ -285,14 +282,11 @@ namespace flopoco{
 						}
 						REPORT(DEBUG, "after emptyInputs maxBitsToCompress is " << maxBitsToCompress);
 						unsigned int bitsFound = 0;
-						REPORT(DEBUG, "trying to get column " << c + cTemp << ". there are " << bitheap->bits.size() << " many columns");
 						//check if the position of bits (c + cTemp) is inside the range of the bitheap
 						if(c + cTemp < bitheap->bits.size()){
 							for(unsigned int k = 0; k < bitheap->bits[c + cTemp].size(); k++){
 								if(bitsFound < (unsigned) maxBitsToCompress){
-									REPORT(DEBUG, "checking the " << k << "th bit");
 									Bit* tempBit = bitheap->bits[c + cTemp][k];
-									REPORT(DEBUG, "bit has name " << tempBit->signal->getName());
 									if(tempBit->type == BitType::free){
 										bitsFound++;
 										tempBitVector[cTemp].push_back(tempBit);
@@ -300,9 +294,6 @@ namespace flopoco{
 								}
 							}
 						}
-					}
-					for(unsigned int z = 0; z < tempBitVector.size(); z++){
-						REPORT(DEBUG, "after searching bits at column " << z << " of compressor there are " << tempBitVector[z].size() << " many inputs which are not constantly zero.");
 					}
 					applyCompressor(tempBitVector, realCompressor, c);
 				}
@@ -782,10 +773,10 @@ namespace flopoco{
 			bitheap->op->vhdl << endl;
 
 			//declare the adder
+#if 0
 			IntAdder* adder;
 
 			//create the adder
-#if 0
 			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
 			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
@@ -1009,7 +1000,7 @@ namespace flopoco{
 			col0=6;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 3.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 3.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1022,7 +1013,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1033,7 +1024,7 @@ namespace flopoco{
 			col0=5;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1046,7 +1037,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1057,7 +1048,7 @@ namespace flopoco{
 			col0=4;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1070,7 +1061,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1081,7 +1072,7 @@ namespace flopoco{
 			col0=3;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 1.0, true);
+			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 1.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}

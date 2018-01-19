@@ -106,10 +106,7 @@ namespace flopoco
 
 		BitheapSolutionStatus status;
 
-		/**
-		 * 	@brief clears empty stages if there are no later stages with compressors in them. clears also empty columns if there are no columns closer to MSB with compressors in them.
-		 **/
-		void cleanUpStagesAndColumns();
+
 
 	};
 

@@ -1,7 +1,6 @@
 
 #include "ParandehAfsharCompressionStrategy.hpp"
-//#include "CompressionStrategy.hpp"
-//#include "BitHeap/BitheapNew.hpp"
+
 
 
 using namespace std;
@@ -135,6 +134,7 @@ namespace flopoco{
 
 
 	pair<BasicCompressor*, int> ParandehAfsharCompressionStrategy::ParandehAfsharSearch(unsigned int stage, unsigned int column){
+
 		BasicCompressor* compressor = nullptr;
 		int resultColumn = -1;
 		double achievedEfficiencyBest = -1.0;

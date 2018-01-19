@@ -44,45 +44,6 @@ namespace flopoco{
 
 
 
-	void Solution::cleanUpStagesAndColumns(){
-
-		//first find the number of stages with compressors in them
-		int fullStages; //number of stages with compressors
-		bool foundFullStage = false;
-		for(fullStages = comps.size(); fullStages > 0; fullStages--){
-			unsigned int tempS = (unsigned) (fullStages - 1);
-			for(unsigned int c = 0; c < comps[tempS].size(); c++){
-				if(comps[tempS][c].size() > 0){
-					foundFullStage = true;
-					break;
-				}
-			}
-			if(foundFullStage){
-				break;
-			}
-		}
-		//delete the rest
-		if(fullStages < comps.size()){
-			comps.resize(fullStages);
-		}
-
-		//go through every stage and delete empty columns if there is no bigger
-		//column with compressors in it
-		for(unsigned int s = 0; s < comps.size(); s++){
-			int maxColumn = (unsigned) (comps[s].size() - 1);
-			while(maxColumn >= 0){
-				if(comps[s][maxColumn].size() > 0){
-					break;
-				}
-				else{
-					maxColumn--;
-				}
-			}
-			if(maxColumn + 1 != comps[s].size()){
-				comps[s].resize(maxColumn + 1);
-			}
-		}
-	}
 
 	vector<pair<BasicCompressor*, unsigned int> > Solution::getCompressorsAtPosition(unsigned int stage, unsigned int column){
 
