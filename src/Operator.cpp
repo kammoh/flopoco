@@ -2154,13 +2154,12 @@ namespace flopoco{
 					newRhsName = newRhsName.substr(rhsName.find("(")+1, rhsName.find(")")-rhsName.find("(")-1);
 				}
 				//this could also be a delayed signal name
-				int delay=0;
+				int functionalDelay=0;
 				if(newRhsName.find('^') != string::npos){
 					string sdelay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
 					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
 					REPORT(0, "doApplySchedule: Found funct. delayed signal 2  : " << newRhsName << " delay:" << sdelay );
-					delay=stoi(sdelay);
-					getSignalByName(newRhsName) -> updateLifeSpan(delay);
+					functionalDelay = stoi(sdelay);
 				}
 
 				try			{
@@ -2175,12 +2174,20 @@ namespace flopoco{
 
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
-				newStr << rhsName;
+				newStr << newRhsName;
 				if(getTarget()->isPipelined() && !unknownLHSName && !unknownRHSName) {
+					// Should we insert a pipeline register ?
 				  int deltaCycle = lhsSignal->getCycle() - rhsSignal->getCycle();
 					if(deltaCycle>0)
 						newStr << "_d" << vhdlize(deltaCycle);
+					
+					// Should we insert a functional register ? This case is exclusive with the previous as long as functional delays are introduced only by the functionalRegister method.
+					if(functionalDelay>0) {
+						getSignalByName(newRhsName) -> updateLifeSpan(functionalDelay); // wonder where it is done for pipeline registers???
+						newStr << "_d" << vhdlize(functionalDelay);
+					}
 				}
+					
 				//find the next rhsName, if there is one
 				tmpCurrentPos = tmpNextPos + rhsNameLength + 2;
 				tmpNextPos = workStr.find('$', tmpCurrentPos);
