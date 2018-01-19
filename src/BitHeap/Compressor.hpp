@@ -94,7 +94,7 @@ namespace flopoco
 		 * returns pointer to the compressor. In that compresor
 		 * the constructor will generate vhdl code.
 		 */
-		Compressor* getCompressor();
+        virtual Compressor* getCompressor();
 
 		/**
 		 * 	@brief returns the amount of different inputcolumns
@@ -131,14 +131,14 @@ namespace flopoco
 		 * 	(number of inputbits - number of outputbits) / area. If area is zero, the efficiency is zero as well.
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly 
 		 */
-		double getEfficiency(unsigned int middleLength = 0);
+        virtual double getEfficiency(unsigned int middleLength = 0);
 
 		/**
 		 *	@brief returns the Amount of LUT-equivalents, the compressor needs to be implemented
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		float getArea(unsigned int middleLength = 0);
+        virtual float getArea(unsigned int middleLength = 0);
 
 		/**
 		 *	@brief returns a string of the compressor e.g. for debugging.

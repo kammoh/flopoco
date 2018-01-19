@@ -323,13 +323,13 @@ namespace flopoco{
 		UserInterface::parseString(args, "columnHeights", &in);
 		UserInterface::parseBoolean(args, "compactView", &compactView_);
 
-		// tokenize the string, with ':' as a separator
+        // tokenize the string, with ',' as a separator
 		stringstream ss(in);
 		while(ss.good())
 		{
 			string substr;
 
-			getline(ss, substr, ':');
+            getline(ss, substr, ',');
 			heights_.insert(heights_.begin(), stoi(substr));
 		}
 
@@ -341,8 +341,8 @@ namespace flopoco{
 				"A basic compressor.",
 				"BasicInteger", // categories
 				"",
-				"columnHeights(string): colon-separated list of heights for the columns of the compressor, \
-in decreasing order of the weight. Example: columnHeights=\"2:3\"; \
+                "columnHeights(string): comma separated list of heights for the columns of the compressor, \
+in decreasing order of the weight. For example, columnHeights=\"2,3\" produces a (2,3:4) GPC; \
 				compactView(bool)=false: whether the VHDL code is printed in a more compact way, or not",
 				"",
 				Compressor::parseArguments
