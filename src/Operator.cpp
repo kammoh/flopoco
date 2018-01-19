@@ -347,7 +347,7 @@ namespace flopoco{
 
 	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
-		/// REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
+	  REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
 
 		//TODO: add more checks here
 		//if this is a global operator or a shared instance, then there is nothing to be done
@@ -1033,33 +1033,27 @@ namespace flopoco{
 	}
 
 
-	void Operator::outPortMap(Operator* op, string componentPortName, string actualSignalName, bool newSignal){
+
+	
+	void Operator::outPortMap(Operator* op, string componentPortName, string actualSignalName){
 		Signal *s;
 
 		// check if the signal already exists, when we're supposed to create a new signal
-		if(newSignal && (signalMap_.find(actualSignalName) !=  signalMap_.end())) {
+		if(signalMap_.find(actualSignalName) !=  signalMap_.end()) {
 			THROWERROR("In outPortMap(): signal " << actualSignalName << " already exists");
 		}
 
 		//check if the signal connected to the port exists, and return it if so
 		//	or create it if it doesn't exist
 		s = nullptr;
-		if(newSignal){
-			//create the new signal
-			//	this will be an incomplete signal, as we cannot know the exact details of the signal yet
-			//	the rest of the information will be completed by addOutput, which has the rest of the required information
-			//	and add it to the list of signals to be scheduled
-			declare(actualSignalName, -1); // -1 for incomplete declaration
-			s = getSignalByName(actualSignalName);
-		}else
-		{
-			try {
-				s = getSignalByName(actualSignalName);
-			}
-			catch(string &e2) {
-				THROWERROR("In outPortMap(): " << e2);
-			}
-		}
+
+		//create the new signal
+		//	this will be an incomplete signal, as we cannot know the exact details of the signal yet
+		//	the rest of the information will be completed by addOutput, which has the rest of the required information
+		//	and add it to the list of signals to be scheduled
+		declare(actualSignalName, -1); // -1 for incomplete declaration
+		s = getSignalByName(actualSignalName);
+		REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
 
 		// add the mapping to the output mapping list of Op
 		tmpOutPortMap_[componentPortName] = s;
@@ -1069,6 +1063,7 @@ namespace flopoco{
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
 		Signal *s;
 		std::string name;
+		REPORT(DEBUG, "InPortMap: " << componentPortName << " => "  << actualSignalName);
 
 		//check if the signal already exists
 		try{
@@ -1090,6 +1085,7 @@ namespace flopoco{
 		double constValue;
 		sollya_obj_t node;
 
+		REPORT(DEBUG, "InPortMapCst: " << componentPortName << " => "  << actualSignal);
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
@@ -1229,20 +1225,8 @@ namespace flopoco{
 
 			o << it->first << " => " << rhsString;
 			if(op->isShared()){
-#if 0
-				// shared instance: clone the input signal of op, then connect it.
-				string cloneName = declare(0.0,
-																	 formal->getName()+"copy"+to_string(getNewUId()),
-																	 formal->width()); // The other parameters are OK
-				Signal* cloneOfFormal = getSignalByName(cloneName);
-				inputCloneList.push_back(cloneOfFormal);
-				cloneOfFormal->addPredecessor(actual);
-				actual->addSuccessor(cloneOfFormal);
-				REPORT(DEBUG, "instance() of shared component  "<< op->getUniqueName() << ": cloning formal "<< formal->getUniqueName() << " as " << cloneOfFormal->getUniqueName() << " of predecessor " << actual->getUniqueName()) ;
-#else
 				// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
 				inputActualList.push_back(actual);
-#endif
 			}
 		}
 
@@ -1251,6 +1235,7 @@ namespace flopoco{
 			Signal* actual = it->second; // the connexion here is formal -> actual
 			string formalName = it->first; // ... with actual in this and formal in op
 			Signal* formal=op->getSignalByName(formalName);
+			REPORT(DEBUG, "instance: out port loop  " << actual->getName() << " "<< actual->incompleteDeclaration()<<" " << formalName  );
 
 			//the signal connected to the output should be an incompletely declared signal,
 			//	so its information must be completed and it must be properly connected now
@@ -1969,6 +1954,7 @@ namespace flopoco{
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
 						lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
+						REPORT(FULL, "doApplySchedule: instance lhsName=" << lhsName);
 
 						//copy lhsName (the formal input/output) to the new vhdl buffer
 						newStr << lhsName;
@@ -1987,6 +1973,7 @@ namespace flopoco{
 							doubleQuoteSep = true;
 						}
 
+						REPORT(FULL, "doApplySchedule/instance skipping: " << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos));
 						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
 						//extract a rhsName
@@ -2008,6 +1995,7 @@ namespace flopoco{
 							rhsIsSignal = true;
 						}
 						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
+						REPORT(FULL, "doApplySchedule/instance rhsname= " << rhsName);
 
 						//						rhsSignal = NULL;
 						//						lhsSignal = NULL;
@@ -2026,6 +2014,7 @@ namespace flopoco{
 								// In this case, we have in the dep graph the dependencies (actualIn->actualOut): extract the first one
 								Signal* subopInput = getSignalByName(rhsName);
 								Signal* subopOutput = getSignalByName(rhsName)->successor(0);
+														
 								REPORT(DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
 								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle() + getFunctionalDelay(subopInput, subopOutput);
 								if( deltaCycle> 0)
@@ -2033,7 +2022,7 @@ namespace flopoco{
 							}
 						}
 						catch(string &e) {
-							REPORT(FULL, "doApplySchedule caught " << e);
+							REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 						}
 
 

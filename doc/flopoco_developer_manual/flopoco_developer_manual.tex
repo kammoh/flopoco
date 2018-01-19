@@ -11,7 +11,7 @@
 FloPoCo \input{../../VERSION} developer manual
 }
 
-\author{Florent de Dinechin, Bogdan Pasca}
+\author{Florent de Dinechin+}
 
 \graphicspath{{../Figures/}}
 \pagestyle{empty}
@@ -49,7 +49,7 @@ documented. The web page of the CMake project is \url{http://www.cmake.org/}.
 
 \subsection{Overview of FloPoCo}
 
-In FloPoCo, everything is an \texttt{Operator}. 
+The core of FloPoCo is the \texttt{Operator} class. 
 Operator is a virtual class from which all FloPoCo operators inherit. 
 
 The FloPoCo source includes a dummy operator, \texttt{UserDefinedOperator}, for you to play with. 
@@ -59,12 +59,10 @@ By default it is compiled but unplugged. To plug it back, just comment the corre
 A good way to design a new operator is to imitate a simple one. We suggest
 %\texttt{IntAdder} or 
 \texttt{Shifter} for simple integer operators, and \texttt{FPAddSinglePath}
-for a complex operator with several sub-components. An example of
-assembling several FP operators in a larger pipeline is
-\texttt{Collision}.
+for a complex operator with several sub-components.
+% An example of assembling several FP operators in a larger pipeline is \texttt{Collision}.
 
- Meanwhile, browse
-through \texttt{Operator.hpp}. It has become quite bloated, showing
+Meanwhile, browse through \texttt{Operator.hpp}. It has become quite bloated, showing
 the history of the project. Try not to use methods flagged as
 deprecated, as they will be removed in the future. Hopefully.%  Instead, use the
 % automatic pipeline framework is described in Section~\ref{sec:pme}
@@ -76,7 +74,7 @@ including \texttt{Virtex} and \texttt{Stratix} targets. You may want to
 add a new target, the best way to do so is by imitation. Please
 consider contributing it to the project.
 
-The command-line parser is in \texttt{UserInterface.cpp} but in principle you won't have to edit it.
+The command-line parser is in \texttt{UserInterface} but in principle you won't have to edit it.
 It takes information from each operator's documentation strings defined in their \texttt{registerFactory()} methods. 
 Again, we hope that you can design the interface to your operator by imitation of existing ones.
 
@@ -85,7 +83,7 @@ To add a new operator to FloPoCo, you need to
 \item write its \texttt{.cpp} and \texttt{.hpp} (we suggest you start with a copy of  \texttt{UserDefinedOperator}, which is almost an empty skeleton).
 \item add it to \texttt{CMakeList.txt}
 \item add the \texttt{.hpp} to \texttt{FloPoCo.hpp}.
-\item add its  \texttt{registerFactory()} method to \texttt{main.cpp}. 
+\item add a call to its  \texttt{registerFactory()} method to \texttt{Factories.cpp}. 
 \end{itemize}
 
 That should be all. The rest is arithmetic!
@@ -98,12 +96,13 @@ And do not hesitate to contact us: \texttt{Florent.de.Dinechin@insa-lyon.fr}.
 %  \end{latexonly}
 \end{center}
 
+
 \section{Linking against FloPoCo\label{sec:linking}}
 All the operators provided by the FloPoCo command line are availaible
 programmatically in libFloPoCo. A minimal example of using this
 library is provided in \texttt{src/main\_minimal.cpp}.
 
-The file \texttt{src/main.cpp} is the source of the FloPoCo command
+It is best to use an operator through its factory. The file \texttt{src/main.cpp} is the source of the FloPoCo command
 line, and as such uses most operators: looking at it is the quickest
 way to look for the interface of a given operator.
 

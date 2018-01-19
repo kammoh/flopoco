@@ -44,6 +44,8 @@ namespace flopoco
 		/**  main initialization function */
 		static	void initialize();
 
+		static void registerFactories();
+		
 		/** parse all the operators passed on the command-line */
 		static void buildAll(int argc, char* argv[]);
 
