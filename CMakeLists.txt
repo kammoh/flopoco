@@ -431,6 +431,7 @@ src/PrimitiveComponents/Xilinx/Xilinx_GenericMux
 src/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
 src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State
 src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice
+src/PrimitiveComponents/Xilinx/XilinxGPC
 #
 #src/PrimitiveComponents/Altera/Altera_LCELL
 #

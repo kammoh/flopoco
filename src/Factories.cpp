@@ -5,7 +5,7 @@
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
 
   Authors : Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr
-            Bogdan Pasca, Bogdan.Pasca@ens-lyon.org
+			Bogdan Pasca, Bogdan.Pasca@ens-lyon.org
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL, INSA-Lyon
@@ -83,7 +83,7 @@ void UserInterface::registerFactories()
 		// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH
 		// BasicPolyApprox::registerFactory();
 		// PiecewisePolyApprox::registerFactory();
-	  FixRealKCM::registerFactory();
+		FixRealKCM::registerFactory();
 		TestBench::registerFactory();
 		Wrapper::registerFactory();
 		FPAdd::registerFactory();
@@ -115,13 +115,14 @@ void UserInterface::registerFactories()
 		// hidden for now
 		// Fix2DNorm::registerFactory();
 
-        Xilinx_GenericAddSub::registerFactory();
-        Xilinx_Comparator::registerFactory();
-        Xilinx_TernaryAdd_2State::registerFactory();
+		Xilinx_GenericAddSub::registerFactory();
+		Xilinx_Comparator::registerFactory();
+		Xilinx_TernaryAdd_2State::registerFactory();
+		XilinxGPC::registerFactory();
 
 		// TargetModel::registerFactory();
 		// Uncomment me to play within FloPoCo operator development
-	  UserDefinedOperator::registerFactory();
+		UserDefinedOperator::registerFactory();
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;
