@@ -145,6 +145,7 @@ namespace flopoco
 		static bool   plainVHDL;
 		static bool   generateFigures;
 		static double unusedHardMultThreshold;
+        static bool   useTargetOptimizations;
 		static int    resourceEstimation;
 		static bool   floorplanning;
 		static bool   reDebug;

@@ -3,7 +3,7 @@ PROJECT(FloPoCo C CXX)
 MESSAGE("Trying to build FloPoCo on " ${CMAKE_SYSTEM_NAME} ", compiler is " ${CMAKE_C_COMPILER})
 
 # CMake's way of handling various versions
-cmake_minimum_required(VERSION 2.4)
+cmake_minimum_required(VERSION 3.9)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
@@ -69,7 +69,10 @@ FIND_LIBRARY(PYTHON_LIB
 
 
 # Detect Sollya's presence
-FIND_LIBRARY( SOLLYA_LIB sollya )
+FIND_LIBRARY( SOLLYA_LIB
+	NAMES libsollya.so
+	HINTS "/usr/lib/x86_64-linux-gnu"
+	)
 
 IF (SOLLYA_LIB)
 	MESSAGE(STATUS "Found Sollya: ${SOLLYA_LIB}")
@@ -115,6 +118,66 @@ ELSE ( WCPG_FOUND )
 	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator" )
 ENDIF ( WCPG_FOUND )
 
+# dectect if scalp is available
+FIND_PATH(SCALP_H
+          ScaLP/Solver.h
+	  HINTS "/opt/scalp/include"
+	  DOC "Path of main header of scalp"
+)
+FIND_LIBRARY(SCALP_LIB
+        NAMES libScaLP.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP main library")
+
+FIND_LIBRARY(SCALP_CPLEX_LIB
+        NAMES libScaLP-CPLEX.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for cplex solver backend")
+
+FIND_LIBRARY(SCALP_GUROBI_LIB
+        NAMES libScaLP-Gurobi.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for Gurobi solver backend")
+
+FIND_LIBRARY(SCALP_SCIP_LIB
+        NAMES libScaLP-SCIP.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for SCIP solver backend")
+
+FIND_LIBRARY(SCALP_LPSOLVE_LIB
+        NAMES libScaLP-LPSOLVE.so
+	HINTS "/usr/local/lib64/"
+	DOC "Directory of the SCALP library for LPSOLVE solver backend")
+
+IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
+    SET(SCALP_FOUND TRUE)
+ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
+
+
+SET(SCALP_INCLUDE_DIRS ${SCALP_H})
+IF (SCALP_FOUND)
+	ADD_DEFINITIONS(-DHAVE_SCALP)
+    set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
+	IF (SCALP_CPLEX_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_CPLEX_LIB})
+	ENDIF (SCALP_CPLEX_LIB)
+	IF (SCALP_GUROBI_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_GUROBI_LIB})
+	ENDIF (SCALP_GUROBI_LIB)
+	
+	IF (SCALP_SCIP_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_SCIP_LIB})
+	ENDIF (SCALP_SCIP_LIB)
+	
+	IF (SCALP_LPSOLVE_LIB)
+		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
+	ENDIF (SCALP_LPSOLVE_LIB)
+	
+	MESSAGE(STATUS "Found SCALP: ${SCALP_INCLUDE_DIRS} ${SCALP_LIB}")
+	MESSAGE(STATUS "      Using the following ILP Solvers: ${SCALP_LIBS}")  
+ELSE (SCALP_FOUND)
+	MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (${SCALP_INCLUDE_DIRS} ${SCALP_LIB})")
+ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
 
@@ -132,7 +195,7 @@ ELSE(FLEXPP_EXECUTABLE)
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions)
+INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${SCALP_INCLUDE_DIRS})
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT VHDLLexer.cpp
@@ -262,6 +325,7 @@ src/AutoTest/AutoTest
  src/BitHeap/FirstFittingCompressionStrategy
  src/BitHeap/ParandehAfsharCompressionStrategy
  src/BitHeap/MaxEfficiencyCompressionStrategy
+# src/BitHeap/VariableColumnCompressor
 
 #--------------------------------------------------------------------
 #               OPERATORS          
@@ -337,6 +401,13 @@ src/IntAddSubCmp/IntMultiAdder
 # src/IntMult/FixMultAdd
 src/IntMult/MultiplierBlock
 # src/IntMult/IntSquarer
+src/IntMult/BaseMultiplier
+src/IntMult/BaseMultiplier2xk
+src/IntMult/BaseMultiplierCollection
+src/IntMult/BaseMultiplierDSP
+src/IntMult/BaseMultiplierDSPSuperTilesXilinx
+src/IntMult/BaseMultiplierLUT
+
 
 # Complex numbers ---------------------------------------------------
 src/Complex/FixComplexKCM
@@ -402,7 +473,34 @@ src/Trigs/Atan2Table
 
 #src/Trigs/Fix2DNorm
 
+# Primitive Components ----------------------------------------------
+src/PrimitiveComponents/BooleanEquation
+src/PrimitiveComponents/GenericLut
+src/PrimitiveComponents/Primitive
+src/PrimitiveComponents/GenericAddSub
+src/PrimitiveComponents/GenericMux
 
+src/PrimitiveComponents/Xilinx/Xilinx_Primitive
+src/PrimitiveComponents/Xilinx/Xilinx_LUT_compute
+src/PrimitiveComponents/Xilinx/Xilinx_CARRY4
+src/PrimitiveComponents/Xilinx/Xilinx_LUT5
+src/PrimitiveComponents/Xilinx/Xilinx_LUT6
+src/PrimitiveComponents/Xilinx/Xilinx_MUXF7
+src/PrimitiveComponents/Xilinx/Xilinx_MUXF8
+src/PrimitiveComponents/Xilinx/Xilinx_FDCE
+src/PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder
+src/PrimitiveComponents/Xilinx/Xilinx_Comparator
+src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub
+src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub_slice
+src/PrimitiveComponents/Xilinx/Xilinx_GenericMux
+src/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
+src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State
+src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice
+src/PrimitiveComponents/Xilinx/XilinxGPC
+src/PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor
+#
+#src/PrimitiveComponents/Altera/Altera_LCELL
+#
 src/Tools/Plane
 src/Tools/Point
 
@@ -441,6 +539,12 @@ TARGET_LINK_LIBRARIES(
   )
 ENDIF (WCPG_FOUND)
 
+IF (SCALP_FOUND)
+TARGET_LINK_LIBRARIES(
+  FloPoCo
+  ${SCALP_LIBS}
+  )
+ENDIF (SCALP_FOUND)
 
 ADD_EXECUTABLE(flopoco
  src/main 

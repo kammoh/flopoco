@@ -34,6 +34,11 @@ namespace flopoco
 		 */
 		Compressor(Target * target, vector<int> heights, float area = 0.0, bool compactView = false);
 
+        /*!
+         * An empty constructor, needed to derive from this class without generating code
+         */
+        Compressor(Target *target);
+
 		/**
 		 * Destructor
 		 */
@@ -78,7 +83,11 @@ namespace flopoco
 		int wOut;                           /**< size of the output */
 		float area;							/**< size of the compressor in LUT-equivalents */
 
-	private:
+    protected:
+
+        void setWordSizes();
+        void createInputsAndOutputs();
+
 		int maxVal;                         /**< the maximum value that the compressor can count up to */
 		bool compactView;                   /**< print the VHDL in a more compact way, or not */
 		bool compressorUsed;                /**< whether this compressor has been used for a compression, or not */
@@ -87,14 +96,14 @@ namespace flopoco
 	class BasicCompressor
 	{
 	public:
-		BasicCompressor(Target * target, vector<int> heights, float area = 0.0, bool compactView = false, string type = "combinatorial");
+		BasicCompressor(Target * target, vector<int> heights, float area = 0.0, string type = "combinatorial", bool compactView = false);
 
 		~BasicCompressor();
 		/**
 		 * returns pointer to the compressor. In that compresor
 		 * the constructor will generate vhdl code.
 		 */
-		Compressor* getCompressor();
+        virtual Compressor* getCompressor();
 
 		/**
 		 * 	@brief returns the amount of different inputcolumns
@@ -129,29 +138,32 @@ namespace flopoco
 		/**
 		 * 	@brief returns efficiency of the compressor. efficiency is computed with the formula
 		 * 	(number of inputbits - number of outputbits) / area. If area is zero, the efficiency is zero as well.
-		 * 	@param middleLength if compressor is variable, middleLength must be set correctly 
+		 * 	@param middleLength if compressor is variable, middleLength must be set correctly
 		 */
-		double getEfficiency(unsigned int middleLength = 0);
+        virtual double getEfficiency(unsigned int middleLength = 0);
 
 		/**
 		 *	@brief returns the Amount of LUT-equivalents, the compressor needs to be implemented
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		float getArea(unsigned int middleLength = 0);
+        virtual float getArea(unsigned int middleLength = 0);
 
 		/**
 		 *	@brief returns a string of the compressor e.g. for debugging.
 		 */
 		string getStringOfIO();
 
+		Target* target;
 		vector<int> heights;                /**< the heights of the columns */
 		vector<int> outHeights;             /**< the heights of the columns of the output, if this is a partially compressed result */
-		int wOut;
 		float area;							/**< size of the compressor in LUT-equivalents */
 		string type; 						/**< combinatorial, targetSpecific or variableLength */
+		int wOut;
+
+
 		Compressor* compressor; 				/**< if getCompressor() is being called for the first time, the pointer of the generated compressor will be saved here. */
-		Target* target;
+
 	private:
 		bool compactView;
 	};

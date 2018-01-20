@@ -34,7 +34,6 @@ using namespace flopoco;
 
 int main(int argc, char* argv[] )
 {
-
 	try {
 		UserInterface::main(argc, argv);
 	}

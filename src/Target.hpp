@@ -147,6 +147,12 @@ namespace flopoco{
 		/** should flopoco generate SVG figures */
 		void setGenerateFigures(bool b);
 
+        /** should target specific optimizations be performed */
+        bool  useTargetOptimizations();
+
+        /** should target specific optimizations be performed */
+        void  setUseTargetOptimizations(bool b);
+
 		/** Returns the number of inputs that the LUTs have on the specific device
 		 * @return the number of inputs for the look-up tables (LUTs) of the device
 		 */
@@ -718,6 +724,7 @@ namespace flopoco{
 																		1 means: any sub-multiplier, even very small ones, go to DSP*/
 		bool   plainVHDL_;     /**< True if we want the VHDL code to be concise and readable, with + and * instead of optimized FloPoCo operators. */
 		bool   generateFigures_;  /**< If true, some operators may generate some figures in SVG format */
+        bool   useTargetOptimizations_; /**< If true, target specific optimizations using primitives are performed. Vendor specific libraries are necessary for simulation. */
 	};
 
 }

@@ -6,7 +6,7 @@ using namespace std;
 
 namespace flopoco{
 
-	BasicCompressor::BasicCompressor(Target * target_, vector<int> heights_, float area_, bool compactView_, string type_): target(target_), heights(heights_), area(area_), compactView(compactView_), type(type_)
+	BasicCompressor::BasicCompressor(Target * target_, vector<int> heights_, float area_, string type_, bool compactView_): target(target_), heights(heights_), area(area_), type(type_), compactView(compactView_)
 	{
 		//compute the size of the input and of the output
 		int wIn = 0;
@@ -42,6 +42,10 @@ namespace flopoco{
 				compressor = new Compressor(target, heights, area, compactView);
 				return compressor;
 			}
+		}
+		else{
+			//TODO cases targetSpecific and variable
+			return nullptr;
 		}
 	}
 
@@ -161,60 +165,50 @@ namespace flopoco{
 		}
 	}
 
+    Compressor::Compressor(Target * target): Operator(nullptr, target)
+    {
+
+    }
 
 	Compressor::Compressor(Target * target_, vector<int> heights_, float area_, bool compactView_)
 		: Operator(nullptr, target_), // for now, no parent
 			heights(heights_), area(area_), compactView(compactView_), compressorUsed(false)
 	{
 		ostringstream name;
-		stringstream nm, xs;
-		//compressors are supposed to be combinatorial
-		//setCombinatorial();
+
+        //compressors are supposed to be combinatorial
+        setCombinatorial();
 		setShared();
 
-		//remove the zero columns at the lsb
-		while(heights[0] == 0)
-		{
-			heights.erase(heights.begin());
-		}
+        //remove the zero columns at the lsb
+        while(heights[0] == 0)
+        {
+            heights.erase(heights.begin());
+        }
 
-		name << "Compressor_";
+        setWordSizes();
+        createInputsAndOutputs();
 
-		//compute the size of the input and of the output
-		wIn = 0;
-		maxVal = 0;
-		for(int i=heights.size()-1; i>=0; i--)
-		{
-			wIn    += heights[i];
-			maxVal += intpow2(i) * heights[i];
-			name << heights[i];
-		}
-
-		wOut = intlog2(maxVal);
-
-		//setting up outHeights
-		outHeights.resize(wOut, 1);
+        //set name:
+        name << "Compressor_";
+        for(int i=heights.size()-1; i>=0; i--)
+            name << heights[i];
 
 		name << "_" << wOut;
 		setName(name.str());
 
-		//create the inputs
-		//	and the internal signal which concatenates all the inputs
-		for(int i=heights.size()-1; i>=0; i--)
-		{
-			//no need to create a signal for columns of height 0
-			if(heights[i] == 0)
-				continue;
+        stringstream xs;
+        for(int i=heights.size()-1; i>=0; i--)
+        {
+            //no need to create a signal for columns of height 0
+            if(heights[i] == 0)
+                continue;
 
-			addInput(join("X",i), heights[i]);
-
-			xs << "X" << i << " ";
-			if(i != 0)
-				xs << "& ";
-		}
-		//create the output
-		addOutput("R", wOut);
-		//getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
+            xs << "X" << i << " ";
+            if(i != 0)
+                xs << "& ";
+        }
+        //getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
 		double cpDelay = getTarget()->tableDelay(wIn, wOut, true);
 		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
 		vhdl << tab << "with X select " << declare(cpDelay, "R0", wOut) << " <= " << endl;
@@ -268,6 +262,38 @@ namespace flopoco{
 		REPORT(DEBUG, "Generated " << name.str());
 	}
 
+    void Compressor::setWordSizes()
+    {
+        //compute the size of the input and of the output
+        wIn = 0;
+        maxVal = 0;
+        for(int i=heights.size()-1; i>=0; i--)
+        {
+            wIn    += heights[i];
+            maxVal += intpow2(i) * heights[i];
+        }
+
+        wOut = intlog2(maxVal);
+
+        //setting up outHeights
+        outHeights.resize(wOut, 1);
+    }
+
+    void Compressor::createInputsAndOutputs()
+    {
+        //create the inputs
+        //	and the internal signal which concatenates all the inputs
+        for(int i=heights.size()-1; i>=0; i--)
+        {
+            //no need to create a signal for columns of height 0
+            if(heights[i] == 0)
+                continue;
+
+            addInput(join("X",i), heights[i]);
+        }
+        //create the output
+        addOutput("R", wOut);
+    }
 
 	Compressor::~Compressor(){
 	}
@@ -323,13 +349,13 @@ namespace flopoco{
 		UserInterface::parseString(args, "columnHeights", &in);
 		UserInterface::parseBoolean(args, "compactView", &compactView_);
 
-		// tokenize the string, with ':' as a separator
+        // tokenize the string, with ',' as a separator
 		stringstream ss(in);
 		while(ss.good())
 		{
 			string substr;
 
-			getline(ss, substr, ':');
+            getline(ss, substr, ',');
 			heights_.insert(heights_.begin(), stoi(substr));
 		}
 
@@ -341,8 +367,8 @@ namespace flopoco{
 				"A basic compressor.",
 				"BasicInteger", // categories
 				"",
-				"columnHeights(string): colon-separated list of heights for the columns of the compressor, \
-in decreasing order of the weight. Example: columnHeights=\"2:3\"; \
+                "columnHeights(string): comma separated list of heights for the columns of the compressor, \
+in decreasing order of the weight. For example, columnHeights=\"2,3\" produces a (2,3:4) GPC; \
 				compactView(bool)=false: whether the VHDL code is printed in a more compact way, or not",
 				"",
 				Compressor::parseArguments
