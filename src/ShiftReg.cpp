@@ -26,10 +26,11 @@ namespace flopoco {
 		for(int i=0; i<n; i++) {
 			addOutput(join("Xd", i), w, true);
 		}
-		
-		vhdl << tab << declare("XX", w, false, Signal::registeredWithAsyncReset) << " <= X;" << endl;
+
+		vhdl << tab << declare("X0" , w)  << " <= X;" << endl;
 		for(int i=0; i<n; i++) {
-			vhdl << tab << "Xd" << i << " <= " << delay("XX", i) << ";" << endl;
+			addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithAsyncReset);
+			vhdl << tab << join("Xd",i)  << " <= " << join("X", i+1) << ";" << endl;
 		}
 	};
 

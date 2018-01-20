@@ -579,17 +579,17 @@ public:
 
 
 
-	// TODO rename
 	/**
-	 * Delay a signal for a given amount of of cycles.
-	 * The inserted register is a functional delay (e.g. the z^(-1) function used in signal processing),
-	 * The name of the signal will be temporarily modified until the second parsing stage
-	 * to signal_name^nbDelayCycles
-	 * @param signalName the signal to delay
-	 * @param nbDelayCycles the number of cycles the signal will be delayed, by default 1
-	 * @param delayType the type of delay inserted (pipeline or functional), by default pipeline
+	 * addRegisteredSignalCopy is _the_ interface to have functional delays, 
+	 (e.g. the z^(-1) function used in signal processing)
+	 irrespective of what happens during pipelining.
+	 It registers sourceName and creates a registerd copy (which is declare()d.
+	 * The inserted register is a functional delay ,
+	 * @param registeredCopyName as the name suggests
+	 * @param sourceName  the signal to register
+	 * @param sigType the type of delay inserted (with or without reset, etc...), defaults to usual pipeline register without reset
 	 */
-	string delay(string signalName, int nbDelayCycles = 1);
+	void  addRegisteredSignalCopy(string registeredCopyName, string sourceName, Signal::SignalType sigtype=Signal::wire);
 
 
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)

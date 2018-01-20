@@ -67,6 +67,7 @@ To discuss.
 *** FPDiv for low complexity shared subcomponents DONE
 *** FixRealKCM for simple bit heap DONE
 *** FixFIR and FixIIR for large bit heaps + functional delays
+*** FixFunctionByTable (check that Table does the delay properly in the blockram case)
 *** ALAP rescheduling for constant signals
 *** IntMult... sigh, some day 
 

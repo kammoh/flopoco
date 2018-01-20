@@ -998,20 +998,19 @@ namespace flopoco{
 
 
 	
-	// TODO rename into something else
-	string Operator::delay(string signalName, int nbDelayCycles)
+	void Operator::addRegisteredSignalCopy(string copyName, string sourceName, Signal::SignalType sigtype)
 	{
 		ostringstream result;
+		Signal* s;
+		try{
+			s = getSignalByName(sourceName);
+		}
+		catch(string &e2) {
+			THROWERROR("In addRegisteredSignalCopy(): " << e2);
+		}
 
-		//check that the number of delay cycles is a positive integer
-		if(nbDelayCycles < 0)
-			THROWERROR("In delay(): trying to add a negative number of delay cycles:" << nbDelayCycles);
-		//check that the signal exists
-		if(!isSignalDeclared(signalName))
-			THROWERROR("In delay(): trying to delay a signal that does not yet exist:" << signalName);
-		
-		result << signalName << "^" << nbDelayCycles;
-		return result.str();
+		vhdl << tab << declare(copyName, s->width(), s->isBus(), sigtype) << " <= "<<sourceName<<"^1;" << endl;
+		// this ^ will be caught in doApplySchedule(). We could have arbitrary number of delays but I wait for a use case
 	}
 
 

@@ -255,8 +255,13 @@ namespace flopoco{
 
 		if((!logicTable) && (cpDelay < (double)(1.0/getTarget()->frequency())))
 		{
-			REPORT(FULL,"Warning: delaying output by 1 cycle to allow implementation as Block RAM" << endl);
-			vhdl << tab << "Y <= " << delay("Y0", 1) << ";" << endl;
+			REPORT(INFO,"Warning: delaying output by 1 cycle to allow implementation as Block RAM" << endl);
+#if O // I'm afraid the following messes up the pipeline: should be tested.
+			addRegisteredSignalCopy("Yd", "Y0");
+			vhdl << tab << "Y <= Yd;" << endl;
+#else
+			REPORT(INFO,"TODO! FixMe" << endl);
+#endif
 		}
 		else
 			vhdl << tab << "Y <= Y0;" << endl;

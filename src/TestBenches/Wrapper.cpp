@@ -47,7 +47,11 @@ namespace flopoco{
 				addInput(s->getName(), s->width(), s->isBus());
 				//connect the input to an intermediary signal
 				idext = "i_" + s->getName();
+#if O
 				vhdl << tab << declare(getTarget()->ffDelay(), idext, s->width(), s->isBus()) << " <= " << delay(s->getName()) << ";" << endl;
+#else
+				addRegisteredSignalCopy(idext, s->getName());
+#endif
 				//connect the port of the wrapped operator
 				inPortMap (op, s->getName(), idext);
 			}else if(s->type() == Signal::out){
@@ -71,7 +75,12 @@ namespace flopoco{
 
 			if(s->type() == Signal::out) {
 				string idext = "o_" + s->getName();
+#if O
 				vhdl << tab << s->getName() << " <= " << delay(idext) << ";" << endl;
+#else
+				addRegisteredSignalCopy(s->getName()+"d", idext);
+				vhdl << tab << s->getName() << " <= " << s->getName()+"d" << ";" << endl;
+#endif
 			}
 		}
 	}
