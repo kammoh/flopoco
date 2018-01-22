@@ -15,7 +15,7 @@
 using namespace std;
 namespace flopoco{
 
-XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target* target, int width, bool useLastColumn) : Compressor(target)
+XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target* target, int width, bool useLastColumn) : Compressor(parentOp, target)
 {
     this->useLastColumn = useLastColumn;
     setWidth(width);
@@ -36,7 +36,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 
     int needed_cc = ( width / 4 ) + ( width % 4 > 0 ? 1 : 0 ); //no. of required carry chains
 
-    cout << "no of required carry-chains for width=" << width << " is " << needed_cc << endl;
+//    cout << "no of required carry-chains for width=" << width << " is " << needed_cc << endl;
 
     declare( "cc_s", needed_cc * 4 );
     declare( "cc_di", needed_cc * 4 );
@@ -85,7 +85,8 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         outPortMap(cur_lut,"o5","R1" + of(i+1));
         outPortMap(cur_lut,"o6","cc_s" + of(i));
 
-        vhdl << cur_lut->primitiveInstance( join("lut",i), this ) << endl;
+//        vhdl << cur_lut->primitiveInstance( join("lut",i), this ) << endl;
+        vhdl << cur_lut->instance(this,join("lut",i)) << endl;
         //        addToGlobalOpList(cur_lut);
     }
 
