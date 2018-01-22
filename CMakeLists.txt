@@ -3,7 +3,7 @@ PROJECT(FloPoCo C CXX)
 MESSAGE("Trying to build FloPoCo on " ${CMAKE_SYSTEM_NAME} ", compiler is " ${CMAKE_C_COMPILER})
 
 # CMake's way of handling various versions
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 2.4)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
@@ -121,7 +121,7 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
           ScaLP/Solver.h
-	  HINTS "/opt/scalp/include"
+	  HINTS "/usr/local/include"
 	  DOC "Path of main header of scalp"
 )
 FIND_LIBRARY(SCALP_LIB
