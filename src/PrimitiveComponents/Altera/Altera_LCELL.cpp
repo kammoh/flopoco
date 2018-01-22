@@ -15,7 +15,7 @@
 using namespace std;
 namespace flopoco {
 
-Altera_LCELL::Altera_LCELL(Target *target, const string &lut_mask, const bool &shared_arith, const bool &dont_touch) : Primitive(target), _hasSharedArith(false), _hasDontTouch(false), _hasLUT7(false) {
+Altera_LCELL::Altera_LCELL(Operator *parentOp, Target *target, const string &lut_mask, const bool &shared_arith, const bool &dont_touch) : Primitive(parentOp, target), _hasSharedArith(false), _hasDontTouch(false), _hasLUT7(false) {
     srcFileName = "Altera_LCELL";
     //setName("Altera_LCELL");
     if(target->getVendor() == "Altera"){

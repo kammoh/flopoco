@@ -2,7 +2,7 @@
 #include "Xilinx_CARRY4.hpp"
 
 namespace flopoco {
-    Xilinx_Comparator::Xilinx_Comparator( Target *target, int wIn, ComparatorType type ) : Operator( target ) , m_type( type ) {
+	Xilinx_Comparator::Xilinx_Comparator(Operator *parentOp, Target *target, int wIn, ComparatorType type ) : Operator( parentOp,target ) , m_type( type ) {
         setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
 
         std::stringstream name_str;
@@ -104,7 +104,7 @@ namespace flopoco {
         }
 
         for( int i = 0; i < needed_luts; i++ ) {
-            Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( target );
+			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
             cur_lut->setGeneric( "init", lut_content );
             inPortMap( cur_lut , "i0", "a" + of( i * 2 ) );
             inPortMap( cur_lut , "i1", "a" + of( i * 2 + 1 ) );
@@ -120,7 +120,7 @@ namespace flopoco {
         }
 
         if( ws_remain ) {
-            Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( target );
+			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
             cur_lut->setGeneric( "init", lut_content );
             inPortMap( cur_lut , "i0", "a" + of( needed_luts * 2 ) );
             inPortMap( cur_lut , "i1", "a" + of( needed_luts * 2 ) );
@@ -136,7 +136,7 @@ namespace flopoco {
         }
 
         for( int i = 0; i < needed_cc; i++ ) {
-            Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( target );
+			Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
             if( i == 0 ) {
                 inPortMapCst( cur_cc, "cyinit", ( c_init ? "'1'" : "'0'" ) );
                 inPortMapCst( cur_cc, "ci", "'0'" );
@@ -317,7 +317,7 @@ namespace flopoco {
             exit( -1 );
         }
 
-        return new Xilinx_Comparator( target, wIn, type );
+		return new Xilinx_Comparator( parentOp, target, wIn, type );
     }
 
     void Xilinx_Comparator::registerFactory() {

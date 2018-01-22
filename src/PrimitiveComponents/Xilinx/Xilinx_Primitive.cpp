@@ -16,7 +16,7 @@ using namespace std;
 namespace flopoco {
 
 
-    Xilinx_Primitive::Xilinx_Primitive( Target *target ) : Primitive( target ) {
+    Xilinx_Primitive::Xilinx_Primitive(Operator *parentOp, Target *target ) : Primitive( parentOp, target ) {
         checkTargetCompatibility(target);
     }
 

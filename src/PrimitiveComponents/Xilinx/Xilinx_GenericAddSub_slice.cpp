@@ -41,15 +41,15 @@ namespace flopoco {
         REPORT( DEBUG , "Building" + this->getName() );
 
         if( dss ) {
-            build_with_dss( target, wIn, initial );
+			build_with_dss( parentOp, target, wIn, initial );
         } else if( fixed ) {
-            build_fixed_sign( target, wIn, initial );
+			build_fixed_sign( parentOp, target, wIn, initial );
         } else {
-            build_normal( target, wIn, initial );
+			build_normal( parentOp, target, wIn, initial );
         }
     }
 
-    void Xilinx_GenericAddSub_slice::build_normal( Target *target, int wIn, bool initial ) {
+	void Xilinx_GenericAddSub_slice::build_normal(Operator* parentOp, Target *target, int wIn, bool initial ) {
         lut_op carry_pre_o6;
         lut_op carry_pre_o5 = lut_in( 2 ) | lut_in( 3 );
         lut_op add_o5 =
@@ -93,7 +93,7 @@ namespace flopoco {
         for( int i = 0; i < wIn; i++ ) {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
-            Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( target );
+			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( parentOp,target );
 
             if( initial && i == 0 ) {
                 initial_lut->setGeneric( "init", carry_pre.get_hex() );
@@ -118,7 +118,7 @@ namespace flopoco {
             vhdl << initial_lut->primitiveInstance( lut_name.str(), this );
         }
 
-        Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( target );
+		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
         outPortMap( further_cc, "co", "cc_co");
         outPortMap( further_cc, "o", "cc_o");
         inPortMapCst( further_cc, "cyinit", "'0'" );
@@ -130,7 +130,7 @@ namespace flopoco {
         vhdl << "sum_out <= cc_o" << range( wIn - 1, 0 ) << ";" << std::endl;
     }
 
-    void Xilinx_GenericAddSub_slice::build_fixed_sign( Target *target, int wIn, bool initial ) {
+	void Xilinx_GenericAddSub_slice::build_fixed_sign(Operator* parentOp, Target *target, int wIn, bool initial ) {
         lut_op add_o5 =   ( ~lut_in( 2 ) & ~lut_in( 3 ) &  lut_in( 0 ) ) |
                           ( lut_in( 2 ) & ~lut_in( 3 ) & ~lut_in( 0 ) ) |
                           ( ~lut_in( 2 ) &  lut_in( 3 ) &  lut_in( 0 ) ) ;
@@ -173,7 +173,7 @@ namespace flopoco {
         for( int i = 0; i < wIn; i++ ) {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
-            Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( target );
+			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( parentOp,target );
             initial_lut->setGeneric( "init", adder.get_hex() );
             inPortMap( initial_lut, "i0", "y_in" + of( i ) );
             inPortMap( initial_lut, "i1", "x_in" + of( i ) );
@@ -186,7 +186,7 @@ namespace flopoco {
             vhdl << initial_lut->primitiveInstance( lut_name.str(), this );
         }
 
-        Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( target );
+		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
         outPortMap( further_cc, "co", "cc_co");
         outPortMap( further_cc, "o", "cc_o");
         inPortMapCst( further_cc, "cyinit", "'0'" );
@@ -198,7 +198,7 @@ namespace flopoco {
         vhdl << "sum_out <= cc_o" << range( wIn - 1, 0 ) << ";" << std::endl;
     }
 
-    void Xilinx_GenericAddSub_slice::build_with_dss( Target *target, int wIn, bool initial ) {
+	void Xilinx_GenericAddSub_slice::build_with_dss(Operator *parentOp, Target *target, int wIn, bool initial ) {
         addInput( "x_in", wIn );
         addInput( "y_in", wIn );
         addInput( "neg_x_in" );
@@ -237,7 +237,7 @@ namespace flopoco {
         for( int i = 0; i < wIn; i++ ) {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
-            Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( target );
+			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
 
             if( initial && i == 0 ) {
                 cur_lut->setGeneric( "init", getLUT_dss_init() );
@@ -258,7 +258,7 @@ namespace flopoco {
             vhdl << cur_lut->primitiveInstance( lut_name.str(), this );
         }
 
-        Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( target );
+		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
         outPortMap( further_cc, "co", "cc_co");
         outPortMap( further_cc, "o", "cc_o");
         inPortMapCst( further_cc, "cyinit", "'0'" );

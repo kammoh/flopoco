@@ -14,13 +14,13 @@ BaseMultiplierLUT::BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int
 
 }
 
-Operator* BaseMultiplierLUT::generateOperator(Target* target)
+Operator* BaseMultiplierLUT::generateOperator(Operator *parentOp, Target* target)
 {
-    return new BaseMultiplierLUTOp(target, isSignedX, isSignedY, wX, wY);
+	return new BaseMultiplierLUTOp(parentOp, target, isSignedX, isSignedY, wX, wY);
 }
 
 
-BaseMultiplierLUTTable::BaseMultiplierLUTTable(Target* target, int dx, int dy, int wO, bool negate, bool signedX, bool signedY) : Table(target, dx+dy, wO, 0, -1, true), // logic table
+BaseMultiplierLUTTable::BaseMultiplierLUTTable(Operator *parentOp, Target* target, int dx, int dy, int wO, bool negate, bool signedX, bool signedY) : Table(target, dx+dy, wO, 0, -1, true), // logic table
     dx(dx), dy(dy), wO(wO), negate(negate), signedX(signedX), signedY(signedY)
 {
     ostringstream name;
@@ -69,7 +69,7 @@ mpz_class BaseMultiplierLUTTable::function(int yx)
 
 }
 
-BaseMultiplierLUTOp::BaseMultiplierLUTOp(Target* target, bool isSignedX, bool isSignedY, int wX, int wY) : Operator(target)
+BaseMultiplierLUTOp::BaseMultiplierLUTOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY) : Operator(parentOp,target)
 {
     int wOut = wX + wY;
 
@@ -84,7 +84,7 @@ BaseMultiplierLUTOp::BaseMultiplierLUTOp(Target* target, bool isSignedX, bool is
 
     vhdl << tab << declare("YX",wX+wY) << " <= Y" << " & " << "X;" << endl;
 
-    BaseMultiplierLUTTable* bmlt = new BaseMultiplierLUTTable(target, wX, wY, wOut, false, isSignedX, isSignedY);
+	BaseMultiplierLUTTable* bmlt = new BaseMultiplierLUTTable(parentOp,target, wX, wY, wOut, false, isSignedX, isSignedY);
 
     addSubComponent(bmlt);
     inPortMap(bmlt, "X", "YX");

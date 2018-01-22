@@ -14,7 +14,7 @@
 
 using namespace std;
 namespace flopoco {
-    Xilinx_CARRY4::Xilinx_CARRY4( Target *target ) : Xilinx_Primitive( target ) {
+	Xilinx_CARRY4::Xilinx_CARRY4(Operator *parentOp, Target *target ) : Xilinx_Primitive( parentOp, target ) {
         setName( "CARRY4" );
         srcFileName = "Xilinx_CARRY4";
         addInput( "ci", 1 );

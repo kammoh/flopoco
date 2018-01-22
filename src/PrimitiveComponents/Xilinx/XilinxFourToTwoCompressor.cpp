@@ -72,7 +72,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_op lutop_o5 = (lut_in(0) & lut_in(1)) | (lut_in(0) & lut_in(2)) | (lut_in(1) & lut_in(2)); //carry out of full adder
         lut_init lutop( lutop_o5, lutop_o6 );
 
-        Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( target );
+        Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
         cur_lut->setGeneric( "init", lutop.get_hex() );
 
         inPortMap(cur_lut,"i0",join("X",i) + of(0));
@@ -97,7 +97,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_op lutop_o5 = lut_in(3); //identical with input 3
         lut_init lutop( lutop_o5, lutop_o6 );
 
-        Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( target );
+        Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
         cur_lut->setGeneric( "init", lutop.get_hex() );
 
         inPortMap(cur_lut,"i0",join("X",width-1) + of(0));
@@ -117,7 +117,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     }
 
     for( int i = 0; i < needed_cc; i++ ) {
-        Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( target );
+        Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
 
         inPortMapCst( cur_cc, "cyinit", "'0'" );
         if( i == 0 ) {

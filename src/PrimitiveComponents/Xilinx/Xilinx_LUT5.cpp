@@ -14,28 +14,28 @@
 
 using namespace std;
 namespace flopoco {
-    Xilinx_LUT5_base::Xilinx_LUT5_base( Target *target ) : Xilinx_Primitive( target ) {}
+	Xilinx_LUT5_base::Xilinx_LUT5_base(Operator *parentOp, Target *target ) : Xilinx_Primitive( parentOp,target ) {}
 
-    Xilinx_LUT5::Xilinx_LUT5( Target *target ) : Xilinx_LUT5_base( target ) {
+	Xilinx_LUT5::Xilinx_LUT5(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "LUT5" );
         addOutput( "o", 1 );
         base_init();
     }
 
-    Xilinx_LUT5_L::Xilinx_LUT5_L( Target *target ) : Xilinx_LUT5_base( target ) {
+	Xilinx_LUT5_L::Xilinx_LUT5_L(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "LUT5_L" );
         addOutput( "lo", 1 );
         base_init();
     }
 
-    Xilinx_LUT5_D::Xilinx_LUT5_D( Target *target ) : Xilinx_LUT5_base( target ) {
+	Xilinx_LUT5_D::Xilinx_LUT5_D(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "LUT5_D" );
         addOutput( "lo", 1 );
         addOutput( "o", 1 );
         base_init();
     }
 
-    Xilinx_CFGLUT5::Xilinx_CFGLUT5( Target *target ) : Xilinx_LUT5_base( target ) {
+	Xilinx_CFGLUT5::Xilinx_CFGLUT5(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "CFGLUT5" );
         addInput("clk");
         addInput("ce"); //clk enable

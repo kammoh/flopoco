@@ -17,11 +17,11 @@ namespace flopoco {
 		// destructor
         ~Xilinx_GenericAddSub_slice() {}
 
-        void build_normal( Target *target, int wIn, bool initial );
+		void build_normal(Operator* parentOp, Target *target, int wIn, bool initial );
 
-        void build_fixed_sign( Target *target, int wIn, bool initial );
+		void build_fixed_sign(Operator* parentOp, Target *target, int wIn, bool initial );
 
-        void build_with_dss( Target *target, int wIn, bool initial );
+		void build_with_dss(Operator* parentOp, Target *target, int wIn, bool initial );
 
         void getLUT_std() {
         }

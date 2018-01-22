@@ -30,13 +30,13 @@ BaseMultiplier2xk::BaseMultiplier2xk(bool isSignedX, bool isSignedY, int width, 
 
 }
 
-Operator* BaseMultiplier2xk::generateOperator(Target* target)
+Operator* BaseMultiplier2xk::generateOperator(Operator *parentOp, Target* target)
 {
-    return new BaseMultiplier2xkOp(target, isSignedX, isSignedY, width, flipXY);
+	return new BaseMultiplier2xkOp(parentOp, target, isSignedX, isSignedY, width, flipXY);
 }
 	
 
-BaseMultiplier2xkOp::BaseMultiplier2xkOp(Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(target)
+BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
 {
     ostringstream name;
 
@@ -84,7 +84,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Target* target, bool isSignedX, bool is
         lut_op lutop_o5 = lut_in(0) & lut_in(1); //and of first partial product
         lut_init lutop( lutop_o5, lutop_o6 );
 
-        Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( target );
+		Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
         cur_lut->setGeneric( "init", lutop.get_hex() );
 
         inPortMap(cur_lut,"i0",in2 + of(1));
@@ -111,7 +111,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Target* target, bool isSignedX, bool is
 
     //create the carry chain:
     for( int i = 0; i < needed_cc; i++ ) {
-        Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( target );
+		Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
 
         inPortMapCst( cur_cc, "cyinit", "'0'" );
         if( i == 0 ) {

@@ -143,13 +143,13 @@ bool BaseMultiplierDSPSuperTilesXilinx::shapeValid(int x, int y)
 }
 
 
-Operator* BaseMultiplierDSPSuperTilesXilinx::generateOperator(Target* target)
+Operator* BaseMultiplierDSPSuperTilesXilinx::generateOperator(Operator *parentOp, Target* target)
 {
-    return new BaseMultiplierDSPSuperTilesXilinxOp(target, isSignedX, isSignedY, wX, wY, wR, shape, pipelineDSPs);
+	return new BaseMultiplierDSPSuperTilesXilinxOp(parentOp, target, isSignedX, isSignedY, wX, wY, wR, shape, pipelineDSPs);
 }
 
 
-BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Target* target, bool isSignedX, bool isSignedY, int wX, int wY, int wR, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs) : Operator(target)
+BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, int wR, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs) : Operator(parentOp,target)
 {
     useNumericStd();
 

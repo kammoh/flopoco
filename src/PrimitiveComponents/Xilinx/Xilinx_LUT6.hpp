@@ -15,7 +15,7 @@ namespace flopoco {
     // new operator class declaration
     class Xilinx_LUT6_base : public Xilinx_Primitive {
       public:
-        Xilinx_LUT6_base( Target *target );
+		Xilinx_LUT6_base(Operator* parentOp, Target *target );
         ~Xilinx_LUT6_base() {};
 
         void base_init();
@@ -23,25 +23,25 @@ namespace flopoco {
 
     class Xilinx_LUT6 : public Xilinx_LUT6_base {
       public:
-        Xilinx_LUT6( Target *target );
+		Xilinx_LUT6(Operator* parentOp, Target *target );
         ~Xilinx_LUT6() {};
     };
 
     class Xilinx_LUT6_2 : public Xilinx_LUT6_base {
       public:
-        Xilinx_LUT6_2( Target *target );
+		Xilinx_LUT6_2(Operator* parentOp, Target *target );
         ~Xilinx_LUT6_2() {};
     };
 
     class Xilinx_LUT6_L : public Xilinx_LUT6_base {
       public:
-        Xilinx_LUT6_L( Target *target );
+		Xilinx_LUT6_L(Operator* parentOp, Target *target );
         ~Xilinx_LUT6_L() {};
     };
 
     class Xilinx_LUT6_D : public Xilinx_LUT6_base {
       public:
-        Xilinx_LUT6_D( Target *target );
+		Xilinx_LUT6_D(Operator* parentOp, Target *target );
         ~Xilinx_LUT6_D() {};
     };
 }//namespace

@@ -52,7 +52,7 @@ namespace flopoco {
         }
 
         for( uint i = 0; i < wIn; ++i  ) {
-            Xilinx_LUT6_2 *lut_bit_i = new Xilinx_LUT6_2( target );
+			Xilinx_LUT6_2 *lut_bit_i = new Xilinx_LUT6_2( parentOp,target );
             lut_bit_i->setGeneric( "init", lut_content );
             inPortMap( lut_bit_i, "i0", "z_in" + of( i ) );
             inPortMap( lut_bit_i, "i1", "y_in" + of( i ) );
@@ -66,7 +66,7 @@ namespace flopoco {
         }
 
         if( is_initial ) {
-            Xilinx_CARRY4 *init_cc = new Xilinx_CARRY4( target );
+			Xilinx_CARRY4 *init_cc = new Xilinx_CARRY4( parentOp,target );
             outPortMap( init_cc, "co", "cc_co");
             outPortMap( init_cc, "o", "cc_o");
             inPortMap( init_cc, "cyinit", "carry_in" );
@@ -75,7 +75,7 @@ namespace flopoco {
             inPortMap( init_cc, "s", "cc_s" );
             vhdl << init_cc->primitiveInstance( "init_cc", this );
         } else {
-            Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( target );
+			Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
             outPortMap( further_cc, "co", "cc_co");
             outPortMap( further_cc, "o", "cc_o");
             inPortMapCst( further_cc, "cyinit", "'0'" );

@@ -14,7 +14,7 @@
 
 using namespace std;
 namespace flopoco {
-    Xilinx_CFGLUT5::Xilinx_CFGLUT5(Target* target) : Primitive(target)
+	Xilinx_CFGLUT5::Xilinx_CFGLUT5(Operator *parentOp, Target* target) : Primitive(parentOp,target)
 	{
         //isSequential_= false;
         //hasRegistersWithoutReset_

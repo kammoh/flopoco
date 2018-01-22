@@ -71,7 +71,7 @@ namespace flopoco {
             addInput( "s_in" );
 
             for( int i = 0; i < ( wIn - ( wIn % 2 ) ) / 2; i++ ) {
-                Xilinx_LUT6_2 *luts = new Xilinx_LUT6_2( target );
+				Xilinx_LUT6_2 *luts = new Xilinx_LUT6_2( parentOp, target );
                 luts->setGeneric( "init", "current_lut_init" );
                 inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                 inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
@@ -87,7 +87,7 @@ namespace flopoco {
             }
 
             if( wIn % 2 ) {
-                Xilinx_LUT6_2 *hluts = new Xilinx_LUT6_2( target );
+				Xilinx_LUT6_2 *hluts = new Xilinx_LUT6_2( parentOp, target );
                 hluts->setGeneric( "init", "current_lut_init" );
                 inPortMap( hluts, join( "i", 0 ), "m_in" + of( wIn * 2 - 2 ) );
                 inPortMap( hluts, join( "i", 1 ), "m_in" + of( wIn * 2 - 1 ) );
@@ -114,7 +114,7 @@ namespace flopoco {
                 addInput( "s_in", 2 );
 
                 for( int i = 0; i < wIn; i++ ) {
-                    Xilinx_LUT6 *luts = new Xilinx_LUT6( target );
+					Xilinx_LUT6 *luts = new Xilinx_LUT6( parentOp, target );
                     luts->setGeneric( "init", "current_lut_init" );
                     inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                     inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
@@ -133,7 +133,7 @@ namespace flopoco {
                 declare( "intercon_L6_to_M7", wIn * 2 );
 
                 for( int i = 0; i < 2 * wIn; i++ ) {
-                    Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( target );
+					Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( parentOp,target );
                     luts->setGeneric( "init", "current_lut_init" );
                     inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                     inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
@@ -148,7 +148,7 @@ namespace flopoco {
                 }
 
                 for( int i = 0; i < wIn; i++ ) {
-                    Xilinx_MUXF7 *mux7 = new Xilinx_MUXF7( target );
+					Xilinx_MUXF7 *mux7 = new Xilinx_MUXF7( parentOp,target );
                     inPortMap( mux7, join( "i", 0 ), "intercon_L6_to_M7" + of( i * 2 ) );
                     inPortMap( mux7, join( "i", 1 ), "intercon_L6_to_M7" + of( i * 2 + 1 ) );
                     inPortMap( mux7, "s", "s_in" + of( 2 ) );
@@ -164,7 +164,7 @@ namespace flopoco {
                 declare( "intercon_M7_to_M8", wIn * 2 );
 
                 for( int i = 0; i < wIn * 4; i++ ) {
-                    Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( target );
+					Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( parentOp,target );
                     luts->setGeneric( "init", "current_lut_init" );
                     inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                     inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
@@ -179,7 +179,7 @@ namespace flopoco {
                 }
 
                 for( int i = 0; i < wIn * 2; i++ ) {
-                    Xilinx_MUXF7_L *mux7 = new Xilinx_MUXF7_L( target );
+					Xilinx_MUXF7_L *mux7 = new Xilinx_MUXF7_L( parentOp,target );
                     inPortMap( mux7, join( "i", 0 ), "intercon_L6_to_M7" + of( i * 2 ) );
                     inPortMap( mux7, join( "i", 1 ), "intercon_L6_to_M7" + of( i * 2 + 1 ) );
                     inPortMap( mux7, "s", "s_in" + of( 2 ) );
@@ -189,7 +189,7 @@ namespace flopoco {
                     vhdl << mux7->primitiveInstance( muxname.str(), this );
                 }
 
-                Xilinx_MUXF8 *mux8 = new Xilinx_MUXF8( target );
+				Xilinx_MUXF8 *mux8 = new Xilinx_MUXF8( parentOp,target );
                 inPortMap( mux8, join( "i", 0 ), "intercon_M7_to_M8" + of( 0 ) );
                 inPortMap( mux8, join( "i", 1 ), "intercon_M7_to_M8" + of( 1 ) );
                 inPortMap( mux8, "s", "s_in" + of( 3 ) );

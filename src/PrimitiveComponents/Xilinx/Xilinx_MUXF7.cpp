@@ -14,21 +14,21 @@
 
 using namespace std;
 namespace flopoco {
-    Xilinx_MUXF7_base::Xilinx_MUXF7_base( Target *target ) : Xilinx_Primitive( target ) {}
+	Xilinx_MUXF7_base::Xilinx_MUXF7_base(Operator *parentOp, Target *target ) : Xilinx_Primitive( parentOp,target ) {}
 
-    Xilinx_MUXF7::Xilinx_MUXF7( Target *target ) : Xilinx_MUXF7_base( target ) {
+	Xilinx_MUXF7::Xilinx_MUXF7(Operator *parentOp, Target *target ) : Xilinx_MUXF7_base( parentOp,target ) {
         setName( "MUXF7" );
         addOutput( "o", 1 );
         base_init();
     }
 
-    Xilinx_MUXF7_L::Xilinx_MUXF7_L( Target *target ) : Xilinx_MUXF7_base( target ) {
+	Xilinx_MUXF7_L::Xilinx_MUXF7_L(Operator *parentOp, Target *target ) : Xilinx_MUXF7_base( parentOp,target ) {
         setName( "MUXF7_L" );
         addOutput( "lo", 1 );
         base_init();
     }
 
-    Xilinx_MUXF7_D::Xilinx_MUXF7_D( Target *target ) : Xilinx_MUXF7_base( target ) {
+	Xilinx_MUXF7_D::Xilinx_MUXF7_D(Operator *parentOp, Target *target ) : Xilinx_MUXF7_base( parentOp,target ) {
         setName( "MUXF7_D" );
         addOutput( "o", 1 );
         addOutput( "lo", 1 );

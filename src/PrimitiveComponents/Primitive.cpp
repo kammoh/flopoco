@@ -11,7 +11,7 @@
 
 using namespace std;
 namespace flopoco {
-    Primitive::Primitive( Target *target ) : Operator( target ){
+	Primitive::Primitive(Operator *parentOp, Target *target ) : Operator( parentOp, target ){
         setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
         setCombinatorial();
     }

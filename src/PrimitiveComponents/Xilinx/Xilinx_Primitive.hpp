@@ -10,7 +10,7 @@ namespace flopoco {
       public:
 
         // constructor, defined there with two parameters (default value 0 for each)
-        Xilinx_Primitive( Target *target );
+        Xilinx_Primitive(Operator *parentOp, Target *target );
 
         // destructor
         ~Xilinx_Primitive();

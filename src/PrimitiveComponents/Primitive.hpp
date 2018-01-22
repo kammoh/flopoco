@@ -26,7 +26,7 @@ namespace flopoco {
     class Primitive : public Operator {
         std::map<std::string, std::string> generics_; //!< Map for generics
       public:
-        Primitive( Target *target );
+        Primitive(Operator *parentOp, Target *target );
         ~Primitive();
 
         ///
