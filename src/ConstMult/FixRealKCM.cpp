@@ -419,16 +419,16 @@ namespace flopoco{
 			Signal* rTemp = thisOp->getSignalByName(rTempName);
 
 			if(negativeConstant) {
-				rTemp->setFixSigned(false); // make it a signed signal
+				rTemp->setIsSigned(); // make it a signed signal
 				bitHeap -> subtractSignal(rTempName);
 			}
-			else{
+			else{ // positive constant
 				if(signedInput)	{
-					rTemp->setFixSigned(false); // make it a signed signal
+					rTemp->setIsSigned(); // make it a signed signal
 					bitHeap -> addSignal(rTempName);
 				}
 				else  { // !negativeConstant and !signedInput
-					rTemp->setFixUnsigned(false); // make it a signed signal
+					rTemp->setIsSigned(false); // make it an unsigned signal
 					bitHeap -> addSignal(rTempName);
 				}
 			}
@@ -519,20 +519,23 @@ namespace flopoco{
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
+					cout << "****************************Case 0" << endl;
 					// bitHeap -> addSignedBitVector(
 					// 															sliceOutName, // name
 					// 															sliceOutWidth, // size
 					// 															0 // weight
 					// 															);
-					sliceOut -> setFixSigned(false);
+					sliceOut -> setIsSigned();
 					bitHeap -> addSignal(sliceOutName);
 					break;
 				case 1:
-					sliceOut -> setFixUnsigned(false);
+					cout << "****************************Case 1" << endl;
+					sliceOut -> setIsSigned(false);
 					bitHeap -> addSignal(sliceOutName);
 					break;
 				case -1: // In this case the table simply stores x* absC 
-					sliceOut -> setFixSigned(false);
+					cout << "****************************Case -1" << endl;
+					sliceOut -> setIsSigned(false);
 					bitHeap -> subtractSignal(sliceOutName);
 					break;
 				default: THROWERROR("unexpected value in tableOutputSign");

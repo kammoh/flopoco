@@ -225,23 +225,17 @@ namespace flopoco{
 
 	bool Signal::isSigned() const {return isSigned_;};
 
-	bool Signal::isFP() const {return isFP_;}
-
-	void Signal::setIsFP(bool newIsFP) {isFP_ = newIsFP;}
+	void Signal::setIsSigned(bool newIsSigned) {isSigned_ = newIsSigned;}
 
 	bool Signal::isFix() const {return isFix_;}
 
 	void Signal::setIsFix(bool newIsFix) {isFix_ = newIsFix;}
 
-	bool Signal::isFixSigned() const {return isFix_ && isSigned_;}
-
-	void Signal::setFixSigned(bool newIsFix) {isFix_ = newIsFix; isSigned_ = true;}
-
-	bool Signal::isFixUnsigned() const {return isFix_ && !isSigned_;}
-
-	void Signal::setFixUnsigned(bool newIsFix) {isFix_ = newIsFix; isSigned_ = false;}
-
 	bool Signal::isIEEE() const {return isIEEE_;}
+
+	bool Signal::isFP() const {return isFP_;}
+
+	void Signal::setIsFP(bool newIsFP) {isFP_ = newIsFP;}
 
 	void Signal::setIsIEEE(bool newIsIEEE) {isIEEE_ = newIsIEEE;}
 

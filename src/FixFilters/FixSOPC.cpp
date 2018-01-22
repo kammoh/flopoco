@@ -400,7 +400,7 @@ namespace flopoco{
 		vector<pair<string,string>> paramList;
 		
 		if(index==-1) 	{ // The unit tests
-			for(int n=3; n<5; n+=2){
+			for(int n=3; n<9; n+=2){
 
 				// build stupid coeff list with positive and negative numbers. I don't think this corresponds to an actual filter.
 				ostringstream c1,c2;

@@ -925,7 +925,7 @@ namespace flopoco{
 
 	void  Operator::resizeFixPoint(string lhsName, string rhsName, const int MSB, const int LSB, const int indentLevel){
 		Signal* rhsSignal = getSignalByName(rhsName);
-		bool isSigned = rhsSignal->isFixSigned();
+		bool isSigned = rhsSignal->isSigned();
 		int oldMSB = rhsSignal->MSB();
 		int oldLSB = rhsSignal->LSB();
 

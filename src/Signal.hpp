@@ -209,19 +209,16 @@ class Operator;
 		 */
 		int LSB() const;
 
+		/**
+		 * Set the signedness
+		 */
+		void setIsSigned(bool newIsSigned = true);
+
+
 		/** Returns the signess of the signal
 		 */
 		bool isSigned() const;
 
-		/**
-		 * Reports if the signal is a FloPoCo floating-point signal
-		 */
-		bool isFP() const;
-
-		/**
-		 * Set the value of isFP
-		 */
-		void setIsFP(bool newIsFP = true);
 
 		/**
 		 * Reports if the signal is a fixed-point signal
@@ -233,25 +230,16 @@ class Operator;
 		 */
 		void setIsFix(bool newIsFix = true);
 
-		/**
-		 * Reports if the signal is a signed fixed-point signal
-		 */
-		bool isFixSigned() const;
 
 		/**
-		 * Set the value of isFix and the signess
+		 * Reports if the signal is a FloPoCo floating-point signal
 		 */
-		void setFixSigned(bool newIsFix = true);
+		bool isFP() const;
 
 		/**
-		 * Reports if the signal is an unsigned fixed-point signal
+		 * Set the value of isFP
 		 */
-		bool isFixUnsigned() const;
-
-		/**
-		 * Set the value of isFix and the un-signess
-		 */
-		void setFixUnsigned(bool newIsFix = true);
+		void setIsFP(bool newIsFP = true);
 
 		/**
 		 * Reports if the signal is an IEEE floating-point signal
