@@ -14,8 +14,8 @@ namespace flopoco{
 
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
-	FixSOPC::FixSOPC(Target* target_, int lsbIn_, int lsbOut_, vector<string> coeff_) :
-		Operator(target_),
+	FixSOPC::FixSOPC(OperatorPtr parentOp_, Target* target_, int lsbIn_, int lsbOut_, vector<string> coeff_) :
+		Operator(parentOp_, target_),
 		lsbOut(lsbOut_),
 		coeff(coeff_),
 		g(-1),
@@ -32,8 +32,8 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
-			Operator(target_),
+	FixSOPC::FixSOPC(OperatorPtr parentOp_, Target* target_, vector<int> msbIn_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
+			Operator(parentOp_, target_),
 			msbIn(msbIn_),
 			lsbIn(lsbIn_),
 			msbOut(msbOut_),
@@ -56,8 +56,8 @@ namespace flopoco{
 	}
 
 
-	FixSOPC::FixSOPC(Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
-			Operator(target_),
+	FixSOPC::FixSOPC(OperatorPtr parentOp_, Target* target_, vector<double> maxAbsX_, vector<int> lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_, int g_, double targetError_) :
+			Operator(parentOp_, target_),
 			maxAbsX(maxAbsX_),
 			lsbIn(lsbIn_),
 			msbOut(msbOut_),
@@ -335,9 +335,13 @@ namespace flopoco{
 				input.push_back( substr );
 			}
 		
-		return new FixSOPC(target, lsbIn, lsbOut, input);
+		return new FixSOPC(parentOp, target, lsbIn, lsbOut, input);
 	}
 
+
+
+
+	
 	void FixSOPC::registerFactory(){
 		UserInterface::add("FixSOPC", // name
 											 "A fix-point Sum of Product by Constants.",
@@ -347,7 +351,8 @@ namespace flopoco{
                         lsbOut(int): output's last significant bit;\
                         coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "",
-											 FixSOPC::parseArguments
+											 FixSOPC::parseArguments,
+											 FixSOPC::unitTest
 											 ) ;
 	}
 
@@ -387,4 +392,43 @@ namespace flopoco{
 #endif
 	}
 
+	
+	TestList FixSOPC::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 	{ // The unit tests
+			for(int n=3; n<5; n+=2){
+
+				// build a stupid coeff list with positive and negative numbers, and even a zero sometimes. I don't think this corresponds to an actual filter.
+				ostringstream c;
+				c << "\"";
+				for (int i=1; i<n; i++) {
+					c <<  "cos(pi*" << i << "/" << n << ")";
+					if(i<n-1)
+						c << ":";
+				}
+				c << "\"";
+				
+				for(int lsb=-3; lsb>-16; lsb--) { // test various input widths
+					paramList.push_back(make_pair("lsbIn",  to_string(lsb)));
+					paramList.push_back(make_pair("lsbOut", to_string(lsb))); // same LSB, this tests enough
+					paramList.push_back(make_pair("coeff",  c.str() ));
+					paramList.push_back(make_pair("TestBench n=",  "1000"));
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
+			}
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
+
+	
 }

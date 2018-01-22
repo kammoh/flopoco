@@ -98,7 +98,7 @@ namespace flopoco {
 		}
 
 
-		fixSOPC = new FixSOPC(getTarget(), lsbInOut, lsbInOut, coeff);
+		fixSOPC = new FixSOPC(getParentOp(), getTarget(), lsbInOut, lsbInOut, coeff);
 
 		addSubComponent(fixSOPC);
 
