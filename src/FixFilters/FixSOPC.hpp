@@ -21,7 +21,7 @@ namespace flopoco{
 		 * @brief simplest constructor for inputs in the fixed-point format (0, lsbIn), computing msbOut out of the coeffs, computing the internal format.
 		 * This constructor is all we need for a FIR
 		 */
-		FixSOPC(Target* target, int lsbIn, int lsbOut, vector<string> coeff);
+		FixSOPC(OperatorPtr parentOp_, Target* target, int lsbIn, int lsbOut, vector<string> coeff);
 
 
 
@@ -34,7 +34,7 @@ namespace flopoco{
 		 *			If g=0, the architecture will have no guard bit, no final round bit will be added. The architecture will not be faithful.
 		 *			If g>0, the provided number of guard bits will be used and a final round bit added in position lsbOut-1.
 		 */
-		FixSOPC(Target* target, vector<int> msbIn, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1, double targetError = 0.0);
+		FixSOPC(OperatorPtr parentOp_, Target* target, vector<int> msbIn, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1, double targetError = 0.0);
 
 
 
@@ -48,7 +48,7 @@ namespace flopoco{
 		 *			If g=0, the architecture will have no guard bit, no final round bit will be added. The architecture will not be faithful.
 		 *			If g>0, the provided number of guard bits will be used and a final round bit added in position lsbOut-1.
 		 */
-		FixSOPC(Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1, double targetError = 0.0);
+		FixSOPC(OperatorPtr parentOp_, Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1, double targetError = 0.0);
 
 
 		
@@ -70,6 +70,7 @@ namespace flopoco{
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static TestList unitTest(int index);
 		static void registerFactory();
 
 	protected:

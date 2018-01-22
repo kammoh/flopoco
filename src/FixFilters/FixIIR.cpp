@@ -179,7 +179,7 @@ namespace flopoco {
 			coeffSOPC.push_back("-("+coeffa[i]+")");
 		}
 		
-		FixSOPC* fixSOPC = new FixSOPC(getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
+		FixSOPC* fixSOPC = new FixSOPC(getParentOp(), getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
 		addSubComponent(fixSOPC);
 		for (uint32_t i=0; i<n; i++) {
 			inPortMap(fixSOPC, join("X",i), join("U", i));
