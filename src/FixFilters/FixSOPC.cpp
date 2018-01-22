@@ -402,23 +402,35 @@ namespace flopoco{
 		if(index==-1) 	{ // The unit tests
 			for(int n=3; n<5; n+=2){
 
-				// build a stupid coeff list with positive and negative numbers, and even a zero sometimes. I don't think this corresponds to an actual filter.
-				ostringstream c;
-				c << "\"";
+				// build stupid coeff list with positive and negative numbers. I don't think this corresponds to an actual filter.
+				ostringstream c1,c2;
+				c1 << "\"";
+				c2 << "\"";
 				for (int i=1; i<n; i++) {
-					c <<  "cos(pi*" << i << "/" << n << ")";
-					if(i<n-1)
-						c << ":";
+					c1 << "sin(pi*" << i << "/" << n << ")"; // only positive numbers
+					c2 << "cos(pi*" << i << "/" << n << ")"; // pos and neg numbers
+					if(i<n-1) {
+						c1 << ":";
+						c2 << ":";
+					}
 				}
-				c << "\"";
+				c1 << "\"";
+				c2 << "\"";
 				
 				for(int lsb=-3; lsb>-16; lsb--) { // test various input widths
+					paramList.clear();
 					paramList.push_back(make_pair("lsbIn",  to_string(lsb)));
 					paramList.push_back(make_pair("lsbOut", to_string(lsb))); // same LSB, this tests enough
-					paramList.push_back(make_pair("coeff",  c.str() ));
+					paramList.push_back(make_pair("coeff",  c1.str() ));
 					paramList.push_back(make_pair("TestBench n=",  "1000"));
 					testStateList.push_back(paramList);
+
 					paramList.clear();
+					paramList.push_back(make_pair("lsbIn",  to_string(lsb)));
+					paramList.push_back(make_pair("lsbOut", to_string(lsb))); // same LSB, this tests enough
+					paramList.push_back(make_pair("coeff",  c2.str() ));
+					paramList.push_back(make_pair("TestBench n=",  "1000"));
+					testStateList.push_back(paramList);
 				}
 			}
 		}
