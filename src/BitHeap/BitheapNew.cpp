@@ -471,7 +471,7 @@ namespace flopoco {
 	void BitheapNew::addSignal(string signalName, int shift)
 	{
 
-		REPORT(0*DEBUG, "addSignal	" << signalName << " shift=" << shift);
+		REPORT(DEBUG, "addSignal	" << signalName << " shift=" << shift);
 		Signal* s = op->getSignalByName(signalName);
 		int sMSB = s->MSB();
 		int sLSB = s->LSB();
@@ -482,7 +482,7 @@ namespace flopoco {
 			REPORT(0,"WARNING: addSignal(): " << signalName << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
 		if(s->isSigned()) { // We must sign-extend it, using the constant trick
-			REPORT(0*DEBUG, "addSignal: this is a signed signal	");
+			REPORT(DEBUG, "addSignal: this is a signed signal	");
 
 			if(!op->getSignalByName(signalName)->isBus()) {
 				// getting here doesn't make much sense
@@ -498,7 +498,7 @@ namespace flopoco {
 			}
 			else{
 				// complement the leading bit
-				addBit(sMSB+shift,	"not("+signalName + of(sMSB-sLSB)+")");
+				addBit(sMSB+shift,	"not "+signalName + of(sMSB-sLSB));
 				// add the string of ones from this bit to the MSB of the bit heap
 				for(int w=sMSB; w<=this->msb-shift; w++) {
 					addConstantOneBit(w+shift);
@@ -507,7 +507,7 @@ namespace flopoco {
 		}
 
 		else{ // unsigned
-			REPORT(0*DEBUG, "addSignal: this is an unsigned signal	");
+			REPORT(DEBUG, "addSignal: this is an unsigned signal	");
 			if(!op->getSignalByName(signalName)->isBus())
 				addBit(shift,signalName);
 			else {// isBus: this is a bit vector
@@ -523,7 +523,7 @@ namespace flopoco {
 
 	void BitheapNew::subtractSignal(string signalName, int shift)
 	{
-		REPORT(0, "subtractSignal  " << signalName << " shift=" << shift);
+		REPORT(DEBUG, "subtractSignal  " << signalName << " shift=" << shift);
 		Signal* s = op->getSignalByName(signalName);
 		int sMSB = s->MSB();
 		int sLSB = s->LSB();
@@ -536,13 +536,15 @@ namespace flopoco {
 		
 		if(s->isSigned()) {
 			// we subtract                            000000sxxxxxxx000 (shift=3)
-			// which with the sign extension trick is 111111Sxxxxxxx000  (capital means: complement
+			// which must be sign-extended to         sssssssxxxxxxx000 
 			//                                                    
-			// so we must add to the bit heap         000000sXXXXXXX111
+			// so we must add to the bit heap         SSSSSSSXXXXXXX111 (capital means: complement)
 			//                                                       +1
-			// equivalently                           000000sXXXXXXX
+			// equivalently                           SSSSSSSXXXXXXX
 			//                                                    +1
-			REPORT(0*DEBUG, "subtractSignal: this is a signed signal	");
+			// with the sign extension trick:         000000sXXXXXXX
+			//                                      + 1111111      1         
+			REPORT(DEBUG, "subtractSignal: this is a signed signal	");
 		
 			// If the bit vector is of width 1, the following loop is empty.
 			for(int w=sLSB; w<=sMSB; w++) {
@@ -550,7 +552,7 @@ namespace flopoco {
 			}
 			addConstantOneBit(sLSB+shift); // the +1
 			// add the string of ones to the MSB of the bit heap
-			for(int w=sMSB+1; w<=this->msb-shift; w++) {
+			for(int w=sMSB; w<=this->msb-shift; w++) {
 				addConstantOneBit(w+shift);
 			}
 		}
@@ -559,7 +561,7 @@ namespace flopoco {
 			//                                                    
 			// so we must add to the bit heap         111111XXXXXXXX
 			//                                                    +1
-			REPORT(0*DEBUG, "subtractSignal: this is an unsigned signal	");
+			REPORT(DEBUG, "subtractSignal: this is an unsigned signal	");
 			for(int w=sLSB; w<=sMSB; w++) {
 				addBit(w+shift, "not " + signalName + of(w-sLSB)); 
 			}

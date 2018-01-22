@@ -414,23 +414,16 @@ namespace flopoco{
 		// We keep these two variables separated because it makes this two-step process more explicit than changing lsbOut.
 		
 		if(constantIsPowerOfTwo)	{
-			// Create a signal that shifts it or truncates it into place
+			// Create a signal that shifts the input (so multiplies by the _abs val_),
+			// or truncates it into place
 			string rTempName = createShiftedPowerOfTwo(inputSignalName);
 			Signal* rTemp = thisOp->getSignalByName(rTempName);
 
 			if(negativeConstant) {
-				rTemp->setIsSigned(); // make it a signed signal
 				bitHeap -> subtractSignal(rTempName);
 			}
 			else{ // positive constant
-				if(signedInput)	{
-					rTemp->setIsSigned(); // make it a signed signal
-					bitHeap -> addSignal(rTempName);
-				}
-				else  { // !negativeConstant and !signedInput
-					rTemp->setIsSigned(false); // make it an unsigned signal
-					bitHeap -> addSignal(rTempName);
-				}
+				bitHeap -> addSignal(rTempName);
 			}
 			return true; // and that 's all folks.
 			}
@@ -468,6 +461,8 @@ namespace flopoco{
 		t << "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
 		thisOp->vhdl <<  t.str();
 #endif
+		// copy the signedness into rtemp
+		thisOp->getSignalByName(rTempName)->setIsSigned(signedInput);
 		return rTempName;
 	}
 
@@ -519,7 +514,7 @@ namespace flopoco{
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
-					cout << "****************************Case 0" << endl;
+					//					cout << "****************************Case 0" << endl;
 					// bitHeap -> addSignedBitVector(
 					// 															sliceOutName, // name
 					// 															sliceOutWidth, // size
@@ -529,12 +524,12 @@ namespace flopoco{
 					bitHeap -> addSignal(sliceOutName);
 					break;
 				case 1:
-					cout << "****************************Case 1" << endl;
+					//					cout << "****************************Case 1" << endl;
 					sliceOut -> setIsSigned(false);
 					bitHeap -> addSignal(sliceOutName);
 					break;
 				case -1: // In this case the table simply stores x* absC 
-					cout << "****************************Case -1" << endl;
+					//					cout << "****************************Case -1" << endl;
 					sliceOut -> setIsSigned(false);
 					bitHeap -> subtractSignal(sliceOutName);
 					break;
