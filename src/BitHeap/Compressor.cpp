@@ -6,7 +6,7 @@ using namespace std;
 
 namespace flopoco{
 
-	BasicCompressor::BasicCompressor(Target * target_, vector<int> heights_, float area_, string type_, bool compactView_): target(target_), heights(heights_), area(area_), type(type_), compactView(compactView_)
+    BasicCompressor::BasicCompressor(Operator* parentOp_, Target * target_, vector<int> heights_, float area_, string type_, bool compactView_): parentOp(parentOp_), target(target_), heights(heights_), area(area_), type(type_), compactView(compactView_)
 	{
 		//compute the size of the input and of the output
 		int wIn = 0;
@@ -39,7 +39,7 @@ namespace flopoco{
 				return compressor;
 			}
 			else{
-				compressor = new Compressor(target, heights, area, compactView);
+                compressor = new Compressor(parentOp, target, heights, area, compactView);
 				return compressor;
 			}
 		}
@@ -165,13 +165,13 @@ namespace flopoco{
 		}
 	}
 
-    Compressor::Compressor(Target * target): Operator(nullptr, target)
+    Compressor::Compressor(Operator* parentOp, Target * target) : Operator(parentOp, target)
     {
 
     }
 
-	Compressor::Compressor(Target * target_, vector<int> heights_, float area_, bool compactView_)
-		: Operator(nullptr, target_), // for now, no parent
+    Compressor::Compressor(Operator* parentOp, Target * target_, vector<int> heights_, float area_, bool compactView_)
+        : Operator(parentOp, target_), // for now, no parent
 			heights(heights_), area(area_), compactView(compactView_), compressorUsed(false)
 	{
 		ostringstream name;
@@ -359,7 +359,7 @@ namespace flopoco{
 			heights_.insert(heights_.begin(), stoi(substr));
 		}
 
-		return new Compressor(target, heights_, compactView_);
+        return new Compressor(parentOp, target, heights_, compactView_);
 	}
 
 	void Compressor::registerFactory(){

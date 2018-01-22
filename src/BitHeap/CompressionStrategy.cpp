@@ -13,7 +13,7 @@ namespace flopoco{
 		stringstream s;
 
 		 //for REPORT to work
-		srcFileName = bitheap->op->getSrcFileName() + ":BitHeap:CompressionStrategy";
+        srcFileName = bitheap->getOp()->getSrcFileName() + ":BitHeap:CompressionStrategy";
 		guid = Operator::getNewUId();
 		s << bitheap->name << "_CompressionStrategy_" << guid;
 		uniqueName_ = s.str();
@@ -23,8 +23,8 @@ namespace flopoco{
 
 		//the initial delay between the soonest bit and the rest of the bits
 		//	to be compressed is equal to the delay of a basic compressor
-		compressionDelay = bitheap->op->getTarget()->logicDelay(bitheap->op->getTarget()->lutInputs());
-		stagesPerCycle = (1.0/bitheap->op->getTarget()->frequency()) / compressionDelay;
+        compressionDelay = bitheap->getOp()->getTarget()->logicDelay(bitheap->getOp()->getTarget()->lutInputs());
+        stagesPerCycle = (1.0/bitheap->getOp()->getTarget()->frequency()) / compressionDelay;
 
 		REPORT(DEBUG, "compressionDelay is " << compressionDelay << " and stagesPerCycle is " << stagesPerCycle);
 
@@ -42,9 +42,9 @@ namespace flopoco{
 	void CompressionStrategy::orderBitsByColumnAndStage()
 	{
 		REPORT(DEBUG, "in orderBitsByColumnAndStage")
-		double objectiveDelay = 1.0/bitheap->op->getTarget()->frequency();
+        double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
 
-		bitheap->op->schedule();
+        bitheap->getOp()->schedule();
 
 		//first get the minimal cycle and maximum cycle and delay
 		int minCycle = std::numeric_limits<int>::max();
@@ -352,7 +352,7 @@ namespace flopoco{
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
 		//for a bit to be in stage i, its criticalPath delay has to be smaller or equal to boundaries[i].
 		//(for the same cycle)
-		double objectiveDelay = 1.0/bitheap->op->getTarget()->frequency();
+        double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
 		vector<double> boundaries;
 		double remainingTime = objectiveDelay;
 		while(remainingTime >= compressionDelay){
@@ -457,7 +457,7 @@ namespace flopoco{
 			REPORT(DEBUG, "Bitheap already compressed, so startCompression has nothing else to do.");
 		}
 		//generate the final addition
-		generateFinalAddVHDL(bitheap->op->getTarget()->getVendor() == "Xilinx");
+        generateFinalAddVHDL(bitheap->getOp()->getTarget()->getVendor() == "Xilinx");
 		//concatenate all the chunks and create the final result
 		concatenateChunks();
 		//mark the bitheap as compressed
@@ -542,15 +542,15 @@ namespace flopoco{
 
 		//create the signals for the compressor inputs
 		//	and create the port mappings
-		bitheap->op->vhdl << endl;
+        bitheap->getOp()->vhdl << endl;
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
 			compressorIONames.str("");
 			compressorIONames << compressor->getName() << "_bh"
 					<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
-			bitheap->op->vhdl << tab << bitheap->op->declare(compressorIONames.str(), compressor->heights[i])
+            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(compressorIONames.str(), compressor->heights[i])
 					<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
-			bitheap->op->inPortMap(compressor, join("X",i), compressorIONames.str());
+            bitheap->getOp()->inPortMap(compressor, join("X",i), compressorIONames.str());
 		}
 
 		//create the signals for the compressor output
@@ -559,11 +559,11 @@ namespace flopoco{
 		compressorIONames << compressor->getName() << "_bh"
 				<< bitheap->guid << "_uid" << instanceUID << "_Out";
 		// Following line commented by F2D: outPortMap does the declaration
-		// bitheap->op->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
-		bitheap->op->outPortMap(compressor, "R", compressorIONames.str());
+        // bitheap->getOp()->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
+        bitheap->getOp()->outPortMap(compressor, "R", compressorIONames.str());
 
 		//create the compressor instance
-		bitheap->op->vhdl << bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
+        bitheap->getOp()->vhdl << bitheap->getOp()->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
 
 		//mark the bits that were at the input of the compressor as having been compressed
 		//	so that they can be eliminated from the bitheap
@@ -577,7 +577,7 @@ namespace flopoco{
 		bitheap->addSignal(compressorIONames.str(), weight);
 
 		//mark the bits of the result of the compression as just added
-		bitheap->markBits(bitheap->op->getSignalByName(compressorIONames.str()), BitType::justAdded, weight);
+        bitheap->markBits(bitheap->getOp()->getSignalByName(compressorIONames.str()), BitType::justAdded, weight);
 	}
 
 	void CompressionStrategy::applyCompressor(vector<vector<Bit*> > inputBits, Compressor* compressor, int weight)
@@ -616,15 +616,15 @@ namespace flopoco{
 		}
 
 		//inputsignals
-		bitheap->op->vhdl << endl;
+        bitheap->getOp()->vhdl << endl;
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
 			vectorName.str("");
 			vectorName << compressor->getName() << "_bh"
 					<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
-			bitheap->op->vhdl << tab << bitheap->op->declare(vectorName.str(), compressor->heights[i])
+            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(vectorName.str(), compressor->heights[i])
 					<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
-			bitheap->op->inPortMap(compressor, join("X",i), vectorName.str());
+            bitheap->getOp()->inPortMap(compressor, join("X",i), vectorName.str());
 		}
 
 		//create the signals for the comrpessor outputs. Can handle compresssors who have
@@ -649,7 +649,7 @@ namespace flopoco{
 			vectorName.str("");
 			vectorName << compressor->getName() << "_bh" << bitheap->guid << "_uid"
 					<< instanceUID << "_Out" << (tempHeight - 1);
-			//			bitheap->op->declare(vectorName.str(), lastOccurence + 1, (lastOccurence + 1 > 1));
+            //			bitheap->getOp()->declare(vectorName.str(), lastOccurence + 1, (lastOccurence + 1 > 1));
 
 			//check if there are more than one outputVectors in total
 			bool singleOutputVector = true;
@@ -660,24 +660,24 @@ namespace flopoco{
 				}
 			}
 			if(singleOutputVector == true){
-				bitheap->op->outPortMap(compressor, "R", vectorName.str());
+                bitheap->getOp()->outPortMap(compressor, "R", vectorName.str());
 			}
 			else{
 				ostringstream tempR;
 				tempR.str("");
 				tempR << "R" << (tempHeight - 1);
-				bitheap->op->outPortMap(compressor, tempR.str(), vectorName.str());
+                bitheap->getOp()->outPortMap(compressor, tempR.str(), vectorName.str());
 			}
 
 			//create the compressor
-			bitheap->op->vhdl << bitheap->op->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
+            bitheap->getOp()->vhdl << bitheap->getOp()->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
 
 			//add the outputBits to the bitheap
 			for(unsigned int c = 0; c <= (unsigned) lastOccurence; c++){
 				if(c + weight < bitheap->width && (unsigned)compressor->outHeights[c] >= tempHeight){
 					bitheap->addBit(c + weight, vectorName.str() + of(c));
 				}
-				bitheap->markBits(bitheap->op->getSignalByName(vectorName.str()), BitType::justAdded, weight);
+                bitheap->markBits(bitheap->getOp()->getSignalByName(vectorName.str()), BitType::justAdded, weight);
 			}
 
 		}
@@ -763,34 +763,34 @@ namespace flopoco{
 			}
 
 			//create the signals for the inputs/output of the adder
-			bitheap->op->vhdl << endl;
-			bitheap->op->vhdl << tab << bitheap->op->declare(adderIn0Name.str(), bitheap->msb-adderStartIndex+1+1)
+            bitheap->getOp()->vhdl << endl;
+            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(adderIn0Name.str(), bitheap->msb-adderStartIndex+1+1)
 					<< " <= \"0\" & " << adderIn0.str() << ";" << endl;
-			bitheap->op->vhdl << tab << bitheap->op->declare(adderIn1Name.str(), bitheap->msb-adderStartIndex+1+1)
+            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(adderIn1Name.str(), bitheap->msb-adderStartIndex+1+1)
 					<< " <= \"0\" & " << adderIn1.str() << ";" << endl;
-			bitheap->op->vhdl << tab << bitheap->op->declare(adderCinName.str())
+            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(adderCinName.str())
 					<< " <= " << adderCin.str() << ";" << endl;
-			bitheap->op->vhdl << endl;
+            bitheap->getOp()->vhdl << endl;
 
 			//declare the adder
 #if 0
 			IntAdder* adder;
 
 			//create the adder
-			bitheap->op->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
-			adder = new IntAdder(bitheap->op, bitheap->op->getTarget(), bitheap->msb-adderStartIndex+1+1);
+            bitheap->getOp()->declare(adderOutName.str(), bitheap->msb-adderStartIndex+1+1);
+            adder = new IntAdder(bitheap->op, bitheap->getOp()->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
 			//create the port maps for the adder
-			bitheap->op->inPortMap(adder, "X", adderIn0Name.str());
-			bitheap->op->inPortMap(adder, "Y", adderIn1Name.str());
-			bitheap->op->inPortMap(adder, "Cin", adderCinName.str());
-			bitheap->op->outPortMap(adder, "R", adderOutName.str());
+            bitheap->getOp()->inPortMap(adder, "X", adderIn0Name.str());
+            bitheap->getOp()->inPortMap(adder, "Y", adderIn1Name.str());
+            bitheap->getOp()->inPortMap(adder, "Cin", adderCinName.str());
+            bitheap->getOp()->outPortMap(adder, "R", adderOutName.str());
 
 
 			//create the instance of the adder
-			bitheap->op->vhdl << bitheap->op->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
+            bitheap->getOp()->vhdl << bitheap->getOp()->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
 #else
-			bitheap->op->newInstance("IntAdder",
+            bitheap->getOp()->newInstance("IntAdder",
 															 "bitheapFinalAdd_bh"+to_string(bitheap->guid),
 															 "wIn=" + to_string(bitheap->msb-adderStartIndex+1+1),
 															 "X=>"+ adderIn0Name.str()
@@ -916,7 +916,7 @@ namespace flopoco{
 					<< compressorNumber << " maximum index=" << possibleCompressors.size()-1);
 		}else{
 			compressor = possibleCompressors[compressorNumber];
-			soonestBitTotalTime = soonestBit->signal->getCycle() * (1.0/bitheap->op->getTarget()->frequency()) +
+            soonestBitTotalTime = soonestBit->signal->getCycle() * (1.0/bitheap->getOp()->getTarget()->frequency()) +
 									soonestBit->signal->getCriticalPath();
 		}
 
@@ -945,7 +945,7 @@ namespace flopoco{
 				}
 
 				//the total time of the current bit
-				currentBitTotalTime = currentBit->signal->getCycle() * 1.0/bitheap->op->getTarget()->frequency() +
+                currentBitTotalTime = currentBit->signal->getCycle() * 1.0/bitheap->getOp()->getTarget()->frequency() +
 										currentBit->signal->getCriticalPath();
 				//check if the bit can be compressed
 				if(currentBitTotalTime-soonestBitTotalTime <= delay)
@@ -1000,7 +1000,7 @@ namespace flopoco{
 			col0=6;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 3.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 3.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1013,7 +1013,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1024,7 +1024,7 @@ namespace flopoco{
 			col0=5;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1037,7 +1037,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1048,7 +1048,7 @@ namespace flopoco{
 			col0=4;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1061,7 +1061,7 @@ namespace flopoco{
 
 			newVect.push_back(col0);
 			newVect.push_back(col1);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 2.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 2.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1072,7 +1072,7 @@ namespace flopoco{
 			col0=3;
 
 			newVect.push_back(col0);
-			newCompressor = new BasicCompressor(bitheap->op->getTarget(), newVect, 1.0, "combinatorial", true);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 1.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
@@ -1099,12 +1099,12 @@ namespace flopoco{
 			{
 				//the bitheap is compressed, all that is left
 				//	is to add the lsb bit to the result
-				bitheap->op->vhdl << tab
-						<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
+                bitheap->getOp()->vhdl << tab
+                        << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
 				if(bitheap->bits[count].size() > 0)
-					bitheap->op->vhdl << " <= " << bitheap->bits[count][0]->getName() << ";" << endl;
+                    bitheap->getOp()->vhdl << " <= " << bitheap->bits[count][0]->getName() << ";" << endl;
 				else
-					bitheap->op->vhdl << " <= \'0\';" << endl;
+                    bitheap->getOp()->vhdl << " <= \'0\';" << endl;
 
 				chunksDone.insert(chunksDone.begin(), join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
 			}else{
@@ -1116,36 +1116,36 @@ namespace flopoco{
 
 			//create the signals for a new chunk
 			if(count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0) > 1)
-				bitheap->op->vhdl << tab
-					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
+                bitheap->getOp()->vhdl << tab
+                    << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
 							count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0), true) << " <= " ;
 			else
-				bitheap->op->vhdl << tab
-					<< bitheap->op->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count)) << " <= " ;
+                bitheap->getOp()->vhdl << tab
+                    << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count)) << " <= " ;
 
 			//add the bits to the chunk
 			//	add the first bit
 			if(bitheap->bits[count].size() > 0)
-				bitheap->op->vhdl << bitheap->bits[count][0]->getName();
+                bitheap->getOp()->vhdl << bitheap->bits[count][0]->getName();
 			else
-				bitheap->op->vhdl << "\"0\"";
+                bitheap->getOp()->vhdl << "\"0\"";
 			//	add the rest of the bits
 			for(unsigned i=count-1; i>compressionDoneIndex; i--)
 			{
 				if(bitheap->bits[i].size() > 0)
-					bitheap->op->vhdl << " & " << bitheap->bits[i][0]->getName();
+                    bitheap->getOp()->vhdl << " & " << bitheap->bits[i][0]->getName();
 				else
-					bitheap->op->vhdl << " & \"0\"";
+                    bitheap->getOp()->vhdl << " & \"0\"";
 			}
 			//add one last bit, if necessary
 			if(compressionDoneIndex == 0)
 			{
 				if(bitheap->bits[0].size() > 0)
-					bitheap->op->vhdl << " & " << bitheap->bits[0][0]->getName();
+                    bitheap->getOp()->vhdl << " & " << bitheap->bits[0][0]->getName();
 				else
-					bitheap->op->vhdl << " & \"0\"";
+                    bitheap->getOp()->vhdl << " & \"0\"";
 			}
-			bitheap->op->vhdl << ";" << endl;
+            bitheap->getOp()->vhdl << ";" << endl;
 
 			//add the new chunk to the vector of compressed chunks
 			chunksDone.push_back(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
@@ -1162,12 +1162,12 @@ namespace flopoco{
 			THROWERROR("No chunks to concatenate in concatenateChunksDone");
 
 		//create the signal containing the result of the bitheap compression
-		bitheap->op->vhdl << tab
-				<< bitheap->op->declare(join("bitheapResult_bh", bitheap->guid), bitheap->width) << " <= ";
+        bitheap->getOp()->vhdl << tab
+                << bitheap->getOp()->declare(join("bitheapResult_bh", bitheap->guid), bitheap->width) << " <= ";
 		// the chunks in reverse order,	from msb to lsb
-		bitheap->op->vhdl << chunksDone[chunksDone.size()-1];
+        bitheap->getOp()->vhdl << chunksDone[chunksDone.size()-1];
 		for(int i=(int)chunksDone.size()-2; i>=0; i--)
-			bitheap->op->vhdl << " & " << chunksDone[i];
-		bitheap->op->vhdl << ";" << endl;
+            bitheap->getOp()->vhdl << " & " << chunksDone[i];
+        bitheap->getOp()->vhdl << ";" << endl;
 	}
 }

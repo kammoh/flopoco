@@ -32,12 +32,12 @@ namespace flopoco
 		/**
 		 * A basic constructor
 		 */
-		Compressor(Target * target, vector<int> heights, float area = 0.0, bool compactView = false);
+        Compressor(Operator* parentOp, Target * target, vector<int> heights, float area = 0.0, bool compactView = false);
 
         /*!
          * An empty constructor, needed to derive from this class without generating code
          */
-        Compressor(Target *target);
+        Compressor(Operator* parentOp, Target *target);
 
 		/**
 		 * Destructor
@@ -96,7 +96,7 @@ namespace flopoco
 	class BasicCompressor
 	{
 	public:
-		BasicCompressor(Target * target, vector<int> heights, float area = 0.0, string type = "combinatorial", bool compactView = false);
+        BasicCompressor(Operator* parentOp_, Target * target, vector<int> heights, float area = 0.0, string type = "combinatorial", bool compactView = false);
 
 		~BasicCompressor();
 		/**
@@ -154,6 +154,7 @@ namespace flopoco
 		 */
 		string getStringOfIO();
 
+        Operator* parentOp;
 		Target* target;
 		vector<int> heights;                /**< the heights of the columns */
 		vector<int> outHeights;             /**< the heights of the columns of the output, if this is a partially compressed result */

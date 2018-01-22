@@ -13,7 +13,7 @@ namespace flopoco
 		/**
 		 * A basic constructor
 		 */
-        XilinxGPC(Target * target, vector<int> heights);
+        XilinxGPC(Operator *parentOp, Target * target, vector<int> heights);
 
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);

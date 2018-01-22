@@ -5,7 +5,7 @@ using namespace std;
 
 namespace flopoco{
 
-XilinxGPC::XilinxGPC(Target * target, vector<int> heights) : Compressor(target)
+XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) : Compressor(parentOp, target)
 {
     this->heights = heights;
     ostringstream name;
@@ -51,7 +51,7 @@ OperatorPtr XilinxGPC::parseArguments(OperatorPtr parentOp, Target *target, vect
         heights.insert(heights.begin(), stoi(substr));
     }
 
-    return new XilinxGPC(target,heights);
+    return new XilinxGPC(parentOp,target,heights);
 }
 
 void XilinxGPC::registerFactory(){
