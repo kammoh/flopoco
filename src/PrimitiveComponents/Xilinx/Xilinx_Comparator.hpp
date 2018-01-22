@@ -20,7 +20,7 @@ namespace flopoco {
 
         ComparatorType m_type;
 
-        Xilinx_Comparator( Target *target, int wIn, ComparatorType type );
+		Xilinx_Comparator(Operator* parentOp, Target *target, int wIn, ComparatorType type );
 
         void emulate( TestCase *tc );
         void buildStandardTestCases( TestCaseList *tcl );

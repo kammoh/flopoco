@@ -11,7 +11,7 @@ class Altera_LCELL : public Primitive {
         bool _hasSharedArith,_hasDontTouch,_hasLUT7;
       public:
 
-        Altera_LCELL( Target *target, const std::string & lut_mask, const bool &shared_arith = false, const bool &dont_touch = false );
+        Altera_LCELL(Operator *parentOp, Target *target, const std::string & lut_mask, const bool &shared_arith = false, const bool &dont_touch = false );
 
         ~Altera_LCELL() {}
 

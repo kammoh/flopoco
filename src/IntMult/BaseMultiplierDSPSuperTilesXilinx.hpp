@@ -40,7 +40,7 @@ namespace flopoco {
 	public:
         BaseMultiplierDSPSuperTilesXilinx(bool isSignedX, bool isSignedY, TILE_SHAPE shape, bool pipelineDSPs);
 
-        virtual Operator *generateOperator(Target *target);
+		virtual Operator *generateOperator(Operator *parentOp, Target *target);
 
         virtual bool shapeValid(int x, int y);
 
@@ -52,7 +52,7 @@ namespace flopoco {
     class BaseMultiplierDSPSuperTilesXilinxOp : public Operator
     {
     public:
-        BaseMultiplierDSPSuperTilesXilinxOp(Target* target, bool isSignedX, bool isSignedY, int wX, int wY, int wR, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs);
+		BaseMultiplierDSPSuperTilesXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, int wR, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs);
     private:
         int wX, wY, wR;
     };

@@ -20,7 +20,7 @@ namespace flopoco {
 	public:
         BaseMultiplier2xk(bool isSignedX, bool isSignedY, int width, bool flipXY=false);
 
-        virtual Operator *generateOperator(Target *target);
+		virtual Operator *generateOperator(Operator *parentOp, Target *target);
 
     private:
         bool flipXY;
@@ -30,7 +30,7 @@ namespace flopoco {
     class BaseMultiplier2xkOp : public Operator
     {
     public:
-        BaseMultiplier2xkOp(Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY=false);
+		BaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY=false);
     private:
         int wX, wY;
     };

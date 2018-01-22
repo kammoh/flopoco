@@ -66,7 +66,7 @@ namespace flopoco {
                     vhdl << tab << "x_out(" << i << ") <= '0';" << endl;
                 else {
                     addLUT( 5, 1 );
-                    Xilinx_LUT5 *luti = new Xilinx_LUT5( target );
+					Xilinx_LUT5 *luti = new Xilinx_LUT5( parentOp, target );
                     inPortMap( luti, "i0", "x(0)" );
                     inPortMap( luti, "i1", "x(1)" );
                     inPortMap( luti, "i2", "x(2)" );
@@ -87,7 +87,7 @@ namespace flopoco {
                     vhdl << tab << "x_out(" << i << ") <= '0';" << endl;
                 else {
                     addLUT( 6, 1 );
-                    Xilinx_LUT6 *luti = new Xilinx_LUT6( target );
+					Xilinx_LUT6 *luti = new Xilinx_LUT6( parentOp, target );
                     inPortMap( luti, "i0", "x(0)" );
                     inPortMap( luti, "i1", "x(1)" );
                     inPortMap( luti, "i2", "x(2)" );

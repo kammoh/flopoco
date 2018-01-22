@@ -28,13 +28,13 @@ BaseMultiplierDSP::BaseMultiplierDSP(bool isSignedX, bool isSignedY, int wX, int
 
 }
 
-Operator* BaseMultiplierDSP::generateOperator(Target* target)
+Operator* BaseMultiplierDSP::generateOperator(Operator *parentOp, Target* target)
 {
-    return new BaseMultiplierDSPOp(target, isSignedX, isSignedY, wX, wY, pipelineDSPs, flipXY);
+	return new BaseMultiplierDSPOp(parentOp, target, isSignedX, isSignedY, wX, wY, pipelineDSPs, flipXY);
 }
 	
 
-BaseMultiplierDSPOp::BaseMultiplierDSPOp(Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool pipelineDSPs, bool flipXY) : Operator(target)
+BaseMultiplierDSPOp::BaseMultiplierDSPOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool pipelineDSPs, bool flipXY) : Operator(parentOp,target)
 {
     useNumericStd();
 

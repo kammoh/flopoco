@@ -25,7 +25,7 @@ namespace flopoco {
          * @brief generateOperator generates an instance of the corresponding Operator that realizes the given shape
          * @return the generated operator
          */
-        virtual Operator *generateOperator(Target* target) = 0;
+		virtual Operator *generateOperator(Operator *parentOp, Target* target) = 0;
 
         /**
          * @brief Returns true if x and y coordinates are at valid shape positions, override this function if shape is non rectangular within wX and wY

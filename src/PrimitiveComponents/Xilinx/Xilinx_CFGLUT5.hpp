@@ -17,7 +17,7 @@ namespace flopoco {
 		// definition of some function for the operator    
 
 		// constructor, defined there with two parameters (default value 0 for each)
-		Xilinx_CFGLUT5(Target* target);
+        Xilinx_CFGLUT5(Operator *parentOp, Target* target);
 
 		// destructor
 		~Xilinx_CFGLUT5() {};

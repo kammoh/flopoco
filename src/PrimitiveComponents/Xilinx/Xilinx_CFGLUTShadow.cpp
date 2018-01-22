@@ -115,7 +115,7 @@ namespace flopoco {
         lut_op lutop_o6 = (~lut_in(0) & lut_in(3)) | (lut_in(0) & lut_in(4)); //2:1 MUX between in3 and in4 (select input is in0)
         lut_init lutop( lutop_o5, lutop_o6 );
 
-        Xilinx_LUT6_2 *muxlut = new Xilinx_LUT6_2( target );
+		Xilinx_LUT6_2 *muxlut = new Xilinx_LUT6_2( parentOp,target );
         addToGlobalOpList(muxlut);
         muxlut->setGeneric( "init", lutop.get_hex() );
 
