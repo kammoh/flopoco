@@ -111,8 +111,11 @@ Options:
   and only access it through 
   Operator::functionalRegister(string registerOutputName, string registerInputName)
    (currently addRegisteredSignalCopy but it is not good)
+  This attribute is
+    - read by schedule() to reset the schedule (and also avoid it going into an infinite loop)
+    - read at code generation time to make sure registerInputName is registered
 Thing to study: how to manage reset (it should be a Signal like the others I think)
- 
+
 ** Plan for bringup
 *** Shifter for basic pipeline: DONE
 *** IntAdder for explicit call to schedule(): DONE
