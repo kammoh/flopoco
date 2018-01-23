@@ -26,8 +26,6 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     name << "Compressor_4_to_2_type" << useLastColumn << "_width_" << width;
     setName(name.str());
 
-    cout << "!!! hier0" << endl;
-
     for(unsigned i=0;i<heights.size();i++)
     {
         if(heights[heights.size()-i-1] > 0)
@@ -36,8 +34,6 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 
     addOutput("R0", wOut);
     addOutput("R1", wOut);
-
-    cout << "!!! hier1" << endl;
 
     int needed_cc = ( width / 4 ) + ( width % 4 > 0 ? 1 : 0 ); //no. of required carry chains
 
@@ -48,8 +44,6 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     declare( "cc_co", needed_cc * 4 );
     declare( "cc_o", needed_cc * 4 );
 
-    cout << "!!! hier2" << endl;
-
     //init unused carry-chain inputs to zero:
     if(needed_cc*4 > width)
     {
@@ -58,14 +52,10 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     }
     vhdl << tab << "cc_di(" << width-1 << " downto 0) <= ";
 
-    cout << "!!! hier3" << endl;
-
     if(useLastColumn)
         vhdl << "X" << width-1 << "(1)";
     else
         vhdl << "'0'";
-
-    cout << "!!! hier4" << endl;
 
     for(int i=1; i < width; i++)
     {
@@ -75,8 +65,6 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 
     vhdl << endl;
 
-    cout << "!!! hier5" << endl;
-
     //create LUTs, except the last LUT:
     for(int i=0; i < width-1; i++)
     {
@@ -85,11 +73,8 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_op lutop_o5 = (lut_in(0) & lut_in(1)) | (lut_in(0) & lut_in(2)) | (lut_in(1) & lut_in(2)); //carry out of full adder
         lut_init lutop( lutop_o5, lutop_o6 );
 
-        cout << "!!! hier6" << endl;
         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
-        cout << "!!! hier7" << endl;
         cur_lut->setGeneric( "init", lutop.get_hex() );
-        cout << "!!! hier8" << endl;
 
         cout << "calling Operator::inPortMap()" << endl;
         inPortMap(cur_lut,"i0",join("X",i) + of(0));
@@ -104,9 +89,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         outPortMap(cur_lut,"o6","cc_s" + of(i));
 
 //        vhdl << cur_lut->primitiveInstance( join("lut",i), this ) << endl;
-        cout << "!!! hier9" << endl;
         vhdl << instance(cur_lut,join("lut",i)) << endl;
-        cout << "!!! hier10" << endl;
         //        addToGlobalOpList(cur_lut);
     }
 

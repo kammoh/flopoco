@@ -1046,6 +1046,14 @@ namespace flopoco{
 		std::string name;
 		REPORT(DEBUG, "InPortMap: " << componentPortName << " => "  << actualSignalName);
 
+		string range_part;
+		REPORT(DEBUG, "renaming actualSignalName from " << actualSignalName);
+		if( actualSignalName.find("(")!=string::npos ){
+			range_part = actualSignalName.substr(actualSignalName.find("("));
+			actualSignalName = actualSignalName.substr(0,actualSignalName.find("("));
+		}
+		REPORT(DEBUG, "to " << actualSignalName);
+
 		//check if the signal already exists
 		try{
 			s = getSignalByName(actualSignalName);
@@ -2008,7 +2016,6 @@ namespace flopoco{
 						catch(string &e) {
 							REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 						}
-
 
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
