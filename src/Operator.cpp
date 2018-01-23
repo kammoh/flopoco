@@ -2016,6 +2016,9 @@ namespace flopoco{
 						catch(string &e) {
 							REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 						}
+						catch(char const *e) {
+							REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
+						}
 
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
