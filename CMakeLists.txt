@@ -364,6 +364,7 @@ src/AutoTest/AutoTest
  src/BitHeap/FirstFittingCompressionStrategy
  src/BitHeap/ParandehAfsharCompressionStrategy
  src/BitHeap/MaxEfficiencyCompressionStrategy
+ src/BitHeap/OptimalCompressionStrategy
 # src/BitHeap/VariableColumnCompressor
 
 #--------------------------------------------------------------------

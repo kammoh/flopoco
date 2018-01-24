@@ -55,6 +55,7 @@ enum BitType : unsigned;
 		friend class FirstFittingCompressionStrategy;
 		friend class ParandehAfsharCompressionStrategy;
 		friend class MaxEfficiencyCompressionStrategy;
+		friend class OptimalCompressionStrategy;
 		/**
 		 * @brief The constructor for an signed/unsigned integer bitheap
 		 * @param op                the operator in which the bitheap is being built
@@ -355,6 +356,11 @@ enum BitType : unsigned;
 		 */
 		CompressionStrategy* getCompressionStrategy();
 
+		/**
+		 *	@brief sorts the bits in each column in lexicographical order
+		 */
+		void sortBitsInColumns();
+
 	protected:
 
 		/**
@@ -377,6 +383,13 @@ enum BitType : unsigned;
 		void drawConfiguration(int offsetY);
 
 		void drawBit(int cnt, int w, int turnaroundX, int offsetY, int c);
+
+		/**
+		 *	@brief returns true, if bit1 < bit2 (in lexicographicOrdering)
+		 *	@param bit1 is first bit
+		 *	@parma bit2 is second bit
+		 */
+		static bool lexicographicOrdering(const Bit* bit1, const Bit* bit2);
 
 
 	public:
