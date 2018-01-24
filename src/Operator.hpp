@@ -1726,6 +1726,9 @@ private:
 
 	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+
+	map<string, string>  tmpInPortMapStr_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+	map<string, string>  tmpOutPortMapStr_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 };
 
 

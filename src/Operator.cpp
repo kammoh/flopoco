@@ -347,6 +347,7 @@ namespace flopoco{
 
 	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
+		UserInterface::verbose=3; //!!!
 	  REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
 
 		//TODO: add more checks here
@@ -356,6 +357,7 @@ namespace flopoco{
 
 		Signal *connectionSignal = nullptr; // connectionSignal is the actual signal connected to portSignal
 		map<std::string, Signal*>::iterator itStart, itEnd;
+		map<std::string, string>::iterator itStartStr, itEndStr;
 
 
 		//check that portSignal is really an I/O signal
@@ -366,10 +368,14 @@ namespace flopoco{
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
 			itStart = parentOp_->tmpInPortMap_.begin();
 			itEnd = parentOp_->tmpInPortMap_.end();
+			itStartStr = parentOp_->tmpInPortMapStr_.begin();
+			itEndStr = parentOp_->tmpInPortMapStr_.end();
 		}else{
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");
 			itStart = parentOp_->tmpOutPortMap_.begin();
 			itEnd = parentOp_->tmpOutPortMap_.end();
+			itStartStr = parentOp_->tmpOutPortMapStr_.begin();
+			itEndStr = parentOp_->tmpOutPortMapStr_.end();
 		}
 
 		//check that portSignal exists on the parent operator's port map
@@ -380,6 +386,16 @@ namespace flopoco{
 				break;
 			}
 		}
+
+		//check that portSignal exists on the parent operator's port map
+		for(map<std::string, string>::iterator it=itStartStr; it!=itEndStr; it++)
+		{
+			if(it->first == portSignal->getName()){
+				connectionSignal = getSignalByName(it->second);
+				break;
+			}
+		}
+
 		//check if any match was found in the port mappings
 		if(connectionSignal == nullptr)
 			THROWERROR("I/O port " << portSignal->getName() << " of operator " << getName()
@@ -416,6 +432,7 @@ namespace flopoco{
 			connectionSignal->setCriticalPathContribution(0.0);
 		}
  #endif
+		UserInterface::verbose=0; //!!!
 	}
 
 
