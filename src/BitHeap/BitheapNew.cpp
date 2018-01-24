@@ -3,7 +3,8 @@
 #include "BitHeap/FirstFittingCompressionStrategy.hpp"
 #include "BitHeap/ParandehAfsharCompressionStrategy.hpp"
 #include "BitHeap/MaxEfficiencyCompressionStrategy.hpp"
-
+#include "BitHeap/OptimalCompressionStrategy.hpp"
+#include <algorithm>
 namespace flopoco {
 
 	BitheapNew::BitheapNew(Operator* op_, unsigned width_, string name_, int compressionType_) :
@@ -132,7 +133,22 @@ namespace flopoco {
 #endif
 
 
+	void BitheapNew::sortBitsInColumns(){
+		for(unsigned int c = 0; c < bits.size(); c++){
+			std::sort(bits[c].begin(), bits[c].end(), lexicographicOrdering);
+		}
+	}
 
+	bool BitheapNew::lexicographicOrdering(const Bit* bit1, const Bit* bit2){
+		if( (bit1->signal->getCycle() < bit2->signal->getCycle()) ||
+				( (bit1->signal->getCycle() < bit2->signal->getCycle()) &&
+					(bit1->signal->getCriticalPath() < bit2->signal->getCriticalPath()) )  ){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
 
 	void BitheapNew::insertBitInColumn(Bit* bit, unsigned columnNumber)
 	{
@@ -701,6 +717,7 @@ namespace flopoco {
 			compressionStrategy = new FirstFittingCompressionStrategy(this);
 		compressionStrategy = new ParandehAfsharCompressionStrategy(this);
 			//compressionStrategy = new MaxEfficiencyCompressionStrategy(this);
+			//compressionStrategy = new OptimalCompressionStrategy(this);	//does currently nothing
 		//start the compression
 		compressionStrategy->startCompression();
 		//mark the bitheap compressed

@@ -23,8 +23,15 @@ namespace flopoco{
 
 		//the initial delay between the soonest bit and the rest of the bits
 		//	to be compressed is equal to the delay of a basic compressor
-        compressionDelay = bitheap->getOp()->getTarget()->logicDelay(bitheap->getOp()->getTarget()->lutInputs());
-        stagesPerCycle = (1.0/bitheap->getOp()->getTarget()->frequency()) / compressionDelay;
+
+#if 0
+ 		compressionDelay = bitheap->op->getTarget()->logicDelay(bitheap->op->getTarget()->lutInputs());
+#else
+		//set delay to one slice  TODO: set delay to lut + carrychain
+		compressionDelay = bitheap->op->getTarget()->tableDelay(bitheap->op->getTarget()->lutInputs() + 2, 5, true);
+#endif
+		stagesPerCycle = (1.0/bitheap->op->getTarget()->frequency()) / compressionDelay;
+
 
 		REPORT(DEBUG, "compressionDelay is " << compressionDelay << " and stagesPerCycle is " << stagesPerCycle);
 
@@ -44,8 +51,12 @@ namespace flopoco{
 		REPORT(DEBUG, "in orderBitsByColumnAndStage")
         double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
 
-        bitheap->getOp()->schedule();
 
+		bitheap->op->schedule();
+		bitheap->sortBitsInColumns();
+
+		REPORT(DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
+		printBitsInBitheap();
 		//first get the minimal cycle and maximum cycle and delay
 		int minCycle = std::numeric_limits<int>::max();
 		int maxCycle = 0;
@@ -116,7 +127,7 @@ namespace flopoco{
 				unsigned int tempStage = getStageOfArrivalForBit(bitheap->bits[c][i]);
 				tempStage -= minStage;	//subtract the offset
 				orderedBits[tempStage][c].push_back(bitheap->bits[c][i]); //TODO: check if we set the new criticalPath accordingly
-				REPORT(DEBUG, "added Bit with cycle " << bitheap->bits[c][i]->signal->getCycle() << " and criticalPath " << bitheap->bits[c][i]->signal->getCriticalPath() << " to stage " << tempStage << " and column " << c);
+				REPORT(DEBUG, "added Bit " << bitheap->bits[c][i]->signal->getName() << " with cycle " << bitheap->bits[c][i]->signal->getCycle() << " and criticalPath " << bitheap->bits[c][i]->signal->getCriticalPath() << " to stage " << tempStage << " and column " << c);
 			}
 		}
 	}
@@ -178,6 +189,17 @@ namespace flopoco{
 			}
 		}
 		solution.addCompressor(stage, column, compressor, middleLength);
+	}
+
+	void CompressionStrategy::printBitsInBitheap(){
+		if(UserInterface::verbose < DEBUG){
+			return;
+		}
+		for(unsigned int c = 0; c < bitheap->bits.size(); c++){
+			for(unsigned int i = 0; i < bitheap->bits[c].size(); i++){
+				REPORT(DEBUG, "bit at column " << c << " and i " << i << " is called " << bitheap->bits[c][i]->signal->getName() << ". cycle is " << bitheap->bits[c][i]->signal->getCycle() << " and critical path is " << bitheap->bits[c][i]->signal->getCriticalPath());
+			}
+		}
 	}
 
 	void CompressionStrategy::printBitAmounts(){
@@ -296,8 +318,11 @@ namespace flopoco{
 						}
 					}
 					applyCompressor(tempBitVector, realCompressor, c);
+					bitheap->op->schedule();
+					bitheap->sortBitsInColumns();
 				}
 			}
+
 			//assume that in every stage we compress bits
 			colorCount++;
 			bitheap->colorBits(BitType::justAdded, colorCount);
@@ -309,6 +334,8 @@ namespace flopoco{
 			bitheapPlotter->takeSnapshot(soonestBit, soonestCompressibleBit);
 
 			REPORT(DEBUG, "finished stage " << s << " of " << bitAmount.size() - 1);
+			REPORT(DEBUG, "the bits in the bitheap are ordered as following");
+			printBitsInBitheap();
 		}
 		concatenateLSBColumns();
 

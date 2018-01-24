@@ -91,7 +91,7 @@ namespace flopoco{
 						if(tempResult.first != nullptr && tempResult.second >= 0){
 							found = true;
 							result = tempResult;
-							REPORT(DEBUG, " found compressor " << tempResult.first->getStringOfIO() << " with efficiency " << tempResult.second);
+							REPORT(DEBUG, " found compressor " << tempResult.first->getStringOfIO() << " at column " << tempResult.second);
 						}
 					}
 					if(found){
@@ -104,11 +104,11 @@ namespace flopoco{
 					compressor = result.first;
 					placeCompressor(s, column, compressor);
 					printBitAmounts();
-					REPORT(DEBUG, "placed compressor " << compressor << " at stage " << s << " and column " << column);
+										REPORT(DEBUG, "placed compressor " << compressor->getStringOfIO() << " at stage " << s << " and column " << column);
 				}
 
 			}
-			REPORT(DEBUG, "finished stage " << s << " with parandeh-afhar algorithm.");
+			REPORT(DEBUG, "finished stage " << s << " with parandeh-afhar algorithm." << endl);
 
 			//finished one stage. bring the remaining bits in bitAmount to the new stage
 			for(unsigned int c = 0; c < bitAmount[s].size(); c++){
