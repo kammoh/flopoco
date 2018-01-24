@@ -355,7 +355,6 @@ namespace flopoco{
 			return;
 
 		Signal *connectionSignal = nullptr; // connectionSignal is the actual signal connected to portSignal
-//		map<std::string, Signal*>::iterator itStart, itEnd;
         map<std::string, string>::iterator itStart, itEnd;
 
 
@@ -365,20 +364,15 @@ namespace flopoco{
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
-//          itStart = parentOp_->tmpInPortMap_.begin();
-//			itEnd = parentOp_->tmpInPortMap_.end();
             itStart = parentOp_->tmpInPortMap_.begin();
             itEnd = parentOp_->tmpInPortMap_.end();
 		}else{
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");
-//			itStart = parentOp_->tmpOutPortMap_.begin();
-//			itEnd = parentOp_->tmpOutPortMap_.end();
             itStart = parentOp_->tmpOutPortMap_.begin();
             itEnd = parentOp_->tmpOutPortMap_.end();
 		}
 
 		//check that portSignal exists on the parent operator's port map
-//        for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
         for(map<std::string, string>::iterator it=itStart; it!=itEnd; it++)
         {
 			if(it->first == portSignal->getName()){
@@ -1082,7 +1076,6 @@ namespace flopoco{
 		}
 
 		// add the mapping to the input mapping list of Op
-//        tmpInPortMap_[componentPortName] = s;
         tmpInPortMap_[componentPortName] = actualSignalName;
     }
 
@@ -1121,7 +1114,6 @@ namespace flopoco{
 		signalList_.push_back(s);
 		signalMap_[s->getName()] = s;
 
-//        tmpInPortMap_[componentPortName] = s;
         tmpInPortMap_[componentPortName] = s->getName();
     }
 
@@ -1156,25 +1148,19 @@ namespace flopoco{
 		// First, I/O sanity check: check that all the signals are connected
 		for(auto i: *(op->getIOList())) 	{
 			bool isSignalMapped = false;
-//            map<string, Signal*>::iterator iterStart, iterStop;
             map<string, string>::iterator iterStart, iterStop;
 
 			//set the start and stop values for the iterators, for either the input,
 			//	or the output temporary port map, depending on the signal type
 			if(i->type() == Signal::in)	{
-//                iterStart = tmpInPortMap_.begin();
-//                iterStop = tmpInPortMap_.end();
                 iterStart = tmpInPortMap_.begin();
                 iterStop = tmpInPortMap_.end();
             }
 			else{
-//                iterStart = tmpOutPortMap_.begin();
-//                iterStop = tmpOutPortMap_.end();
                 iterStart = tmpOutPortMap_.begin();
                 iterStop = tmpOutPortMap_.end();
             }
 
-//            for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)	{
             for(map<string, string>::iterator it=iterStart; it!=iterStop; it++)	{
                 if(it->first == i->getName())		{
 					//mark the signal as connected
@@ -1217,20 +1203,16 @@ namespace flopoco{
 		}
 
 		//build the code for the inputs
-//        map<string, Signal*>::iterator it;
         map<string, string>::iterator it;
         string rhsString;
 		vector<Signal*> inputActualList;
 
-//        for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
         for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
         {
-//            Signal* actual = it->second; // the connexion here is actual -> formal
             string actualName = it->second;
             Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
             string formalName = it->first; // ... with actual in this and formal in op
 			//			Signal* formal=op->getSignalByName(formalName);
-//            if((it != tmpInPortMap_.begin()) || op->isSequential())
             if((it != tmpInPortMap_.begin()) || op->isSequential())
                 o << "," << endl <<  tab << tab << "           ";
 
@@ -1288,11 +1270,9 @@ namespace flopoco{
 				}
 			}
 
-//            if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
             if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
                 o << "," << endl <<  tab << tab << "           ";
 
-//			o << it->first << " => " << it->second->getName();
             o << it->first << " => " << it->second;
         }
 
@@ -1302,8 +1282,6 @@ namespace flopoco{
 		addSubComponent(op);
 
 		//clear the port mappings
-//      tmpInPortMap_.clear();
-//		tmpOutPortMap_.clear();
         tmpInPortMap_.clear();
         tmpOutPortMap_.clear();
 

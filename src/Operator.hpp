@@ -1724,9 +1724,6 @@ private:
 	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
 	set<Signal*> alreadyScheduled;                          /**< only used by a top-level operator: the set of signals that are already scheduled. */
 
-//	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-//	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-
     map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_. Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
     map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
 };
