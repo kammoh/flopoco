@@ -17,8 +17,6 @@ namespace flopoco{
 
 XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target* target, int width, bool useLastColumn) : Compressor(parentOp, target)
 {
-    cout << "parentOp=" << parentOp << endl;
-
     this->useLastColumn = useLastColumn;
     setWidth(width);
 
@@ -184,7 +182,6 @@ void XilinxFourToTwoCompressor::setWidth(int width)
 
 OperatorPtr XilinxFourToTwoCompressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
 {
-    cout << "parentOp=" << parentOp << endl;
     if( target->getVendor() != "Xilinx" )
         throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 

@@ -1052,14 +1052,13 @@ namespace flopoco{
 		REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
 
 		// add the mapping to the output mapping list of Op
-//        tmpOutPortMap_[componentPortName] = s;
-        tmpOutPortMap_[componentPortName] = s->getName();
+        tmpOutPortMap_[componentPortName] = actualSignalName;
     }
 
 
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
 		Signal *s;
-        REPORT(0, "InPortMap: " << componentPortName << " => "  << actualSignalName);
+        REPORT(DEBUG, "InPortMap: " << componentPortName << " => "  << actualSignalName);
 
 /*
         string actualSignalNameWithoutRange = actualSignalName;
@@ -1225,7 +1224,6 @@ namespace flopoco{
 			}else{
                 rhsString = actualName;
 			}
-            cout << "rhsString=" << rhsString << endl;
 
             o << formalName << " => " << rhsString;
 			if(op->isShared()){
@@ -1235,10 +1233,8 @@ namespace flopoco{
 		}
 
 		//build the code for the outputs
-//        for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
         for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
         {
-//            Signal* actual = it->second; // the connexion here is formal -> actual
             string actualName = it->second;
             Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
             string formalName = it->first; // ... with actual in this and formal in op
@@ -1273,6 +1269,7 @@ namespace flopoco{
             if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
                 o << "," << endl <<  tab << tab << "           ";
 
+            cout << "!!" << it->first << " => " << it->second;
             o << it->first << " => " << it->second;
         }
 
@@ -1285,7 +1282,7 @@ namespace flopoco{
         tmpInPortMap_.clear();
         tmpOutPortMap_.clear();
 
-        cout << o.str() << endl;
+        cout << o.str() << endl; //!!!
 
 		return o.str();
 	}
