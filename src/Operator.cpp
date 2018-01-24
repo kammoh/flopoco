@@ -437,7 +437,7 @@ namespace flopoco{
 
 
 	Signal* Operator::getSignalByName(string name) {
-
+        //in case of a bit of a vector, get rid of the range (...)
         if( name.find("(")!=string::npos ){
             name = name.substr(0,name.find("("));
         }
@@ -1220,14 +1220,14 @@ namespace flopoco{
 //        map<string, Signal*>::iterator it;
         map<string, string>::iterator it;
         string rhsString;
-		vector<Signal*> inputCloneList;
 		vector<Signal*> inputActualList;
 
 //        for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
         for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
         {
 //            Signal* actual = it->second; // the connexion here is actual -> formal
-            Signal* actual = getSignalByName(it->second); // the connexion here is actual -> formal
+            string actualName = it->second;
+            Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
             string formalName = it->first; // ... with actual in this and formal in op
 			//			Signal* formal=op->getSignalByName(formalName);
 //            if((it != tmpInPortMap_.begin()) || op->isSequential())
@@ -1237,12 +1237,13 @@ namespace flopoco{
 			// The following code assumes that the IO is declared as standard_logic_vector
 			// If the actual parameter is a signed or unsigned, we want to automatically convert it
 			if(actual->type() == Signal::constant){
-				rhsString = actual->getName().substr(0, actual->getName().find("_cst"));
+                rhsString = actualName.substr(0, actualName.find("_cst"));
 			}else if(actual->isFix()){
-				rhsString = std_logic_vector(actual->getName());
+                rhsString = std_logic_vector(actualName);
 			}else{
-				rhsString = actual->getName();
+                rhsString = actualName;
 			}
+            cout << "rhsString=" << rhsString << endl;
 
             o << formalName << " => " << rhsString;
 			if(op->isShared()){
@@ -1256,10 +1257,11 @@ namespace flopoco{
         for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
         {
 //            Signal* actual = it->second; // the connexion here is formal -> actual
-            Signal* actual = getSignalByName(it->second); // the connexion here is formal -> actual
+            string actualName = it->second;
+            Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
             string formalName = it->first; // ... with actual in this and formal in op
 			Signal* formal=op->getSignalByName(formalName);
-			REPORT(DEBUG, "instance: out port loop  " << actual->getName() << " "<< actual->incompleteDeclaration()<<" " << formalName  );
+            REPORT(DEBUG, "instance: out port loop  " << actualName << " "<< actual->incompleteDeclaration()<<" " << formalName  );
 
 			//the signal connected to the output should be an incompletely declared signal,
 			//	so its information must be completed and it must be properly connected now
@@ -1304,6 +1306,8 @@ namespace flopoco{
 //		tmpOutPortMap_.clear();
         tmpInPortMap_.clear();
         tmpOutPortMap_.clear();
+
+        cout << o.str() << endl;
 
 		return o.str();
 	}
