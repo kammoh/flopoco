@@ -83,7 +83,7 @@ namespace flopoco{
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
-
+        uniqueName_                 = "undefined!";
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
@@ -373,20 +373,11 @@ namespace flopoco{
 		}
 
 		//check that portSignal exists on the parent operator's port map
-        for(map<std::string, string>::iterator it=itStart; it!=itEnd; it++)
+        for(map<std::string, string>::iterator it=itStart; it!=itEnd; ++it)
         {
 			if(it->first == portSignal->getName()){
-                connectionSignal = getSignalByName(it->second);
-				break;
-			}
-		}
-
-		//check that portSignal exists on the parent operator's port map
-        for(map<std::string, string>::iterator it=itStart; it!=itEnd; it++)
-		{
-			if(it->first == portSignal->getName()){
-				connectionSignal = getSignalByName(it->second);
-				break;
+                connectionSignal = parentOp_->getSignalByName(it->second);
+                break;
 			}
 		}
 
@@ -431,6 +422,7 @@ namespace flopoco{
 
 
 	Signal* Operator::getSignalByName(string name) {
+
         //in case of a bit of a vector, get rid of the range (...)
         if( name.find("(")!=string::npos ){
             name = name.substr(0,name.find("("));
@@ -439,7 +431,7 @@ namespace flopoco{
         //search for the signal in the list of signals
 		if(signalMap_.find(name) == signalMap_.end()) {
 			//signal not found, throw an error
-			THROWERROR("In getSignalByName, signal " << name << " not declared");
+            THROWERROR("In getSignalByName, signal " << name << " not declared (operator " << this << ").");
 		}
 		//signal found, return the reference to it
 		return signalMap_[name];
@@ -830,7 +822,8 @@ namespace flopoco{
 	}
 
 	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType) {
-		Signal* s;
+        REPORT(FULL, "Declaring signal " << name << " in operator " << this);
+        Signal* s;
 		bool incompleteDeclaration;
 		// check the signal doesn't already exist
 		if(signalMap_.find(name) !=  signalMap_.end()) {
@@ -1032,23 +1025,16 @@ namespace flopoco{
 
 	
 	void Operator::outPortMap(Operator* op, string componentPortName, string actualSignalName){
-		Signal *s;
-
-		// check if the signal already exists, when we're supposed to create a new signal
+        // check if the signal already exists, when we're supposed to create a new signal
 		if(signalMap_.find(actualSignalName) !=  signalMap_.end()) {
 			THROWERROR("In outPortMap(): signal " << actualSignalName << " already exists");
 		}
-
-		//check if the signal connected to the port exists, and return it if so
-		//	or create it if it doesn't exist
-		s = nullptr;
 
 		//create the new signal
 		//	this will be an incomplete signal, as we cannot know the exact details of the signal yet
 		//	the rest of the information will be completed by addOutput, which has the rest of the required information
 		//	and add it to the list of signals to be scheduled
 		declare(actualSignalName, -1); // -1 for incomplete declaration
-		s = getSignalByName(actualSignalName);
 		REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
 
 		// add the mapping to the output mapping list of Op
@@ -1057,18 +1043,11 @@ namespace flopoco{
 
 
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
-		Signal *s;
         REPORT(DEBUG, "InPortMap: " << componentPortName << " => "  << actualSignalName);
 
-/*
-        string actualSignalNameWithoutRange = actualSignalName;
-        if( actualSignalNameWithoutRange.find("(")!=string::npos ){
-            actualSignalNameWithoutRange = actualSignalName.substr(0,actualSignalName.find("("));
-		}
-*/
 		//check if the signal already exists
 		try{
-            s = getSignalByName(actualSignalName);
+            getSignalByName(actualSignalName);
 		}
 		catch(string &e2) {
 			THROWERROR("In inPortMap(): " << e2);
