@@ -80,8 +80,8 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         inPortMap(cur_lut,"i1",join("X",i) + of(1));
         inPortMap(cur_lut,"i2",join("X",i) + of(2));
         inPortMap(cur_lut,"i3",join("X",i) + of(3));
-        inPortMapCst(cur_lut, "i4","0");
-        inPortMapCst(cur_lut, "i5","1");
+        inPortMapCst(cur_lut, "i4","'0'");
+        inPortMapCst(cur_lut, "i5","'1'");
 
         outPortMap(cur_lut,"o5","R1" + of(i+1));
         outPortMap(cur_lut,"o6","cc_s" + of(i));
@@ -102,11 +102,11 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         cur_lut->setGeneric( "init", lutop.get_hex() );
 
         inPortMap(cur_lut,"i0",join("X",width-1) + of(0));
-        inPortMapCst(cur_lut,"i1","0");
-        inPortMapCst(cur_lut,"i2","0");
+        inPortMapCst(cur_lut,"i1","'0'");
+        inPortMapCst(cur_lut,"i2","'0'");
         inPortMap(cur_lut,"i3",join("X",width-1) + of(1));
-        inPortMapCst(cur_lut, "i4","0");
-        inPortMapCst(cur_lut, "i5","1");
+        inPortMapCst(cur_lut, "i4","'0'");
+        inPortMapCst(cur_lut, "i5","'1'");
         outPortMap(cur_lut,"o5","open");
         outPortMap(cur_lut,"o6","cc_s" + of(width-1));
 
@@ -120,9 +120,9 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     for( int i = 0; i < needed_cc; i++ ) {
         Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4(this,target);
 
-        inPortMapCst( cur_cc, "cyinit", "0" );
+        inPortMapCst( cur_cc, "cyinit", "'0'" );
         if( i == 0 ) {
-            inPortMapCst( cur_cc, "ci", "0" ); //carry-in can not be used as AX input is blocked!!
+            inPortMapCst( cur_cc, "ci", "'0'" ); //carry-in can not be used as AX input is blocked!!
         } else {
             inPortMap( cur_cc, "ci", "cc_co" + of( i * 4 - 1 ) );
         }
