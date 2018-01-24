@@ -45,6 +45,12 @@ FIND_PATH(MPFR_H
 	  DOC "Path of mpfr.h, the include file for GNU MPFR library"
 )
 
+FIND_PATH(GMPXX_H
+	  gmpxx.h
+)
+
+link_directories(/Users/pluto/Desktop/FloPoCo_Libs/out/lib /opt/local/lib/)
+
 FIND_LIBRARY(MPFR_LIB
 	NAMES mpfr mpfr.lib
 	HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
@@ -194,7 +200,7 @@ ELSE(FLEXPP_EXECUTABLE)
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${SCALP_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${SCALP_INCLUDE_DIRS} ${MPFR_H} ${GMPXX_H})
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT VHDLLexer.cpp
@@ -250,7 +256,7 @@ ADD_CUSTOM_COMMAND(
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
 
-ADD_LIBRARY(FloPoCo STATIC
+ADD_LIBRARY(FloPoCoLib STATIC
 
 #--------------------------------------------------------------------
 #               FRAMEWORK
@@ -513,34 +519,34 @@ src/TutorialOperator
 )
 
 TARGET_LINK_LIBRARIES(
-  FloPoCo 
+  FloPoCoLib 
   mpfr gmp gmpxx xml2 mpfi
   )
 
 IF (SOLLYA_LIB)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${SOLLYA_LIB}
 	)
 ENDIF (SOLLYA_LIB)
 
 IF (PYTHON_LIB)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${PYTHON_LIB}
   )
 ENDIF (PYTHON_LIB)
 
 IF (WCPG_FOUND)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${WCPG_LIB}
   )
 ENDIF (WCPG_FOUND)
 
 IF (SCALP_FOUND)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${SCALP_LIBS}
   )
 ENDIF (SCALP_FOUND)
@@ -551,7 +557,7 @@ ADD_EXECUTABLE(flopoco
  
 TARGET_LINK_LIBRARIES(
   flopoco  
-	FloPoCo 
+	FloPoCoLib 
   )
 
 # unplugged for now to speed up compilation, to revive some day
@@ -577,4 +583,4 @@ TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
 
 
 #add_subdirectory(src/random)
-#target_link_libraries(FloPoCo flopoco_random_lib)
+#target_link_libraries(FloPoCoLib flopoco_random_lib)
