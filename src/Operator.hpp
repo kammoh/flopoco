@@ -618,9 +618,9 @@ public:
 	/**
 	 * Use a constant signal as input of a subcomponent.
 	 * @param componentPortName is the name of the port on the component
-	 * @param actualSignal is the constant signal to be mapped to this port
+     * @param constantValue is the constant value to be mapped to this port
 	 */
-	void inPortMapCst(Operator* op, string componentPortName, string actualSignal);
+    void inPortMapCst(Operator* op, string componentPortName, string constantValue);
 
 	/**
 	 * Returns the VHDL for an instance of a sub-component.
@@ -1724,11 +1724,11 @@ private:
 	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
 	set<Signal*> alreadyScheduled;                          /**< only used by a top-level operator: the set of signals that are already scheduled. */
 
-	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+//	map<string, Signal*>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+//	map<string, Signal*>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 
-	map<string, string>  tmpInPortMapStr_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
-	map<string, string>  tmpOutPortMapStr_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+    map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
+    map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ */
 };
 
 

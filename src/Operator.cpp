@@ -347,8 +347,7 @@ namespace flopoco{
 
 	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
-		UserInterface::verbose=3; //!!!
-	  REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
+      REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
 
 		//TODO: add more checks here
 		//if this is a global operator or a shared instance, then there is nothing to be done
@@ -356,8 +355,8 @@ namespace flopoco{
 			return;
 
 		Signal *connectionSignal = nullptr; // connectionSignal is the actual signal connected to portSignal
-		map<std::string, Signal*>::iterator itStart, itEnd;
-		map<std::string, string>::iterator itStartStr, itEndStr;
+//		map<std::string, Signal*>::iterator itStart, itEnd;
+        map<std::string, string>::iterator itStart, itEnd;
 
 
 		//check that portSignal is really an I/O signal
@@ -366,29 +365,30 @@ namespace flopoco{
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
-			itStart = parentOp_->tmpInPortMap_.begin();
-			itEnd = parentOp_->tmpInPortMap_.end();
-			itStartStr = parentOp_->tmpInPortMapStr_.begin();
-			itEndStr = parentOp_->tmpInPortMapStr_.end();
+//          itStart = parentOp_->tmpInPortMap_.begin();
+//			itEnd = parentOp_->tmpInPortMap_.end();
+            itStart = parentOp_->tmpInPortMap_.begin();
+            itEnd = parentOp_->tmpInPortMap_.end();
 		}else{
 			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");
-			itStart = parentOp_->tmpOutPortMap_.begin();
-			itEnd = parentOp_->tmpOutPortMap_.end();
-			itStartStr = parentOp_->tmpOutPortMapStr_.begin();
-			itEndStr = parentOp_->tmpOutPortMapStr_.end();
+//			itStart = parentOp_->tmpOutPortMap_.begin();
+//			itEnd = parentOp_->tmpOutPortMap_.end();
+            itStart = parentOp_->tmpOutPortMap_.begin();
+            itEnd = parentOp_->tmpOutPortMap_.end();
 		}
 
 		//check that portSignal exists on the parent operator's port map
-		for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
-		{
+//        for(map<std::string, Signal*>::iterator it=itStart; it!=itEnd; it++)
+        for(map<std::string, string>::iterator it=itStart; it!=itEnd; it++)
+        {
 			if(it->first == portSignal->getName()){
-				connectionSignal = it->second;
+                connectionSignal = getSignalByName(it->second);
 				break;
 			}
 		}
 
 		//check that portSignal exists on the parent operator's port map
-		for(map<std::string, string>::iterator it=itStartStr; it!=itEndStr; it++)
+        for(map<std::string, string>::iterator it=itStart; it!=itEnd; it++)
 		{
 			if(it->first == portSignal->getName()){
 				connectionSignal = getSignalByName(it->second);
@@ -432,13 +432,17 @@ namespace flopoco{
 			connectionSignal->setCriticalPathContribution(0.0);
 		}
  #endif
-		UserInterface::verbose=0; //!!!
 	}
 
 
 
 	Signal* Operator::getSignalByName(string name) {
-		//search for the signal in the list of signals
+
+        if( name.find("(")!=string::npos ){
+            name = name.substr(0,name.find("("));
+        }
+
+        //search for the signal in the list of signals
 		if(signalMap_.find(name) == signalMap_.end()) {
 			//signal not found, throw an error
 			THROWERROR("In getSignalByName, signal " << name << " not declared");
@@ -1054,57 +1058,56 @@ namespace flopoco{
 		REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
 
 		// add the mapping to the output mapping list of Op
-		tmpOutPortMap_[componentPortName] = s;
-	}
+//        tmpOutPortMap_[componentPortName] = s;
+        tmpOutPortMap_[componentPortName] = s->getName();
+    }
 
 
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
 		Signal *s;
-		std::string name;
-		REPORT(DEBUG, "InPortMap: " << componentPortName << " => "  << actualSignalName);
+        REPORT(0, "InPortMap: " << componentPortName << " => "  << actualSignalName);
 
-		string range_part;
-		REPORT(DEBUG, "renaming actualSignalName from " << actualSignalName);
-		if( actualSignalName.find("(")!=string::npos ){
-			range_part = actualSignalName.substr(actualSignalName.find("("));
-			actualSignalName = actualSignalName.substr(0,actualSignalName.find("("));
+/*
+        string actualSignalNameWithoutRange = actualSignalName;
+        if( actualSignalNameWithoutRange.find("(")!=string::npos ){
+            actualSignalNameWithoutRange = actualSignalName.substr(0,actualSignalName.find("("));
 		}
-		REPORT(DEBUG, "to " << actualSignalName);
-
+*/
 		//check if the signal already exists
 		try{
-			s = getSignalByName(actualSignalName);
+            s = getSignalByName(actualSignalName);
 		}
 		catch(string &e2) {
 			THROWERROR("In inPortMap(): " << e2);
 		}
 
 		// add the mapping to the input mapping list of Op
-		tmpInPortMap_[componentPortName] = s;
-	}
+//        tmpInPortMap_[componentPortName] = s;
+        tmpInPortMap_[componentPortName] = actualSignalName;
+    }
 
 
 
-	void Operator::inPortMapCst(Operator* op, string componentPortName, string actualSignal){
+    void Operator::inPortMapCst(Operator* op, string componentPortName, string constantValue){
 		Signal *s;
 		string name;
 		double constValue;
 		sollya_obj_t node;
 
-		REPORT(DEBUG, "InPortMapCst: " << componentPortName << " => "  << actualSignal);
+        REPORT(DEBUG, "InPortMapCst: " << componentPortName << " => "  << constantValue);
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
 		//try to parse the constant
-		node = sollya_lib_parse_string(actualSignal.c_str());
+        node = sollya_lib_parse_string(constantValue.c_str());
 		// If conversion did not succeed (i.e. parse error)
 		if(node == 0)
-			THROWERROR("Unable to parse string " << actualSignal << " as a numeric constant" << endl);
+            THROWERROR("Unable to parse string " << constantValue << " as a numeric constant" << endl);
 		sollya_lib_get_constant_as_double(&constValue, node);
 		sollya_lib_clear_obj(node);
 
 		//create a new signal for constant input
-		s = new Signal(this, join(actualSignal, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
+        s = new Signal(this, join(constantValue, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
 
 		// TODO the following bit of code should move to Signal, for Signal::constant signals
 		//set the timing for the constant signal, at cycle 0, criticalPath 0, criticalPathContribution 0
@@ -1118,8 +1121,9 @@ namespace flopoco{
 		signalList_.push_back(s);
 		signalMap_[s->getName()] = s;
 
-		tmpInPortMap_[componentPortName] = s;
-	}
+//        tmpInPortMap_[componentPortName] = s;
+        tmpInPortMap_[componentPortName] = s->getName();
+    }
 
 
 	/*
@@ -1152,21 +1156,27 @@ namespace flopoco{
 		// First, I/O sanity check: check that all the signals are connected
 		for(auto i: *(op->getIOList())) 	{
 			bool isSignalMapped = false;
-			map<string, Signal*>::iterator iterStart, iterStop;
+//            map<string, Signal*>::iterator iterStart, iterStop;
+            map<string, string>::iterator iterStart, iterStop;
 
 			//set the start and stop values for the iterators, for either the input,
 			//	or the output temporary port map, depending on the signal type
 			if(i->type() == Signal::in)	{
-				iterStart = tmpInPortMap_.begin();
-				iterStop = tmpInPortMap_.end();
-			}
+//                iterStart = tmpInPortMap_.begin();
+//                iterStop = tmpInPortMap_.end();
+                iterStart = tmpInPortMap_.begin();
+                iterStop = tmpInPortMap_.end();
+            }
 			else{
-				iterStart = tmpOutPortMap_.begin();
-				iterStop = tmpOutPortMap_.end();
-			}
+//                iterStart = tmpOutPortMap_.begin();
+//                iterStop = tmpOutPortMap_.end();
+                iterStart = tmpOutPortMap_.begin();
+                iterStop = tmpOutPortMap_.end();
+            }
 
-			for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)	{
-				if(it->first == i->getName())		{
+//            for(map<string, Signal*>::iterator it=iterStart; it!=iterStop; it++)	{
+            for(map<string, string>::iterator it=iterStart; it!=iterStop; it++)	{
+                if(it->first == i->getName())		{
 					//mark the signal as connected
 					isSignalMapped = true;
 					break;
@@ -1207,17 +1217,22 @@ namespace flopoco{
 		}
 
 		//build the code for the inputs
-		map<string, Signal*>::iterator it;
-		string rhsString;
+//        map<string, Signal*>::iterator it;
+        map<string, string>::iterator it;
+        string rhsString;
 		vector<Signal*> inputCloneList;
 		vector<Signal*> inputActualList;
 
-		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)		{
-			Signal* actual = it->second; // the connexion here is actual -> formal
-			string formalName = it->first; // ... with actual in this and formal in op
+//        for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
+        for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
+        {
+//            Signal* actual = it->second; // the connexion here is actual -> formal
+            Signal* actual = getSignalByName(it->second); // the connexion here is actual -> formal
+            string formalName = it->first; // ... with actual in this and formal in op
 			//			Signal* formal=op->getSignalByName(formalName);
-			if((it != tmpInPortMap_.begin()) || op->isSequential())
-				o << "," << endl <<  tab << tab << "           ";
+//            if((it != tmpInPortMap_.begin()) || op->isSequential())
+            if((it != tmpInPortMap_.begin()) || op->isSequential())
+                o << "," << endl <<  tab << tab << "           ";
 
 			// The following code assumes that the IO is declared as standard_logic_vector
 			// If the actual parameter is a signed or unsigned, we want to automatically convert it
@@ -1229,7 +1244,7 @@ namespace flopoco{
 				rhsString = actual->getName();
 			}
 
-			o << it->first << " => " << rhsString;
+            o << formalName << " => " << rhsString;
 			if(op->isShared()){
 				// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
 				inputActualList.push_back(actual);
@@ -1237,9 +1252,12 @@ namespace flopoco{
 		}
 
 		//build the code for the outputs
-		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++) {
-			Signal* actual = it->second; // the connexion here is formal -> actual
-			string formalName = it->first; // ... with actual in this and formal in op
+//        for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+        for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+        {
+//            Signal* actual = it->second; // the connexion here is formal -> actual
+            Signal* actual = getSignalByName(it->second); // the connexion here is formal -> actual
+            string formalName = it->first; // ... with actual in this and formal in op
 			Signal* formal=op->getSignalByName(formalName);
 			REPORT(DEBUG, "instance: out port loop  " << actual->getName() << " "<< actual->incompleteDeclaration()<<" " << formalName  );
 
@@ -1268,11 +1286,13 @@ namespace flopoco{
 				}
 			}
 
-			if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
-				o << "," << endl <<  tab << tab << "           ";
+//            if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
+            if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
+                o << "," << endl <<  tab << tab << "           ";
 
-			o << it->first << " => " << it->second->getName();
-		}
+//			o << it->first << " => " << it->second->getName();
+            o << it->first << " => " << it->second;
+        }
 
 		o << ");" << endl;
 
@@ -1280,8 +1300,10 @@ namespace flopoco{
 		addSubComponent(op);
 
 		//clear the port mappings
-		tmpInPortMap_.clear();
-		tmpOutPortMap_.clear();
+//      tmpInPortMap_.clear();
+//		tmpOutPortMap_.clear();
+        tmpInPortMap_.clear();
+        tmpOutPortMap_.clear();
 
 		return o.str();
 	}
