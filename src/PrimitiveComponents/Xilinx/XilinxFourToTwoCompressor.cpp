@@ -74,9 +74,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
         cur_lut->setGeneric( "init", lutop.get_hex() );
 
-        cout << "calling Operator::inPortMap()" << endl;
         inPortMap(cur_lut,"i0",join("X",i) + of(0));
-        cout << "returned from Operator::inPortMap()" << endl;
         inPortMap(cur_lut,"i1",join("X",i) + of(1));
         inPortMap(cur_lut,"i2",join("X",i) + of(2));
         inPortMap(cur_lut,"i3",join("X",i) + of(3));

@@ -1269,7 +1269,6 @@ namespace flopoco{
             if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
                 o << "," << endl <<  tab << tab << "           ";
 
-            cout << "!!" << it->first << " => " << it->second;
             o << it->first << " => " << it->second;
         }
 
@@ -1281,8 +1280,6 @@ namespace flopoco{
 		//clear the port mappings
         tmpInPortMap_.clear();
         tmpOutPortMap_.clear();
-
-        cout << o.str() << endl; //!!!
 
 		return o.str();
 	}
