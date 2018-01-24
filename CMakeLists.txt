@@ -471,7 +471,7 @@ src/FPDivSqrt/FPSqrt
 # src/Trigs/CordicSinCos
 # src/Trigs/CordicSinOrCos
 # src/Trigs/FixAtan2
- src/Trigs/FixAtan2ByCORDIC
+#! does not compile with clang under mac os X: src/Trigs/FixAtan2ByCORDIC
 #src/Trigs/FixAtan2ByRecipMultAtan
 #src/Trigs/FixAtan2ByBivariateApprox
 src/Trigs/Atan2Table
