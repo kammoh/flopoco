@@ -552,6 +552,8 @@ src/Tools/Point
 src/TutorialOperator
 )
 
+set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
+
 TARGET_LINK_LIBRARIES(
   FloPoCoLib 
   ${GMP_LIB} ${GMPXX_LIB} ${MPFI_LIB} ${MPFR_LIB} #xml2 ??xml2 not necessary??
