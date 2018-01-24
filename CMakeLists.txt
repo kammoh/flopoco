@@ -104,7 +104,7 @@ ENDIF (MPFI_H AND MPFI_LIB)
 
 # Detect Python
 FIND_PATH(PYTHON_H
-	  Python.h
+	  python2.7/Python.h
 	  DOC "Path of Python.h"
 )
 
@@ -115,10 +115,14 @@ FIND_LIBRARY(PYTHON_LIB
 )
 
 IF ( PYTHON_H AND PYTHON_LIB )
-	MESSAGE ( STATUS "Found Python : ${PYTHON_H},${PYTHON_LIB}" )
-ELSE ( PYTHON_H AND PYTHON_LIB )
-	MESSAGE ( FATAL_ERROR "Could not find (found: ${PYTHON_H},${PYTHON_LIB})")
+    SET(PYTHON_FOUND TRUE)
 ENDIF ( PYTHON_H AND PYTHON_LIB )
+
+IF ( PYTHON_FOUND )
+	MESSAGE ( STATUS "Found Python : ${PYTHON_H},${PYTHON_LIB}" )
+ELSE ( PYTHON_FOUND )
+	MESSAGE ( STATUS "Could not find (found: ${PYTHON_H},${PYTHON_LIB}), no flopoco_soaktest will be available")
+ENDIF ( PYTHON_FOUND )
 
 # Detect Sollya
 FIND_LIBRARY( SOLLYA_LIB
@@ -234,7 +238,7 @@ ELSE(FLEXPP_EXECUTABLE)
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${PYTHON_H} ${MPFR_H} ${SOLLYA_H})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT VHDLLexer.cpp
@@ -600,6 +604,7 @@ TARGET_LINK_LIBRARIES(
   )
 
 # unplugged for now to speed up compilation, to revive some day
+#IF (PYTHON_FOUND)
 #ADD_EXECUTABLE(flopoco_soaktest
 # src/main_soaktest
 #)
@@ -607,6 +612,8 @@ TARGET_LINK_LIBRARIES(
 #  flopoco_soaktest  
 #	${FLOPOCO_LIB}
 #)
+#INCLUDE_DIRECTORIES(${PYTHON_H})  
+#ENDIF (PYTHON_FOUND)
 
 
 
