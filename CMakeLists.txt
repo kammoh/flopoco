@@ -39,6 +39,33 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 #SET(CMAKE_BUILD_TYPE release)
 
 
+
+# Detect GMP / GMPXX
+FIND_PATH(GMPXX_H
+	  gmpxx.h
+)
+
+FIND_LIBRARY(GMP_LIB
+	NAMES gmp gmp.lib
+	DOC "Directory of the GMP library")
+
+FIND_PATH(GMP_H
+	  gmp.h
+)
+
+FIND_LIBRARY(GMPXX_LIB
+	NAMES gmpxx gmpxx.lib
+	DOC "Directory of the GMPXX library")
+
+IF (GMPXX_H AND GMPXX_LIB AND GMP_H AND GMP_LIB)
+    MESSAGE(STATUS "Found gmp and gmpxx: ${GMP_H},${GMP_LIB},${GMPXX_H},${GMPXX_LIB}")
+ELSE (GMPXX_H AND GMPXX_LIB AND GMP_H AND GMP_LIB)
+    MESSAGE(FATAL_ERROR "Could not find gmp and/or gmpxx (found: ${GMP_H},${GMP_LIB},${GMPXX_H},${GMPXX_LIB})")
+ENDIF (GMPXX_H AND GMPXX_LIB AND GMP_H AND GMP_LIB)
+
+
+# Detect MPFR
+
 FIND_PATH(MPFR_H
 	  mpfr.h
 	  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/include"
@@ -50,6 +77,14 @@ FIND_LIBRARY(MPFR_LIB
 	HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
 	DOC "Directory of the MPFR library")
 
+IF (MPFR_H AND MPFR_LIB)
+    MESSAGE(STATUS "Found mpfr: ${MPFR_H},${MPFR_LIB}")
+ELSE (MPFR_H AND MPFR_LIB)
+    MESSAGE(FATAL_ERROR "Could not find MPFR (found: ${MPFR_H},${MPFR_LIB}).\nOn Debian-based systems type: 'sudo apt-get install libmpfr-dev'")
+ENDIF (MPFR_H AND MPFR_LIB)
+
+
+# Detect MPFI
 FIND_PATH(MPFI_H
 	  mpfi.h
 	  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/include"
@@ -61,40 +96,49 @@ FIND_LIBRARY(MPFI_LIB
 	HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
 	DOC "Directory of the MPFI library")
 
+IF (MPFI_H AND MPFI_LIB)
+    MESSAGE(STATUS "Found mpfi: ${MPFI_H},${MPFI_LIB}")
+ELSE (MPFI_H AND MPFI_LIB)
+    MESSAGE(FATAL_ERROR "Could not find MPFI (found: ${MPFI_H},${MPFI_LIB})")
+ENDIF (MPFI_H AND MPFI_LIB)
+
+# Detect Python
+FIND_PATH(PYTHON_H
+	  python2.7/Python.h
+	  DOC "Path of Python.h"
+)
+
 FIND_LIBRARY(PYTHON_LIB
-	NAMES libpython2.7.so
+	NAMES libpython2.7.so libpython2.7.dylib
 	HINTS "/usr/lib/x86_64-linux-gnu"
 	DOC "Directory of the Python library"
 )
 
+IF ( PYTHON_H AND PYTHON_LIB )
+    SET(PYTHON_FOUND TRUE)
+ENDIF ( PYTHON_H AND PYTHON_LIB )
 
-# Detect Sollya's presence
+IF ( PYTHON_FOUND )
+	MESSAGE ( STATUS "Found Python : ${PYTHON_H},${PYTHON_LIB}" )
+ELSE ( PYTHON_FOUND )
+	MESSAGE ( STATUS "Could not find (found: ${PYTHON_H},${PYTHON_LIB}), no flopoco_soaktest will be available")
+ENDIF ( PYTHON_FOUND )
+
+# Detect Sollya
 FIND_LIBRARY( SOLLYA_LIB
-	NAMES libsollya.so
+	NAMES libsollya.so libsollya.dylib
 	HINTS "/usr/lib/x86_64-linux-gnu"
 	)
 
-IF (SOLLYA_LIB)
-	MESSAGE(STATUS "Found Sollya: ${SOLLYA_LIB}")
-ELSE (SOLLYA_LIB)
-	MESSAGE(FATAL_ERROR "Sollya not found")
-ENDIF (SOLLYA_LIB)
+FIND_PATH(SOLLYA_H
+	  sollya.h
+)
 
-IF ( PYTHON_LIB )
-	MESSAGE ( STATUS "Found Python : ${PYTHON_LIB}" )
-ELSE ( PYTHON_LIB )
-	MESSAGE ( FATAL_ERROR "Could not find PYTHON_LIB" )
-ENDIF ( PYTHON_LIB )
-
-IF (MPFR_H AND MPFR_LIB)
-    SET(MPFR_FOUND TRUE)
-ENDIF (MPFR_H AND MPFR_LIB)
-
-IF (MPFR_FOUND)
-    MESSAGE(STATUS "Found mpfr: ${MPFR_H} ${MPFR_LIB}")
-ELSE (MPFR_FOUND)
-    MESSAGE(FATAL_ERROR "Could not find MPFR.\nOn Debian-based systems type: 'sudo apt-get install libmpfr-dev'")
-ENDIF (MPFR_FOUND)
+IF (SOLLYA_H AND SOLLYA_H)
+	MESSAGE(STATUS "Found Sollya: ${SOLLYA_LIB},${SOLLYA_H}")
+ELSE (SOLLYA_H AND SOLLYA_H)
+	MESSAGE(FATAL_ERROR "Sollya not found (found: ${SOLLYA_LIB},${SOLLYA_H})")
+ENDIF (SOLLYA_H AND SOLLYA_H)
 
 
 FIND_PATH(WCPG_H
@@ -112,10 +156,10 @@ IF (WCPG_H AND WCPG_LIB)
 ENDIF (WCPG_H AND WCPG_LIB)
 
 IF ( WCPG_FOUND )
-	MESSAGE ( STATUS "Found WCPG : ${WCPG_H} ${WCPG_LIB}" )
+	MESSAGE ( STATUS "Found WCPG : ${WCPG_H},${WCPG_LIB}" )
   ADD_DEFINITIONS(-DHAVE_WCPG)
 ELSE ( WCPG_FOUND )
-	MESSAGE ( STATUS "Could not find WCPG, this will affect the FixIIR operator" )
+	MESSAGE ( STATUS "Could not find WCPG (found: ${WCPG_H},${WCPG_LIB}), this will affect the FixIIR operator" )
 ENDIF ( WCPG_FOUND )
 
 # dectect if scalp is available
@@ -125,35 +169,34 @@ FIND_PATH(SCALP_H
 	  DOC "Path of main header of scalp"
 )
 FIND_LIBRARY(SCALP_LIB
-        NAMES libScaLP.so
+        NAMES libScaLP libScaLP.so  libScaLP.dylib
 	HINTS "/usr/local/lib64/"
 	DOC "Directory of the SCALP main library")
 
 FIND_LIBRARY(SCALP_CPLEX_LIB
-        NAMES libScaLP-CPLEX.so
+        NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
 	HINTS "/usr/local/lib64/"
 	DOC "Directory of the SCALP library for cplex solver backend")
 
 FIND_LIBRARY(SCALP_GUROBI_LIB
-        NAMES libScaLP-Gurobi.so
+        NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
 	HINTS "/usr/local/lib64/"
 	DOC "Directory of the SCALP library for Gurobi solver backend")
 
 FIND_LIBRARY(SCALP_SCIP_LIB
-        NAMES libScaLP-SCIP.so
+        NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
 	HINTS "/usr/local/lib64/"
 	DOC "Directory of the SCALP library for SCIP solver backend")
 
 FIND_LIBRARY(SCALP_LPSOLVE_LIB
-        NAMES libScaLP-LPSOLVE.so
+        NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSOLVE.dylib
 	HINTS "/usr/local/lib64/"
 	DOC "Directory of the SCALP library for LPSOLVE solver backend")
 
 IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
-    SET(SCALP_FOUND TRUE)
+  SET(SCALP_FOUND TRUE)
 ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
 
-SET(SCALP_INCLUDE_DIRS ${SCALP_H})
 IF (SCALP_FOUND)
 	ADD_DEFINITIONS(-DHAVE_SCALP)
     set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
@@ -172,10 +215,10 @@ IF (SCALP_FOUND)
 		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
 	ENDIF (SCALP_LPSOLVE_LIB)
 	
-	MESSAGE(STATUS "Found SCALP: ${SCALP_INCLUDE_DIRS} ${SCALP_LIB}")
-	MESSAGE(STATUS "      Using the following ILP Solvers: ${SCALP_LIBS}")  
+	MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
+	MESSAGE(STATUS "      Using the following ILP solver libraries: ${SCALP_LIBS}")  
 ELSE (SCALP_FOUND)
-	MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (requires ${SCALP_INCLUDE_DIRS} ${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB} ${SCALP_GUROBI_LIB} ${SCALP_SCIP_LIB} ${SCALP_LPSOLVE_LIB})")
+	MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (found: ${SCALP_H},${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
 ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
@@ -194,7 +237,7 @@ ELSE(FLEXPP_EXECUTABLE)
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${SCALP_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT VHDLLexer.cpp
@@ -250,7 +293,7 @@ ADD_CUSTOM_COMMAND(
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
 
-ADD_LIBRARY(FloPoCo STATIC
+ADD_LIBRARY(FloPoCoLib STATIC
 
 #--------------------------------------------------------------------
 #               FRAMEWORK
@@ -324,6 +367,7 @@ src/AutoTest/AutoTest
  src/BitHeap/FirstFittingCompressionStrategy
  src/BitHeap/ParandehAfsharCompressionStrategy
  src/BitHeap/MaxEfficiencyCompressionStrategy
+ src/BitHeap/OptimalCompressionStrategy
 # src/BitHeap/VariableColumnCompressor
 
 #--------------------------------------------------------------------
@@ -465,7 +509,7 @@ src/FPDivSqrt/FPSqrt
 # src/Trigs/CordicSinCos
 # src/Trigs/CordicSinOrCos
 # src/Trigs/FixAtan2
- src/Trigs/FixAtan2ByCORDIC
+#! does not compile with clang under mac os X: src/Trigs/FixAtan2ByCORDIC
 #src/Trigs/FixAtan2ByRecipMultAtan
 #src/Trigs/FixAtan2ByBivariateApprox
 src/Trigs/Atan2Table
@@ -512,37 +556,41 @@ src/Tools/Point
 src/TutorialOperator
 )
 
+set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
+
 TARGET_LINK_LIBRARIES(
-  FloPoCo 
-  mpfr gmp gmpxx xml2 mpfi
+  FloPoCoLib 
+  ${GMP_LIB} ${GMPXX_LIB} ${MPFI_LIB} ${MPFR_LIB} #xml2 ??xml2 not necessary??
   )
 
 IF (SOLLYA_LIB)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${SOLLYA_LIB}
 	)
 ENDIF (SOLLYA_LIB)
 
 IF (PYTHON_LIB)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${PYTHON_LIB}
   )
 ENDIF (PYTHON_LIB)
 
 IF (WCPG_FOUND)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${WCPG_LIB}
   )
+INCLUDE_DIRECTORIES(${WCPG_H})  
 ENDIF (WCPG_FOUND)
 
 IF (SCALP_FOUND)
 TARGET_LINK_LIBRARIES(
-  FloPoCo
+  FloPoCoLib
   ${SCALP_LIBS}
   )
+	INCLUDE_DIRECTORIES(${SCALP_H})
 ENDIF (SCALP_FOUND)
 
 ADD_EXECUTABLE(flopoco
@@ -551,10 +599,11 @@ ADD_EXECUTABLE(flopoco
  
 TARGET_LINK_LIBRARIES(
   flopoco  
-	FloPoCo 
+	FloPoCoLib 
   )
 
 # unplugged for now to speed up compilation, to revive some day
+#IF (PYTHON_FOUND)
 #ADD_EXECUTABLE(flopoco_soaktest
 # src/main_soaktest
 #)
@@ -562,19 +611,21 @@ TARGET_LINK_LIBRARIES(
 #  flopoco_soaktest  
 #	${FLOPOCO_LIB}
 #)
+#INCLUDE_DIRECTORIES(${PYTHON_H})  
+#ENDIF (PYTHON_FOUND)
 
 
 
 ADD_EXECUTABLE(fp2bin src/Tools/fp2bin  src/utils)
-TARGET_LINK_LIBRARIES(fp2bin  mpfr gmp gmpxx)
+TARGET_LINK_LIBRARIES(fp2bin ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 
 ADD_EXECUTABLE(bin2fp src/Tools/bin2fp  src/utils)
-TARGET_LINK_LIBRARIES(bin2fp  mpfr gmp gmpxx)
+TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 
 ADD_EXECUTABLE(longacc2fp src/Tools/longacc2fp  src/utils)
-TARGET_LINK_LIBRARIES(longacc2fp  mpfr gmp gmpxx)
+TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 
 
 
 #add_subdirectory(src/random)
-#target_link_libraries(FloPoCo flopoco_random_lib)
+#target_link_libraries(FloPoCoLib flopoco_random_lib)

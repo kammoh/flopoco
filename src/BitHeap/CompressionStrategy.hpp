@@ -213,9 +213,14 @@ class BitheapPlotter;
 		unsigned int getStageOfArrivalForBit(Bit* bit);
 
 		/**
-		 * @brief prints the current bitAmounts for all stages and columns
+		 * @brief prints the current bitAmounts for all stages and columns (for debugging)
 		 */
 		void printBitAmounts();
+
+		/**
+		 *	@brief print sthe current Bits in the bitheap (for debugging)
+		 */
+		void printBitsInBitheap();
 
 		/**
 		 * @brief all compressors specified in the solution will be used (vhdl code will be generated)

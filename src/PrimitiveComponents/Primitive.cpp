@@ -14,6 +14,7 @@ namespace flopoco {
 	Primitive::Primitive(Operator *parentOp, Target *target ) : Operator( parentOp, target ){
         setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
         setCombinatorial();
+		setShared();
     }
 
     Primitive::~Primitive() {}
