@@ -485,7 +485,7 @@ namespace flopoco{
 		}
 		//generate the final addition
         generateFinalAddVHDL(bitheap->getOp()->getTarget()->getVendor() == "Xilinx");
-		//concatenate all the chunks and create the final result
+        //concatenate all the chunks and create the final result
 		concatenateChunks();
 		//mark the bitheap as compressed
 		bitheap->isCompressed = true;
@@ -723,7 +723,7 @@ namespace flopoco{
 
 	void CompressionStrategy::generateFinalAddVHDL(bool isXilinx)
 	{
-		//check if the last two lines are already compressed
+        //check if the last two lines are already compressed
 		if(bitheap->getMaxHeight() < 2)
 		{
 			//an adder isn't necessary; concatenateLSBColumns should do the rest

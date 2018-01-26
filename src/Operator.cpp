@@ -1075,7 +1075,14 @@ namespace flopoco{
 
 
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
-        REPORT(DEBUG, "InPortMap: " << op->getName() << " : " << componentPortName << " => "  << actualSignalName);
+        if(op != nullptr)
+        {
+            REPORT(DEBUG, "InPortMap: " << op->getName() << " : " << componentPortName << " => "  << actualSignalName);
+        }
+        else
+        {
+            REPORT(DEBUG, "InPortMap: (null) : " << componentPortName << " => "  << actualSignalName);
+        }
 
         //check if the signal already exists
 		try{
@@ -1307,7 +1314,7 @@ namespace flopoco{
 
 		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
 
-		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
+        schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
 
 		//parse the parameters
 		parametersVector.push_back(opName);
@@ -1322,20 +1329,21 @@ namespace flopoco{
 			}
 		}
 
-		//parse the input port mappings
-		parsePortMappings(instance, inPortMaps, 0);
-		//parse the constant input port mappings, if there are any
+        //parse the input port mappings
+        parsePortMappings(instance, inPortMaps, 0);
+        //parse the constant input port mappings, if there are any
 		parsePortMappings(instance, inPortMapsCst, 1);
 		//parse the input port mappings
 		parsePortMappings(instance, outPortMaps, 2);
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
-		for (auto i: parametersVector){
-			REPORT(DEBUG, i);
-		}
-		//create the operator
-		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
 
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
+        REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
+        for (auto i: parametersVector){
+            REPORT(DEBUG, i);
+        }
+        //create the operator
+        instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
+
+        REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 
 		//create the instance
 		vhdl << this->instance(instance, instanceName, false);
@@ -1372,13 +1380,13 @@ namespace flopoco{
 				string portName = mapping.substr(0, sepPos);
 				string signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
 				REPORT(4, "port map " << portName << "=>" << signalName << " of type " << portTypes);
-				if(portTypes == 0)
+                if(portTypes == 0)
 					inPortMap(instance, portName, signalName);
 				else if(portTypes == 1)
 					inPortMapCst(instance, portName, signalName);
 				else
 					outPortMap(instance, portName, signalName);
-			}
+            }
 		}
 	}
 
