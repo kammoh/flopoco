@@ -89,7 +89,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 //        vhdl << instance(cur_lut,join("lut",i)) << endl;
         vhdl << cur_lut->primitiveInstance(join("lut",i)) << endl;
         //UserInterface::addToGlobalOpList(cur_lut);
-//        addSubComponent(cur_lut);
+        addSubComponent(cur_lut);
     }
 
     if(useLastColumn)
@@ -189,9 +189,11 @@ OperatorPtr XilinxFourToTwoCompressor::parseArguments(OperatorPtr parentOp, Targ
         throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
     int wOut;
+    bool useLastColumn;
     UserInterface::parseInt(args,"wOut",&wOut );
+    UserInterface::parseBoolean(args,"useLastColumn",&useLastColumn );
 
-    return new XilinxFourToTwoCompressor(parentOp, target, wOut);
+    return new XilinxFourToTwoCompressor(parentOp, target, wOut, useLastColumn);
 }
 
 void XilinxFourToTwoCompressor::registerFactory()
@@ -200,10 +202,10 @@ void XilinxFourToTwoCompressor::registerFactory()
                         "An efficient 4:2 compressor build of xilinx primitives.", // description, string
                         "Primitives", // category, from the list defined in UserInterface.cpp
                         "",
-                        "wOut(int): The wordsize of the 4:2 compressor",
+                        "wOut(int): The wordsize of the 4:2 compressor;\
+                        useLastColumn(bool)=0: if the 4:2 compressor should additonally compress two bits in the last column, this should be set to true;",
                         "",
                         XilinxFourToTwoCompressor::parseArguments
                         );
 }
-
 

@@ -18,27 +18,27 @@ namespace flopoco {
 
 	Xilinx_MUXF7::Xilinx_MUXF7(Operator *parentOp, Target *target ) : Xilinx_MUXF7_base( parentOp,target ) {
         setName( "MUXF7" );
-        addOutput( "o", 1 );
+        addOutput( "o" );
         base_init();
     }
 
 	Xilinx_MUXF7_L::Xilinx_MUXF7_L(Operator *parentOp, Target *target ) : Xilinx_MUXF7_base( parentOp,target ) {
         setName( "MUXF7_L" );
-        addOutput( "lo", 1 );
+        addOutput( "lo" );
         base_init();
     }
 
 	Xilinx_MUXF7_D::Xilinx_MUXF7_D(Operator *parentOp, Target *target ) : Xilinx_MUXF7_base( parentOp,target ) {
         setName( "MUXF7_D" );
-        addOutput( "o", 1 );
-        addOutput( "lo", 1 );
+        addOutput( "o" );
+        addOutput( "lo" );
         base_init();
     }
 
     void Xilinx_MUXF7_base::base_init() {
         srcFileName = "Xilinx_MUXF7";
-        addInput( "i0", 1 );
-        addInput( "i1", 1 );
-        addInput( "s", 1 );
+        addInput( "i0" );
+        addInput( "i1" );
+        addInput( "s" );
     }
 }//namespace

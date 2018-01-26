@@ -17,10 +17,10 @@ namespace flopoco {
 	Xilinx_FDCE::Xilinx_FDCE(Operator *parentOp, Target *target ) : Xilinx_Primitive(parentOp, target ) {
         setName( "FDCE" );
         srcFileName = "Xilinx_FDCE";
-        addInput( "clr", 1 );
-        addInput( "ce", 1 );
-        addInput( "d", 1 );
-        addInput( "c", 1 );
-        addOutput( "q", 1 );
+        addInput( "clr" );
+        addInput( "ce" );
+        addInput( "d" );
+        addInput( "c" );
+        addOutput( "q" );
     }
 }//namespace

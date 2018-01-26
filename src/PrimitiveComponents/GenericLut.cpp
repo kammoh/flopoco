@@ -53,11 +53,11 @@ namespace flopoco {
         }
 
         for( unsigned int i = 0; i < wIn_; ++i ) {
-            addInput( join( "i", i ), 1, false );
+            addInput( join( "i", i ) );
         }
 
         for( unsigned int i = 0; i < wOut_; ++i ) {
-            addOutput( join( "o", i ), 1, 1, false  );
+            addOutput( join( "o", i ) );
         }
 
         ////////Build Lut////////

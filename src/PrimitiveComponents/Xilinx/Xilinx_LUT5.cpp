@@ -18,20 +18,20 @@ namespace flopoco {
 
 	Xilinx_LUT5::Xilinx_LUT5(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "LUT5" );
-        addOutput( "o", 1 );
+        addOutput( "o" );
         base_init();
     }
 
 	Xilinx_LUT5_L::Xilinx_LUT5_L(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "LUT5_L" );
-        addOutput( "lo", 1 );
+        addOutput( "lo" );
         base_init();
     }
 
 	Xilinx_LUT5_D::Xilinx_LUT5_D(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
         setName( "LUT5_D" );
-        addOutput( "lo", 1 );
-        addOutput( "o", 1 );
+        addOutput( "lo" );
+        addOutput( "o" );
         base_init();
     }
 
@@ -40,9 +40,9 @@ namespace flopoco {
         addInput("clk");
         addInput("ce"); //clk enable
         addInput("cdi");//configuration data in
-        addOutput( "o5", 1 ); //4 LUT output
-        addOutput( "o6", 1 ); //5 LUT output
-        addOutput( "cdo", 1 ); //configuration data out
+        addOutput( "o5" ); //4 LUT output
+        addOutput( "o6" ); //5 LUT output
+        addOutput( "cdo" ); //configuration data out
         base_init();
     }
 
@@ -51,6 +51,6 @@ namespace flopoco {
         srcFileName = "Xilinx_LUT5";
 
         for( int i = 0; i < 5; i++ )
-            addInput( join( "i", i ), 1 );
+            addInput( join( "i", i ) );
     }
 }//namespace

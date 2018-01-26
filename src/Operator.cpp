@@ -179,9 +179,11 @@ namespace flopoco{
 		addInput(name, 1, false);
 	}
 
+/*ambiguous to addInput(const std::string name) !!!
 	void Operator::addInput(const char* name) {
 		addInput(name, 1, false);
 	}
+*/
 
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
 		//search if the signal has already been declared
@@ -210,10 +212,11 @@ namespace flopoco{
 		addOutput (name, 1, 1, false);
 	}
 
+/*ambiguous to addOutput(const std::string name)!!!
 	void Operator::addOutput(const char* name) {
 		addOutput (name, 1, 1, false);
 	}
-
+*/
 
 	void Operator::addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb) {
 		//search if the signal has already been declared
@@ -3456,7 +3459,7 @@ namespace flopoco{
 
 	void Operator::setShared(){
 		isShared_ = true;
-		isSequential_ = true; // shared operators must be combinatorial
+        isSequential_ = false; // shared operators must be combinatorial
 	}
 
 
