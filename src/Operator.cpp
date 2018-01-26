@@ -1331,7 +1331,7 @@ namespace flopoco{
 						// relink the critical path info for the pipeline to work.
 						double criticalPath = formal->getCriticalPath(); // this is OK because the subcomponent has been scheduled
 						Signal* cloneOrActual = actual;
-						if(op->isSequential()) {
+						if(isSequential()) {
 							// We want to be able to pipeline the output signal using information from within the shared instance.
 							// For this have to add an intermediate signal to receive the output of pipeline registers...
 							// The actual has already been declared, so we declare a clone that will become the actual.
