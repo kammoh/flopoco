@@ -83,7 +83,7 @@ namespace flopoco{
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
-        uniqueName_                 = "undefined!";
+        isOperatorApplyScheduleDone_= false;
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
@@ -2269,6 +2269,10 @@ namespace flopoco{
 
 		//copy the remaining code to the vhdl code buffer
 		newStr << oldStr.substr(currentPos, oldStr.size()-currentPos);
+
+//        cout << "------------------------------------" << endl;
+        cout << newStr.str();
+//        cout << "------------------------------------" << endl;
 
 		vhdl.setSecondLevelCode(newStr.str());
 
