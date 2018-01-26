@@ -1137,7 +1137,16 @@ namespace flopoco{
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
-		//try to parse the constant
+
+        //remove quotation marks from constant (as this produces sollya warnings)
+        std::size_t found = constantValue.find("'");
+        while(found!=std::string::npos)
+        {
+            constantValue.replace(found,1,"");
+            found = constantValue.find("'"); //search for other "'"'s
+        }
+
+        //try to parse the constant
         node = sollya_lib_parse_string(constantValue.c_str());
 		// If conversion did not succeed (i.e. parse error)
 		if(node == 0)
