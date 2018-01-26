@@ -74,7 +74,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_init lutop( lutop_o5, lutop_o6 );
 
         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
-        cur_lut->setGeneric( "init", lutop.get_hex() );
+        cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
         inPortMap(cur_lut,"i0",join("X",i) + of(0));
         inPortMap(cur_lut,"i1",join("X",i) + of(1));
@@ -89,7 +89,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 //        vhdl << instance(cur_lut,join("lut",i)) << endl;
         vhdl << cur_lut->primitiveInstance(join("lut",i)) << endl;
         //UserInterface::addToGlobalOpList(cur_lut);
-        addSubComponent(cur_lut);
+//        addSubComponent(cur_lut);
     }
 
     if(useLastColumn)
@@ -100,7 +100,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_init lutop( lutop_o5, lutop_o6 );
 
         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
-        cur_lut->setGeneric( "init", lutop.get_hex() );
+        cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
         inPortMap(cur_lut,"i0",join("X",width-1) + of(0));
         inPortMapCst(cur_lut,"i1","'0'");

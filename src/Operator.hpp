@@ -611,14 +611,14 @@ public:
      * @param name Name of the generic to set
      * @param value Value of the generic
      */
-    void setGeneric( std::string name, string value );
+    void setGeneric(std::string name, string value, int width, bool isBus=false);
 
     /**
      * setGeneric Sets the specific generic
      * @param name Name of the generic to set
      * @param value Value of the generic
      */
-    void setGeneric( string name, const long value );
+    void setGeneric(string name, const long value, int width, bool isBus=false);
 
 
 	/**

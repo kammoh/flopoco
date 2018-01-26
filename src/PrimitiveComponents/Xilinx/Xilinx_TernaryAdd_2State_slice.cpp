@@ -53,7 +53,7 @@ namespace flopoco {
 
         for( uint i = 0; i < wIn; ++i  ) {
 			Xilinx_LUT6_2 *lut_bit_i = new Xilinx_LUT6_2( parentOp,target );
-            lut_bit_i->setGeneric( "init", lut_content );
+            lut_bit_i->setGeneric( "init", lut_content, 64 );
             inPortMap( lut_bit_i, "i0", "z_in" + of( i ) );
             inPortMap( lut_bit_i, "i1", "y_in" + of( i ) );
             inPortMap( lut_bit_i, "i2", "x_in" + of( i ) );

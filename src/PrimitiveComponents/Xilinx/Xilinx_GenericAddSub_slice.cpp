@@ -96,9 +96,9 @@ namespace flopoco {
 			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( parentOp,target );
 
             if( initial && i == 0 ) {
-                initial_lut->setGeneric( "init", carry_pre.get_hex() );
+                initial_lut->setGeneric( "init", carry_pre.get_hex(), 64 );
             } else {
-                initial_lut->setGeneric( "init", adder.get_hex() );
+                initial_lut->setGeneric( "init", adder.get_hex(), 64 );
             }
 
             inPortMap( initial_lut, "i0", "y_in" + of( i ) );
@@ -174,7 +174,7 @@ namespace flopoco {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
 			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( parentOp,target );
-            initial_lut->setGeneric( "init", adder.get_hex() );
+            initial_lut->setGeneric( "init", adder.get_hex(), 64 );
             inPortMap( initial_lut, "i0", "y_in" + of( i ) );
             inPortMap( initial_lut, "i1", "x_in" + of( i ) );
             inPortMap( initial_lut, "i2", "neg_y_in" );
@@ -240,11 +240,11 @@ namespace flopoco {
 			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
 
             if( initial && i == 0 ) {
-                cur_lut->setGeneric( "init", getLUT_dss_init() );
+                cur_lut->setGeneric( "init", getLUT_dss_init(), 64 );
             } else if( initial && i == 1 ) {
-                cur_lut->setGeneric( "init", getLUT_dss_sec() );
+                cur_lut->setGeneric( "init", getLUT_dss_sec(), 64 );
             } else {
-                cur_lut->setGeneric( "init", getLUT_dss_std() );
+                cur_lut->setGeneric( "init", getLUT_dss_std(), 64 );
             }
 
             inPortMap( cur_lut, "i0", "y_in" + of( i ) );

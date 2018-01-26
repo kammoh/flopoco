@@ -67,27 +67,8 @@ namespace flopoco {
         }
     }
 
-/*
-    void Primitive::setGeneric( string name, string value ) {
-        generics_.insert( std::make_pair( name, value ) );
-    }
 
-    void Primitive::setGeneric( string name, const long value ) {
-        setGeneric( name, std::to_string( value ) );
-    }
-
-    std::map<string, string> &Primitive::getGenerics() {
-        return generics_;
-    }
-*/
-/*
-    void Primitive::outputVHDL( ostream &o, string name ) {
-    }
-    void Primitive::outputVHDLComponent( ostream &o, string name ) {
-    }
-*/
-
-    /* The new interface, identical to instance()*/
+    /* The new interface, similar to instance()*/
     string Primitive::primitiveInstance(string instanceName)
     {
         addPrimitiveLibrary(getParentOp(),getParentOp()->getTarget());

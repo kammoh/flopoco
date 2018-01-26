@@ -548,7 +548,19 @@ namespace flopoco{
 		unsigned int i;
 
 		o << tab << "component " << name << " is" << endl;
-		if (ioList_.size() > 0)
+        if( !generics_.empty() ) {
+            o << tab << tab << "generic ( ";
+            std::map<string, string>::iterator it = generics_.begin();
+            o << getSignalByName(it->first)->toVHDL();
+
+            for( ++it; it != generics_.end(); ++it  ) {
+                o << ";" << endl << tab << tab << it->first << " : " << getSignalByName(it->first)->toVHDL();
+            }
+
+            o << ");" << endl;
+        }
+
+        if (ioList_.size() > 0)
 		{
 			o << tab << tab << "port ( ";
 			if(isSequential()) {
@@ -1099,13 +1111,20 @@ namespace flopoco{
         tmpInPortMap_[componentPortName] = actualSignalName;
     }
 
-    void Operator::setGeneric( string name, string value ) {
-        REPORT(0, "setGeneric: "<< getName() << " : " << name << " => "  << value);
+    void Operator::setGeneric( string name, string value, int width, bool isBus ) {
+        REPORT(DEBUG, "setGeneric: "<< getName() << " : " << name << " => "  << value);
+
+        Signal *s = new Signal(this, name, Signal::constant, width, isBus);
+
+        //add the signal to the signal dictionary
+        signalMap_[name] = s;
+
         generics_.insert( std::make_pair( name, value ) );
     }
 
-    void Operator::setGeneric( string name, const long value ) {
-        setGeneric( name, std::to_string( value ) );
+    void Operator::setGeneric(string name, const long value , int width, bool isBus)
+    {
+        setGeneric( name, std::to_string( value ), width, isBus );
     }
 
     void Operator::inPortMapCst(Operator* op, string componentPortName, string constantValue){
@@ -1217,7 +1236,6 @@ namespace flopoco{
 		o << endl;
 
         // INSERTED PART FOR PRIMITIVES
-        cout << "op->generics_.empty()=" << op->generics_.empty() << endl;
         if( !op->generics_.empty() ) {
             o << tab << tab << "generic map ( ";
             std::map<string, string>::iterator it = op->generics_.begin();

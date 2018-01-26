@@ -75,7 +75,7 @@ namespace flopoco {
                     stringstream output;
                     output << "x_out(" << i << ")";
                     outPortMap( luti, "o", output.str());
-                    luti->setGeneric( "init", init.get_hex() );
+                    luti->setGeneric( "init", init.get_hex(), 64 );
                     stringstream lutname;
                     lutname << "bit_" << i;
                     vhdl << luti->primitiveInstance( lutname.str() );
@@ -97,7 +97,7 @@ namespace flopoco {
                     stringstream output;
                     output << "x_out(" << i << ")";
                     outPortMap( luti, "o", output.str());
-                    luti->setGeneric( "init", init.get_hex() );
+                    luti->setGeneric( "init", init.get_hex(), 64 );
                     stringstream lutname;
                     lutname << "bit_" << i;
                     vhdl << luti->primitiveInstance( lutname.str() );
