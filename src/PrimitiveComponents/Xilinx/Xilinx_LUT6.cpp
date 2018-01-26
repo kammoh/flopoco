@@ -18,30 +18,30 @@ namespace flopoco {
         srcFileName = "Xilinx_LUT6";
 
         for( int i = 0; i < 6; i++ )
-            addInput( join( "i", i ), 1 );
+            addInput( join( "i", i ) );
     }
 
 	Xilinx_LUT6::Xilinx_LUT6(Operator *parentOp, Target *target ) : Xilinx_LUT6_base( parentOp, target ) {
         setName( "LUT6" );
-        addOutput( "o", 1 );
+        addOutput( "o" );
         vhdl << "o <= i0" << endl;
     }
 
 	Xilinx_LUT6_2::Xilinx_LUT6_2(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
         setName( "LUT6_2" );
-        addOutput( "o5", 1 );
-        addOutput( "o6", 1 );
+        addOutput( "o5" );
+        addOutput( "o6" );
     }
 
 	Xilinx_LUT6_L::Xilinx_LUT6_L(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
         setName( "LUT6_L" );
-        addOutput( "lo", 1 );
+        addOutput( "lo" );
     }
 
 	Xilinx_LUT6_D::Xilinx_LUT6_D(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
         setName( "LUT6_D" );
-        addOutput( "o", 1 );
-        addOutput( "lo", 1 );
+        addOutput( "o" );
+        addOutput( "lo" );
     }
 
 }//namespace

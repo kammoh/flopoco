@@ -19,7 +19,7 @@ namespace flopoco {
         : Operator( parentOp, target ),
           wordsize( wIn ),
           width( muxWidth ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         srcFileName = "Xilinx_GenericMux";
         stringstream namestr;

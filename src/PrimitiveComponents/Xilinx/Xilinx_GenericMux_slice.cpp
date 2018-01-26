@@ -20,7 +20,7 @@ using namespace std;
 
 namespace flopoco {
     Xilinx_GenericMux_slice::Xilinx_GenericMux_slice(Operator *parentOp, Target *target, GenericMux_SLICE_VARIANT variant, int wIn ) : Operator( parentOp, target ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         setCombinatorial();
         stringstream namestr;
@@ -72,7 +72,7 @@ namespace flopoco {
 
             for( int i = 0; i < ( wIn - ( wIn % 2 ) ) / 2; i++ ) {
 				Xilinx_LUT6_2 *luts = new Xilinx_LUT6_2( parentOp, target );
-                luts->setGeneric( "init", "current_lut_init" );
+                luts->setGeneric( "init", "current_lut_init", 64 );
                 inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                 inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
                 inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
@@ -88,7 +88,7 @@ namespace flopoco {
 
             if( wIn % 2 ) {
 				Xilinx_LUT6_2 *hluts = new Xilinx_LUT6_2( parentOp, target );
-                hluts->setGeneric( "init", "current_lut_init" );
+                hluts->setGeneric( "init", "current_lut_init", 64 );
                 inPortMap( hluts, join( "i", 0 ), "m_in" + of( wIn * 2 - 2 ) );
                 inPortMap( hluts, join( "i", 1 ), "m_in" + of( wIn * 2 - 1 ) );
                 inPortMapCst( hluts, join( "i", 2 ), "'0'" );
@@ -115,7 +115,7 @@ namespace flopoco {
 
                 for( int i = 0; i < wIn; i++ ) {
 					Xilinx_LUT6 *luts = new Xilinx_LUT6( parentOp, target );
-                    luts->setGeneric( "init", "current_lut_init" );
+                    luts->setGeneric( "init", "current_lut_init", 64 );
                     inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                     inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
                     inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
@@ -134,7 +134,7 @@ namespace flopoco {
 
                 for( int i = 0; i < 2 * wIn; i++ ) {
 					Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( parentOp,target );
-                    luts->setGeneric( "init", "current_lut_init" );
+                    luts->setGeneric( "init", "current_lut_init", 64 );
                     inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                     inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
                     inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
@@ -165,7 +165,7 @@ namespace flopoco {
 
                 for( int i = 0; i < wIn * 4; i++ ) {
 					Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( parentOp,target );
-                    luts->setGeneric( "init", "current_lut_init" );
+                    luts->setGeneric( "init", "current_lut_init", 64 );
                     inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
                     inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
                     inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );

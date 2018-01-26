@@ -16,7 +16,7 @@ using namespace std;
 namespace flopoco {
 
     Xilinx_GenericAddSub::Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn, int fixed_signs ) : Operator( parentOp, target ),wIn_(wIn),signs_(fixed_signs),dss_(false) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         srcFileName = "Xilinx_GenericAddSub";
         stringstream name;
@@ -38,7 +38,7 @@ namespace flopoco {
     }
 
     Xilinx_GenericAddSub::Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn, bool dss ) : Operator( parentOp, target ),wIn_(wIn),signs_(-1),dss_(dss) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
         srcFileName = "Xilinx_GenericAddSub";
         stringstream name;
         name << "Xilinx_GenericAddSub_" << wIn;

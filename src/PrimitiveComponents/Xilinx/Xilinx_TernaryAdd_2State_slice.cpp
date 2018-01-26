@@ -17,7 +17,7 @@ using namespace std;
 namespace flopoco {
 
     Xilinx_TernaryAdd_2State_slice::Xilinx_TernaryAdd_2State_slice(Operator *parentOp, Target *target, const uint &wIn , const bool &is_initial , const std::string &lut_content ) : Operator( parentOp, target ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         setName( "Xilinx_TernaryAdd_2State_slice_s" + std::to_string( wIn ) + ( is_initial ? "_init" : "" ) );
         srcFileName = "Xilinx_TernaryAdd_2State_slice";
@@ -53,7 +53,7 @@ namespace flopoco {
 
         for( uint i = 0; i < wIn; ++i  ) {
 			Xilinx_LUT6_2 *lut_bit_i = new Xilinx_LUT6_2( parentOp,target );
-            lut_bit_i->setGeneric( "init", lut_content );
+            lut_bit_i->setGeneric( "init", lut_content, 64 );
             inPortMap( lut_bit_i, "i0", "z_in" + of( i ) );
             inPortMap( lut_bit_i, "i1", "y_in" + of( i ) );
             inPortMap( lut_bit_i, "i2", "x_in" + of( i ) );

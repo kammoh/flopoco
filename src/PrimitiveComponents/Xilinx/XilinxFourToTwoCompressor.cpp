@@ -17,6 +17,8 @@ namespace flopoco{
 
 XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target* target, int width, bool useLastColumn) : Compressor(parentOp, target)
 {
+    setCopyrightString("Martin Kumm");
+
     this->useLastColumn = useLastColumn;
     setWidth(width);
 
@@ -33,20 +35,6 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     addOutput("R0", wOut);
     addOutput("R1", wOut);
 
-/*
-    vector<Signal*> sl = getSignalList();
-    cout << "declared signals in signal list:" << endl;
-    for(int i=0; i < sl.size(); i++)
-    {
-        cout << "  " << sl[i]->getName() << endl;
-    }
-
-    cout << "declared signals in signal map:" << endl;
-    for(auto s : getSignalMap())
-    {
-        cout << "  " << s.first << endl;
-    }
-*/
     int needed_cc = ( width / 4 ) + ( width % 4 > 0 ? 1 : 0 ); //no. of required carry chains
 
     REPORT(DEBUG, "no of required carry-chains for width=" << width << " is " << needed_cc);
@@ -86,7 +74,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_init lutop( lutop_o5, lutop_o6 );
 
         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
-        cur_lut->setGeneric( "init", lutop.get_hex() );
+        cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
         inPortMap(cur_lut,"i0",join("X",i) + of(0));
         inPortMap(cur_lut,"i1",join("X",i) + of(1));
@@ -112,7 +100,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         lut_init lutop( lutop_o5, lutop_o6 );
 
         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
-        cur_lut->setGeneric( "init", lutop.get_hex() );
+        cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
         inPortMap(cur_lut,"i0",join("X",width-1) + of(0));
         inPortMapCst(cur_lut,"i1","'0'");
@@ -201,9 +189,11 @@ OperatorPtr XilinxFourToTwoCompressor::parseArguments(OperatorPtr parentOp, Targ
         throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
     int wOut;
+    bool useLastColumn;
     UserInterface::parseInt(args,"wOut",&wOut );
+    UserInterface::parseBoolean(args,"useLastColumn",&useLastColumn );
 
-    return new XilinxFourToTwoCompressor(parentOp, target, wOut);
+    return new XilinxFourToTwoCompressor(parentOp, target, wOut, useLastColumn);
 }
 
 void XilinxFourToTwoCompressor::registerFactory()
@@ -212,10 +202,10 @@ void XilinxFourToTwoCompressor::registerFactory()
                         "An efficient 4:2 compressor build of xilinx primitives.", // description, string
                         "Primitives", // category, from the list defined in UserInterface.cpp
                         "",
-                        "wOut(int): The wordsize of the 4:2 compressor",
+                        "wOut(int): The wordsize of the 4:2 compressor;\
+                        useLastColumn(bool)=0: if the 4:2 compressor should additonally compress two bits in the last column, this should be set to true;",
                         "",
                         XilinxFourToTwoCompressor::parseArguments
                         );
 }
-
 

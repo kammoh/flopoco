@@ -85,7 +85,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
         lut_init lutop( lutop_o5, lutop_o6 );
 
 		Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
-        cur_lut->setGeneric( "init", lutop.get_hex() );
+        cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
         inPortMap(cur_lut,"i0",in2 + of(1));
         inPortMap(cur_lut,"i2",in2 + of(0));

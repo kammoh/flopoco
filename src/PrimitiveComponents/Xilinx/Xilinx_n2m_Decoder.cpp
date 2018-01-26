@@ -12,7 +12,7 @@ using namespace std;
 
 namespace flopoco {
     Xilinx_n2m_Decoder::Xilinx_n2m_Decoder(Operator *parentOp, Target *target, string name, map<int, int> groups, int n, int m ) : Operator( parentOp, target ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         setCombinatorial();
         stringstream tname;
@@ -75,7 +75,7 @@ namespace flopoco {
                     stringstream output;
                     output << "x_out(" << i << ")";
                     outPortMap( luti, "o", output.str());
-                    luti->setGeneric( "init", init.get_hex() );
+                    luti->setGeneric( "init", init.get_hex(), 64 );
                     stringstream lutname;
                     lutname << "bit_" << i;
                     vhdl << luti->primitiveInstance( lutname.str() );
@@ -97,7 +97,7 @@ namespace flopoco {
                     stringstream output;
                     output << "x_out(" << i << ")";
                     outPortMap( luti, "o", output.str());
-                    luti->setGeneric( "init", init.get_hex() );
+                    luti->setGeneric( "init", init.get_hex(), 64 );
                     stringstream lutname;
                     lutname << "bit_" << i;
                     vhdl << luti->primitiveInstance( lutname.str() );

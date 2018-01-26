@@ -3,7 +3,7 @@
 
 namespace flopoco {
 	Xilinx_Comparator::Xilinx_Comparator(Operator *parentOp, Target *target, int wIn, ComparatorType type ) : Operator( parentOp,target ) , m_type( type ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         std::stringstream name_str;
         name_str << "Xilinx_Comparator_";
@@ -105,7 +105,7 @@ namespace flopoco {
 
         for( int i = 0; i < needed_luts; i++ ) {
 			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
-            cur_lut->setGeneric( "init", lut_content );
+            cur_lut->setGeneric( "init", lut_content, 64 );
             inPortMap( cur_lut , "i0", "a" + of( i * 2 ) );
             inPortMap( cur_lut , "i1", "a" + of( i * 2 + 1 ) );
             inPortMap( cur_lut , "i2", "b" + of( i * 2 ) );
@@ -121,7 +121,7 @@ namespace flopoco {
 
         if( ws_remain ) {
 			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
-            cur_lut->setGeneric( "init", lut_content );
+            cur_lut->setGeneric( "init", lut_content, 64 );
             inPortMap( cur_lut , "i0", "a" + of( needed_luts * 2 ) );
             inPortMap( cur_lut , "i1", "a" + of( needed_luts * 2 ) );
             inPortMap( cur_lut , "i2", "b" + of( needed_luts * 2 ) );

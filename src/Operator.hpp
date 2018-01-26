@@ -180,7 +180,7 @@ public:
 	 * @param width the number of bits of the signal.
 	 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 	 */
-	void addInput  (const std::string name, const int width=1, const bool isBus=true);
+    void addInput  (const std::string name, const int width, const bool isBus=true);
 
 	/**
 	 * Adds an input wire (of type std_logic) to the operator.
@@ -189,7 +189,7 @@ public:
 	 */
 	void addInput  (const std::string name);
 
-	void addInput (const char* name);
+//	void addInput (const char* name); //ambiguous to addInput(const std::string name) !!!
 
 	/**
 	 * Adds  signal to the operator.
@@ -199,16 +199,16 @@ public:
 	 * @param numberOfPossibleOutputValues (optional, defaults to 1) set to 2 for a faithfully rounded operator for instance
 	 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 	 */
-	void addOutput(const std::string name, const int width=1, const int numberOfPossibleOutputValues=1, const bool isBus=true);
+    void addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues=1, const bool isBus=true);
 
 	/**
 	 * Adds an output wire (of type std_logic) with one possible value to the operator.
 	 * 	Adds a signal of type Signal::out to the the I/O signal list.
 	 * @param name  the name of the signal
 	 */
-	void addOutput(const std::string name);
+    void addOutput(const std::string name);
 
-	void addOutput(const char* name);
+//	void addOutput(const char* name); //ambiguous to addOutput(const std::string name) !!!
 
 #if 1
 	// Test:
@@ -606,6 +606,19 @@ public:
 
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
 
+    /**
+     * setGeneric Sets the specific generic
+     * @param name Name of the generic to set
+     * @param value Value of the generic
+     */
+    void setGeneric(std::string name, string value, int width, bool isBus=false);
+
+    /**
+     * setGeneric Sets the specific generic
+     * @param name Name of the generic to set
+     * @param value Value of the generic
+     */
+    void setGeneric(string name, const long value, int width, bool isBus=false);
 
 
 	/**
@@ -1750,6 +1763,8 @@ private:
 
     map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_. Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
     map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
+    map<std::string, std::string> generics_;               /**< A map for generics, this is required to include library elements like primitives */
+
 };
 
 

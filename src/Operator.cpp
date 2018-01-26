@@ -83,7 +83,7 @@ namespace flopoco{
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
-        uniqueName_                 = "undefined!";
+        isOperatorApplyScheduleDone_= false;
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
@@ -179,9 +179,11 @@ namespace flopoco{
 		addInput(name, 1, false);
 	}
 
+/*ambiguous to addInput(const std::string name) !!!
 	void Operator::addInput(const char* name) {
 		addInput(name, 1, false);
 	}
+*/
 
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
 		//search if the signal has already been declared
@@ -210,10 +212,11 @@ namespace flopoco{
 		addOutput (name, 1, 1, false);
 	}
 
+/*ambiguous to addOutput(const std::string name)!!!
 	void Operator::addOutput(const char* name) {
 		addOutput (name, 1, 1, false);
 	}
-
+*/
 
 	void Operator::addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb) {
 		//search if the signal has already been declared
@@ -545,7 +548,19 @@ namespace flopoco{
 		unsigned int i;
 
 		o << tab << "component " << name << " is" << endl;
-		if (ioList_.size() > 0)
+        if( !generics_.empty() ) {
+            o << tab << tab << "generic ( ";
+            std::map<string, string>::iterator it = generics_.begin();
+            o << getSignalByName(it->first)->toVHDL();
+
+            for( ++it; it != generics_.end(); ++it  ) {
+                o << ";" << endl << tab << tab << it->first << " : " << getSignalByName(it->first)->toVHDL();
+            }
+
+            o << ");" << endl;
+        }
+
+        if (ioList_.size() > 0)
 		{
 			o << tab << tab << "port ( ";
 			if(isSequential()) {
@@ -1096,7 +1111,21 @@ namespace flopoco{
         tmpInPortMap_[componentPortName] = actualSignalName;
     }
 
+    void Operator::setGeneric( string name, string value, int width, bool isBus ) {
+        REPORT(DEBUG, "setGeneric: "<< getName() << " : " << name << " => "  << value);
 
+        Signal *s = new Signal(this, name, Signal::constant, width, isBus);
+
+        //add the signal to the signal dictionary
+        signalMap_[name] = s;
+
+        generics_.insert( std::make_pair( name, value ) );
+    }
+
+    void Operator::setGeneric(string name, const long value , int width, bool isBus)
+    {
+        setGeneric( name, std::to_string( value ), width, isBus );
+    }
 
     void Operator::inPortMapCst(Operator* op, string componentPortName, string constantValue){
 		Signal *s;
@@ -1108,7 +1137,16 @@ namespace flopoco{
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
-		//try to parse the constant
+
+        //remove quotation marks from constant (as this produces sollya warnings)
+        std::size_t found = constantValue.find("'");
+        while(found!=std::string::npos)
+        {
+            constantValue.replace(found,1,"");
+            found = constantValue.find("'"); //search for other "'"'s
+        }
+
+        //try to parse the constant
         node = sollya_lib_parse_string(constantValue.c_str());
 		// If conversion did not succeed (i.e. parse error)
 		if(node == 0)
@@ -1212,6 +1250,21 @@ namespace flopoco{
 		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
+
+        // INSERTED PART FOR PRIMITIVES
+        if( !op->generics_.empty() ) {
+            o << tab << tab << "generic map ( ";
+            std::map<string, string>::iterator it = op->generics_.begin();
+            o << it->first << " => " << it->second;
+
+            for( ++it; it != op->generics_.end(); ++it  ) {
+                o << "," << endl << tab << tab << it->first << " => " << it->second;
+            }
+
+            o << ")" << endl;
+        }
+        // INSERTED PART END
+
 		o << tab << tab << "port map ( ";
 
 		// build vhdl and erase portMap_
@@ -3462,7 +3515,7 @@ namespace flopoco{
 
 	void Operator::setShared(){
 		isShared_ = true;
-		isSequential_ = true; // shared operators must be combinatorial
+        isSequential_ = false; // shared operators must be combinatorial
 	}
 
 

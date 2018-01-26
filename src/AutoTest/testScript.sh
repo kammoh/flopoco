@@ -14,6 +14,9 @@ if grep 'gtkwave' temp > /dev/null; then
 			echo $nvc
 			message='nvc simulation ERROR'
 	fi
+	#cleanup:
+        rm *.fst
+        rm -R work
 else
 	message='VHDL not generated'
 fi
