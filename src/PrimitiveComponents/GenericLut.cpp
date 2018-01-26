@@ -11,7 +11,7 @@ using namespace std;
 namespace flopoco {
     GenericLut::GenericLut( Target *target, const std::string &name, const std::map<unsigned int, unsigned int> &pairs, const unsigned int &wIn, const unsigned int &wOut ) : Operator( target ) {
 
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
         setCombinatorial();
         stringstream tname;
         tname << "GenericLut_" << name;
@@ -303,7 +303,7 @@ namespace flopoco {
     }
 
     GenericLut::GenericLut( Target *target, const std::string &name, const std::vector<bool_eq> &equations ): Operator( target ), equations_( equations ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
         Xilinx_Primitive::checkTargetCompatibility( target );
         setCombinatorial();
         stringstream tname;

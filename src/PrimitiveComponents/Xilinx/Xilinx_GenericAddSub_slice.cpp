@@ -17,7 +17,7 @@ using namespace std;
 
 namespace flopoco {
     Xilinx_GenericAddSub_slice::Xilinx_GenericAddSub_slice(Operator *parentOp, Target *target, int wIn, bool initial, bool fixed, bool dss , const string &prefix ) : Operator( parentOp, target ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         stringstream name;
 

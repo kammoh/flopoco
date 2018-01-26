@@ -19,7 +19,7 @@ namespace flopoco {
 
     Xilinx_TernaryAdd_2State::Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target, const int &wIn, const short &state, const short &state2 )
         : Operator( parentOp, target ), wIn_(wIn), state_(state),state2_(state2) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
         if( state2_ == -1 ) {
             state2_ = state_;
         }

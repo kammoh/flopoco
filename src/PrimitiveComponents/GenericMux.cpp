@@ -11,7 +11,7 @@
 using namespace std;
 namespace flopoco {
     GenericMux::GenericMux(Operator* parentOp, Target* target, const uint32_t &wIn, const uint32_t &inputCount) : Operator(parentOp,target) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
         srcFileName="GenericMux";
 		ostringstream name;
         name << "GenericMux_w" << wIn << "_s" << inputCount;

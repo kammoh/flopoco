@@ -6,18 +6,6 @@
 #include <map>
 
 namespace flopoco {
-    class UniKs {
-      public:
-        enum Authors {
-            AUTHOR_MKUMM = 0x1,
-            AUTHOR_KMOELLER = 0x2,
-            AUTHOR_JKAPPAUF = 0x4,
-            AUTHOR_MKLEINLEIN = 0x8
-        };
-
-        static std::string getAuthorsString( const int &authors );
-    };
-
     ///
     /// \brief The Primitive class. Base class for all primitive implementations.
     ///

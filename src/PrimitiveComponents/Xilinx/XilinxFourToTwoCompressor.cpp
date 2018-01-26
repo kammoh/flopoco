@@ -17,6 +17,8 @@ namespace flopoco{
 
 XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target* target, int width, bool useLastColumn) : Compressor(parentOp, target)
 {
+    setCopyrightString("Martin Kumm");
+
     this->useLastColumn = useLastColumn;
     setWidth(width);
 
@@ -33,20 +35,6 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     addOutput("R0", wOut);
     addOutput("R1", wOut);
 
-/*
-    vector<Signal*> sl = getSignalList();
-    cout << "declared signals in signal list:" << endl;
-    for(int i=0; i < sl.size(); i++)
-    {
-        cout << "  " << sl[i]->getName() << endl;
-    }
-
-    cout << "declared signals in signal map:" << endl;
-    for(auto s : getSignalMap())
-    {
-        cout << "  " << s.first << endl;
-    }
-*/
     int needed_cc = ( width / 4 ) + ( width % 4 > 0 ? 1 : 0 ); //no. of required carry chains
 
     REPORT(DEBUG, "no of required carry-chains for width=" << width << " is " << needed_cc);

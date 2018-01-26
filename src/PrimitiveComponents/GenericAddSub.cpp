@@ -9,7 +9,7 @@
 using namespace std;
 namespace flopoco {
     GenericAddSub::GenericAddSub(Operator* parentOp, Target* target, const uint32_t &wIn, const uint32_t &flags) : Operator( parentOp,target), flags_(flags) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString("Marco Kleinlein");
         this->useNumericStd();
         srcFileName="GenericAddSub";
 		ostringstream name;

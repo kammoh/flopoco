@@ -3,7 +3,7 @@
 
 namespace flopoco {
 	Xilinx_Comparator::Xilinx_Comparator(Operator *parentOp, Target *target, int wIn, ComparatorType type ) : Operator( parentOp,target ) , m_type( type ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         std::stringstream name_str;
         name_str << "Xilinx_Comparator_";

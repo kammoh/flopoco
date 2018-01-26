@@ -20,7 +20,7 @@ using namespace std;
 
 namespace flopoco {
     Xilinx_GenericMux_slice::Xilinx_GenericMux_slice(Operator *parentOp, Target *target, GenericMux_SLICE_VARIANT variant, int wIn ) : Operator( parentOp, target ) {
-        setCopyrightString( UniKs::getAuthorsString( UniKs::AUTHOR_MKLEINLEIN ) );
+        setCopyrightString( "Marco Kleinlein" );
 
         setCombinatorial();
         stringstream namestr;
