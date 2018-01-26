@@ -60,6 +60,8 @@ To discuss.
   So the actual interface to provide to Martin is not yet fixed.
 
 ** TODOs for Florent:
+I think the current framework won't work with a shared instance inputting inputs from different cycles.
+Check.
 ** Options for pipeline delays versus functional delays
 First, I got rid completely of the integer cycle information stored on the edges,
 (this removes all the "0" on the edges of the dep graph in flopoco.dot) 

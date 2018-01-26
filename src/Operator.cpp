@@ -1165,21 +1165,21 @@ namespace flopoco{
 		// First, I/O sanity check: check that all the signals are connected
 		for(auto i: *(op->getIOList())) 	{
 			bool isSignalMapped = false;
-            map<string, string>::iterator iterStart, iterStop;
+			map<string, string>::iterator iterStart, iterStop;
 
 			//set the start and stop values for the iterators, for either the input,
 			//	or the output temporary port map, depending on the signal type
 			if(i->type() == Signal::in)	{
-                iterStart = tmpInPortMap_.begin();
-                iterStop = tmpInPortMap_.end();
-            }
+				iterStart = tmpInPortMap_.begin();
+				iterStop = tmpInPortMap_.end();
+			}
 			else{
-                iterStart = tmpOutPortMap_.begin();
-                iterStop = tmpOutPortMap_.end();
-            }
+				iterStart = tmpOutPortMap_.begin();
+				iterStop = tmpOutPortMap_.end();
+			}
 
-            for(map<string, string>::iterator it=iterStart; it!=iterStop; it++)	{
-                if(it->first == i->getName())		{
+			for(map<string, string>::iterator it=iterStart; it!=iterStop; it++)	{
+				if(it->first == i->getName())		{
 					//mark the signal as connected
 					isSignalMapped = true;
 					break;
@@ -1190,18 +1190,25 @@ namespace flopoco{
 			//	then we cannot continue
 			if(!isSignalMapped) {
 				THROWERROR("In instance() while trying to create a new instance of "
-						<< op->getName() << " called " << instanceName << ": input/output "
-						<< i->getName() << " is not mapped to anything" << endl);
+									 << op->getName() << " called " << instanceName << ": input/output "
+									 << i->getName() << " is not mapped to anything" << endl);
 			}
 		} // End of the I/O sanity check
 
+#if 0
 		if(!op->isOperatorScheduled()) {
 			op->schedule();
 		}
 		if(op->isShared()) {
 			op->applySchedule();
 		}
-
+#else // There is already a call to schedule() in newInstance, so the unique case is covered properly there
+		if(op->isShared() && !op->isOperatorScheduled() ) {
+			op->schedule();
+			op->applySchedule();
+		}
+#endif
+		
 		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
@@ -1220,84 +1227,104 @@ namespace flopoco{
 		}
 
 		//build the code for the inputs
-        map<string, string>::iterator it;
-        string rhsString;
+		map<string, string>::iterator it;
+		string rhsString;
 		vector<Signal*> inputActualList;
+		
+		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
+			{
+				string actualName = it->second;
+				Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
+				string formalName = it->first; // ... with actual in this and formal in op
+				//			Signal* formal=op->getSignalByName(formalName);
+				if((it != tmpInPortMap_.begin()) || op->isSequential())
+					o << "," << endl <<  tab << tab << "           ";
 
-        for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
-        {
-            string actualName = it->second;
-            Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
-            string formalName = it->first; // ... with actual in this and formal in op
-			//			Signal* formal=op->getSignalByName(formalName);
-            if((it != tmpInPortMap_.begin()) || op->isSequential())
-                o << "," << endl <<  tab << tab << "           ";
+				// The following code assumes that the IO is declared as standard_logic_vector
+				// If the actual parameter is a signed or unsigned, we want to automatically convert it
+				if(actual->type() == Signal::constant){
+					rhsString = actualName.substr(0, actualName.find("_cst"));
+				}else if(actual->isFix()){
+					rhsString = std_logic_vector(actualName);
+				}else{
+					rhsString = actualName;
+				}
 
-			// The following code assumes that the IO is declared as standard_logic_vector
-			// If the actual parameter is a signed or unsigned, we want to automatically convert it
-			if(actual->type() == Signal::constant){
-                rhsString = actualName.substr(0, actualName.find("_cst"));
-			}else if(actual->isFix()){
-                rhsString = std_logic_vector(actualName);
-			}else{
-                rhsString = actualName;
+				o << formalName << " => " << rhsString;
+				if(op->isShared()){
+					// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
+					inputActualList.push_back(actual);
+				}
 			}
-
-            o << formalName << " => " << rhsString;
-			if(op->isShared()){
-				// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
-				inputActualList.push_back(actual);
-			}
-		}
-
+		
+		ostringstream outputSignalCopies;
 		//build the code for the outputs
-        for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
-        {
-            string actualName = it->second;
-            Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
-            string formalName = it->first; // ... with actual in this and formal in op
-			Signal* formal=op->getSignalByName(formalName);
-            REPORT(DEBUG, "instance: out port loop  " << actualName << " "<< actual->incompleteDeclaration()<<" " << formalName  );
+		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
+			{
+				string actualName = it->second;
+				Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
+				string formalName = it->first; // ... with actual in this and formal in op
+				Signal* formal=op->getSignalByName(formalName);
+				REPORT(DEBUG, "instance: out port loop  " << actualName << " "<< actual->incompleteDeclaration()<<" " << formalName  );
 
-			//the signal connected to the output should be an incompletely declared signal,
-			//	so its information must be completed and it must be properly connected now
-			if(actual->incompleteDeclaration())		{
-				//copy the details from the output port
-				actual->copySignalParameters(op->getSignalByName(formalName));
-				actual->setIncompleteDeclaration(false); //mark the signal as completely declared
-				if(op->isShared()){ // shared instance:  directly connect the inputs to the actual output in the dependency graph
-					actual->setCriticalPathContribution(formal->getCriticalPath()); // this is OK because the subcomponent has been scheduled
-					REPORT(DEBUG, "instance() of a shared component. CP of "<< actual->getUniqueName() << " is " << actual->getCriticalPathContribution());
-					for (auto i: inputActualList) {
-						i->addSuccessor(actual);
-						actual->addPredecessor(i);
-						REPORT(FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  actual->getUniqueName()
-									 << " with critical path contribution " <<  actual->getCriticalPathContribution() ) ;
+				//the signal connected to the output should be an incompletely declared signal,
+				//	so its information must be completed and it must be properly connected now
+				if(actual->incompleteDeclaration())		{
+					//copy the details from the output port
+					actual->copySignalParameters(op->getSignalByName(formalName));
+					actual->setIncompleteDeclaration(false); //mark the signal as completely declared
+					if(op->isShared()){ // shared instance:  directly connect the inputs to the actual output in the dependency graph
+						REPORT(DEBUG, "instance():  Actual parameter "<< actual->getUniqueName()  << " of shared instance " << op->getName());
+						// relink the critical path info for the pipeline to work.
+						double criticalPath = formal->getCriticalPath(); // this is OK because the subcomponent has been scheduled
+						Signal* cloneOrActual = actual;
+						if(op->isSequential()) {
+							// We want to be able to pipeline the output signal using information from within the shared instance.
+							// For this have to add an intermediate signal to receive the output of pipeline registers...
+							// The actual has already been declared, so we declare a clone that will become the actual.
+							string cloneName = actual->getName() + "_copy" +to_string(getNewUId());
+							declare(cloneName, actual->width());
+							Signal* clone = getSignalByName(cloneName);
+							clone -> copySignalParameters(actual);
+							// Now we want the clone to become the actual parameter
+							outputSignalCopies << tab << actualName << " <= " << cloneName << ";" << endl;
+							actualName = cloneName; // will be consumed by the actual output of formal => actual below
+							cloneOrActual = clone;
+						}
+						actual->setCriticalPathContribution(criticalPath);
+
+						for (auto i: inputActualList) {
+							i->addSuccessor(cloneOrActual);
+							cloneOrActual->addPredecessor(i);
+							REPORT(FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  cloneOrActual->getUniqueName() );
+						}
+
 					}
+					else {	 	// unique instances: just connect both signals in the dependency graph
+						actual->addPredecessor(formal);
+						formal->addSuccessor(actual);
+						//the new signal doesn't add anything to the critical path
+						actual->setCriticalPathContribution(0.0);
+					}
+				}
 
-				}
-				else {	 	// unique instances: just connect both signals in the dependency graph
-					actual->addPredecessor(formal);
-					formal->addSuccessor(actual);
-					//the new signal doesn't add anything to the critical path
-					actual->setCriticalPathContribution(0.0);
-				}
+				if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
+					o << "," << endl <<  tab << tab << "           ";
+
+				o << formalName << " => " << actualName;
 			}
-
-            if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
-                o << "," << endl <<  tab << tab << "           ";
-
-            o << it->first << " => " << it->second;
-        }
 
 		o << ");" << endl;
 
+		// add the possible copies of shared instance outputs
+		o << outputSignalCopies.str();
+		
 		//add the operator to the subcomponent list/map (and possibly to globalOpList)
 		addSubComponent(op);
 
 		//clear the port mappings
-        tmpInPortMap_.clear();
-        tmpOutPortMap_.clear();
+		tmpInPortMap_.clear();
+		tmpOutPortMap_.clear();
 
 		return o.str();
 	}
@@ -1314,7 +1341,7 @@ namespace flopoco{
 
 		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
 
-        schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
+		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
 
 		//parse the parameters
 		parametersVector.push_back(opName);
@@ -2036,11 +2063,12 @@ namespace flopoco{
 						//						lhsSignal = NULL;
 
 						//copy rhsName to the new vhdl buffer
-                        if(!open)
-                            newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "") << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
-//                        else
-//                            newStr << "open";
+						if(!open)
+							newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "") << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+						//                        else
+						//                            newStr << "open";
 
+#if 0 // The following code registers the inputs instead of registering the outputs.
 						try {
 							//	delay it if necessary, i.e. if it is a shared instance with a dependency to a later signal
 							if(getTarget()->isPipelined()
@@ -2064,6 +2092,7 @@ namespace flopoco{
 						catch(char const *e) {
 							REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 						}
+#endif
 
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
