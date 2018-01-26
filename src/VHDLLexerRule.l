@@ -275,7 +275,15 @@ label					  ({identifier}{space_character}*":")
 ({p}{o}{r}{t}({space_character})+{m}{a}{p}) {
 	(*yyextra->os) << yytext;
 	
-	*yyextra->lexingMode = LexerContext::instance;
+	*yyextra->lexingMode = LexerContext::portmap;
+	*yyextra->lhsName = "";
+	yyextra->extraRhsNames->clear();
+}
+
+({g}{e}{n}{e}{r}{i}{c}({space_character})+{m}{a}{p}) {
+	(*yyextra->os) << yytext;
+	
+	*yyextra->lexingMode = LexerContext::genericmap;
 	*yyextra->lhsName = "";
 	yyextra->extraRhsNames->clear();
 }
@@ -392,14 +400,14 @@ label					  ({identifier}{space_character}*":")
 	}else if(*yyextra->lexingMode == LexerContext::variableAssignment)
 	{
 		(*yyextra->os) << yytext;
-	}else if(*yyextra->lexingMode == LexerContext::instance)
+	}else if(*yyextra->lexingMode == LexerContext::portmap)
 	{
 		(*yyextra->os) << "??" << yytext << "??";
-		*yyextra->lexingMode = LexerContext::instance2;
-	}else if(*yyextra->lexingMode == LexerContext::instance2)
+		*yyextra->lexingMode = LexerContext::portmap2;
+	}else if(*yyextra->lexingMode == LexerContext::portmap2)
 	{
 		(*yyextra->os) << "$$" << yytext << "$$";
-		*yyextra->lexingMode = LexerContext::instance;
+		*yyextra->lexingMode = LexerContext::portmap;
 	}else if(*yyextra->lexingMode == LexerContext::caseStatement)
 	{
 		(*yyextra->os) << yytext;
@@ -444,9 +452,9 @@ label					  ({identifier}{space_character}*":")
 	
 	//if, while parsing a component instance, there is a constant signal connected to
 	//	the port, then just reinitialize the state count
-	if(*yyextra->lexingMode == LexerContext::instance2)
+	if(*yyextra->lexingMode == LexerContext::portmap2)
 	{
-		*yyextra->lexingMode = LexerContext::instance;
+		*yyextra->lexingMode = LexerContext::portmap;
 	}
 }
 

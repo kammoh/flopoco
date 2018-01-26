@@ -67,6 +67,7 @@ namespace flopoco {
         }
     }
 
+/*
     void Primitive::setGeneric( string name, string value ) {
         generics_.insert( std::make_pair( name, value ) );
     }
@@ -78,7 +79,7 @@ namespace flopoco {
     std::map<string, string> &Primitive::getGenerics() {
         return generics_;
     }
-
+*/
 /*
     void Primitive::outputVHDL( ostream &o, string name ) {
     }

@@ -22,9 +22,10 @@ public:
 		selectedSignalAssignment2,
 		selectedSignalAssignment3,
 		variableAssignment, 
-		instance,  // within a port map()
-		instance2, // item but in second parse
-		process,
+        portmap,  // within a port map()
+        portmap2, // item but in second parse
+        genericmap,  // within a generic map()
+        process,
 		caseStatement,
 		comment
 	} LexMode;

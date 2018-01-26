@@ -30,6 +30,7 @@ namespace flopoco {
         ///
         static void checkTargetCompatibility( Target *target );
 
+/*
         ///
         /// \brief setGeneric Sets the specific generic
         /// \param name Name of the generic to set
@@ -42,7 +43,7 @@ namespace flopoco {
         /// \param value Value of the generic
         ///
         void setGeneric( string name, const long value );
-
+*/
         ///
         /// \brief getGenerics returns all set generics
         /// \return Map of all generics

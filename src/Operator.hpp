@@ -606,6 +606,19 @@ public:
 
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
 
+    /**
+     * setGeneric Sets the specific generic
+     * @param name Name of the generic to set
+     * @param value Value of the generic
+     */
+    void setGeneric( std::string name, string value );
+
+    /**
+     * setGeneric Sets the specific generic
+     * @param name Name of the generic to set
+     * @param value Value of the generic
+     */
+    void setGeneric( string name, const long value );
 
 
 	/**
@@ -1750,6 +1763,8 @@ private:
 
     map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_. Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
     map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
+    map<std::string, std::string> generics_;               /**< A map for generics, this is required to include library elements like primitives */
+
 };
 
 

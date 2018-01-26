@@ -1096,7 +1096,14 @@ namespace flopoco{
         tmpInPortMap_[componentPortName] = actualSignalName;
     }
 
+    void Operator::setGeneric( string name, string value ) {
+        REPORT(0, "setGeneric: "<< getName() << " : " << name << " => "  << value);
+        generics_.insert( std::make_pair( name, value ) );
+    }
 
+    void Operator::setGeneric( string name, const long value ) {
+        setGeneric( name, std::to_string( value ) );
+    }
 
     void Operator::inPortMapCst(Operator* op, string componentPortName, string constantValue){
 		Signal *s;
@@ -1205,6 +1212,22 @@ namespace flopoco{
 		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
+
+        // INSERTED PART FOR PRIMITIVES
+        cout << "op->generics_.empty()=" << op->generics_.empty() << endl;
+        if( !op->generics_.empty() ) {
+            o << tab << tab << "generic map ( ";
+            std::map<string, string>::iterator it = op->generics_.begin();
+            o << it->first << " => " << it->second;
+
+            for( ++it; it != op->generics_.end(); ++it  ) {
+                o << "," << endl << tab << tab << it->first << " => " << it->second;
+            }
+
+            o << ")" << endl;
+        }
+        // INSERTED PART END
+
 		o << tab << tab << "port map ( ";
 
 		// build vhdl and erase portMap_
@@ -2269,10 +2292,6 @@ namespace flopoco{
 
 		//copy the remaining code to the vhdl code buffer
 		newStr << oldStr.substr(currentPos, oldStr.size()-currentPos);
-
-//        cout << "------------------------------------" << endl;
-        cout << newStr.str();
-//        cout << "------------------------------------" << endl;
 
 		vhdl.setSecondLevelCode(newStr.str());
 
