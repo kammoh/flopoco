@@ -78,7 +78,7 @@ namespace flopoco {
                     luti->setGeneric( "init", init.get_hex() );
                     stringstream lutname;
                     lutname << "bit_" << i;
-                    vhdl << luti->primitiveInstance( lutname.str(), this );
+                    vhdl << luti->primitiveInstance( lutname.str() );
                 }
             } else if( n == 6 ) {
                 lut_init init( lutc );
@@ -100,7 +100,7 @@ namespace flopoco {
                     luti->setGeneric( "init", init.get_hex() );
                     stringstream lutname;
                     lutname << "bit_" << i;
-                    vhdl << luti->primitiveInstance( lutname.str(), this );
+                    vhdl << luti->primitiveInstance( lutname.str() );
                 }
             }
         }

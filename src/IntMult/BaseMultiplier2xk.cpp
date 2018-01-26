@@ -106,7 +106,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
         outPortMap(cur_lut,"o5","cc_di" + of(i));
         outPortMap(cur_lut,"o6","cc_s" + of(i));
 
-        vhdl << cur_lut->primitiveInstance( join("lut",i), this ) << endl;
+        vhdl << cur_lut->primitiveInstance( join("lut",i)) << endl;
     }
 
     //create the carry chain:
@@ -126,7 +126,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
 
         stringstream cc_name;
         cc_name << "cc_" << i;
-        vhdl << cur_cc->primitiveInstance( cc_name.str(), this );
+        vhdl << cur_cc->primitiveInstance( cc_name.str());
     }
     vhdl << endl;
 

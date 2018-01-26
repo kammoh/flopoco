@@ -68,7 +68,11 @@ namespace flopoco {
         ///
         /// Code is adopted from Operator::instance, inserted parts are marked.
         /// Do not use Operator::instance as it will lose generics and doesn't set needed libraries.
-        std::string primitiveInstance(string instanceName , OperatorPtr parent = nullptr);
+        /* The new interface, similar to instance()*/
+        std::string primitiveInstance(string instanceName);
+
+        /* the old, deprecated interface */
+//        std::string primitiveInstance(string instanceName , OperatorPtr parent = nullptr);
 
         // Operator interface
       public:
@@ -77,13 +81,13 @@ namespace flopoco {
         /// \param o
         /// \param name
         ///
-        virtual void outputVHDL( ostream &o, string name );
+//        virtual void outputVHDL( ostream &o, string name );
         ///
         /// \brief outputVHDLComponent emptied version of Operator::outputVHDLComponent as it is not needed for primitives.
         /// \param o
         /// \param name
         ///
-        virtual void outputVHDLComponent( ostream &o, string name );
+//        virtual void outputVHDLComponent( ostream &o, string name );
 
     };
 }//namespace

@@ -16,33 +16,26 @@ namespace flopoco {
     class Xilinx_LUT6_base : public Xilinx_Primitive {
       public:
 		Xilinx_LUT6_base(Operator* parentOp, Target *target );
-        ~Xilinx_LUT6_base() {};
-
-        void base_init();
     };
 
     class Xilinx_LUT6 : public Xilinx_LUT6_base {
       public:
 		Xilinx_LUT6(Operator* parentOp, Target *target );
-        ~Xilinx_LUT6() {};
     };
 
     class Xilinx_LUT6_2 : public Xilinx_LUT6_base {
       public:
 		Xilinx_LUT6_2(Operator* parentOp, Target *target );
-        ~Xilinx_LUT6_2() {};
     };
 
     class Xilinx_LUT6_L : public Xilinx_LUT6_base {
       public:
 		Xilinx_LUT6_L(Operator* parentOp, Target *target );
-        ~Xilinx_LUT6_L() {};
     };
 
     class Xilinx_LUT6_D : public Xilinx_LUT6_base {
       public:
 		Xilinx_LUT6_D(Operator* parentOp, Target *target );
-        ~Xilinx_LUT6_D() {};
     };
 }//namespace
 

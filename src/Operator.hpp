@@ -305,6 +305,18 @@ public:
 	 */
 	void setCopyrightString(std::string authorsYears);
 
+    /**
+     * Adds user-defined header information (used, e.g., for primitives that require extra libraries)
+     * May be called multiple times
+     * @param headerString the header information
+     */
+    void addAdditionalHeaderInformation(std::string headerString);
+
+    /**
+     * Returns the user-defined header information defined so far
+     * @return the user-defined header information
+     */
+    std::string getAdditionalHeaderInformation();
 
 	/**
 	 * Use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
@@ -877,21 +889,26 @@ public:
 
 
 
-	/**
-	 * Returns a pointer to the signal having the name as @param s.
-	 * Throws an exception if the signal is not yet declared.
-	 * @param s then name of the signal we want to return
-	 * @return the pointer to the signal having name s
-	 */
-	Signal* getSignalByName(string s);
-
+    /**
+     * Returns a pointer to the signal having the name as @param s.
+     * Throws an exception if the signal is not yet declared.
+     * @param name the name of the signal we want to return
+     * @return the pointer to the signal having name s
+     */
+    Signal* getSignalByName(string name);
 
 	/**
 	 * Return the list of signals declared in this operator
 	 */
 	vector<Signal*> getSignalList();
 
-	bool isSignalDeclared(string name);
+    /**
+     * Checks if a signal is already declared
+     * Possible range specifier are ignored
+     * @param name the name of the signal we want to check
+     * @return true, if signal exists, false otherwise
+     */
+    bool isSignalDeclared(string name);
 
 
 	/**
@@ -974,6 +991,12 @@ public:
 	 */
 	void stdLibs(std::ostream& o);
 
+
+    /**
+     * Output user defined header information, using additionalHeaderString_
+     * @param o the stream where the header is going to be outputted
+     */
+    void additionalHeader(std::ostream& o);
 
 	/** DEPRECATED
 	 * Output the VHDL entity of the current operator.
@@ -1705,6 +1728,7 @@ private:
 	string                 commentedName_;                  /**< Usually is the default name of the architecture.  */
 	string                 headerComment_;                  /**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;                /**< Authors and years.  */
+    string                 additionalHeaderString_;         /**< User-defined header information (used, e.g., for primitives that require extra libraries).  */
 	// TODO move the two following to outputVHDL
 
 	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
