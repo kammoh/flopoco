@@ -15,39 +15,33 @@
 using namespace std;
 namespace flopoco {
 	Xilinx_LUT6_base::Xilinx_LUT6_base(Operator *parentOp, Target *target ) : Xilinx_Primitive(parentOp, target ) {
+        srcFileName = "Xilinx_LUT6";
+
+        for( int i = 0; i < 6; i++ )
+            addInput( join( "i", i ), 1 );
     }
 
 	Xilinx_LUT6::Xilinx_LUT6(Operator *parentOp, Target *target ) : Xilinx_LUT6_base( parentOp, target ) {
         setName( "LUT6" );
-        base_init();
         addOutput( "o", 1 );
+        vhdl << "o <= i0" << endl;
     }
 
 	Xilinx_LUT6_2::Xilinx_LUT6_2(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
         setName( "LUT6_2" );
-        base_init();
         addOutput( "o5", 1 );
         addOutput( "o6", 1 );
     }
 
 	Xilinx_LUT6_L::Xilinx_LUT6_L(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
         setName( "LUT6_L" );
-        base_init();
         addOutput( "lo", 1 );
     }
 
 	Xilinx_LUT6_D::Xilinx_LUT6_D(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
         setName( "LUT6_D" );
-        base_init();
         addOutput( "o", 1 );
         addOutput( "lo", 1 );
     }
 
-    void Xilinx_LUT6_base::base_init() {
-        // definition of the source file name, used for info and error reporting using REPORT
-        srcFileName = "Xilinx_LUT6";
-
-        for( int i = 0; i < 6; i++ )
-            addInput( join( "i", i ), 1 );
-    }
 }//namespace

@@ -60,12 +60,73 @@ To discuss.
   So the actual interface to provide to Martin is not yet fixed.
 
 ** TODOs for Florent:
+** Options for pipeline delays versus functional delays
+First, I got rid completely of the integer cycle information stored on the edges,
+(this removes all the "0" on the edges of the dep graph in flopoco.dot) 
+but  predecessors and successors are still lists of pairs: one TODO cleanup here.
+(also, the word "functional" appears a lot of times in Operator.cpp: check each of them)
+*** Forcing pipeline registers
+use cases: 
+1- Wrapper (not important as it could be a functional register)
+   warning, we want to be able to Wrap a combinatorial operator.
+2- exploiting internal registers of DSP and BlockRAM at high-frequency
+3- people who would want to manually build/control their pipeline, 
+   but still want it to be correct by construction 
+Cleanest solution in my current opinion:
+ - add an attribute to Signal, in parallel to criticalPathContribution: int forcedPipelineRegister
+ - set it with an inelegant method (Signal::forcePipelineRegister(int cycles=1)
+   This method should be seldom used anyway
+ - consume it within schedule() in parallel to criticalPathContribution: very easy.
+ - all the rest should work untouched.
+For use case 2, we also have the option to 
+   add a criticalPathContribution that is n times the cycle latency,
+   have schedule() advance the cycle n times in this case (there is a #if for that)
+However I'm afraid it doesn't work for intermediate frequency: 
+   in a DSP, either you pipeline using the 3 internal registers 
+      and you get a latency of d \approx 1/500Mhz,
+      or you do not pipeline at all and  the latency is 3d.
+      You can probably get a latency of 2d 
+      but there is no intermediate option with a latency of 2.5d.
+So anyway you need some DSP-specific pipeline management, 
+   which could as well use forcePipelineRegister()
+*** Functional registers
+Use cases:
+- Z^-1  in FIR, IIR
+- LongAcc and other accumulators
+- state register in a state machine
+What we want:
+- the output of a functional register has its schedule set to (0,0) just as the inputs of a root Operator
+- pipelining (insertion of pipeline registers) is disabled on a loop 
+For instance, 
+  in a FIR we may still pipeline the bit heap,  
+  in an IIR or state machine, we should no longer.
+I would not attempt to detect loops, but provide a method that disables pipelining 
+(currently possible using setCombinatorial but it is Operator-wide)
+this is to discuss
+
+Options:
+- just provide a set of specific Operators that are registers (with reset or not, etc)
+  This is not as trivial as it seems, because instance() and/or schedule() must detect them
+- (preferred) add one attribute bool isFunctionalRegisterOutput to Signal,
+  and only access it through 
+  Operator::functionalRegister(string registerOutputName, string registerInputName)
+   (currently addRegisteredSignalCopy but it is not good)
+  This attribute is
+    - read by schedule() to reset the schedule (and also avoid it going into an infinite loop)
+    - read at code generation time to make sure registerInputName is registered
+Thing to study: how to manage reset (it should be a Signal like the others I think)
+
 ** Plan for bringup
 *** Shifter for basic pipeline: DONE
 *** IntAdder for explicit call to schedule(): DONE
 *** FPAdd for simple subcomponents : DONE
 *** FPDiv for low complexity shared subcomponents DONE
-*** FixRealKCM for simple bit heap DONE
+*** FixRealKCM for simple bit heap DONE, one bug remaining
+a few test fail, e.g. 
+./flopoco FixRealKCM constant="log(2)" lsbIn=0 lsbOut=1 msbIn=11 signedInput=0 targetUlpError=1.0 TestBench n=1000
+./flopoco FixRealKCM constant="log(2)" lsbIn=0 lsbOut=1 msbIn=7 signedInput=1 targetUlpError=1.0 TestBench n=1000
+This seems worse than a last-bit error as I first thought.
+*** FixSOPC DONE
 *** FixFIR and FixIIR for large bit heaps + functional delays
 *** FixFunctionByTable (check that Table does the delay properly in the blockram case)
 *** ALAP rescheduling for constant signals

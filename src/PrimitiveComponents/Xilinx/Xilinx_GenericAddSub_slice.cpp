@@ -115,7 +115,7 @@ namespace flopoco {
             inPortMapCst( initial_lut, "i5", "'1'" );
             outPortMap( initial_lut, "o5", "lut_o5" + of( i ));
             outPortMap( initial_lut, "o6", "lut_o6" + of( i ));
-            vhdl << initial_lut->primitiveInstance( lut_name.str(), this );
+            vhdl << initial_lut->primitiveInstance( lut_name.str() );
         }
 
 		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
@@ -125,7 +125,7 @@ namespace flopoco {
         inPortMap( further_cc, "ci", "carry_in" );
         inPortMap( further_cc, "di", "cc_di" );
         inPortMap( further_cc, "s", "cc_s" );
-        vhdl << further_cc->primitiveInstance( "slice_cc", this );
+        vhdl << further_cc->primitiveInstance( "slice_cc" );
         vhdl << "carry_out <= cc_co" << of( wIn - 1 ) << ";" << std::endl;
         vhdl << "sum_out <= cc_o" << range( wIn - 1, 0 ) << ";" << std::endl;
     }
@@ -183,7 +183,7 @@ namespace flopoco {
             inPortMapCst( initial_lut, "i5", "'1'" );
             outPortMap( initial_lut, "o5", "lut_o5" + of( i ));
             outPortMap( initial_lut, "o6", "lut_o6" + of( i ));
-            vhdl << initial_lut->primitiveInstance( lut_name.str(), this );
+            vhdl << initial_lut->primitiveInstance( lut_name.str() );
         }
 
 		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
@@ -193,7 +193,7 @@ namespace flopoco {
         inPortMap( further_cc, "ci", "carry_in" );
         inPortMap( further_cc, "di", "cc_di" );
         inPortMap( further_cc, "s", "cc_s" );
-        vhdl << further_cc->primitiveInstance( "slice_cc", this );
+        vhdl << further_cc->primitiveInstance( "slice_cc" );
         vhdl << "carry_out <= cc_co" << of( wIn - 1 ) << ";" << std::endl;
         vhdl << "sum_out <= cc_o" << range( wIn - 1, 0 ) << ";" << std::endl;
     }
@@ -255,7 +255,7 @@ namespace flopoco {
             inPortMapCst( cur_lut, "i5", "'1'" );
             outPortMap( cur_lut, "o5", "bb_t" + of( i ));
             outPortMap( cur_lut, "o6", "lut_o6" + of( i ));
-            vhdl << cur_lut->primitiveInstance( lut_name.str(), this );
+            vhdl << cur_lut->primitiveInstance( lut_name.str() );
         }
 
 		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
@@ -265,7 +265,7 @@ namespace flopoco {
         inPortMap( further_cc, "ci", "carry_in" );
         inPortMap( further_cc, "di", "cc_di" );
         inPortMap( further_cc, "s", "cc_s" );
-        vhdl << further_cc->primitiveInstance( "slice_cc", this );
+        vhdl << further_cc->primitiveInstance( "slice_cc" );
         vhdl << "carry_out <= cc_co" << of( wIn - 1 ) << ";" << std::endl;
         vhdl << "sum_out <= cc_o" << range( wIn - 1, 0 ) << ";" << std::endl;
         vhdl << "bbus_out <= bb_t;" << std::endl;

@@ -33,9 +33,23 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
     addOutput("R0", wOut);
     addOutput("R1", wOut);
 
+/*
+    vector<Signal*> sl = getSignalList();
+    cout << "declared signals in signal list:" << endl;
+    for(int i=0; i < sl.size(); i++)
+    {
+        cout << "  " << sl[i]->getName() << endl;
+    }
+
+    cout << "declared signals in signal map:" << endl;
+    for(auto s : getSignalMap())
+    {
+        cout << "  " << s.first << endl;
+    }
+*/
     int needed_cc = ( width / 4 ) + ( width % 4 > 0 ? 1 : 0 ); //no. of required carry chains
 
-//    cout << "no of required carry-chains for width=" << width << " is " << needed_cc << endl;
+    REPORT(DEBUG, "no of required carry-chains for width=" << width << " is " << needed_cc);
 
     declare( "cc_s", needed_cc * 4 );
     declare( "cc_di", needed_cc * 4 );
@@ -84,9 +98,10 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         outPortMap(cur_lut,"o5","R1" + of(i+1));
         outPortMap(cur_lut,"o6","cc_s" + of(i));
 
-//        vhdl << cur_lut->primitiveInstance( join("lut",i), this ) << endl;
-        vhdl << instance(cur_lut,join("lut",i)) << endl;
-        //        addToGlobalOpList(cur_lut);
+//        vhdl << instance(cur_lut,join("lut",i)) << endl;
+        vhdl << cur_lut->primitiveInstance(join("lut",i)) << endl;
+        //UserInterface::addToGlobalOpList(cur_lut);
+//        addSubComponent(cur_lut);
     }
 
     if(useLastColumn)
@@ -106,9 +121,10 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         inPortMapCst(cur_lut, "i4","'0'");
         inPortMapCst(cur_lut, "i5","'1'");
         outPortMap(cur_lut,"o5","open");
+//        outPortMap(cur_lut,"o5",declare("X"));
         outPortMap(cur_lut,"o6","cc_s" + of(width-1));
 
-        vhdl << cur_lut->primitiveInstance( join("lut",width-1), this ) << endl;
+        vhdl << cur_lut->primitiveInstance(join("lut",width-1)) << endl;
     }
     else
     {
@@ -131,7 +147,8 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 
         stringstream cc_name;
         cc_name << "cc_" << i;
-        vhdl << cur_cc->primitiveInstance( cc_name.str(), this );
+//        vhdl << instance(cur_cc,cc_name.str()) << endl;
+        vhdl << cur_cc->primitiveInstance(cc_name.str()) << endl;
     }
 
     vhdl << endl;

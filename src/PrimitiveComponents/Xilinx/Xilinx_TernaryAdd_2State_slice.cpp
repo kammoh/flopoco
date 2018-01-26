@@ -62,7 +62,7 @@ namespace flopoco {
             inPortMapCst( lut_bit_i, "i5", "'1'" );
             outPortMap( lut_bit_i, "o5", "bbus_out" + of( i ));
             outPortMap( lut_bit_i, "o6", "lut_o6" + of( i ));
-            vhdl << lut_bit_i->primitiveInstance( join( "lut_bit_", i ), this );
+            vhdl << lut_bit_i->primitiveInstance( join( "lut_bit_", i ) );
         }
 
         if( is_initial ) {
@@ -73,7 +73,7 @@ namespace flopoco {
             inPortMapCst( init_cc, "ci", "'0'" );
             inPortMap( init_cc, "di", "cc_di" );
             inPortMap( init_cc, "s", "cc_s" );
-            vhdl << init_cc->primitiveInstance( "init_cc", this );
+            vhdl << init_cc->primitiveInstance( "init_cc" );
         } else {
 			Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
             outPortMap( further_cc, "co", "cc_co");
@@ -82,7 +82,7 @@ namespace flopoco {
             inPortMap( further_cc, "ci", "carry_in" );
             inPortMap( further_cc, "di", "cc_di" );
             inPortMap( further_cc, "s", "cc_s" );
-            vhdl << further_cc->primitiveInstance( "further_cc", this );
+            vhdl << further_cc->primitiveInstance( "further_cc" );
         }
 
         vhdl << tab << "carry_out	<= cc_co" << of( wIn - 1 ) << ";" << std::endl;

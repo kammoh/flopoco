@@ -20,15 +20,13 @@ namespace flopoco {
     Primitive::~Primitive() {}
 
     void Primitive::addPrimitiveLibrary(OperatorPtr op, Target *target ){
-        const std::string copyr = op->getCopyrightString();
-        // Does bad things to copyright string...
         std::stringstream o;
-        o << std::endl << "--------------------------------------------------------------------------------" << std::endl;
+        o << "--------------------------------------------------------------------------------" << std::endl;
         if( target->getVendor() == "Xilinx" ){
             if( target->getID() == "Virtex6" ){
                 o << "library UNISIM;" << std::endl;
-                o << "use UNISIM.Vcomponents.all;";
-            }else {
+                o << "use UNISIM.Vcomponents.all;" << std::endl;
+            } else {
                 throw std::runtime_error("Target not supported for primitives");
             }
         }else if(target->getVendor() == "Altera"){
@@ -57,8 +55,9 @@ namespace flopoco {
         }else{
             throw std::runtime_error("Target not supported for primitives");
         }
-        if( copyr.find( o.str() )==std::string::npos  ){
-            op->setCopyrightString( copyr + o.str() );
+        o << "--------------------------------------------------------------------------------" << std::endl;
+        if( op->getAdditionalHeaderInformation().find( o.str() )==std::string::npos  ){
+            op->addAdditionalHeaderInformation(o.str());
         }
     }
 
@@ -80,12 +79,23 @@ namespace flopoco {
         return generics_;
     }
 
+/*
     void Primitive::outputVHDL( ostream &o, string name ) {
     }
-
     void Primitive::outputVHDLComponent( ostream &o, string name ) {
     }
+*/
 
+    /* The new interface, identical to instance()*/
+    string Primitive::primitiveInstance(string instanceName)
+    {
+        addPrimitiveLibrary(getParentOp(),getParentOp()->getTarget());
+        return getParentOp()->instance(this, instanceName);
+    }
+
+#if 0 //!!
+    /* the old, deprecated interface */
+/*
     string Primitive::primitiveInstance( string instanceName , OperatorPtr parent) {
         Primitive *op = this;
 
@@ -94,8 +104,8 @@ namespace flopoco {
             addPrimitiveLibrary(parent,parent->getTarget());
         // INSERTED PART END
 
+
         ostringstream o;
-#if 0 //!!
         o << tab << instanceName << ": " << op->getName();
 
         if ( op->isSequential() ) {
@@ -203,9 +213,9 @@ namespace flopoco {
         //
         // subComponents_.push_back(op);
 
-#endif //!!
         return o.str();
     }
+#endif //!!
 
     string UniKs::getAuthorsString( const int &authors ) {
         std::stringstream out;

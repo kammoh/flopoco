@@ -83,7 +83,7 @@ namespace flopoco{
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
-        uniqueName_                 = "undefined!";
+        isOperatorApplyScheduleDone_= false;
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
@@ -157,7 +157,7 @@ namespace flopoco{
 
 	void Operator::addInput(const std::string name, const int width, const bool isBus) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addInput, signal " << name << " seems to already exist");
 		}
@@ -185,7 +185,7 @@ namespace flopoco{
 
 	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addOutput, signal " << name<< " seems to already exist");
 		}
@@ -217,7 +217,7 @@ namespace flopoco{
 
 	void Operator::addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addFixInput, signal " << name<< " seems to already exist");
 		}
@@ -238,7 +238,7 @@ namespace flopoco{
 
 	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addFixOutput, signal " << name<< " seems to already exist");
 		}
@@ -262,7 +262,7 @@ namespace flopoco{
 
 	void Operator::addFPInput(const std::string name, const int wE, const int wF) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addFPInput, signal " << name<< " seems to already exist");
 		}
@@ -280,7 +280,7 @@ namespace flopoco{
 
 	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addFPOutput, signal " << name<< " seems to already exist");
 		}
@@ -303,7 +303,7 @@ namespace flopoco{
 
 	void Operator::addIEEEInput(const std::string name, const int wE, const int wF) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addIEEEInput, signal " << name<< " seems to already exist");
 		}
@@ -322,7 +322,7 @@ namespace flopoco{
 
 	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
 		//search if the signal has already been declared
-		if (signalMap_.find(name) != signalMap_.end()) {
+        if (isSignalDeclared(name)) {
 			//if yes, signal the error
 			THROWERROR("In addIEEEOutput, signal " << name<< " seems to already exist");
 		}
@@ -421,35 +421,37 @@ namespace flopoco{
 
 
 
-	Signal* Operator::getSignalByName(string name) {
-
+    Signal* Operator::getSignalByName(string name)
+    {
         //in case of a bit of a vector, get rid of the range (...)
         if( name.find("(")!=string::npos ){
             name = name.substr(0,name.find("("));
         }
 
         //search for the signal in the list of signals
-		if(signalMap_.find(name) == signalMap_.end()) {
+        if(!isSignalDeclared(name)) {
 			//signal not found, throw an error
             THROWERROR("In getSignalByName, signal " << name << " not declared (operator " << this << ").");
 		}
-		//signal found, return the reference to it
-		return signalMap_[name];
+
+        //signal found, return the reference to it
+        return signalMap_[name];
 	}
 
+    bool Operator::isSignalDeclared(string name)
+    {
+        //in case of a bit of a vector, get rid of the range (...)
+        if( name.find("(")!=string::npos ){
+            name = name.substr(0,name.find("("));
+        }
+
+        return (signalMap_.find(name) != signalMap_.end());
+    }
 
 
 	vector<Signal*> Operator::getSignalList(){
 		return signalList_;
-	};
-
-	bool Operator::isSignalDeclared(string name){
-		if(signalMap_.find(name) ==  signalMap_.end()){
-			return false;
-		}
-		return true;
-	}
-
+    }
 
 	void Operator::addHeaderComment(std::string comment){
 		headerComment_ += comment;
@@ -611,36 +613,49 @@ namespace flopoco{
 		copyrightString_ = authorsYears;
 	}
 
+    void Operator::addAdditionalHeaderInformation(std::string headerString){
+        additionalHeaderString_ += headerString;
+    }
+
+    std::string Operator::getAdditionalHeaderInformation()
+    {
+        return additionalHeaderString_;
+    }
+
 	void Operator::useStdLogicUnsigned() {
 		stdLibType_ = 0;
-	};
+    }
 
 	/**
 	 * Use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
 	 */
 	void Operator::useStdLogicSigned() {
 		stdLibType_ = -1;
-	};
+    }
 
 	void Operator::useNumericStd() {
 		stdLibType_ = 1;
-	};
+    }
 
 	void Operator::useNumericStd_Signed() {
 		stdLibType_ = 2;
-	};
+    }
 
 	void Operator::useNumericStd_Unsigned() {
 		stdLibType_ = 3;
-	};
+    }
 
 	int Operator::getStdLibType() {
 		return stdLibType_;
-	};
+    }
 
-	void Operator::licence(std::ostream& o){
-		licence(o, copyrightString_);
-	}
+    void Operator::licence(std::ostream& o){
+        licence(o, copyrightString_);
+    }
+
+    void Operator::additionalHeader(std::ostream& o){
+        o << additionalHeaderString_;
+    }
 
 
 	void Operator::licence(std::ostream& o, std::string authorsyears){
@@ -826,12 +841,19 @@ namespace flopoco{
         Signal* s;
 		bool incompleteDeclaration;
 		// check the signal doesn't already exist
-		if(signalMap_.find(name) !=  signalMap_.end()) {
+        if(isSignalDeclared(name)) {
 			THROWERROR("In declare(), signal " << name << " already exists" << endl);
 		}
 
-		// construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
-		s = new Signal(this, name, regType, width, isbus);
+        if(name != "open") //ignore keyword 'open', this occurs for port maps with open output ports
+        {
+            // construct the signal (lifeSpan and cycle are reset to 0 by the constructor)
+            s = new Signal(this, name, regType, width, isbus);
+        }
+        else
+        {
+            s = new Signal(this, name, Signal::constant, width, isbus); //consider 'open' as a constant (which has not to be declared)
+        }
 
 		if(width==-1)
 			incompleteDeclaration=true;
@@ -854,7 +876,7 @@ namespace flopoco{
 		Signal* s;
 
 		// check the signals doesn't already exist
-		if(signalMap_.find(name) !=  signalMap_.end()) {
+        if(isSignalDeclared(name)) {
 			THROWERROR("In declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
@@ -881,7 +903,7 @@ namespace flopoco{
 		Signal* s;
 
 		// check the signals doesn't already exist
-		if(signalMap_.find(name) !=  signalMap_.end()) {
+        if(isSignalDeclared(name)) {
 			THROWERROR("In declareFixPoint(), signal " << name << " already exists" << endl);
 		}
 
@@ -1025,6 +1047,16 @@ namespace flopoco{
 
 	
 	void Operator::outPortMap(Operator* op, string componentPortName, string actualSignalName){
+
+        //declare the signal only if not existing (existing signals may happen when port maps to different ranges are performed, hence we cannot treat this as an error)
+        if(!isSignalDeclared(actualSignalName))
+        {
+            declare(actualSignalName, -1); // -1 for incomplete declaration
+            REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
+        }
+
+/* should be removed soon:
+
         // check if the signal already exists, when we're supposed to create a new signal
 		if(signalMap_.find(actualSignalName) !=  signalMap_.end()) {
 			THROWERROR("In outPortMap(): signal " << actualSignalName << " already exists");
@@ -1036,16 +1068,23 @@ namespace flopoco{
 		//	and add it to the list of signals to be scheduled
 		declare(actualSignalName, -1); // -1 for incomplete declaration
 		REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
-
+*/
 		// add the mapping to the output mapping list of Op
         tmpOutPortMap_[componentPortName] = actualSignalName;
     }
 
 
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
-        REPORT(DEBUG, "InPortMap: " << componentPortName << " => "  << actualSignalName);
+        if(op != nullptr)
+        {
+            REPORT(DEBUG, "InPortMap: " << op->getName() << " : " << componentPortName << " => "  << actualSignalName);
+        }
+        else
+        {
+            REPORT(DEBUG, "InPortMap: (null) : " << componentPortName << " => "  << actualSignalName);
+        }
 
-		//check if the signal already exists
+        //check if the signal already exists
 		try{
             getSignalByName(actualSignalName);
 		}
@@ -1065,7 +1104,7 @@ namespace flopoco{
 		double constValue;
 		sollya_obj_t node;
 
-        REPORT(DEBUG, "InPortMapCst: " << componentPortName << " => "  << constantValue);
+        REPORT(DEBUG, "InPortMapCst: "<< op->getName() << " : " << componentPortName << " => "  << constantValue);
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
@@ -1275,7 +1314,7 @@ namespace flopoco{
 
 		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
 
-		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
+        schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
 
 		//parse the parameters
 		parametersVector.push_back(opName);
@@ -1290,20 +1329,21 @@ namespace flopoco{
 			}
 		}
 
-		//parse the input port mappings
-		parsePortMappings(instance, inPortMaps, 0);
-		//parse the constant input port mappings, if there are any
+        //parse the input port mappings
+        parsePortMappings(instance, inPortMaps, 0);
+        //parse the constant input port mappings, if there are any
 		parsePortMappings(instance, inPortMapsCst, 1);
 		//parse the input port mappings
 		parsePortMappings(instance, outPortMaps, 2);
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
-		for (auto i: parametersVector){
-			REPORT(DEBUG, i);
-		}
-		//create the operator
-		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
 
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
+        REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
+        for (auto i: parametersVector){
+            REPORT(DEBUG, i);
+        }
+        //create the operator
+        instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
+
+        REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 
 		//create the instance
 		vhdl << this->instance(instance, instanceName, false);
@@ -1340,13 +1380,13 @@ namespace flopoco{
 				string portName = mapping.substr(0, sepPos);
 				string signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
 				REPORT(4, "port map " << portName << "=>" << signalName << " of type " << portTypes);
-				if(portTypes == 0)
+                if(portTypes == 0)
 					inPortMap(instance, portName, signalName);
 				else if(portTypes == 1)
 					inPortMapCst(instance, portName, signalName);
 				else
 					outPortMap(instance, portName, signalName);
-			}
+            }
 		}
 	}
 
@@ -1825,7 +1865,8 @@ namespace flopoco{
 		if (! vhdl.isEmpty() ){
 			licence(o);
 			pipelineInfo(o);
-			stdLibs(o);
+            additionalHeader(o);
+            stdLibs(o);
 			outputVHDLEntity(o);
 			newArchitecture(o,name);
 			o << buildVHDLComponentDeclarations();
@@ -1935,7 +1976,7 @@ namespace flopoco{
 
 					tmpCurrentPos = workStr.find("?", auxPosition2);
 					while(tmpCurrentPos != string::npos)	{
-						bool singleQuoteSep = false, doubleQuoteSep = false;
+                        bool singleQuoteSep = false, doubleQuoteSep = false, open = false;
 						bool rhsIsSignal=false;
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
@@ -1950,14 +1991,18 @@ namespace flopoco{
 						tmpNextPos = workStr.find("$", tmpCurrentPos);
 
 						//check for constant as rhs name
-						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)	{
-							tmpNextPos = workStr.find("\'", tmpCurrentPos);
-							singleQuoteSep = true;
-						}
-						else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)  {
+                        if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)	{
+                            tmpNextPos = workStr.find("\'", tmpCurrentPos);
+                            singleQuoteSep = true;
+                        }
+                        else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)  {
 							tmpNextPos = workStr.find("\"", tmpCurrentPos);
 							doubleQuoteSep = true;
 						}
+                        else if(workStr.find("open", tmpCurrentPos) < tmpNextPos)	{
+                            tmpNextPos = workStr.find("open", tmpCurrentPos)+4;
+                            open = true;
+                        }
 
 						REPORT(FULL, "doApplySchedule/instance skipping: " << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos));
 						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
@@ -1967,14 +2012,18 @@ namespace flopoco{
 						if(singleQuoteSep) {
 							//a 1-bit constant
 							tmpCurrentPos = tmpNextPos+1;
-							tmpNextPos = workStr.find("\'", tmpCurrentPos);
+                            tmpNextPos = workStr.find("\'", tmpCurrentPos);
 						}
-						else if(doubleQuoteSep) {
-							//a multiple bit constant
-							tmpCurrentPos = tmpNextPos+1;
-							tmpNextPos = workStr.find("\"", tmpCurrentPos);
-						}
-						else {
+                        else if(doubleQuoteSep) {
+                            //a multiple bit constant
+                            tmpCurrentPos = tmpNextPos+1;
+                            tmpNextPos = workStr.find("\"", tmpCurrentPos);
+                        }
+                        else if(open) {
+                            //a open output
+                            tmpCurrentPos = tmpNextPos+1;
+                        }
+                        else {
 							//a regular signal name
 							tmpCurrentPos = tmpNextPos+2;
 							tmpNextPos = workStr.find("$", tmpCurrentPos);
@@ -1987,8 +2036,10 @@ namespace flopoco{
 						//						lhsSignal = NULL;
 
 						//copy rhsName to the new vhdl buffer
-						newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "")
-									 << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+                        if(!open)
+                            newStr << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "") << rhsName << (singleQuoteSep ? "\'" : doubleQuoteSep ? "\"" : "");
+//                        else
+//                            newStr << "open";
 
 						try {
 							//	delay it if necessary, i.e. if it is a shared instance with a dependency to a later signal
@@ -2019,10 +2070,10 @@ namespace flopoco{
 
 						//copy the rest of the code to the new vhdl buffer
 						if(tmpCurrentPos != string::npos)
-							newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep ? 1 : 2),
-									tmpCurrentPos-tmpNextPos-(singleQuoteSep||doubleQuoteSep ? 1 : 2));
+                            newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep||open ? 1 : 2),
+                                    tmpCurrentPos-tmpNextPos-(singleQuoteSep||doubleQuoteSep||open ? 1 : 2));
 						else
-							newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep ? 1 : 2), workStr.size());
+                            newStr << workStr.substr(tmpNextPos+(singleQuoteSep||doubleQuoteSep||open ? 1 : 2), workStr.size());
 					}
 				}
 
@@ -2218,6 +2269,10 @@ namespace flopoco{
 
 		//copy the remaining code to the vhdl code buffer
 		newStr << oldStr.substr(currentPos, oldStr.size()-currentPos);
+
+//        cout << "------------------------------------" << endl;
+        cout << newStr.str();
+//        cout << "------------------------------------" << endl;
 
 		vhdl.setSecondLevelCode(newStr.str());
 

@@ -116,7 +116,7 @@ namespace flopoco {
             outPortMap( cur_lut, "o5", "cc_di" + of( i ));
             stringstream lut_name;
             lut_name << "lut_" << i;
-            vhdl << cur_lut->primitiveInstance( lut_name.str(), this ) << endl;
+            vhdl << cur_lut->primitiveInstance( lut_name.str() ) << endl;
         }
 
         if( ws_remain ) {
@@ -132,7 +132,7 @@ namespace flopoco {
             outPortMap( cur_lut, "o5", "cc_di" + of( needed_luts ));
             stringstream lut_name;
             lut_name << "hlut";
-            vhdl << cur_lut->primitiveInstance( lut_name.str(), this ) << endl;
+            vhdl << cur_lut->primitiveInstance( lut_name.str() ) << endl;
         }
 
         for( int i = 0; i < needed_cc; i++ ) {
@@ -150,7 +150,7 @@ namespace flopoco {
             outPortMap( cur_cc, "co", "cc_co" + range( i * 4 + 3, i * 4 ));
             stringstream cc_name;
             cc_name << "cc_" << i;
-            vhdl << cur_cc->primitiveInstance( cc_name.str(), this );
+            vhdl << cur_cc->primitiveInstance( cc_name.str() );
         }
 
         vhdl << tab << "o <= cc_co" << of( needed_luts + ( ws_remain ? 1 : 0 ) - 1 ) << ";" << std::endl;
