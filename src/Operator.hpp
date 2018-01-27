@@ -36,6 +36,8 @@ namespace flopoco {
 
 #include "UserInterface.hpp"
 
+
+
 namespace flopoco {
 	// global const variables
 	static const map<string, double> emptyDelayMap;
@@ -1697,7 +1699,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////Attributes
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
-
+	// TODO Most of these should be protected
 	vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;                 /**< The list of I/O signals of the operator */
@@ -1716,7 +1718,7 @@ protected:
 	string              uniqueName_;                        /**< By default, a name derived from the operator class and the parameters */
 	string 				      architectureName_;                  /**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_;                   /**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
-
+	
 	int                  myuid;                             /**< Unique id>*/
 	int                  cost;                              /**< The cost of the operator depending on different metrics */
 
@@ -1728,6 +1730,8 @@ private:
 	bool                   isSequential_;                   /**< True if the operator needs a clock signal*/
 	int                    pipelineDepth_;                  /**< The pipeline depth of the operator. 0 for combinatorial circuits */
 	map<string, Signal*>   signalMap_;                      /**< A dictionary of signals, for recovering a signal based on it's name */
+	map<string, OperatorPtr> instanceOp_ ;                  /**< A map to get instance info   */
+	map<string, vector<string>> instanceActualIO_ ;         /**< A map to get instance info. This list is in the same order as the ioList of the subcomponent   */
 	map<string, pair<string, string>> constants_;           /**< The list of constants of the operator: name, <type, value> */
 	map<string, string>    attributes_;                     /**< The list of attribute declarations (name, type) */
 	map<pair<string,string>, string >  attributesValues_;   /**< attribute values <attribute name, object (component, signal, etc)> ,  value> */
@@ -1739,9 +1743,9 @@ private:
 	string                 commentedName_;                  /**< Usually is the default name of the architecture.  */
 	string                 headerComment_;                  /**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;                /**< Authors and years.  */
-    string                 additionalHeaderString_;         /**< User-defined header information (used, e.g., for primitives that require extra libraries).  */
+	string                 additionalHeaderString_;         /**< User-defined header information (used, e.g., for primitives that require extra libraries).  */
 	// TODO move the two following to outputVHDL
-
+	// TODO recirculation and clock enable are two description of the same behaviour. 
 	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
 	int		                 hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */

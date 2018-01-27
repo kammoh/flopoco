@@ -253,6 +253,11 @@ THIS INCLUDES WRITING ITS AUTOTEST
 ** FPPipeline
 ** lut_rng
 * Cleaning up
+** replace target->isPipelined() (and getTarget->isPipelined()) with isSequential()
+Rationale: the two are redundant. isSequential is less prone to change during the life of an Operator... 
+isSequential is properly initialized out of isPipelined in the default Operator constructor.
+DONE more or less in Operator
+** Check that ?? and $$ and "port map" in comments don't ruin the pipeline framework
 ** get rid of old BitHeap (and rename the new one)
 ** get rid of rst signal
 Observation: no operator uses rst, except FixFIR and LargeAcc. 
@@ -388,7 +393,7 @@ ConstMult:
 
 General
 
-* If we could start pipeline from scratch
+* If we could start pipeline from scratch MOSTLY DONE
 If we were to redo the pipeline framework from scratch, here is the proper way to do it.
 
 The current situation has a history: we first added cycle management, then, as a refinement, critical-path based subcycle timing.

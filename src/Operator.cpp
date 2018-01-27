@@ -484,7 +484,7 @@ namespace flopoco{
 	void Operator::setNameWithFreqAndUID(std::string operatorName){
 		std::ostringstream o;
 		o <<  operatorName <<  "_" ;
-		if(target_->isPipelined())
+		if(isSequential())
 			o << "F"<<target_->frequencyMHz() ;
 		else
 			o << "comb";
@@ -1241,12 +1241,14 @@ namespace flopoco{
 			op->applySchedule();
 		}
 #else // There is already a call to schedule() in newInstance, so the unique case is covered properly there
+		// actually calling schedule() here for unique instances leads to bugs, as the scheduler manages to follow half-connected signals
 		if(op->isShared() && !op->isOperatorScheduled() ) {
 			op->schedule();
 			op->applySchedule();
 		}
 #endif
-		
+
+			
 		// Now begin VHDL output
 		o << tab << instanceName << ": " << op->getName();
 		o << endl;
@@ -1284,32 +1286,32 @@ namespace flopoco{
 		string rhsString;
 		vector<Signal*> inputActualList;
 		
-		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++)
-			{
-				string actualName = it->second;
-				Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
-				string formalName = it->first; // ... with actual in this and formal in op
-				//			Signal* formal=op->getSignalByName(formalName);
-				if((it != tmpInPortMap_.begin()) || op->isSequential())
-					o << "," << endl <<  tab << tab << "           ";
-
-				// The following code assumes that the IO is declared as standard_logic_vector
-				// If the actual parameter is a signed or unsigned, we want to automatically convert it
-				if(actual->type() == Signal::constant){
+		for(it=tmpInPortMap_.begin(); it!=tmpInPortMap_.end(); it++){
+			string actualName = it->second;
+			Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
+			string formalName = it->first; // ... with actual in this and formal in op
+			//			Signal* formal=op->getSignalByName(formalName);
+			if((it != tmpInPortMap_.begin()) || op->isSequential())
+				o << "," << endl <<  tab << tab << "           ";
+			
+			// The following code assumes that the IO is declared as standard_logic_vector
+			// If the actual parameter is a signed or unsigned, we want to automatically convert it
+			if(actual->type() == Signal::constant){
 					rhsString = actualName.substr(0, actualName.find("_cst"));
-				}else if(actual->isFix()){
-					rhsString = std_logic_vector(actualName);
-				}else{
+			}else if(actual->isFix()){
+				rhsString = std_logic_vector(actualName);
+			}else{
 					rhsString = actualName;
-				}
-
-				o << formalName << " => " << rhsString;
-				if(op->isShared()){
-					// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
-					inputActualList.push_back(actual);
-				}
 			}
-		
+			
+			o << formalName << " => " << rhsString;
+			if(op->isShared()){
+				// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
+				inputActualList.push_back(actual);
+			}
+		}
+
+		map<string, string> cloneNamesMap; // used to remember cloning information when we build instanceActualIO
 		ostringstream outputSignalCopies;
 		//build the code for the outputs
 		for(it=tmpOutPortMap_.begin(); it!=tmpOutPortMap_.end(); it++)
@@ -1345,6 +1347,7 @@ namespace flopoco{
 							cloneOrActual = clone;
 						}
 						actual->setCriticalPathContribution(criticalPath);
+						cloneNamesMap[actual->getName()] = cloneOrActual->getName();
 
 						for (auto i: inputActualList) {
 							i->addSuccessor(cloneOrActual);
@@ -1368,13 +1371,32 @@ namespace flopoco{
 			}
 
 		o << ");" << endl;
-
+		
 		// add the possible copies of shared instance outputs
 		o << outputSignalCopies.str();
 		
 		//add the operator to the subcomponent list/map (and possibly to globalOpList)
 		addSubComponent(op);
 
+		// populate the instance maps.
+		// The following code is protected by the IO sanity checks above
+		vector<string> actualIOList;
+		for(auto i: *(op->getIOList())) {
+			for(auto j: tmpInPortMap_)	{
+				if(j.first == i->getName()) {
+					actualIOList.push_back(j.second);
+				}
+			}
+			for(auto j: tmpOutPortMap_) {
+				if(j.first == i->getName()) {
+					actualIOList.push_back(cloneNamesMap[j.second] );
+				}
+			}
+		} 
+		instanceOp_[instanceName] = op;
+		instanceActualIO_[instanceName] = actualIOList;
+		REPORT(0, "Finished building instanceActualIO_["<< instanceName<< "], it is of size " << instanceActualIO_[instanceName].size());
+		
 		//clear the port mappings
 		tmpInPortMap_.clear();
 		tmpOutPortMap_.clear();
@@ -2034,13 +2056,25 @@ namespace flopoco{
 			//	must remove the markings
 			//the rest of the code contains pairs of ??lhsName?? => $$rhsName$$ pairs
 			//	for which the helper signals must be removed and delays _dxxx must be added
-			auxPosition2 = workStr.find("port map"); // This is OK because this string can only be created by flopoco
+			auxPosition2 = workStr.find("port map"); // not checking capitalization is OK because this string can only be created by flopoco
 			if(auxPosition2 != string::npos)	{
-				string instanceName=lhsName;
-				OperatorPtr subop = getSubComponent(instanceName);
+				// we have the position of "port map"; we need the name of the instance name.
+				// It is the word before the ":"; all this looks terribly fragile and depends on the fact that this VHDL is created here in flopoco.
+				size_t i=nextPos;
+				while(oldStr[i]!=':')
+					i--;
+				size_t endInstanceName = i;
+				while(oldStr[i]!=' ')
+					i--;
+				size_t beginInstanceName = i+1;
+				string instanceName = oldStr.substr(beginInstanceName, endInstanceName-beginInstanceName);
+				REPORT(FULL,"doApplySchedule found instance name >>>>"<<instanceName<<"<<<<");
+				
+				string subOpName=lhsName;
+				OperatorPtr subop = getSubComponent(subOpName);
 				if(subop==nullptr)
-					THROWERROR("doApplySchedule(): " << instanceName << " does not seem to be a subcomponent of " << getName());
-				REPORT(DEBUG, "doApplySchedule: found instance: " << instanceName);//workStr.substr(auxPosition, auxPosition2));
+					THROWERROR("doApplySchedule(): " << subOpName << " does not seem to be a subcomponent of " << getName());
+				REPORT(DEBUG, "doApplySchedule: found instance: " << subOpName);//workStr.substr(auxPosition, auxPosition2));
 				//try to parse the names of the signals in the port mapping
 				if(workStr.find("?", auxPosition2) == string::npos) {
 					//empty port mapping
@@ -2056,7 +2090,7 @@ namespace flopoco{
 
 					tmpCurrentPos = workStr.find("?", auxPosition2);
 					while(tmpCurrentPos != string::npos)	{
-                        bool singleQuoteSep = false, doubleQuoteSep = false, open = false;
+						bool singleQuoteSep = false, doubleQuoteSep = false, open = false;
 						bool rhsIsSignal=false;
 						//extract a lhsName
 						tmpNextPos = workStr.find("?", tmpCurrentPos+2);
@@ -2121,22 +2155,31 @@ namespace flopoco{
 						//                        else
 						//                            newStr << "open";
 
-#if 0 // The following code registers the inputs instead of registering the outputs.
+						// All the inputs should be synchronized.
+						// We do this by comparing their cycle to the cycle of the first output of the instance. 
 						try {
 							//	delay it if necessary, i.e. if it is a shared instance with a dependency to a later signal
-							if(getTarget()->isPipelined()
+							if(isSequential()
 								 && rhsIsSignal // rhs is not a constant
 								 && subop->isShared() // otherwise the dependency graph takes care of all the pipelining
 								 && subop->getSignalByName(lhsName)->type() == Signal::in
 								 ) {// the lhs is a input of the subcomponent
 								// In this case, we have in the dep graph the dependencies (actualIn->actualOut): extract the first one
 								Signal* subopInput = getSignalByName(rhsName);
-								Signal* subopOutput = getSignalByName(rhsName)->successor(0);
-														
+								//look for the first output
+								int i=0; 
+								while((*subop->getIOList())[i]->type() != Signal::out)
+									i++;
+								vector<string> actualIO = instanceActualIO_[instanceName];
+								Signal* subopOutput = getSignalByName(actualIO[i]);
+								
+								// was								subopOutput = (*subopInput->successors())[0].first; // but bug if the actual input has other successors
 								REPORT(DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
 								int deltaCycle =subopOutput->getCycle() - subopInput->getCycle();
-								if( deltaCycle> 0)
+								if( deltaCycle> 0) {
 									newStr << "_d" << vhdlize(deltaCycle);
+									subopInput -> updateLifeSpan(deltaCycle);
+								}
 							}
 						}
 						catch(string &e) {
@@ -2145,7 +2188,6 @@ namespace flopoco{
 						catch(char const *e) {
 							REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 						}
-#endif
 
 						//prepare to parse a new pair
 						tmpCurrentPos = workStr.find("?", tmpNextPos+2);
@@ -2222,7 +2264,7 @@ namespace flopoco{
 				//output the rhs signal name
 				newStr << rhsName;
 
-				if(getTarget()->isPipelined() && !unknownLHSName  && !unknownRHSName) {
+				if(isSequential() && !unknownLHSName  && !unknownRHSName) {
 					int deltaCycle = lhsSignal->getCycle()-rhsSignal->getCycle();
 					if( deltaCycle> 0)
 						newStr << "_d" << vhdlize(deltaCycle);
@@ -2311,7 +2353,7 @@ namespace flopoco{
 				//copy the rhsName with the delay information into the new vhdl buffer
 				//	rhsName becomes rhsName_dxxx, if the rhsName signal is declared at a previous cycle
 				newStr << newRhsName;
-				if(getTarget()->isPipelined() && !unknownLHSName && !unknownRHSName) {
+				if(isSequential() && !unknownLHSName && !unknownRHSName) {
 					// Should we insert a pipeline register ?
 				  int deltaCycle = lhsSignal->getCycle() - rhsSignal->getCycle();
 					if(deltaCycle>0)
