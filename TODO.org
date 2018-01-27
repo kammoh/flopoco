@@ -60,8 +60,16 @@ To discuss.
   So the actual interface to provide to Martin is not yet fixed.
 
 ** TODOs for Florent:
-I think the current framework won't work with a shared instance inputting inputs from different cycles.
-Check.
+The current framework won't work with a shared instance inputting inputs from different cycles:
+- for unique instances the input synchronization is done inside the subcomponent.
+This is (probably) the reason for the current FixSOPC fail.
+To fix it:
+- doApplySchedule has to insert a "_dn" on the actual input signal name
+- the value of n is outputSignal->cycle - actual->cycle.
+- We can't extract this info in the current framework
+- but at the point where we want to insert the delay (about Operator.cpp line 2120) we have instanceName
+- so all we need to add is a map(uniqueInstanceName, cycle) populated by schedule() or so. 
+
 ** Options for pipeline delays versus functional delays
 First, I got rid completely of the integer cycle information stored on the edges,
 (this removes all the "0" on the edges of the dep graph in flopoco.dot) 
@@ -92,6 +100,7 @@ However I'm afraid it doesn't work for intermediate frequency:
 So anyway you need some DSP-specific pipeline management, 
    which could as well use forcePipelineRegister()
 *** Functional registers
+
 Use cases:
 - Z^-1  in FIR, IIR
 - LongAcc and other accumulators
@@ -117,6 +126,31 @@ Options:
     - read by schedule() to reset the schedule (and also avoid it going into an infinite loop)
     - read at code generation time to make sure registerInputName is registered
 Thing to study: how to manage reset (it should be a Signal like the others I think)
+
+*** comments by Martin (before they get buried in the mail forever)
+
+Forcing pipeline registers: I really like the idea to have "forcePipelineRegister" in Signal for cases you definitely want a stage at a certain place.
+Functional registers: I would also vote for "isFunctionalRegisterOutput" in Signal.
+
+Maybe it would be a good idea to extend declare() as a convenience function for this to have the possibility to declare a FF like
+
+vhdl << "Q <= " << declareFunctionalReg("D") << endl;
+
+Or as another optional argument for declare() like
+
+string declare(string name, const int width, bool isbus=true, Signal::SignalReg sigReg=Signal::None, Signal::SignalType regType = Signal::wire);
+
+where Signal::SignalReg could be Signal::None, Signal::FunctionalReg or Signal::ForcedPipelineReg?
+
+Then we would have
+
+vhdl << "Q <= " << declare("D",1,false,Signal::FunctionalReg) << endl;
+
+to implement a FF.
+
+I think this is more readable/transparent than calling
+
+functionalRegister("Q","D");
 
 ** Plan for bringup
 *** Shifter for basic pipeline: DONE

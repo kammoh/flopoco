@@ -1340,7 +1340,7 @@ namespace flopoco{
 							Signal* clone = getSignalByName(cloneName);
 							clone -> copySignalParameters(actual);
 							// Now we want the clone to become the actual parameter
-							outputSignalCopies << tab << actualName << " <= " << cloneName << ";" << endl;
+							outputSignalCopies << tab << actualName << " <= " << cloneName << "; -- output copy to hold a pipeline register if needed" << endl;
 							actualName = cloneName; // will be consumed by the actual output of formal => actual below
 							cloneOrActual = clone;
 						}
