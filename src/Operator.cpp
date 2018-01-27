@@ -2071,18 +2071,18 @@ namespace flopoco{
 						tmpNextPos = workStr.find("$", tmpCurrentPos);
 
 						//check for constant as rhs name
-                        if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)	{
-                            tmpNextPos = workStr.find("\'", tmpCurrentPos);
-                            singleQuoteSep = true;
-                        }
-                        else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)  {
+						if(workStr.find("\'", tmpCurrentPos) < tmpNextPos)	{
+							tmpNextPos = workStr.find("\'", tmpCurrentPos);
+							singleQuoteSep = true;
+						}
+						else if(workStr.find("\"", tmpCurrentPos) < tmpNextPos)  {
 							tmpNextPos = workStr.find("\"", tmpCurrentPos);
 							doubleQuoteSep = true;
 						}
-                        else if(workStr.find("open", tmpCurrentPos) < tmpNextPos)	{
-                            tmpNextPos = workStr.find("open", tmpCurrentPos)+4;
-                            open = true;
-                        }
+						else if(workStr.find("open", tmpCurrentPos) < tmpNextPos)	{
+							tmpNextPos = workStr.find("open", tmpCurrentPos)+4;
+							open = true;
+						}
 
 						REPORT(FULL, "doApplySchedule/instance skipping: " << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos));
 						newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
@@ -2094,16 +2094,16 @@ namespace flopoco{
 							tmpCurrentPos = tmpNextPos+1;
                             tmpNextPos = workStr.find("\'", tmpCurrentPos);
 						}
-                        else if(doubleQuoteSep) {
-                            //a multiple bit constant
-                            tmpCurrentPos = tmpNextPos+1;
-                            tmpNextPos = workStr.find("\"", tmpCurrentPos);
-                        }
-                        else if(open) {
-                            //a open output
-                            tmpCurrentPos = tmpNextPos+1;
-                        }
-                        else {
+						else if(doubleQuoteSep) {
+							//a multiple bit constant
+							tmpCurrentPos = tmpNextPos+1;
+							tmpNextPos = workStr.find("\"", tmpCurrentPos);
+						}
+						else if(open) {
+							//a open output
+							tmpCurrentPos = tmpNextPos+1;
+						}
+						else {
 							//a regular signal name
 							tmpCurrentPos = tmpNextPos+2;
 							tmpNextPos = workStr.find("$", tmpCurrentPos);

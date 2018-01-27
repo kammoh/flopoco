@@ -1699,8 +1699,6 @@ public:
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 
 	vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
-	map<string, map<string, string>> instancePortMaps;    /**< The port maps for each instance */     
-	
 	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
 	vector<Signal*>        ioList_;                 /**< The list of I/O signals of the operator */
 	FlopocoStream          vhdl;                    /**< The internal stream to which the constructor will build the VHDL code */
