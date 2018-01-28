@@ -321,10 +321,13 @@ Let us now see what happens in terms of scheduling and pipelining.
 
   Since there is only one big signal graph, \verb!Operator::schedule()! first gets to the root of the component hierarchy, before actually computing the schedule, starting from the inputs of this root.
 
+\item When the inputs to a sub-component are not synchronized, they will be synchronized inside the sub-component.
+
 \item It is important to understand that \verb!Operator::schedule()! can be invoked on an incomplete graph.
   In such an ASAP scheduling, the schedule of a signal is only defined by the schedule of its predecessors: once it is computed, it will no longer change, so \verb!Operator::schedule()! may be called several times. It will be called by default after the end of the constructor of a root operator (so the signal graph is complete).
 
 \item All this probably works best (only works?) if the VHDL is written in the natural order, from inputs to outputs... 
+
 \end{itemize}
 
 
@@ -335,9 +338,13 @@ Let us now see what happens in terms of scheduling and pipelining.
 		\label{fig:depgraphFPAdd}
 	\end{figure}    
 
+
+
 \subsubsection{Shared instances}
 
-Shared instances present two differences:
+Again, shared instances are small, purely combinatorial components.
+
+Here are the main differences:
 \begin{enumerate}
 \item The constructor of the subcomponent must be called only once.
 \item The instances themselves must be somehow replicated in the signal graph.
@@ -347,8 +354,12 @@ Each output is labeled with a critical path contribution,   equal to the critica
 
 This is performed under the hood by the \verb!Operator::inPortMap()!, \verb!Operator::outPortMap()! and \verb!Operator::instance()! methods.
 
-The simplest example of shared instances is currently \texttt{FPDivSqrt/FPDiv}.
+An instance is combinatorial, hence lives within a single cycle.
+Therefore, all the outputs of a shared instance have this same cycle.
+All the inputs are also input at this same cycle to the instance (they are delayed in the \texttt{port map}.
+If a pipeline register is inserted to account for the delay of a shared instance, it is inserted on the outputs.
 
+The simplest example of shared instances is currently \texttt{FPDivSqrt/FPDiv}.
 
 
 \section{Test bench generation}\label{sec:test-bench-gener}
