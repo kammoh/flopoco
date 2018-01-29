@@ -286,10 +286,10 @@ namespace flopoco{
         for(int i=heights.size()-1; i>=0; i--)
         {
             //no need to create a signal for columns of height 0
-            if(heights[i] == 0)
-                continue;
-
-            addInput(join("X",i), heights[i]);
+			if(heights[i] > 0)
+			{
+				addInput(join("X",i), heights[i]);
+			}
         }
         //create the output
         addOutput("R", wOut);

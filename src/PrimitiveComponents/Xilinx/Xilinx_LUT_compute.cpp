@@ -5,6 +5,11 @@ lut_op lut_in( int id ) {
     return in;
 }
 
+lut_init::lut_init( uint64_t init_content )
+{
+    this->init_content = init_content;
+}
+
 lut_init::lut_init( lut_op op ) {
     has_two_out = false;
     base = op;

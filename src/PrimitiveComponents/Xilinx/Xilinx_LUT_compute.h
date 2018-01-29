@@ -55,6 +55,7 @@ class lut_init {
     lut_op base;
     bool has_two_out;
   public:
+    lut_init( uint64_t init_content );
     lut_init( lut_op op );
     lut_init( lut_op op_o5, lut_op op_o6 );
     void compute();
