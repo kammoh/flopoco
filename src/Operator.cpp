@@ -867,7 +867,8 @@ namespace flopoco{
         }
         else
         {
-            s = new Signal(this, name, Signal::constant, width, isbus); //consider 'open' as a constant (which has not to be declared)
+			//consider 'open' as a constant (which has not to be declared)
+			s = new Signal(this, name, Signal::constant, width, isbus);
         }
 
 		if(width==-1)
@@ -1303,7 +1304,7 @@ namespace flopoco{
 			}else{
 					rhsString = actualName;
 			}
-			
+
 			o << formalName << " => " << rhsString;
 			if(op->isShared()){
 				// shared instance: build a list of all the input signals, to be connected directly to the output in the dependency graph.
@@ -1337,14 +1338,17 @@ namespace flopoco{
 							// We want to be able to pipeline the output signal using information from within the shared instance.
 							// For this have to add an intermediate signal to receive the output of pipeline registers...
 							// The actual has already been declared, so we declare a clone that will become the actual.
-							string cloneName = actual->getName() + "_copy" +to_string(getNewUId());
-							declare(cloneName, actual->width());
-							Signal* clone = getSignalByName(cloneName);
-							clone -> copySignalParameters(actual);
-							// Now we want the clone to become the actual parameter
-							outputSignalCopies << tab << actualName << " <= " << cloneName << "; -- output copy to hold a pipeline register if needed" << endl;
-							actualName = cloneName; // will be consumed by the actual output of formal => actual below
-							cloneOrActual = clone;
+							if(actual->type() != Signal::constant) //ignore the case of an open output
+							{
+								string cloneName = actual->getName() + "_copy" +to_string(getNewUId());
+								declare(cloneName, actual->width());
+								Signal* clone = getSignalByName(cloneName);
+								clone -> copySignalParameters(actual);
+								// Now we want the clone to become the actual parameter
+								outputSignalCopies << tab << actualName << " <= " << cloneName << "; -- output copy to hold a pipeline register if needed" << endl;
+								actualName = cloneName; // will be consumed by the actual output of formal => actual below
+								cloneOrActual = clone;
+							}
 						}
 						actual->setCriticalPathContribution(criticalPath);
 						cloneNamesMap[actual->getName()] = cloneOrActual->getName();
@@ -1363,11 +1367,11 @@ namespace flopoco{
 						actual->setCriticalPathContribution(0.0);
 					}
 				}
-
 				if(  (it != tmpOutPortMap_.begin())  ||   (tmpInPortMap_.size() != 0)   ||   op->isSequential()  )
 					o << "," << endl <<  tab << tab << "           ";
 
 				o << formalName << " => " << actualName;
+
 			}
 
 		o << ");" << endl;
@@ -1395,7 +1399,7 @@ namespace flopoco{
 		} 
 		instanceOp_[instanceName] = op;
 		instanceActualIO_[instanceName] = actualIOList;
-		REPORT(0, "Finished building instanceActualIO_["<< instanceName<< "], it is of size " << instanceActualIO_[instanceName].size());
+		REPORT(DEBUG, "Finished building instanceActualIO_["<< instanceName<< "], it is of size " << instanceActualIO_[instanceName].size());
 		
 		//clear the port mappings
 		tmpInPortMap_.clear();
@@ -2057,6 +2061,7 @@ namespace flopoco{
 			//the rest of the code contains pairs of ??lhsName?? => $$rhsName$$ pairs
 			//	for which the helper signals must be removed and delays _dxxx must be added
 			auxPosition2 = workStr.find("port map"); // not checking capitalization is OK because this string can only be created by flopoco
+
 			if(auxPosition2 != string::npos)	{
 				// we have the position of "port map"; we need the name of the instance name.
 				// It is the word before the ":"; all this looks terribly fragile and depends on the fact that this VHDL is created here in flopoco.
@@ -2079,8 +2084,7 @@ namespace flopoco{
 				if(workStr.find("?", auxPosition2) == string::npos) {
 					//empty port mapping
 					newStr << workStr.substr(auxPosition, workStr.size());
-				}
-				else 	{
+				} else {
 					//parse a list of ??lhsName?? => $$rhsName$$
 					//	or ??lhsName?? => 'x' or ??lhsName?? => "xxxx"
 					size_t tmpCurrentPos, tmpNextPos;
@@ -2114,7 +2118,7 @@ namespace flopoco{
 							doubleQuoteSep = true;
 						}
 						else if(workStr.find("open", tmpCurrentPos) < tmpNextPos)	{
-							tmpNextPos = workStr.find("open", tmpCurrentPos)+4;
+							tmpNextPos = workStr.find("open", tmpCurrentPos);
 							open = true;
 						}
 
@@ -2135,6 +2139,7 @@ namespace flopoco{
 						}
 						else if(open) {
 							//a open output
+							tmpNextPos = workStr.find("open", tmpCurrentPos)-1; //has to be one less as we want the 'o' of "open"
 							tmpCurrentPos = tmpNextPos+1;
 						}
 						else {
@@ -2143,6 +2148,7 @@ namespace flopoco{
 							tmpNextPos = workStr.find("$", tmpCurrentPos);
 							rhsIsSignal = true;
 						}
+
 						rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 						REPORT(FULL, "doApplySchedule/instance rhsname= " << rhsName);
 
@@ -2234,7 +2240,6 @@ namespace flopoco{
 			    lhsSignal = NULL;
 			    unknownLHSName = true;
 			}
-
 			//check for "select" signal assignments
 			//	with signal_name select... etc
 			//	the problem is there is a signal belonging to the right hand side
@@ -2243,6 +2248,8 @@ namespace flopoco{
 				//extract the first rhs signal name
 				tmpCurrentPos = 0;
 				tmpNextPos = workStr.find('$');
+
+				assert(tmpNextPos != string::npos);
 
 				rhsName = workStr.substr(tmpCurrentPos, tmpNextPos);
 
@@ -2287,6 +2294,7 @@ namespace flopoco{
 				if(tmpNextPos == string::npos)
 				{
 					//copy the rest of the code
+					assert(workStr.size()-tmpCurrentPos > 0);
 					newStr << workStr.substr(tmpCurrentPos, workStr.size()-tmpCurrentPos);
 
 					//prepare for a new instruction to be parsed
@@ -2303,7 +2311,6 @@ namespace flopoco{
 					continue;
 				}
 			}
-
 			//extract the rhsNames and annotate them find the position of the rhsName, and copy
 			// the vhdl code up to the rhsName in the new vhdl code buffer
 			// There was a bug here  if one variable is had select in its name

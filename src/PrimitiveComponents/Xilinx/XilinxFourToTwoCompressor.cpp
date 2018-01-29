@@ -108,7 +108,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
         inPortMap(cur_lut,"i3",join("X",width-1) + of(1));
         inPortMapCst(cur_lut, "i4","'0'");
         inPortMapCst(cur_lut, "i5","'1'");
-        outPortMap(cur_lut,"o5","open");
+		outPortMap(cur_lut,"o5","open");
 //        outPortMap(cur_lut,"o5",declare("X"));
         outPortMap(cur_lut,"o6","cc_s" + of(width-1));
 
