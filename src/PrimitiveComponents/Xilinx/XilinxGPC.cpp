@@ -46,30 +46,134 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 	vector<string> lutOp(4);
 	vector<vector<string> > lutInputMappings(4,vector<string>(4));
 	vector<string> ccDInputMappings(4);
+	string carryInMapping;
 
-	if((heights[2] == 6) && (heights[1] == 0) && (heights[0] == 6))
+	const string LUTConfigA = "69966996AAAAAAAA";
+	const string LUTConfigB = "566A566AAAAAAAAA";
+	const string LUTConfigC = "96696996AAAAAAAA";
+	const string LUTConfigD = "3FFCFCC0FFF0F000";
+	const string LUTConfigH = "6996966996696996";
+	const string LUTConfigI = "177E7EE8FFF0F000";
+	const string LUTConfigJ = "69966996C33CC33C";
+	const string LUTConfigK = "9996966666666666";
+	const string LUTConfigL = "78878778F00F0FF0";
+
+	if(heights.size() == 3)
 	{
-		lutOp[0] = "6996966996696996"; //config h
-		lutOp[1] = "177E7EE8FFF0F000"; //config i
-		lutOp[2] = "6996966996696996"; //config h
-		lutOp[3] = "177E7EE8FFF0F000"; //config i
+		if((heights[2] == 6) && (heights[1] == 0) && (heights[0] == 6))
+		{
+			//(6,0,6;5) GPC:
+			lutOp = {LUTConfigH, LUTConfigI, LUTConfigH, LUTConfigI};
 
-		lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};
-		lutInputMappings[1] = {"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5),"'1'"};
-		lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
-		lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};
+			lutInputMappings[1] = {"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5),"'1'"};
+			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
+			lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
 
-		ccDInputMappings = {"X0" + of(0),"O5","X2" + of(0),"O5"};
+			ccDInputMappings = {"X0" + of(0),"O5","X2" + of(0),"O5"};
+
+			carryInMapping="'0'";
+		}
+		else if((heights[2] == 6) && (heights[1] == 1) && (heights[0] == 5))
+		{
+			//(6,1,5;5) GPC:
+			lutOp = {LUTConfigA, LUTConfigB, LUTConfigH, LUTConfigI};
+
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
+			lutInputMappings[1] = {"X1" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
+			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
+			lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
+
+			ccDInputMappings = {"O5","O5","X2" + of(0),"O5"};
+
+			carryInMapping="X0" + of(4);
+		}
+		else if((heights[2] == 6) && (heights[1] == 2) && (heights[0] == 3))
+		{
+			//(6,2,3;5) GPC:
+			lutOp = {LUTConfigA, LUTConfigA, LUTConfigH, LUTConfigI};
+
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"'0'","'0'","'0'","'1'"};
+			lutInputMappings[1] = {"X1" + of(0),"X1" + of(1),"'0'","'0'","'0'","'1'"};
+			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
+			lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
+
+			ccDInputMappings = {"O5","O5","X2" + of(0),"O5"};
+
+			carryInMapping="X0" + of(2);
+		}
+		else
+		{
+			stringstream s;
+			s << "Unsupported GPC with column heights: ";
+			for(int i=heights.size()-1; i >= 0; i--)
+			{
+				s << heights[i] << " ";
+			}
+			THROWERROR(s.str());
+		}
+	}
+	else if(heights.size() == 4)
+	{
+		if((heights[3] == 1) && (heights[2] == 3) && (heights[1] == 2) && (heights[0] == 5))
+		{
+			//(1,3,2,5;5) GPC:
+			lutOp = {LUTConfigJ, LUTConfigK, LUTConfigL, LUTConfigB};
+
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
+			lutInputMappings[1] = {"X1" + of(0),"X1" + of(1),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'1'"};
+			lutInputMappings[2] = {"X1" + of(0),"X1" + of(1),"X2" + of(0),"X2" + of(1),"X2" + of(2),"'1'"};
+			lutInputMappings[3] = {"X3" + of(0),"X2" + of(0),"X2" + of(1),"X2" + of(2),"'0'","'1'"};
+
+			ccDInputMappings = {"O5","O5","O5","O5"};
+
+			carryInMapping="X0" + of(4);
+
+		}
+		else if((heights[3] == 1) && (heights[2] == 4) && (heights[1] == 1) && (heights[0] == 5))
+		{
+			//(1,4,1,5;5) GPC:
+			lutOp = {LUTConfigA, LUTConfigB, LUTConfigA, LUTConfigB};
+
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
+			lutInputMappings[1] = {"X1" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
+			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+			lutInputMappings[3] = {"X3" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+
+			ccDInputMappings = {"O5","O5","O5","O5"};
+
+			carryInMapping="X0" + of(4);
+
+		}
+		else if((heights[3] == 1) && (heights[2] == 4) && (heights[1] == 0) && (heights[0] == 6))
+		{
+			//(1,4,0,6;5) GPC:
+			lutOp = {LUTConfigC, LUTConfigD, LUTConfigA, LUTConfigB};
+
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"'1'"};
+			lutInputMappings[1] = {"'0'","X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"'1'"};
+			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+			lutInputMappings[3] = {"X3" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+
+			ccDInputMappings = {"O5","O5","O5","O5"};
+
+			carryInMapping="X0" + of(5);
+
+		}
+		else
+		{
+			stringstream s;
+			s << "Unsupported GPC with column heights: ";
+			for(int i=heights.size()-1; i >= 0; i--)
+			{
+				s << heights[i] << " ";
+			}
+			THROWERROR(s.str());
+		}
 	}
 	else
 	{
-		stringstream s;
-		s << "Unsupported GPC with column heights: ";
-		for(int i=heights.size()-1; i >= 0; i--)
-		{
-			s << heights[i] << " ";
-		}
-		THROWERROR(s.str());
+		THROWERROR("Unsupported GPC with " << heights.size() << "columns");
 	}
 	//build LUTs for one slice
 	for(int i=0; i <= 3; i++)
@@ -112,9 +216,18 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 
     Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4(this,target);
 
-    inPortMapCst( cur_cc, "cyinit", "'0'" );
-    inPortMapCst( cur_cc, "ci", "'0'" ); //carry-in can not be used as AX input is blocked!!
-//    inPortMap( cur_cc, "ci", "cc_co" + of( i * 4 - 1 ) );
+	inPortMapCst( cur_cc, "ci", "'0'" );
+
+	if(carryInMapping.find("'") == string::npos)
+	{
+		//input is a dynamic signal
+		inPortMap( cur_cc, "cyinit", carryInMapping);
+	}
+	else
+	{
+		//input is a constant
+		inPortMapCst( cur_cc, "cyinit", carryInMapping);
+	}
 
     inPortMap( cur_cc, "di", "cc_di");
     inPortMap( cur_cc, "s", "cc_s");
