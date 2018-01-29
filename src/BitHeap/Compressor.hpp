@@ -159,7 +159,7 @@ namespace flopoco
 		vector<int> heights;                /**< the heights of the columns */
 		vector<int> outHeights;             /**< the heights of the columns of the output, if this is a partially compressed result */
 		float area;							/**< size of the compressor in LUT-equivalents */
-		string type; 						/**< combinatorial, targetSpecific or variableLength */
+		string type; 						/**< combinatorial or variableLength */
 		int wOut;
 
 

@@ -44,36 +44,30 @@ namespace flopoco{
 			}
 		}
 		else{
-			//TODO cases targetSpecific and variable
+			//TODO cases variable
 			return nullptr;
 		}
 	}
 
 	double BasicCompressor::getEfficiency(unsigned int middleLength){
-		if(type.compare("variable") != 0){
-			int inputBits = 0;
-			int outputBits = 0;
-			double ratio = 0.0;
-			for(unsigned int j = 0; j < heights.size(); j++){
-				inputBits += heights[j];
-			}
-			for(unsigned int j = 0; j < outHeights.size(); j++){
-				outputBits += outHeights[j];
-			}
-			ratio = (double)inputBits - (double)outputBits;
-			if(area != 0.0){
-				ratio /= (double)area;
-			}
-			else{
-				//area (and therefore cost) is zero. Therefore set ratio to zero.
-				ratio = 0.0;
-			}
-			return ratio;
+		int inputBits = 0;
+		int outputBits = 0;
+		double ratio = 0.0;
+		for(unsigned int j = 0; j < heights.size(); j++){
+			inputBits += heights[j];
+		}
+		for(unsigned int j = 0; j < outHeights.size(); j++){
+			outputBits += outHeights[j];
+		}
+		ratio = (double) (inputBits - outputBits);
+		if(area != 0.0){
+			ratio /= (double) area;
 		}
 		else{
-			//TODO
-			return 0.0;
+			//area (and therefore cost) is zero. Therefore set ratio to zero.
+			ratio = 0.0;
 		}
+		return ratio;
 	}
 
 	unsigned int BasicCompressor::getHeights(unsigned int middleLength){

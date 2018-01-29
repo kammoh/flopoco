@@ -1,6 +1,7 @@
 
 #include "CompressionStrategy.hpp"
 #include <limits>
+#include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 
 using namespace std;
 
@@ -1102,6 +1103,16 @@ namespace flopoco{
             newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 1.0, "combinatorial", true);
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
+		}
+		if(bitheap->getOp()->getTarget()->useTargetOptimizations() && (bitheap->getOp()->getTarget()->getVendor() == "Xilinx"))
+		{
+			REPORT(DEBUG,"Adding target optimized GPCs for Xilinx FPGAs");
+			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,6}));
+			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {5,1,6}));
+			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {3,2,6}));
+			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {5,2,3,1}));
+			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {5,1,4,1}));
+			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,4,1}));
 		}
 	}
 

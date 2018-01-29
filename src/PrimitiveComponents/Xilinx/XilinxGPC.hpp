@@ -28,8 +28,8 @@ namespace flopoco
     class BasicXilinxGPC : public BasicCompressor
 	{
 	public:
-        BasicXilinxGPC(Target * target);
+		BasicXilinxGPC(Operator* parentOp_, Target * target, vector<int> heights);
 
-        virtual double getEfficiency(unsigned int middleLength);
+		virtual Compressor* getCompressor();
 	};
 }

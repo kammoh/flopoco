@@ -23,12 +23,8 @@ namespace flopoco {
         std::stringstream o;
         o << "--------------------------------------------------------------------------------" << std::endl;
         if( target->getVendor() == "Xilinx" ){
-            if( target->getID() == "Virtex6" ){
-                o << "library UNISIM;" << std::endl;
-                o << "use UNISIM.Vcomponents.all;" << std::endl;
-            } else {
-                throw std::runtime_error("Target not supported for primitives");
-            }
+			o << "library UNISIM;" << std::endl;
+			o << "use UNISIM.Vcomponents.all;" << std::endl;
         }else if(target->getVendor() == "Altera"){
             o << "library wysiwyg;" << std::endl;
             o << "use wysiwyg.";

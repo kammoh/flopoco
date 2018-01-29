@@ -34,12 +34,6 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
     name << "_" << wOut;
     setName(name.str());
 
-//    vhdl << tab << "R <= (others => '0');" << endl;
-/*
-    declare("s",5);
-    declare("cc_co",4);
-    declare("cc_o",4);
-*/
 	declare("cc_di",4);
 	declare("cc_s",4);
 
@@ -273,31 +267,15 @@ in decreasing order of the weight. For example, columnHeights=\"6,0,6\" produces
                        ) ;
 }
 
-double BasicXilinxGPC::getEfficiency(unsigned int middleLength){
-    if(type.compare("variable") != 0){
-        int inputBits = 0;
-        int outputBits = 0;
-        double ratio = 0.0;
-        for(unsigned int j = 0; j < heights.size(); j++){
-            inputBits += heights[j];
-        }
-        for(unsigned int j = 0; j < outHeights.size(); j++){
-            outputBits += outHeights[j];
-        }
-        ratio = (double)inputBits - (double)outputBits;
-        if(area != 0.0){
-            ratio /= (double)area;
-        }
-        else{
-            //area (and therefore cost) is zero. Therefore set ratio to zero.
-            ratio = 0.0;
-        }
-        return ratio;
-    }
-    else{
-        //TODO
-        return 0.0;
-    }
+BasicXilinxGPC::BasicXilinxGPC(Operator* parentOp_, Target * target, vector<int> heights) : BasicCompressor(parentOp_,target,heights)
+{
+	area = 4.0; //every target specific GPC uses 4 LUTs (so far)
 }
 
+Compressor* BasicXilinxGPC::getCompressor(){
+	compressor = new XilinxGPC(parentOp, target, heights);
+	return compressor;
 }
+
+
+} //namespace
