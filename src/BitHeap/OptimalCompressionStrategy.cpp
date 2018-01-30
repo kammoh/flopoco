@@ -22,7 +22,7 @@ namespace flopoco{
 
 #ifndef HAVE_SCALP
 		THROWERROR("For the optimal compressor tree generation scalp is needed");
-#endif
+#else
 
 		//for debugging it might be better to order the compressors by efficiency
 		orderCompressorsByCompressionEfficiency();
@@ -47,9 +47,10 @@ namespace flopoco{
 
 		//here the VHDL-Code for the compressors as well as the bits->compressors->bits are being written.
 		applyAllCompressorsFromSolution();
-
+#endif //HAVE_SCALP
 	}
 
+#ifdef HAVE_SCALP
 	void OptimalCompressionStrategy::optimalGeneration(){
 
 		resizeBitAmount(5);//set bitAmounts to 5 stages
@@ -406,4 +407,6 @@ namespace flopoco{
 		}
 	}
 
+
+#endif //HAVE_SCALP
 }
