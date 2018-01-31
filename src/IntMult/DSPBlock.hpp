@@ -46,7 +46,6 @@ public:
     static void registerFactory();
 
 private:
-    int wX, wY, wR;
 };
 
 }
