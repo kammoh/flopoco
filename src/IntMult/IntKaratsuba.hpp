@@ -16,7 +16,7 @@ namespace flopoco{
 	 * The Integer Multiplier class. Receives at input two numbers of 
 	 * wInX and wInY widths and outputs a result having the width wOut=wInX+wInY 
 	 **/
-	class IntKaratsuba : public Operator
+	class IntKaratsubaRectangular : public Operator
 	{
 	public:
 		/** 
@@ -25,13 +25,13 @@ namespace flopoco{
 		 * @param wInX integer argument representing the width in bits of the input X 
 		 * @param wInY integer argument representing the width in bits of the input Y
 		 **/
-		IntKaratsuba(Target* target, int wIn, map<string, double> inputDelays = emptyDelayMap);
+		IntKaratsubaRectangular(Target* target, int wIn, map<string, double> inputDelays = emptyDelayMap);
 
 		void outputVHDL(std::ostream& o, std::string name);
 		/**
 		 * IntKaratsuba destructor
 		 */
-		~IntKaratsuba();
+		~IntKaratsubaRectangular();
 
 		/**
 		 * Emulates an multiplier

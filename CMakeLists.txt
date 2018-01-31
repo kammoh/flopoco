@@ -444,13 +444,14 @@ src/IntAddSubCmp/IntMultiAdder
 # src/IntMult/FixMultAdd
 src/IntMult/MultiplierBlock
 # src/IntMult/IntSquarer
+src/IntMult/DSPBlock
 src/IntMult/BaseMultiplier
 src/IntMult/BaseMultiplier2xk
 src/IntMult/BaseMultiplierCollection
 src/IntMult/BaseMultiplierDSP
 src/IntMult/BaseMultiplierDSPSuperTilesXilinx
 src/IntMult/BaseMultiplierLUT
-
+src/IntMult/IntKaratsubaRectangular
 
 # Complex numbers ---------------------------------------------------
 src/Complex/FixComplexKCM
