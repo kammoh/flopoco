@@ -18,7 +18,7 @@ namespace flopoco {
     {
 
 	public:
-        BaseMultiplierDSP(bool isSignedX, bool isSignedY, int wX, int wY, bool pipelineDSPs, bool flipXY=false);
+		BaseMultiplierDSP(bool isSignedX, bool isSignedY, int wX, int wY, bool flipXY=false);
 
 		virtual Operator *generateOperator(Operator *parentOp, Target *target);
 
@@ -26,14 +26,5 @@ namespace flopoco {
         bool flipXY;
         bool pipelineDSPs;
 	};
-
-    class BaseMultiplierDSPOp : public Operator
-    {
-    public:
-		BaseMultiplierDSPOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool pipelineDSPs, bool flipXY=false);
-    private:
-        int wX, wY, wR;
-    };
-
 }
 #endif

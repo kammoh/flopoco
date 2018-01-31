@@ -104,7 +104,7 @@
 // #include "IntMult/IntSquarer.hpp"
 // #include "IntMult/GenericBinaryPolynomial.hpp"
 // #include "IntMult/IntPower.hpp"
-
+#include "IntMult/IntKaratsubaRectangular.hpp"
 
 /* Floating-point adder variants ----------------------------- */
 #include "FPAddSub/FPAdd.hpp"

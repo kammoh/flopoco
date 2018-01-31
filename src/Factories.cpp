@@ -69,6 +69,7 @@ void UserInterface::registerFactories()
 		// IntComparator::registerFactory();
 		IntDualAddSub::registerFactory();
 		IntMultiAdder::registerFactory();
+		IntKaratsubaRectangular::registerFactory();
 		// IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
