@@ -23,12 +23,16 @@ public:
      * @brief Constructor of a common DSPBlock that translates to DSP implementations when the sizes are chosen accordingly
      *
      * Depending on the inputs, the following operation is performed.
-     * usePostAdder | usePreAdder | Operation
-     * -------------------------------------------
-     *    false     |    false    |  X * Y
-     *    true      |    false    |  X * Y + Z
-     *    false     |    true     |  (X1+X2) * Y
-     *    true      |    true     |  (X1+X2) * Y + Z
+     * ------------------------------------------------------------------
+     * usePostAdder | usePreAdder | preAdderSubtracts | Operation
+     * ------------------------------------------------------------------
+     *    false     |    false    |    false          |  X * Y
+     *    true      |    false    |    false          |  X * Y + Z
+     *    false     |    true     |    false          |  (X1+X2) * Y
+     *    true      |    true     |    false          |  (X1+X2) * Y + Z
+     *    false     |    true     |    true           |  (X1-X2) * Y
+     *    true      |    true     |    true           |  (X1-X2) * Y + Z
+     * ------------------------------------------------------------------
      *
      * @param parentOp A pointer to the parent Operator
      * @param target A pointer to the target
@@ -38,7 +42,7 @@ public:
      * @param usePostAdder enables post-adders when set to true (see table above)
      * @param usePreAdder enables pre-adders when set to true (see table above)
      */
-    DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ=0, bool usePostAdder=false, bool usePreAdder=false);
+    DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ=0, bool usePostAdder=false, bool usePreAdder=false, bool preAdderSubtracts=false);
 
     /** Factory method */
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);

@@ -2,7 +2,7 @@
 
 namespace flopoco {
 
-DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ, bool usePostAdder, bool usePreAdder) : Operator(parentOp,target)
+DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ, bool usePostAdder, bool usePreAdder, bool preAdderSubtracts) : Operator(parentOp,target)
 {
     useNumericStd();
 
@@ -18,7 +18,16 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ, b
         addInput("X2", wX);
         wX += 1; //the input X is now one bit wider
         //implement pre-adder:
-        vhdl << tab << declare("X",wX) << " <= std_logic_vector(resize(signed(X1)," << wX << ") + resize(signed(X2)," << wX << ")); -- pre-adder" << endl;
+        vhdl << tab << declare("X",wX) << " <= std_logic_vector(resize(signed(X1)," << wX << ")";
+        if(preAdderSubtracts)
+        {
+            vhdl << "-";
+        }
+        else
+        {
+            vhdl << "+";
+        }
+        vhdl << " resize(signed(X2)," << wX << ")); -- pre-adder" << endl;
     }
     else
     {
@@ -49,15 +58,16 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ, b
 OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
     int wX,wY,wZ;
-    bool usePostAdder, usePreAdder;
+    bool usePostAdder, usePreAdder, preAdderSubtracts;
 
     UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
     UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
     UserInterface::parsePositiveInt(args, "wZ", &wZ);
     UserInterface::parseBoolean(args,"usePostAdder",&usePostAdder);
     UserInterface::parseBoolean(args,"usePreAdder",&usePreAdder);
+    UserInterface::parseBoolean(args,"preAdderSubtracts",&preAdderSubtracts);
 
-    return new DSPBlock(parentOp,target,wX,wY,wZ,usePostAdder,usePreAdder);
+    return new DSPBlock(parentOp,target,wX,wY,wZ,usePostAdder,usePreAdder,preAdderSubtracts);
 }
 
 void DSPBlock::registerFactory()
@@ -70,7 +80,8 @@ void DSPBlock::registerFactory()
                         wY(int): size of input Y;\
                         wZ(int)=0: size of input Z (if post-adder is used);\
                         usePostAdder(bool)=0: use post-adders;\
-                        usePreAdder(bool)=0: use pre-adders;",
+                        usePreAdder(bool)=0: use pre-adders;\
+                        preAdderSubtracts(bool)=0: if true, the pre-adder performs a pre-subtraction;",
                        "",
                        DSPBlock::parseArguments
                        ) ;
