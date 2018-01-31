@@ -549,22 +549,22 @@ namespace flopoco {
 		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
 			REPORT(0,"WARNING: subtractSignal(): " << signalName << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
-		
+
 		if(s->isSigned()) {
 			// we subtract                            000000sxxxxxxx000 (shift=3)
-			// which must be sign-extended to         sssssssxxxxxxx000 
-			//                                                    
+			// which must be sign-extended to         sssssssxxxxxxx000
+			//
 			// so we must add to the bit heap         SSSSSSSXXXXXXX111 (capital means: complement)
 			//                                                       +1
 			// equivalently                           SSSSSSSXXXXXXX
 			//                                                    +1
 			// with the sign extension trick:         000000sXXXXXXX
-			//                                      + 1111111      1         
+			//                                      + 1111111      1
 			REPORT(DEBUG, "subtractSignal: this is a signed signal	");
-		
+
 			// If the bit vector is of width 1, the following loop is empty.
 			for(int w=sLSB; w<=sMSB; w++) {
-				addBit(w+shift, (w!=sMSB?  "not ": "") + signalName + of(w-sLSB)); 
+				addBit(w+shift, (w!=sMSB?  "not ": "") + signalName + of(w-sLSB));
 			}
 			addConstantOneBit(sLSB+shift); // the +1
 			// add the string of ones to the MSB of the bit heap
@@ -574,12 +574,12 @@ namespace flopoco {
 		}
 		else{ // unsigned
 			// we subtract                            000000xxxxxxxx000  (shift=3)
-			//                                                    
+			//
 			// so we must add to the bit heap         111111XXXXXXXX
 			//                                                    +1
 			REPORT(DEBUG, "subtractSignal: this is an unsigned signal	");
 			for(int w=sLSB; w<=sMSB; w++) {
-				addBit(w+shift, "not " + signalName + of(w-sLSB)); 
+				addBit(w+shift, "not " + signalName + of(w-sLSB));
 			}
 			addConstantOneBit(sLSB+shift); // the +1
 			// add the string of ones to the MSB of the bit heap

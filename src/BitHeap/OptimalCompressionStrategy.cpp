@@ -53,7 +53,8 @@ namespace flopoco{
 #ifdef HAVE_SCALP
 	void OptimalCompressionStrategy::optimalGeneration(){
 
-		resizeBitAmount(5);//set bitAmounts to 5 stages
+		resizeBitAmount(4);//set bitAmounts to 5 stages
+		REPORT(DEBUG, "bitAmount has now a size of " << bitAmount.size());
 		REPORT(DEBUG, "resized bitAmount");
 
 		initializeSolver();
@@ -98,12 +99,15 @@ namespace flopoco{
 	}
 
 	void OptimalCompressionStrategy::resizeBitAmount(unsigned int stages){
+
 		stages++;	//we need also one stage for the outputbits
+
 		unsigned int columns = bitAmount[bitAmount.size() - 1].size();
 		//we need one stage more for the
-		while(bitAmount.size() <= stages){
+		while(bitAmount.size() < stages){
 			bitAmount.resize(bitAmount.size() + 1);
 			bitAmount[bitAmount.size() - 1].resize(columns, 0);
+			REPORT(DEBUG, "new bitAmount.size() is " << bitAmount.size() << " and stages are " << stages);
 		}
 	}
 
@@ -129,6 +133,7 @@ namespace flopoco{
 				}
 			}
 		}
+		REPORT(DEBUG, "finished initializing k-variables");
 
 		//N_s_c
 		columnBitCountVars.clear();
@@ -141,6 +146,7 @@ namespace flopoco{
 				columnBitCountVars[s - 1].push_back(tempN);
 			}
 		}
+		REPORT(DEBUG, "finished initializing N-variables");
 
 		//U_s_c
 		newBitsCountVars.clear();
@@ -153,10 +159,11 @@ namespace flopoco{
 				newBitsCountVars[s].push_back(tempU);
 			}
 		}
+		REPORT(DEBUG, "finished initializing U-variables");
 
 		//Z_s_c
 		emptyInputVars.clear();
-		emptyInputVars.resize(bitAmount.size() - 1);
+		emptyInputVars.resize(bitAmount.size());
 		for(unsigned int s = 0; s < emptyInputVars.size(); s++){
 			for(unsigned int c = 0; c < bitAmount[s].size(); c++){
 				stringstream varName;
@@ -165,6 +172,7 @@ namespace flopoco{
 				emptyInputVars[s].push_back(tempZ);
 			}
 		}
+		REPORT(DEBUG, "finished initializing Z-variables");
 
 		//D_s
 		stageVars.clear();
@@ -175,6 +183,7 @@ namespace flopoco{
 			ScaLP::Variable tempD = ScaLP::newBinaryVariable(varName.str());
 			stageVars[s] = tempD;
 		}
+		REPORT(DEBUG, "finished initializing D-variables");
 
 	}
 
@@ -206,7 +215,7 @@ namespace flopoco{
 
 	void OptimalCompressionStrategy::generateConstraintC1(){
 		const int LARGE_NUMBER = 10000;
-		for(unsigned int s = 0; s < compCountVars.size() - 1; s++){
+		for(unsigned int s = 0; s < compCountVars.size(); s++){
 			for(int c = 0; c < (int)bitAmount[s].size(); c++){
 				stringstream consName;
 				consName << "C1_" << s << "_" << c;
@@ -217,7 +226,7 @@ namespace flopoco{
 						//REPORT(DEBUG, "ce is " << ce << " for compressor " << possibleCompressors[e]->getStringOfIO());
 						if(c - ce >= 0){
 							int tempColumn = possibleCompressors[e]->getHeights() - ce - 1;
-							c1Term = c1Term + possibleCompressors[e]->getHeightsAtColumn((unsigned) tempColumn) * compCountVars[s][e][(unsigned)(c - ce)];
+							c1Term = c1Term + possibleCompressors[e]->getHeightsAtColumn((unsigned) tempColumn, true) * compCountVars[s][e][(unsigned)(c - ce)];
 						}
 					}
 				}
@@ -241,7 +250,7 @@ namespace flopoco{
 	}
 
 	void OptimalCompressionStrategy::generateConstraintC2(){
-		for(unsigned int s = 0; s < compCountVars.size() - 1; s++){
+		for(unsigned int s = 0; s < compCountVars.size(); s++){
 			for(int c = 0; c < (int)bitAmount[s].size(); c++){
 				stringstream consName;
 				consName << "C2_" << s << "_" << c;
@@ -251,7 +260,7 @@ namespace flopoco{
 					for(int ce = (int)possibleCompressors[e]->getOutHeights() - 1; ce >= 0; ce--){
 						if(c - ce >= 0){
 							int tempColumn = possibleCompressors[e]->getOutHeights() - ce - 1;
-							c2Term = c2Term + possibleCompressors[e]->getOutHeightsAtColumn(tempColumn) * compCountVars[s][e][(unsigned) (c - ce)];
+							c2Term = c2Term + possibleCompressors[e]->getOutHeightsAtColumn( (unsigned)tempColumn, true) * compCountVars[s][e][(unsigned) (c - ce)];
 						}
 					}
 				}
@@ -266,8 +275,8 @@ namespace flopoco{
 
 	void OptimalCompressionStrategy::generateConstraintC3(){
 		const int LARGE_NUMBER = 10000;
-		for(unsigned int s = 0; s < compCountVars.size(); s++){
-			for(unsigned int c = 0; c < compCountVars[s].size(); c++){
+		for(unsigned int s = 0; s < bitAmount.size(); s++){
+			for(unsigned int c = 0; c < bitAmount[s].size(); c++){
 				stringstream consName;
 				consName << "C3_" << s << "_" << c;
 				ScaLP::Term c3Term;
@@ -276,7 +285,7 @@ namespace flopoco{
 					c3Term = c3Term + columnBitCountVars[s - 1][c];
 				}
 				c3Term = c3Term + newBitsCountVars[s][c];
-				for(unsigned int z = s + 1; z < compCountVars.size(); z++){
+				for(unsigned int z = s + 1; z < bitAmount.size(); z++){
 					//make sure that that in the follwoing stages all the U's are empty.
 					//this is done by adding all of the U-variables of later stages with the factor of 4. Therefore e.g. if s = 3 -> D_3 = 1 -> in constraint C3_3_c: 1000 + 4 * U_later <= 1002 -> if at least one U_later is >0, then constraint is not met
 					// +4 instead of +3: if formulation is modiefied to a ternary adder, this constraint does not need to change change.
@@ -401,7 +410,13 @@ namespace flopoco{
 				double tempValue = result.values[emptyInputVars[s][c]];
 				tempValue += 0.00001;
 				int integerValue = (int) tempValue;
-				tempVector.push_back(integerValue * (-1)); 	//the empty inputs must be negative.
+				//the Z's in stage of the final adder have the value of ~ LARGE_NUMBER. Filter them because there are no holes there.
+				if(integerValue < 100){
+					tempVector.push_back(integerValue * (-1)); 	//the empty inputs must be negative.
+				}
+				else{
+					tempVector.push_back(0);
+				}
 			}
 			solution.setEmptyInputsByRemainingBits(s, tempVector);
 		}

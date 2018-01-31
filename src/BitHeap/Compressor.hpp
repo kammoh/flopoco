@@ -125,7 +125,7 @@ namespace flopoco
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		unsigned int getHeightsAtColumn(unsigned int column, unsigned int middleLength = 0);
+		unsigned int getHeightsAtColumn(unsigned int column, bool ilpGeneration = false, unsigned int middleLength = 0);
 
 		/**
 		 * 	@brief returns the amount of outputs for a given outputcolumn of the compressor
@@ -133,7 +133,7 @@ namespace flopoco
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		unsigned int getOutHeightsAtColumn(unsigned int column, unsigned int middleLength = 0);
+		unsigned int getOutHeightsAtColumn(unsigned int column, bool ilpGeneration = false, unsigned int middleLength = 0);
 
 		/**
 		 * 	@brief returns efficiency of the compressor. efficiency is computed with the formula
