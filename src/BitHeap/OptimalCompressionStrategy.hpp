@@ -37,7 +37,7 @@ class BitheapNew;
 
 #ifdef HAVE_SCALP
 
-		void optimalGeneration();
+		bool optimalGeneration(unsigned int stages = 0, bool optimalMinStages = false);
 
 		void resizeBitAmount(unsigned int stages);
 
@@ -94,6 +94,12 @@ class BitheapNew;
 		bool solve();
 
 		void fillSolutionFromILP();
+
+		unsigned int getMaxStageCount();
+
+		unsigned int getMinAmountOfStages();
+
+		bool daddaTwoBitStageReached(vector<int> currentBits, unsigned int stage);
 
 		ScaLP::Solver *problemSolver; /* stores the solver */
 

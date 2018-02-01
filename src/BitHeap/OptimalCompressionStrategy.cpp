@@ -24,6 +24,8 @@ namespace flopoco{
 		THROWERROR("For the optimal compressor tree generation scalp is needed");
 #else
 
+		bool optimalMinStages = true;
+
 		//for debugging it might be better to order the compressors by efficiency
 		orderCompressorsByCompressionEfficiency();
 
@@ -41,7 +43,24 @@ namespace flopoco{
 		solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
 		//generates the compressor tree but only works one the bitAmount datastructure. Fills the solution. No VHDL-Code is written here.
-		optimalGeneration();
+
+		bool foundSolution = false;
+		if(!optimalMinStages){
+			foundSolution = optimalGeneration();
+			if(foundSolution == false){
+				THROWERROR("wasn't able to find a solution within the given timelimit");
+			}
+		}
+		else{
+			unsigned int stages = getMinAmountOfStages();
+			REPORT(DEBUG, "after getMinAmountOfStages stages = " << stages);
+			bool foundSolution = false;
+			while(!foundSolution){
+				foundSolution = optimalGeneration(stages, true);
+				stages++;
+			}
+
+		}
 
 
 
@@ -51,9 +70,19 @@ namespace flopoco{
 	}
 
 #ifdef HAVE_SCALP
-	void OptimalCompressionStrategy::optimalGeneration(){
+	bool OptimalCompressionStrategy::optimalGeneration(unsigned int stages, bool optimalMinStages){
 
-		resizeBitAmount(4);//set bitAmounts to 5 stages
+		if(!optimalMinStages){
+			unsigned int daddaStageCount = getMaxStageCount();
+
+			REPORT(DEBUG, "daddaStageCount is " << daddaStageCount);
+
+			resizeBitAmount(daddaStageCount);//set bitAmounts to 5 stages
+		}
+		else{
+			resizeBitAmount(stages);
+		}
+
 		REPORT(DEBUG, "bitAmount has now a size of " << bitAmount.size());
 		REPORT(DEBUG, "resized bitAmount");
 
@@ -84,17 +113,24 @@ namespace flopoco{
 		generateConstraintC4();
 		REPORT(DEBUG, "generated all constraints");
 
+		if(optimalMinStages){
+			selectOutputStage(stages);
+		}
+
 		//selectOutputStage(); needed for optimalMinStages()
 
 		generateConstraintForVariableCompressors();
 
 		problemSolver->writeLP("compressorTree.lp");
 
-		solve();
-		REPORT(DEBUG, "solved");
+		bool success = solve();
+		REPORT(DEBUG, "solved with success = " << success);
+		if(success){
+			fillSolutionFromILP();
+			REPORT(DEBUG, "solution done from ilp");
+		}
 
-		fillSolutionFromILP();
-		REPORT(DEBUG, "solution done from ilp");
+		return success;
 
 	}
 
@@ -107,7 +143,6 @@ namespace flopoco{
 		while(bitAmount.size() < stages){
 			bitAmount.resize(bitAmount.size() + 1);
 			bitAmount[bitAmount.size() - 1].resize(columns, 0);
-			REPORT(DEBUG, "new bitAmount.size() is " << bitAmount.size() << " and stages are " << stages);
 		}
 	}
 
@@ -373,8 +408,6 @@ namespace flopoco{
 		if(stat == ScaLP::status::INFEASIBLE_OR_UNBOUND || stat == ScaLP::status::INFEASIBLE || stat == ScaLP::status::UNBOUND ||stat == ScaLP::status::TIMEOUT_INFEASIBLE){
 			solutionFound = false;
 			REPORT(DEBUG, "problem is unbound, infeasible or no solution within timelimit is reached");
-			THROWERROR("No optimal solution found (problem infeasible or unbounded!)");
-			//TODO: for optimalMinStages, make additional conditions
 		}
 		else if(stat == ScaLP::status::OPTIMAL || stat == ScaLP::status::FEASIBLE || stat == ScaLP::status::TIMEOUT_FEASIBLE ){
 			solutionFound = true;
@@ -420,6 +453,76 @@ namespace flopoco{
 			}
 			solution.setEmptyInputsByRemainingBits(s, tempVector);
 		}
+	}
+
+	unsigned int OptimalCompressionStrategy::getMaxStageCount(){
+
+		//catching the case that there is no bitheap needed
+		if(daddaTwoBitStageReached(bitAmount[0], 0)){
+
+			return 0;
+		}
+		unsigned int stages = 0;
+		vector<int> tempVector(bitAmount[0].size());
+		for(unsigned int c = 0; c < bitAmount[0].size(); c++){
+
+			tempVector[c] = ceil((((float)bitAmount[0][c]) *  (2.0/3.0)) - 0.00001);
+		}
+
+
+
+		while(!daddaTwoBitStageReached(tempVector, stages)){
+			stages++;
+			if(stages < bitAmount.size()){
+				for(unsigned int c = 0; c < bitAmount[stages].size(); c++){
+					tempVector[c] += bitAmount[stages][c];
+				}
+			}
+			for(unsigned int c = 0;c < bitAmount[0].size(); c++){
+				tempVector[c] = ceil((((float)tempVector[c]) *  (2.0/3.0)) - 0.00001);
+			}
+		}
+
+		stages++; //for first ceil
+		return stages;
+	}
+
+	bool OptimalCompressionStrategy::daddaTwoBitStageReached(vector<int> currentBits, unsigned int stage){
+		bool reached = true;
+		for(unsigned w = 0; w < currentBits.size(); w++){
+			if(currentBits[w] > 2){
+				reached = false;
+			}
+		}
+
+		//check for inputbits which arrive later
+		for(unsigned int s = stage + 1; s < bitAmount.size(); s++){
+			for(unsigned int c = 0; c < bitAmount[s].size(); c++){
+				if(bitAmount[s][c] > 0){
+					reached = false;
+				}
+			}
+		}
+		return reached;
+	}
+
+	unsigned int OptimalCompressionStrategy::getMinAmountOfStages(){
+
+		//computes how many stages the compressor tree needs at least.
+		//this is done by checking what is the highest stage where bits from outside arrive.
+		//there can't be a compressortree, which is smaller than that highest stage
+
+		//skip s == 0 because there must be bits in there
+		for(unsigned int s = bitAmount.size() - 1; s > 0; s--){
+			for(unsigned int c = 0; c < bitAmount[s].size(); c++){
+				if(bitAmount[s][c] > 0){
+					return s;
+				}
+			}
+		}
+
+		//we found no inputbits in later stages, therefore return 0;
+		return 0;
 	}
 
 
