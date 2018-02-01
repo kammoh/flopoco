@@ -16,9 +16,14 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ, b
     {
         addInput("X1", wX);
         addInput("X2", wX);
+
         wX += 1; //the input X is now one bit wider
+
+		vhdl << tab << declare(target->DSPAdderDelay(),"X1_resized",18) << " <= std_logic_vector(resize(signed(X1),18));" << endl;
+		vhdl << tab << declare(target->DSPAdderDelay(),"X2_resized",18) << " <= std_logic_vector(resize(signed(X2),18));" << endl;
+
         //implement pre-adder:
-        vhdl << tab << declare("X",wX) << " <= std_logic_vector(resize(signed(X1)," << wX << ")";
+		vhdl << tab << declare("X",wX) << " <= std_logic_vector(signed(X1_resized) ";
         if(preAdderSubtracts)
         {
             vhdl << "-";
@@ -27,7 +32,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ, b
         {
             vhdl << "+";
         }
-        vhdl << " resize(signed(X2)," << wX << ")); -- pre-adder" << endl;
+		vhdl << " signed(X2_resized)); -- pre-adder" << endl;
     }
     else
     {
