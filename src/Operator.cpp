@@ -545,46 +545,49 @@ namespace flopoco{
 
 
 	void Operator::outputVHDLComponent(std::ostream& o, std::string name) {
-		unsigned int i;
-
-		o << tab << "component " << name << " is" << endl;
-        if( !generics_.empty() ) {
-            o << tab << tab << "generic ( ";
-            std::map<string, string>::iterator it = generics_.begin();
-            o << getSignalByName(it->first)->toVHDL();
-
-            for( ++it; it != generics_.end(); ++it  ) {
-                o << ";" << endl << tab << tab << it->first << " : " << getSignalByName(it->first)->toVHDL();
-            }
-
-            o << ");" << endl;
-        }
-
-        if (ioList_.size() > 0)
+		if(!isLibraryComponent()) //don't generate component declaration for library components
 		{
-			o << tab << tab << "port ( ";
-			if(isSequential()) {
-				// add clk, rst, etc. signals which are not member of iolist
-				if(hasClockEnable())
-					o << "clk, rst, ce : in std_logic;" <<endl;
-				else if(isRecirculatory())
-					o << "clk, rst, stall_s: in std_logic;" <<endl;
-				else
-					o << "clk, rst : in std_logic;" <<endl;
+			unsigned int i;
+
+			o << tab << "component " << name << " is" << endl;
+			if( !generics_.empty() ) {
+				o << tab << tab << "generic ( ";
+				std::map<string, string>::iterator it = generics_.begin();
+				o << getSignalByName(it->first)->toVHDL();
+
+				for( ++it; it != generics_.end(); ++it  ) {
+					o << ";" << endl << tab << tab << it->first << " : " << getSignalByName(it->first)->toVHDL();
+				}
+
+				o << ");" << endl;
 			}
 
-			for (i=0; i<this->ioList_.size(); i++){
-				Signal* s = this->ioList_[i];
+			if (ioList_.size() > 0)
+			{
+				o << tab << tab << "port ( ";
+				if(isSequential()) {
+					// add clk, rst, etc. signals which are not member of iolist
+					if(hasClockEnable())
+						o << "clk, rst, ce : in std_logic;" <<endl;
+					else if(isRecirculatory())
+						o << "clk, rst, stall_s: in std_logic;" <<endl;
+					else
+						o << "clk, rst : in std_logic;" <<endl;
+				}
 
-				if (i>0 || isSequential()) // align signal names
-					o << tab << "          ";
-				o <<  s->toVHDL();
-				if(i < this->ioList_.size()-1)
-					o << ";" << endl;
+				for (i=0; i<this->ioList_.size(); i++){
+					Signal* s = this->ioList_[i];
+
+					if (i>0 || isSequential()) // align signal names
+						o << tab << "          ";
+					o <<  s->toVHDL();
+					if(i < this->ioList_.size()-1)
+						o << ";" << endl;
+				}
+				o << tab << ");"<<endl;
 			}
-			o << tab << ");"<<endl;
+			o << tab << "end component;" << endl;
 		}
-		o << tab << "end component;" << endl;
 	}
 
 	void Operator::outputVHDLComponent(std::ostream& o) {
@@ -3564,14 +3567,20 @@ namespace flopoco{
 
 	void Operator::setShared(){
 		isShared_ = true;
-        isSequential_ = false; // shared operators must be combinatorial
+		isSequential_ = false; // shared operators must be combinatorial
 	}
-
 
 	bool Operator::isShared(){
 		return isShared_;
 	}
 
+	void Operator::setLibraryComponent(){
+		isLibraryComponent_ = true;
+	}
+
+	bool Operator::isLibraryComponent(){
+		return isLibraryComponent_;
+	}
 
 	void Operator::applySchedule()
 	{

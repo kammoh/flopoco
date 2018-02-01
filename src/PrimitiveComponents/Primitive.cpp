@@ -15,6 +15,7 @@ namespace flopoco {
         setCopyrightString( "Marco Kleinlein" );
         setCombinatorial();
 		setShared();
+		setLibraryComponent();
     }
 
     Primitive::~Primitive() {}

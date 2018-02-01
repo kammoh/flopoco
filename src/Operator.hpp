@@ -1295,6 +1295,16 @@ public:
 	 */
 	bool isShared();
 
+	/**
+	 * Sets this operator to a library component. Typically a wrapper to components like primitives
+	 */
+	void setLibraryComponent();
+
+	/**
+	 * Is this operator just a wrapper to a library component (like primitives)?
+	 */
+	bool isLibraryComponent();
+
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////Functions used for resource estimations
@@ -1758,6 +1768,7 @@ private:
 
 	bool                   noParseNoSchedule_;              /**< Flag instructing the VHDL to go through unchanged */
 	bool                   isShared_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
+	bool                   isLibraryComponent_;             /**< Flag that indicates the the component is a library component (e.g., like primitives) and no code for the component or entity is generated. */
 
 	vector<triplet<string, string, int>> unresolvedDependenceTable;   /**< The list of dependence relations which contain on either the lhs or rhs an (still) unknown name */
 	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
