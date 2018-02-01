@@ -1305,6 +1305,10 @@ public:
 	 */
 	bool isLibraryComponent();
 
+	/**
+	 * Getter for generics (needed for deep copies)
+	 */
+	map<std::string, std::string> getGenerics();
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////Functions used for resource estimations

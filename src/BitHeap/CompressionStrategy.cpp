@@ -573,12 +573,15 @@ namespace flopoco{
         bitheap->getOp()->vhdl << endl;
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
-			compressorIONames.str("");
-			compressorIONames << compressor->getName() << "_bh"
-					<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
-            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(compressorIONames.str(), compressor->heights[i])
-					<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
-            bitheap->getOp()->inPortMap(compressor, join("X",i), compressorIONames.str());
+			if(compressor->heights[i] > 0)
+			{
+				compressorIONames.str("");
+				compressorIONames << compressor->getName() << "_bh"
+						<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
+				bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(compressorIONames.str(), compressor->heights[i])
+						<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
+				bitheap->getOp()->inPortMap(compressor, join("X",i), compressorIONames.str());
+			}
 		}
 
 		//create the signals for the compressor output
@@ -647,12 +650,15 @@ namespace flopoco{
         bitheap->getOp()->vhdl << endl;
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
-			vectorName.str("");
-			vectorName << compressor->getName() << "_bh"
-					<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
-            bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(vectorName.str(), compressor->heights[i])
-					<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
-            bitheap->getOp()->inPortMap(compressor, join("X",i), vectorName.str());
+			if(compressor->heights[i] > 0)
+			{
+				vectorName.str("");
+				vectorName << compressor->getName() << "_bh"
+						<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
+				bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(vectorName.str(), compressor->heights[i])
+						<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
+				bitheap->getOp()->inPortMap(compressor, join("X",i), vectorName.str());
+			}
 		}
 
 		//create the signals for the comrpessor outputs. Can handle compresssors who have

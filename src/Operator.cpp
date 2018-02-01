@@ -80,6 +80,7 @@ namespace flopoco{
 		isOperatorDrawn_            = false;
 
 		isShared_                   = false;
+		isLibraryComponent_         = false;
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
@@ -3306,6 +3307,7 @@ namespace flopoco{
 		isOperatorDrawn_            = op->isOperatorDrawn();
 
 		isShared_                   = op->isShared();
+		isLibraryComponent_         = op->isLibraryComponent();
 
 		resourceEstimate.str(op->resourceEstimate.str());
 		resourceEstimateReport.str(op->resourceEstimateReport.str());
@@ -3314,6 +3316,8 @@ namespace flopoco{
 
 		floorplan.str(op->floorplan.str());
 		flpHelper                   = op->flpHelper;
+
+		generics_					= op->getGenerics();
 	}
 
 
@@ -3580,6 +3584,10 @@ namespace flopoco{
 
 	bool Operator::isLibraryComponent(){
 		return isLibraryComponent_;
+	}
+
+	map<std::string, std::string> Operator::getGenerics(){
+		return generics_;
 	}
 
 	void Operator::applySchedule()
