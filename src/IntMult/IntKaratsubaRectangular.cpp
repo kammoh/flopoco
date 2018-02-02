@@ -41,49 +41,72 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
 
     BitheapNew *bitHeap = new BitheapNew(this, wOut+1);
 
-    vhdl << tab << declare("c0",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b0));" << endl;
+	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
+//	double multDelay = 0.5*maxTargetCriticalPath;
+	double multDelay = 0;
+
+	vhdl << tab << declare(multDelay,"c0",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b0));" << endl;
     bitHeap->addSignal("c0");
 
-    vhdl << tab << declare("c2",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b0));" << endl;
+	vhdl << tab << declare(multDelay,"c2",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b0));" << endl;
     bitHeap->addSignal("c2",2*TileBaseMultiple);
 
-    vhdl << tab << declare("c3",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b3));" << endl;
+	vhdl << tab << declare(multDelay,"c3",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b3));" << endl;
     bitHeap->addSignal("c3",3*TileBaseMultiple);
 
-    vhdl << tab << declare("c4",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b0));" << endl;
+	vhdl << tab << declare(multDelay,"c4",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b0));" << endl;
     bitHeap->addSignal("c4",4*TileBaseMultiple);
 
-    vhdl << tab << declare("c5",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b3));" << endl;
+	vhdl << tab << declare(multDelay,"c5",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b3));" << endl;
     bitHeap->addSignal("c5",5*TileBaseMultiple);
 
-    vhdl << tab << declare("c7",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b3));" << endl;
+	vhdl << tab << declare(multDelay,"c7",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b3));" << endl;
     bitHeap->addSignal("c7",7*TileBaseMultiple);
 
-    vhdl << tab << declare("c8",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b6));" << endl;
+	vhdl << tab << declare(multDelay,"c8",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b6));" << endl;
     bitHeap->addSignal("c8",8*TileBaseMultiple);
 
-    vhdl << tab << declare("c9",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b3));" << endl;
+	vhdl << tab << declare(multDelay,"c9",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b3));" << endl;
     bitHeap->addSignal("c9",9*TileBaseMultiple);
 
-    vhdl << tab << declare("c10",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b6));" << endl;
+	vhdl << tab << declare(multDelay,"c10",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b6));" << endl;
     bitHeap->addSignal("c10",10*TileBaseMultiple);
 
-    vhdl << tab << declare("c12",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b6));" << endl;
+	vhdl << tab << declare(multDelay,"c12",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b6));" << endl;
     bitHeap->addSignal("c12",12*TileBaseMultiple);
 
-#ifdef KARATSUBA
-    vhdl << tab << declare("d6",TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a0)," << TileWidth+1 << ") - resize(unsigned(a6)," << TileWidth+1 << ")));" << endl;
-    declare("k6",TileWidth+TileHeight+2);
-    newInstance( "DSPBlock", "dsp"+to_string(0), "wX=24 wY=17 usePreAdder=1 preAdderSubtracts=1","X1=>b0, X2=>b6, Y=>d6", "R=>k6");
-    bitHeap->subtractSignal("k6",6*TileBaseMultiple);
-    bitHeap->addSignal("c0",6*TileBaseMultiple);
-    bitHeap->addSignal("c12",6*TileBaseMultiple);
-#else
-    vhdl << tab << declare("c6a",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b6));" << endl;
-    bitHeap->addSignal("c6a",6*TileBaseMultiple);
-    vhdl << tab << declare("c6b",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b0));" << endl;
-    bitHeap->addSignal("c6b",6*TileBaseMultiple);
+
+	bool useRectangularKaratsuba=true;
+	if(useRectangularKaratsuba)
+	{
+#define KARATSUBA_SUB
+#ifdef KARATSUBA_SUB
+		vhdl << tab << declare("d6",TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a0)," << TileWidth+1 << ")) - signed(resize(unsigned(a6)," << TileWidth+1 << ")));" << endl;
+		getSignalByName(declare("k6",42))->setIsSigned();
+		vhdl << tab << declare("b0se",25) << " <= std_logic_vector(resize(unsigned(b0),25));" << endl;
+		vhdl << tab << declare("b6se",25) << " <= std_logic_vector(resize(unsigned(b6),25));" << endl;
+		newInstance( "DSPBlock", "dsp"+to_string(0), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=1","X1=>b0se, X2=>b6se, Y=>d6", "R=>k6");
+		bitHeap->subtractSignal("k6",6*TileBaseMultiple);
+		bitHeap->addSignal("c0",6*TileBaseMultiple);
+		bitHeap->addSignal("c12",6*TileBaseMultiple);
+#else //Add
+		vhdl << tab << declare("d6",TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a0)," << TileWidth+1 << ")) + signed(resize(unsigned(a6)," << TileWidth+1 << ")));" << endl;
+		declare("k6",42);
+		vhdl << tab << declare("b0se",25) << " <= std_logic_vector(resize(unsigned(b0),25));" << endl;
+		vhdl << tab << declare("b6se",25) << " <= std_logic_vector(resize(unsigned(b6),25));" << endl;
+		newInstance( "DSPBlock", "dsp"+to_string(0), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=0 isPipelined=0","X1=>b0se, X2=>b6se, Y=>d6", "R=>k6");
+		bitHeap->addSignal("k6",6*TileBaseMultiple);
+		bitHeap->subtractSignal("c0",6*TileBaseMultiple);
+		bitHeap->subtractSignal("c12",6*TileBaseMultiple);
 #endif
+	}
+	else
+	{
+		vhdl << tab << declare(multDelay,"c6a",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b6));" << endl;
+		bitHeap->addSignal("c6a",6*TileBaseMultiple);
+		vhdl << tab << declare(multDelay,"c6b",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b0));" << endl;
+		bitHeap->addSignal("c6b",6*TileBaseMultiple);
+	}
 
     //compress the bitheap
     bitHeap -> startCompression();
