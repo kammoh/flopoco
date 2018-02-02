@@ -10,20 +10,29 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int pipel
     name << "DSPBlock_" << wX << "x" << wY;
     setName(name.str());
 
-    if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
+	if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
 
-    if(usePreAdder)
+	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
+	double stageDelay = 0.9 * maxTargetCriticalPath;
+
+	if(usePreAdder)
+	{
+		addInput("X1", wX);
+		addInput("X2", wX);
+	}
+	else
+	{
+		addInput("X", wX);
+	}
+
+	addInput("Y", wY);
+
+	int wM; //the width of the multiplier result
+	if(usePreAdder)
     {
-        addInput("X1", wX);
-        addInput("X2", wX);
-
-        wX += 1; //the input X is now one bit wider
-
-		vhdl << tab << declare(target->DSPAdderDelay(),"X1_resized",18) << " <= std_logic_vector(resize(signed(X1),18));" << endl;
-		vhdl << tab << declare(target->DSPAdderDelay(),"X2_resized",18) << " <= std_logic_vector(resize(signed(X2),18));" << endl;
 
         //implement pre-adder:
-		vhdl << tab << declare("X",wX) << " <= std_logic_vector(signed(X1_resized) ";
+		vhdl << tab << declare(stageDelay,"X",wX) << " <= std_logic_vector(signed(X1) ";
         if(preAdderSubtracts)
         {
             vhdl << "-";
@@ -32,49 +41,40 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int pipel
         {
             vhdl << "+";
         }
-		vhdl << " signed(X2_resized)); -- pre-adder" << endl;
+		vhdl << " signed(X2)); -- pre-adder" << endl;
     }
+	wM = wX + wY;
+
+
+/*
+	double totalDelay;
+	if(pipelineDepth > 0)
+	{
+		totalDelay = pipelineDepth*maxTargetCriticalPath + getTarget()->ffDelay();
+	}
+	else
+	{
+		totalDelay = target->DSPMultiplierDelay();
+	}
+	cout << "totalDelay=" << totalDelay << endl;
+*/
+	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
+
+	vhdl << tab << declare(stageDelay,"M",wM) << " <= std_logic_vector(signed(X) * signed(Y)); -- multiplier" << endl;
+
+	if(usePostAdder)
+    {
+		if(wZ > wM) THROWERROR("word size for input Z (which is " << wZ << " ) must be less or equal to word size of multiplier result (which is " << wM << " ).");
+		addInput("Z", wZ);
+		vhdl << tab << declare(stageDelay,"A",wM) << " <= std_logic_vector(signed(M) + signed(Z)); -- post-adder" << endl;
+		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= A;" << endl;
+	}
     else
     {
-        addInput("X", wX);
+		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= M;" << endl;
     }
-    addInput("Y", wY);
-
-    int wM = wX + wY;
-
-    if(usePostAdder)
-    {
-        addInput("Z", wZ);
-        int wR = max(wM,wZ)+1;
-        addOutput("R", wR);
-
-		//target->DSPMultiplierDelay()+target->DSPAdderDelay()
-		vhdl << tab << declare("M",wM) << " <= std_logic_vector(signed(X) * signed(Y)); -- multiplier" << endl;
-        vhdl << tab << "R <= std_logic_vector(resize(signed(M)," << wR << ") + resize(signed(Z)," << wR << ")); -- post-adder" << endl;
-
-    }
-    else
-    {
-		double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
-		double totalDelay = pipelineDepth*maxTargetCriticalPath + getTarget()->ffDelay();
-
-		cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
-		cout << "totalDelay=" << totalDelay << endl;
-
-		addOutput("R", wM);
-
-		if(pipelineDepth > 0)
-		{
-			vhdl << tab << declare("M",wM) << " <= std_logic_vector(signed(X) * signed(Y)); -- multiplier" << endl;
-			vhdl << tab << declare(totalDelay,"Rtmp",wM) << " <= M;" << endl;
-			vhdl << tab << "R <= Rtmp;" << endl;
-		}
-		else
-		{
-			vhdl << tab << declare(target->DSPMultiplierDelay(),"M",wM) << " <= std_logic_vector(signed(X) * signed(Y)); -- multiplier" << endl;
-			vhdl << tab << "R <= M;" << endl;
-		}
-    }
+	addOutput("R", wM);
+	vhdl << tab << "R <= Rtmp;" << endl;
 }
 
 OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)

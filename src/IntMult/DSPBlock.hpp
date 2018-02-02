@@ -34,6 +34,8 @@ public:
      *    true      |    true     |    true           |  (X1-X2) * Y + Z
      * ------------------------------------------------------------------
      *
+	 * For Xilinx FPGAs, select wX=25, wY=17 and wZ=42 with usePreAdder=1 usePostAdder=1 for a DSP block which is detectable by synthesis (tested with ISE 13.4 and ISE 14.7)
+	 *
      * @param parentOp A pointer to the parent Operator
      * @param target A pointer to the target
      * @param wX input word size of X or X1 and X2 (when pre-adders are used)
