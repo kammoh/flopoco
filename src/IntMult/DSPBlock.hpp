@@ -42,7 +42,7 @@ public:
      * @param usePostAdder enables post-adders when set to true (see table above)
      * @param usePreAdder enables pre-adders when set to true (see table above)
      */
-    DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int wZ=0, bool usePostAdder=false, bool usePreAdder=false, bool preAdderSubtracts=false);
+	DSPBlock(Operator *parentOp, Target* target, int wX, int wY, int pipelineDepth=-1, int wZ=0, bool usePostAdder=false, bool usePreAdder=false, bool preAdderSubtracts=false);
 
     /** Factory method */
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
