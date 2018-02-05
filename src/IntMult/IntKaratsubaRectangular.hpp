@@ -47,7 +47,7 @@ namespace flopoco{
 		void createMult(int i, int j);
 
 		/**
-		 * Implements a_i b_j + a_k b_l by using (a_i + a_k)(b_j + b_l) - a_i b_l - a_k b_j
+		 * Implements a_i b_j + a_k b_l by using (a_i - a_k)(b_j - b_l) + a_i b_l + a_k b_j
 		 */
 		void createKaratsubaRect(int i, int j, int k, int l);
 

@@ -33,24 +33,53 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
         vhdl << tab << declare("b" + to_string(TileHeightMultiple*y),TileHeight) << " <= Y(" << (y+1)*TileHeight-1 << " downto " << y*TileHeight << ");" << endl;
     }
 
-	bitHeap = new BitheapNew(this, wOut+1);
+	bitHeap = new BitheapNew(this, wOut+2);
 
 //	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
 //	multDelay = 3*maxTargetCriticalPath;
 	multDelay = 0;
 
-	createMult(0, 0);
-	createMult(2, 0);
-	createMult(0, 3);
-	createMult(4, 0);
-	createMult(2, 3);
-	createMult(4, 3);
-	createMult(2, 6);
-	createMult(6, 3);
-	createMult(4, 6);
-	createMult(6, 6);
+	if(wX == 64 && wY == 72)
+	{
+		createMult(0, 0);
+		createMult(2, 0);
+		createMult(0, 3);
+		createMult(4, 0);
+		createMult(2, 3);
+		createMult(4, 3);
+		createMult(2, 6);
+		createMult(6, 3);
+		createMult(4, 6);
+		createMult(6, 6);
 
-	createKaratsubaRect(0,6,6,0);
+		createKaratsubaRect(0,6,6,0);
+	}
+	else if(wX == 96 && wY == 96)
+	{
+		createMult(0, 0);
+		createMult(2, 0);
+		createMult(0, 3);
+		createMult(4, 0);
+		createMult(2, 3);
+		createMult(4, 3);
+		createMult(6, 6);
+		createMult(8, 6);
+		createMult(6, 9);
+		createMult(10, 6);
+		createMult(8, 9);
+		createMult(10, 9);
+
+		createKaratsubaRect(0,6,6,0);
+		createKaratsubaRect(2,6,8,0);
+		createKaratsubaRect(0,9,6,3);
+		createKaratsubaRect(4,6,10,0);
+		createKaratsubaRect(2,9,8,3);
+		createKaratsubaRect(4,9,10,3);
+	}
+	else
+	{
+		THROWERROR("There is no predifined solution for the given input word sizes, sorry.")
+	}
 
     //compress the bitheap
     bitHeap -> startCompression();
@@ -62,16 +91,19 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
 
 void IntKaratsubaRectangular::createMult(int i, int j)
 {
-//	vhdl << tab << declare(multDelay,"c" + to_string(i) + "_" + to_string(j),TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a" <<  + i << " ) * unsigned(b" <<  + j << "));" << endl;
-//	bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
-
+	/*
+	vhdl << tab << declare(multDelay,"c" + to_string(i) + "_" + to_string(j),TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a" <<  + i << " ) * unsigned(b" <<  + j << "));" << endl;
+*/
 	if(!isSignalDeclared("a" + to_string(i) + "se"))
 		vhdl << tab << declare("a" + to_string(i) + "se",17) << " <= std_logic_vector(resize(unsigned(a" << i << "),17));" << endl;
 	if(!isSignalDeclared("b" + to_string(j) + "se"))
 		vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
-	vhdl << tab << declare("zero" + to_string(i) + to_string(j),25) << " <= (others => '0');" << endl;
+	if(!isSignalDeclared("zero25"))
+		vhdl << tab << declare("zero25",25) << " <= (others => '0');" << endl;
 
-	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=0 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>zero" + to_string(i) + to_string(j) + ", Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
+	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>zero25, Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
+
+
 	bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
 }
 
@@ -81,12 +113,17 @@ void IntKaratsubaRectangular::createKaratsubaRect(int i, int j, int k, int l)
 
 	if(useKaratsuba)
 	{
-		vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << TileWidth+1 << ")) - signed(resize(unsigned(a" << k << ")," << TileWidth+1 << ")));" << endl;
+		if(!isSignalDeclared("d" + to_string(i) + "_" + to_string(k)))
+			vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << TileWidth+1 << ")) - signed(resize(unsigned(a" << k << ")," << TileWidth+1 << ")));" << endl;
 		getSignalByName(declare("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),42))->setIsSigned();
-		vhdl << tab << declare("b" + to_string(l) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << l << "),25));" << endl;
-		vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
-		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(l) + "se, X2=>b" + to_string(j) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
-		bitHeap->subtractSignal("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),6*TileBaseMultiple);
+
+		if(!isSignalDeclared("b" + to_string(l) + "se"))
+			vhdl << tab << declare("b" + to_string(l) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << l << "),25));" << endl;
+		if(!isSignalDeclared("b" + to_string(j) + "se"))
+			vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
+
+		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
+		bitHeap->addSignal("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),6*TileBaseMultiple);
 		bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*TileBaseMultiple);
 		bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*TileBaseMultiple);
 	}

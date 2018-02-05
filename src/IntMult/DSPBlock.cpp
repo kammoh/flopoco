@@ -7,10 +7,12 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool isPi
     useNumericStd();
 
     ostringstream name;
-    name << "DSPBlock_" << wX << "x" << wY;
-    setName(name.str());
+//	name << "DSPBlock_" << wX << "x" << wY << (usePreAdder==1 ? "_PreAdd" : "") << (usePostAdder==1 ? "_PostAdd" : "") << (isPipelined==1 ? "_pip" : "") << "_uid" << getNewUId();
+	name << "DSPBlock_" << wX << "x" << wY << (usePreAdder==1 && !preAdderSubtracts ? "_PreAdd" : usePreAdder==1 && preAdderSubtracts ? "_PreSub" : "") << (usePostAdder==1 ? "_PostAdd" : "") << (isPipelined==1 ? "_pip" : "");
+	setShared(); //set this operator to be a shared operator, does not work for pipelined ones!!
+	setSequential(); //Dirty hack!!
 
-	setShared(); //set this operator to be a shared operator
+	setName(name.str());
 
 	if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
 
@@ -50,7 +52,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool isPi
     }
 	wM = wX + wY;
 
-	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
+//	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();
 	vhdl << tab << declare(stageDelay,"M",wM) << " <= std_logic_vector(signed(X) * signed(Y)); -- multiplier" << endl;
