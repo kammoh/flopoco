@@ -76,6 +76,41 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
 		createKaratsubaRect(2,9,8,3);
 		createKaratsubaRect(4,9,10,3);
 	}
+	else if(wX == 112 && wY == 120)
+	{
+		//multipliers required for sharing in Karatsuba
+		createMult(0, 0);
+		createMult(2, 0);
+		createMult(4, 0);
+		createMult(0, 3);
+		createMult(2, 3);
+		createMult(4, 3);
+		createMult(6, 6);
+		createMult(8, 6);
+		createMult(10, 6);
+		createMult(6, 9);
+		createMult(8, 9);
+		createMult(10, 9);
+		createMult(12, 12);
+
+		//applying the Karatsuba shared multipliers:
+		createKaratsubaRect(0,6,6,0);
+		createKaratsubaRect(2,6,8,0);
+		createKaratsubaRect(4,6,10,0);
+		createKaratsubaRect(0,9,6,3);
+		createKaratsubaRect(2,9,8,3);
+		createKaratsubaRect(4,9,10,3);
+		createKaratsubaRect(0,12,12,0);
+		createKaratsubaRect(6,12,12,6);
+
+		//multipliers not used for Karatsuba:
+		createMult(12, 3);
+		createMult(12, 9);
+		createMult(2, 12);
+		createMult(4, 12);
+		createMult(8, 12);
+		createMult(10, 12);
+	}
 	else
 	{
 		THROWERROR("There is no predifined solution for the given input word sizes, sorry.")
@@ -94,6 +129,7 @@ void IntKaratsubaRectangular::createMult(int i, int j)
 	/*
 	vhdl << tab << declare(multDelay,"c" + to_string(i) + "_" + to_string(j),TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a" <<  + i << " ) * unsigned(b" <<  + j << "));" << endl;
 */
+	cout << "implementing a" << i << " * b" << j << " with weight " << (i+j) << endl;
 	if(!isSignalDeclared("a" + to_string(i) + "se"))
 		vhdl << tab << declare("a" + to_string(i) + "se",17) << " <= std_logic_vector(resize(unsigned(a" << i << "),17));" << endl;
 	if(!isSignalDeclared("b" + to_string(j) + "se"))
@@ -113,6 +149,8 @@ void IntKaratsubaRectangular::createKaratsubaRect(int i, int j, int k, int l)
 
 	if(useKaratsuba)
 	{
+		cout << "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j << "" << endl;
+
 		if(!isSignalDeclared("d" + to_string(i) + "_" + to_string(k)))
 			vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << TileWidth+1 << ")) - signed(resize(unsigned(a" << k << ")," << TileWidth+1 << ")));" << endl;
 		getSignalByName(declare("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),42))->setIsSigned();
@@ -123,7 +161,7 @@ void IntKaratsubaRectangular::createKaratsubaRect(int i, int j, int k, int l)
 			vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 
 		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
-		bitHeap->addSignal("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),6*TileBaseMultiple);
+		bitHeap->addSignal("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),(i+j)*TileBaseMultiple);
 		bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*TileBaseMultiple);
 		bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*TileBaseMultiple);
 	}
