@@ -58,40 +58,27 @@ namespace flopoco{
 
 		REPORT(DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
 		printBitsInBitheap();
-		//first get the minimal cycle and maximum cycle and delay
-		int minCycle = std::numeric_limits<int>::max();
-		int maxCycle = 0;
-		double minDelay = 1.0;
-		double maxDelay = -1.0;
+		//first get the minimal cycle and maximum cycle
+		unsigned int minCycle = 0 - 1;
+		unsigned int maxCycle = 0;
 		Bit* minBit;
 		Bit* maxBit;
 		for(unsigned int i = 0; i < bitheap->bits.size(); i++){
 			for(unsigned int j = 0; j < bitheap->bits[i].size(); j++){
-				if(bitheap->bits[i][j]->signal->getCycle() > maxCycle){
-					maxCycle = bitheap->bits[i][j]->signal->getCycle();
-					maxDelay = -1.0;
+				
+				if(getStageOfArrivalForBit(bitheap->bits[i][j]) > maxCycle){
+					maxCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
+					maxBit = bitheap->bits[i][j];
 				}
-				if(bitheap->bits[i][j]->signal->getCycle() < minCycle){
-					minCycle = bitheap->bits[i][j]->signal->getCycle();
-					minDelay = 1.0;
+				if(getStageOfArrivalForBit(bitheap->bits[i][j]) < minCycle){
+					minCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
+					minBit = bitheap->bits[i][j];
 				}
-
-				if(bitheap->bits[i][j]->signal->getCycle() == maxCycle){
-					if(bitheap->bits[i][j]->signal->getCriticalPath() > maxDelay){
-						maxDelay = bitheap->bits[i][j]->signal->getCriticalPath();
-						maxBit = bitheap->bits[i][j];
-					}
-				}
-				if(bitheap->bits[i][j]->signal->getCycle() == minCycle){
-					if(bitheap->bits[i][j]->signal->getCriticalPath() < minDelay){
-						minDelay = bitheap->bits[i][j]->signal->getCriticalPath();
-						minBit = bitheap->bits[i][j];
-					}
-				}
+				
 			}
 		}
-		REPORT(DEBUG, "max is cycle " << maxCycle << " with delay " << maxDelay);
-		REPORT(DEBUG, "min is cycle " << minCycle << " with delay " << minDelay);
+		REPORT(DEBUG, "max is cycle " << maxCycle);
+		REPORT(DEBUG, "min is cycle " << minCycle);
 		REPORT(DEBUG, "minBit is " << minBit->signal->getName() << " and maxBit is " << maxBit->signal->getName());
 
 		REPORT(DEBUG, "objectiveDelay = " << objectiveDelay);
@@ -387,14 +374,18 @@ namespace flopoco{
 			remainingTime -= compressionDelay;
 			boundaries.insert(boundaries.begin(), remainingTime);
 		}
+		
 		unsigned int stage = bit->signal->getCycle() * stagesPerCycle;	//maxStage = number of stages - 1
 		double tempCriticalPath = bit->signal->getCriticalPath();
-		for(unsigned i = 0; i < boundaries.size(); i++){
-			if(tempCriticalPath > boundaries[i]){
-				stage++;
-			}
-			if(tempCriticalPath > boundaries[stagesPerCycle - 1]){
-				THROWERROR("criticalPath of signal is bigger than the biggest boundary. Bit should be in next cycle");
+		if(tempCriticalPath > boundaries[stagesPerCycle - 1]){
+			//bit is in next cylce
+			stage += stagesPerCycle;
+		}
+		else{			
+			for(unsigned i = 0; i < boundaries.size(); i++){
+				if(tempCriticalPath > boundaries[i]){
+					stage++;
+				}
 			}
 		}
 		return stage;
