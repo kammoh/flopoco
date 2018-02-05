@@ -2,15 +2,15 @@
 
 #include "IntKaratsubaRectangular.hpp"
 #include "IntMult/DSPBlock.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "assert.h"
 
 using namespace std;
 
 namespace flopoco{
 
 
-IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* target, int wX, int wY) :
-    Operator(parentOp,target), wX(wX), wY(wY), wOut(wX+wY)
+IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* target, int wX, int wY, bool useKaratsuba) :
+	Operator(parentOp,target), wX(wX), wY(wY), wOut(wX+wY), useKaratsuba(useKaratsuba)
 {
 
     ostringstream name;
@@ -24,12 +24,6 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
     addInput ("Y", wY);
     addOutput("R", wOut);
 
-    const int TileBaseMultiple=8;
-    const int TileWidthMultiple=2;
-    const int TileHeightMultiple=3;
-    const int TileWidth=TileBaseMultiple*TileWidthMultiple;
-    const int TileHeight=TileBaseMultiple*TileHeightMultiple;
-
     for(int x=0; x < wX/TileWidth; x++)
     {
         vhdl << tab << declare("a" + to_string(TileWidthMultiple*x),TileWidth) << " <= X(" << (x+1)*TileWidth-1 << " downto " << x*TileWidth << ");" << endl;
@@ -39,74 +33,24 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
         vhdl << tab << declare("b" + to_string(TileHeightMultiple*y),TileHeight) << " <= Y(" << (y+1)*TileHeight-1 << " downto " << y*TileHeight << ");" << endl;
     }
 
-    BitheapNew *bitHeap = new BitheapNew(this, wOut+1);
+	bitHeap = new BitheapNew(this, wOut+1);
 
-	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
-//	double multDelay = 0.5*maxTargetCriticalPath;
-	double multDelay = 0;
+//	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
+//	multDelay = 3*maxTargetCriticalPath;
+	multDelay = 0;
 
-	vhdl << tab << declare(multDelay,"c0",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b0));" << endl;
-    bitHeap->addSignal("c0");
+	createMult(0, 0);
+	createMult(2, 0);
+	createMult(0, 3);
+	createMult(4, 0);
+	createMult(2, 3);
+	createMult(4, 3);
+	createMult(2, 6);
+	createMult(6, 3);
+	createMult(4, 6);
+	createMult(6, 6);
 
-	vhdl << tab << declare(multDelay,"c2",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b0));" << endl;
-    bitHeap->addSignal("c2",2*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c3",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b3));" << endl;
-    bitHeap->addSignal("c3",3*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c4",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b0));" << endl;
-    bitHeap->addSignal("c4",4*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c5",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b3));" << endl;
-    bitHeap->addSignal("c5",5*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c7",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b3));" << endl;
-    bitHeap->addSignal("c7",7*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c8",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a2) * unsigned(b6));" << endl;
-    bitHeap->addSignal("c8",8*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c9",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b3));" << endl;
-    bitHeap->addSignal("c9",9*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c10",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a4) * unsigned(b6));" << endl;
-    bitHeap->addSignal("c10",10*TileBaseMultiple);
-
-	vhdl << tab << declare(multDelay,"c12",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b6));" << endl;
-    bitHeap->addSignal("c12",12*TileBaseMultiple);
-
-
-	bool useRectangularKaratsuba=true;
-	if(useRectangularKaratsuba)
-	{
-#define KARATSUBA_SUB
-#ifdef KARATSUBA_SUB
-		vhdl << tab << declare("d6",TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a0)," << TileWidth+1 << ")) - signed(resize(unsigned(a6)," << TileWidth+1 << ")));" << endl;
-		getSignalByName(declare("k6",42))->setIsSigned();
-		vhdl << tab << declare("b0se",25) << " <= std_logic_vector(resize(unsigned(b0),25));" << endl;
-		vhdl << tab << declare("b6se",25) << " <= std_logic_vector(resize(unsigned(b6),25));" << endl;
-		newInstance( "DSPBlock", "dsp"+to_string(0), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=1","X1=>b0se, X2=>b6se, Y=>d6", "R=>k6");
-		bitHeap->subtractSignal("k6",6*TileBaseMultiple);
-		bitHeap->addSignal("c0",6*TileBaseMultiple);
-		bitHeap->addSignal("c12",6*TileBaseMultiple);
-#else //Add
-		vhdl << tab << declare("d6",TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a0)," << TileWidth+1 << ")) + signed(resize(unsigned(a6)," << TileWidth+1 << ")));" << endl;
-		declare("k6",42);
-		vhdl << tab << declare("b0se",25) << " <= std_logic_vector(resize(unsigned(b0),25));" << endl;
-		vhdl << tab << declare("b6se",25) << " <= std_logic_vector(resize(unsigned(b6),25));" << endl;
-		newInstance( "DSPBlock", "dsp"+to_string(0), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=0 isPipelined=0","X1=>b0se, X2=>b6se, Y=>d6", "R=>k6");
-		bitHeap->addSignal("k6",6*TileBaseMultiple);
-		bitHeap->subtractSignal("c0",6*TileBaseMultiple);
-		bitHeap->subtractSignal("c12",6*TileBaseMultiple);
-#endif
-	}
-	else
-	{
-		vhdl << tab << declare(multDelay,"c6a",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a0) * unsigned(b6));" << endl;
-		bitHeap->addSignal("c6a",6*TileBaseMultiple);
-		vhdl << tab << declare(multDelay,"c6b",TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a6) * unsigned(b0));" << endl;
-		bitHeap->addSignal("c6b",6*TileBaseMultiple);
-	}
+	createKaratsubaRect(0,6,6,0);
 
     //compress the bitheap
     bitHeap -> startCompression();
@@ -114,6 +58,43 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
     vhdl << tab << "R" << " <= " << bitHeap->getSumName() <<
             range(wOut-1, 0) << ";" << endl;
 
+}
+
+void IntKaratsubaRectangular::createMult(int i, int j)
+{
+//	vhdl << tab << declare(multDelay,"c" + to_string(i) + "_" + to_string(j),TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a" <<  + i << " ) * unsigned(b" <<  + j << "));" << endl;
+//	bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
+
+	if(!isSignalDeclared("a" + to_string(i) + "se"))
+		vhdl << tab << declare("a" + to_string(i) + "se",17) << " <= std_logic_vector(resize(unsigned(a" << i << "),17));" << endl;
+	if(!isSignalDeclared("b" + to_string(j) + "se"))
+		vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
+	vhdl << tab << declare("zero" + to_string(i) + to_string(j),25) << " <= (others => '0');" << endl;
+
+	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=0 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>zero" + to_string(i) + to_string(j) + ", Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
+	bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
+}
+
+void IntKaratsubaRectangular::createKaratsubaRect(int i, int j, int k, int l)
+{
+	assert(i+j == k+l);
+
+	if(useKaratsuba)
+	{
+		vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << TileWidth+1 << ")) - signed(resize(unsigned(a" << k << ")," << TileWidth+1 << ")));" << endl;
+		getSignalByName(declare("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),42))->setIsSigned();
+		vhdl << tab << declare("b" + to_string(l) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << l << "),25));" << endl;
+		vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
+		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(l) + "se, X2=>b" + to_string(j) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
+		bitHeap->subtractSignal("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),6*TileBaseMultiple);
+		bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*TileBaseMultiple);
+		bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*TileBaseMultiple);
+	}
+	else
+	{
+		createMult(i, j);
+		createMult(k, l);
+	}
 }
 
 void IntKaratsubaRectangular::emulate(TestCase* tc){
@@ -126,11 +107,13 @@ void IntKaratsubaRectangular::emulate(TestCase* tc){
 OperatorPtr IntKaratsubaRectangular::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
     int wX,wY;
+	bool useKaratsuba;
 
     UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-    UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
+	UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
+	UserInterface::parseBoolean(args, "useKaratsuba", &useKaratsuba);
 
-    return new IntKaratsubaRectangular(parentOp,target,wX,wY);
+	return new IntKaratsubaRectangular(parentOp,target,wX,wY,useKaratsuba);
 }
 
 void IntKaratsubaRectangular::registerFactory(){
@@ -138,7 +121,7 @@ void IntKaratsubaRectangular::registerFactory(){
                        "Implements a large unsigned Multiplier using rectangular shaped tiles as appears for Xilinx FPGAs. Currently limited to specific, hand-optimized sizes",
                        "BasicInteger", // categories
                        "",
-                       "wX(int): size of input X; wY(int): size of input Y;",
+					   "wX(int): size of input X; wY(int): size of input Y;useKaratsuba(bool)=1: Uses Karatsuba when set to 1, instead a standard tiling without sharing is used.",
                        "",
                        IntKaratsubaRectangular::parseArguments
                        ) ;

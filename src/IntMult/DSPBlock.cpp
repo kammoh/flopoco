@@ -10,6 +10,8 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool isPi
     name << "DSPBlock_" << wX << "x" << wY;
     setName(name.str());
 
+	setShared(); //set this operator to be a shared operator
+
 	if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
 
 	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
