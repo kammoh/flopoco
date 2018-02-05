@@ -2,6 +2,7 @@
 #include "CompressionStrategy.hpp"
 #include <limits>
 #include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
+#include "assert.h"
 
 using namespace std;
 
@@ -59,18 +60,20 @@ namespace flopoco{
 		REPORT(DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
 		printBitsInBitheap();
 		//first get the minimal cycle and maximum cycle
-		unsigned int minCycle = 0 - 1;
-		unsigned int maxCycle = 0;
-		Bit* minBit;
-		Bit* maxBit;
-		for(unsigned int i = 0; i < bitheap->bits.size(); i++){
-			for(unsigned int j = 0; j < bitheap->bits[i].size(); j++){
-				
-				if(getStageOfArrivalForBit(bitheap->bits[i][j]) > maxCycle){
+		int minCycle = 1E6;
+		int maxCycle = -1;
+		Bit* minBit = nullptr;
+		Bit* maxBit = nullptr;
+		for(unsigned int i = 0; i < bitheap->bits.size(); i++)
+		{
+			for(unsigned int j = 0; j < bitheap->bits[i].size(); j++)
+			{
+				int currentCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
+				if(currentCycle > maxCycle){
 					maxCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					maxBit = bitheap->bits[i][j];
 				}
-				if(getStageOfArrivalForBit(bitheap->bits[i][j]) < minCycle){
+				if(currentCycle < minCycle){
 					minCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					minBit = bitheap->bits[i][j];
 				}
@@ -79,6 +82,8 @@ namespace flopoco{
 		}
 		REPORT(DEBUG, "max is cycle " << maxCycle);
 		REPORT(DEBUG, "min is cycle " << minCycle);
+		assert(minBit != nullptr);
+		assert(maxBit != nullptr);
 		REPORT(DEBUG, "minBit is " << minBit->signal->getName() << " and maxBit is " << maxBit->signal->getName());
 
 		REPORT(DEBUG, "objectiveDelay = " << objectiveDelay);
