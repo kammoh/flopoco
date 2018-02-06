@@ -1,4 +1,5 @@
 cd TestResults/tmp
+export DYLD_LIBRARY_PATH=/Users/pluto/research/develop/inst/lib
 echo "-------------------------------------------" >> ../$1/report
 echo "./flopoco $*"
 echo "./flopoco $*" >> ../$1/report
@@ -14,11 +15,9 @@ if grep 'gtkwave' temp > /dev/null; then
 			echo $nvc
 			message='nvc simulation ERROR'
 	fi
-	#cleanup:
-        rm *.fst
-        rm -R work
 else
 	message='VHDL not generated'
+	echo $temp
 fi
 echo  $message >> ../$1/report
 echo  $message

@@ -12,7 +12,7 @@ namespace flopoco{
 		/** 
          * The constructor of the IntKaratsubaRectangular class
 		 **/
-		IntKaratsubaRectangular(Operator* parentOp, Target* target, int wX, int wY,bool useKaratsuba=true);
+		IntKaratsubaRectangular(Operator* parentOp, Target* target, int wX, int wY,bool useKaratsuba=true, bool useRectangularTiles=true);
 
         /**
          * Emulates the multiplier
@@ -24,6 +24,8 @@ namespace flopoco{
         /** Register the factory */
         static void registerFactory();
 
+		static TestList unitTest(int index);
+
     protected:
 	
         int wX; /**< the width (in bits) of the input X  */
@@ -33,23 +35,30 @@ namespace flopoco{
 		bool useKaratsuba; /**< uses Karatsuba when true, instead uses standard tiling without sharing */
 		double multDelay;
 
-		const int TileBaseMultiple=8;
-		const int TileWidthMultiple=2;
-		const int TileHeightMultiple=3;
-		const int TileWidth=TileBaseMultiple*TileWidthMultiple;
-		const int TileHeight=TileBaseMultiple*TileHeightMultiple;
+		int TileBaseMultiple;
+		int TileWidthMultiple;
+		int TileHeightMultiple;
+		int TileWidth;
+		int TileHeight;
 
 		BitheapNew *bitHeap;
 
 		/**
-		 * Implements + a_i b_j
+		 * Implements "+ a_i b_j" using a rectangular multiplier
 		 */
 		void createMult(int i, int j);
 
 		/**
 		 * Implements a_i b_j + a_k b_l by using (a_i - a_k)(b_j - b_l) + a_i b_l + a_k b_j
+		 * using a rectangular multiplier
 		 */
-		void createKaratsubaRect(int i, int j, int k, int l);
+		void createRectKaratsuba(int i, int j, int k, int l);
+
+		/**
+		 * Implements a_i b_j + a_k b_l by using (a_i - a_k)(b_j - b_l) + a_i b_l + a_k b_j
+		 * using a square multiplier
+		 */
+		void createSquareKaratsuba(int i, int j, int k, int l);
 
 	private:
 	};
