@@ -33,6 +33,7 @@ namespace flopoco{
         int wOut; /**< the width (in bits) of the output R  */
 
 		bool useKaratsuba; /**< uses Karatsuba when true, instead uses standard tiling without sharing */
+		bool useRectangularTiles;
 		double multDelay;
 
 		int TileBaseMultiple;

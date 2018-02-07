@@ -10,7 +10,7 @@ namespace flopoco{
 
 
 IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* target, int wX, int wY, bool useKaratsuba, bool useRectangularTiles) :
-	Operator(parentOp,target), wX(wX), wY(wY), wOut(wX+wY), useKaratsuba(useKaratsuba)
+	Operator(parentOp,target), wX(wX), wY(wY), wOut(wX+wY), useKaratsuba(useKaratsuba), useRectangularTiles(useRectangularTiles)
 {
 
     ostringstream name;
@@ -36,7 +36,7 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
 	}
 	else
 	{
-		TileBaseMultiple=16;
+		TileBaseMultiple=17;
 		TileWidthMultiple=1;
 		TileHeightMultiple=1;
 		TileWidth=TileBaseMultiple*TileWidthMultiple;
@@ -180,13 +180,13 @@ void IntKaratsubaRectangular::createMult(int i, int j)
 */
 	REPORT(DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
 	if(!isSignalDeclared("a" + to_string(i) + "se"))
-		vhdl << tab << declare("a" + to_string(i) + "se",17) << " <= std_logic_vector(resize(unsigned(a" << i << "),17));" << endl;
+		vhdl << tab << declare("a" + to_string(i) + "se",18) << " <= std_logic_vector(resize(unsigned(a" << i << "),18));" << endl;
 	if(!isSignalDeclared("b" + to_string(j) + "se"))
 		vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 	if(!isSignalDeclared("zero25"))
 		vhdl << tab << declare("zero25",25) << " <= (others => '0');" << endl;
 
-	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>zero25, Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
+	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>zero25, Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
 
 
 	bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
@@ -202,16 +202,25 @@ void IntKaratsubaRectangular::createRectKaratsuba(int i, int j, int k, int l)
 		REPORT(INFO, "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j);
 
 		if(!isSignalDeclared("d" + to_string(i) + "_" + to_string(k)))
-			vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),TileWidth+1) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << TileWidth+1 << ")) - signed(resize(unsigned(a" << k << ")," << TileWidth+1 << ")));" << endl;
-		getSignalByName(declare("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),42))->setIsSigned();
+			vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),18) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << 18 << ")) - signed(resize(unsigned(a" << k << ")," << 18 << ")));" << endl;
+		declare("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),43);
 
 		if(!isSignalDeclared("b" + to_string(l) + "se"))
 			vhdl << tab << declare("b" + to_string(l) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << l << "),25));" << endl;
 		if(!isSignalDeclared("b" + to_string(j) + "se"))
 			vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 
-		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=17 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
-		bitHeap->addSignal("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),(i+j)*TileBaseMultiple);
+		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
+
+		int wDSPOut;
+		if(useRectangularTiles)
+			wDSPOut=41; //18+24-1=41 bits necessary
+		else
+			wDSPOut=35; //18+18-1=35 bits necessary
+
+		getSignalByName(declare("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),wDSPOut))->setIsSigned();
+		vhdl << tab << "kr" << i << "_" << j << "_" << k << "_" << l << " <= k" << i << "_" << j << "_" << k << "_" << l << "(" << wDSPOut-1 << " downto 0);" << endl;
+		bitHeap->addSignal("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),(i+j)*TileBaseMultiple);
 		bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*TileBaseMultiple);
 		bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*TileBaseMultiple);
 	}
@@ -264,6 +273,17 @@ TestList IntKaratsubaRectangular::unitTest(int index)
 	TestList testStateList;
 	vector<pair<string,string>> paramList;
 
+	//test Karatsuba with square tiles:
+	for(int w=17; w <= 136; w+=17)
+	{
+		paramList.push_back(make_pair("wX", to_string(w)));
+		paramList.push_back(make_pair("wY", to_string(w)));
+		paramList.push_back(make_pair("useKaratsuba", "1"));
+		paramList.push_back(make_pair("useRectangularTiles", "0"));
+		testStateList.push_back(paramList);
+		paramList.clear();
+	}
+
 	//test Karatsuba and standard tiling with rectangular tiles:
 	for(int useKaratsuba=0; useKaratsuba < 2; useKaratsuba++)
 	{
@@ -285,14 +305,6 @@ TestList IntKaratsubaRectangular::unitTest(int index)
 		testStateList.push_back(paramList);
 		paramList.clear();
 	}
-	//test Karatsuba with square tiles:
-	for(int w=32; w <= 128; w+=16)
-	paramList.push_back(make_pair("wX", "64"));
-	paramList.push_back(make_pair("wY", "64"));
-	paramList.push_back(make_pair("useKaratsuba", "1"));
-	paramList.push_back(make_pair("useRectangularTiles", "0"));
-	testStateList.push_back(paramList);
-	paramList.clear();
 
 	return testStateList;
 }
