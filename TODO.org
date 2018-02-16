@@ -299,6 +299,7 @@ a test programme iterates through the operators, testing them one by one for var
 add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
 The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
 * Janitoring
+*** build a SNAP package https://docs.snapcraft.io/build-snaps/c
 *** rename BitheapNew into BitHeap	
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
