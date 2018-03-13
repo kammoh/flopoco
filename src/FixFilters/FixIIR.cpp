@@ -153,7 +153,7 @@ namespace flopoco {
 		vhdl << instance(inputShiftReg, "inputShiftReg");
 #else
 		string outputs = "";
-		for (uint32_t i = 0; i<n; i++) {
+		for (uint32_t i = 1; i<=n; i++) {
 			outputs += join("Xd", i) + "=>" + join("U", i) + (i<n-1?",":"");
 		}
 		newInstance("ShiftReg", "inputShiftReg", "w=" + to_string(1-lsbIn) + " n=" + to_string(n), "X=>X", outputs);
@@ -164,14 +164,14 @@ namespace flopoco {
 		ShiftReg *outputShiftReg = new ShiftReg(parentOp, getTarget(), msbOut-lsbExt+1, m+1);
 		addSubComponent(outputShiftReg);
 		inPortMap(outputShiftReg, "X", "YinternalLoopback");
-		for (uint32_t i = 0; i<m; i++) {
+		for (uint32_t i = 1; i<=m; i++) {
 			outPortMap(outputShiftReg, join("Xd", i+1), join("Y", i));
 		}
 		vhdl << instance(outputShiftReg, "outputShiftReg");
 #else
 		outputs = "";
-		for (uint32_t i = 0; i<n; i++) {
-			outputs += join("Xd", i) + "=>" + join("Y", i) + (i<n-1?",":"");
+		for (uint32_t i = 1; i<=m+1; i++) {
+			outputs += join("Xd", i) + "=>" + join("Y", i) + (i<m+1?",":"");
 		}
 		newInstance("ShiftReg", "outputShiftReg", "w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m+1), "X=>YinternalLoopback", outputs);
 #endif
