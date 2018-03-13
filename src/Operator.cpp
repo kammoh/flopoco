@@ -949,7 +949,7 @@ namespace flopoco{
 	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType, bool incompleteDeclaration)
 	{
 		//set, if needed, the global parameters used for generating the registers
-		if((regType==Signal::registeredWithoutReset) || (regType==Signal::registeredWithZeroInitialiser))
+		if((regType==Signal::registeredWithoutReset))
 			hasRegistersWithoutReset_ = true;
 		if(regType==Signal::registeredWithSyncReset)
 			hasRegistersWithSyncReset_ = true;
@@ -1705,7 +1705,7 @@ namespace flopoco{
 				o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 			for(unsigned int i=0; i<signalList_.size(); i++) {
 				Signal *s = signalList_[i];
-				if ((s->type() == Signal::registeredWithoutReset) || (s->type()==Signal::registeredWithZeroInitialiser)
+				if ((s->type() == Signal::registeredWithoutReset) 
 						|| (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration))
 					if(s->getLifeSpan() > 0) {
 						for(int j=1; j <= s->getLifeSpan(); j++)

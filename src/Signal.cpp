@@ -436,7 +436,6 @@ namespace flopoco{
 		if(type()==Signal::wire || type()==Signal::table
 				|| type()==Signal::registeredWithoutReset
 				|| type()==Signal::registeredWithAsyncReset || type()==Signal::registeredWithSyncReset
-				|| type()==Signal::registeredWithZeroInitialiser
 				|| type()==Signal::constantWithDeclaration)
 			o << "signal ";
 		o << getName();
@@ -477,13 +476,6 @@ namespace flopoco{
 		o << " : ";
 
 		o << toVHDLType();
-
-		if (type()==Signal::registeredWithZeroInitialiser) {
-			if( (1==width()) && (!isBus_) )
-				o << " := '0'";
-			else
-				o << ":= (others=>'0')";
-		}
 		o << ";";
 
 		if((type_ == Signal::table) && (tableAttributes_ != ""))

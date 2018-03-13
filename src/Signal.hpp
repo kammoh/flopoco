@@ -47,8 +47,7 @@ class Operator;
 			table,                           /**< if the signal is a table (either logic, or RAM-based) */
 			registeredWithoutReset,          /**< if the signal is registered, but does not have a reset */
 			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */
-			registeredWithSyncReset,         /**< if the signal is registered, and has an synchronous reset */
-			registeredWithZeroInitialiser    /**< if the signal is registered, the it has a zero initializer (but no reset) */
+			registeredWithSyncReset         /**< if the signal is registered, and has an synchronous reset */
 		} SignalType;
 
 #if 0 // all these flags could be replaced with something like that
