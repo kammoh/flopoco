@@ -129,14 +129,14 @@ public:
 	 * Typical example is a table designed to fit in a LUT or parallel row of LUTs
 	 * We assume all the operators added to GlobalOpList are un-pipelined.
 	 */
-	void addToGlobalOpList();
+//	void addToGlobalOpList();
 
 	/**
 	 * Add operator @param op to the global (first-level) list, which is stored in its Target.
 	 * C.f. version of the method with no parameters for usage and more explanations
 	 * @param op the operator to add to the global operator list
 	 */
-	void addToGlobalOpList(Operator *op);
+//	void addToGlobalOpList(Operator *op);
 
 	/**
 	 * Apply the schedule computed by schedule() to the VHDL stream.

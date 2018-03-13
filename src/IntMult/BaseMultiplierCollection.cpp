@@ -6,9 +6,7 @@
 
 namespace flopoco {
 
-
 BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int wX, unsigned int wY, bool pipelineDSPs){
-
     srcFileName = "BaseMultiplierCollection";
     uniqueName_ = "BaseMultiplierCollection";
 	
@@ -16,8 +14,9 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int 
     this->wX = wX;
     this->wY = wY;
 
+
     //create DSP-based multipliers:
-    baseMultipliers.push_back(new BaseMultiplierDSP(false, false, 17, 24, pipelineDSPs));
+	baseMultipliers.push_back(new BaseMultiplierDSP(false, false, 17, 24, pipelineDSPs));
     baseMultipliers.push_back(new BaseMultiplierDSP(false, false, 24, 17, pipelineDSPs));
 
     //create DSP-based super tiles: TODO make correct ordering
@@ -38,7 +37,6 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int 
 
     baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_L, pipelineDSPs)); //_12 = L
     baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_F, pipelineDSPs)); //_13 = F
-
 
     for(unsigned int width = 4; width <= 17; width++){
         baseMultipliers.push_back(new BaseMultiplierDSP(false, false, width, width, pipelineDSPs));

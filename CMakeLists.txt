@@ -440,7 +440,9 @@ src/IntAddSubCmp/IntMultiAdder
 
  
 # Multiplication related --------------------------------------------
-# src/IntMult/IntMultiplier
+src/IntMult/IntMultiplier
+src/IntMult/TilingStrategy
+src/IntMult/TilingStrategyOptimalILP
 # src/IntMult/FixMultAdd
 src/IntMult/MultiplierBlock
 # src/IntMult/IntSquarer

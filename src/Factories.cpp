@@ -71,7 +71,7 @@ void UserInterface::registerFactories()
 		IntMultiAdder::registerFactory();
 		DSPBlock::registerFactory();
 		IntKaratsubaRectangular::registerFactory();
-		// IntMultiplier::registerFactory();
+		IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
 		// IntConstMult::registerFactory(); // depends on BH, but in currently unplugged code
