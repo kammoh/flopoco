@@ -863,12 +863,6 @@ public:
 	
 
 	/**
-	 * Returns true if the operator needs a recirculation signal
-	 *  TODO : change name
-	 */
-	bool isRecirculatory();
-
-	/**
 	 * Set the operator to sequential.
 	 * You shouldn't need to use this method for standard operators
 	 * (Operator::Operator()  calls it according to Target)
@@ -882,12 +876,6 @@ public:
 	 */
 	void setCombinatorial();
 
-
-	/**
-	 * Set the operator to need a recirculation signal in order to
-	 * trigger the pipeline work
-	 */
-	void setRecirculationSignal();
 
 	/**
 	 * Indicates that it is not a warning if there is feedback of one cycle, but it
@@ -1121,8 +1109,6 @@ public:
 	void setClockEnable(bool val);
 
 	string getCopyrightString();
-
-	bool getNeedRecirculationSignal();
 
 	Operator* getIndirectOperator();
 
@@ -1758,9 +1744,6 @@ private:
 	string                 headerComment_;                  /**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;                /**< Authors and years.  */
 	string                 additionalHeaderString_;         /**< User-defined header information (used, e.g., for primitives that require extra libraries).  */
-	// TODO move the two following to outputVHDL
-	// TODO recirculation and clock enable are two description of the same behaviour. 
-	bool                   needRecirculationSignal_;        /**< True if the operator has registers having a recirculation signal  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
 	int		                 hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/

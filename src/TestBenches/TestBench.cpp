@@ -73,10 +73,7 @@ namespace flopoco{
 		// add clk and rst
 		declare("clk");
 		declare("rst");
-		// declaration and assignation of the recirculation signal
-		if (op_->isRecirculatory()) {
-			vhdl << tab << declare("stall_s") << " <= '0';" << endl;
-		}
+		// declaration and assignation of the clock enable signal
 		if (op_->hasClockEnable()) {
 			vhdl << tab << declare("ce") << " <= '1';" << endl;
 		}

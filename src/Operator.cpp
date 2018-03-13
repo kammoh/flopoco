@@ -71,7 +71,6 @@ namespace flopoco{
 		hasClockEnable_             = false;
 		pipelineDepth_              = 0;
 
-		needRecirculationSignal_    = false;
 		myuid                       = getNewUId();
 		architectureName_			= "arch";
 		indirectOperator_           = NULL;
@@ -570,8 +569,6 @@ namespace flopoco{
 					// add clk, rst, etc. signals which are not member of iolist
 					if(hasClockEnable())
 						o << "clk, rst, ce : in std_logic;" <<endl;
-					else if(isRecirculatory())
-						o << "clk, rst, stall_s: in std_logic;" <<endl;
 					else
 						o << "clk, rst : in std_logic;" <<endl;
 				}
@@ -607,8 +604,6 @@ namespace flopoco{
 					// add clk, rst, etc. signals which are not member of iolist
 				if(hasClockEnable())
 					o << "clk, rst, ce : in std_logic;" <<endl;
-				else if(isRecirculatory())
-					o << "clk, rst, stall_s: in std_logic;" <<endl;
 				else
 					o << "clk, rst : in std_logic;" <<endl;
 			}
@@ -751,9 +746,6 @@ namespace flopoco{
 		return isSequential_;
 	}
 
-	bool Operator::isRecirculatory() {
-		return needRecirculationSignal_;
-	}
 
 	void Operator::setSequential() {
 		isSequential_=true;
@@ -761,10 +753,6 @@ namespace flopoco{
 
 	void Operator::setCombinatorial() {
 		isSequential_=false;
-	}
-
-	void Operator::setRecirculationSignal() {
-		needRecirculationSignal_ = true;
 	}
 
 
@@ -1278,9 +1266,6 @@ namespace flopoco{
 		if(op->isSequential())	{
 			o << "clk  => clk" << "," << endl
 			  << tab << tab << "           rst  => rst";
-			if (op->isRecirculatory()) {
-				o << "," << endl << tab << tab << "           stall_s => stall_s";
-			};
 			if (op->hasClockEnable()) {
 				o << "," << endl << tab << tab << "           ce => ce";
 			};
@@ -1692,16 +1677,14 @@ namespace flopoco{
 
 		// execute only if the operator is sequential, otherwise output nothing
 		string recTab = "";
-		if ( isRecirculatory() || hasClockEnable() )
+		if (hasClockEnable() )
 			recTab = tab;
 		if (isSequential()){
 			// First registers without reset
 			o << tab << "process(clk)" << endl;
 			o << tab << tab << "begin" << endl;
 			o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-			if (isRecirculatory())
-				o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
-			else if (hasClockEnable())
+			if (hasClockEnable())
 				o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 			for(unsigned int i=0; i<signalList_.size(); i++) {
 				Signal *s = signalList_[i];
@@ -1719,7 +1702,7 @@ namespace flopoco{
 						o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 				}
 			}
-			if (isRecirculatory() || hasClockEnable())
+			if (hasClockEnable())
 				o << tab << tab << tab << tab << "end if;" << endl;
 			o << tab << tab << tab << "end if;\n";
 			o << tab << tab << "end process;\n";
@@ -1742,8 +1725,7 @@ namespace flopoco{
 						}
 				}
 				o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
-				if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
-				else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+			  if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 				for(unsigned int i=0; i<signalList_.size(); i++) {
 					Signal *s = signalList_[i];
 					if (s->type() == Signal::registeredWithAsyncReset)
@@ -1752,7 +1734,7 @@ namespace flopoco{
 								o << recTab << tab <<tab << tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 						}
 				}
-				if (isRecirculatory() || hasClockEnable())
+				if (hasClockEnable())
 					o << tab << tab << tab << tab << "end if;" << endl;
 				o << tab << tab << tab << "end if;" << endl;
 				o << tab << tab <<"end process;" << endl;
@@ -1777,8 +1759,7 @@ namespace flopoco{
 						}
 				}
 				o << tab << tab << tab << tab << "else" << endl;
-				if (isRecirculatory()) o << tab << tab << tab << tab << "if stall_s = '0' then" << endl;
-				else if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+				if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 				for(unsigned int i=0; i<signalList_.size(); i++) {
 					Signal *s = signalList_[i];
 					if (s->type() == Signal::registeredWithSyncReset)
@@ -1787,7 +1768,7 @@ namespace flopoco{
 								o << tab <<tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 						}
 				}
-				if (isRecirculatory() || hasClockEnable())
+				if (hasClockEnable())
 					o << tab << tab << tab << tab << "end if;" << endl;
 				o << tab << tab << tab << tab << "end if;" << endl;
 				o << tab << tab << tab << "end if;" << endl;
@@ -1939,10 +1920,6 @@ namespace flopoco{
 
 	string Operator::getCopyrightString(){
 		return copyrightString_;
-	}
-
-	bool Operator::getNeedRecirculationSignal(){
-		return needRecirculationSignal_;
 	}
 
 	Operator* Operator::getIndirectOperator(){
@@ -3298,7 +3275,6 @@ namespace flopoco{
 		commentedName_              = op->commentedName_;
 		headerComment_              = op->headerComment_;
 		copyrightString_            = op->getCopyrightString();
-		needRecirculationSignal_    = op->getNeedRecirculationSignal();
 		hasClockEnable_             = op->hasClockEnable();
 		indirectOperator_           = op->getIndirectOperator();
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
