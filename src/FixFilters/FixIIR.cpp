@@ -137,9 +137,13 @@ namespace flopoco {
 			mpfr_set_d(xHistory[i], 0.0, GMP_RNDN);
 		}
 
+#if 0
 		setSequential();
 		getTarget()->setPipelined(true);
+#endif
+		
 		// The shift registers
+#if 0
 		ShiftReg *inputShiftReg = new ShiftReg(parentOp, getTarget(), 1-lsbIn, n);
 		addSubComponent(inputShiftReg);
 		inPortMap(inputShiftReg, "X", "X");
@@ -147,8 +151,16 @@ namespace flopoco {
 			outPortMap(inputShiftReg, join("Xd", i), join("U", i));
 		}
 		vhdl << instance(inputShiftReg, "inputShiftReg");
-
+#else
+		string outputs = "";
+		for (uint32_t i = 0; i<n; i++) {
+			outputs += join("Xd", i) + "=>" + join("U", i) + (i<n-1?",":"");
+		}
+		newInstance("ShiftReg", "inputShiftReg", "w=" + to_string(1-lsbIn) + " n=" + to_string(n), "X=>X", outputs);
+#endif
+		
 		vhdl << tab << declare("YinternalLoopback", msbOut-lsbExt+1) << " <= Yinternal;" << endl; // just so that the inportmap finds it  
+#if 0
 		ShiftReg *outputShiftReg = new ShiftReg(parentOp, getTarget(), msbOut-lsbExt+1, m+1);
 		addSubComponent(outputShiftReg);
 		inPortMap(outputShiftReg, "X", "YinternalLoopback");
@@ -156,11 +168,17 @@ namespace flopoco {
 			outPortMap(outputShiftReg, join("Xd", i+1), join("Y", i));
 		}
 		vhdl << instance(outputShiftReg, "outputShiftReg");
+#else
+		outputs = "";
+		for (uint32_t i = 0; i<n; i++) {
+			outputs += join("Xd", i) + "=>" + join("Y", i) + (i<n-1?",":"");
+		}
+		newInstance("ShiftReg", "outputShiftReg", "w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m+1), "X=>YinternalLoopback", outputs);
+#endif
 		
 		// Now building a single SOPC. For this we need the following info:
 		//		FixSOPC(Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1);
 		// We will concatenate coeffb of size n then then coeffa of size m
-		
 		// MaxX
 
 		setCombinatorial();

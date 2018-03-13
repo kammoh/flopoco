@@ -10,8 +10,8 @@ using namespace std;
 
 namespace flopoco {
 
-	ShiftReg::ShiftReg(OperatorPtr parentOp, Target* target, int w_, int n_)
-		: Operator(parentOp, target), w(w_), n(n_)
+	ShiftReg::ShiftReg(OperatorPtr parentOp, Target* target, int w_, int n_, bool hasReset_)
+		: Operator(parentOp, target), w(w_), n(n_), hasReset(hasReset_)
 	{
 		srcFileName="ShiftReg";
 		setCopyrightString ( "Louis Beseme, Florent de Dinechin, Matei Istoan (2014-2016)" );
@@ -29,7 +29,10 @@ namespace flopoco {
 
 		vhdl << tab << declare("X0" , w)  << " <= X;" << endl;
 		for(int i=0; i<n; i++) {
-			addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithAsyncReset);
+			if(hasReset)
+				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithAsyncReset);
+			else
+				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithoutReset);				
 			vhdl << tab << join("Xd",i)  << " <= " << join("X", i+1) << ";" << endl;
 		}
 	};

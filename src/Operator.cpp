@@ -2347,7 +2347,7 @@ namespace flopoco{
 				if(newRhsName.find('^') != string::npos){
 					string sdelay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
 					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
-					REPORT(0, "doApplySchedule: Found funct. delayed signal 2  : " << newRhsName << " delay:" << sdelay );
+					REPORT(0, "doApplySchedule: Found funct. delayed signal  : " << newRhsName << " delay:" << sdelay );
 					functionalDelay = stoi(sdelay);
 				}
 
