@@ -65,10 +65,6 @@ namespace flopoco{
 		vhdl.setOperator(this);
 		stdLibType_                 = 0;						// unfortunately this is the historical default.
 		target_                     = target;
-		hasRegistersWithoutReset_   = false;
-		hasRegistersWithAsyncReset_ = false;
-		hasRegistersWithSyncReset_  = false;
-		hasClockEnable_             = false;
 		pipelineDepth_              = 0;
 
 		myuid                       = getNewUId();
@@ -567,10 +563,12 @@ namespace flopoco{
 				o << tab << tab << "port ( ";
 				if(isSequential()) {
 					// add clk, rst, etc. signals which are not member of iolist
+					o << "clk";
+					if(hasReset())
+						o << ", rst";
 					if(hasClockEnable())
-						o << "clk, rst, ce : in std_logic;" <<endl;
-					else
-						o << "clk, rst : in std_logic;" <<endl;
+						o << ", ce";
+					o << " : in std_logic;" <<endl;
 				}
 
 				for (i=0; i<this->ioList_.size(); i++){
@@ -599,13 +597,15 @@ namespace flopoco{
 		o << "entity " << uniqueName_ << " is" << endl;
 		if (ioList_.size() > 0)
 		{
-			o << tab << " port ( ";
+			o << tab << " port (";
 			if(isSequential()) {
 					// add clk, rst, etc. signals which are not member of iolist
+				o << "clk";
+				if(hasReset())
+					o << ", rst";
 				if(hasClockEnable())
-					o << "clk, rst, ce : in std_logic;" <<endl;
-				else
-					o << "clk, rst : in std_logic;" <<endl;
+					o << ", ce";
+				o << " : in std_logic;" <<endl;
 			}
 
 			for (i=0; i<this->ioList_.size(); i++){
@@ -936,14 +936,6 @@ namespace flopoco{
 
 	void Operator::initNewSignal(Signal* s, double criticalPathContribution, Signal::SignalType regType, bool incompleteDeclaration)
 	{
-		//set, if needed, the global parameters used for generating the registers
-		if((regType==Signal::registeredWithoutReset))
-			hasRegistersWithoutReset_ = true;
-		if(regType==Signal::registeredWithSyncReset)
-			hasRegistersWithSyncReset_ = true;
-		if(regType==Signal::registeredWithAsyncReset)
-			hasRegistersWithAsyncReset_ = true;
-
 		//define its cycle, critical path and contribution to the critical path
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
@@ -1046,8 +1038,8 @@ namespace flopoco{
 		catch(string &e2) {
 			THROWERROR("In addRegisteredSignalCopy(): " << e2);
 		}
-
-		vhdl << tab << declare(copyName, s->width(), s->isBus(), sigtype) << " <= "<<sourceName<<"^1;" << endl;
+		s->setType(sigtype);
+		vhdl << tab << declare(copyName, s->width(), s->isBus()) << " <= "<<sourceName<<"^1;" << endl;
 		// this ^ will be caught in doApplySchedule(). We could have arbitrary number of delays but I wait for a use case
 	}
 
@@ -1264,11 +1256,11 @@ namespace flopoco{
 
 		// build vhdl and erase portMap_
 		if(op->isSequential())	{
-			o << "clk  => clk" << "," << endl
-			  << tab << tab << "           rst  => rst";
-			if (op->hasClockEnable()) {
+			o << "clk  => clk";
+			if (op->hasReset())
+			  o << "," << endl << tab << tab << "           rst  => rst";
+			if (op->hasClockEnable()) 
 				o << "," << endl << tab << tab << "           ce => ce";
-			};
 		}
 
 		//build the code for the inputs
@@ -1677,71 +1669,80 @@ namespace flopoco{
 
 		// execute only if the operator is sequential, otherwise output nothing
 		string recTab = "";
-		if (hasClockEnable() )
+		if (hasClockEnable())
 			recTab = tab;
 		if (isSequential()){
 			// First registers without reset
-			o << tab << "process(clk)" << endl;
-			o << tab << tab << "begin" << endl;
-			o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-			if (hasClockEnable())
-				o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-			for(unsigned int i=0; i<signalList_.size(); i++) {
-				Signal *s = signalList_[i];
-				if ((s->type() == Signal::registeredWithoutReset) 
-						|| (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration))
+			ostringstream regs;
+			for(auto s: signalList_) {
+				if ((s->type() == Signal::registeredWithoutReset) || (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration))
 					if(s->getLifeSpan() > 0) {
 						for(int j=1; j <= s->getLifeSpan(); j++)
-							o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+							regs << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 					}
 			}
-			for(unsigned int i=0; i<ioList_.size(); i++) {
-				Signal *s = ioList_[i];
+			for(auto s: ioList_) {
 				if(s->getLifeSpan() >0) {
 					for(int j=1; j <= s->getLifeSpan(); j++)
-						o << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+						regs << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 				}
 			}
-			if (hasClockEnable())
-				o << tab << tab << tab << tab << "end if;" << endl;
-			o << tab << tab << tab << "end if;\n";
-			o << tab << tab << "end process;\n";
+			if (regs.str() != "") {
+				o << tab << "process(clk)" << endl;
+				o << tab << tab << "begin" << endl;
+				o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
+				if (hasClockEnable())
+					o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+				o << regs.str();
+				if (hasClockEnable())
+					o << tab << tab << tab << tab << "end if;" << endl;
+				o << tab << tab << tab << "end if;\n";
+				o << tab << tab << "end process;\n";
+			}
 
 			// then registers with asynchronous reset
-			if (hasRegistersWithAsyncReset_) {
+			ostringstream aregs, aregsinit;
+			for(auto s: signalList_) {
+				if (s->type() == Signal::registeredWithAsyncReset) {
+					if(s->getLifeSpan() > 0) {
+						for(int j=1; j <= s->getLifeSpan(); j++) {
+							if ( (s->width()>1) || (s->isBus()))
+								aregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
+							else
+								aregsinit << recTab << tab <<tab << tab << tab   << s->delayedName(j) << " <=  '0';" << endl;
+							aregs << recTab << tab << tab << tab << tab        << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+						}
+					}
+				}
+			}
+			for(auto s: ioList_) {
+				if (s->type() == Signal::registeredWithAsyncReset) {
+					if(s->getLifeSpan() > 0) {
+						for(int j=1; j <= s->getLifeSpan(); j++) {
+							if ( (s->width()>1) || (s->isBus()))
+								aregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
+							else
+								aregsinit << recTab << tab <<tab << tab << tab  << s->delayedName(j) << " <=  '0';" << endl;
+							aregs << recTab << tab << tab << tab << tab       << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+						}
+					}
+				}
+			}
+			if (aregsinit.str() !="") {
 				o << tab << "process(clk, rst)" << endl;
 				o << tab << tab << "begin" << endl;
 				o << tab << tab << tab << "if rst = '1' then" << endl;
-				for(unsigned int i=0; i<signalList_.size(); i++) {
-					Signal *s = signalList_[i];
-					if (s->type() == Signal::registeredWithAsyncReset)
-						if(s->getLifeSpan() >0) {
-							for(int j=1; j <= s->getLifeSpan(); j++){
-								if ( (s->width()>1) || (s->isBus()))
-									o << tab << tab <<tab << tab << s->delayedName(j) << " <=  (others => '0');" << endl;
-								else
-									o << tab <<tab << tab << tab << s->delayedName(j) << " <=  '0';" << endl;
-							}
-						}
-				}
+				o << aregsinit.str();
 				o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
 			  if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-				for(unsigned int i=0; i<signalList_.size(); i++) {
-					Signal *s = signalList_[i];
-					if (s->type() == Signal::registeredWithAsyncReset)
-						if(s->getLifeSpan() >0) {
-							for(int j=1; j <= s->getLifeSpan(); j++)
-								o << recTab << tab <<tab << tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
-						}
-				}
-				if (hasClockEnable())
-					o << tab << tab << tab << tab << "end if;" << endl;
+				o << aregs.str();
+				if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
 				o << tab << tab << tab << "end if;" << endl;
 				o << tab << tab <<"end process;" << endl;
-			}
+			}			
 
 			// then registers with synchronous reset
-			if (hasRegistersWithSyncReset_) {
+			if (false) {
 				o << tab << "process(clk, rst)" << endl;
 				o << tab << tab << "begin" << endl;
 				o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
@@ -1894,22 +1895,19 @@ namespace flopoco{
 		return attributesValues_;
 	}
 
-	bool Operator::getHasRegistersWithoutReset(){
-		return hasRegistersWithoutReset_;
-	}
-
-	bool Operator::getHasRegistersWithAsyncReset(){
-		return hasRegistersWithAsyncReset_;
-	}
-
-	bool Operator::getHasRegistersWithSyncReset(){
-		return hasRegistersWithSyncReset_;
-	}
-
+	// we used to attempt to maintain an attribute for the following but it is really simpler to test it when needed 
 	bool Operator::hasReset() {
-		return hasRegistersWithSyncReset_ || hasRegistersWithAsyncReset_;
+		for(auto s: signalList_) {
+			if ((s->type() == Signal::registeredWithAsyncReset) || (s->type() == Signal::registeredWithSyncReset) )
+				return true;
+		}
+		for(auto s: ioList_) {
+			if ((s->type() == Signal::registeredWithAsyncReset) || (s->type() == Signal::registeredWithSyncReset) )
+				return true;
+		}
+		return false;
 	}
-
+	
 	bool Operator::hasClockEnable(){
 		return hasClockEnable_;
 	}
@@ -3267,10 +3265,6 @@ namespace flopoco{
 		attributes_                 = op->getAttributes();
 		types_                      = op->getTypes();
 		attributesValues_           = op->getAttributesValues();
-
-		hasRegistersWithoutReset_   = op->getHasRegistersWithoutReset();
-		hasRegistersWithAsyncReset_ = op->getHasRegistersWithAsyncReset();
-		hasRegistersWithSyncReset_  = op->getHasRegistersWithSyncReset();
 
 		commentedName_              = op->commentedName_;
 		headerComment_              = op->headerComment_;

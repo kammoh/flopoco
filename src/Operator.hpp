@@ -1737,9 +1737,6 @@ private:
 	map<pair<string,string>, string >  attributesValues_;   /**< attribute values <attribute name, object (component, signal, etc)> ,  value> */
 	map<string, bool>      attributesAddSignal_;            /**< Vivado requires to add :signal, I have to read a VHDL book to understand how to do this cleany */
 	map<string, string>    types_;                          /**< The list of type declarations (name, type) */
-	bool                   hasRegistersWithoutReset_;       /**< True if the operator has registers without a reset */
-	bool                   hasRegistersWithAsyncReset_;     /**< True if the operator has registers having an async reset */
-	bool                   hasRegistersWithSyncReset_;      /**< True if the operator has registers having a synch reset */
 	string                 commentedName_;                  /**< Usually is the default name of the architecture.  */
 	string                 headerComment_;                  /**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;                /**< Authors and years.  */

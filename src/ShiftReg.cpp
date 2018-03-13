@@ -23,7 +23,7 @@ namespace flopoco {
 
 		addInput("X", w, true);
 
-		for(int i=0; i<n; i++) {
+		for(int i=1; i<=n; i++) {
 			addOutput(join("Xd", i), w, true);
 		}
 
@@ -33,7 +33,9 @@ namespace flopoco {
 				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithAsyncReset);
 			else
 				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithoutReset);				
-			vhdl << tab << join("Xd",i)  << " <= " << join("X", i+1) << ";" << endl;
+		}
+		for(int i=1; i<=n; i++) {
+			vhdl << tab << join("Xd",i)  << " <= " << join("X", i) << ";" << endl;
 		}
 	};
 
