@@ -38,7 +38,7 @@ class Operator;
 	{
 	public:
 		/** The possible types of a signal.  
-				Note that a signal is registered iff its lifeSpan is >0. 
+				Note that a signal is registered iff its lifeSpan is > 0. 
 				The two last types then tell if it needs a reset or not.
 				TODO: reset type is orthogonal to the others: should be taken out.
 		*/

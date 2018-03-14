@@ -1677,11 +1677,6 @@ namespace flopoco{
 			siglist.insert( siglist.end(), signalList_.begin(), signalList_.end() );
 			siglist.insert( siglist.end(), ioList_.begin(), ioList_.end() );
 
-			cerr << endl << getName() << "  siglist ";
-			for(auto s: siglist) {
-				cerr << s->getName() << ":" <<s->getLifeSpan() << " " ;
-			}
-
 			// look up for delayed signals of various types, and build intermediate VHDL if needed
 			ostringstream regs, aregs, aregsinit, sregs, sregsinit;
 			for(auto s: siglist) {
