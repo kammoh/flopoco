@@ -32,7 +32,7 @@ namespace flopoco {
 			if(hasReset)
 				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithAsyncReset);
 			else
-				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::registeredWithoutReset);				
+				addRegisteredSignalCopy(join("X", i+1), join("X", i), Signal::wire);				
 		}
 		for(int i=1; i<=n; i++) {
 			vhdl << tab << join("Xd",i)  << " <= " << join("X", i) << ";" << endl;

@@ -37,19 +37,23 @@ class Operator;
 	class Signal
 	{
 	public:
-		/** The possible types of a signal*/
+		/** The possible types of a signal.  
+				Note that a signal is registered iff its lifeSpan is >0. 
+				The two last types then tell if it needs a reset or not.
+				TODO: reset type is orthogonal to the others: should be taken out.
+		*/
 		typedef enum {
 			in,                              /**< if the signal is an input signal */
 			out,                             /**< if the signal is an output signal */
-			wire,                            /**< if the signal is a wire (not registered) */
+			wire,                            /**< if the signal is a wire (may be registered) */
 			constant,                        /**< if the signal is a constant */
 			constantWithDeclaration,         /**< if the signal is a constant, but needs to be declared */
 			table,                           /**< if the signal is a table (either logic, or RAM-based) */
-			registeredWithoutReset,          /**< if the signal is registered, but does not have a reset */
 			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */
 			registeredWithSyncReset         /**< if the signal is registered, and has an synchronous reset */
 		} SignalType;
 
+		
 #if 0 // all these flags could be replaced with something like that
 		/** The possible arithmetic types of a bit vector*/
 		typedef enum {

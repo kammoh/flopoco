@@ -851,7 +851,8 @@ namespace flopoco{
 
 		for(unsigned int i=0; i<(parentOp->getSignalList()).size(); i++) {
 			Signal *s = (parentOp->getSignalList())[i];
-			if ((s->type() == Signal::registeredWithoutReset) || (s->type() == Signal::wire)
+			if ((s->type() == Signal::wire)
+					|| (s->type() == Signal::in)
 					|| (s->type() == Signal::registeredWithAsyncReset) || (s->type() == Signal::registeredWithSyncReset))
 				if(s->getLifeSpan() >0) {
 					if(target->isPipelined() && parentOp->isSequential()){

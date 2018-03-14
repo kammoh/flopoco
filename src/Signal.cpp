@@ -434,7 +434,6 @@ namespace flopoco{
 		ostringstream o;
 
 		if(type()==Signal::wire || type()==Signal::table
-				|| type()==Signal::registeredWithoutReset
 				|| type()==Signal::registeredWithAsyncReset || type()==Signal::registeredWithSyncReset
 				|| type()==Signal::constantWithDeclaration)
 			o << "signal ";
