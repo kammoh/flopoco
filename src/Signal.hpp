@@ -48,10 +48,15 @@ class Operator;
 			wire,                            /**< if the signal is a wire (may be registered) */
 			constant,                        /**< if the signal is a constant */
 			constantWithDeclaration,         /**< if the signal is a constant, but needs to be declared */
-			table,                           /**< if the signal is a table (either logic, or RAM-based) */
-			registeredWithAsyncReset,        /**< if the signal is registered, and has an asynchronous reset */
-			registeredWithSyncReset         /**< if the signal is registered, and has an synchronous reset */
+			table                           /**< if the signal is a table (either logic, or RAM-based) */
 		} SignalType;
+
+
+		typedef enum {
+			noReset,         /**< if the signal is registered, and has an synchronous reset */
+			asyncReset,         /**< if the signal is registered, and has an synchronous reset */
+			syncReset,         /**< if the signal is registered, and has an synchronous reset */
+		} ResetType;
 
 		
 #if 0 // all these flags could be replaced with something like that
@@ -260,9 +265,29 @@ class Operator;
 		bool isBus() const;
 
 		/**
+		 * set or change the signal name
+		 */
+		void setName(std::string name);
+
+		/**
 		 * Returns the type of the signal
 		 */
 		SignalType type() const;
+
+		/**
+		 * sets the type of the signal
+		 */
+		void setType(SignalType t);
+
+		/**
+		 * Returns the reset type of the signal
+		 */
+		
+		void setResetType(ResetType t);
+		/**
+		 * sets the reset type of the signal
+		 */
+		ResetType resetType();
 
 
 
@@ -512,8 +537,6 @@ class Operator;
 		 */
 		std::string valueToVHDLHex(mpz_class v, bool quot = true);
 
-		void setName(std::string name);
-		void setType(SignalType t);
 
 		/** return a color for drawing a node */
 		static std::string getDotNodeColor(int index);
@@ -522,6 +545,7 @@ class Operator;
 		Operator*     parentOp_;                       /**< The operator which contains this signal */
 		std::string   name_;                           /**< The name of the signal */
 		SignalType    type_;                           /**< The type of the signal, see SignalType */
+		ResetType     resetType_;                      /**< The type of reset if the signal is registered */
 		int           width_;                          /**< The width of the signal */
 
 		double       constValue_;                      /**< The value of the constant, for a constant signal */

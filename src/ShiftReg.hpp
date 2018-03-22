@@ -11,7 +11,7 @@ namespace flopoco{
 	  
 		public:
 			/* Costructor : w is the input and output size; n is the number of taps */
-		ShiftReg(OperatorPtr parentOp, Target* target, int w, int n, bool hasReset=true); 
+		ShiftReg(OperatorPtr parentOp, Target* target, int w, int n, Signal::ResetType resetType=Signal::noReset); 
 
 			/* Destructor */
 			~ShiftReg();
@@ -35,7 +35,7 @@ namespace flopoco{
 	  	private:
 			int w; // input and output size
 			int n; // number of tap in ShiftReg
-			bool hasReset; // number of tap in ShiftReg
+			Signal::ResetType resetType; // do we want a reset
 	};
 
 }

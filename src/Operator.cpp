@@ -1028,7 +1028,7 @@ namespace flopoco{
 
 
 	
-	void Operator::addRegisteredSignalCopy(string copyName, string sourceName, Signal::SignalType sigtype)
+	void Operator::addRegisteredSignalCopy(string copyName, string sourceName, Signal::ResetType regType)
 	{
 		ostringstream result;
 		Signal* s;
@@ -1038,7 +1038,7 @@ namespace flopoco{
 		catch(string &e2) {
 			THROWERROR("In addRegisteredSignalCopy(): " << e2);
 		}
-		s->setType(sigtype);
+		s->setResetType(regType);
 		vhdl << tab << declare(copyName, s->width(), s->isBus()) << " <= "<<sourceName<<"^1;" << endl;
 		// this ^ will be caught in doApplySchedule(). We could have arbitrary number of delays but I wait for a use case
 	}
@@ -1682,17 +1682,17 @@ namespace flopoco{
 			for(auto s: siglist) {
 				if(s->getLifeSpan() > 0) { // This catches all the registered signals
 					for(int j=1; j <= s->getLifeSpan(); j++) {
-						if ((s->type() == Signal::in) || (s->type() == Signal::wire) || (s->type() == Signal::table) || (s->type() == Signal::constantWithDeclaration)) {
+						if (s->resetType() == Signal::noReset) {
 							regs << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 						}
-						if (s->type() == Signal::registeredWithAsyncReset) {
+						if (s->resetType() == Signal::asyncReset) {
 							if ( (s->width()>1) || (s->isBus()))
 								aregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
 							else
 								aregsinit << recTab << tab <<tab << tab << tab   << s->delayedName(j) << " <=  '0';" << endl;
 							aregs << recTab << tab << tab << tab << tab        << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
 						}
-						if (s->type() == Signal::registeredWithSyncReset) {
+						if (s->resetType() == Signal::syncReset) {
 							if ( (s->width()>1) || (s->isBus()))
 								sregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
 							else
@@ -1870,11 +1870,11 @@ namespace flopoco{
 	// we used to attempt to maintain an attribute for the following but it is really simpler to test it when needed 
 	bool Operator::hasReset() {
 		for(auto s: signalList_) {
-			if ((s->type() == Signal::registeredWithAsyncReset) || (s->type() == Signal::registeredWithSyncReset) )
+			if ( s->resetType() != Signal::noReset )
 				return true;
 		}
 		for(auto s: ioList_) {
-			if ((s->type() == Signal::registeredWithAsyncReset) || (s->type() == Signal::registeredWithSyncReset) )
+			if ( s->resetType() != Signal::noReset )
 				return true;
 		}
 		return false;
@@ -2294,7 +2294,7 @@ namespace flopoco{
 				if(newRhsName.find('^') != string::npos){
 					string sdelay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
 					newRhsName = newRhsName.substr(0, newRhsName.find('^'));
-					REPORT(0, "doApplySchedule: Found funct. delayed signal  : " << newRhsName << " delay:" << sdelay );
+					REPORT(FULL, "doApplySchedule: Found funct. delayed signal  : " << newRhsName << " delay:" << sdelay );
 					functionalDelay = stoi(sdelay);
 				}
 

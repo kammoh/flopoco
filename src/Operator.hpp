@@ -603,7 +603,7 @@ public:
 	 * @param sourceName  the signal to register
 	 * @param sigType the type of delay inserted (with or without reset, etc...), defaults to usual pipeline register without reset
 	 */
-	void  addRegisteredSignalCopy(string registeredCopyName, string sourceName, Signal::SignalType sigtype=Signal::wire);
+	void  addRegisteredSignalCopy(string registeredCopyName, string sourceName, Signal::ResetType regType=Signal::noReset);
 
 
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
