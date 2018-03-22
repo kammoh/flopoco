@@ -46,18 +46,18 @@ namespace flopoco {
 		}
 		addInput("X", 1-lsbInOut, true);
 
-		ShiftReg *shiftReg = new ShiftReg(getParentOp(), getTarget(), 1-lsbInOut, n);
 
-		addSubComponent(shiftReg);
-		inPortMap(shiftReg, "X", "X");
-
-		for(int i = 0; i<n; i++) {
-			outPortMap(shiftReg, join("Xd", i), join("Y", i));
+		vhdl << tab << declare("Xd0", 1-lsbInOut)  << " <= X;" << endl;
+		// The instance of the shift register for Xd1...Xdn-1
+		string omap="";
+		for(int i = 1; i<n; i++) {
+			omap += join("Xd", i) + "=>" +  join("Xd", i) + (i<n-1?",":"") ;
 		}
+		newInstance("ShiftReg", "inputShiftReg",
+								join("w=",1-lsbInOut) + join(" n=", n-1), // the parameters
+								"X=>X", omap);  // the in and out port maps
 
-		vhdl << instance(shiftReg, "shiftReg");
-
-
+		
 		if (rescale) {
 			// Most of this code is copypasted from SOPC.
 			// parse the coeffs from the string, with Sollya parsing
@@ -97,7 +97,7 @@ namespace flopoco {
 			}
 		}
 
-
+#if 0
 		fixSOPC = new FixSOPC(getParentOp(), getTarget(), lsbInOut, lsbInOut, coeff);
 
 		addSubComponent(fixSOPC);
@@ -109,7 +109,25 @@ namespace flopoco {
 		outPortMap(fixSOPC, "R", "Rtmp");
 
 		vhdl << instance(fixSOPC, "fixSOPC");
+#else
+		
+		// The instance of SOPC 
+		string parameters = join("lsbIn=", lsbInOut) + join(" lsbOut=", lsbInOut) + " coeff=";
+		for (int i=0; i< n; i++)	{
+			parameters += coeff[i] + (i<n-1? ":":"");
+		}
+	
+		string inportmap="";
+		for(int i = 0; i<n; i++) {
+			inportmap += join("X", i) + "=>" +  join("Xd", i) + (i<n-1?",":"") ;
+		}
+		fixSOPC = (FixSOPC*) newInstance("FixSOPC", "SOPC",
+																		 parameters, // the parameters
+																		 inportmap, // the in port maps
+																		 "R=>Rtmp" );  // the out port map
 
+#endif
+		
 		addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1,   true);
 		vhdl << "R <= Rtmp;" << endl;
 

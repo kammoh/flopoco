@@ -70,7 +70,7 @@ namespace flopoco {
 											 "ShiftersLZOCs",
 											 "", //seeAlso
 											 "w(int): the size of the input; \
-						            n(int): the number of stages in the shift register;\
+						            n(int): the number of stages in the shift register, also the number of outputs;\
                         reset(int)=0: the reset type (0 for none, 1 for synchronous, 2 for asynchronous)",
 											 "",
 											 ShiftReg::parseArguments
