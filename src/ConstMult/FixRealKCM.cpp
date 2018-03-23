@@ -417,7 +417,7 @@ namespace flopoco{
 			// Create a signal that shifts the input (so multiplies by the _abs val_),
 			// or truncates it into place
 			string rTempName = createShiftedPowerOfTwo(inputSignalName);
-			Signal* rTemp = thisOp->getSignalByName(rTempName);
+			//Signal* rTemp = thisOp->getSignalByName(rTempName);
 
 			if(negativeConstant) {
 				bitHeap -> subtractSignal(rTempName);
@@ -508,9 +508,9 @@ namespace flopoco{
 				thisOp->vhdl << thisOp->instance(t , instanceName);
 
 				Signal* sliceOut = thisOp->getSignalByName(sliceOutName);
-				int sliceOutWidth = sliceOut->width();
 
-				cerr << "***** Size of "<< sliceOutName << " is " << sliceOutWidth	 << " " << tableOutputSign[i] << endl;
+				// int sliceOutWidth = sliceOut->width();
+				//cerr << "***** Size of "<< sliceOutName << " is " << sliceOutWidth	 << " " << tableOutputSign[i] << endl;
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
