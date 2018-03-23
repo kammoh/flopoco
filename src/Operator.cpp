@@ -86,7 +86,6 @@ namespace flopoco{
 		// so each sub-component of an operator will share the same target.
 		// It also makes the subcomponent calls easier: pass clock and ce without thinking about it.
 		// It is not very elegant because if the operator is eventually combinatorial, it will nevertheless have a clock signal.
-		REPORT(0, "target is pipelined : " << target_->isPipelined() << " " << target_->frequency())
 		if(target_->isPipelined())
 			setSequential();
 		else
