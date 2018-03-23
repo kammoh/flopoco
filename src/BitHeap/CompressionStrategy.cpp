@@ -821,13 +821,12 @@ namespace flopoco{
             bitheap->getOp()->vhdl << bitheap->getOp()->instance(adder, join("bitheapFinalAdd_bh", bitheap->guid)) << endl;
 #else
             bitheap->getOp()->newInstance("IntAdder",
-															 "bitheapFinalAdd_bh"+to_string(bitheap->guid),
-															 "wIn=" + to_string(bitheap->msb-adderStartIndex+1+1),
-															 "X=>"+ adderIn0Name.str()
-															 + ",Y=>"+adderIn1Name.str()
-															 + ",Cin=>" + adderCinName.str(),
-															 "R=>"+ adderOutName.str()   );
-
+																					"bitheapFinalAdd_bh"+to_string(bitheap->guid),
+																					"wIn=" + to_string(bitheap->msb-adderStartIndex+1+1),
+																					"X=>"+ adderIn0Name.str()
+																					+ ",Y=>"+adderIn1Name.str()
+																					+ ",Cin=>" + adderCinName.str(),
+																					"R=>"+ adderOutName.str()   );
 #endif
 			//add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex, 0)));

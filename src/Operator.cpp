@@ -841,7 +841,7 @@ namespace flopoco{
 	}
 
 	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType) {
-        REPORT(FULL, "Declaring signal " << name << " in operator " << this);
+		REPORT(FULL, "Declaring signal " << name << " in operator uid" << this->getuid());
         Signal* s;
 		bool incompleteDeclaration;
 		// check the signal doesn't already exist
@@ -1038,6 +1038,7 @@ namespace flopoco{
 		s->setResetType(regType);
 		vhdl << tab << declare(copyName, s->width(), s->isBus()) << " <= "<<sourceName<<"^1;" << endl;
 		// this ^ will be caught in doApplySchedule(). We could have arbitrary number of delays but I wait for a use case
+		getSignalByName(copyName) -> setHasBeenScheduled(true); // so that the schedule can start from these signals -- lexicographic time is (0,0)
 	}
 
 
@@ -2502,22 +2503,26 @@ namespace flopoco{
 
 	}
 
-	void  Operator::markConstantSignalsScheduled(set<Signal*> & alreadyScheduled) {
+	void  Operator::buildAlreadyScheduledList(set<Signal*> & alreadyScheduled) {
 			for(auto i: signalList_)	{
 				if (i->predecessors()->size()==0) {
-					alreadyScheduled.insert(i);
 					i->setHasBeenScheduled(true);
 				}
+				if (i->hasBeenScheduled()) {  // this captures the previous constant signals but also the functional register outputs
+					alreadyScheduled.insert(i);
+ 				}
+
 			}
 			// and do the same recursively for all subcomponents
 			for(auto op: subComponentList_)	{
-				op->markConstantSignalsScheduled(alreadyScheduled);
+				op->buildAlreadyScheduledList(alreadyScheduled);
 			}
 	}
 
 
 	void Operator::schedule()
 	{
+		REPORT(DEBUG, "Entering schedule() with isOperatorScheduled_="<< isOperatorScheduled_); 
 		if(noParseNoSchedule_ || isOperatorScheduled_) // for TestBench and Wrapper
 			return;
 
@@ -2540,12 +2545,13 @@ namespace flopoco{
 			// restate that inputs  are already scheduled for good measure (recall that we are in the top level)
 			for(auto i: ioList_)	{
 				if (i->type()==Signal::in) {
-					alreadyScheduled.insert(i); // TODO refactor into one call setScheduled(Signal*)
+					alreadyScheduled.insert(i); // TODO refactor into one call setScheduled(Signal*) ? 
 					i->setHasBeenScheduled(true);
 				}
 			}
-			// restate that signals without predecessors (e.g. toto <= "010101"; ) are already scheduled for good measure (recall that we are in the top level)
-			markConstantSignalsScheduled(alreadyScheduled);
+			// recursively run through subcomponents looking for already scheduled signals such as constants signals, functional register outputs, etc
+			buildAlreadyScheduledList(alreadyScheduled);
+			
 			// then build the current wavefront (new successors may have been added to already scheduled signals)
 			for(auto i: alreadyScheduled)	{
 				for(auto successor : *i->successors()) {
@@ -2613,6 +2619,7 @@ namespace flopoco{
 						unscheduledOutputs.insert(i->getName());
 				}
 			}
+#if 0 // The following assumes that outputs are declared at the beginning of operator constructor 
 			if(unscheduledOutputs.size()==0) {
 				// Success! All outputs are scheduled
 				isOperatorScheduled_=true;
@@ -2624,6 +2631,11 @@ namespace flopoco{
 					unscheduled << "  " << i;
 				REPORT(DEBUG, "schedule(): Warning: the following outputs were NOT scheduled: " << unscheduled.str());
 			}
+#endif
+			ostringstream unscheduled;
+			for (auto i: unscheduledOutputs)
+				unscheduled << "  " << i;
+			REPORT(DEBUG, "exiting schedule(), currently unscheduled outputs: " << unscheduled.str());
 		}
 	}
 
@@ -3539,6 +3551,7 @@ namespace flopoco{
 			for(auto it: subComponentList_) {
 					it->applySchedule();
 				}
+			computePipelineDepths();	 // also for the subcomponents
 		}
 	}
 

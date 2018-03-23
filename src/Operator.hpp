@@ -1149,7 +1149,7 @@ public:
 	void moveDependenciesToSignalGraph();
 
 	/* auxillary recursive function */
-	void markConstantSignalsScheduled(set<Signal*> & alreadyScheduled);
+	void buildAlreadyScheduledList(set<Signal*> & alreadyScheduled);
 
 	/**
 	 * Performs as much as possible of an ASAP scheduling for the root operator of this operator.

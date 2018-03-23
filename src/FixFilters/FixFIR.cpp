@@ -57,7 +57,7 @@ namespace flopoco {
 								join("w=",1-lsbInOut) + join(" n=", n-1), // the parameters
 								"X=>X", omap);  // the in and out port maps
 
-		
+
 		if (rescale) {
 			// Most of this code is copypasted from SOPC.
 			// parse the coeffs from the string, with Sollya parsing
@@ -97,19 +97,6 @@ namespace flopoco {
 			}
 		}
 
-#if 0
-		fixSOPC = new FixSOPC(getParentOp(), getTarget(), lsbInOut, lsbInOut, coeff);
-
-		addSubComponent(fixSOPC);
-
-		for(int i=0; i<n; i++) {
-			inPortMap(fixSOPC, join("X",i), join("Y", i));
-		}
-
-		outPortMap(fixSOPC, "R", "Rtmp");
-
-		vhdl << instance(fixSOPC, "fixSOPC");
-#else
 		
 		// The instance of SOPC 
 		string parameters = join("lsbIn=", lsbInOut) + join(" lsbOut=", lsbInOut) + " coeff=";
@@ -126,11 +113,9 @@ namespace flopoco {
 																		 inportmap, // the in port maps
 																		 "R=>Rtmp" );  // the out port map
 
-#endif
 		
 		addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1,   true);
-		vhdl << "R <= Rtmp;" << endl;
-
+		vhdl << tab << "R <= Rtmp;" << endl;
 		// initialize stuff for emulate
 		for(int i=0; i<=n; i++) {
 			xHistory[i]=0;
