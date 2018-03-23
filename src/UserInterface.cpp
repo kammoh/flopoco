@@ -27,14 +27,13 @@ namespace flopoco
 	int    UserInterface::verbose;
 	string UserInterface::targetFPGA;
 	double UserInterface::targetFrequencyMHz;
-	bool   UserInterface::pipeline;
 	bool   UserInterface::clockEnable;
 	bool   UserInterface::useHardMult;
 	bool   UserInterface::plainVHDL;
-    bool   UserInterface::generateFigures;
-    double UserInterface::unusedHardMultThreshold;
-    bool   UserInterface::useTargetOptimizations;
-    int    UserInterface::resourceEstimation;
+	bool   UserInterface::generateFigures;
+	double UserInterface::unusedHardMultThreshold;
+	bool   UserInterface::useTargetOptimizations;
+	int    UserInterface::resourceEstimation;
 	bool   UserInterface::floorplanning;
 	bool   UserInterface::reDebug;
 	bool   UserInterface::flpDebug;
@@ -102,13 +101,12 @@ namespace flopoco
 				values.clear();
 				values.push_back(std::to_string(0));
 				values.push_back(std::to_string(1));
-				v.push_back(option_t("pipeline", values));
 				v.push_back(option_t("clockEnable", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
-                v.push_back(option_t("useHardMults", values));
-                v.push_back(option_t("useTargetOptimizations", values));
-
+				v.push_back(option_t("useHardMults", values));
+				v.push_back(option_t("useTargetOptimizations", values));
+				
 				//free options, using an empty vector of values
 				values.clear();
 				v.push_back(option_t("name", values));
@@ -169,7 +167,6 @@ namespace flopoco
 		parseString(args, "name", &entityName, true); // not sticky: will be used, and reset, after the operator parser
 		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
 		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
-		parseBoolean(args, "pipeline", &pipeline, true );
 		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
 		parseBoolean(args, "plainVHDL", &plainVHDL, true);
@@ -177,9 +174,9 @@ namespace flopoco
 		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
-        parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
-        parseBoolean(args, "floorplanning", &floorplanning, true);
-		parseBoolean(args, "reDebug", &reDebug, true );
+		parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
+		parseBoolean(args, "floorplanning", &floorplanning, true);
+		//		parseBoolean(args, "reDebug", &reDebug, true );
 		parseString(args, "dependencyGraph", &depGraphDrawing, true);
 		//	parseBoolean(args, "", &  );
 	}
@@ -351,7 +348,6 @@ namespace flopoco
 		outputFileName="flopoco.vhdl";
 		targetFPGA=defaultFPGA;
 		targetFrequencyMHz=400;
-		pipeline=true;
 		useHardMult=true;
 		unusedHardMultThreshold=0.7;
 
@@ -450,17 +446,13 @@ namespace flopoco
 				else {
 					throw("ERROR: unknown target: " + targetFPGA);
 				}
-				target->setPipelined(pipeline);
 				target->setClockEnable(clockEnable);
-				if(pipeline)
-					target->setFrequency(1e6*targetFrequencyMHz);
-				else
-					target->setFrequency(1e6*0.0001);
+				target->setFrequency(1e6*targetFrequencyMHz);
 				target->setUseHardMultipliers(useHardMult);
 				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
 				target->setPlainVHDL(plainVHDL);
 				target->setGenerateFigures(generateFigures);
-                target->setUseTargetOptimizations(useTargetOptimizations);
+				target->setUseTargetOptimizations(useTargetOptimizations);
 				// Now build the operator
 				OperatorFactoryPtr fp = getFactoryByName(opName);
 				if (fp==NULL){
@@ -734,10 +726,9 @@ namespace flopoco
 		s << "Generic options include:" << endl;
 		s << "  " << COLOR_BOLD << "name" << COLOR_NORMAL << "=<string>:        override the the default entity name "<<endl;
 		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:  override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
-		s << "  " << COLOR_BOLD << "pipeline" << COLOR_NORMAL << "=<0|1>:       pipelined operator, or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "target" << COLOR_NORMAL << "=<string>:      target FPGA (default " << defaultFPGA << ") " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "     Supported targets: Zynq7000, Stratix2...5, Virtex2...6, Cyclone2...5,Spartan3"<<endl;
-		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
         s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>:    use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;

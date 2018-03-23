@@ -852,7 +852,6 @@ public:
 
 	/**
 	 * Returns true if the operator needs a clock signal;
-	 * It will also get a rst but doesn't need to use it.
 	 */
 	bool isSequential();
 
@@ -865,14 +864,12 @@ public:
 	/**
 	 * Set the operator to sequential.
 	 * You shouldn't need to use this method for standard operators
-	 * (Operator::Operator()  calls it according to Target)
 	 */
 	void setSequential();
 
 	/**
 	 * Set the operator to combinatorial
 	 * You shouldn't need to use this method for standard operators
-	 * (Operator::Operator()  calls it according to Target)
 	 */
 	void setCombinatorial();
 
@@ -1719,7 +1716,7 @@ protected:
 	string 				      architectureName_;                  /**< Name of the operator architecture */
 	vector<Signal*>     testCaseSignals_;                   /**< The list of pointers to the signals in a test case entry. Its size also gives the dimension of a test case */
 	
-	int                  myuid;                             /**< Unique id>*/
+	int                  myuid;                             /**< Unique id */
 	int                  cost;                              /**< The cost of the operator depending on different metrics */
 
 
@@ -1727,8 +1724,8 @@ private:
 	Target*                target_;                         /**< The target on which the operator will be deployed */
 	Operator*              parentOp_;                       /**< The parent operator (i.e. the operator inside which this operator is a subcomponent)  */
 	int                    stdLibType_;                     /**< 0 will use the Synopsys ieee.std_logic_unsigned, -1 uses std_logic_signed, 1 uses ieee numeric_std  (preferred) */
-	bool                   isSequential_;                   /**< True if the operator needs a clock signal*/
-	int                    pipelineDepth_;                  /**< The pipeline depth of the operator. 0 for combinatorial circuits */
+	bool                   isSequential_;                   /**< True if the operator needs a clock signal */
+	int                    pipelineDepth_;                  /**< The pipeline depth of the operator. 0 for combinatorial circuits. A non-pipelined signal can still be sequential, e.g. a FIR. */
 	map<string, Signal*>   signalMap_;                      /**< A dictionary of signals, for recovering a signal based on it's name */
 	map<string, OperatorPtr> instanceOp_ ;                  /**< A map to get instance info   */
 	map<string, vector<string>> instanceActualIO_ ;         /**< A map to get instance info. This list is in the same order as the ioList of the subcomponent   */

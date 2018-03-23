@@ -69,10 +69,6 @@ namespace flopoco{
 		string getVendor();
 
 
-		// Methods related to target behaviour and performance
-		/** Sets the target to pipelined, or not */
-		void setPipelined(bool v=true);
-
 		/** Returns true if the target is to have pipelined design, otherwise false
 		 * @return if the target is pipelined
 		 */

@@ -416,7 +416,7 @@ namespace flopoco{
 		else
 			cost += cx*cy*lutInputs_; // LUT cost for small multiplications
 
-			return cost*5/8;
+		return cost*5/8;
 	};
 
 

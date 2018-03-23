@@ -19,7 +19,7 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 #include <memory>
 
 // Operator Factory, based on the one by David Thomas, with a bit of clean up.
-// For typical use, see src/ShiftersEtc/Shifter  or   src/ExpLog/FPExp
+// For typical use, see src/ShiftersEtc/Shifter  or   src/FPAddSub/FPAdd*
 
 namespace flopoco
 {

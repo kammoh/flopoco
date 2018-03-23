@@ -79,13 +79,14 @@ namespace flopoco{
 		noParseNoSchedule_          = false;
 
  		parentOp_                   = parentOp;
-        isOperatorApplyScheduleDone_= false;
+		isOperatorApplyScheduleDone_= false;
 
 		// Currently we set the pipeline and clock enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
 		// so each sub-component of an operator will share the same target.
 		// It also makes the subcomponent calls easier: pass clock and ce without thinking about it.
-		// It is not very elegant because if the operator is eventually combinatorial, it will nevertheless have a clock and rst signal.
+		// It is not very elegant because if the operator is eventually combinatorial, it will nevertheless have a clock signal.
+		REPORT(0, "target is pipelined : " << target_->isPipelined() << " " << target_->frequency())
 		if(target_->isPipelined())
 			setSequential();
 		else
@@ -480,10 +481,7 @@ namespace flopoco{
 	void Operator::setNameWithFreqAndUID(std::string operatorName){
 		std::ostringstream o;
 		o <<  operatorName <<  "_" ;
-		if(isSequential())
-			o << "F"<<target_->frequencyMHz() ;
-		else
-			o << "comb";
+		o << "F"<<target_->frequencyMHz() ;
 		o << "_uid" << getNewUId();
 		uniqueName_ = o.str();
 	}

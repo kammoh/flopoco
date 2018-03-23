@@ -181,8 +181,6 @@ namespace flopoco {
 		// We will concatenate coeffb of size n then then coeffa of size m
 		// MaxX
 
-		setCombinatorial();
-		getTarget()->setPipelined(false);
 		vector<double> maxInSOPC;
 		vector<int> lsbInSOPC;
 		vector<string> coeffSOPC;
@@ -210,9 +208,6 @@ namespace flopoco {
 		vhdl << instance(fixSOPC, "fixSOPC");
 		//		syncCycleFromSignal("Yinternal");
 		
-		setSequential();
-		getTarget()->setPipelined(true);
-
 		//The final rounding must be computed with an addition, no escaping it
 		int sizeYinternal = msbOut - lsbExt + 1;
 		int sizeYfinal = msbOut - lsbOut + 1;

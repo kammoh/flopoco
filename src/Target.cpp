@@ -64,13 +64,8 @@ namespace flopoco{
 		}
 
 
-	void Target::setPipelined(bool v) {
-		pipeline_=v;
-	}
-
-
 	bool Target::isPipelined() {
-		return pipeline_;
+		return (frequency_!=0);
 	}
 
 	void Target::setClockEnable(bool val) {
