@@ -186,7 +186,7 @@ void IntKaratsubaRectangular::createMult(int i, int j)
 	if(!isSignalDeclared("zero25"))
 		vhdl << tab << declare("zero25",25) << " <= (others => '0');" << endl;
 
-	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>zero25, Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
+	newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0 xIsSigned=1 yIsSigned=1","X1=>b" + to_string(j) + "se, X2=>zero25, Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
 
 
 	bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
@@ -210,7 +210,7 @@ void IntKaratsubaRectangular::createRectKaratsuba(int i, int j, int k, int l)
 		if(!isSignalDeclared("b" + to_string(j) + "se"))
 			vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 
-		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
+		newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0 xIsSigned=1 yIsSigned=1","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
 
 		int wDSPOut;
 		if(useRectangularTiles)
