@@ -52,18 +52,18 @@ namespace flopoco {
     }
 
     void GenericAddSub::buildCommon(Target* target, const uint32_t &wIn){
-        const uint16_t c_count = (hasFlags(CONF_LEFT)?1:0) + (hasFlags(CONF_RIGHT)?1:0) + (hasFlags(TERNARY|CONF_MID)?1:0);
+		const uint16_t c_count = (hasFlags(CONF_LEFT)?1:0) + (hasFlags(CONF_RIGHT)?1:0) + (hasFlags(TERNARY&CONF_MID)?1:0);
         if(c_count >0){
             vhdl << declare( "CONF", c_count ) << " <= ";
             if( hasFlags(CONF_LEFT) ){
                 vhdl << "iL_c";
-                if( hasFlags(TERNARY|CONF_MID) ){
+				if( hasFlags(TERNARY&CONF_MID) ){
                     vhdl << "& iM_c";
                 }
                 if( hasFlags(CONF_RIGHT) ){
                     vhdl << "& iR_c";
                 }
-            }else if( hasFlags(TERNARY|CONF_MID) ){
+			}else if( hasFlags(TERNARY&CONF_MID) ){
                 vhdl << "iM_c";
                 if( hasFlags(CONF_RIGHT) ){
                     vhdl << "& iM_c";
@@ -82,14 +82,14 @@ namespace flopoco {
                 if( hasFlags(CONF_LEFT) ){
                     vhdl << (i&(mask)?"-":"+") << "unsigned(iL)";
                     mask >>= 1;
-                    if( hasFlags(TERNARY|CONF_MID) ){
+					if( hasFlags(TERNARY&CONF_MID) ){
                         vhdl << (i&mask?"-":"+") << "unsigned(iM)";
                         mask >>= 1;
                     }
                     if( hasFlags(CONF_RIGHT) ){
                         vhdl << (i&mask?"-":"+") << "unsigned(iR)";
                     }
-                }else if( hasFlags(TERNARY|CONF_MID) ){
+				}else if( hasFlags(TERNARY&CONF_MID) ){
                     vhdl << "unsigned(iL)";
                     vhdl << (i&mask?"-":"+") << "unsigned(iM)";
                     mask >>= 1;
@@ -106,7 +106,7 @@ namespace flopoco {
         }
         else
         {
-            vhdl << "\tsum_o <= std_logic_vector(" << (hasFlags(SUB_LEFT)?"-":"");
+			vhdl << "\tsum_o <= std_logic_vector(" << (hasFlags(SUB_LEFT)?"-":"");
             if(hasFlags(TERNARY))
             {
                 vhdl << "signed(iM)" << (hasFlags(SUB_MID)?"-":"+") << " signed(iM)";
