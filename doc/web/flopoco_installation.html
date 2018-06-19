@@ -40,7 +40,7 @@ Copy this in a dash/bash shell (and enter your password when prompted):
 
 <h4>Version 4.1.2, the last one with the old pipelining framework</h4>
 
-<p><kbd>yes | sudo apt-get install g++ libgmp3-dev libmpfr-dev libfplll-dev libxml2-dev bison libmpfi-dev flex cmake libboost-all-dev libgsl0-dev && wget https://gforge.inria.fr/frs/download.php/33151/sollya-4.1.tar.gz && tar xzf sollya-4.1.tar.gz && cd sollya-4.1/ && ./configure && make -j4  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/file/37213/flopoco-4.1.2.tgz && tar xzf flopoco-4.1.2.tgz && cd flopoco-4.1.2/ && cmake . && make -j4  && ./flopoco && ./flopoco BuildHTMLDoc </kbd></p>
+<p><kbd>yes | sudo apt install g++ libgmp3-dev libmpfr-dev sollya libsollya6-dev bison flex cmake libboost-all-dev libgsl0-dev wget && wget https://gforge.inria.fr/frs/download.php/file/37213/flopoco-4.1.2.tgz && tar xzf flopoco-4.1.2.tgz && cd flopoco-4.1.2/ && cmake . && make -j4  && ./flopoco && ./flopoco BuildHTMLDoc </kbd></p>
 
 <p>In addition, enable bash autocompletion by typing <kbd>./flopoco BuildAutocomplete</kbd> and following the instructions</p>
 

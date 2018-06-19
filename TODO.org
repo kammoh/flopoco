@@ -299,27 +299,22 @@ a test programme iterates through the operators, testing them one by one for var
 add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
 The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
 * Janitoring
-*** build a SNAP package https://docs.snapcraft.io/build-snaps/   or a Docker instance or something 
-*** rename BitheapNew into BitHeap	
-*** Add a proper Kintex7 target
-*** replace the big ifs in Target.cpp with  method overloading in subtargets ? 
+*** uniformize name construction 
+replace setName with setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
-*** Replace pointers with smart pointers
+*** rename BitheapNew into BitHeap
+*** build a SNAP package https://docs.snapcraft.io/build-snaps/   or a Docker instance or something 
+*** Add a proper Kintex7 target
+*** replace the big ifs in Target.cpp with  method overloading in subtargets ? 
 *** gradually convert everything to standard lib arithmetic, getting rid of the synopsis ones.
 *** TargetFactory
-*** uniformize name construction 
-using setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
-
-*** add more  newComponentAndInstance() on the model of FixMultAdd
-Linked with "replace inPortMap and outPortMap by an additional argument to instance()" ?
-List of operators that would most benefit from it: 
-The most used, i.e. IntAdder, Shifters, etc
 *** rename pow2, intpow2 etc as exp2
 *** doxygen: exclude unplugged operators
 *** See table attributes above
 *** remove Operator::signalList, replace it with signalMap altogether
 (this must be considered carefully, we have several lists)
+*** Replace pointers with smart pointers ?
 * Bit heap and multipliers
 ** rewrite BitHeap with fixed-point support and better compression (see Kumm papers and uni_kassel branch)
 ** pipeline virtual IntMult
