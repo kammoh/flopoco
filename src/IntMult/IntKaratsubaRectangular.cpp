@@ -54,7 +54,7 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
         vhdl << tab << declare("b" + to_string(TileHeightMultiple*y),TileHeight) << " <= Y(" << (y+1)*TileHeight-1 << " downto " << y*TileHeight << ");" << endl;
     }
 
-	bitHeap = new BitheapNew(this, wOut+10);
+	bitHeap = new BitHeap(this, wOut+10);
 
 //	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
 //	multDelay = 3*maxTargetCriticalPath;

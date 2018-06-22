@@ -56,11 +56,11 @@
 
 #include "BitHeap/Bit.hpp"
 #include "BitHeap/Compressor.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 #include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitheapPlotter.hpp"
+#include "BitHeap/BitHeapPlotter.hpp"
 
-#include "BitHeap/BitheapTest.hpp"
+#include "BitHeap/BitHeapTest.hpp"
 
 /* shifters + lzoc ------------------------------------------- */
 #include "ShiftersEtc/Shifters.hpp"

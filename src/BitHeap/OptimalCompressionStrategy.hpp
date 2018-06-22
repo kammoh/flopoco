@@ -2,7 +2,7 @@
 #define OPTIMALCOMPRESSIONSTRATEGY_HPP
 
 #include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 #include "BitHeap/Compressor.hpp"
 
 #ifdef HAVE_SCALP
@@ -14,7 +14,7 @@
 namespace flopoco
 {
 
-class BitheapNew;
+class BitHeap;
 
 	class OptimalCompressionStrategy : public CompressionStrategy
 	{
@@ -25,7 +25,7 @@ class BitheapNew;
 		/**
 		 * A basic constructor for a compression strategy
 		 */
-		OptimalCompressionStrategy(BitheapNew *bitheap);
+		OptimalCompressionStrategy(BitHeap *bitheap);
 
 
 

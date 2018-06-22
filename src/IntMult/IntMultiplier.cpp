@@ -71,8 +71,8 @@ namespace flopoco {
             return;
         }
 
-//		bitHeap = new BitheapNew(this, wOut);
-		bitHeap = new BitheapNew(this, wOut+10); //!!! just for test
+//		bitHeap = new BitHeap(this, wOut);
+		bitHeap = new BitHeap(this, wOut+10); //!!! just for test
 
 		REPORT(DEBUG, "Creating BaseMultiplierCollection");
 //		BaseMultiplierCollection baseMultiplierCollection(parentOp->getTarget(), wX, wY);

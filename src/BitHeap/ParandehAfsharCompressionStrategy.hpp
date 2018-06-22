@@ -2,12 +2,12 @@
 #define PARANDEHAFSHARCOMPRESSIONSTRATEGY_HPP
 
 #include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 namespace flopoco
 {
 
-class BitheapNew;
+class BitHeap;
 
 	class ParandehAfsharCompressionStrategy : public CompressionStrategy
 	{
@@ -16,7 +16,7 @@ class BitheapNew;
 		/**
 		 * A basic constructor for a compression strategy
 		 */
-		ParandehAfsharCompressionStrategy(BitheapNew *bitheap);
+		ParandehAfsharCompressionStrategy(BitHeap *bitheap);
 
 	private:
 		/**

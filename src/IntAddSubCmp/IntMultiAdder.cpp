@@ -47,7 +47,7 @@ namespace flopoco{
 		name << "IntMultiAdder_"  << (signedInput?"S":"U") << wIn << "_" << n;
 		setNameWithFreqAndUID(name.str());
 
-		BitheapNew* bh;
+		BitHeap* bh;
 		if(wOut_==0){ //compute it
 			wOut = wIn+intlog2(n);
 		}
@@ -67,7 +67,7 @@ namespace flopoco{
 
 		REPORT(INFO, "wOut=" << wOut);
 		addOutput("R", wOut);
-		bh = new BitheapNew(this, wOut); 
+		bh = new BitHeap(this, wOut); 
 
 		for (unsigned int i=0; i<n; i++) {
 			string xi=join("X",i);

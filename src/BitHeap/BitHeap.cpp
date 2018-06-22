@@ -1,5 +1,5 @@
 
-#include "BitheapNew.hpp"
+#include "BitHeap.hpp"
 #include "BitHeap/FirstFittingCompressionStrategy.hpp"
 #include "BitHeap/ParandehAfsharCompressionStrategy.hpp"
 #include "BitHeap/MaxEfficiencyCompressionStrategy.hpp"
@@ -7,7 +7,7 @@
 #include <algorithm>
 namespace flopoco {
 
-	BitheapNew::BitheapNew(Operator* op_, unsigned width_, string name_, int compressionType_) :
+	BitHeap::BitHeap(Operator* op_, unsigned width_, string name_, int compressionType_) :
 		msb(width_-1), lsb(0),
 		width(width_),
 		height(0),
@@ -19,7 +19,7 @@ namespace flopoco {
 	}
 
 
-	BitheapNew::BitheapNew(Operator* op_, int msb_, int lsb_, string name_, int compressionType_) :
+	BitHeap::BitHeap(Operator* op_, int msb_, int lsb_, string name_, int compressionType_) :
 		msb(msb_), lsb(lsb_),
 		width(msb_-lsb_+1),
 		height(0),
@@ -31,7 +31,7 @@ namespace flopoco {
 	}
 
 
-	BitheapNew::~BitheapNew() {
+	BitHeap::~BitHeap() {
 		//erase the bits from the bit vector, as well as from the history
 		for(unsigned i=0; i<bits.size(); i++)
 		{
@@ -47,7 +47,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::initialize()
+	void BitHeap::initialize()
 	{
 		stringstream s;
 
@@ -85,7 +85,7 @@ namespace flopoco {
 	}
 
 
-	Bit* BitheapNew::addBit(int weight, string rhsAssignment)
+	Bit* BitHeap::addBit(int weight, string rhsAssignment)
 	{
 		REPORT(FULL, "adding a bit at weight " << weight << " with rhs=" << rhsAssignment);
 
@@ -116,7 +116,7 @@ namespace flopoco {
 
 #if 0 // don't see where it is used
 
-	void BitheapNew::addBit(int weight, Signal *signal, int index)
+	void BitHeap::addBit(int weight, Signal *signal, int index)
 	{
 		// check this bit exists in the signal
 		if((index < 0) || (index > signal->width()-1 ))
@@ -133,13 +133,13 @@ namespace flopoco {
 #endif
 
 
-	void BitheapNew::sortBitsInColumns(){
+	void BitHeap::sortBitsInColumns(){
 		for(unsigned int c = 0; c < bits.size(); c++){
 			std::sort(bits[c].begin(), bits[c].end(), lexicographicOrdering);
 		}
 	}
 
-	bool BitheapNew::lexicographicOrdering(const Bit* bit1, const Bit* bit2){
+	bool BitHeap::lexicographicOrdering(const Bit* bit1, const Bit* bit2){
 		if( (bit1->signal->getCycle() < bit2->signal->getCycle()) ||
 				( (bit1->signal->getCycle() < bit2->signal->getCycle()) &&
 					(bit1->signal->getCriticalPath() < bit2->signal->getCriticalPath()) )  ){
@@ -150,7 +150,7 @@ namespace flopoco {
 		}
 	}
 
-	void BitheapNew::insertBitInColumn(Bit* bit, unsigned columnNumber)
+	void BitHeap::insertBitInColumn(Bit* bit, unsigned columnNumber)
 	{
 		vector<Bit*>::iterator it = bits[columnNumber].begin();
 		bool inserted = false;
@@ -187,7 +187,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::removeBit(int weight, int direction)
+	void BitHeap::removeBit(int weight, int direction)
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Weight " << weight << " out of the bit heap range ("<< msb << ", " << lsb << ") in removeBit");
@@ -209,7 +209,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::removeBit(int weight, Bit* bit)
+	void BitHeap::removeBit(int weight, Bit* bit)
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Weight " << weight << " out of the bit heap range ("<< msb << ", " << lsb << ") in removeBit");
@@ -240,7 +240,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::removeBits(int weight, unsigned count, int direction)
+	void BitHeap::removeBits(int weight, unsigned count, int direction)
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Weight " << weight << " out of the bit heap range ("<< msb << ", " << lsb << ") in removeBit");
@@ -264,7 +264,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::removeBits(int msb, int lsb, unsigned count, int direction)
+	void BitHeap::removeBits(int msb, int lsb, unsigned count, int direction)
 	{
 		if(lsb < this->lsb)
 			THROWERROR("LSB (=" << lsb << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ") in removeBit");
@@ -282,7 +282,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::removeCompressedBits()
+	void BitHeap::removeCompressedBits()
 	{
 		for(unsigned i=0; i<width; i++)
 		{
@@ -304,7 +304,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBit(int weight, unsigned number, BitType type)
+	void BitHeap::markBit(int weight, unsigned number, BitType type)
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Weight (=" << weight << ") out of bitheap bit range ("<< msb << ", " << lsb << ")  in markBit");
@@ -317,7 +317,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBit(Bit* bit, BitType type)
+	void BitHeap::markBit(Bit* bit, BitType type)
 	{
 		bool bitFound = false;
 
@@ -344,7 +344,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBits(int msb, int lsb, BitType type, unsigned number)
+	void BitHeap::markBits(int msb, int lsb, BitType type, unsigned number)
 	{
 		if(lsb < this->lsb)
 			THROWERROR("markBits: LSB (=" << lsb << ") out of bitheap bit range ("<< this->msb << ", " << this->lsb << ")");
@@ -369,14 +369,14 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBits(vector<Bit*> bits, BitType type)
+	void BitHeap::markBits(vector<Bit*> bits, BitType type)
 	{
 		for(unsigned i=0; i<bits.size(); i++)
 			markBit(bits[i], type);
 	}
 
 
-	void BitheapNew::markBits(Signal *signal, BitType type, int weight)
+	void BitHeap::markBits(Signal *signal, BitType type, int weight)
 	{
 		int startIndex;
 
@@ -403,7 +403,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::markBitsForCompression()
+	void BitHeap::markBitsForCompression()
 	{
 		for(unsigned i=0; i<width; i++)
 		{
@@ -418,7 +418,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::colorBits(BitType type, unsigned int newColor)
+	void BitHeap::colorBits(BitType type, unsigned int newColor)
 	{
 		for(unsigned i=0; i<width; i++)
 		{
@@ -434,7 +434,7 @@ namespace flopoco {
 
 
 
-	void BitheapNew::addConstantOneBit(int weight)
+	void BitHeap::addConstantOneBit(int weight)
 	{
 		if( (weight < lsb) || (weight > msb) )
 			THROWERROR("addConstantOneBit(): weight (=" << weight << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ")");
@@ -445,7 +445,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::subtractConstantOneBit(int weight)
+	void BitHeap::subtractConstantOneBit(int weight)
 	{
 		if( (weight < lsb) || (weight > msb) )
 			THROWERROR("subtractConstantOneBit(): weight (=" << weight << ") out of bitheap bit range  ("<< this->msb << ", " << this->lsb << ")");
@@ -456,7 +456,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::addConstant(mpz_class constant, int shift)
+	void BitHeap::addConstant(mpz_class constant, int shift)
 	{
 		if( (shift < lsb) || (shift+intlog2(constant) > msb) )
 			THROWERROR("addConstant: Constant " << constant << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
@@ -468,7 +468,7 @@ namespace flopoco {
 
 
 
-	void BitheapNew::subtractConstant(mpz_class constant, int shift)
+	void BitHeap::subtractConstant(mpz_class constant, int shift)
 	{
 		if( (shift < lsb) || (shift+intlog2(constant) > msb) )
 			THROWERROR("subtractConstant: Constant " << constant << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
@@ -484,7 +484,7 @@ namespace flopoco {
 
 
 
-	void BitheapNew::addSignal(string signalName, int shift)
+	void BitHeap::addSignal(string signalName, int shift)
 	{
 
 		REPORT(DEBUG, "addSignal	" << signalName << " shift=" << shift);
@@ -537,7 +537,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::subtractSignal(string signalName, int shift)
+	void BitHeap::subtractSignal(string signalName, int shift)
 	{
 		REPORT(DEBUG, "subtractSignal  " << signalName << " shift=" << shift);
 		Signal* s = op->getSignalByName(signalName);
@@ -593,7 +593,7 @@ namespace flopoco {
 
 
 
-	void BitheapNew::resizeBitheap(unsigned newWidth, int direction)
+	void BitHeap::resizeBitheap(unsigned newWidth, int direction)
 	{
 		if((direction != 0) && (direction != 1))
 			THROWERROR("Invalid direction in resizeBitheap: direction=" << direction);
@@ -656,7 +656,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::resizeBitheap(int newMsb, int newLsb)
+	void BitHeap::resizeBitheap(int newMsb, int newLsb)
 	{
 		if((newMsb < newLsb))
 			THROWERROR("Invalid arguments in resizeBitheap: newMsb=" << newMsb << " newLsb=" << newLsb);
@@ -683,7 +683,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::mergeBitheap(BitheapNew* bitheap)
+	void BitHeap::mergeBitheap(BitHeap* bitheap)
 	{
 		if(op->getName() != bitheap->op->getName())
 			THROWERROR("Cannot merge bitheaps belonging to different operators!");
@@ -710,7 +710,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::startCompression()
+	void BitHeap::startCompression()
 	{
 		//create a new compression strategy, if one isn't present already
 		//if(compressionStrategy == nullptr)
@@ -725,19 +725,19 @@ namespace flopoco {
 	}
 
 
-	string BitheapNew::getSumName()
+	string BitHeap::getSumName()
 	{
 		return join("bitheapResult_bh", guid);
 	}
 
 
-	string BitheapNew::getSumName(int msb, int lsb)
+	string BitHeap::getSumName(int msb, int lsb)
 	{
 		return join(join("bitheapResult_bh", guid), range(msb, lsb));
 	}
 
 
-	unsigned BitheapNew::getMaxHeight()
+	unsigned BitHeap::getMaxHeight()
 	{
 		unsigned maxHeight = 0;
 
@@ -750,7 +750,7 @@ namespace flopoco {
 	}
 
 
-	unsigned BitheapNew::getColumnHeight(int weight)
+	unsigned BitHeap::getColumnHeight(int weight)
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Invalid argument for getColumnHeight: weight=" << weight);
@@ -759,7 +759,7 @@ namespace flopoco {
 	}
 
 
-	bool BitheapNew::compressionRequired()
+	bool BitHeap::compressionRequired()
 	{
 		if(getMaxHeight() < 3){
 			return false;
@@ -774,31 +774,31 @@ namespace flopoco {
 	}
 
 
-	Plotter* BitheapNew::getPlotter()
+	Plotter* BitHeap::getPlotter()
 	{
 		return plotter;
 	}
 
 
-	Operator* BitheapNew::getOp()
+	Operator* BitHeap::getOp()
 	{
 		return op;
 	}
 
 
-	int BitheapNew::getGUid()
+	int BitHeap::getGUid()
 	{
 		return guid;
 	}
 
 
-	string BitheapNew::getName()
+	string BitHeap::getName()
 	{
 		return name;
 	}
 
 
-	int BitheapNew::newBitUid(unsigned weight)
+	int BitHeap::newBitUid(unsigned weight)
 	{
 		if(((int)weight < lsb) || ((int)weight > msb))
 			THROWERROR("Invalid argument for newBitUid: weight=" << weight);
@@ -810,7 +810,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::printColumnInfo(int weight)
+	void BitHeap::printColumnInfo(int weight)
 	{
 		if((weight < lsb) || (weight > msb))
 			THROWERROR("Invalid argument for printColumnInfo: weight=" << weight);
@@ -824,7 +824,7 @@ namespace flopoco {
 	}
 
 
-	void BitheapNew::printBitHeapStatus()
+	void BitHeap::printBitHeapStatus()
 	{
 		REPORT(DEBUG, "Bitheap status:");
 		for(unsigned w=0; w<bits.size(); w++)
@@ -835,36 +835,36 @@ namespace flopoco {
 	}
 
 
-	vector<vector<Bit*>> BitheapNew::getBits()
+	vector<vector<Bit*>> BitHeap::getBits()
 	{
 		return bits;
 	}
 
 
-	CompressionStrategy* BitheapNew::getCompressionStrategy()
+	CompressionStrategy* BitHeap::getCompressionStrategy()
 	{
 		return compressionStrategy;
 	}
 
 
-	void BitheapNew::initializeDrawing()
+	void BitHeap::initializeDrawing()
 	{
 
 	}
 
 
-	void BitheapNew::closeDrawing(int offsetY)
+	void BitHeap::closeDrawing(int offsetY)
 	{
 
 	}
 
 
-	void BitheapNew::drawConfiguration(int offsetY)
+	void BitHeap::drawConfiguration(int offsetY)
 	{
 
 	}
 
-	void BitheapNew::drawBit(int cnt, int w, int turnaroundX, int offsetY, int c)
+	void BitHeap::drawBit(int cnt, int w, int turnaroundX, int offsetY, int c)
 	{
 
 	}

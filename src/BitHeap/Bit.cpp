@@ -1,13 +1,13 @@
 
 #include "Bit.hpp"
-#include "BitheapNew.hpp"
+#include "BitHeap.hpp"
 
 using namespace std;
 
 namespace flopoco
 {
 
-	Bit::Bit(BitheapNew *bitheap_, string rhsAssignment_, int weight_, BitType type_) :
+	Bit::Bit(BitHeap *bitheap_, string rhsAssignment_, int weight_, BitType type_) :
 		weight(weight_), type(type_), bitheap(bitheap_), colorCount(0), rhsAssignment(rhsAssignment_)
 	{
 		std::ostringstream p;
@@ -26,7 +26,7 @@ namespace flopoco
 	}
 
 
-	Bit::Bit(BitheapNew *bitheap_, Signal *signal_, int offset_, int weight_, BitType type_) :
+	Bit::Bit(BitHeap *bitheap_, Signal *signal_, int offset_, int weight_, BitType type_) :
 		weight(weight_), type(type_), bitheap(bitheap_), colorCount(0)
 	{
 		std::ostringstream p;

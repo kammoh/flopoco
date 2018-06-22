@@ -1,5 +1,5 @@
 
-#include "BitheapTest.hpp"
+#include "BitHeapTest.hpp"
 
 
 using namespace std;
@@ -47,7 +47,7 @@ namespace flopoco{
 		}
 		addOutput("R", size);
 
-		bitheap = new BitheapNew(this, msb, lsb);
+		bitheap = new BitHeap(this, msb, lsb);
 
 		for(int i=0; i<nbInputs; i++)
 			bitheap->addSignal(join("X", i), weights[i]);

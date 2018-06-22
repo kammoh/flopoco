@@ -11,8 +11,8 @@
   All rights reserved.
 
 */
-#ifndef __BITHEAPNEW_HPP
-#define __BITHEAPNEW_HPP
+#ifndef __BITHEAP_HPP
+#define __BITHEAP_HPP
 
 
 #include <vector>
@@ -44,7 +44,7 @@ class CompressionStrategy;
 enum BitType : unsigned;
 
 
-	class BitheapNew
+	class BitHeap
 	{
 
 
@@ -68,7 +68,7 @@ enum BitType : unsigned;
 		 *									addition tree at the end of the
 		 *									compression
 		 */
-		BitheapNew(Operator* op, unsigned width, string name = "", int compressionType = COMPRESSION_TYPE);
+		BitHeap(Operator* op, unsigned width, string name = "", int compressionType = COMPRESSION_TYPE);
 
 		/**
 		 * @brief The constructor for an signed/unsigned fixed-point bitheap
@@ -83,10 +83,10 @@ enum BitType : unsigned;
 		 *									addition tree at the end of the
 		 *									compression
 		 */
-		BitheapNew(Operator* op, int msb, int lsb, string name = "", int compressionType = COMPRESSION_TYPE);
+		BitHeap(Operator* op, int msb, int lsb, string name = "", int compressionType = COMPRESSION_TYPE);
 
 
-		~BitheapNew();
+		~BitHeap();
 
 
 		/**
@@ -270,7 +270,7 @@ enum BitType : unsigned;
 		 * NOTE: only bitheaps belonging to the same parent operator can be merged together
 		 * @param bitheap           the bitheap to merge into this one
 		 */
-		void mergeBitheap(BitheapNew* bitheap);
+		void mergeBitheap(BitHeap* bitheap);
 
 
 		/**

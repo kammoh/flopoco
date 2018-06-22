@@ -107,7 +107,7 @@ namespace flopoco{
 		//create the bitheap
 		//		int bitheaplsb = lsbOut - g;
 		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
-		bitHeap = new BitheapNew(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
+		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
 
 		buildTablesForBitHeap(); // does everything up to bit heap compression
 
@@ -392,7 +392,7 @@ namespace flopoco{
 	}
 
 
-	void FixRealKCM::addToBitHeap(BitheapNew* bitHeap_, int g_) {
+	void FixRealKCM::addToBitHeap(BitHeap* bitHeap_, int g_) {
 		bitHeap=bitHeap_;
 		g=g_;
 

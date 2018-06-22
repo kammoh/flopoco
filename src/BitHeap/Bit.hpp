@@ -8,7 +8,7 @@
 
 #include "Signal.hpp"
 #include "Compressor.hpp"
-#include "BitheapNew.hpp"
+#include "BitHeap.hpp"
 
 using namespace std;
 
@@ -21,7 +21,7 @@ enum BitType : unsigned {
 	compressed
 };
 
-class BitheapNew;
+class BitHeap;
 
 	class Bit
 	{
@@ -60,7 +60,7 @@ class BitheapNew;
 		 * @param weight the weight at which this bit is added to the bitheap, by default 0 (or the lsb of the bitheap)
 		 * @param type the status of the bit, in terms of its processing
 		 */
-		Bit(BitheapNew *bitheap, string rhsAssignment, int weight = 0, BitType type = BitType::free);
+		Bit(BitHeap *bitheap, string rhsAssignment, int weight = 0, BitType type = BitType::free);
 
 		/**
 		 * @brief Standard constructor from an existing signal
@@ -70,7 +70,7 @@ class BitheapNew;
 		 * @param weight the weight at which this bit is added to the bitheap, by default 0 (or the lsb of the bitheap)
 		 * @param type the status of the bit, in terms of its processing
 		 */
-		Bit(BitheapNew *bitheap, Signal *signal, int offset = 0, int weight = 0, BitType type = BitType::free);
+		Bit(BitHeap *bitheap, Signal *signal, int offset = 0, int weight = 0, BitType type = BitType::free);
 
 		/**
 		 * @brief Clone constructor
@@ -118,7 +118,7 @@ class BitheapNew;
 		int weight;
 		BitType type;
 
-		BitheapNew *bitheap;
+		BitHeap *bitheap;
 		Compressor *compressor;
 		Signal *signal;
 

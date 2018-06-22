@@ -19,7 +19,7 @@ All rights reserved.
 #include <iostream>
 #include <fstream>
 
-#include "BitheapNew.hpp"
+#include "BitHeap.hpp"
 #include "Bit.hpp"
 
 
@@ -34,7 +34,7 @@ namespace flopoco
 {
 
 class Bit;
-class BitheapNew;
+class BitHeap;
 
 	class BitheapPlotter
 	{
@@ -85,7 +85,7 @@ class BitheapNew;
 		/**
 		 * @brief constructor
 		 */
-		BitheapPlotter(BitheapNew* bitheap);
+		BitheapPlotter(BitHeap* bitheap);
 
 		/**
 		 * @brief destructor
@@ -156,7 +156,7 @@ class BitheapNew;
 
 		string srcFileName;
 
-		BitheapNew* bitheap;
+		BitHeap* bitheap;
 	};
 }
 

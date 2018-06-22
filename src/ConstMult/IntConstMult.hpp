@@ -12,7 +12,7 @@
 #include "ShiftAddDag.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 /**
 	@brief Integer constant multiplication.
@@ -109,7 +109,7 @@ namespace flopoco{
 		ShiftAddOp* buildEuclideanDag(const mpz_class n, ShiftAddDag* constant);
 		int prepareBoothTree(mpz_class &n, ShiftAddDag* &tree_try, ShiftAddOp** &level, ShiftAddOp* &result, ShiftAddOp* &MX, unsigned int* &shifts, int& nonZeroInBoothCode, int& globalshift);
 
-		BitheapNew* bitheap;
+		BitHeap* bitheap;
 	};
 }
 #endif

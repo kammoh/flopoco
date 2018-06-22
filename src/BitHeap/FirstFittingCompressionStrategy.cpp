@@ -7,7 +7,7 @@ using namespace std;
 namespace flopoco{
 
 
-	FirstFittingCompressionStrategy::FirstFittingCompressionStrategy(BitheapNew* bitheap) : CompressionStrategy(bitheap)
+	FirstFittingCompressionStrategy::FirstFittingCompressionStrategy(BitHeap* bitheap) : CompressionStrategy(bitheap)
 	{
 
 	}

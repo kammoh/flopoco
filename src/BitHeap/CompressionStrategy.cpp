@@ -9,7 +9,7 @@ using namespace std;
 namespace flopoco{
 
 
-	CompressionStrategy::CompressionStrategy(BitheapNew *bitheap_) :
+	CompressionStrategy::CompressionStrategy(BitHeap *bitheap_) :
 		bitheap(bitheap_)
 	{
 		stringstream s;

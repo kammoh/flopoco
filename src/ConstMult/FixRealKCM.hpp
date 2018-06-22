@@ -2,7 +2,7 @@
 #define FIXREALKCM_HPP
 #include "../Operator.hpp"
 #include "../Table.hpp"
-#include "../BitHeap/BitheapNew.hpp"
+#include "../BitHeap/BitHeap.hpp"
 
 
 
@@ -108,7 +108,7 @@ namespace flopoco{
 		/**
 		 * @brief do the actual VHDL generation for the bitHeap KCM.
 		 */
-		void addToBitHeap(BitheapNew* bitHeap, int g);
+		void addToBitHeap(BitHeap* bitHeap, int g);
 
 
 
@@ -146,7 +146,7 @@ namespace flopoco{
 
 
 		/** The heap of weighted bits that will be used to do the additions */
-		BitheapNew*	bitHeap;    	
+		BitHeap*	bitHeap;    	
 
 		/** The input signal. */
 		string inputSignalName;

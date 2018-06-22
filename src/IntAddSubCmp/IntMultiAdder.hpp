@@ -1,7 +1,7 @@
 #ifndef INTMULTIADDER_HPP
 #define INTMULTIADDER_HPP
 #include "../Operator.hpp"
-#include "../BitHeap/BitheapNew.hpp"
+#include "../BitHeap/BitHeap.hpp"
 
 
 

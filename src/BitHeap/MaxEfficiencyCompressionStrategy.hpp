@@ -2,12 +2,12 @@
 #define MAXEFFICIENCYCOMPRESSIONSTRATEGY_HPP
 
 #include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 namespace flopoco
 {
 
-class BitheapNew;
+class BitHeap;
 
 	class MaxEfficiencyCompressionStrategy : public CompressionStrategy
 	{
@@ -16,7 +16,7 @@ class BitheapNew;
 		/**
 		 * A basic constructor for a compression strategy
 		 */
-		MaxEfficiencyCompressionStrategy(BitheapNew *bitheap);
+		MaxEfficiencyCompressionStrategy(BitHeap *bitheap);
 
 
 	private:

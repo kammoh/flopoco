@@ -7,7 +7,7 @@
 #include "utils.hpp"
 #include "Operator.hpp"
 #include "Table.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 #include "IntMult/MultiplierBlock.hpp"
 #include "IntMult/BaseMultiplier.hpp"
@@ -58,7 +58,7 @@ namespace flopoco {
 	private:
 		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
 												this is a pointer to the Operator that will provide the actual vhdl stream etc. */
-        BitheapNew* bitHeap;    			/**< The heap of weighted bits that will be used to do the additions */
+        BitHeap* bitHeap;    			/**< The heap of weighted bits that will be used to do the additions */
 
         /** Places a single BaseMultiplier at a given position
          * xPos, yPos:                  Position of the lower right corner of the BaseMultiplier

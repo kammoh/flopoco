@@ -1,7 +1,7 @@
 
 #include "MaxEfficiencyCompressionStrategy.hpp"
 //#include "CompressionStrategy.hpp"
-//#include "BitHeap/BitheapNew.hpp"
+//#include "BitHeap/BitHeap.hpp"
 
 
 using namespace std;
@@ -9,7 +9,7 @@ using namespace std;
 namespace flopoco{
 
 
-	MaxEfficiencyCompressionStrategy::MaxEfficiencyCompressionStrategy(BitheapNew* bitheap) : CompressionStrategy(bitheap)
+	MaxEfficiencyCompressionStrategy::MaxEfficiencyCompressionStrategy(BitHeap* bitheap) : CompressionStrategy(bitheap)
 	{
 		lowerBounds.resize(1);
 		lowerBounds[0] = 0.0;

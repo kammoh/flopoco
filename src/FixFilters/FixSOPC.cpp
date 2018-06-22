@@ -198,7 +198,7 @@ namespace flopoco{
 		if(!getTarget()->plainVHDL())
 		{
 			//create the bitheap that computes the sum
-			bitHeap = new BitheapNew(this, sumSize);
+			bitHeap = new BitHeap(this, sumSize);
 
 			// actually generate the code
 			for(int i=0; i<n; i++)		{

@@ -2,12 +2,12 @@
 #define FIRSTFITTINGCOMPRESSIONSTRATEGY_HPP
 
 #include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 namespace flopoco
 {
 
-class BitheapNew;
+class BitHeap;
 
 	class FirstFittingCompressionStrategy : public CompressionStrategy
 	{
@@ -16,7 +16,7 @@ class BitheapNew;
 		/**
 		 * A basic constructor for a compression strategy
 		 */
-		FirstFittingCompressionStrategy(BitheapNew *bitheap);
+		FirstFittingCompressionStrategy(BitHeap *bitheap);
 
 	private:
 		void compressionAlgorithm();

@@ -12,7 +12,7 @@ All rights reserved.
 
 */
 
-#include "BitheapPlotter.hpp"
+#include "BitHeapPlotter.hpp"
 
 
 using namespace std;
@@ -85,7 +85,7 @@ namespace flopoco
 	}
 
 
-	BitheapPlotter::BitheapPlotter(BitheapNew* bitheap_) :
+	BitheapPlotter::BitheapPlotter(BitHeap* bitheap_) :
 			bitheap(bitheap_)
 	{
 		srcFileName = bitheap_->getName() + ":BitheapPlotter";

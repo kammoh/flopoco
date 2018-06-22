@@ -8,7 +8,7 @@ using namespace std;
 namespace flopoco{
 
 
-	OptimalCompressionStrategy::OptimalCompressionStrategy(BitheapNew* bitheap) : CompressionStrategy(bitheap)
+	OptimalCompressionStrategy::OptimalCompressionStrategy(BitHeap* bitheap) : CompressionStrategy(bitheap)
 	{
 
 	}

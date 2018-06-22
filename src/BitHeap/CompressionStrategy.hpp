@@ -9,8 +9,8 @@
 
 #include "BitHeap/Bit.hpp"
 #include "BitHeap/Compressor.hpp"
-#include "BitHeap/BitheapNew.hpp"
-#include "BitHeap/BitheapPlotter.hpp"
+#include "BitHeap/BitHeap.hpp"
+#include "BitHeap/BitHeapPlotter.hpp"
 #include "BitHeap/Solution.hpp"
 
 #include "IntAddSubCmp/IntAdder.hpp"
@@ -30,7 +30,7 @@ class BitheapPlotter;
 		/**
 		 * A basic constructor for a compression strategy
 		 */
-		CompressionStrategy(BitheapNew *bitheap);
+		CompressionStrategy(BitHeap *bitheap);
 
 		/**
 		 * Destructor
@@ -243,7 +243,7 @@ class BitheapPlotter;
 
 		Solution solution;
 
-		BitheapNew *bitheap;                        /**< The bitheap this compression strategy belongs to */
+		BitHeap *bitheap;                        /**< The bitheap this compression strategy belongs to */
 		BitheapPlotter *bitheapPlotter;             /**< The bitheap plotter for this bitheap compression */
 
 		vector<BasicCompressor*> possibleCompressors;    /**< All the possible compressors that can be used for compressing the bitheap */

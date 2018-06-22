@@ -158,11 +158,11 @@ namespace flopoco {
 			int guardBits_re = intlog2(errorInUlpsRe);
 			int guardBits_im = intlog2(errorInUlpsIm);
 
-			BitheapNew* bitheapRe = new BitheapNew(
+			BitHeap* bitheapRe = new BitHeap(
 					this,
 					 outputre_width + guardBits_re
 				);
-			BitheapNew* bitheapIm = new BitheapNew(
+			BitHeap* bitheapIm = new BitHeap(
 					this, 
 					outputim_width + guardBits_im 
 				);

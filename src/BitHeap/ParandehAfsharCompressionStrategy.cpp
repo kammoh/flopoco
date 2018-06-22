@@ -8,7 +8,7 @@ using namespace std;
 namespace flopoco{
 
 
-	ParandehAfsharCompressionStrategy::ParandehAfsharCompressionStrategy(BitheapNew* bitheap) : CompressionStrategy(bitheap)
+	ParandehAfsharCompressionStrategy::ParandehAfsharCompressionStrategy(BitHeap* bitheap) : CompressionStrategy(bitheap)
 	{
 
 	}

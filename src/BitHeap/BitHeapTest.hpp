@@ -14,7 +14,7 @@
 #include "mpfr.h"
 
 #include "../Operator.hpp"
-#include "BitheapNew.hpp"
+#include "BitHeap.hpp"
 
 #include "../utils.hpp"
 
@@ -55,7 +55,7 @@ namespace flopoco
 		static void registerFactory();
 
 	public:
-		BitheapNew *bitheap;                /**< the heights of the columns */
+		BitHeap *bitheap;                /**< the heights of the columns */
 		int nbInputs;                       /**< the number of inputs to the bitheap */
 		vector<int> weights;                /**< the weights of the inputs */
 		int weight;                         /**< the weight for all the inputs */

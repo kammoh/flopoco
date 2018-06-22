@@ -2,7 +2,7 @@
 #define IntKaratsuba_HPP
 
 #include "Operator.hpp"
-#include "BitHeap/BitheapNew.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 namespace flopoco{
 
@@ -42,7 +42,7 @@ namespace flopoco{
 		int TileWidth;
 		int TileHeight;
 
-		BitheapNew *bitHeap;
+		BitHeap *bitHeap;
 
 		/**
 		 * Implements "+ a_i b_j" using a rectangular multiplier

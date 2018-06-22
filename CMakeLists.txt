@@ -357,12 +357,12 @@ src/AutoTest/AutoTest
  
  src/BitHeap/Bit
  src/BitHeap/Compressor
- src/BitHeap/BitheapNew
+ src/BitHeap/BitHeap
  src/BitHeap/CompressionStrategy
- src/BitHeap/BitheapPlotter
+ src/BitHeap/BitHeapPlotter
  src/BitHeap/Solution
  
- src/BitHeap/BitheapTest
+ src/BitHeap/BitHeapTest
 
  src/BitHeap/FirstFittingCompressionStrategy
  src/BitHeap/ParandehAfsharCompressionStrategy
