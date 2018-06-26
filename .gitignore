@@ -24,3 +24,7 @@ PiecewisePoly*.cache
 work-obj93.cf
 test.input
 *.vcd
+
+# Autotest
+TestResults
+gmon.out

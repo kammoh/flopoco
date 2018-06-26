@@ -67,7 +67,7 @@ void UserInterface::registerFactories()
 		IntDualAddSub::registerFactory();
 		IntMultiAdder::registerFactory();
 		DSPBlock::registerFactory();
-		IntKaratsubaRectangular::registerFactory();
+		//IntKaratsubaRectangular::registerFactory();
 		IntMultiplier::registerFactory();
 		// IntSquarer::registerFactory();
 
