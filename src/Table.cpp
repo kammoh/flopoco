@@ -25,85 +25,11 @@ using namespace std;
 
 namespace flopoco{
 
-
-	int Table::double2input(double x){
-		throw string("Error, double2input is being used and has not been overriden");
-	}
-	
-	double Table::input2double(int x) {
-		throw string("Error, input2double is being used and has not been overriden");
-	}
-
-	mpz_class Table::double2output(double x){
-		throw string("Error, double2output is being used and has not been overriden");
-	}
-
-	double Table::output2double(mpz_class x) {
-		throw string("Error, output2double is being used and has not been overriden");
-	}
-
-#if 0 // TODO some day
-	mpz_class Table::mpfr2output(mpfr_t x){
-		throw string("Error, mpfr2output is being used and has not been overriden");
-	}
-
-	void Table::output2mpfr(mpz_class x, mpfr_t y) {
-		throw string("Error, output2mpfr is being used and has not been overriden");
-	}
-#endif
-
 	mpz_class Table::call_function(int x)
 	{
 		return function(x);
 	}
 
-
-
-	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable, map<string, double> inputDelays) :
-		Operator(target_),
-		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
-	{
-		srcFileName = "Table";
-		THROWERROR("\n\n Deprecated constructor.\n Please replace whatever inheritance you may have with a plain Table.\n See FPDiv for an example. " << endl);
-		if(wIn<0){
-			THROWERROR("wIn="<<wIn<<"; Input size cannot be negative"<<endl);
-		}
-		if(wOut<0){
-			THROWERROR("wOut="<<wOut<<"; Output size cannot be negative"<<endl);
-		}
-		setCopyrightString("Florent de Dinechin, Matei Istoan (2007-2016)");
-
-		if(_logicTable==1)
-			logicTable=true;
-		else if (_logicTable==-1)
-			logicTable=false;
-		else { // the constructor should decide
-			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
-			if(!logicTable)
-				REPORT(DETAILED, "This table will be implemented in memory blocks");
-		}
-		
-		// Set up the IO signals
-		addInput ("X"  , wIn, true);
-		addOutput ("Y"  , wOut, 1, true);
-
-		if(maxIn==-1)
-			maxIn=(1<<wIn)-1;
-		if(minIn<0) {
-			cerr<<"ERROR in Table::Table, minIn<0\n";
-			exit(EXIT_FAILURE);
-		}
-		if(maxIn>=(1<<wIn)) {
-			cerr<<"ERROR in Table::Table, maxIn too large\n";
-			exit(EXIT_FAILURE);
-		}
-		if((minIn==0) && (maxIn==(1<<wIn)-1))
-			full=true;
-		else
-			full=false;
-		if (wIn > 10)
-		  REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
-	}
 
 
 	
@@ -162,7 +88,7 @@ namespace flopoco{
 			setNameWithFreqAndUID(srcFileName+"_"+vhdlize(wIn)+"_"+vhdlize(wOut));
 
 		//checks for logic table
-		if(_logicTable == 0)
+		if(_logicTable == -1)
 			logicTable = false;
 		else if(_logicTable == 1)
 			logicTable = true;
@@ -286,38 +212,53 @@ namespace flopoco{
 	}
 
 
-	//FOR TEST PURPOSES ONLY
-	OperatorPtr Table::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-		int wIn_;
-		int wOut_;
-		int logicTable_;
-		vector<mpz_class> values_;
 
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn_, false);
-		UserInterface::parseStrictlyPositiveInt(args, "wOut", &wOut_, false);
-		UserInterface::parseInt(args, "logicTable", &logicTable_, false);
+	///////// Deprecated constructor, get rid of it ASAP
+	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable, map<string, double> inputDelays) :
+		Operator(target_),
+		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
+	{
+		srcFileName = "Table";
+		THROWERROR("\n\n Deprecated constructor.\n Please replace whatever inheritance you may have with a plain Table.\n See FPDiv for an example. " << endl);
+		// if(wIn<0){
+		// 	THROWERROR("wIn="<<wIn<<"; Input size cannot be negative"<<endl);
+		// }
+		// if(wOut<0){
+		// 	THROWERROR("wOut="<<wOut<<"; Output size cannot be negative"<<endl);
+		// }
+		// setCopyrightString("Florent de Dinechin, Matei Istoan (2007-2016)");
 
-		for(int i=0; i<(1<<wIn_); i++){
-			mpz_class tmpMPZ = mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random()) * mpz_class(random());
-			values_.push_back( (tmpMPZ*tmpMPZ+mpz_class(random())) % (mpz_class(1)<<wOut_) );
-		}
+		// if(_logicTable==1)
+		// 	logicTable=true;
+		// else if (_logicTable==-1)
+		// 	logicTable=false;
+		// else { // the constructor should decide
+		// 	logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
+		// 	if(!logicTable)
+		// 		REPORT(DETAILED, "This table will be implemented in memory blocks");
+		// }
+		
+		// // Set up the IO signals
+		// addInput ("X"  , wIn, true);
+		// addOutput ("Y"  , wOut, 1, true);
 
-		return new Table(parentOp, target, values_, wIn_, wOut_, "", logicTable_);
+		// if(maxIn==-1)
+		// 	maxIn=(1<<wIn)-1;
+		// if(minIn<0) {
+		// 	cerr<<"ERROR in Table::Table, minIn<0\n";
+		// 	exit(EXIT_FAILURE);
+		// }
+		// if(maxIn>=(1<<wIn)) {
+		// 	cerr<<"ERROR in Table::Table, maxIn too large\n";
+		// 	exit(EXIT_FAILURE);
+		// }
+		// if((minIn==0) && (maxIn==(1<<wIn)-1))
+		// 	full=true;
+		// else
+		// 	full=false;
+		// if (wIn > 10)
+		//   REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
 	}
 
-	//FOR TEST PURPOSES ONLY
-	void Table::registerFactory(){
-		UserInterface::add("Table", // name
-				"A generic table. FOR TEST PURPOSES ONLY.",
-				"Miscellaneous", // category
-				"",
-				"wIn(int): input width;\
-				wOut(int): output width;\
-				logicTable(int): logic-based/RAM-based table",
-				"",
-				Table::parseArguments
-		);
-
-	}
-
+	
 }
