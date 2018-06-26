@@ -52,9 +52,6 @@ void UserInterface::registerFactories()
 		IntAdderShortLatency::registerFactory();
 #endif
 		
-		//FOR TEST PURPOSES ONLY
-		Table::registerFactory();
-
 #if 0 // Plug them for debug purpose only
 		IntAdderSpecific::registerFactory();
 		LongIntAdderAddAddMuxGen1::registerFactory();
@@ -79,7 +76,7 @@ void UserInterface::registerFactories()
 		// FPRealKCM::registerFactory();
 		// IntConstDiv::registerFactory(); // depends on IntConstMult
 		// FPConstDiv::registerFactory();
-		// FixFunctionByTable::registerFactory();
+		FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();
 		// FixFunctionByPiecewisePoly::registerFactory();
 		// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH

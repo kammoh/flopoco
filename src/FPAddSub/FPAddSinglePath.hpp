@@ -21,9 +21,10 @@ namespace flopoco{
 	public:
 		/**
 		 * The FPAddSinglePath constructor
-		 * @param[in]		target		the target device
-		 * @param[in]		wE			the the with of the exponent
-		 * @param[in]		wF			the the with of the fraction
+		 * @param[in]		parentOp	parent operator in the instance hierarchy
+		 * @param[in]		target		target device
+		 * @param[in]		wE				with of the exponent
+		 * @param[in]		wF				with of the fraction
 		 */
 		FPAddSinglePath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
@@ -38,9 +39,9 @@ namespace flopoco{
 		TestCase* buildRandomTestCase(int i);
 
 	private:
-		/** The width of the exponent */
+		/** width of the exponent */
 		int wE;
-		/** The width of the fraction */
+		/** width of the fraction */
 		int wF;
 		/** Is this an FPAdd or an FPSub? */
 		bool sub;

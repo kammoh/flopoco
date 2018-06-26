@@ -81,10 +81,6 @@ namespace flopoco{
 		virtual ~Table() {};
 
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		static void registerFactory();
-
 
 
 		/**
@@ -103,47 +99,6 @@ namespace flopoco{
 		mpz_class call_function(int x);
 
 
-		/** Overloading the method of Operator */
-//		void outputVHDL(ostream& o, string name);
-
-		/** A function that translates an real value into an integer input.
-			 This function should be overridden by an implementation of Table.
-			 It is optional.
-		*/
-		virtual int    double2input(double x);
-
-		/** A function that translates an integer input value into its real semantics
-			 This function should be overridden by an implementation of Table.
-			 It is optional.
-		*/
-		virtual double input2double(int x);
-
-		/** A function that translates an real value into an integer output
-			 This function should be overridden by an implementation of Table
-			 It is optional.
-		*/
-		virtual  mpz_class double2output(double x);
-
-		/** A function that translates an integer output value into its real semantics
-			 This function should be overridden by an implementation of Table
-			 It is optional.
-		*/
-		virtual double output2double(mpz_class x);
-
-#if 0 // TODO some day
-		/** A function that translates an real value into an integer output
-			 This function should be overridden by an implementation of Table
-			 It is optional.
-		*/
-		virtual  mpz_class mpfr2output(double x);
-
-		/** A function that translates an integer output value into its real semantics
-			 This function should be overridden by an implementation of Table
-			 It is optional.
-		*/
-		virtual double output2mpfr(mpz_class x);
-
-#endif
 
 		/** A function that returns an estimation of the size of the table in LUTs. Your mileage may vary thanks to boolean optimization */
 		int size_in_LUTs();
