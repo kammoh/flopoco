@@ -21,9 +21,10 @@ namespace flopoco{
 	public:
 		/**
 		 * The FPAddSinglePath constructor
+		 * @param[in]		parentOp	the parent operator in the instance hierarchy
 		 * @param[in]		target		the target device
-		 * @param[in]		wE			the the with of the exponent
-		 * @param[in]		wF			the the with of the fraction
+		 * @param[in]		wE			  the the with of the exponent
+		 * @param[in]		wF			  the the with of the fraction
 		 */
 		FPAddSinglePath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
