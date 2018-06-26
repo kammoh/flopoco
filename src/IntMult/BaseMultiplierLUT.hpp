@@ -18,28 +18,11 @@ namespace flopoco {
     {
 
 	public:
-        BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int wY);
+			BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int wY);
 
-		virtual Operator *generateOperator(Operator *parentOp, Target *target);
-
-    private:
-
+			virtual Operator *generateOperator(Operator *parentOp, Target *target);
+			mpz_class function(int x);
 	};
 
-    class BaseMultiplierLUTOp : public Operator
-    {
-    public:
-		BaseMultiplierLUTOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY);
-    };
-
-    class BaseMultiplierLUTTable : public Table
-    {
-    public:
-		BaseMultiplierLUTTable(Operator *parentOp, Target* target, int dx, int dy, int wO, bool negate=false, bool signedX=false, bool signedY=false );
-        mpz_class function(int x);
-    protected:
-        int dx, dy, wO;
-        bool negate, signedX, signedY;
-    };
 }
 #endif
