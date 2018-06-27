@@ -121,7 +121,7 @@ namespace flopoco
 						// string grepCommand = "grep '" + *itOperator + "\.o' CMakeFiles/FloPoCoLib.dir/depend.make | awk -F/ '{print $NF}' | awk -F. '{print $1}' | grep ^.*$";
 
 						// Command to get the name of the Operator using the depend file of CMake
-					string grepCommand = "grep '" + *itOperator + "\.hpp' CMakeFiles/FloPoCoLib.dir/depend.make | grep -o '.*\.o' | awk -F/ '{print $NF}' | awk -F. '{print $1}'";
+					string grepCommand = "grep '" + *itOperator + "\\.hpp' CMakeFiles/FloPoCoLib.dir/depend.make | grep -o '.*\\.o' | awk -F/ '{print $NF}' | awk -F. '{print $1}'";
 
 					if(!(in = popen(grepCommand.c_str(), "r")))
 					{

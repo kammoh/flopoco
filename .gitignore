@@ -28,3 +28,11 @@ test.input
 # Autotest
 TestResults
 gmon.out
+
+# Latex Doc
+doc/flopoco_developer_manual/flopoco_developer_manual.aux
+doc/flopoco_developer_manual/flopoco_developer_manual.log
+doc/flopoco_developer_manual/flopoco_developer_manual.pdf
+doc/flopoco_developer_manual/flopoco_developer_manual.toc
+doc/flopoco_developer_manual/flopoco_developer_manual.bbl
+doc/flopoco_developer_manual/flopoco_developer_manual.blg

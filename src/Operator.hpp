@@ -29,9 +29,9 @@ using namespace std;
 
 namespace flopoco {
 	class Operator;
- 	typedef Operator* OperatorPtr;
- 	typedef vector<vector<pair<string,string>>> TestList;
- 	typedef TestList (*unitTest_func_t)(int);
+	typedef Operator* OperatorPtr;
+	typedef vector<vector<pair<string,string>>> TestList;
+	typedef TestList (*unitTest_func_t)(int);
 }
 
 #include "UserInterface.hpp"
@@ -57,7 +57,7 @@ namespace flopoco {
 #define THROWERROR(stream) {{ostringstream o; o << " ERROR in " << uniqueName_ << " (" << srcFileName << "): " << stream << endl; throw o.str();}}
 
 
-//Floorplanning - direction of placement constraints
+	//Floorplanning - direction of placement constraints
 #define ABOVE						0
 #define UNDER						1
 #define TO_LEFT_OF					2
@@ -68,14 +68,14 @@ namespace flopoco {
 #define TO_LEFT_OF_WITH_EXTRA			6
 #define TO_RIGHT_OF_WITH_EXTRA			7
 
-//Floorplanning - constraint type
+	//Floorplanning - constraint type
 #define PLACEMENT 					0
 #define CONNECTIVITY				1
 
-/**
- * This is a top-level class representing an Operator.
- * This class is inherited by all classes which will output a VHDL entity.
- */
+	/**
+	 * This is a top-level class representing an Operator.
+	 * This class is inherited by all classes which will output a VHDL entity.
+	 */
 class Operator
 {
 
@@ -113,7 +113,7 @@ public:
 	 * Add a sub-operator to this operator
 	 All the operators in the subCompontentList will be declared in the VHDL.
 	 The shared operators are also added to UserInterface::globalOpList
-	 */
+	*/
 	void addSubComponent(Operator* op);
 
 	/** Retrieve a sub-operator by its name, NULL if not found */
@@ -129,14 +129,14 @@ public:
 	 * Typical example is a table designed to fit in a LUT or parallel row of LUTs
 	 * We assume all the operators added to GlobalOpList are un-pipelined.
 	 */
-//	void addToGlobalOpList();
+	//	void addToGlobalOpList();
 
 	/**
 	 * Add operator @param op to the global (first-level) list, which is stored in its Target.
 	 * C.f. version of the method with no parameters for usage and more explanations
 	 * @param op the operator to add to the global operator list
 	 */
-//	void addToGlobalOpList(Operator *op);
+	//	void addToGlobalOpList(Operator *op);
 
 	/**
 	 * Apply the schedule computed by schedule() to the VHDL stream.
@@ -171,9 +171,9 @@ public:
 
 
 
- /*****************************************************************************/
- /*         Paperwork-related methods (for defining an operator entity)       */
- /*****************************************************************************/
+	/*****************************************************************************/
+	/*         Paperwork-related methods (for defining an operator entity)       */
+	/*****************************************************************************/
 
 	/**
 	 * Adds an input signal to the operator.
@@ -182,7 +182,7 @@ public:
 	 * @param width the number of bits of the signal.
 	 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 	 */
-    void addInput  (const std::string name, const int width, const bool isBus=true);
+	void addInput  (const std::string name, const int width, const bool isBus=true);
 
 	/**
 	 * Adds an input wire (of type std_logic) to the operator.
@@ -191,7 +191,7 @@ public:
 	 */
 	void addInput  (const std::string name);
 
-//	void addInput (const char* name); //ambiguous to addInput(const std::string name) !!!
+	//	void addInput (const char* name); //ambiguous to addInput(const std::string name) !!!
 
 	/**
 	 * Adds  signal to the operator.
@@ -201,16 +201,16 @@ public:
 	 * @param numberOfPossibleOutputValues (optional, defaults to 1) set to 2 for a faithfully rounded operator for instance
 	 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 	 */
-    void addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues=1, const bool isBus=true);
+	void addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues=1, const bool isBus=true);
 
 	/**
 	 * Adds an output wire (of type std_logic) with one possible value to the operator.
 	 * 	Adds a signal of type Signal::out to the the I/O signal list.
 	 * @param name  the name of the signal
 	 */
-    void addOutput(const std::string name);
+	void addOutput(const std::string name);
 
-//	void addOutput(const char* name); //ambiguous to addOutput(const std::string name) !!!
+	//	void addOutput(const char* name); //ambiguous to addOutput(const std::string name) !!!
 
 #if 1
 	// Test:
@@ -307,18 +307,18 @@ public:
 	 */
 	void setCopyrightString(std::string authorsYears);
 
-    /**
-     * Adds user-defined header information (used, e.g., for primitives that require extra libraries)
-     * May be called multiple times
-     * @param headerString the header information
-     */
-    void addAdditionalHeaderInformation(std::string headerString);
+	/**
+	 * Adds user-defined header information (used, e.g., for primitives that require extra libraries)
+	 * May be called multiple times
+	 * @param headerString the header information
+	 */
+	void addAdditionalHeaderInformation(std::string headerString);
 
-    /**
-     * Returns the user-defined header information defined so far
-     * @return the user-defined header information
-     */
-    std::string getAdditionalHeaderInformation();
+	/**
+	 * Returns the user-defined header information defined so far
+	 * @return the user-defined header information
+	 */
+	std::string getAdditionalHeaderInformation();
 
 	/**
 	 * Use the Synopsys de-facto standard ieee.std_logic_unsigned for this entity
@@ -355,25 +355,25 @@ public:
 	/**
 	 * Sets Operator name to given name, with either the frequency appended, or "comb" for combinatorial.
 	 * @param operatorName new name of the operator
-	*/
+	 */
 	void setNameWithFreq(std::string operatorName = "UnknownOperator");
 
 	/** Sets Operator name to given name, with either the frequency appended, or "comb" for combinatorial, and a unique identifier for good measure.
 	 * @param operatorName new name of the operator
-	*/
+	 */
 	void setNameWithFreqAndUID(std::string operatorName = "UnknownOperator");
 
 	/** Sets Operator name to givenName.
 	 * Sets the name of the operator to operatorName.
 	 * @param operatorName new name of the operator
-	*/
+	 */
 	void setName(std::string operatorName = "UnknownOperator");
 
 	/**
 	 * This method should be used by an operator to change the default name of a sub-component.
 	 * The default name becomes the commented name.
 	 * @param operatorName new name of the operator
-	*/
+	 */
 	void changeName(std::string operatorName);
 
 	/**
@@ -382,14 +382,14 @@ public:
 	 *               formed with the operator internal parameters
 	 * @param postfix the postfix string which will be placed at the end of the operator name
 	 *                formed with the operator internal parameters
-	*/
+	 */
 	void setName(std::string prefix, std::string postfix);
 
 
 	/**
 	 * Adds a comment before the entity declaration, along with the copyright string etc.
 	 * The "comment" string should include -- at the beginning of each line.
-	*/
+	 */
 	void addHeaderComment(std::string comment);
 
 	/**
@@ -414,9 +414,9 @@ public:
 
 
 
- /*****************************************************************************/
- /*        VHDL-related methods (for defining an operator architecture)       */
- /*****************************************************************************/
+	/*****************************************************************************/
+	/*        VHDL-related methods (for defining an operator architecture)       */
+	/*****************************************************************************/
 
 	/**
 	 * Functions related to pipeline management
@@ -572,7 +572,7 @@ public:
 	/**
 	 * Initialize a newly declared signal.
 	 * Method used to share code between the declare functions
-   * TODO should probably be refactored in Signakl
+	 * TODO should probably be refactored in Signakl
 	 * @param s the newly declared signal
 	 * @param criticalPathContribution: the delay that the signal adds to the critical path of the circuit
 	 * @param regType: the registring type of this signal. See also the Signal Class for more info
@@ -608,19 +608,19 @@ public:
 
 	// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
 
-    /**
-     * setGeneric Sets the specific generic
-     * @param name Name of the generic to set
-     * @param value Value of the generic
-     */
-    void setGeneric(std::string name, string value, int width, bool isBus=false);
+	/**
+	 * setGeneric Sets the specific generic
+	 * @param name Name of the generic to set
+	 * @param value Value of the generic
+	 */
+	void setGeneric(std::string name, string value, int width, bool isBus=false);
 
-    /**
-     * setGeneric Sets the specific generic
-     * @param name Name of the generic to set
-     * @param value Value of the generic
-     */
-    void setGeneric(string name, const long value, int width, bool isBus=false);
+	/**
+	 * setGeneric Sets the specific generic
+	 * @param name Name of the generic to set
+	 * @param value Value of the generic
+	 */
+	void setGeneric(string name, const long value, int width, bool isBus=false);
 
 
 	/**
@@ -645,9 +645,9 @@ public:
 	/**
 	 * Use a constant signal as input of a subcomponent.
 	 * @param componentPortName is the name of the port on the component
-     * @param constantValue is the constant value to be mapped to this port
+	 * @param constantValue is the constant value to be mapped to this port
 	 */
-    void inPortMapCst(Operator* op, string componentPortName, string constantValue);
+	void inPortMapCst(Operator* op, string componentPortName, string constantValue);
 
 	/**
 	 * Returns the VHDL for an instance of a sub-component.
@@ -660,9 +660,9 @@ public:
 
 	/**
 	 * Create a new instance of an operator inside the current containing operator
-	 * @patam opName the type of operator being instantiated
+	 * @param opName the type of operator being instantiated
 	 * @param instanceName the name of the instance being created (label compulsory in VHDL)
-	 * @parameters the parameters given to the constructor of the instance's operator
+	 * @param parameters the parameters given to the constructor of the instance's operator
 	 * 				specified as a string containing 'paramName=paramValue' separated by spaces (as on the FloPoCo command line)
 	 * @param inPortMaps the port mappings for the inputs
 	 * 				specified as a string containing 'portName:signalName' separated by ',' (as on VHDL port maps)
@@ -729,9 +729,9 @@ public:
 
 
 
- /*****************************************************************************/
- /*        Testing-related methods (for defining an operator testbench)       */
- /*****************************************************************************/
+	/*****************************************************************************/
+	/*        Testing-related methods (for defining an operator testbench)       */
+	/*****************************************************************************/
 
 	/**
 	 * Gets the correct value associated to one or more inputs.
@@ -767,13 +767,13 @@ public:
 
 
 
- /*****************************************************************************/
- /*     From this point, we have methods that are not needed in normal use    */
- /*****************************************************************************/
+	/*****************************************************************************/
+	/*     From this point, we have methods that are not needed in normal use    */
+	/*****************************************************************************/
 
 	/**
-		 Only for very specific operators such as TestBench or Wrapper for which we just want the VHDL to get through untouched
-	 */
+	   Only for very specific operators such as TestBench or Wrapper for which we just want the VHDL to get through untouched
+	*/
 	void setNoParseNoSchedule();
 	bool noParseNoSchedule();
 		
@@ -889,26 +889,26 @@ public:
 
 
 
-    /**
-     * Returns a pointer to the signal having the name as @param s.
-     * Throws an exception if the signal is not yet declared.
-     * @param name the name of the signal we want to return
-     * @return the pointer to the signal having name s
-     */
-    Signal* getSignalByName(string name);
+	/**
+	 * Returns a pointer to the signal having the name as @param s.
+	 * Throws an exception if the signal is not yet declared.
+	 * @param name the name of the signal we want to return
+	 * @return the pointer to the signal having name s
+	 */
+	Signal* getSignalByName(string name);
 
 	/**
 	 * Return the list of signals declared in this operator
 	 */
 	vector<Signal*> getSignalList();
 
-    /**
-     * Checks if a signal is already declared
-     * Possible range specifier are ignored
-     * @param name the name of the signal we want to check
-     * @return true, if signal exists, false otherwise
-     */
-    bool isSignalDeclared(string name);
+	/**
+	 * Checks if a signal is already declared
+	 * Possible range specifier are ignored
+	 * @param name the name of the signal we want to check
+	 * @return true, if signal exists, false otherwise
+	 */
+	bool isSignalDeclared(string name);
 
 
 	/**
@@ -992,11 +992,11 @@ public:
 	void stdLibs(std::ostream& o);
 
 
-    /**
-     * Output user defined header information, using additionalHeaderString_
-     * @param o the stream where the header is going to be outputted
-     */
-    void additionalHeader(std::ostream& o);
+	/**
+	 * Output user defined header information, using additionalHeaderString_
+	 * @param o the stream where the header is going to be outputted
+	 */
+	void additionalHeader(std::ostream& o);
 
 	/** DEPRECATED
 	 * Output the VHDL entity of the current operator.
@@ -1014,7 +1014,7 @@ public:
 	/**
 	 * Add a VHDL type declaration.
 	 */
- 	void addType(std::string name, std::string def);
+	void addType(std::string name, std::string def);
 
 	/**
 	 * Add a VHDL constant. This may make the code easier to read, but more difficult to debug.
@@ -1043,14 +1043,14 @@ public:
 	 * Final report function, prints to the terminal.
 	 * By default, reports the pipeline depth, but feel free to overload
 	 * it if you have anything useful to tell to the end user
-	*/
+	 */
 	virtual void outputFinalReport(ostream& s, int level);	
 
 
 	/**
 	 * Returns the pipeline depth of this operator
 	 * @return the pipeline depth of the operator
-	*/
+	 */
 	int getPipelineDepth();
 
 	/**
@@ -1755,9 +1755,9 @@ private:
 	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
 	set<Signal*> alreadyScheduled;                          /**< only used by a top-level operator: the set of signals that are already scheduled. */
 
-    map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_. Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
-    map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
-    map<std::string, std::string> generics_;               /**< A map for generics, this is required to include library elements like primitives */
+	map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_. Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
+	map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
+	map<std::string, std::string> generics_;               /**< A map for generics, this is required to include library elements like primitives */
 
 };
 

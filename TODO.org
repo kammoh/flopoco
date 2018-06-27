@@ -258,7 +258,6 @@ Rationale: the two are redundant. isSequential is less prone to change during th
 isSequential is properly initialized out of isPipelined in the default Operator constructor.
 DONE more or less in Operator
 ** Check that ?? and $$ and "port map" in comments don't ruin the pipeline framework
-** get rid of old BitHeap (and rename the new one)
 ** get rid of rst signal
 Observation: no operator uses rst, except FixFIR and LargeAcc. 
 There is a good reason for that: it would prevent the inference of srl logic.
@@ -303,7 +302,6 @@ The issue is to implement the default of this method, hopefully everything is in
 replace setName with setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
-*** rename BitheapNew into BitHeap
 *** build a SNAP package https://docs.snapcraft.io/build-snaps/   or a Docker instance or something 
 *** Add a proper Kintex7 target
 *** replace the big ifs in Target.cpp with  method overloading in subtargets ? 
