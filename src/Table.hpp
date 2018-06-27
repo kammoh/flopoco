@@ -40,39 +40,17 @@ namespace flopoco{
 
 	class Table : public Operator
 	{
-	public:
-
-		/** Input width (in bits)*/
-		int wIn;
-
-		/** Output width (in bits)*/
-		int wOut;
-
-		/** minimal input value (default 0) */
-		mpz_class minIn;
-
-		/** maximal input value (default 2^wIn-1) */
-		mpz_class maxIn;
-
-		/**
-		 * The obsolete Table constructor
-		 * @param[in] target the target device
-		 * @param[in] wIn    the with of the input in bits
-		 * @param[in] wOut   the with of the output in bits
-     	 * @param[in] logicTable   1 if the table is intended to be implemented as logic; -1 if the table is intended to be implemented as BRAM; 0: let the constructor decide
-		 */
-		Table(Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1, int logicTable = 0,  map<string, double> inputDelays = emptyDelayMap );
-
+		public:
 		/**
 		 * The Table constructor
 		 * @param[in] target 		the target device
 		 * @param[in] values 		the values used to fill the table
-		 * @param[in] wIn    		the with of the input in bits
-		 * @param[in] wOut   		the with of the output in bits
-		 * @param[in] logicTable 	true if the table is intended to be implemented as logic;
+		 * @param[in] wIn    		the with of the input in bits (optional, may be deduced from values)
+		 * @param[in] wOut   		the with of the output in bits  (optional, may be deduced from values)
+		 * @param[in] logicTable 	true if the table is intended to be implemented as logic; 
 		 * 							false (default value) if the table is intended to be implemented as BRAM
-		 * @param[in] minIn			minimal input value (default: smallest value in values)
-		 * @param[in] maxIn			maximal input value (default: largest value in values)
+		 * @param[in] minIn			minimal input value, to which value[0] will be mapped (default 0)
+		 * @param[in] maxIn			maximal input value (default: values.size()-1)
 		 */
 		Table(OperatorPtr parentOp, Target* target, vector<mpz_class> _values, int _wIn = -1, int _wOut = -1, string name="", int _logicTable = -1, int _minIn = -1, int _maxIn = -1);
 
@@ -81,23 +59,9 @@ namespace flopoco{
 		virtual ~Table() {};
 
 
+		/** get one element of the table */
 
-
-		/**
-		 * The function that will define the values contained in the table
-		 * @param[in] x  input to the table, an integer value between minIn and maxIn
-		 * @return    an mpz integer  between 0 and 2^wOut-1
-		 */
-		virtual mpz_class function(int x);//FOR TESTING = 0;
-
-		/**
-		 * This method is required as a trick mechanism:
-		 * 	function() is pure virtual, and thus cannot be called from the constructor;
-		 * 	thus, we need another function that does that call, so that everything
-		 * 	compiles and links properly
-		 */
-		mpz_class call_function(int x);
-
+	  mpz_class val(int x);
 
 
 		/** A function that returns an estimation of the size of the table in LUTs. Your mileage may vary thanks to boolean optimization */
@@ -107,9 +71,41 @@ namespace flopoco{
 		bool logicTable; 			/**< true: LUT-based table; false: BRAM-based */
 		double cpDelay;  				/**< For a LUT-based table, its delay; */
 
-		public:
+
+	public:
+
 		vector<mpz_class> values;	/**< the values used to fill the table */
-	};
+
+		/** Input width (in bits)*/
+		int wIn;
+
+		/** Output width (in bits)*/
+		int wOut;
+
+		
+		/** minimal input value (default 0) */
+		mpz_class minIn;
+
+		/** maximal input value (default 2^wIn-1) */
+		mpz_class maxIn;
+
+		
+
+
+
+
+
+		public:
+		/**
+		 * The obsolete Table constructor
+		 * @param[in] target the target device
+		 * @param[in] wIn    the with of the input in bits
+		 * @param[in] wOut   the with of the output in bits
+     	 * @param[in] logicTable   1 if the table is intended to be implemented as logic; -1 if the table is intended to be implemented as BRAM; 0: let the constructor decide
+		 */
+		Table(Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1, int logicTable = 0,  map<string, double> inputDelays = emptyDelayMap );
+
+};
 
 }
 #endif

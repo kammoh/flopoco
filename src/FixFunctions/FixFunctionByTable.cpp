@@ -32,7 +32,7 @@ using namespace std;
 
 namespace flopoco{
 
-	FixFunctionByTable::FixFunctionByTable(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable, map<string, double> inputDelays):
+	FixFunctionByTable::FixFunctionByTable(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable):
 		Table(target, -lsbIn + (signedIn?1:0), msbOut-lsbOut+1, 0, -1, logicTable){ // This sets wIn
 
 		f = new FixFunction(func, signedIn, lsbIn, msbOut, lsbOut);

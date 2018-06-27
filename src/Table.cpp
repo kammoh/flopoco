@@ -25,18 +25,18 @@ using namespace std;
 
 namespace flopoco{
 
+#if 0
 	mpz_class Table::call_function(int x)
 	{
 		return function(x);
 	}
-
-
+#endif
 
 	
 
 	Table::Table(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
 		Operator(parentOp_, target_),
-		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn), values(_values)
+		 values(_values), wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
 	{
 		srcFileName = "Table";
 		setNameWithFreqAndUID(_name);
@@ -201,16 +201,17 @@ namespace flopoco{
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2018)");
 	}
 
+	mpz_class Table::val(int x){
+		if(x<minIn || x>maxIn) {
+			THROWERROR("Error in table: input index " << x
+								 << " out of range ["<< minIn << " " << maxIn << "]" << endl);	
+		}
+		return values[x];
+	}
 
 	int Table::size_in_LUTs() {
 		return wOut*int(intpow2(wIn-getTarget()->lutInputs()));
 	}
-
-	//FOR TEST PURPOSES ONLY
-	mpz_class Table::function(int x){
-		return 0;
-	}
-
 
 
 	///////// Deprecated constructor, get rid of it ASAP
