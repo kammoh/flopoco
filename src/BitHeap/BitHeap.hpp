@@ -27,8 +27,6 @@
 
 #include "IntAddSubCmp/IntAdder.hpp"
 
-#include "Table.hpp"
-#include "DualTable.hpp"
 
 
 #define COMPRESSION_TYPE 0
