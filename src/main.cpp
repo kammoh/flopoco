@@ -23,8 +23,7 @@
 #include <sollya.h>
 #include <cstdlib>
 
-
-#include "FloPoCo.hpp"
+#include "UserInterface.hpp"
 #include "utils.hpp"
 #include "main.hpp"
 
