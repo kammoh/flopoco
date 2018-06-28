@@ -35,19 +35,24 @@ namespace flopoco{
 	
 
 	Table::Table(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, string _name, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) :
-		Operator(parentOp_, target_),
-		 values(_values), wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
+		Operator(parentOp_, target_)
 	{
+		srcFileName = "Table";
+		setNameWithFreqAndUID(_name);
+		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2018)");
 		init(_values, _name, _wIn, _wOut,  _logicTable,  _minIn,  _maxIn); 
 	}
 
 
 	void	Table::init(vector<mpz_class> _values, string _name,
-							int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) {
-		srcFileName = "Table";
-		setNameWithFreqAndUID(_name);
-		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2018)");
+										int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn)
+	{
 
+		values     = _values;
+		wIn        = _wIn;
+		wOut       = _wOut;
+		minIn      = _minIn;
+		maxIn      = _maxIn;
 		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
 			THROWERROR("Error in table: the set of values to be written in the table is empty" << endl);
@@ -100,6 +105,7 @@ namespace flopoco{
 			logicTable = true;
 		else
 			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
+		REPORT(DEBUG, "_logicTable=" << _logicTable << "  logicTable=" << logicTable);
 
 		// Sanity check: the table is built using a RAM, but is underutilized
 		if(!logicTable

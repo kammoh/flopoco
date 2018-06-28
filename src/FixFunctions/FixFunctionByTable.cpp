@@ -32,48 +32,37 @@ using namespace std;
 
 namespace flopoco{
 
-	FixFunctionByTable::FixFunctionByTable(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable)		:
-		Table(parentOp, target)
-
-	{}
-#if 0
-
-		,
-		Table::wIn(-lsbIn + (signedIn?1:0)),
-		wOut(msbOut-lsbOut+1),
-		logicTable(logicTable)
+	FixFunctionByTable::FixFunctionByTable(OperatorPtr parentOp_, Target* target_, string func_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
+		Table(parentOp_, target_)
 	{
-
-		f = new FixFunction(func, signedIn, lsbIn, msbOut, lsbOut);
-		ostringstream name;
 		srcFileName="FixFunctionByTable";
-
+		ostringstream name;
 		name<<"FixFunctionByTable";
 		setNameWithFreqAndUID(name.str());
-
 		setCopyrightString("Florent de Dinechin (2010-2018)");
+
+		f = new FixFunction(func_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
+		wIn = -lsbIn_ + (signedIn_?1:0);
+		wOut = msbOut_-lsbOut_+1;
+		vector<mpz_class> v;
+		for(int i=0; i<(1<<wIn); i++) {
+			v.push_back(function(i));
+		};
+		Table::init(v);
+	};
 
-	}
 
-#endif
+
+
+
+
+	
 	FixFunctionByTable::~FixFunctionByTable() {
 		free(f);
 	}
 
 
-	// This replaces the actual constructor and returns a Table object that is not this.
-	// It works as long as the table is built using its factory interface.
-	OperatorPtr FixFunctionByTable::buildTableOperator() {
-#if 0
-		vector<mpz_class> v;
-		for(int i=0; i<(1<<wIn); i++) {
-			v.push_back(function(i));	OperatorPtr FixFunctionByTable::buildTableOperator
-		};
-		actualFunctionTable =  new Table(getParentOp(), getTarget(), v);
-		return actualFunctionTable;
-#endif
-	}
 	
 	//overloading the method from table
 	mpz_class FixFunctionByTable::function(int x){
@@ -97,7 +86,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		return new FixFunctionByTable(target, f, signedIn, lsbIn, msbOut, lsbOut);
+		return new FixFunctionByTable(parentOp, target, f, signedIn, lsbIn, msbOut, lsbOut);
 	}
 
 	void FixFunctionByTable::registerFactory()
