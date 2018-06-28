@@ -32,8 +32,17 @@ using namespace std;
 
 namespace flopoco{
 
-	FixFunctionByTable::FixFunctionByTable(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable):
-		Table(target, -lsbIn + (signedIn?1:0), msbOut-lsbOut+1, 0, -1, logicTable){ // This sets wIn
+	FixFunctionByTable::FixFunctionByTable(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable)		:
+		Table(parentOp, target)
+
+	{}
+#if 0
+
+		,
+		Table::wIn(-lsbIn + (signedIn?1:0)),
+		wOut(msbOut-lsbOut+1),
+		logicTable(logicTable)
+	{
 
 		f = new FixFunction(func, signedIn, lsbIn, msbOut, lsbOut);
 		ostringstream name;
@@ -42,15 +51,30 @@ namespace flopoco{
 		name<<"FixFunctionByTable";
 		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Florent de Dinechin (2010-2014)");
+		setCopyrightString("Florent de Dinechin (2010-2018)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
 
 	}
 
+#endif
 	FixFunctionByTable::~FixFunctionByTable() {
 		free(f);
 	}
 
+
+	// This replaces the actual constructor and returns a Table object that is not this.
+	// It works as long as the table is built using its factory interface.
+	OperatorPtr FixFunctionByTable::buildTableOperator() {
+#if 0
+		vector<mpz_class> v;
+		for(int i=0; i<(1<<wIn); i++) {
+			v.push_back(function(i));	OperatorPtr FixFunctionByTable::buildTableOperator
+		};
+		actualFunctionTable =  new Table(getParentOp(), getTarget(), v);
+		return actualFunctionTable;
+#endif
+	}
+	
 	//overloading the method from table
 	mpz_class FixFunctionByTable::function(int x){
 		mpz_class ru, rd;

@@ -34,10 +34,16 @@ namespace flopoco{
 
 	
 
-	Table::Table(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, int _wIn, int _wOut, string _name, int _logicTable, int _minIn, int _maxIn) :
+	Table::Table(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, string _name, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) :
 		Operator(parentOp_, target_),
 		 values(_values), wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
 	{
+		init(_values, _name, _wIn, _wOut,  _logicTable,  _minIn,  _maxIn); 
+	}
+
+
+	void	Table::init(vector<mpz_class> _values, string _name,
+							int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) {
 		srcFileName = "Table";
 		setNameWithFreqAndUID(_name);
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007-2018)");
@@ -193,9 +199,7 @@ namespace flopoco{
 			vhdl << tab << "Y <= Y0;" << endl;
 	}
 
-
-
-
+	
 	Table::Table(OperatorPtr parentOp, Target* target) :
 		Operator(parentOp, target){
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007, 2018)");
@@ -215,7 +219,7 @@ namespace flopoco{
 
 
 	///////// Deprecated constructor, get rid of it ASAP
-	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable, map<string, double> inputDelays) :
+	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable) :
 		Operator(target_),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
 	{

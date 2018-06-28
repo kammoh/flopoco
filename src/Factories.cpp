@@ -76,7 +76,7 @@ void UserInterface::registerFactories()
 		// FPRealKCM::registerFactory();
 		// IntConstDiv::registerFactory(); // depends on IntConstMult
 		// FPConstDiv::registerFactory();
-		FixFunctionByTable::registerFactory();
+		/// FixFunctionByTable::registerFactory();
 		// FixFunctionBySimplePoly::registerFactory();
 		// FixFunctionByPiecewisePoly::registerFactory();
 		// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH

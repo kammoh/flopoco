@@ -173,7 +173,7 @@ namespace flopoco{
 			vhdl << tab << declare(join("w", nDigit-1), wF+6) << " <=  \"00\" & prescaledfX;" << endl; //TODO : review that, maybe MSB 0 to save
 
 			vector<mpz_class> tableContent = selFunctionTable(0.75, 1.0, 2, 5, 7, 8, 7, 4);
-			Table* selfunctiontable = new Table(this, target, tableContent,7,4);
+			Table* selfunctiontable = new Table(this, target, tableContent,"selFunction7_4", 7,4);
 
 			for(i=nDigit-1; i>=1; i--) {
 
@@ -317,11 +317,11 @@ namespace flopoco{
 			Table* selfunctiontable;
 			if(alpha==3) {
 				tableContent = selFunctionTable(0.5, 1.0, 1, 4, 3, 4, 5, 3);
-				selfunctiontable = new Table(this, target, tableContent,5,3);
+				selfunctiontable = new Table(this, target, tableContent,"selFunction5_3",5,3);
 			}
 			else if(alpha==2){
 				tableContent = selFunctionTable(0.5, 1.0, 3, 6, 2, 4, 9, 3);
-				selfunctiontable = new Table(this, target, tableContent,9,3);
+				selfunctiontable = new Table(this, target, tableContent,"selFunctionç_3",9,3);
 			}
 			else THROWERROR("alpha="<< alpha << " is not an option");
 

@@ -497,9 +497,9 @@ namespace flopoco{
 				Table* t = new Table(thisOp->getParentOp(),
 														 thisOp->getTarget(),
 														 tableContent,
+														 tablename, //name
 														 m[i] - l[i]+1, // wIn
 														 tableOutSize, //wOut
-														 tablename, //name
 														 1 // logicTable
 														 );
 				

@@ -19,7 +19,7 @@ namespace flopoco{
 			 The FixFunctionByTable constructor. For the meaning of the parameters, see FixFunction.hpp
 		 */
 
-		FixFunctionByTable(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable=0);
+		FixFunctionByTable(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable=0);
 
 		/**
 		 * FixFunctionByTable destructor
@@ -39,7 +39,8 @@ namespace flopoco{
 
 		FixFunction *f;
 		unsigned wR;
-
+		Table actualFunctionTable;
+		OperatorPtr buildTableOperator();
 	};
 
 }

@@ -492,7 +492,7 @@ src/FPDivSqrt/FPSqrt
  src/FixConstant
 
  src/FixFunctions/FixFunction
- src/FixFunctions/FixFunctionByTable
+# src/FixFunctions/FixFunctionByTable
  #src/FixFunctions/BasicPolyApprox
  #src/FixFunctions/PiecewisePolyApprox
  #src/FixFunctions/FixHornerEvaluator
