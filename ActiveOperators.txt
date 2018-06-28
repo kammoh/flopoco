@@ -1,0 +1,265 @@
+ADD_LIBRARY(FloPoCoLib STATIC #This must stay at the first line
+#--------------------------------------------------------------------
+#               FRAMEWORK
+#--------------------------------------------------------------------
+
+# src/FloPoCo.hpp
+ src/Operator
+ src/UserInterface
+ src/Factories
+ src/Signal
+ src/utils
+ src/FlopocoStream
+ VHDLLexer # generated from .l
+ 
+ src/Instance
+ 
+# Resource Estimation related ---------------------------------------
+  src/Tools/ResourceEstimationHelper
+ 
+ # Floorplanning related ---------------------------------------------
+ src/Tools/FloorplanningHelper
+
+ # Targets -----------------------------------------------------------
+ src/Targets/DSP
+ src/Target 
+ #src/TargetModel
+ 
+# src/Targets/Spartan3 
+# src/Targets/Virtex4 
+# src/Targets/Virtex5 
+ src/Targets/Virtex6 
+ src/Targets/Zynq7000 
+ src/Targets/Kintex7 
+ 
+# src/Targets/StratixII 
+# src/Targets/StratixIII 
+# src/Targets/StratixIV
+ src/Targets/StratixV
+ 
+ #src/Targets/CycloneII 
+ #src/Targets/CycloneIII 
+ #src/Targets/CycloneIV 
+ #src/Targets/CycloneV 
+
+# AutoTest ------------------------------------------------------------
+src/AutoTest/AutoTest
+
+# TestBench-related -------------------------------------------------
+ src/TestBenches/TestCase
+ src/TestBenches/FPNumber
+ src/TestBenches/IEEENumber
+ src/TestBenches/Wrapper
+ src/TestBenches/TestBench 
+
+
+
+# Bit heap  ------------------------------------------------
+# src/BitHeap/BitHeap
+# src/BitHeap/WeightedBit
+# src/BitHeap/Plotter
+ 
+ src/BitHeap/Bit
+ src/BitHeap/Compressor
+ src/BitHeap/BitHeap
+ src/BitHeap/CompressionStrategy
+ src/BitHeap/BitHeapPlotter
+ src/BitHeap/Solution
+ 
+ src/BitHeap/BitHeapTest
+
+ src/BitHeap/FirstFittingCompressionStrategy
+ src/BitHeap/ParandehAfsharCompressionStrategy
+ src/BitHeap/MaxEfficiencyCompressionStrategy
+ src/BitHeap/OptimalCompressionStrategy
+# src/BitHeap/VariableColumnCompressor
+
+#--------------------------------------------------------------------
+#               OPERATORS          
+#--------------------------------------------------------------------
+
+src/TutorialOperator
+
+#src/OperatorPipeline/OperatorPipeline
+#src/FPExpressions/ExpressionParserData
+
+
+
+# Conversions ----------------------------------------------------
+#src/Conversions/InputIEEE
+#src/Conversions/OutputIEEE
+#src/Conversions/FP2Fix
+#src/Conversions/Fix2FP
+
+# Shifters/LZOC ----------------------------------------------------
+ src/ShiftersEtc/LZOC 
+ src/ShiftersEtc/LZOCShifterSticky
+ src/ShiftersEtc/Shifters
+
+# FixFilters ----------------------------------------------------------
+ src/ShiftReg
+ src/FixFilters/FixSOPC
+ src/FixFilters/FixFIR
+ src/FixFilters/FixHalfSine
+ src/FixFilters/FixIIR 
+
+
+# pipelined Integer addition -------------------------------------------------
+ src/IntAddSubCmp/IntAdder  
+# src/IntAddSubCmp/IntAdderClassical 
+# src/IntAddSubCmp/IntAdderAlternative 
+# src/IntAddSubCmp/IntAdderShortLatency
+# src/IntAddSubCmp/IntComparator
+ src/IntAddSubCmp/IntDualAddSub
+ src/IntAddSubCmp/BasicCompressor
+src/IntAddSubCmp/IntMultiAdder
+ 
+# ---------- First generation of fast large adders ------------------------
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1 
+# src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
+
+# ---------- Second Generation of fast large adders -----------------------
+# src/IntAddSubCmp/IntAdderSpecific 
+# src/IntAddSubCmp/IntComparatorSpecific 
+# src/IntAddSubCmp/CarryGenerationCircuit 
+# src/IntAddSubCmp/LongIntAdderAddAddMuxGen2 
+# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2 
+# src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
+# src/IntAddSubCmp/LongIntAdderMuxNetwork
+
+# Constant multiplications and divisions
+ src/ConstMult/ShiftAddOp 
+ src/ConstMult/ShiftAddDag 
+# src/ConstMult/IntConstMult 
+# src/ConstMult/IntConstMCM  
+# src/ConstMult/KCMTable
+# src/ConstMult/IntIntKCM 
+# src/ConstMult/FPConstMult 
+# src/ConstMult/CRFPConstMult 
+ src/ConstMult/FixRealKCM
+# src/ConstMult/FPRealKCM
+# src/ConstMult/IntConstDiv 
+# src/ConstMult/FPConstDiv 
+
+ 
+# Multiplication related --------------------------------------------
+src/IntMult/IntMultiplier
+src/IntMult/TilingStrategy
+src/IntMult/TilingStrategyOptimalILP
+# src/IntMult/FixMultAdd
+src/IntMult/MultiplierBlock
+# src/IntMult/IntSquarer
+src/IntMult/DSPBlock
+src/IntMult/BaseMultiplier
+src/IntMult/BaseMultiplier2xk
+src/IntMult/BaseMultiplierCollection
+src/IntMult/BaseMultiplierDSP
+src/IntMult/BaseMultiplierDSPSuperTilesXilinx
+src/IntMult/BaseMultiplierLUT
+src/IntMult/IntKaratsubaRectangular
+
+# Complex numbers ---------------------------------------------------
+src/Complex/FixComplexKCM
+# TODO for Matei
+#src/Complex/FixedComplexAdder
+
+# Floating-point adders and subtracters -----------------------------
+ src/FPAddSub/FPAdd
+ src/FPAddSub/FPAddDualPath
+ src/FPAddSub/FPAddSinglePath
+# src/FPAddSub/FPAdd3Input
+# src/FPAddSub/FPAddSub
+
+# Floating-point multipliers and squarers
+# src/FPMultSquare/FPMult
+#  src/FPMultSquare/FPMultKaratsuba # See TODO
+# src/FPMultSquare/FPSquare
+
+# Floating-point dividers and square roots
+src/FPDivSqrt/FPDiv
+src/FPDivSqrt/FPSqrt
+#src/FPDivSqrt/Tools/NbBitsMin
+# src/FPDivSqrt/FPSqrtPoly # Resurrect some day?
+
+
+# Composite operators
+#src/FPComposite/FPLargeAcc 
+#src/FPComposite/LargeAccToFP 
+#src/FPComposite/FPDotProduct 
+#src/FPComposite/FP2DNorm
+
+# Generic fixed-point function evaluators ---------------------------
+ src/Table 
+ src/DualTable 
+ 
+ src/FixConstant
+
+ src/FixFunctions/FixFunction
+ src/FixFunctions/FixFunctionByTable
+ #src/FixFunctions/BasicPolyApprox
+ #src/FixFunctions/PiecewisePolyApprox
+ #src/FixFunctions/FixHornerEvaluator
+ #src/FixFunctions/FixFunctionBySimplePoly
+ #src/FixFunctions/FixFunctionByPiecewisePoly
+
+ src/FixFunctions/GenericTable
+ src/FixFunctions/BipartiteTable
+# src/FixFunctions/Multipartite 
+# src/FixFunctions/FixFunctionByMultipartiteTable
+# src/FixFunctions/QuineMcCluskey
+
+# Trigonometric functions ------------------------------------------
+#src/Trigs/ConstDiv3ForSinPoly
+#src/Trigs/FixSinPoly
+# src/Trigs/FixSinCos
+# src/Trigs/CordicSinCos
+# src/Trigs/CordicSinOrCos
+# src/Trigs/FixAtan2
+#! does not compile with clang under mac os X: src/Trigs/FixAtan2ByCORDIC
+#src/Trigs/FixAtan2ByRecipMultAtan
+#src/Trigs/FixAtan2ByBivariateApprox
+src/Trigs/Atan2Table
+
+#src/Trigs/Fix2DNorm
+
+# Primitive Components ----------------------------------------------
+src/PrimitiveComponents/BooleanEquation
+src/PrimitiveComponents/GenericLut
+src/PrimitiveComponents/Primitive
+src/PrimitiveComponents/GenericAddSub
+src/PrimitiveComponents/GenericMux
+
+src/PrimitiveComponents/Xilinx/Xilinx_Primitive
+src/PrimitiveComponents/Xilinx/Xilinx_LUT_compute
+src/PrimitiveComponents/Xilinx/Xilinx_CARRY4
+src/PrimitiveComponents/Xilinx/Xilinx_LUT5
+src/PrimitiveComponents/Xilinx/Xilinx_LUT6
+src/PrimitiveComponents/Xilinx/Xilinx_MUXF7
+src/PrimitiveComponents/Xilinx/Xilinx_MUXF8
+src/PrimitiveComponents/Xilinx/Xilinx_FDCE
+src/PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder
+src/PrimitiveComponents/Xilinx/Xilinx_Comparator
+src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub
+src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub_slice
+src/PrimitiveComponents/Xilinx/Xilinx_GenericMux
+src/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
+src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State
+src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice
+src/PrimitiveComponents/Xilinx/XilinxGPC
+src/PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor
+#
+#src/PrimitiveComponents/Altera/Altera_LCELL
+#
+src/Tools/Plane
+src/Tools/Point
+
+# Exp, Log and Power
+#src/ExpLog/FPExp
+#src/ExpLog/IterativeLog //depends on IntSquarer
+#src/ExpLog/FPPow
+
+# If you want to add your operator, feel free
+src/TutorialOperator
+
+) #This must stay at the last line
