@@ -59,9 +59,9 @@ namespace flopoco{
 
 		//set wIn
 		if(wIn < 0){
-			REPORT(DEBUG, "WARNING: wIn value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wIn
 			wIn = intlog2(values.size());
+			REPORT(DEBUG, "WARNING: wIn value was not set, wIn=" << wIn << " was inferred from the vector of values");
 		}
 		else if(((unsigned)1<<wIn) < values.size()) {
 			REPORT(DEBUG, "WARNING: wIn set to a value lower than the number of values which are to be written in the table.");
@@ -84,9 +84,9 @@ namespace flopoco{
 
 		//set wOut
 		if(wOut < 0){
-			REPORT(DEBUG, "WARNING: wOut value not set, will be inferred from the values which are to be written in the table.");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
+			REPORT(DEBUG, "WARNING: wOut value was not set, wOut=" << wOut << " was inferred from the vector of values");
 		}
 		else if(wOut < intlog2(maxValue))  {
 			REPORT(DEBUG, "WARNING: wOut value set to a value lower than the size of the values which are to be written in the table.");

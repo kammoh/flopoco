@@ -44,13 +44,13 @@ namespace flopoco{
 		f = new FixFunction(func_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
 		wIn = f->wIn;
-		wOut = msbOut_-lsbOut_+1;
+		wOut = f->wOut;
 		vector<mpz_class> v;
 		for(int i=0; i<(1<<wIn); i++) {
 			REPORT(FULL, "f("<< i << ") = " << function(i) );
 			v.push_back(function(i));
 		};
-		Table::init(v);
+		Table::init(v,join("f", getNewUId()), wIn, wOut);
 	};
 
 
