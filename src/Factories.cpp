@@ -21,37 +21,35 @@ public:\
 	static void registerFactory();\
 }
 
-
 namespace flopoco{
 
-DEF(Shifter);
-DEF(LZOC);
-DEF(LZOCShifterSticky);
-DEF(ShiftReg);
-DEF(Compressor);
-DEF(BitheapTest);
-DEF(IntAdder);
-DEF(IntDualAddSub);
-DEF(IntMultiAdder);
-DEF(DSPBlock);
-DEF(IntMultiplier);
-DEF(FPAdd);
-DEF(FPDiv);
-DEF(FixRealKCM);
-DEF(FixFunctionByTable);
-DEF(FixSOPC);
-DEF(FixFIR);
-DEF(FixIIR);
-DEF(TestBench);
-DEF(Wrapper);
-DEF(AutoTest);
-DEF(XilinxAddSub);
-DEF(XilinxComparator);
-DEF(XilinxTernaryAddSub);
-DEF(XilinxGPC);
-DEF(XilinxFourToTwoCompressor);
-DEF(TutorialOperator);
-
+	DEF(AutoTest);
+	DEF(Compressor);
+	DEF(BitheapTest);
+	DEF(Shifter);
+	DEF(LZOC);
+	DEF(LZOCShifterSticky);
+	DEF(ShiftReg);
+	DEF(IntAdder);
+	DEF(IntDualAddSub);
+	DEF(IntMultiAdder);
+	DEF(DSPBlock);
+	DEF(IntMultiplier);
+	DEF(FixFunctionByTable);
+	DEF(FixRealKCM);
+	DEF(TestBench);
+	DEF(Wrapper);
+	DEF(FPAdd);
+	DEF(FPDiv);
+	DEF(FixSOPC);
+	DEF(FixFIR);
+	DEF(FixIIR);
+	//DEF(Xilinx_GenericAddSub);
+	DEF(Xilinx_Comparator);
+	//DEF(Xilinx_TernaryAdd_2State);
+	DEF(XilinxGPC);
+	DEF(XilinxFourToTwoCompressor);
+	DEF(TutorialOperator);
 
 	void UserInterface::registerFactories()
 	{
@@ -78,21 +76,21 @@ DEF(TutorialOperator);
 			IntAdder::registerFactory();
 		
 #if 0 // Plug them back some day
-			// IntAdderClassical::registerFactory();
-			// IntAdderAlternative::registerFactory();
-			// IntAdderShortLatency::registerFactory();
+			IntAdderClassical::registerFactory();
+			IntAdderAlternative::registerFactory();
+			IntAdderShortLatency::registerFactory();
 #endif
 		
 #if 0 // Plug them for debug purpose only
-			// IntAdderSpecific::registerFactory();
-			// LongIntAdderAddAddMuxGen1::registerFactory();
-			// LongIntAdderAddAddMuxGen2::registerFactory();
-			// LongIntAdderCmpAddIncGen1::registerFactory();
-			// LongIntAdderCmpAddIncGen2::registerFactory();
-			// LongIntAdderCmpCmpAddGen1::registerFactory();
-			// LongIntAdderCmpCmpAddGen2::registerFactory();
-			// LongIntAdderMuxNetwork::registerFactory();
-			// IntComparatorSpecific::registerFactory();
+			IntAdderSpecific::registerFactory();
+			LongIntAdderAddAddMuxGen1::registerFactory();
+			LongIntAdderAddAddMuxGen2::registerFactory();
+			LongIntAdderCmpAddIncGen1::registerFactory();
+			LongIntAdderCmpAddIncGen2::registerFactory();
+			LongIntAdderCmpCmpAddGen1::registerFactory();
+			LongIntAdderCmpCmpAddGen2::registerFactory();
+			LongIntAdderMuxNetwork::registerFactory();
+			IntComparatorSpecific::registerFactory();
 #endif
 			// IntComparator::registerFactory();
 			IntDualAddSub::registerFactory();
@@ -145,9 +143,9 @@ DEF(TutorialOperator);
 			// hidden for now
 			// Fix2DNorm::registerFactory();
 
-			Xilinx_GenericAddSub::registerFactory();
+			//Xilinx_GenericAddSub::registerFactory();
 			Xilinx_Comparator::registerFactory();
-			Xilinx_TernaryAdd_2State::registerFactory();
+			//Xilinx_TernaryAdd_2State::registerFactory();
 			XilinxGPC::registerFactory();
 			XilinxFourToTwoCompressor::registerFactory();
 
