@@ -165,12 +165,12 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
   ScaLP/Solver.h
-  HINTS "/usr/local/include"
+  HINTS "/usr/local/include/" "~/.local/include"
   DOC "Path of main header of scalp"
   )
 FIND_LIBRARY(SCALP_LIB
   NAMES libScaLP libScaLP.so  libScaLP.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "~/.local/lib/"
   DOC "Directory of the SCALP main library")
 
 FIND_LIBRARY(SCALP_CPLEX_LIB
@@ -237,13 +237,13 @@ ELSE(FLEXPP_EXECUTABLE)
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT VHDLLexer.cpp
+  OUTPUT src/VHDLLexer.cpp
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
   COMMAND ${FLEXPP_EXECUTABLE} 
-  ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp 
+  ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/src/VHDLLexer.cpp 
   ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
   )
 
@@ -293,7 +293,26 @@ ADD_CUSTOM_COMMAND(
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
 #All operators active in flopoco (not only the ones with an interface)
-include(ActiveOperators.txt)
+#include(ActiveOperators.txt)
+
+
+#Thanks SOF https://stackoverflow.com/questions/4346412/how-to-prepend-all-filenames-on-the-list-with-common-path#27630120
+
+# PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args] 
+FUNCTION(PREPEND var prefix)
+   SET(listVar "")
+   FOREACH(f ${ARGN})
+      LIST(APPEND listVar "${prefix}${f}")
+   ENDFOREACH(f)
+   SET(${var} "${listVar}" PARENT_SCOPE)
+ENDFUNCTION(PREPEND)
+
+FILE(STRINGS ${CMAKE_SOURCE_DIR}/src/Active.txt ACTIVE_THINGS)
+
+PREPEND(PATH_ACTIVE_THINGS ${CMAKE_SOURCE_DIR}/src/ ${ACTIVE_THINGS})
+
+#MESSAGE("${active}")
+ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS} src/VHDLLexer)
 
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
