@@ -30,7 +30,7 @@ namespace flopoco{
 		ostringstream name;
 		srcFileName="Atan2Table";
 		name <<"Atan2Table_" << wIn << "_" << wOut << "_" << archType;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 	}
 
 	Atan2Table::~Atan2Table()

@@ -17,7 +17,7 @@ namespace flopoco {
 
 Altera_LCELL::Altera_LCELL(Operator *parentOp, Target *target, const string &lut_mask, const bool &shared_arith, const bool &dont_touch) : Primitive(parentOp, target), _hasSharedArith(false), _hasDontTouch(false), _hasLUT7(false) {
     srcFileName = "Altera_LCELL";
-    //setName("Altera_LCELL");
+    //setNameWithFreqAndUID("Altera_LCELL");
     if(target->getVendor() == "Altera"){
         std::stringstream o;
         if( target->getID() == "CycloneII" ){
@@ -48,7 +48,7 @@ Altera_LCELL::Altera_LCELL(Operator *parentOp, Target *target, const string &lut
                 }
             }
             o << "lcell_comb";
-            setName(o.str());
+            setNameWithFreqAndUID(o.str());
         }
 
 

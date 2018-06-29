@@ -35,7 +35,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "FPMultKaratsuba_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		if (wFX!=wFY){
 			cerr << "karatsuba, equal sizes for inputs pls";

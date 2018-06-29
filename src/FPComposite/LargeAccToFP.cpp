@@ -46,7 +46,7 @@ namespace flopoco{
 			  <<(MSBA_>=0?"":"M")<<abs(MSBA_)<<"_"
 			  <<(LSBA_>=0?"":"M")<<abs(LSBA_)<<"_"
 			  <<wEOut_<<"_"<<wFOut_;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		sizeAcc_ = MSBA - LSBA + 1;
 

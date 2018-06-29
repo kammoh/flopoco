@@ -19,7 +19,7 @@ namespace flopoco {
     Xilinx_TernaryAdd_2State_slice::Xilinx_TernaryAdd_2State_slice(Operator *parentOp, Target *target, const uint &wIn , const bool &is_initial , const std::string &lut_content ) : Operator( parentOp, target ) {
         setCopyrightString( "Marco Kleinlein" );
 
-        setName( "Xilinx_TernaryAdd_2State_slice_s" + std::to_string( wIn ) + ( is_initial ? "_init" : "" ) );
+        setNameWithFreqAndUID( "Xilinx_TernaryAdd_2State_slice_s" + std::to_string( wIn ) + ( is_initial ? "_init" : "" ) );
         srcFileName = "Xilinx_TernaryAdd_2State_slice";
         //addToGlobalOpList( this );
         setCombinatorial();

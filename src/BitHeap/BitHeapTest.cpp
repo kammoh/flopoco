@@ -21,7 +21,7 @@ namespace flopoco{
 
 		name << "BitheapTest_msb_" << vhdlize(msb) << "_lsb_" << vhdlize(lsb)
 				<< "_nbInputs_" << vhdlize(nbInputs);
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		//srand(time(NULL));
 		srand(1);

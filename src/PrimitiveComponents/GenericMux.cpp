@@ -15,7 +15,7 @@ namespace flopoco {
         srcFileName="GenericMux";
 		ostringstream name;
         name << "GenericMux_w" << wIn << "_s" << inputCount;
-        setName(name.str());
+        setNameWithFreqAndUID(name.str());
 
         for( uint i=0;i<inputCount;++i )
             addInput(getInputName(i),wIn);

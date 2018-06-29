@@ -87,7 +87,7 @@ namespace flopoco{
 			o << getTarget()->frequencyMHz() ;
 		else
 			o << "comb";
-		setName(o.str());
+		setNameWithFreqAndUID(o.str());
 
 		addFPInput("X", wE, wF);
 		addFPInput("Y", wE, wF);

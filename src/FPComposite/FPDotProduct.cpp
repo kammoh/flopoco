@@ -51,7 +51,7 @@ namespace flopoco{
 			name << getTarget()->frequencyMHz() ;
 		else
 			name << "comb";
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2008-2011)");		
 

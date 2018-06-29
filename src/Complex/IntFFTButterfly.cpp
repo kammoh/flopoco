@@ -20,7 +20,7 @@ namespace flopoco{
 			name << "IntFFTButterfly_" << w << "_w_exp_" << twiddleExponent << "_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "IntFFTButterfly_" << w << "_w_exp_" << twiddleExponent << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		addInput("Xi", 		   w, true);
 		addInput("Xr", 		   w, true);

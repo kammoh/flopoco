@@ -25,7 +25,7 @@ namespace flopoco {
     Xilinx_CFGLUTShadow::Xilinx_CFGLUTShadow(Target* target, bool cfgLutCompatibleInterface) : Operator(target)
 	{
         srcFileName="Xilinx_CFGLUTShadow";
-        setName("Xilinx_CFGLUTShadow");
+        setNameWithFreqAndUID("Xilinx_CFGLUTShadow");
         setCopyrightString("Martin Kumm");
 
 		// declaring inputs

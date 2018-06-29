@@ -63,7 +63,7 @@ namespace flopoco{
 				 <<(MaxMSBX_>=0?"":"M")<<abs(MaxMSBX_)<<"_"
 				 <<(MSBA_>=0?"":"M")<<abs(MSBA_)<<"_" 
 				 <<(LSBA_>=0?"":"M")<<abs(LSBA_);
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		// This operator is a sequential one
 		setSequential();

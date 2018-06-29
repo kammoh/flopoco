@@ -122,7 +122,10 @@ void UserInterface::registerFactories()
 
 		// TargetModel::registerFactory();
 		// For new developers to play within FloPoCo operator development
-	  TutorialOperator::registerFactory();
+	  	TutorialOperator::registerFactory();
+
+		//Internship shit making
+		MAC::registerFactory();
 	}
 	catch (const std::exception &e) {
 		cerr << "Error while registering factories: " << e.what() <<endl;

@@ -26,7 +26,7 @@ namespace flopoco {
             name << "_fixed_" << ( fixed_signs & 0x1 ) << ( ( fixed_signs & 0x2 ) >> 1 ) ;
         }
 
-        setName( name.str() );
+        setNameWithFreqAndUID( name.str() );
         setCombinatorial();
         addLUT( wIn + 1 );
 
@@ -47,7 +47,7 @@ namespace flopoco {
             name << "_dss";
         }
 
-        setName( name.str() );
+        setNameWithFreqAndUID( name.str() );
 		setCombinatorial();
         addLUT( wIn + 1 );
 

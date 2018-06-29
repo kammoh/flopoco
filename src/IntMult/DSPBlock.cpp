@@ -12,7 +12,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	setShared(); //set this operator to be a shared operator, does not work for pipelined ones!!
 	setSequential(); //Dirty hack!!
 
-	setName(name.str());
+	setNameWithFreqAndUID(name.str());
 
 	if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
 

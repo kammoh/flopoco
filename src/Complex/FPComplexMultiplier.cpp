@@ -18,7 +18,7 @@ namespace flopoco{
 	{
 		ostringstream o;
 		o << "ComplexMultiplier_" << wE << "_" << wF;
-		setName(o.str());
+		setNameWithFreqAndUID(o.str());
 
 		addFPInput("Xi", wE, wF);
 		addFPInput("Xr", wE, wF);

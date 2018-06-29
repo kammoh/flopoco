@@ -38,7 +38,7 @@ namespace flopoco{
 		o << "FPSumOf3Squares_" << wE << "_" << wF;
 		if(!optimize)
 			o << "_FP";
-		setName(o.str());
+		setNameWithFreqAndUID(o.str());
 
 		addFPInput("X", wE, wF);
 		addFPInput("Y", wE, wF);

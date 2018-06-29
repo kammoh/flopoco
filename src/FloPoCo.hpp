@@ -247,5 +247,8 @@ use withing matrix-multiplication scenarios ------------------ */
 #include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 #include "PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
 
+/*Internshiping shit making*/
+#include "Internshiping/MAC.hpp"
+
 
 #endif //FLOPOCO_HPP

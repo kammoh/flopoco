@@ -1706,7 +1706,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 			int wF = checkStrictlyPositive(argv[i++], argv[0]);
 			cerr << "> LNSAddSub: wE=" << wE << " wF=" << wF << endl;
 			op = new LNSAddSub(target, wE, wF);
-			if(cl_name!="")	op->setName(cl_name);
+			if(cl_name!="")	op->setNameWithFreqAndUID(cl_name);
 			addOperator(oplist, op);
 		}
 		else if (opname == "LNSMul")
@@ -1718,7 +1718,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 			int wF = checkStrictlyPositive(argv[i++], argv[0]);
 			cerr << "> LNSMul: wE=" << wE << " wF=" << wF << endl;
 			op = new LNSMul(target, wE, wF);
-			if(cl_name!="")	op->setName(cl_name);
+			if(cl_name!="")	op->setNameWithFreqAndUID(cl_name);
 			addOperator(oplist, op);
 		}
 		else if (opname == "LNSDiv")
@@ -1741,7 +1741,7 @@ bool parseCommandLine(int argc, char* argv[], vector<Operator*> &oplist){
 			int wF = checkStrictlyPositive(argv[i++], argv[0]);
 			cerr << "> LNSSqrt: wE=" << wE << " wF=" << wF << endl;
 			op = new LNSSqrt(target, wE, wF);
-			if(cl_name!="")	op->setName(cl_name);
+			if(cl_name!="")	op->setNameWithFreqAndUID(cl_name);
 			addOperator(oplist, op);
 		}
 		else if (opname == "LNSAdd")

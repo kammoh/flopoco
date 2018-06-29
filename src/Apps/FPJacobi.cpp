@@ -43,7 +43,7 @@ namespace flopoco{
 		ostringstream name;
 
 		name <<"FPJacobi_"<<wE<<"_"<<wF<<"_f"<<getTarget()->frequencyMHz()<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2010)");		
 

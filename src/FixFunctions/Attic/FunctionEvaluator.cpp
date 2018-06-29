@@ -44,7 +44,7 @@ namespace flopoco{
 		srcFileName="FunctionEvaluator";
 
 		name<<"FunctionEvaluator_"<<getNewUId();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Bogdan Pasca, Mioara Joldes, Florent de Dinechin (2010)");
 

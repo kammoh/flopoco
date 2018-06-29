@@ -49,7 +49,7 @@ namespace flopoco{
 		}
 
 		name << "_uid"<<getNewUId();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca (2010)");
 
 		addInput ("X", wIn_,true);

@@ -13,7 +13,7 @@ namespace flopoco {
         srcFileName="GenericMult";
 		ostringstream name;
         name << "GenericMult_w" << wX << "_" << printFlags();
-        setName(name.str());
+        setNameWithFreqAndUID(name.str());
 
         this->wX = wX;
         this->wY = wY;

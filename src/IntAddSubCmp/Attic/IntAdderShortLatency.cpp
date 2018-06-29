@@ -36,7 +36,7 @@ namespace flopoco {
 
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2010)" );
 		name << "IntAdderShortLatency_" << wIn_<<"_f"<<getTarget()->frequencyMHz()<<"_uid"<<getNewUId();
-		setName ( name.str() );
+		setNameWithFreqAndUID ( name.str() );
 
 		// Set up the IO signals
 		addInput ( "X"  , wIn_, true );

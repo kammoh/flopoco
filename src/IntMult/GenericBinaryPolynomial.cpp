@@ -71,7 +71,7 @@ GenericBinaryPolynomial::GenericBinaryPolynomial(Target* target,
 	ostringstream name;
 	name << "GenericBinaryPolynomial_" << p.mon_size << "_" << p.data.size()
 	     << "_uid" << Operator::getNewUId();
-	setName(name.str());
+	setNameWithFreqAndUID(name.str());
 	setCopyrightString("Guillaume Sergent, Florent de Dinechin 2012");
 
 	addInput ("X" , p.mon_size);

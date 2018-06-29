@@ -67,7 +67,7 @@ namespace flopoco {
 			name <<"FixMultAdd_";
 			name << wX << "x" << wY << "p" << wA << "r" << wOut << "" << (signedIO?"signed":"unsigned");
 			name << Operator::getNewUId();
-			setName(name.str());
+			setNameWithFreqAndUID(name.str());
 			REPORT(DEBUG, "Building " << name.str());
 		}
 

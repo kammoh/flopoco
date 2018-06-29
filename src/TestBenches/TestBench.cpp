@@ -41,7 +41,7 @@ namespace flopoco{
 		op->numberOfTests = n;
 
 		srcFileName="TestBench";
-		setName("TestBench_" + op_->getName());
+		setNameWithFreqAndUID("TestBench_" + op_->getName());
 
 		//		REPORT(LIST,"Test bench for "+ op_->getName());
 

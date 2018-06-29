@@ -33,7 +33,7 @@ namespace flopoco{
 	{
 		ostringstream name;
 		name << "IntSquarer_" << wIn_ << "_uid"<<getNewUId();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca (2009)");
 
 		srcFileName = "IntSquarer";

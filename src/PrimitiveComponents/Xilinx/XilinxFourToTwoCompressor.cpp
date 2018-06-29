@@ -24,7 +24,7 @@ XilinxFourToTwoCompressor::XilinxFourToTwoCompressor(Operator* parentOp, Target*
 
     ostringstream name;
     name << "Compressor_4_to_2_type" << useLastColumn << "_width_" << width;
-    setName(name.str());
+    setNameWithFreqAndUID(name.str());
 
     for(unsigned i=0;i<heights.size();i++)
     {

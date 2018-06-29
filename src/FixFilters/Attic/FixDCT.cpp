@@ -17,7 +17,7 @@ namespace flopoco{
 					
 		ostringstream name;
 		name << "FixDCT2_" << p << "_uid" << getNewUId();
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 	
 		setCopyrightString("Florent de Dinechin, Matei Istoan (2013)");
 

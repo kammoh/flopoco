@@ -44,7 +44,7 @@ namespace flopoco{
 		ostringstream name;
 
 		name <<"TaMaDiShiftRegister_width"<<widthLocation<<"_dimmension"<<n<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

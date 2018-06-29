@@ -199,7 +199,7 @@ namespace flopoco{
 			name << heights[i];
 
 		name << "_" << wOut;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		stringstream xs;
 		for(int i=heights.size()-1; i>=0; i--)

@@ -24,7 +24,7 @@ namespace flopoco {
         srcFileName = "Xilinx_GenericMux";
         stringstream namestr;
         namestr << "Xilinx_GenericMux_" << muxWidth << "_w" << wIn;
-        setName( namestr.str() );
+        setNameWithFreqAndUID( namestr.str() );
         setCombinatorial();
         int build_width = 2;
         int bit_per_slice = 0;

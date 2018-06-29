@@ -50,7 +50,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "IntIntKCM_" << wIn_ << "_" << C << (signedInput_?"_signed":"_unsigned");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		int constantWidth = intlog2( C );
 		int lutWidth = getTarget()->lutInputs();
@@ -247,7 +247,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "IntIntKCM_" << wIn_ << "_" << C << (signedInput_ ? "_signed" : "_unsigned");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		int constantWidth = intlog2(C);
 		int lutWidth = getTarget()->lutInputs();

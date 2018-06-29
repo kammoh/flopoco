@@ -35,7 +35,7 @@ namespace flopoco {
             name << "_init";
         }
 
-        setName( name.str() );
+        setNameWithFreqAndUID( name.str() );
         setCombinatorial();
         srcFileName = "Xilinx_GenericAddSub_slice";
         REPORT( DEBUG , "Building" + this->getName() );

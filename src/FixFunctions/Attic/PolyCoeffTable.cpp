@@ -386,7 +386,7 @@ namespace flopoco{
     ostringstream name;
     /*Set up the name of the entity */
     name <<"PolyCoeffTable_"<<wIn<<"_"<<wOut;
-    setName(name.str());
+    setNameWithFreqAndUID(name.str());
 		
     /*Set up the IO signals*/
     addInput ("X"	, wIn, true);

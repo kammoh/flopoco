@@ -55,7 +55,7 @@ namespace flopoco
 
 		ostringstream name;
 		name << "FixFunctionByMultipartiteTable_" << getNewUId();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		setCriticalPath(getMaxInputDelays(inputDelays));
 
@@ -203,7 +203,7 @@ namespace flopoco
 	{
 		ostringstream name;
 		name << "toXor_" << toIndex << "_" << getNewUId();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		Multipartite* mp = mpt->bestMP;
 		Table* toi = mp->toi[toIndex];

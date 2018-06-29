@@ -27,7 +27,7 @@ namespace flopoco{
 			name << "FixSinOrCos_" << w <<"_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "FixSinOrCos_" << w << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		// declaring inputs
 		addInput("X",1+w,true);

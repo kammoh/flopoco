@@ -32,7 +32,7 @@ namespace flopoco {
             namestr << "_s" << ( state2_ & 0x7 );
         }
 
-        setName( namestr.str() );
+        setNameWithFreqAndUID( namestr.str() );
         string lut_content = computeLUT( );
         setCombinatorial();
         //addGeneric("input_word_size","integer","10");

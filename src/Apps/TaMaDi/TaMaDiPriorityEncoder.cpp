@@ -45,7 +45,7 @@ namespace flopoco{
 
 		int outWires = intlog2(n-1); 
 		name <<"TaMaDiPriorityEncoder_n"<<n<<"_output"<<outWires<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

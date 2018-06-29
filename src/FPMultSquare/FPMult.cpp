@@ -36,7 +36,7 @@ namespace flopoco{
 
 		ostringstream name;
 		name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_<<"_uid"<<getNewUId();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin 2008-2011");
 
 
