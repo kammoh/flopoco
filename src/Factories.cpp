@@ -44,9 +44,9 @@ namespace flopoco{
 	DEF(FixSOPC);
 	DEF(FixFIR);
 	DEF(FixIIR);
-	//DEF(Xilinx_GenericAddSub);
+	DEF(Xilinx_GenericAddSub);
 	DEF(Xilinx_Comparator);
-	//DEF(Xilinx_TernaryAdd_2State);
+	DEF(Xilinx_TernaryAdd_2State);
 	DEF(XilinxGPC);
 	DEF(XilinxFourToTwoCompressor);
 	DEF(TutorialOperator);
@@ -143,9 +143,9 @@ namespace flopoco{
 			// hidden for now
 			// Fix2DNorm::registerFactory();
 
-			//Xilinx_GenericAddSub::registerFactory();
+			Xilinx_GenericAddSub::registerFactory();
 			Xilinx_Comparator::registerFactory();
-			//Xilinx_TernaryAdd_2State::registerFactory();
+			Xilinx_TernaryAdd_2State::registerFactory();
 			XilinxGPC::registerFactory();
 			XilinxFourToTwoCompressor::registerFactory();
 
