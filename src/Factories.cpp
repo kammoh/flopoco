@@ -13,119 +13,151 @@
   All rights reserved.
 
 */
+#include "UserInterface.hpp"
+
+#define DEF(op)	\
+class op {	\
+public:\
+	static void registerFactory();\
+}
 
 
+namespace flopoco{
 
-#include "FloPoCo.hpp"
+DEF(Shifter);
+DEF(LZOC);
+DEF(LZOCShifterSticky);
+DEF(ShiftReg);
+DEF(Compressor);
+DEF(BitheapTest);
+DEF(IntAdder);
+DEF(IntDualAddSub);
+DEF(IntMultiAdder);
+DEF(DSPBlock);
+DEF(IntMultiplier);
+DEF(FPAdd);
+DEF(FPDiv);
+DEF(FixRealKCM);
+DEF(FixFunctionByTable);
+DEF(FixSOPC);
+DEF(FixFIR);
+DEF(FixIIR);
+DEF(TestBench);
+DEF(Wrapper);
+DEF(AutoTest);
+DEF(XilinxAddSub);
+DEF(XilinxComparator);
+DEF(XilinxTernaryAddSub);
+DEF(XilinxGPC);
+DEF(XilinxFourToTwoCompressor);
+DEF(TutorialOperator);
 
-using namespace flopoco;
 
+	void UserInterface::registerFactories()
+	{
+		try {
+			AutoTest::registerFactory();
 
-void UserInterface::registerFactories()
-{
-	try {
+			Compressor::registerFactory();
+			BitheapTest::registerFactory();
 
-		AutoTest::registerFactory();
+			// Florent has commented out all the operators for now.
+			// Uncomment them only to bring them up to the new framework.
 
-		Compressor::registerFactory();
-		BitheapTest::registerFactory();
+			// Fix2FP::registerFactory();
+			// FP2Fix::registerFactory();
+			// InputIEEE::registerFactory();
+			// OutputIEEE::registerFactory();
 
-		// Florent has commented out all the operators for now.
-		// Uncomment them only to bring them up to the new framework.
+			Shifter::registerFactory();
+			LZOC::registerFactory();
+			LZOCShifterSticky::registerFactory();
 
-		// Fix2FP::registerFactory();
-		// FP2Fix::registerFactory();
-		// InputIEEE::registerFactory();
-		// OutputIEEE::registerFactory();
+			ShiftReg::registerFactory();
 
-		Shifter::registerFactory();
-		LZOC::registerFactory();
-		LZOCShifterSticky::registerFactory();
-
-		ShiftReg::registerFactory();
-
-		IntAdder::registerFactory();
+			IntAdder::registerFactory();
 		
 #if 0 // Plug them back some day
-		IntAdderClassical::registerFactory();
-		IntAdderAlternative::registerFactory();
-		IntAdderShortLatency::registerFactory();
+			// IntAdderClassical::registerFactory();
+			// IntAdderAlternative::registerFactory();
+			// IntAdderShortLatency::registerFactory();
 #endif
 		
 #if 0 // Plug them for debug purpose only
-		IntAdderSpecific::registerFactory();
-		LongIntAdderAddAddMuxGen1::registerFactory();
-		LongIntAdderAddAddMuxGen2::registerFactory();
-		LongIntAdderCmpAddIncGen1::registerFactory();
-		LongIntAdderCmpAddIncGen2::registerFactory();
-		LongIntAdderCmpCmpAddGen1::registerFactory();
-		LongIntAdderCmpCmpAddGen2::registerFactory();
-		LongIntAdderMuxNetwork::registerFactory();
-		IntComparatorSpecific::registerFactory();
+			// IntAdderSpecific::registerFactory();
+			// LongIntAdderAddAddMuxGen1::registerFactory();
+			// LongIntAdderAddAddMuxGen2::registerFactory();
+			// LongIntAdderCmpAddIncGen1::registerFactory();
+			// LongIntAdderCmpAddIncGen2::registerFactory();
+			// LongIntAdderCmpCmpAddGen1::registerFactory();
+			// LongIntAdderCmpCmpAddGen2::registerFactory();
+			// LongIntAdderMuxNetwork::registerFactory();
+			// IntComparatorSpecific::registerFactory();
 #endif
-		// IntComparator::registerFactory();
-		IntDualAddSub::registerFactory();
-		IntMultiAdder::registerFactory();
-		DSPBlock::registerFactory();
-		//IntKaratsubaRectangular::registerFactory();
-		IntMultiplier::registerFactory();
-		// IntSquarer::registerFactory();
+			// IntComparator::registerFactory();
+			IntDualAddSub::registerFactory();
+			IntMultiAdder::registerFactory();
+			DSPBlock::registerFactory();
+			//IntKaratsubaRectangular::registerFactory();
+			IntMultiplier::registerFactory();
+			// IntSquarer::registerFactory();
 
-		// IntConstMult::registerFactory(); // depends on BH, but in currently unplugged code
-		// FPConstMult::registerFactory();
-		// FPRealKCM::registerFactory();
-		// IntConstDiv::registerFactory(); // depends on IntConstMult
-		// FPConstDiv::registerFactory();
-		FixFunctionByTable::registerFactory();
-		// FixFunctionBySimplePoly::registerFactory();
-		// FixFunctionByPiecewisePoly::registerFactory();
-		// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH
-		// BasicPolyApprox::registerFactory();
-		// PiecewisePolyApprox::registerFactory();
-		FixRealKCM::registerFactory();
-		TestBench::registerFactory();
-		Wrapper::registerFactory();
-		FPAdd::registerFactory();
-		// FPAddSub::registerFactory();
-		// FPAdd3Input::registerFactory();
-		// FPAddSinglePath::registerFactory();
-		// FPMult::registerFactory();
-		// //FPMultKaratsuba::registerFactory();
-		// FPSquare::registerFactory();
-		FPDiv::registerFactory();
-		// FPDiv::NbBitsMinRegisterFactory();
-		// FPSqrt::registerFactory();
+			// IntConstMult::registerFactory(); // depends on BH, but in currently unplugged code
+			// FPConstMult::registerFactory();
+			// FPRealKCM::registerFactory();
+			// IntConstDiv::registerFactory(); // depends on IntConstMult
+			// FPConstDiv::registerFactory();
+			FixFunctionByTable::registerFactory();
+			// FixFunctionBySimplePoly::registerFactory();
+			// FixFunctionByPiecewisePoly::registerFactory();
+			// FixFunctionByMultipartiteTable::registerFactory(); // depends on BH
+			// BasicPolyApprox::registerFactory();
+			// PiecewisePolyApprox::registerFactory();
+			FixRealKCM::registerFactory();
+			TestBench::registerFactory();
+			Wrapper::registerFactory();
+			FPAdd::registerFactory();
+			// FPAddSub::registerFactory();
+			// FPAdd3Input::registerFactory();
+			// FPAddSinglePath::registerFactory();
+			// FPMult::registerFactory();
+			// //FPMultKaratsuba::registerFactory();
+			// FPSquare::registerFactory();
+			FPDiv::registerFactory();
+			// FPDiv::NbBitsMinRegisterFactory();
+			// FPSqrt::registerFactory();
 
-		// FPLargeAcc::registerFactory();
-		// LargeAccToFP::registerFactory();
-		// FPDotProduct::registerFactory();
+			// FPLargeAcc::registerFactory();
+			// LargeAccToFP::registerFactory();
+			// FPDotProduct::registerFactory();
 
-		// FPExp::registerFactory();
-		// IterativeLog::registerFactory();
-		// FPPow::registerFactory();
-		// FixSinCos::registerFactory();
-		// CordicSinCos::registerFactory();
-		// FixAtan2::registerFactory();
-		// //FixedComplexAdder::registerFactory();
-		FixSOPC::registerFactory();
-	  FixFIR::registerFactory();
-		FixIIR::registerFactory();
+			// FPExp::registerFactory();
+			// IterativeLog::registerFactory();
+			// FPPow::registerFactory();
+			// FixSinCos::registerFactory();
+			// CordicSinCos::registerFactory();
+			// FixAtan2::registerFactory();
+			// //FixedComplexAdder::registerFactory();
+			FixSOPC::registerFactory();
+			FixFIR::registerFactory();
+			FixIIR::registerFactory();
 
-		// hidden for now
-		// Fix2DNorm::registerFactory();
+			// hidden for now
+			// Fix2DNorm::registerFactory();
 
-		Xilinx_GenericAddSub::registerFactory();
-		Xilinx_Comparator::registerFactory();
-		Xilinx_TernaryAdd_2State::registerFactory();
-		XilinxGPC::registerFactory();
-		XilinxFourToTwoCompressor::registerFactory();
+			Xilinx_GenericAddSub::registerFactory();
+			Xilinx_Comparator::registerFactory();
+			Xilinx_TernaryAdd_2State::registerFactory();
+			XilinxGPC::registerFactory();
+			XilinxFourToTwoCompressor::registerFactory();
 
-		// TargetModel::registerFactory();
-		// For new developers to play within FloPoCo operator development
-	  TutorialOperator::registerFactory();
-	}
-	catch (const std::exception &e) {
-		cerr << "Error while registering factories: " << e.what() <<endl;
-		exit(EXIT_FAILURE);
+			// TargetModel::registerFactory();
+			// For new developers to play within FloPoCo operator development
+			TutorialOperator::registerFactory();
+		}
+		catch (const std::exception &e) {
+			cerr << "Error while registering factories: " << e.what() <<endl;
+			exit(EXIT_FAILURE);
+		}
 	}
 }
