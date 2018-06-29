@@ -1,6 +1,6 @@
 #! /bin/sh
-HEADPATH="\.\.\/\.\.\/src\/"
+HEADPATH="\.\./\.\./src/"
 echo "INPUT =\\ " > activeops.txt
-sed "s/^/$HEADPATH/ ; s/$/.hpp \\\/" ../../src/Active.txt >> activeops.txt
+../../tools/EraseComments.sh ../../src/Active.txt /dev/stdout | sed "s:.*:$HEADPATH\0.hpp \\\:"  >> activeops.txt
 doxygen	Doxyfile
 rm activeops.txt

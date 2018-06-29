@@ -304,19 +304,27 @@ SET_SOURCE_FILES_PROPERTIES(src/Factories GENERATED)
 
 # PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args] 
 FUNCTION(PREPEND var prefix)
-   SET(listVar "")
-   FOREACH(f ${ARGN})
-      LIST(APPEND listVar "${prefix}${f}")
-   ENDFOREACH(f)
-   SET(${var} "${listVar}" PARENT_SCOPE)
+  SET(listVar "")
+  FOREACH(f ${ARGN})
+    LIST(APPEND listVar "${prefix}${f}")
+  ENDFOREACH(f)
+  SET(${var} "${listVar}" PARENT_SCOPE)
 ENDFUNCTION(PREPEND)
+ 
+execute_process(
+  COMMAND ./tools/EraseComments.sh src/Active.txt tolink.txt
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
-FILE(STRINGS ${CMAKE_SOURCE_DIR}/src/Active.txt ACTIVE_THINGS)
-
+FILE(STRINGS ${CMAKE_SOURCE_DIR}/tolink.txt ACTIVE_THINGS)
 PREPEND(PATH_ACTIVE_THINGS ${CMAKE_SOURCE_DIR}/src/ ${ACTIVE_THINGS})
 
-#MESSAGE("${active}")
-ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS} src/VHDLLexer)
+execute_process(
+  COMMAND rm tolink.txt
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS})
 
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
