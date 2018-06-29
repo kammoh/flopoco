@@ -50,7 +50,11 @@ namespace flopoco{
 		/** helper method: computes the value of the function on an MPFR; no range check */
 		void eval(mpfr_t r, mpfr_t x) const;
 
-		/** if correctlyRounded is true, compute the CR result in rNorD; otherwise computes the RD in rNorD and the RU in ru */
+		/** if correctlyRounded is true, compute the CR result in rNorD; otherwise computes the RD in rNorD and the RU in ru.
+				x as well as the result(s) are given as bit vectors.
+				These bit vectors are held in a mpz_class which is always positive, although it may hold a two's complement value.
+				(this is the usual behaviour of emulate())
+		*/
 		void eval(mpz_class x, mpz_class &rNorD, mpz_class &ru, bool correctlyRounded=false) const;
 
 		void emulate(TestCase * tc,	bool correctlyRounded=false /**< if true, correctly rounded RN; if false, faithful function */);
