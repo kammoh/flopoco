@@ -249,7 +249,6 @@ ADD_CUSTOM_COMMAND(
 
 #SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
 
-
 # Create custom command for bison/yacc (note the outputs)
 FIND_PROGRAM(BISON_EXECUTABLE
   NAMES bison
@@ -292,10 +291,15 @@ ADD_CUSTOM_COMMAND(
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
-#All operators active in flopoco (not only the ones with an interface)
-#include(ActiveOperators.txt)
 
+ADD_CUSTOM_COMMAND(
+  OUTPUT src/Factories.cpp
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/Interfaced.txt  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
+  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories
+  )
 
+SET_SOURCE_FILES_PROPERTIES(src/Factories GENERATED)
 #Thanks SOF https://stackoverflow.com/questions/4346412/how-to-prepend-all-filenames-on-the-list-with-common-path#27630120
 
 # PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args] 

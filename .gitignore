@@ -25,6 +25,8 @@ work-obj93.cf
 test.input
 *.vcd
 
+src/Factories.cpp
+
 # Autotest
 TestResults
 gmon.out
