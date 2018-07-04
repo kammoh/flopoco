@@ -1417,9 +1417,9 @@ namespace flopoco{
         //parse the input port mappings
         parsePortMappings(instance, inPortMaps, 0);
         //parse the constant input port mappings, if there are any
-		parsePortMappings(instance, inPortMapsCst, 1);
-		//parse the input port mappings
-		parsePortMappings(instance, outPortMaps, 2);
+				parsePortMappings(instance, inPortMapsCst, 1);
+				//parse the input port mappings
+				parsePortMappings(instance, outPortMaps, 2);
 
         REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
         for (auto i: parametersVector){

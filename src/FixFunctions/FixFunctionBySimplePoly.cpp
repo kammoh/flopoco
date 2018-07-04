@@ -135,8 +135,38 @@ namespace flopoco{
 		}
 		outPortMap(h, "R", "Ys");
 		vhdl << instance(h, "horner") << endl;
-#endif
+#else
+		// This is the same order as newwInstance() would do, but does not require to write a factory for this Operator
+		schedule();
+		OperatorPtr h = nullptr;
+		inPortMap(h, "X", "Xs");
+		for(int i=0; i<=degree; i++) {
+			inPortMap(h, join("A",i), join("A",i));
+		}
+		outPortMap(h, "R", "Ys");
+		h = new  FixHornerEvaluator(this, target, 
+																lsbIn,
+																msbOut,
+																lsbOut,
+																degree, 
+																coeffMSB, 
+																poly->coeff[0]->LSB // it is the smaller LSB
+																);
+		//		addSubComponent(h); ????
+		vhdl << instance(h, "horner", false);
 		
+#endif
+#if 0
+		ostringstream params, inputs, outputs;
+		params << "d=" << degree << " lsbIn=" << lsbIn << " msbOut=" << msbOut << " lsbOut=" << lsbOut;
+		inputs <<  "X=>Xs";
+		for(int i=0; i<=degree; i++) {
+			inputs << join(", A",i) << "=>" << join("A",i);
+		}
+		outputs <<  "R=>Ys";
+		REPORT(0, params.str() << " " << inputs.str() << " " << outputs.str());
+		newInstance("FixHornerEvaluator","horner", params.str(), inputs.str(), outputs.str());
+#endif		
 		vhdl << tab << "Y <= " << "std_logic_vector(Ys);" << endl;
 	}
 

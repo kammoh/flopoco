@@ -134,7 +134,6 @@ namespace flopoco{
 		setNameWithFreqAndUID("FixHornerEvaluator");		
 		setCopyrightString("F. de Dinechin (2014)");
 		srcFileName="FixHornerEvaluator";
-
 		if(!signedXandCoeffs)
 			REPORT(0,"signedXandCoeffs=false, this code has probably never been tested in this case. If it works, please remove this warning. If it doesn't, we deeply apologize and invite you to fix it.");
 
@@ -219,14 +218,14 @@ namespace flopoco{
 	}
 
 
-	// A naive constructor that does a worst case analysis of datapath looing onnly at the coeff sizes
+	// A naive constructor that does a worst case analysis of datapath looking onnly at the coeff sizes
 	FixHornerEvaluator::FixHornerEvaluator(OperatorPtr parentOp, Target* target,
 																				 int lsbIn_, int msbOut_, int lsbOut_,
 																				 int degree_, vector<int> msbCoeff_, int lsbCoeff_,
 																				 double roundingErrorBudget_,
 																				 bool signedXandCoeffs_,
 																				 bool finalRounding_, map<string, double> inputDelays)
-	: Operator(target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
+	: Operator(parentOp, target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
 		msbCoeff(msbCoeff_), lsbCoeff(lsbCoeff_),
 		roundingErrorBudget(roundingErrorBudget_) ,signedXandCoeffs(signedXandCoeffs_),
 		finalRounding(finalRounding_)
@@ -267,7 +266,7 @@ namespace flopoco{
 																				 double roundingErrorBudget_,
 																				 bool signedXandCoeffs_,
 																				 bool finalRounding_, map<string, double> inputDelays)
-	: Operator(target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
+	: Operator(parentOp, target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
 		msbCoeff(msbCoeff_), lsbCoeff(lsbCoeff_),
 		roundingErrorBudget(roundingErrorBudget_) ,
 		signedXandCoeffs(signedXandCoeffs_),
