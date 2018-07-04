@@ -351,21 +351,23 @@ namespace flopoco{
 			string inputFileName = "test.input";
 			ofstream fileOut(inputFileName.c_str(),ios::out);
 			// if error at opening, let's mention it !
-			if (!fileOut) cerr << "FloPoCo was not able to open " << inputFileName << " in order to write inputs. " << endl;
+			if (!fileOut)
+				THROWERROR("Not able to open " << inputFileName << " in order to write inputs. ");
 
 			REPORT(LIST,"Generating the exhaustive test bench, this may take some time");
 			// exhaustive test
 			int length = inputSignalVector.size();
-			int* IOwidth = new int[length];
+			//			REPORT(0, "Found " << length << "inputs"); 
+			int* InWidth = new int[length];
 			// getting signal width
-			for (int i = 0; i < length; i++) IOwidth[i] = inputSignalVector[i]->width();
+			for (int i = 0; i < length; i++) InWidth[i] = inputSignalVector[i]->width();
 			mpz_class* bound = new mpz_class[length];
 			mpz_class* counters = new mpz_class[length];
 			int number = 1;
 			for (int i = 0; i < length; i++) {
-				bound[i] = (mpz_class(1) << IOwidth[i]);// * tmp;
+				bound[i] = (mpz_class(1) << InWidth[i]);// * tmp;
 				counters[i] = 0;
-				number *= pow(2,IOwidth[i]);
+				number *= intpow2(InWidth[i]);
 			}
 			// getting signal name
 			string* IOname = new string[length];
@@ -679,7 +681,7 @@ namespace flopoco{
 		bool file;
 
 		if(UserInterface::globalOpList.empty()){
-			throw("ERROR: TestBench has no operator to wrap (it should come after the operator it wraps)");
+			throw(string("TestBench has no operator to wrap (it should come after the operator it wraps)"));
 		}
 
 		UserInterface::parseInt(args, "n", &n);
