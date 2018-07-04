@@ -302,7 +302,7 @@ ADD_CUSTOM_COMMAND(
 SET_SOURCE_FILES_PROPERTIES(src/Factories GENERATED)
 #Thanks SOF https://stackoverflow.com/questions/4346412/how-to-prepend-all-filenames-on-the-list-with-common-path#27630120
 
-# PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args] 
+# PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args]
 FUNCTION(PREPEND var prefix)
   SET(listVar "")
   FOREACH(f ${ARGN})
@@ -310,7 +310,7 @@ FUNCTION(PREPEND var prefix)
   ENDFOREACH(f)
   SET(${var} "${listVar}" PARENT_SCOPE)
 ENDFUNCTION(PREPEND)
- 
+
 execute_process(
   COMMAND ./tools/EraseComments.sh src/SourceFileList.txt tolink.txt
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

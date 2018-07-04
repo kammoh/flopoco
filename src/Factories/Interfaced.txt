@@ -1,3 +1,6 @@
+# every operator here is present in the interface,
+# iff it has the class method registerFactory 
+
 AutoTest
 Compressor
 BitheapTest
