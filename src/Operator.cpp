@@ -457,22 +457,6 @@ namespace flopoco{
 	}
 
 
-	// ????? TODO remove?
-	void Operator::setName(std::string prefix, std::string postfix){
-		ostringstream pr, po;
-
-		if (prefix.length() > 0)
-			pr << prefix << "_";
-		else
-			pr << "";
-		if (postfix.length() > 0)
-			po << "_" << postfix;
-		else
-			po << "";
-
-		uniqueName_ = pr.str() + uniqueName_ + po.str();
-	}
-
 	void Operator::setName(std::string operatorName){
 		uniqueName_ = operatorName;
 	}

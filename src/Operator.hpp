@@ -376,15 +376,6 @@ public:
 	 */
 	void changeName(std::string operatorName);
 
-	/**
-	 * Sets Operator name to prefix_(uniqueName_)_postfix
-	 * @param prefix the prefix string which will be placed in front of the operator name
-	 *               formed with the operator internal parameters
-	 * @param postfix the postfix string which will be placed at the end of the operator name
-	 *                formed with the operator internal parameters
-	 */
-	void setName(std::string prefix, std::string postfix);
-
 
 	/**
 	 * Adds a comment before the entity declaration, along with the copyright string etc.
