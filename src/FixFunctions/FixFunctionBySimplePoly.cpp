@@ -36,8 +36,9 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FixFunctionBySimplePoly::FixFunctionBySimplePoly(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, bool finalRounding_, map<string, double> inputDelays):
-		Operator(target, inputDelays), finalRounding(finalRounding_){
+	FixFunctionBySimplePoly::FixFunctionBySimplePoly(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, bool finalRounding_):
+		Operator(parentOp, target), finalRounding(finalRounding_){
+
 		f = new FixFunction(func, signedIn, lsbIn, msbOut, lsbOut);
 
 		srcFileName="FixFunctionBySimplePoly";
@@ -56,7 +57,6 @@ namespace flopoco{
 		int outputSize = msbOut-lsbOut+1;
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
-		setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay() );
 
 		if(f->signedIn)
 			vhdl << tab << declareFixPoint("Xs", true, 0, lsbIn) << " <= signed(X);" << endl;
@@ -126,6 +126,8 @@ namespace flopoco{
 		}
 
 			else { // using FixMultAdd
+				THROWERROR("Sorry, use the plainVHDL option until we revive FixMultAdd");
+				#if 0
 				REPORT(DETAILED, " i=" << i);
 				FixMultAdd::newComponentAndInstance(this,
 																						join("Step",i),     // instance name
@@ -135,7 +137,7 @@ namespace flopoco{
 																						join("Sigma", i),   // result
 																						sigmaMSB, sigmaLSB  // outMSB, outLSB
 																						);
-				syncCycleFromSignal(join("Sigma", i));
+				#endif
 			}
 		}
 
@@ -147,7 +149,7 @@ namespace flopoco{
 
 
 	FixFunctionBySimplePoly::~FixFunctionBySimplePoly() {
-		free(f);
+		delete f;
 	}
 
 
@@ -193,7 +195,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 
-		return new FixFunctionBySimplePoly(target, f, signedIn, lsbIn, msbOut, lsbOut);
+		return new FixFunctionBySimplePoly(parentOp, target, f, signedIn, lsbIn, msbOut, lsbOut);
 	}
 
 	void FixFunctionBySimplePoly::registerFactory()

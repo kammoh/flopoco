@@ -38,14 +38,19 @@ namespace flopoco {
 		 * @param[in] outLSB            weight of the LSB of the product
 		 * @param[in] enableSuperTiles  if true, supertiles will decrease resource consumption but increase latency
 		 **/
-		FixMultAdd(Target* target, Signal* x, Signal* y, Signal* a, int outMSB, int outLSB,
-		           bool enableSuperTiles=true, map<string, double> inputDelays = emptyDelayMap);
+		FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x, Signal* y, Signal* a,
+							 int outMSB, int outLSB,
+		           bool enableSuperTiles=true);
 
 
 		/**
 		 *  Destructor
 		 */
 		~FixMultAdd();
+
+
+		
+#if 0 // This is probably useless now, and should be replaced with the standard interface
 
 		/**
 		 * Generates a component, and produces VHDL code for the instance inside an operator.
@@ -64,6 +69,8 @@ namespace flopoco {
 																							 int rMSB,
 																							 int rLSB
 																							 );
+#endif
+
 		
 		/**
 		 * The emulate function.

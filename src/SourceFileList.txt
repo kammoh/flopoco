@@ -49,6 +49,7 @@ ConstMult/ShiftAddOp
 ConstMult/ShiftAddDag
 ConstMult/FixRealKCM
 IntMult/IntMultiplier
+IntMult/FixMultAdd
 IntMult/TilingStrategy
 IntMult/TilingStrategyOptimalILP
 IntMult/MultiplierBlock
@@ -71,6 +72,8 @@ DualTable
 FixConstant
 FixFunctions/FixFunction
 FixFunctions/FixFunctionByTable
+FixFunctions/BasicPolyApprox
+FixFunctions/FixFunctionBySimplePoly
 FixFunctions/GenericTable
 FixFunctions/BipartiteTable
 Trigs/Atan2Table
