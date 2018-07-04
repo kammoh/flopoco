@@ -13,19 +13,7 @@
 
   */
 
-
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <math.h>
-#include <string.h>
-
-#include <gmp.h>
-#include <mpfr.h>
-
-#include <gmpxx.h>
 #include "../utils.hpp"
-
 #include "FixFunctionByTable.hpp"
 
 using namespace std;
@@ -50,17 +38,13 @@ namespace flopoco{
 			REPORT(FULL, "f("<< i << ") = " << function(i) );
 			v.push_back(function(i));
 		};
-		Table::init(v,join("f", getNewUId()), wIn, wOut);
-	};
-
-
-
-
+		Table::init(v, join("f", getNewUId()), wIn, wOut);
+	}
 
 
 	
 	FixFunctionByTable::~FixFunctionByTable() {
-		free(f);
+		delete f;
 	}
 
 

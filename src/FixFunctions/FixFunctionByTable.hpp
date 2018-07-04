@@ -1,10 +1,6 @@
 #ifndef FixFunctionByTable_HPP
 #define FixFunctionByTable_HPP
 #include <vector>
-#include <sstream>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
 
 #include "../Table.hpp"
 #include "FixFunction.hpp"

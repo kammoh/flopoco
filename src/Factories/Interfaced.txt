@@ -11,6 +11,7 @@ IntMultiAdder
 DSPBlock
 IntMultiplier
 FixFunctionByTable
+FixFunctionBySimplePoly
 FixRealKCM
 TestBench
 Wrapper
