@@ -381,6 +381,7 @@ namespace flopoco{
 			currentOutputTime += 5 * number;
 			currentOutputTime += op_->getPipelineDepth()*10;
 			currentOutputTime += 5 * number;
+			currentOutputTime += 2;
 			simulationTime=currentOutputTime;
 
 
