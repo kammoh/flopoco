@@ -249,6 +249,12 @@ THIS INCLUDES WRITING ITS AUTOTEST
 
 		UserDefinedOperator
 		
+* Bugs
+** ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="sin(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
+The parity problem leads to wrong alignment.
+Nobody should do this if they have read the Muller book, so... people will try this and it is a bug
+** ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="exp(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
+
 * Release-critical (current regressions):
 ** FPPipeline
 ** lut_rng
@@ -298,9 +304,9 @@ a test programme iterates through the operators, testing them one by one for var
 add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
 The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
 * Janitoring
-*** get rid of free(), replace it with delete
 *** uniformize name construction 
 replace setName with setNameWithFreqAndUID()  Model: src/FPAddSub/FPAdderSinglePath.cpp 
+*** get rid of free(), replace it with delete
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
 *** build a SNAP package https://docs.snapcraft.io/build-snaps/   or a Docker instance or something 

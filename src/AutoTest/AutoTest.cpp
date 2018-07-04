@@ -195,6 +195,7 @@ namespace flopoco
 						}
 						system((commandLine + commandLineTestBench).c_str());	
 					}
+
 				}
 				else				{
 					cout << "No unitTest method defined" << endl;
@@ -279,11 +280,12 @@ namespace flopoco
 
 	string AutoTest::defaultTestBenchSize(map<string,string> * unitTestParam)
 	{
+#if 0 // This is definitely fragile, we can't rely on information extracted this way
 		string testBench = " TestBench n=";
+
 		int bitsSum = 0;
 
 		map<string,string>::iterator itParam;
-
 		for(itParam = unitTestParam->begin(); itParam != unitTestParam->end(); ++itParam)	{
 			// We look for something that looks like an input 
 			//cerr << itParam->first << endl;
@@ -298,7 +300,10 @@ namespace flopoco
 		else	{
 			testBench += "-2";
 		}
+#endif
 
+		string testBench = " TestBench n=10000";
+		
 		return testBench;
 	}
 };

@@ -76,8 +76,8 @@ namespace flopoco{
 		srcFileName="FixFunctionByPiecewisePoly";
 		
 		ostringstream name;
-		name<<"FixFunctionByPiecewisePoly_"<<getNewUId(); 
-		setName(name.str()); 
+		name<<"FixFunctionByPiecewisePoly"; 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCriticalPath(getMaxInputDelays(inputDelays));
 
@@ -366,7 +366,7 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(Target *target, vector<string> &args) {
 		int lsbIn, msbOut, lsbOut, d;
 		string f;
 		double approxErrorBudget;

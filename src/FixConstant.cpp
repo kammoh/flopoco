@@ -116,23 +116,34 @@ namespace flopoco{
 		return isZeroP;
 	}
 
+	
 	void FixConstant::changeMSB(int newMSB){
-		MSB=newMSB;
-		width = (MSB-LSB+1);
 		if(newMSB>=MSB){
-			// Nothing to do! the new size includes the old one
+			MSB = newMSB;
+			width = (MSB-LSB+1);
+			// Nothing else to do! the new size includes the old one
 		}
 		else{
 			// TODO: check that the number fits its new size, and bork otherwise.
-			throw("FixConstant::changeMSB: TODO");
+			throw(string("FixConstant::changeMSB: TODO"));
 		}
 	}
 
+	
 	void FixConstant::changeLSB(int newLSB){
-		throw("FixConstant::changeLSB: TODO");
+		//throw("FixConstant::changeLSB: TODO");
+		if(newLSB<=LSB){
+			LSB = newLSB;
+			width = (MSB-LSB+1);
+			// Otherwise nothing to do! the new size includes the old one
+		}
+		else{
+			// TODO: check that the number fits its new size, and bork otherwise.
+			throw(string("FixConstant::changeLSB: TODO"));
+		}
 	}
 
-	void  FixConstant::addRoundBit(int weight){
+	bool FixConstant::addRoundBit(int weight){
 		if(isZeroP) {
 			isZeroP=false;
 			mpfr_init2(fpValue,2);
@@ -140,28 +151,30 @@ namespace flopoco{
 			MSB=weight+1;
 			LSB=weight;
 			width=2;
+			return(true);
 		}
 		else {
 			if(weight<LSB) {
-				ostringstream e;
-				e << "in FixConstant::addRoundBit, weight of the round bit is "<< weight << ", lower than LSB=" << LSB;
-				throw e.str();
+				return(false);
 			}
-			mpfr_t b,s;
-			mpfr_init2(b,16);
-			mpfr_init2(s,width+1);
-			mpfr_set_ui_2exp(b, 1, weight, GMP_RNDN); //exact
-			mpfr_add(s, fpValue, b, GMP_RNDN);
-			if(mpfr_get_exp(s) != mpfr_get_exp(fpValue)) {
-			//cerr << "FixConstant::addRoundBit has increased MSB";
-				MSB++;
-				width++;
-				mpfr_set_prec(fpValue, width);
+			else {
+				mpfr_t b,s;
+				mpfr_init2(b,16);
+				mpfr_init2(s,width+1);
+				mpfr_set_ui_2exp(b, 1, weight, GMP_RNDN); //exact
+				mpfr_add(s, fpValue, b, GMP_RNDN);
+				if(mpfr_get_exp(s) != mpfr_get_exp(fpValue)) {
+					//cerr << "FixConstant::addRoundBit has increased MSB";
+					MSB++;
+					width++;
+					mpfr_set_prec(fpValue, width);
+				}
+				// just in case we did  get a zero
+				isZeroP = mpfr_zero_p(fpValue);
+				mpfr_set(fpValue, s,  GMP_RNDN); //exact
+				mpfr_clears(s,b, NULL);
+				return(true);
 			}
-			// just in case we did  get a zero
-			isZeroP = mpfr_zero_p(fpValue);
-			mpfr_set(fpValue, s,  GMP_RNDN); //exact
-			mpfr_clears(s,b, NULL);
 		}
 	}
 

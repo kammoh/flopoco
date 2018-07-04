@@ -73,6 +73,7 @@ FixConstant
 FixFunctions/FixFunction
 FixFunctions/FixFunctionByTable
 FixFunctions/BasicPolyApprox
+FixFunctions/FixHornerEvaluator
 FixFunctions/FixFunctionBySimplePoly
 FixFunctions/GenericTable
 FixFunctions/BipartiteTable
