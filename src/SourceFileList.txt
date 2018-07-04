@@ -1,4 +1,4 @@
-#A COMMENT
+# List of active source files, without extension (CMakeLists-like)
 Operator
 UserInterface 
 Factories

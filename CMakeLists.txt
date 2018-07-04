@@ -312,7 +312,7 @@ FUNCTION(PREPEND var prefix)
 ENDFUNCTION(PREPEND)
  
 execute_process(
-  COMMAND ./tools/EraseComments.sh src/Active.txt tolink.txt
+  COMMAND ./tools/EraseComments.sh src/SourceFileList.txt tolink.txt
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 

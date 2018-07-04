@@ -81,12 +81,12 @@ The command-line parser is in \texttt{UserInterface} but in principle you won't 
 It takes information from each operator's documentation strings defined in their \texttt{registerFactory()} methods. 
 Again, we hope that you can design the interface to your operator by imitation of existing ones.
 
+\subsection{Adding a new operator to FloPoCo}
 To add a new operator to FloPoCo, you need to 
 \begin{itemize}
-\item write its \texttt{.cpp} and \texttt{.hpp} (we suggest you start with a copy of  \texttt{UserDefinedOperator}, which is almost an empty skeleton).
-\item add it to \texttt{CMakeList.txt}
-\item add the \texttt{.hpp} to \texttt{FloPoCo.hpp}.
-\item add a call to its  \texttt{registerFactory()} method to \texttt{Factories.cpp}. 
+\item write its \texttt{.cpp} and \texttt{.hpp} (we suggest you start with a copy of  \texttt{UserDefinedOperator}, which is an almost empty skeleton);
+\item add it to \texttt{src/SourceFileList.txt} so that it gets compiled;
+\item add it to \texttt{src/Factories/Interfaced.txt} if you want it to appear in the command-line interface.
 \end{itemize}
 
 That should be all. The rest is arithmetic!
