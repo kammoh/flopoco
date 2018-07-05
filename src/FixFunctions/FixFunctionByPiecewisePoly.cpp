@@ -216,7 +216,7 @@ namespace flopoco{
 
 
 	FixFunctionByPiecewisePoly::~FixFunctionByPiecewisePoly() {
-		free(f);
+		delete f;
 	}
 
 
