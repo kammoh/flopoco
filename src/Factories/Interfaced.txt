@@ -15,6 +15,8 @@ DSPBlock
 IntMultiplier
 FixFunctionByTable
 FixFunctionBySimplePoly
+FixFunctionByPiecewisePoly
+PiecewisePolyApprox
 FixRealKCM
 TestBench
 Wrapper

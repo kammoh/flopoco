@@ -75,9 +75,8 @@ FixFunctions/FixFunctionByTable
 FixFunctions/BasicPolyApprox
 FixFunctions/FixHornerEvaluator
 FixFunctions/FixFunctionBySimplePoly
-FixFunctions/GenericTable
-FixFunctions/BipartiteTable
-Trigs/Atan2Table
+FixFunctions/PiecewisePolyApprox
+FixFunctions/FixFunctionByPiecewisePoly
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive
