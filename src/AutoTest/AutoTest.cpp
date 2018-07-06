@@ -43,7 +43,6 @@ namespace flopoco
 		string commandLine;
 		string commandLineTestBench;
 		set<string> testedOperator;
-		set<string>::iterator itOperator;
 		vector<string> paramNames;
 		vector<string>::iterator itParam;
 		map<string,string> unitTestParam;
@@ -111,7 +110,7 @@ namespace flopoco
 					allOperator.insert(opFact->name());
 				}
 
-				for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)
+				for(auto op: testedOperator)
 				{
 
 					FILE * in;
@@ -121,7 +120,7 @@ namespace flopoco
 						// string grepCommand = "grep '" + *itOperator + "\.o' CMakeFiles/FloPoCoLib.dir/depend.make | awk -F/ '{print $NF}' | awk -F. '{print $1}' | grep ^.*$";
 
 						// Command to get the name of the Operator using the depend file of CMake
-					string grepCommand = "grep '" + *itOperator + "\\.hpp' CMakeFiles/FloPoCoLib.dir/depend.make | grep -o '.*\\.o' | awk -F/ '{print $NF}' | awk -F. '{print $1}'";
+					string grepCommand = "grep '" + op + "\\.hpp' CMakeFiles/FloPoCoLib.dir/depend.make | grep -o '.*\\.o' | awk -F/ '{print $NF}' | awk -F. '{print $1}'";
 
 					if(!(in = popen(grepCommand.c_str(), "r")))
 					{
@@ -148,10 +147,10 @@ namespace flopoco
 
 
 		// For each tested Operator, we run a number of tests defined in the Operator's unitTest method
-		for(itOperator = testedOperator.begin(); itOperator != testedOperator.end(); ++itOperator)	{
+		for(auto op: testedOperator)	{
 			testsDone = false;
-			system(("src/AutoTest/initOpTest.sh " + (*itOperator)).c_str());
-			opFact = UserInterface::getFactoryByName(*itOperator);
+			system(("src/AutoTest/initOpTest.sh " + op).c_str());
+			opFact = UserInterface::getFactoryByName(op);
 			// First we run the unitTest for each tested Operator
 			if(doUnitTest)			{
 				unitTestList.clear();
@@ -162,7 +161,7 @@ namespace flopoco
 					//For every Test
 					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)	{
 						// Create the flopoco command corresponding to the test
-						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
+						commandLine = "src/AutoTest/testScript.sh " + op;
 						commandLineTestBench = "";
 						unitTestParam.clear();
 						// Fetch all parameters and default values for readability
@@ -216,7 +215,7 @@ namespace flopoco
 					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
 					{
 						// Create the flopoco command corresponding to the test
-						commandLine = "src/AutoTest/testScript.sh " + (*itOperator);
+						commandLine = "src/AutoTest/testScript.sh " + op;
 						commandLineTestBench = "";
 
 						unitTestParam.clear();
@@ -270,7 +269,7 @@ namespace flopoco
 			
 			if(testsDone)	{
 			// Clean all temporary file
-				system(("src/AutoTest/cleanOpTest.sh " + (*itOperator)).c_str());
+				system(("src/AutoTest/cleanOpTest.sh " + op).c_str());
 			}
 		}
 
