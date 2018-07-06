@@ -1663,8 +1663,6 @@ namespace flopoco{
 	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
 	TestList IntConstMult::unitTest(int index)
 	{
-		throw ("TestList IntConstDiv::unitTest : TODO, plz FIXME");
-		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
