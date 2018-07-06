@@ -269,7 +269,7 @@ namespace flopoco
 		{
 			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 0
 					<< "\" fill=\"midnightblue\">" << "initial bitheap contents" << "</text>" << endl;
-		}else if(index == snapshots.size()-1)
+		}else if(index == (int)snapshots.size()-1)
 		{
 			fig << "<text x=\"" << turnaroundX + 50 << "\" y=\"" << offsetY + 0
 					<< "\" fill=\"midnightblue\">" << "before final addition" << "</text>" << endl;

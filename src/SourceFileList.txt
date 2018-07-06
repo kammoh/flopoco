@@ -80,7 +80,7 @@ FixFunctions/FixFunctionBySimplePoly
 FixFunctions/PiecewisePolyApprox
 FixFunctions/FixFunctionByPiecewisePoly
 #FixFunctions/Multipartite
-#FixFunctions/FixFunctionByMultipartite
+#FixFunctions/FixFunctionByMultipartiteTable
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive

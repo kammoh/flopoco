@@ -191,11 +191,11 @@ namespace flopoco
 			}
 		}
 
-		GenericTable* raTiV = new GenericTable(mpt->getTarget(), inputSize - betterS, outputSize, valsa);
+		Table* raTiV = new Table(mpt, mpt->getTarget(), valsa, "raTIV", inputSize - betterS, outputSize);
 
-		GenericTable* rwTiV = new GenericTable(mpt->getTarget(), inputSize, maxBitsCounted, valsw);
+		Table* rwTiV = new Table(mpt, mpt->getTarget(), valsw, "rxTIV", inputSize, maxBitsCounted);
 
-		cTiv = new compressedTIV(mpt->getTarget(), raTiV, rwTiV, betterS, maxBitsCounted, inputSize, outputSize);
+		cTiv = new compressedTIV(mpt, mpt->getTarget(), raTiV, rwTiV, betterS, maxBitsCounted, inputSize, outputSize);
 	}
 
 
@@ -212,10 +212,14 @@ namespace flopoco
 	void Multipartite::mkTables(Target* target)
 	{
 		tiv = new TIV(this, target, alpha, f->wOut + guardBits, 0, intpow2(alpha) - 1);
-		toi = vector<TOi*>(m);
+		toi = vector<Table*>(m);
 		for(int i = 0; i < m; ++i)
 		{
-			toi[i] = new TOi(this, i, target, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1, 0, intpow2(gammai[i] + betai[i] - 1) - 1);
+			vector<mpz_class> values;
+			for (int j=0; j < 1<<(gammai[i]+betai[i]-1); j++)
+				values.push_back(TOiFunction(j, i));
+			string name = getName() + join("_TO",i);
+			toi[i] = new Table(this, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
 		}
 
 		compressAndUpdateTIV(alpha, f->wOut + guardBits);
@@ -225,6 +229,7 @@ namespace flopoco
 
 	//------------------------------------------------------------------------------------- Public classes
 
+#if 0
 	Multipartite::TOi::TOi(Multipartite *mp_, int tableIndex, Target *target, int wIn, int wOut, int min, int max):
 		Table(target, wIn, wOut, min, max), mp(mp_), ti(tableIndex)
 	{
@@ -232,9 +237,9 @@ namespace flopoco
 		name << "TOi_table_" << tableIndex;
 		setName(name.str());
 	}
-
-
-	mpz_class Multipartite::TOi::function(int x)
+#endif
+	
+	mpz_class Multipartite::TOiFunction(int x, int ti)
 	{
 		int TOi;
 		double dTOi;
@@ -243,16 +248,16 @@ namespace flopoco
 		int Ai, Bi;
 
 		// to lighten the notation and bring them closer to the paper
-		int wI = mp->inputSize;
-		int wO = mp->outputSize;
-		int g = mp->guardBits;
+		int wI = inputSize;
+		int wO = outputSize;
+		int g = guardBits;
 
-		Ai = x >> (mp->betai[ti]-1);
-		Bi = x - (Ai << (mp->betai[ti]-1));
-		slope = mp->si(ti,Ai); // mathematical slope
+		Ai = x >> (betai[ti]-1);
+		Bi = x - (Ai << (betai[ti]-1));
+		slope = si(ti,Ai); // mathematical slope
 
-		y = slope * intpow2(-wI + mp->pi[ti]) * (Bi+0.5);
-		dTOi = y * intpow2(wO+g) * intpow2(mp->f->lsbIn - mp->f->lsbOut) * intpow2(mp->inputSize - mp->outputSize);
+		y = slope * intpow2(-wI + pi[ti]) * (Bi+0.5);
+		dTOi = y * intpow2(wO+g) * intpow2(f->lsbIn - f->lsbOut) * intpow2(inputSize - outputSize);
 		TOi = (int)floor(dTOi);
 
 		return mpz_class(TOi);
@@ -315,7 +320,7 @@ namespace flopoco
 
 
 
-	Multipartite::compressedTIV::compressedTIV(Target *target, GenericTable *compressedAlpha, GenericTable *compressedout, int s, int wOC, int wI, int wO)
+	Multipartite::compressedTIV::compressedTIV(Target *target, Table *compressedAlpha, Table *compressedout, int s, int wOC, int wI, int wO)
 		: Operator(target), wO_corr(wOC)
 	{
 		stringstream name("");
