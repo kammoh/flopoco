@@ -74,7 +74,7 @@ namespace flopoco{
 	It works in "dry run" mode: it computes g but does not generate any VHDL
 	In this case, the flow is typically (see FixFIR)
 	1/ call the constructor below. It stops before the VHDL generation 
-	2/ have it report its ulp error using getErrorInUlps
+	2/ have it report its ulp error using getErrorInUlps()
 	3/ the bigger operator accumulates these ulp errors, and computes	 the global g out of the sum
 	4/ It  builds the bit heap, then calls buildForBitHeap(bitHeap, g)
 

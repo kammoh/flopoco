@@ -559,14 +559,14 @@ namespace flopoco{
 			mpz_class tdiv = (mpz_class(1)<<optkp) / d; // This is the floor
 			
 			mpz_class ap = (tmod==0? tdiv : tdiv+1);
-			IntConstMult* multp = new IntConstMult(target, wIn, ap);
+			IntConstMult* multp = new IntConstMult(parentOp, target, wIn, ap);
 			int costp = multp -> getArea(); 
 			
 			// Attempt to build the optkm
 			// We need the ceil of 2^k/d
 			mpz_class am = (mpz_class(1)<<optkm) / d; // This is the floor
 
-			IntConstMult* multm = new IntConstMult(target, wIn, am);
+			IntConstMult* multm = new IntConstMult(parentOp, target, wIn, am);
 			// TODO this interface is ugly
 			int costm = multm -> getArea() + wIn; 
 

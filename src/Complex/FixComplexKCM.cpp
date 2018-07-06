@@ -82,7 +82,6 @@ namespace flopoco {
 		mpfr_log2(log2C, mpfr_constant_im, GMP_RNDN);
 		constantImMsb = mpfr_get_si(log2C, GMP_RNDU);
 
-		//Free
 		mpfr_clear(log2C);
 
 		int constantMaxMSB = max(constantReMsb, constantImMsb);	

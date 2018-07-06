@@ -34,20 +34,20 @@ namespace flopoco{
 	{
 	public:
 		/** @brief The standard constructor, inputs the number to implement */
-		IntConstMult(Target* target, int xsize, mpz_class n);
+		IntConstMult(OperatorPtr parentOp, Target* target, int xsize, mpz_class n);
 
 		/** @brief A constructor for constants defined as a header and a period (significands of rational constants).
 			The actual periodic pattern is given as (period << periodMSBZeroes)
 				Parameters i and j are such that the period must be repeated 2^i + 2^j times.
 				If j==-1, just repeat the period 2^i times
 		 */
-		IntConstMult(Target* _target, int _xsize, mpz_class n,
+		IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize, mpz_class n,
 					 mpz_class period, int periodMSBZeroes, int periodSize,
 					 mpz_class header, int headerSize,
 					 int i, int j);
 
 		/** @brief The bare-bones constructor, used by inheriting classes */
-		IntConstMult(Target* target, int xsize);
+		IntConstMult(OperatorPtr parentOp, Target* target, int xsize);
 
 		~IntConstMult();
 

@@ -176,7 +176,8 @@ namespace flopoco{
 		string iname, jname, isignal, jsignal;
 		double idelay=0,jdelay=0;
 		//double max_children_delay;
-		int size, isize, jsize, shift, adder_size; 
+		int size, isize, jsize, shift;
+		// int adder_size; 
 		bool use_pipelined_adder;
 		IntAdder* adder=0;
 
@@ -217,41 +218,14 @@ namespace flopoco{
 					iname = sao->i->name; 
 					jname = sao->j->name; 
 
-					adder_size = sao->cost_in_full_adders+1;
+					//					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
 
 
 					// Now decide what kind of adder we will use, and compute the remaining delay
 
 					use_pipelined_adder=false;
-#if 0 // Code from previous pipeline framework, should be replaced with systematic IntAdders
-					max_children_delay = max(idelay,jdelay);
-					if (false && isSequential()) {
-						// First case: using a plain adder fits within the current pipeline level
-						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
-						if(tentative_delay <= 1./getTarget()->frequency()) {
-							use_pipelined_adder=false;
-							partial_delay = tentative_delay;					
-						}
-						else { 
-							// register the children 
-							// Is a standard adder OK ?
-							tentative_delay = getTarget()->ffDelay() + getTarget()->localWireDelay() + getTarget()->adderDelay(adder_size);
-							if(tentative_delay <= 1./getTarget()->frequency()) {
-								use_pipelined_adder=false;
-								partial_delay = tentative_delay;					
-							}
-							else { // Need to instantiate an IntAdder
-								use_pipelined_adder=true;
-								adder = new IntAdder(this, getTarget(), adder_size);
-								adder->changeName(getName() + "_" + sao->name + "_adder");
-								addSubComponent(adder);
 
-								partial_delay =  (adder->getOutDelayMap())["R"]; //  getTarget()->adderDelay(adder->getLastChunkSize());
-							}
-						}
-					}
-#endif
 					// Now generate the VHDL
 					if(shift==0) { // Add with no shift -- this shouldn't happen with current DAGs so the following code is mostly untested
 						if(op==Sub || op==RSub)
@@ -278,7 +252,7 @@ namespace flopoco{
 							vhdl << instance(adder, sao->name + "_adder");
 						}
 						else
-							vhdl << tab << declare(sao->name, size) << " <= " << isignal << " + " << jsignal << ";" << endl;
+							vhdl << tab << declare(getTarget()->adderDelay(size), sao->name, size) << " <= " << isignal << " + " << jsignal << ";" << endl;
 					}
 
 
@@ -304,6 +278,8 @@ namespace flopoco{
 									if(sao->j->n < 0) { 
 										vhdl <<" + (" << sao->size-1 <<" downto " <<  shift <<" => " << jname << "(" << jsize-1 << ")) "
 											<< ";   -- sum of higher bits"<<endl;
+										// need to set the critical path contribution by hand, because the signal is not redeclared
+										getSignalByName(sao->name)->setCriticalPathContribution(getTarget()->adderDelay(sao->size-shift));
 									}
 									else 
 										vhdl << ";   -- higher bits also untouched"<<endl;
@@ -316,6 +292,7 @@ namespace flopoco{
 									else
 										vhdl <<"(" << sao->size-1 << " downto " <<  shift <<" => '0') ";
 									vhdl << " - " << iname << ";   -- sum of higher bits"<<endl;
+									getSignalByName(sao->name)->setCriticalPathContribution(getTarget()->adderDelay(sao->size-shift));
 								}
 							} // end if (shift >= jsize)
 							else{ 
@@ -363,16 +340,17 @@ namespace flopoco{
 
 									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " << resname + ";" << endl;
 								}
-								else
-									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " // vz (size-1 downto s)
+								else{
+									vhdl << tab << declare(getTarget()->adderDelay(size), sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " // vz (size-1 downto s)
 										<< jsignal << (op==Add ? " + " : "-") << isignal << ";   -- sum of higher bits" << endl; 
-
+								}
 								// In both cases the lower bits of the result (s-1 downto 0) are untouched
 								vhdl << tab << sao->name << "("<<shift-1<<" downto 0) <= " << jname <<"("<< shift-1<<" downto 0);   -- lower bits untouched"<<endl;
 
 							} // end if (shift >= jsize) else
 						} // end if(op == Add || op == RSub) 
-						else { // op=Sub 
+						else { // op=Sub
+							THROWERROR("This seems to be dead code");
 							// Do a normal subtraction of size size
 							isignal = sao->name + "_L";  
 							jsignal = sao->name + "_R"; 
@@ -466,8 +444,8 @@ namespace flopoco{
 
 
 
-	IntConstMult::IntConstMult(Target* _target, int _xsize, mpz_class n) :
-		Operator(_target), n(n), xsize(_xsize)
+	IntConstMult::IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize, mpz_class n) :
+		Operator(parentOp, _target), n(n), xsize(_xsize)
 	{
 			ostringstream name; 
 
@@ -637,8 +615,8 @@ namespace flopoco{
 
 	// The constructor for rational constants
 
-	IntConstMult::IntConstMult(Target* _target, int _xsize, mpz_class n, mpz_class period, int periodMSBZeroes, int periodSize, mpz_class header, int headerSize, int i, int j) :
-		Operator(_target), xsize(_xsize){
+	IntConstMult::IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize, mpz_class n, mpz_class period, int periodMSBZeroes, int periodSize, mpz_class header, int headerSize, int i, int j) :
+		Operator(parentOp, _target), xsize(_xsize){
 			ostringstream name; 
 
 			srcFileName="IntConstMult (periodic)";
@@ -719,8 +697,8 @@ namespace flopoco{
 		}
 
 
-	IntConstMult::IntConstMult(Target* _target, int _xsize) :
-			Operator(_target), xsize(_xsize)
+	IntConstMult::IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize) :
+		Operator(parentOp, _target), xsize(_xsize)
 	{
 
 	}
@@ -1689,7 +1667,7 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-
+		
 		return testStateList;
 	}
 
@@ -1701,7 +1679,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
 		UserInterface::parseString(args, "n", &n);
 		mpz_class nz(n); // TODO catch exceptions here?
-		return new IntConstMult(target, wIn, nz);
+		return new IntConstMult(parentOp, target, wIn, nz);
 	}
 
 	void IntConstMult::registerFactory(){
