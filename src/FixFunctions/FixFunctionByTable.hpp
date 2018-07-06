@@ -22,7 +22,6 @@ namespace flopoco{
 		 */
 		~FixFunctionByTable();
 
-		mpz_class function(int x); // overloading Table method
 		void emulate(TestCase * tc);
 
 		/** Factory method that parses arguments and calls the constructor */

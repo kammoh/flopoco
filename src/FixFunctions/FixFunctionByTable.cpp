@@ -35,8 +35,10 @@ namespace flopoco{
 		wOut = f->wOut;
 		vector<mpz_class> v;
 		for(int i=0; i<(1<<wIn); i++) {
-			REPORT(FULL, "f("<< i << ") = " << function(i) );
-			v.push_back(function(i));
+			mpz_class rn, devnull;
+			f->eval(mpz_class(i), rn, devnull, true);
+			v.push_back(rn);
+			//REPORT(FULL, "f("<< i << ") = " << function(i) );
 		};
 		Table::init(v, join("f", getNewUId()), wIn, wOut);
 	}
@@ -47,14 +49,6 @@ namespace flopoco{
 		delete f;
 	}
 
-
-	
-	//overloading the method from table
-	mpz_class FixFunctionByTable::function(int x){
-		mpz_class ru, rd;
-		f->eval(mpz_class(x), rd, ru, true);
-		return rd;
-	}
 
 
 	void FixFunctionByTable::emulate(TestCase* tc){

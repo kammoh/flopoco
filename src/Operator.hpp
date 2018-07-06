@@ -684,7 +684,7 @@ public:
 	void useHardRAM(Operator* t);
 
 	/**
-	 * Adds attributes to the generated VHDL so that the tools use LUT-based RAM blocks for an instance
+	 * Adds attributes to the generated VHDL so that the tools use LUT-based RAM for an instance
 	 * @param t a pointer to this instance
 	 */
 	void useSoftRAM(Operator* t);

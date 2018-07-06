@@ -33,7 +33,9 @@ namespace flopoco{
 			whichDSPCongfigCanBeUnsigned_.push_back(false);
 			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 9
 			        // The blocks are 36kb configurable as dual 18k so I don't know.
-		}
+
+			// See also all the parameters at the end of Kintex7.hpp
+	}
 
 	Kintex7::~Kintex7() {};
 
@@ -97,6 +99,12 @@ namespace flopoco{
 	{
 		return sizeOfBlock_;	
 	};
+
+
+	double Kintex7::tableDelay(int wIn_, int wOut_, bool logicTable_){
+		return 1e-9;
+	}
+
 	
 	bool Kintex7::suggestSubaddSize(int &x, int wIn){
 		int chunkSize = 4* ((int)floor( (1./frequency() - (adderConstantDelay_ + ffDelay())) / carry4Delay_ ));

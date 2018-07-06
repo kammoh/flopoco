@@ -127,6 +127,16 @@ namespace flopoco{
 	};
 	
 	
+	double Zynq7000::tableDelay(int wIn, int wOut, bool logicTable){
+		if(logicTable) {
+			return logicDelay(wIn);
+		}
+		else {
+			return RAMDelay_+ RAMToLogicWireDelay_;
+		}
+	}
+
+
 	DSP* Zynq7000::createDSP() 
 	{
 		int x, y;

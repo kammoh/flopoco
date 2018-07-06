@@ -143,14 +143,36 @@ namespace flopoco{
 			full=false;
 
 		//user warnings
-		if(wIn > 10)
+		if(wIn > 12)
 			REPORT(FULL, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
 
 
 		//create the code for the table
 		REPORT(DEBUG,"Table.cpp: Filling the table");
-		std::string tableAttributes;
 
+		
+		if(logicTable){
+			int lutsPerBit;
+			if(wIn < getTarget()->lutInputs())
+				lutsPerBit = 1;
+			else
+				lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
+			REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
+		}
+
+		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
+		vhdl << tab << "with X select " << declare(cpDelay, "Y0", wOut) << " <= " << endl;;
+		
+		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
+			vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
+		vhdl << tab << tab << "\"";
+		for(int i=0; i<wOut; i++)
+			vhdl << "-";
+		vhdl <<  "\" when others;" << endl;
+
+		// TODO there seems to be several possibilities to make a BRAM; the following seems ineffective
+
+		std::string tableAttributes;
 		//set the table attributes
 		if(getTarget()->getID() == "Virtex6")
 			tableAttributes =  "attribute ram_extract: string;\nattribute ram_style: string;\nattribute ram_extract of Y0: signal is \"yes\";\nattribute ram_style of Y0: signal is ";
@@ -169,28 +191,7 @@ namespace flopoco{
 			//block RAM
 			tableAttributes += "\"block\";";
 		}
-
-		if(logicTable){
-			int lutsPerBit;
-			if(wIn < getTarget()->lutInputs())
-				lutsPerBit = 1;
-			else
-				lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
-			REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
-		}
-
-		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
-		vhdl << declare(1e-5, "X0", wIn) << " <= X;" << endl;
-		REPORT(0,"Delay=" << cpDelay);
-		vhdl << tab << "with X0 select " << declare(cpDelay, "Y0", wOut) << " <= " << endl;;
 		getSignalByName("Y0") -> setTableAttributes(tableAttributes);
-		
-		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
-			vhdl << tab << tab << "\"" << unsignedBinary(values[i-minIn.get_ui()], wOut) << "\" when \"" << unsignedBinary(i, wIn) << "\"," << endl;
-		vhdl << tab << tab << "\"";
-		for(int i=0; i<wOut; i++)
-			vhdl << "-";
-		vhdl <<  "\" when others;" << endl;
 
 		vhdl << tab << "Y <= Y0;" << endl;
 	}

@@ -202,7 +202,7 @@ namespace flopoco{
 
 	
 	double Target::tableDelay(int wIn_, int wOut_, bool logicTable_){
-		cout << "Warning: using the generic Target::tableDelay(); pipelining using a gross estimate of the target" << endl;
+		cout << "Warning: using the generic Target::tableDelay(); it should be overloaded in your target instead" << endl;
 		return 2e-9;
 	}
 
