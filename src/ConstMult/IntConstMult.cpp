@@ -1641,16 +1641,35 @@ namespace flopoco{
 	{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		// Only exhaustive tests here
-		paramList.push_back(make_pair("n", "17"));
-		paramList.push_back(make_pair("wIn", "12"));
-		paramList.push_back(make_pair("TestBench n=", "-2"));
-		testStateList.push_back(paramList);
 
-		paramList[0] = make_pair("n", "42");
-		testStateList.push_back(paramList);
-		paramList.clear();
+		if(index==-1) {// Unit tests
+			// Only exhaustive tests here
+			paramList.push_back(make_pair("n", "17"));
+			paramList.push_back(make_pair("wIn", "12"));
+			paramList.push_back(make_pair("TestBench n=", "-2"));
+			testStateList.push_back(paramList);
+			
+			paramList[0] = make_pair("n", "42");
+			testStateList.push_back(paramList);
 
+			paramList[0] = make_pair("n", "65535");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "65536");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "65537");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "12345");
+			testStateList.push_back(paramList);
+			
+			paramList[0] = make_pair("n", "1234567");
+			testStateList.push_back(paramList);
+			paramList.clear();
+		}
+		else {//	enumeration of a random test space, TODO
+		}
 		return testStateList;
 	}
 
