@@ -205,7 +205,43 @@ have the declaration of \verb!T! where its value is defined. Let us
 now turn this design into a pipelined one.
 
 \subsection{Adding delay information}
-TODO
+A latency  may be passed as first optional argument to  \texttt{declare()}.
+  This value decribes the contribution of this VHDL statement to the critical path.
+  It is best defined using methods of \texttt{Target}.
+  See \texttt{FPAddSinglePath} for examples.
+
+\subsection{Sub-component instances}
+
+In FloPoCo, most instances are \emph{unique}: an \texttt{Operator} is built for a specific context, optimized for this context, and only one instance of this Operator will be used in the VHDL.
+This is the default situation, because it allows to tool to optimize the pipelining of each component for its context.
+The preferred method to use in such case is the \emph{newInstance} method of Operator. 
+See \texttt{FPAdderSinglePath} for an example of a large component that instantiates many sub-components (several \texttt{IntAdder}, \texttt{Shifter}, etc).
+
+
+A component may also be shared (i.e. the same component is reused many times).
+An example is the small table in \texttt{IntConstDiv} \cite{dedinechin:2012:ensl-00642145:1}.
+In this case the typical code skeleton to use is the following:
+\begin{verbatim}
+Operator* op = new MySubComponent(...);
+op -> setShared();
+//now some loop that creates many instances
+for (....) {
+  inPortMap(op, ...);    // as many times as there are inputs
+  outPortMap(op, ...);   // as many times as there are outputs
+  vhdl << instance(op, "myInstanceName");
+
+}
+\end{verbatim}
+
+See \texttt{IntConstDiv} of \texttt{FPDiv} for detailed examples.
+
+\subsection{Using the Table object}
+Small tables of precomputed values are very powerful components, especially when targetting FPGAs.
+They are quite often shared.
+See \texttt{IntConstDiv} of \texttt{FPDiv} for examples of small, shared tables (intended to be implemented as LUTs on FPGAs, and as logic gates on ASIC).
+
+TODO: See \textbf{FPExp} for an example of unique Table intended to fit in a block RAM.
+
 
 \section{Frequency-directed pipeline}
 
