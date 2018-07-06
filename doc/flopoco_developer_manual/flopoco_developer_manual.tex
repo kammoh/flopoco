@@ -27,13 +27,12 @@ FloPoCo \input{../../VERSION} developer manual
 Welcome to new developers! 
 
 The purpose of this document is to help you use FloPoCo in your own
-project (section~\ref{sec:linking}), and to show you how to design your own pipelined operator
+project (section~\ref{sec:getting-started} to \ref{sec:data-types}), and to show you how to design your own pipelined operator
 using the FloPoCo framework (sections~\ref{sec:tutorial} and \ref{sec:test-bench-gener}). 
 
 \tableofcontents
 
-
- \section{Getting started with FloPoCo\label{sec:getting-started}}
+\section{Getting started with FloPoCo\label{sec:getting-started}}
 
 
 \subsection{Getting the source and compiling using CMake}
@@ -49,8 +48,24 @@ to edit \texttt{CMakeLists.txt}. It is probably going to be straightforward,
 just do some imitation of what is already there. Anyway \texttt{cmake} is well
 documented. The web page of the CMake project is \url{http://www.cmake.org/}.
 
+\subsection{Linking against FloPoCo\label{sec:linking}}
+All the operators provided by the FloPoCo command line are availaible
+programmatically in libFloPoCo. A minimal example of using this
+library is provided in \texttt{src/main\_minimal.cpp}.
 
-\subsection{Overview of FloPoCo}
+It is best to use an operator through its factory. The file \texttt{src/main.cpp} is the source of the FloPoCo command
+line, and as such uses most operators: looking at it is the quickest
+way to look for the interface of a given operator.
+
+The other way is, of course, to look at the corresponding \texttt{hpp}
+file -- they are all included by \texttt{src/Operator.hpp}. Some
+operators offer more constructors (richer interface options) than what
+is used in \texttt{src/main.cpp}.
+
+
+There should be a Doxygen documentation of FloPoCo.
+
+\subsection{Overview of FloPoCo code organization}
 
 The core of FloPoCo is the \texttt{Operator} class. 
 Operator is a virtual class from which all FloPoCo operators inherit. 
@@ -100,24 +115,7 @@ And do not hesitate to contact us: \texttt{Florent.de.Dinechin@insa-lyon.fr}.
 \end{center}
 
 
-\section{Linking against FloPoCo\label{sec:linking}}
-All the operators provided by the FloPoCo command line are availaible
-programmatically in libFloPoCo. A minimal example of using this
-library is provided in \texttt{src/main\_minimal.cpp}.
-
-It is best to use an operator through its factory. The file \texttt{src/main.cpp} is the source of the FloPoCo command
-line, and as such uses most operators: looking at it is the quickest
-way to look for the interface of a given operator.
-
-The other way is, of course, to look at the corresponding \texttt{hpp}
-file -- they are all included by \texttt{src/Operator.hpp}. Some
-operators offer more constructors (richer interface options) than what
-is used in \texttt{src/main.cpp}.
-
-
-There should be a Doxygen documentation of FloPoCo.
-
-\section{Signal data-types in FloPoCo}
+\section{Data-types in FloPoCo\label{sec:data-types}}
 
 \subsection{Floating-point numbers}
 
@@ -144,6 +142,9 @@ Examples:
 \end{itemize}
 
 Finally, whenever we can live with integers, we should stick with integers and not obfuscate them as fixed-point numbers.
+
+
+
 
 \section{Tutorial for new developers \label{sec:tutorial}}
 
@@ -406,54 +407,40 @@ to be overloaded by each Operator. As the name indicates, this method
 provides a bit-accurate simulation of the operator.
  
 Once this method is available, the command\\
- \texttt{flopoco FPAdd 8 23 TestBenchFile 500} \\
+ \texttt{flopoco FPAdd we=8 wf=23 TestBench n=500} \\
 produces a test bench of 500 test vectors to exercise \texttt{\small FPAdd}. 
 
-This test bench is properly synchronized in case of a combinatorial
-operator. This is managed by the \texttt{\small TestBenchFile} operator:
-\texttt{\small emulate()} only has to specify the mathematical
-(combinatorial) functionality of the operator.
+This test bench is properly synchronized if the operator under test happens to be pipelined: \texttt{\small emulate()} only has to specify the mathematical (combinatorial) functionality of the operator.
 
-The \texttt{\small emulate()} method should be considered  the specification of
-the behaviour of the operator. Therefore, as any instructor will tell
-you, it should be written \emph{before} the code generating the VHDL
-of the operator!
-
-\subsubsection{TestBench and TestBenchFile}
-The \texttt{\small TestBenchFile} operator stores the generated test vectors in the text file \texttt{\small test.input}.
-There is another test-bench operator, \texttt{\small TestBench}, which stores the test vectors directly in the VHDL. In early debugging this may be more helpful, as this VHDL may include comments (see below). However compiling the VHDL test bench will take much more time than the simulation itself, so \texttt{\small TestBench} doesn't scale beyond a few thousand vectors. Compiling a \texttt{\small TestBenchFile} is in constant time.
+The \texttt{\small emulate()} method should be considered  the specification of the behaviour of the operator.
+Therefore, as any instructor will tell you, it should be written \emph{before} the code generating the VHDL of the operator (test-driven design).
 
 
+To see examples of \texttt{emulate()} functions, see
+\begin{itemize}
+\item \texttt{IntAdder} or \texttt{IntConstDiv} for an operator with integer inputs and outputs;
+  For these, the GNU Multiple Precision library is your friend.
+\item \texttt{FixRealKCM} for an operator with fixed-point inputs and outputs;
+\item \texttt{FPAdd}  for an operator with floating-point inputs and outputs;
+  For these, your friend is the GNU MPFR library, and FloPoCo provides all the needed helper functions to convert between bit vetors and MPFR numbers.
+\end{itemize}
 
 
 \subsection{\texttt{emulate()}  internals}
-The simplest example of \texttt{\small emulate()} is that of \texttt{\small src/IntAdder.cpp}, copied below.
-\begin{verbatim}
-	void IntAdder::emulate ( TestCase* tc ) {
-		// get the inputs from the TestCase
-		mpz_class svX = tc->getInputValue ( "X" );
-		mpz_class svY = tc->getInputValue ( "Y" );
-		mpz_class svC = tc->getInputValue ( "Cin" );
-		
-		// compute the multiple-precision output
-		mpz_class svR = svX + svY + svC;
-		// Don't allow overflow: the output is modulo 2^wIn
-		svR = svR & ((mpz_class(1)<<wIn_)-1);
-		
-		// complete the TestCase with this expected output
-		tc->addExpectedOutput ( "R", svR );
-	}
-\end{verbatim}
+\texttt{\small emulate()} has a single argument which is a \texttt{\small TestCase}.
+This is a data-structure associating inputs to outputs.
+Upon entering \texttt{\small emulate()}, the input part is filled (probably by \texttt{\small TestBench}), and the purpose of \texttt{\small emulate()} is to fill the output part.
+\texttt{\small emulate()} is completely generic:
+Both inputs and outputs are specified as bit vectors.
+However these vectors are stored for convenience in \texttt{\small mpz\_class} numbers.
+This class is a very convenient C++ wrapper around GMP, which can almost be used as an \texttt{\small int}, but without any overflow issue.
 
-\texttt{\small emulate()} has a single argument which is a
-\texttt{\small TestCase}. This is a data-structure associating inputs to
-outputs. Upon entering \texttt{\small emulate()}, the input part is filled
-(probably by \texttt{\small TestBench} or \texttt{\small TestBenchFile}), and the
-purpose of \texttt{\small emulate()} is to fill the output part.
+Therefore an input/output is a map of the name (which should match those defined by \texttt{\small addInput} etc.) and a \texttt{\small mpz\_class}.
+When the input/outputs are integers, this is a perfect match.
 
-An input/output is a map of the name (which should match those defined by \texttt{\small addInput} etc.) and a \texttt{\small mpz\_class}. This class is a very convenient C++ wrapper over the GMP multiple-precision library, which can almost be used as an \texttt{\small int}, without any overflow issue. When the input/outputs are integers, this is a perfect match.
-
-When the input/outputs are floating-point numbers, the most convenient multiple-precision library is MPFR. However the I/Os  are nevertheless encoded as \texttt{\small mpz\_class}. The \texttt{\small emulate()} method therefore typically must
+When the input/outputs are floating-point numbers, the most convenient multiple-precision library is MPFR.
+However the I/Os  are nevertheless encoded as \texttt{\small mpz\_class}.
+The \texttt{\small emulate()} method therefore typically must
 \begin{itemize}
 \item convert the \texttt{\small mpz\_class} inputs to arbitrary precision floating-point numbers in the MPFR format -- this is done with the help of the \texttt{\small FPNumber} class;
 \item compute the expected results, using functions from the MPFR library;
@@ -462,7 +449,7 @@ When the input/outputs are floating-point numbers, the most convenient multiple-
 This double conversion is a bit cumbersome, but may be copy-pasted from one existing operator: Imitate \texttt{\small FPAddSinglePath} or \texttt{\small FPExp}.
 
 
-\subsubsection{Fully and weakly specified operators}
+\subsection{Fully and weakly specified operators}
  Most operators should be fully specified: for a given input
   vector, they must output a uniquely defined vector. This is the case of 
   \texttt{\small IntAdder} above. For floating-point
@@ -477,9 +464,7 @@ This double conversion is a bit cumbersome, but may be copy-pasted from one exis
   operator should return one of the two FP values surrounding the
   exact result. These values may be obtained thanks to the
   \emph{rounding up} and \emph{rounding down} modes supported by
-  MPFR. See \texttt{\small FPExp} or \texttt{\small FPLog} for a simple example, and
-  \texttt{\small Collision} for a more complex example (computing the two
-  faithful values for $x^2+y^2+z^2$).
+  MPFR. See \texttt{\small FPExp} or \texttt{\small FPLog} for a simple example.
 
 
 \subsection{Operator-specific test  vector generation}
@@ -516,9 +501,8 @@ Finally, \texttt{\small buildStandardTestCases()} allows to test
 corner cases which random testing has little chance to find. See
 \texttt{\small FPAddSinglePath.cpp} for examples. 
 
-Here, it is often useful to add
-a comment to a test case using \texttt{\small addComment}: these comments
-will show up in the VHDL generated by \texttt{\small TestBench}.
+Here, it is often useful to add a comment to a test case using \texttt{\small addComment}: these comments
+will show up in the VHDL generated by \texttt{\small TestBench file=false}.
 
 
 
@@ -542,6 +526,30 @@ This must be done before any vhdl generation.
 If we want to delegate some of this error analysis to the subcomponents, then either it must be implemented in some static method of the Operator, or the constructor must delay the actual VHDL output to another method.
 
 For an example of this in practice, see \texttt{FixFilters/FixSOPC}.
+
+
+\section{Writing a new target}
+Try to fill data such as LUT input size (\texttt{lutInputs()}), etc.
+
+Here are some operators that can be used to calibrate delay functions.
+You may use the scripts in \texttt{tools/} to launch syntheses and get critical path reports.
+It is better to ask for a relatively low frequency (say, half peak, 200MHz) to avoid troubles with I/O buffer delays when using post place-and-route synthesis.
+
+\begin{itemize}
+\item To calibrate the logic delay, use 
+\begin{verbatim}
+  ./flopoco IntConstDiv wIn=64 d=3 Wrapper
+\end{verbatim}
+  If you have specified your lutInputs properly, the architecture should be a sequence of LUTs connected by local routing.
+  First check that the estimated cost reported by FloPoCo matches the actual cost. 
+  
+\item To calibrate the IntAdder delay, use
+\begin{verbatim}
+  ./flopoco IntAdder wIn=64 Wrapper
+\end{verbatim}
+  for increasing values of 64.
+  
+\end{itemize}
 
 
 \bibliographystyle{IEEEtran}
