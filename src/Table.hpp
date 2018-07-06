@@ -49,9 +49,9 @@ namespace flopoco{
 		 * @param[in] name      a new name for the VHDL entity
 		 * @param[in] wIn    		the with of the input in bits (optional, may be deduced from values)
 		 * @param[in] wOut   		the with of the output in bits  (optional, may be deduced from values)
-		 * @param[in] logicTable 1 if the table is intended to be implemented as logic; -1 if it is intended to be implemented as embedded RAM; 
-		 0 (default): let the constructor decide, depending on the size and target
-		 * 							false (default value) if the table is intended to be implemented as BRAM
+		 * @param[in] logicTable 1 if the table is intended to be implemented as logic; 
+                            -1 if it is intended to be implemented as embedded RAM; 
+	                        	 0 (default): let the constructor decide, depending on the size and target
 		 * @param[in] minIn			minimal input value, to which value[0] will be mapped (default 0)
 		 * @param[in] maxIn			maximal input value (default: values.size()-1)
 		 */ 
@@ -99,16 +99,6 @@ namespace flopoco{
 
 
 
-
-		public:
-		/**
-		 * The obsolete Table constructor
-		 * @param[in] target the target device
-		 * @param[in] wIn    the with of the input in bits
-		 * @param[in] wOut   the with of the output in bits
-     	 * @param[in] logicTable   1 if the table is intended to be implemented as logic; -1 if the table is intended to be implemented as BRAM; 0: let the constructor decide
-		 */
-		Table(Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1, int logicTable = 0);
 
 };
 

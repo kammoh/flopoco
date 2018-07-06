@@ -104,7 +104,7 @@ namespace flopoco{
 		else if(_logicTable == 1)
 			logicTable = true;
 		else
-			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
+			logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < getTarget()->sizeOfMemoryBlock()/2 );
 		REPORT(DEBUG, "_logicTable=" << _logicTable << "  logicTable=" << logicTable);
 
 		// Sanity check: the table is built using a RAM, but is underutilized
@@ -178,10 +178,11 @@ namespace flopoco{
 				lutsPerBit = 1 << (wIn-getTarget()->lutInputs());
 			REPORT(DETAILED, "Building a logic table that uses " << lutsPerBit << " LUTs per output bit");
 		}
-		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
 
-		
-		vhdl << tab << "with X select " << declare(cpDelay, "Y0", wOut) << " <= " << endl;;
+		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
+		vhdl << declare(1e-5, "X0", wIn) << " <= X;" << endl;
+		REPORT(0,"Delay=" << cpDelay);
+		vhdl << tab << "with X0 select " << declare(cpDelay, "Y0", wOut) << " <= " << endl;;
 		getSignalByName("Y0") -> setTableAttributes(tableAttributes);
 		
 		for(unsigned int i=minIn.get_ui(); i<=maxIn.get_ui(); i++)
@@ -191,18 +192,7 @@ namespace flopoco{
 			vhdl << "-";
 		vhdl <<  "\" when others;" << endl;
 
-		if((!logicTable) && (cpDelay < (double)(1.0/getTarget()->frequency())))
-		{
-			REPORT(INFO,"Warning: delaying output by 1 cycle to allow implementation as Block RAM" << endl);
-#if O // I'm afraid the following messes up the pipeline: should be tested.
-			addRegisteredSignalCopy("Yd", "Y0");
-			vhdl << tab << "Y <= Yd;" << endl;
-#else
-			REPORT(INFO,"TODO! FixMe" << endl);
-#endif
-		}
-		else
-			vhdl << tab << "Y <= Y0;" << endl;
+		vhdl << tab << "Y <= Y0;" << endl;
 	}
 
 	
@@ -221,54 +211,6 @@ namespace flopoco{
 
 	int Table::size_in_LUTs() {
 		return wOut*int(intpow2(wIn-getTarget()->lutInputs()));
-	}
-
-
-	///////// Deprecated constructor, get rid of it ASAP
-	Table::Table(Target* target_, int _wIn, int _wOut, int _minIn, int _maxIn, int _logicTable) :
-		Operator(target_),
-		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
-	{
-		srcFileName = "Table";
-		THROWERROR("\n\n Deprecated constructor.\n Please replace whatever inheritance you may have with a plain Table.\n See FPDiv for an example. " << endl);
-		// if(wIn<0){
-		// 	THROWERROR("wIn="<<wIn<<"; Input size cannot be negative"<<endl);
-		// }
-		// if(wOut<0){
-		// 	THROWERROR("wOut="<<wOut<<"; Output size cannot be negative"<<endl);
-		// }
-		// setCopyrightString("Florent de Dinechin, Matei Istoan (2007-2016)");
-
-		// if(_logicTable==1)
-		// 	logicTable=true;
-		// else if (_logicTable==-1)
-		// 	logicTable=false;
-		// else { // the constructor should decide
-		// 	logicTable = (wIn <= getTarget()->lutInputs())  ||  (wOut * (mpz_class(1) << wIn) < 0.5*getTarget()->sizeOfMemoryBlock());
-		// 	if(!logicTable)
-		// 		REPORT(DETAILED, "This table will be implemented in memory blocks");
-		// }
-		
-		// // Set up the IO signals
-		// addInput ("X"  , wIn, true);
-		// addOutput ("Y"  , wOut, 1, true);
-
-		// if(maxIn==-1)
-		// 	maxIn=(1<<wIn)-1;
-		// if(minIn<0) {
-		// 	cerr<<"ERROR in Table::Table, minIn<0\n";
-		// 	exit(EXIT_FAILURE);
-		// }
-		// if(maxIn>=(1<<wIn)) {
-		// 	cerr<<"ERROR in Table::Table, maxIn too large\n";
-		// 	exit(EXIT_FAILURE);
-		// }
-		// if((minIn==0) && (maxIn==(1<<wIn)-1))
-		// 	full=true;
-		// else
-		// 	full=false;
-		// if (wIn > 10)
-		//   REPORT(0, "WARNING: FloPoCo is building a table with " << wIn << " input bits, it will be large.");
 	}
 
 	
