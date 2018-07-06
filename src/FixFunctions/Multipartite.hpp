@@ -7,7 +7,6 @@
 #include "FixFunction.hpp"
 #include "../Table.hpp"
 #include "../Operator.hpp"
-#include "GenericTable.hpp"
 
 
 using namespace std;

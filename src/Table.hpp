@@ -43,8 +43,10 @@ namespace flopoco{
 		public:
 		/**
 		 * The Table constructor
+		 * @param[in] parentOp 	the parent operator in the component hierarchy
 		 * @param[in] target 		the target device
 		 * @param[in] values 		the values used to fill the table. Each value is a bit vector given as positive mpz_class.
+		 * @param[in] name      a new name for the VHDL entity
 		 * @param[in] wIn    		the with of the input in bits (optional, may be deduced from values)
 		 * @param[in] wOut   		the with of the output in bits  (optional, may be deduced from values)
 		 * @param[in] logicTable 1 if the table is intended to be implemented as logic; -1 if it is intended to be implemented as embedded RAM; 

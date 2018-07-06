@@ -174,7 +174,8 @@ namespace flopoco{
 	 */
 	void IntConstMult::build_pipeline(ShiftAddOp* sao, double &partial_delay) {
 		string iname, jname, isignal, jsignal;
-		double idelay=0,jdelay=0, max_children_delay;
+		double idelay=0,jdelay=0;
+		//double max_children_delay;
 		int size, isize, jsize, shift, adder_size; 
 		bool use_pipelined_adder;
 		IntAdder* adder=0;
@@ -200,7 +201,6 @@ namespace flopoco{
 			switch(op) {
 				case X:
 					partial_delay=0;
-					setCycle(0, false);
 					return;
 
 				case Add:
@@ -220,12 +220,12 @@ namespace flopoco{
 					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
 
-					max_children_delay = max(idelay,jdelay);
 
 					// Now decide what kind of adder we will use, and compute the remaining delay
 
 					use_pipelined_adder=false;
 #if 0 // Code from previous pipeline framework, should be replaced with systematic IntAdders
+					max_children_delay = max(idelay,jdelay);
 					if (false && isSequential()) {
 						// First case: using a plain adder fits within the current pipeline level
 						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
@@ -235,7 +235,6 @@ namespace flopoco{
 						}
 						else { 
 							// register the children 
-							nextCycle();
 							// Is a standard adder OK ?
 							tentative_delay = getTarget()->ffDelay() + getTarget()->localWireDelay() + getTarget()->adderDelay(adder_size);
 							if(tentative_delay <= 1./getTarget()->frequency()) {
@@ -362,8 +361,6 @@ namespace flopoco{
 									outPortMap (adder, "R",resname);
 									vhdl << instance(adder, sao->name + "_adder");
 
-									syncCycleFromSignal(resname, false);
-									//nextCycle();
 									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " << resname + ";" << endl;
 								}
 								else
@@ -406,8 +403,6 @@ namespace flopoco{
 								outPortMap (adder, "R",resname);
 								vhdl << instance(adder, sao->name + "_adder");
 
-								syncCycleFromSignal(resname, false);
-								//nextCycle();
 								vhdl << tab << declare(sao->name, size) << " <=  " << resname + ";" << endl;
 
 							}
@@ -431,18 +426,16 @@ namespace flopoco{
 					build_pipeline(sao->i, idelay);
 
 					iname = sao->i->name; 
-					setCycleFromSignal(iname, false);
 
 					if(isSequential() 
 							&& idelay +  getTarget()->localWireDelay() + local_delay > 1./getTarget()->frequency()
 							&& sao->i->op != X)
 					{
 						// This resets the partial delay to that of this ShiftAddOp
-						nextCycle();
 						partial_delay =  getTarget()->ffDelay() + getTarget()->adderDelay(sao->cost_in_full_adders);
 					}
 					else{ // this ShiftAddOp and its child will be in the same pipeline level
-						partial_delay = idelay + getTarget()->localWireDelay() + local_delay;
+						partial_delay = idelay + local_delay;
 					}
 					vhdl << tab << declare(sao->name, size) << " <= " ;
 					// TODO use a pipelined IntAdder when necessary

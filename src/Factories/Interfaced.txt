@@ -11,11 +11,14 @@ ShiftReg
 IntAdder
 IntDualAddSub
 IntMultiAdder
+IntConstMult
+IntConstDiv
 DSPBlock
 IntMultiplier
 FixFunctionByTable
 FixFunctionBySimplePoly
 FixFunctionByPiecewisePoly
+#FixFunctionByMultipartiteTable
 PiecewisePolyApprox
 FixRealKCM
 TestBench

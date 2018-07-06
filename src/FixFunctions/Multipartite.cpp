@@ -18,7 +18,6 @@
 #include "../utils.hpp"
 #include "../BitHeap/BitHeap.hpp"
 //#include "QuineMcCluskey.h"
-#include "GenericTable.hpp"
 
 #include <map>
 #include <sstream>

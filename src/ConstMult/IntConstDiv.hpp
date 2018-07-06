@@ -31,38 +31,9 @@ namespace flopoco{
 	{
 	public:
 
-#define INTCONSTDIV_OLDTABLEINTERFACE 0 // 1 for master, 0 for newPipelineFramework
-
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-
-		/** @brief This table inputs a number X on alpha + gammma bits, and computes its Euclidean division by d: X=dQ+R, which it returns as the bit string Q & R */
-		class EuclideanDivTable: public Table {
-		public:
-			int d;
-			int alpha;
-			int rSize;
-			EuclideanDivTable(Target* target, int d, int alpha, int rSize);
-			mpz_class function(int x);
-		};
-
-
-		/** @brief This table is the CBLK table of the Arith23 paper by Ugurdag et al */
-		class CBLKTable: public Table {
-		public:
-			int level; /**< input will be a group of 2^level alpha-bit digits*/
-			int d;
-			int alpha;
-			int rSize;
-			int rho;
-			CBLKTable(Target* target, int level, int d, int alpha, int rSize, int rho);
-			mpz_class function(int x);
-		};
-#else
 		vector<mpz_class>  euclideanDivTable(int d, int alpha, int rSize);
 		vector<mpz_class>  firstLevelCBLKTable(int d, int alpha, int rSize);
 		vector<mpz_class>  otherLevelCBLKTable(int level, int d, int alpha, int rSize, int rho );
-
-#endif // deprecated overloading of Table method
 
 
 		/** @brief The atomic constructor, to be used for small constants
@@ -73,7 +44,7 @@ namespace flopoco{
 		* @param remainderOnly As the name suggests
 		*/
 
-		IntConstDiv(Target* target, int wIn, int d, int alpha=-1, int architecture=0, bool computeQuotient=true, bool computeRemainder=true);
+		IntConstDiv(OperatorPtr parentOp, Target* target, int wIn, int d, int alpha=-1, int architecture=0, bool computeQuotient=true, bool computeRemainder=true);
 
 
 		/** @brief The composite constructor
@@ -83,7 +54,7 @@ namespace flopoco{
 		* @param architecture Architecture used, can be 0 for linear are, linear time, or 1 for n log n area, log n time
 		* @param remainderOnly As the name suggests
 		*/
-		IntConstDiv(Target* target, int wIn, vector<int> d, int alpha=-1, int architecture=0, bool computeQuotient=true, bool computeRemainder=true);
+		IntConstDiv(OperatorPtr parentOp, Target* target, int wIn, vector<int> d, int alpha=-1, int architecture=0, bool computeQuotient=true, bool computeRemainder=true);
 
 		~IntConstDiv();
 

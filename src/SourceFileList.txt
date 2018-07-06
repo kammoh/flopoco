@@ -48,6 +48,8 @@ IntAddSubCmp/IntMultiAdder
 ConstMult/ShiftAddOp
 ConstMult/ShiftAddDag
 ConstMult/FixRealKCM
+ConstMult/IntConstMult
+ConstMult/IntConstDiv
 IntMult/IntMultiplier
 IntMult/FixMultAdd
 IntMult/TilingStrategy
@@ -77,6 +79,8 @@ FixFunctions/FixHornerEvaluator
 FixFunctions/FixFunctionBySimplePoly
 FixFunctions/PiecewisePolyApprox
 FixFunctions/FixFunctionByPiecewisePoly
+#FixFunctions/Multipartite
+#FixFunctions/FixFunctionByMultipartite
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive
