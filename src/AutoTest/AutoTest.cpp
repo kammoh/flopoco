@@ -44,12 +44,9 @@ namespace flopoco
 		string commandLineTestBench;
 		set<string> testedOperator;
 		vector<string> paramNames;
-		vector<string>::iterator itParam;
 		map<string,string> unitTestParam;
 		map<string,string>::iterator itMap;
 		TestList unitTestList;
-		TestList::iterator itUnitTestList;
-		vector<pair<string,string>>::iterator itUnitTest;
 		bool doUnitTest = false;
 		bool doRandomTest = false;
 		bool allOpTest = false;
@@ -159,38 +156,39 @@ namespace flopoco
 				if(unitTestList.size() != 0 )		{
 					testsDone = true;
 					//For every Test
-					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)	{
+					//for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)	{
+					for(auto paramlist : unitTestList)	{
 						// Create the flopoco command corresponding to the test
 						commandLine = "src/AutoTest/testScript.sh " + op;
 						commandLineTestBench = "";
 						unitTestParam.clear();
 						// Fetch all parameters and default values for readability
 						paramNames = opFact->param_names();
-						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)					{
-							string defaultValue = opFact->getDefaultParamVal((*itParam));
-							unitTestParam.insert(make_pair((*itParam),defaultValue));
+						for(auto param :  paramNames)					{
+							string defaultValue = opFact->getDefaultParamVal(param);
+							unitTestParam.insert(make_pair(param,defaultValue));
 						}
 
 						// For every Param
-						for(itUnitTest = (*itUnitTestList).begin(); itUnitTest != (*itUnitTestList).end(); ++itUnitTest)						{
-							itMap = unitTestParam.find((*itUnitTest).first);
+						for(auto param: paramlist)						{
+							itMap = unitTestParam.find(param.first);
 							
 							if( itMap != unitTestParam.end())				{
-								itMap->second = (*itUnitTest).second;
+								itMap->second = param.second;
 							}
-							else if ((*itUnitTest).first == "TestBench n="){
-								commandLineTestBench = " TestBench n=" + (*itUnitTest).second;
+							else if (param.first == "TestBench n="){
+								commandLineTestBench = " TestBench n=" + param.second;
 							}
 							else	{
-								unitTestParam.insert(make_pair((*itUnitTest).first,(*itUnitTest).second));
+								unitTestParam.insert(make_pair(param.first,param.second));
 							}
 						}
 						if(commandLineTestBench == "")		{
 							//TODO
 							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
 						}
-						for(itMap = unitTestParam.begin(); itMap != unitTestParam.end(); itMap++)			{
-							commandLine += " " + itMap->first + "=" + itMap->second;
+						for(auto it :  unitTestParam)			{
+							commandLine += " " + it.first + "=" + it.second;
 						}
 						system((commandLine + commandLineTestBench).c_str());	
 					}
@@ -212,7 +210,7 @@ namespace flopoco
 				{
 					testsDone = true;
 					//For every Test
-					for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
+					for(auto test:  unitTestList) //.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
 					{
 						// Create the flopoco command corresponding to the test
 						commandLine = "src/AutoTest/testScript.sh " + op;
@@ -222,28 +220,27 @@ namespace flopoco
 
 						// Fetch all parameters and default values for readability
 						paramNames = opFact->param_names();
-						for(itParam = paramNames.begin(); itParam != paramNames.end(); ++itParam)
+						for(auto param : paramNames)
 						{
-							string defaultValue = opFact->getDefaultParamVal((*itParam));
-							unitTestParam.insert(make_pair((*itParam),defaultValue));
+							string defaultValue = opFact->getDefaultParamVal(param);
+							unitTestParam.insert(make_pair(param,defaultValue));
 						}
 
-						// For every Param
-						for(itUnitTest = (*itUnitTestList).begin(); itUnitTest != (*itUnitTestList).end(); ++itUnitTest)
+						for(auto param: test)
 						{
-							itMap = unitTestParam.find((*itUnitTest).first);
+							itMap = unitTestParam.find(param.first);
 
 							if( itMap != unitTestParam.end())
 							{
-								itMap->second = (*itUnitTest).second;
+								itMap->second = param.second;
 							}
-							else if ((*itUnitTest).first == "TestBench n=")
+							else if (param.first == "TestBench n=")
 							{
-								commandLineTestBench = " TestBench n=" + (*itUnitTest).second;
+								commandLineTestBench = " TestBench n=" + param.second;
 							}
 							else
 							{
-								unitTestParam.insert(make_pair((*itUnitTest).first,(*itUnitTest).second));
+								unitTestParam.insert(make_pair(param.first,param.second));
 							}
 						}
 
@@ -252,9 +249,9 @@ namespace flopoco
 							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
 						}
 
-						for(itMap = unitTestParam.begin(); itMap != unitTestParam.end(); itMap++)
+						for(auto it : unitTestParam)
 						{
-							commandLine += " " + itMap->first + "=" + itMap->second;
+							commandLine += " " + it.first + "=" + it.second;
 						}
 
 						system((commandLine + commandLineTestBench).c_str());	
@@ -279,7 +276,7 @@ namespace flopoco
 
 	string AutoTest::defaultTestBenchSize(map<string,string> * unitTestParam)
 	{
-#if 0 // This is definitely fragile, we can't rely on information extracted this way
+#if 0 // This  was definitely fragile, we can't rely on information extracted this way
 		string testBench = " TestBench n=";
 
 		int bitsSum = 0;
