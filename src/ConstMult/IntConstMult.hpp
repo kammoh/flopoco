@@ -102,7 +102,7 @@ namespace flopoco{
 
 	protected:
 		bool findBestDivider(const mpz_class n, mpz_t & divider, mpz_t & quotient, mpz_t & remainder);
-		void build_pipeline(ShiftAddOp* sao, double& delay);
+		void build_pipeline(ShiftAddOp* sao);
 		string printBoothCode(int* BoothCode, int size);
 		void showShiftAddDag();
 		void optimizeLefevre(const vector<mpz_class>& constants);

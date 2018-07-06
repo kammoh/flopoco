@@ -172,15 +172,13 @@ namespace flopoco{
 	 * Starting from the leaves, we accumulate partial delays until target_period is reached.
 	 * Then pipeline level will be inserted.
 	 */
-	void IntConstMult::build_pipeline(ShiftAddOp* sao, double &partial_delay) {
+	void IntConstMult::build_pipeline(ShiftAddOp* sao) {
 		string iname, jname, isignal, jsignal;
-		double idelay=0,jdelay=0;
-		//double max_children_delay;
-		int size, isize, jsize, shift;
-		// int adder_size; 
 		bool use_pipelined_adder;
 		IntAdder* adder=0;
+		int size, isize, jsize, shift;
 
+		
 		if (sao==NULL)
 			return;
 		else {
@@ -201,7 +199,6 @@ namespace flopoco{
 
 			switch(op) {
 				case X:
-					partial_delay=0;
 					return;
 
 				case Add:
@@ -211,9 +208,9 @@ namespace flopoco{
 					isize = sao->i->size;
 					jsize = sao->j->size;
 
-					build_pipeline(sao->i, idelay);
+					build_pipeline(sao->i);
 					if(sao->i != sao->j) {
-						build_pipeline(sao->j, jdelay);
+						build_pipeline(sao->j);
 					}
 					iname = sao->i->name; 
 					jname = sao->j->name; 
@@ -394,27 +391,10 @@ namespace flopoco{
 				case Neg:
 					isize = sao->i->size;
 
-					double local_delay;
-					if(op == Neg){   
-						local_delay = getTarget()->adderDelay(sao->cost_in_full_adders);
-					}
-					else 
-						local_delay=0;
-
-					build_pipeline(sao->i, idelay);
+					build_pipeline(sao->i);
 
 					iname = sao->i->name; 
 
-					if(isSequential() 
-							&& idelay +  getTarget()->localWireDelay() + local_delay > 1./getTarget()->frequency()
-							&& sao->i->op != X)
-					{
-						// This resets the partial delay to that of this ShiftAddOp
-						partial_delay =  getTarget()->ffDelay() + getTarget()->adderDelay(sao->cost_in_full_adders);
-					}
-					else{ // this ShiftAddOp and its child will be in the same pipeline level
-						partial_delay = idelay + local_delay;
-					}
 					vhdl << tab << declare(sao->name, size) << " <= " ;
 					// TODO use a pipelined IntAdder when necessary
 					if(op == Neg)   
@@ -551,16 +531,14 @@ namespace flopoco{
 				REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
 				REPORT(INFO, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
 
-				double delay=0.0;
 				// recursively build the pipeline in the vhdl stream
-				build_pipeline(implementation->result, delay);
+				build_pipeline(implementation->result);
 
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
 #else
 				// TODO Switch to the new bit heap framework if this code is ever plugged back
 				//experimenting with bitheaps
-				double delay;
 				delete implementation;
 				implementation = buildMultBoothTreeBitheap(n, 1);
 
@@ -569,8 +547,7 @@ namespace flopoco{
 
 				for(int i=0; (unsigned)i<implementation->saoHeadlist.size(); i++)
 				{
-					delay = 0.0;
-					build_pipeline(implementation->saoHeadlist[i], delay);
+					build_pipeline(implementation->saoHeadlist[i]);
 
 					//add the bits to the bitheap
 					vhdl << endl << tab << "-- adding " << implementation->saoHeadlist[i]->name
@@ -687,9 +664,8 @@ namespace flopoco{
 			REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
 			REPORT(INFO, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
 
-			double delay=0.0;
 			// recursively build the pipeline in the vhdl stream
-			build_pipeline(implementation->result, delay);
+			build_pipeline(implementation->result);
 
 			// copy the top of the DAG into variable R
 			vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
