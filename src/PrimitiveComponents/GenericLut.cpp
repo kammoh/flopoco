@@ -16,7 +16,7 @@ namespace flopoco {
         stringstream tname;
         tname << "GenericLut_" << name;
         srcFileName = "GenericLut";
-        setName( tname.str() );
+        setNameWithFreqAndUID( tname.str() );
         wOut_ = wOut;
         wIn_ = wIn;
 
@@ -309,7 +309,7 @@ namespace flopoco {
         stringstream tname;
         tname << "GenericLut_" << name;
         srcFileName = "GenericLut";
-        setName( tname.str() );
+        setNameWithFreqAndUID( tname.str() );
         wIn_ = 0;
 
         for( unsigned int i = 0; i < equations_.size(); ++i ) {

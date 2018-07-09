@@ -28,7 +28,7 @@ namespace flopoco {
 		// definition of the name of the operator
 		ostringstream name;
 		name << "TargetModel";
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 		// Copyright 
 		setCopyrightString("Florent de Dinechin");
 

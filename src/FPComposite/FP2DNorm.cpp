@@ -24,7 +24,7 @@ namespace flopoco {
 					
 		ostringstream name;
 		name<<"FP2DNorm_"<<wE<<"_"<<wF<<"_uid"<<getNewUId(); 
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 	
 		setCopyrightString("Florent de Dinechin (2013)");		
 	

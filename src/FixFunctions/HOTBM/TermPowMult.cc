@@ -296,7 +296,7 @@ class TermPowMultTableInstance: public flopoco::Operator {
 	                          int alpha, int sigma, int wTable, int i,
 	                          long long int table[], std::string name)
 		:Operator (target) {
-		setName (name);
+		setNameWithFreqAndUID(name);
 		vhdl << "--------------------------------------------------------------------------------" << endl;
 		vhdl << "-- TermPowMult::Table instance for order-" << d << " term Q_" << (i+1) << "." << endl;
 		vhdl << "-- Decomposition:" << endl;
@@ -348,7 +348,7 @@ Component::Component (flopoco::Target* t, TermPowMult tpm, std::string name)
 	bool signTable = tpm.signTable;
 	Param& p = tpm.p;
 	Power* pow = tpm.pow;
-	setName (name);
+	setNameWithFreqAndUID(name);
 	using namespace flopoco;
 
 	for (int i = 0; i < tp.mM+tp.mT; i++) {

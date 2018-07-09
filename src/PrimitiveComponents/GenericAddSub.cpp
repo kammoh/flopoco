@@ -14,7 +14,7 @@ namespace flopoco {
         srcFileName="GenericAddSub";
 		ostringstream name;
         name << "GenericAddSub_w" << wIn << "_" << printFlags();
-        setName(name.str());
+        setNameWithFreqAndUID(name.str());
 
         addInput("iL",wIn);
         addInput("iR",wIn);

@@ -32,7 +32,7 @@ namespace flopoco{
 		setCopyrightString("Florent de Dinechin (2007)");
 		//the name of the Wrapped operator consists of the name of the operator to be
 		//	wrapped followd by _Wrapper
-		setName(op_->getName() + "_Wrapper");
+		setNameWithFreqAndUID(op_->getName() + "_Wrapper");
 
 		//this operator is a sequential one	even if Target is unpipelined
 		setSequential();

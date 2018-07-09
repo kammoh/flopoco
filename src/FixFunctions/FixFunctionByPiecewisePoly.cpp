@@ -77,7 +77,8 @@ namespace flopoco{
 		srcFileName="FixFunctionByPiecewisePoly";
 		
 		ostringstream name;
-		name<<"FixFunctionByPiecewisePoly"; 
+
+		name<<"FixFunctionByPiecewisePoly";
 		setNameWithFreqAndUID(name.str()); 
 
 

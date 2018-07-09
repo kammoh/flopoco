@@ -36,7 +36,7 @@ namespace flopoco{
 
 //		type 1 // X ge not(y)
 		srcFileName="IntComparatorSpecific";
-		setName(join("IntComparatorSpecific_", wIn_,"_",getNewUId()));
+		setNameWithFreqAndUID(join("IntComparatorSpecific_", wIn_,"_",getNewUId()));
 
 		// Set up the IO signals
 		addInput ( "X", wIn_,true);

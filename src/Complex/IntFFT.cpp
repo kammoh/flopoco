@@ -20,7 +20,7 @@ namespace flopoco{
 			name << "IntFFT_" << w << "_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "IntFFT_" << w << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 		
 		stages = log2(n);
 		

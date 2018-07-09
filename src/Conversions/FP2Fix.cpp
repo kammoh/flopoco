@@ -76,7 +76,7 @@ namespace flopoco{
       int absMSB = MSB>=0?MSB:-MSB;
       int absLSB = LSB>=0?LSB:-LSB;
       name<<"FP2Fix_" << wEI << "_" << wFI << (LSB<0?"M":"") << "_" << absLSB << "_" << (MSB<0?"M":"") << absMSB <<"_"<< (Signed?"S":"US") << "_" << (trunc_p==1?"T":"NT");
-      setName(name.str());
+      setNameWithFreqAndUID(name.str());
 
       setCopyrightString("Fabrizio Ferrandi (2012)");
 

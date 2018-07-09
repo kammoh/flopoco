@@ -108,7 +108,7 @@ Component::Component (flopoco::Target* t, PowerROM pr, std::string name)
 {
 	int d = pr.d;
 	PowerROMParam& pp = pr.pp;
-	setName (name);
+	setNameWithFreqAndUID(name);
 
 	vhdl << "--------------------------------------------------------------------------------" << endl;
 	vhdl << "-- PowerROM instance for order-" << d << " powering unit." << endl;

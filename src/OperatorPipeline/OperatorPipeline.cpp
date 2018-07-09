@@ -592,7 +592,7 @@ OperatorPipeline::OperatorPipeline(Target* target, string filename, bool fortran
 
     ostringstream complete_name;
     complete_name << "OperatorPipeline" << getNewUId();
-    setName(complete_name.str());
+    setNameWithFreqAndUID(complete_name.str());
     // r = x^2 + y^2 + z^2 example
     srcFileName = "OperatorPipeline";
 

@@ -263,7 +263,7 @@ Component::Component (flopoco::Target* t, PowerAdHoc pah, std::string name)
 	int d = pah.d;
 	int nPPLine = pah.nPPLine;
 	PowerAdHoc::tPPArray& ppa = pah.ppa; // would need a copy if pah is changed to const&
-	setName (name);
+	setNameWithFreqAndUID(name);
 	using namespace flopoco;
 
 	vhdl << "--------------------------------------------------------------------------------" << endl;

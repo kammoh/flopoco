@@ -47,7 +47,7 @@ namespace flopoco{
 		ostringstream name;
 
 		name <<"TaMaDiFIFO_w"<<w<<"_depth"<<n<<"_m"<<moreThan<<"_uid"<<getNewUId();
-		setName(name.str()); 
+		setNameWithFreqAndUID(name.str()); 
 
 		setCopyrightString("Bogdan Pasca (2011)");		
 

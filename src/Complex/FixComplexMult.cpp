@@ -41,7 +41,7 @@ namespace flopoco{
 			name << "FixedComplexMultiplier_" << wI << "_" << wO << "_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "FixedComplexMultiplier_" << wI << "_" << wO << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		addInput("Xr", 		wI, true);
 		addInput("Xi", 		wI, true);

@@ -18,7 +18,7 @@ namespace flopoco {
         stringstream tname;
         tname << "Xilinx_n2m_Decoder_" << name;
         srcFileName = "Xilinx_n2m_Decoder";
-        setName( tname.str() );
+        setNameWithFreqAndUID( tname.str() );
         check_groups( groups, n, m );
         addInput( "x_in", n );
         addOutput( "x_out", m );

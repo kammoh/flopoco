@@ -18,7 +18,7 @@ namespace flopoco{
 	{
 		ostringstream o;
 		o << "ComplexAdder_" << wE << "_" << wF;
-		setName(o.str());
+		setNameWithFreqAndUID(o.str());
 
 		addFPInput("Xi", wE, wF);
 		addFPInput("Xr", wE, wF);

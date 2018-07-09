@@ -30,7 +30,7 @@ namespace flopoco{
 		Operator(target), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		srcFileName="LongIntAdderMuxNetwork";
-		setName(join("LongIntAdderMuxNetwork_", wIn_));
+		setNameWithFreqAndUID(join("LongIntAdderMuxNetwork_", wIn_));
 
 		// Set up the IO signals
 		for (int i=0; i<2; i++)

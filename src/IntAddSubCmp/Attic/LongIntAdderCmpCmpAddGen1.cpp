@@ -35,7 +35,7 @@ namespace flopoco{
 		Operator(target), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		srcFileName="LongIntAdderCmpCmpAddGen1";
-		setName(join("LongIntAdderCmpCmpAddGen1_", wIn_));
+		setNameWithFreqAndUID(join("LongIntAdderCmpCmpAddGen1_", wIn_));
 //		int version = 1; /* this will go into the parameters */
 
 		// Set up the IO signals

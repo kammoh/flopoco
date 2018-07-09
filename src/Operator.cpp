@@ -3104,7 +3104,7 @@ namespace flopoco{
 		if(op != NULL){
 			op->setuid(getuid()); //the selected implementation becomes this operator
 
-			op->setName(getName());//accordingly set the name of the implementation
+			op->setNameWithFreqAndUID(getName());//accordingly set the name of the implementation
 
 			signalList_ = op->signalList_;
 			subComponentList_ = op->subComponentList_;

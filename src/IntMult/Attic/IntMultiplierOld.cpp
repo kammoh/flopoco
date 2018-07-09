@@ -193,7 +193,7 @@ namespace flopoco {
 		else
 			name << "LogicOnly_";
 		name << wXdecl << "_" << wYdecl <<"_" << (lsbWeightInBitHeap<0?"m":"") << abs(lsbWeightInBitHeap) << "_" << (signedIO?"signed":"unsigned") << "_uid"<<Operator::getNewUId();
-		setName ( name.str() );
+		setNameWithFreqAndUID ( name.str() );
 
 		REPORT(DEBUG, "Building " << name.str() );
 
@@ -1942,7 +1942,7 @@ namespace flopoco {
 		srcFileName="LogicIntMultiplier::SmallMultTable";
 		// No getUid() in the name: this kind of table should be added to the globalOpList
 		name <<"SmallMultTable"<< (negate?"M":"P") << dy << "x" << dx << "r" << wO << (signedX?"Xs":"Xu") << (signedY?"Ys":"Yu");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 	};
 
 

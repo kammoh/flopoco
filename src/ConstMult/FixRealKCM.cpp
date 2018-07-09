@@ -810,7 +810,7 @@ namespace flopoco{
 		ostringstream name; 
 		srcFileName="FixRealKCM";
 		name << mother->getName() << "_Table_" << index;
-		setName(name.str()); // This one not a setNameWithFreqAndUID
+		setName(name.str()); // This one not a setNameWithFreqAndUIDWithFreqAndUID
 		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team");
 		
 	}

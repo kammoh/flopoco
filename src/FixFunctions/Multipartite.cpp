@@ -235,7 +235,7 @@ namespace flopoco
 	{
 		stringstream name("");
 		name << "TOi_table_" << tableIndex;
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 	}
 #endif
 	
@@ -269,7 +269,7 @@ namespace flopoco
 	Multipartite::TIV::TIV(Multipartite *mp, Target* target, int wIn, int wOut, int min, int max):
 		Table(target, wIn, wOut, min, max), mp(mp)
 	{
-		setName("TIV_table");
+		setNameWithFreqAndUID("TIV_table");
 	}
 
 
@@ -325,7 +325,7 @@ namespace flopoco
 	{
 		stringstream name("");
 		name << "Compressed_TIV_decoder_" << getuid();
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Franck Meyer (2015)");
 

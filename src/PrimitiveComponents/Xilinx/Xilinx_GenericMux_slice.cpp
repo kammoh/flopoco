@@ -45,7 +45,7 @@ namespace flopoco {
         }
 
         namestr << "_slice_" << wIn;
-        setName( namestr.str() );
+        setNameWithFreqAndUID( namestr.str() );
 
         srcFileName = "Xilinx_GenericMux_slice";
         addOutput( "m_out", wIn );

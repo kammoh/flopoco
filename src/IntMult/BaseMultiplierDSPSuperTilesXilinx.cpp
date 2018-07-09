@@ -154,7 +154,7 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
     useNumericStd();
 
     char shapeAsChar = ((char) shape) + 'a' - 1; //convert enum to char
-    setName(string("BaseMultiplierDSPSuperTilesXilinxShape_") + string(1,shapeAsChar));
+    setNameWithFreqAndUID(string("BaseMultiplierDSPSuperTilesXilinxShape_") + string(1,shapeAsChar));
 
     if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by BaseMultiplierDSPSuperTilesXilinxOp, sorry");
 

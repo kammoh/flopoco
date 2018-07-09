@@ -32,7 +32,7 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
         name << heights[i];
 
     name << "_" << wOut;
-    setName(name.str());
+    setNameWithFreqAndUID(name.str());
 
 	declare("cc_di",4);
 	declare("cc_s",4);

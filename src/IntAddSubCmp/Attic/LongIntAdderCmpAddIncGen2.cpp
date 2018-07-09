@@ -34,7 +34,7 @@ namespace flopoco{
 		Operator(target), wIn_(wIn), inputDelays_(inputDelays)
 	{
 		srcFileName="LongIntAdderCmpAddIncGen2";
-		setName(join("LongIntAdderCmpAddIncGen2_", wIn_));
+		setNameWithFreqAndUID(join("LongIntAdderCmpAddIncGen2_", wIn_));
 
 		// Set up the IO signals
 		addInput ( "X" , wIn_);

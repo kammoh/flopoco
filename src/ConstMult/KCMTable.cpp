@@ -47,7 +47,7 @@ namespace flopoco{
 		srcFileName="KCMTable";
 		name <<"KCMTable_" << wIn << "_" << C << 
 			(inputSigned_?"_signed":"_unsigned");
-		setName(name.str());
+		setNameWithFreqAndUID(name.str());
 
 	}
 

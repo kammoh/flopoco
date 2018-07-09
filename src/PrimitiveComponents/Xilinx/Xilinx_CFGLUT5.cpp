@@ -20,7 +20,7 @@ namespace flopoco {
         //hasRegistersWithoutReset_
 
 		srcFileName="Xilinx_CFGLUT5";
-        setName("CFGLUT5");
+        setNameWithFreqAndUID("CFGLUT5");
         //setCopyrightString("ACME and Co 2010");
 
 

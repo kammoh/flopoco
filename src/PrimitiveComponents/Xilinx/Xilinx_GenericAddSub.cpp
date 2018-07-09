@@ -47,7 +47,7 @@ namespace flopoco {
 			name << "_dss";
 		}
 
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 		setCombinatorial();
 		addLUT( wIn + 1 );
 

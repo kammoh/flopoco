@@ -42,7 +42,7 @@ namespace flopoco {
 			name << "IntAdderClassical_" << wIn<<"_f"<<getTarget()->frequencyMHz()<<"_uid"<<getNewUId();
 		else
 			name << "IntAdderClassical_" << wIn<<"_comb"<<"_uid"<<getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 
 		inputsGotRegistered = false;
 		objectivePeriod	    = 1.0 / getTarget()->frequency();

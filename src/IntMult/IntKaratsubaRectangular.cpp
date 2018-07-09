@@ -16,7 +16,7 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
     ostringstream name;
     name << "IntKaratsubaRectangular_" << wX << "x" << wY;
     setCopyrightString("Martin Kumm");
-    setName(name.str());
+    setNameWithFreqAndUID(name.str());
 
     useNumericStd();
 

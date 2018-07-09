@@ -40,7 +40,7 @@ namespace flopoco {
 
 		ostringstream name;
 		name <<"IntMultiplier";
-		setName ( name.str() );
+		setNameWithFreqAndUID ( name.str() );
 
         // the addition operators need the ieee_std_signed/unsigned libraries
         useNumericStd();

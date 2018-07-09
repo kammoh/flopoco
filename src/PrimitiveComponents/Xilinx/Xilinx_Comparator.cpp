@@ -38,7 +38,7 @@ namespace flopoco {
         }
 
         name_str << wIn;
-        setName( name_str.str() );
+        setNameWithFreqAndUID( name_str.str() );
         setCombinatorial();
         REPORT( DEBUG , "Building" + this->getName() );
         srcFileName = "Xilinx_Comparator";

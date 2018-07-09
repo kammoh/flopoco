@@ -20,7 +20,7 @@ namespace flopoco{
 			name << "IntFFTLevelDIT2_" << w << "_level_" << k << "_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
 		else
 			name << "IntFFTLevelDIT2_" << w << "_level_" << k << "_uid" << getNewUId();
-		setName( name.str() );
+		setNameWithFreqAndUID( name.str() );
 		
 		for(int i=0; i<n; i++){
 			addInput(join("X", i, "i"), w, true);

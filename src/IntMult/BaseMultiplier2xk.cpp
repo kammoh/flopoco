@@ -58,7 +58,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
         in2 = "Y";
         name << "BaseMultiplier" << width << "x2";
     }
-    setName(name.str());
+    setNameWithFreqAndUID(name.str());
 
     addInput("X", wX, true);
     addInput("Y", wY, true);
