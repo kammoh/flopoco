@@ -1,0 +1,36 @@
+# every operator here is present in the interface,
+# iff it has the class method registerFactory 
+
+AutoTest
+Compressor
+BitheapTest
+Shifter
+LZOC
+LZOCShifterSticky
+ShiftReg
+IntAdder
+IntDualAddSub
+IntMultiAdder
+IntConstMult
+IntConstDiv
+DSPBlock
+IntMultiplier
+FixFunctionByTable
+FixFunctionBySimplePoly
+FixFunctionByPiecewisePoly
+#FixFunctionByMultipartiteTable
+PiecewisePolyApprox
+FixRealKCM
+TestBench
+Wrapper
+FPAdd
+FPDiv
+FixSOPC
+FixFIR
+FixIIR
+Xilinx_GenericAddSub
+Xilinx_Comparator
+Xilinx_TernaryAdd_2State
+XilinxGPC
+XilinxFourToTwoCompressor
+TutorialOperator

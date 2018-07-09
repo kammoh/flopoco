@@ -25,7 +25,7 @@
 namespace flopoco{
 
 	Wrapper::Wrapper(Target* target, Operator *op):
-		Operator(target), op_(op)
+		Operator(nullptr, target), op_(op)
 	{
 		string idext;
 
@@ -67,7 +67,7 @@ namespace flopoco{
 		
 
 		// The VHDL for the instance
-		vhdl << instance(op, "test");
+		vhdl << instance(op, "test", false);
 
 		// copy the outputs
 		for(int i=0; i<op->getIOListSize(); i++){

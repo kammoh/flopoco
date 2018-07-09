@@ -55,6 +55,7 @@ namespace flopoco{
 		
 		int    getIntMultiplierCost(int wInX, int wInY);
 		long   sizeOfMemoryBlock();
+		double tableDelay(int wIn, int wOut, bool logicTable); 
 		DSP*   createDSP(); 
 		int    getEquivalenceSliceDSP();
 		int    getNumberOfDSPs();

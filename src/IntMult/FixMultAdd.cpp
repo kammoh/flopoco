@@ -12,6 +12,12 @@
 */
 
 
+
+/* TODO before there is any hope that it works:
+	 - add to IntMultiplier the version that adds a multiplier to a bit heap
+	 - and then more
+*/
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -32,9 +38,9 @@ namespace flopoco {
 
 
 	// The constructor for a stand-alone operator
-	FixMultAdd::FixMultAdd(Target* target, Signal* x_, Signal* y_, Signal* a_, int outMSB_, int outLSB_,
-												 bool enableSuperTiles_, map<string, double> inputDelays_):
-		Operator ( target, inputDelays_ ),
+	FixMultAdd::FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x_, Signal* y_, Signal* a_,
+												 int outMSB_, int outLSB_, bool enableSuperTiles_):
+		Operator (parentOp, target),
 		x(x_), y(y_), a(a_),
 		outMSB(outMSB_),
 		outLSB(outLSB_),
@@ -52,13 +58,13 @@ namespace flopoco {
 		wY = y->MSB() - y->LSB() +1;
 		wA = a->MSB() - a->LSB() +1;
 
-		signedIO = (x->isFixSigned() && y->isFixSigned());
+		signedIO = (x->isSigned() && y->isSigned());
 		// TODO: manage the case when one is signed and not the other.
-		if((x->isFixSigned() && !y->isFixSigned()) || (!x->isFixSigned() && y->isFixSigned()))
+		if((x->isSigned() && !y->isSigned()) || (!x->isSigned() && y->isSigned()))
 		{
 			THROWERROR("Different signs: x is "
-								 << (x->isFixSigned()?"":"un")<<"signed and y is "
-								 << (y->isFixSigned()?"":"un")<<"signed. This case is currently not supported." );
+								 << (x->isSigned()?"":"un")<<"signed and y is "
+								 << (y->isSigned()?"":"un")<<"signed. This case is currently not supported." );
 		}
 
 		// Set the operator name
@@ -71,6 +77,9 @@ namespace flopoco {
 			REPORT(DEBUG, "Building " << name.str());
 		}
 
+		THROWERROR("FixMultAdd needs more work");
+#if 0
+		
 		// Set up the IO signals
 		xname="X";
 		yname="Y";
@@ -178,7 +187,6 @@ namespace flopoco {
 		bitHeap = new BitHeap(this,								//parent operator
 							  wOut+g,							//size of the bit heap
 							  enableSuperTiles);				//whether super-tiles are used
-		bitHeap->setSignedIO(signedIO);
 
 		//FIXME: are the guard bits included in the bits output by the multiplier?
 		//create the multiplier
@@ -187,12 +195,13 @@ namespace flopoco {
 		if(pMSB >= outLSB-g)
 		{
 			mult = new IntMultiplier(this,							//parent operator
-									 bitHeap,						//the bit heap that performs the compression
-									 getSignalByName(xname),		//first input to the multiplier (a signal)
-									 getSignalByName(yname),		//second input to the multiplier (a signal)
-									 pLSB-(outLSB-g),				//offset of the LSB of the multiplier in the bit heap
-									 false /*negate*/,				//whether to subtract the result of the multiplication from the bit heap
-									 signedIO);
+															 target,
+															 bitHeap,						//the bit heap that performs the compression
+															 getSignalByName(xname),		//first input to the multiplier (a signal)
+															 getSignalByName(yname),		//second input to the multiplier (a signal)
+															 pLSB-(outLSB-g),				//offset of the LSB of the multiplier in the bit heap
+															 false /*negate*/,				//whether to subtract the result of the multiplication from the bit heap
+															 signedIO);
 		}
 		//cerr << "After " << getCurrentCycle() << endl;
 
@@ -250,6 +259,8 @@ namespace flopoco {
 		//assign the output
 		vhdl << tab << rname << " <= " << bitHeap->getSumName() << range(wOut+g-1, g) << ";" << endl;
 		
+#endif
+
 	}
 
 
@@ -258,12 +269,16 @@ namespace flopoco {
 	FixMultAdd::~FixMultAdd()
 	{
 		if(mult)
-			free(mult);
+			delete mult;
+#if 0 // Plug me back some day !
 		if(plotter)
-			free(plotter);
+			delete plotter;
+#endif
 	}
 
 
+	
+#if 0 // This is probably useless now, and should be replaced with the standard interface
 	FixMultAdd* FixMultAdd::newComponentAndInstance(
 													Operator* op,
 													string instanceName,
@@ -291,13 +306,14 @@ namespace flopoco {
 		op->vhdl << op->instance(f, instanceName);
 		// hence a sign mismatch in next iteration.
 		
-		op-> syncCycleFromSignal(join(rSignalName,"_slv")); //, f->getOutputDelay("R"));
 		op->vhdl << tab << op->declareFixPoint(rSignalName, f->signedIO, rMSB, rLSB)
 				<< " <= " <<  (f->signedIO ? "signed(" : "unsigned(") << (join(rSignalName, "_slv")) << ");" << endl;
 
 		return f;
 	}
 
+
+#endif
 
 
 

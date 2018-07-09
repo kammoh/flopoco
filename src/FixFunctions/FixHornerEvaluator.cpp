@@ -134,10 +134,11 @@ namespace flopoco{
 		setNameWithFreqAndUID("FixHornerEvaluator");		
 		setCopyrightString("F. de Dinechin (2014)");
 		srcFileName="FixHornerEvaluator";
-
 		if(!signedXandCoeffs)
 			REPORT(0,"signedXandCoeffs=false, this code has probably never been tested in this case. If it works, please remove this warning. If it doesn't, we deeply apologize and invite you to fix it.");
 
+		if(roundingErrorBudget==-1)
+			roundingErrorBudget = exp2(-lsbOut);
 			// computing the coeff sizes
 		for (int i=0; i<=degree; i++)
 			coeffSize.push_back(msbCoeff[i]-lsbCoeff+1); // see FixConstant.hpp for the constant format
@@ -156,7 +157,7 @@ namespace flopoco{
 
 		// declaring outputs
 		addOutput("R", msbOut-lsbOut+1);
-		//		setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay() );
+		//		setCriticalPath( getMaxInputDelays(inputDelays) + target->localWireDelay() );
 
 }
 
@@ -181,22 +182,22 @@ namespace flopoco{
 
 			//  assemble faithful operators (either FixMultAdd, or truncated mult)
 
-			if(getTarget()->plainVHDL()) {	// stupid pipelining here
+			if(getTarget()->plainVHDL()) {	// no pipelining here
 				vhdl << tab << declareFixPoint(join("P", i), true, msbP[i],  lsbP[i])
 						 <<  " <= "<< join("XsTrunc", i) <<" * Sigma" << i+1 << ";" << endl;
 
 				// Align before addition
 				resizeFixPoint(join("Ptrunc", i), join("P", i), msbSigma[i], lsbSigma[i]-1);
 				resizeFixPoint(join("Aext", i), join("As", i), msbSigma[i], lsbSigma[i]-1);
-				setCycle(getCurrentCycle() + getTarget()->plainMultDepth(1-lsbXTrunc[i], msbSigma[i+1]-lsbSigma[i+1]+1) );
 
 				vhdl << tab << declareFixPoint(join("SigmaBeforeRound", i), true, msbSigma[i], lsbSigma[i]-1)
 						 << " <= " << join("Aext", i) << " + " << join("Ptrunc", i) << "+'1';" << endl;
 				resizeFixPoint(join("Sigma", i), join("SigmaBeforeRound", i), msbSigma[i], lsbSigma[i]);
-				nextCycle();
 			}
 
 			else { // using FixMultAdd
+				THROWERROR("Sorry, use the plainVHDL option until we revive FixMultAdd");
+#if 0
 				//REPORT(DEBUG, "*** iteration " << i << );
 				FixMultAdd::newComponentAndInstance(this,
 																						join("Step",i),     // instance name
@@ -206,9 +207,8 @@ namespace flopoco{
 																						join("Sigma", i),   // result
 																						msbSigma[i], lsbSigma[i]
 																						);
+#endif
 			}
-			syncCycleFromSignal(join("Sigma", i));
-			nextCycle();
 		}
 		if(finalRounding)
 			resizeFixPoint("Ys", "Sigma0",  msbOut, lsbOut);
@@ -218,14 +218,14 @@ namespace flopoco{
 	}
 
 
-	// A naive constructor that does a worst case analysis of datapath looing onnly at the coeff sizes
-	FixHornerEvaluator::FixHornerEvaluator(Target* target,
+	// A naive constructor that does a worst case analysis of datapath looking onnly at the coeff sizes
+	FixHornerEvaluator::FixHornerEvaluator(OperatorPtr parentOp, Target* target,
 																				 int lsbIn_, int msbOut_, int lsbOut_,
 																				 int degree_, vector<int> msbCoeff_, int lsbCoeff_,
 																				 double roundingErrorBudget_,
 																				 bool signedXandCoeffs_,
 																				 bool finalRounding_, map<string, double> inputDelays)
-	: Operator(target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
+	: Operator(parentOp, target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
 		msbCoeff(msbCoeff_), lsbCoeff(lsbCoeff_),
 		roundingErrorBudget(roundingErrorBudget_) ,signedXandCoeffs(signedXandCoeffs_),
 		finalRounding(finalRounding_)
@@ -259,14 +259,14 @@ namespace flopoco{
 
 
 	// An optimized constructor if the caller has been able to compute the signs and MSBs of the sigma terms
-	FixHornerEvaluator::FixHornerEvaluator(Target* target,
+	FixHornerEvaluator::FixHornerEvaluator(OperatorPtr parentOp, Target* target,
 																				 int lsbIn_, int msbOut_, int lsbOut_,
 																				 int degree_, vector<int> msbCoeff_, int lsbCoeff_,
 																				 vector<int> sigmaSign_, vector<int> sigmaMSB_,
 																				 double roundingErrorBudget_,
 																				 bool signedXandCoeffs_,
 																				 bool finalRounding_, map<string, double> inputDelays)
-	: Operator(target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
+	: Operator(parentOp, target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
 		msbCoeff(msbCoeff_), lsbCoeff(lsbCoeff_),
 		roundingErrorBudget(roundingErrorBudget_) ,
 		signedXandCoeffs(signedXandCoeffs_),

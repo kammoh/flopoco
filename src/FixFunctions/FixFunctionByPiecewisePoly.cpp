@@ -30,6 +30,7 @@
 
 
 #include "FixFunctionByPiecewisePoly.hpp"
+#include "Table.hpp"
 #include "FixFunctionByTable.hpp"
 #include "FixHornerEvaluator.hpp"
 
@@ -64,8 +65,8 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FixFunctionByPiecewisePoly::FixFunctionByPiecewisePoly(Target* target, string func, int lsbIn_, int msbOut_, int lsbOut_, int degree_, bool finalRounding_, double approxErrorBudget_, map<string, double> inputDelays):
-		Operator(target, inputDelays), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_), finalRounding(finalRounding_), approxErrorBudget(approxErrorBudget_){
+	FixFunctionByPiecewisePoly::FixFunctionByPiecewisePoly(OperatorPtr parentOp, Target* target, string func, int lsbIn_, int msbOut_, int lsbOut_, int degree_, bool finalRounding_, double approxErrorBudget_):
+		Operator(parentOp, target), degree(degree_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_), finalRounding(finalRounding_), approxErrorBudget(approxErrorBudget_){
 
 		if(finalRounding==false){
 			THROWERROR("FinalRounding=false not implemented yet" );
@@ -76,10 +77,10 @@ namespace flopoco{
 		srcFileName="FixFunctionByPiecewisePoly";
 		
 		ostringstream name;
-		name<<"FixFunctionByPiecewisePoly_"<<getNewUId(); 
+
+		name<<"FixFunctionByPiecewisePoly";
 		setNameWithFreqAndUID(name.str()); 
 
-		setCriticalPath(getMaxInputDelays(inputDelays));
 
 		setCopyrightString("Florent de Dinechin (2014)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n"); 
@@ -92,12 +93,16 @@ namespace flopoco{
 
 		if(degree==0){ // This is a simple table
 			REPORT(DETAILED, "Degree 0: building a simple table");
-			FixFunctionByTable* table=new FixFunctionByTable(target, func, false, lsbIn, msbOut, lsbOut);
-			addSubComponent(table);
-			inPortMap(table, "X", "X");
-			outPortMap(table, "Y", "YR");
-			vhdl << instance(table, "simpleTable") << endl;
-			syncCycleFromSignal("YR");
+			ostringstream params;
+			params << "f="<<func
+						 << "signedIn=false" << " lsbIn=" << lsbIn
+						 << " lsbOut=" << lsbOut << " msbOut=" << msbOut; 
+			newInstance("FixFunctionByTable",
+									"simpleTable",
+									params.str(),
+									"X=>X",
+									"Y=>YR" );
+
 			vhdl << tab << "Y <= YR;" << endl; 
 		}
 		else{
@@ -120,8 +125,6 @@ namespace flopoco{
 
 			// Build the coefficient table out of the vector of polynomials. This is also where we add the final rounding bit
 			buildCoeffTable();
-			GenericTable* coeffTable = new GenericTable(target, alpha, polyTableOutputSize, coeffTableVector); 
-			addSubComponent(coeffTable);
 
 			// What remains of the error budget for the evaluation phase ?
 			double roundingErrorBudget=exp2(lsbOut-1)-polyApprox->approxErrorBound;
@@ -133,11 +136,19 @@ namespace flopoco{
 			vhdl << tab << declare("Z", wX-alpha)  << " <= X" << range(wX-alpha-1, 0) << ";" << endl;
 			vhdl << tab << declare("Zs", wX-alpha)  << " <= (not Z(" << wX-alpha-1 << ")) & Z" << range(wX-alpha-2, 0) << "; -- centering the interval" << endl;
 
+#if 0
+			
 			inPortMap(coeffTable, "X", "A");
 			outPortMap(coeffTable, "Y", "Coeffs");
 			vhdl << instance(coeffTable, "coeffTable") << endl;
+#endif
+			// This is the same order as newInstance() would do, but does not require to write a factory for this Operator
+			schedule();
+			inPortMap(nullptr, "X", "A");
+			outPortMap(nullptr, "Y", "Coeffs");
+			Table* coeffTable = new Table(parentOp, target, coeffTableVector, "coeffTable", alpha, polyTableOutputSize); 
+			vhdl << instance(coeffTable, "coeffTable", false);
 
-			syncCycleFromSignal("Coeffs");
 			// Split the table output into each coefficient
 			int currentShift=0;
 			for(int i=polyApprox->degree; i>=0; i--) {
@@ -163,6 +174,8 @@ namespace flopoco{
 
 
 			REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
+
+#if 0
 			// This builds an architecture such as eps_finalround < 2^(lsbOut-1) and eps_round<2^(lsbOut-2)
 #if 0 // This constructor computes sigma and msbs only out of the formats
 			FixHornerEvaluator* horner = new FixHornerEvaluator(target, lsbIn+alpha+1, msbOut, lsbOut, degree, polyApprox->MSB, polyApprox->LSB, roundingErrorBudget);		
@@ -177,16 +190,34 @@ namespace flopoco{
 				inPortMap(horner,  join("A",i),  join("A",i));
 			}
 			vhdl << instance(horner, "horner") << endl;
-			syncCycleFromSignal("Ys");
-		
-			vhdl << tab << "Y <= " << "std_logic_vector(Ys);" << endl;
+#endif
+
+		// This is the same order as newwInstance() would do, but does not require to write a factory for this Operator
+		schedule();
+		OperatorPtr h = nullptr;
+		inPortMap(h, "X", "Zs");
+		for(int i=0; i<=polyApprox->degree; i++) {
+			inPortMap(h,  join("A",i),  join("A",i));
+		}
+		outPortMap(h, "R", "Ys");
+		h = new  FixHornerEvaluator(this, target, 
+																lsbIn+alpha+1,
+																msbOut,
+																lsbOut,
+																degree, 
+																polyApprox->MSB, 
+																polyApprox->LSB // it is the smaller LSB
+																);
+		vhdl << instance(h, "horner", false);
+			
+		vhdl << tab << "Y <= " << "std_logic_vector(Ys);" << endl;
 		}
 	}
 
 
 
 	FixFunctionByPiecewisePoly::~FixFunctionByPiecewisePoly() {
-		free(f);
+		delete f;
 	}
 
 
@@ -376,7 +407,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parsePositiveInt(args, "d", &d);
 		UserInterface::parseFloat(args, "approxErrorBudget", &approxErrorBudget);
-		return new FixFunctionByPiecewisePoly(target, f, lsbIn, msbOut, lsbOut, d, true, approxErrorBudget);
+		return new FixFunctionByPiecewisePoly(parentOp, target, f, lsbIn, msbOut, lsbOut, d, true, approxErrorBudget);
 	}
 
 	void FixFunctionByPiecewisePoly::registerFactory(){

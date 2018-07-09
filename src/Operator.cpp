@@ -457,22 +457,6 @@ namespace flopoco{
 	}
 
 
-	// ????? TODO remove?
-	void Operator::setName(std::string prefix, std::string postfix){
-		ostringstream pr, po;
-
-		if (prefix.length() > 0)
-			pr << prefix << "_";
-		else
-			pr << "";
-		if (postfix.length() > 0)
-			po << "_" << postfix;
-		else
-			po << "";
-
-		uniqueName_ = pr.str() + uniqueName_ + po.str();
-	}
-
 	void Operator::setName(std::string operatorName){
 		uniqueName_ = operatorName;
 	}
@@ -1417,9 +1401,9 @@ namespace flopoco{
         //parse the input port mappings
         parsePortMappings(instance, inPortMaps, 0);
         //parse the constant input port mappings, if there are any
-		parsePortMappings(instance, inPortMapsCst, 1);
-		//parse the input port mappings
-		parsePortMappings(instance, outPortMaps, 2);
+				parsePortMappings(instance, inPortMapsCst, 1);
+				//parse the input port mappings
+				parsePortMappings(instance, outPortMaps, 2);
 
         REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
         for (auto i: parametersVector){

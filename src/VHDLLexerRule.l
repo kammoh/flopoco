@@ -180,10 +180,10 @@ label					  ({identifier}{space_character}*":")
 ({w}{a}{i}{t}) |
 ({w}{h}{i}{l}{e}) |
 ({x}{n}{o}{r}) |
-({x}{o}{r}) { 
+({x}{o}{r}) |
+({s}{t}{d}_{l}{o}{g}{i}{c}_{v}{e}{c}{t}{o}{r}) { 
     (*yyextra->os) << yytext;
 }
-
 
 "=>" { 
 	(*yyextra->os) << yytext;

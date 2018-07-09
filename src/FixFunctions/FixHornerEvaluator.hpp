@@ -18,7 +18,6 @@
 
 #include "Operator.hpp"
 #include "Table.hpp"
-#include "DualTable.hpp"
 
 
 namespace flopoco{
@@ -45,7 +44,7 @@ namespace flopoco{
      */
 
 																				
-    FixHornerEvaluator(Target* target, 
+    FixHornerEvaluator(OperatorPtr parentOp, Target* target, 
 											 int lsbIn,
 											 int msbOut,
 											 int lsbOut,
@@ -59,7 +58,7 @@ namespace flopoco{
 
 		
 		/** An optimized constructor if the caller has been able to compute the signs and MSBs of the sigma terms */
-    FixHornerEvaluator(Target* target, 
+    FixHornerEvaluator(OperatorPtr parentOp, Target* target, 
 											 int lsbIn,
 											 int msbOut,
 											 int lsbOut,

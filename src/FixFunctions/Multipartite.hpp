@@ -7,7 +7,6 @@
 #include "FixFunction.hpp"
 #include "../Table.hpp"
 #include "../Operator.hpp"
-#include "GenericTable.hpp"
 
 
 using namespace std;
@@ -29,7 +28,11 @@ namespace flopoco
 
 			//------------------------------------------------------------------------------------- Public classes
 
-			/**
+
+		mpz_class TOiFunction(int x, int ti);
+
+#if 0
+	/**
 			 * @brief The TOi class : Used to store one of the multipartite method TO tables
 			 */
 			class TOi : public Table
@@ -42,7 +45,7 @@ namespace flopoco
 					Multipartite* mp;
 					int ti;
 			};
-
+#endif
 			/**
 			 * @brief The TIV class : Used to store the multipartite method TIV table
 			 */
@@ -63,7 +66,7 @@ namespace flopoco
 			class compressedTIV : public Operator
 			{
 				public:
-					compressedTIV(Target* target, GenericTable* compressedAlpha, GenericTable* compressedout, int s, int wOC, int wI, int wO);
+				compressedTIV(OperatorPtr parentOp, Target* target, Table* compressedAlpha, Table* compressedout, int s, int wOC, int wI, int wO);
 
 					int wO_corr;
 			};
@@ -109,7 +112,7 @@ namespace flopoco
 			compressedTIV* cTiv;
 
 			/** The m Tables of Offset , just as the ARITH 15 article */
-			vector<TOi*> toi;
+			vector<Table*> toi;
 
 			double mathError;
 

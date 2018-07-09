@@ -249,6 +249,12 @@ THIS INCLUDES WRITING ITS AUTOTEST
 
 		UserDefinedOperator
 		
+* Bugs
+** ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="sin(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
+The parity problem leads to wrong alignment.
+Nobody should do this if they have read the Muller book, so... people will try this and it is a bug
+** ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="exp(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
+
 * Release-critical (current regressions):
 ** FPPipeline
 ** lut_rng

@@ -29,60 +29,6 @@ using namespace std;
 
 namespace flopoco{
 
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-
-	// The classical table for the linear architecture
-
-	IntConstDiv::EuclideanDivTable::EuclideanDivTable(Target* target, int d_, int alpha_, int rSize_) :
-  	Table(target, alpha_+rSize_, alpha_+rSize_, 0, -1, 1), d(d_), alpha(alpha_), rSize(rSize_) {
-		ostringstream name;
-		srcFileName="IntConstDiv::EuclideanDivTable";
-		name <<"EuclideanDivTable_" << d << "_" << alpha ;
-		setNameWithFreqAndUID(name.str());
-	};
-
-	mpz_class IntConstDiv::EuclideanDivTable::function(int x){
-		// machine integer arithmetic should be safe here
-		if (x<0 || x>=(1<<(alpha+rSize))){
-			ostringstream e;
-			e << "ERROR in IntConstDiv::EuclideanDivTable::function, argument out of range" <<endl;
-			throw e.str();
-		}
-
-		int q = x/d;
-		int r = x%d;
-		return mpz_class((q<<rSize) + r);
-	};
-
-
-
-	IntConstDiv::CBLKTable::CBLKTable(Target* target, int level, int d, int alpha, int rSize, int rho):
-		// Sizes below assume alpha>=rSize
-  	Table(target, (level==0? alpha: 2*rSize), (level==0? rho+rSize: (1<<(level-1))*alpha+rSize), 0, -1, 1), level(level), d(d), alpha(alpha), rSize(rSize), rho(rho) {
-		ostringstream name;
-		srcFileName="IntConstDiv::CLBKTable";
-		name <<"CLBKTable_" << d << "_" << alpha << "_l" << level ;
-		setNameWithFreqAndUID(name.str());
-	}
-
-	mpz_class IntConstDiv::CBLKTable::function(int x){
-		if(level==0){ // the input is one radix-2^alpha digit 
-			mpz_class r = x % d;
-			mpz_class q = x / d;
-			return (q<<rSize) + r;
-		}
-		else{ // the input consists of two remainders
-			int r0 = x & ((1<<rSize)-1);
-			int r1 = x >> rSize;
-			mpz_class y = mpz_class(r0) + (mpz_class(r1) << alpha*((1<<(level-1))) );
-			mpz_class r = y % d;
-			mpz_class q = y / d;
-			// cout << getName() << "   x=" << x << "  r0=" << r0 << " r1=" << r1 << "  y=" << y << " r=" << r << "  q=" << q << endl;
-			return (q<<rSize) + r;
-		}
-	}
-		
-#else
 
 	vector<mpz_class>  IntConstDiv::euclideanDivTable(int d, int alpha, int rSize) { 		// machine integer arithmetic should be safe here
 		vector<mpz_class>  result;
@@ -119,7 +65,6 @@ namespace flopoco{
 		}
 		return result;
 	}		
-#endif // deprecated overloading of Table method
 
 
 		
@@ -153,7 +98,7 @@ namespace flopoco{
 	}
 		
 
-	IntConstDiv::IntConstDiv(Target* target, int wIn_, vector<int> divisors, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
+	IntConstDiv::IntConstDiv(OperatorPtr parentOp, Target* target, int wIn_, vector<int> divisors, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
 		: Operator(target),  wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
 	{
 		setCopyrightString("F. de Dinechin (2016)");
@@ -286,7 +231,7 @@ namespace flopoco{
 
 
 	
-	IntConstDiv::IntConstDiv(Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
+	IntConstDiv::IntConstDiv(OperatorPtr parentOp, Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
 		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
 	{
 		setCopyrightString("F. de Dinechin (2011, 2016)");
@@ -295,8 +240,6 @@ namespace flopoco{
 		if ((d&1)==0) {
 			THROWERROR("Divisor is even! Please manage this outside IntConstDiv");
 		}
-
-
 
 		//		if((architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) || (architecture==INTCONSTDIV_LOGARITHMIC_ARCHITECTURE)) {
 		rSize = intlog2(d-1);
@@ -395,26 +338,15 @@ namespace flopoco{
 		if(architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-			EuclideanDivTable* table;
-			table = new EuclideanDivTable(target, d, alpha, rSize);
-			useSoftRAM(table);
-			addSubComponent(table);
-			double tableDelay=table->getOutputDelay("Y");
-#else // new Table interface
 			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
-			Table* table = new Table(this, target, tableContent, alpha+rSize, alpha+rSize );
-			table->setNameWithFreq("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
+			Table* table = new Table(this, target, tableContent, "", alpha+rSize, alpha+rSize );
+			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
 			table->setShared();
-#endif // deprecated overloading of Table method
 			string ri, xi, ini, outi, qi;
 			ri = join("r", xDigits);
 			vhdl << tab << declare(ri, rSize) << " <= " << zg(rSize, 0) << ";" << endl;
 
 			for (int i=xDigits-1; i>=0; i--) {
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-				manageCriticalPath(tableDelay);
-#endif
 				//			cerr << i << endl;
 				xi = join("x", i);
 				if(i==xDigits-1 && xPadBits!=0) // at the MSB, pad with 0es
@@ -466,20 +398,10 @@ namespace flopoco{
 
 
 			/// First level table
-			
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-			CBLKTable* table;
-
-			// level 0
-			table = new CBLKTable(target, 0, d, alpha, rSize, rho);
-			useSoftRAM(table);
-			addSubComponent(table);
-#else  // deprecated overloading of Table method
 			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, rSize);
-			Table* table = new Table(this, target, tableContent, alpha, rho+rSize);
+			Table* table = new Table(this, target, tableContent, "", alpha, rho+rSize);
 			table->setShared();
-			table->setNameWithFreq("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
-#endif  // deprecated overloading of Table method
+			table->setNameWithFreqAndUID("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 			//			double tableDelay=table->getOutputDelay("Y");
 			for (int i=0; i<xDigits; i++) {
 				xi = join("x", i);
@@ -523,19 +445,12 @@ namespace flopoco{
 				REPORT(INFO, "level=" << level << "  rLevelSize=" << rLevelSize << "  qLevelSize=" << qLevelSize);
 
 
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-				table = new CBLKTable(target, level, d, alpha, rSize, rho);
-				useSoftRAM(table);
-				addSubComponent(table);
-
-#else  // deprecated overloading of Table method
 				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, rSize, rho);
-				Table* table = new Table(this, target, tableContent,
+				Table* table = new Table(this, target, tableContent, "",
 																 2*rSize, /* wIn*/
 																 (1<<(level-1))*alpha+rSize /*wOut*/  );
 				table->setShared();
-				table->setNameWithFreq("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
-#endif
+				table->setNameWithFreqAndUID("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 				for(int i=0; i<rLevelSize; i++) {
 					string tableNumber = "l" + to_string(level) + "_" + to_string(i);
 					string tableName = "table_" + tableNumber;
@@ -566,11 +481,7 @@ namespace flopoco{
 						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " rSize=" << rSize );
 						vhdl << tab << declare(q, subQSize) << " <= " << zg(subQSize - (table->wOut-rSize)) << " & " << out << range (table->wOut-1, rSize) << ";"  << endl;
 						// TODO simplify the content of the zg above
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-						vhdl << tab << declare(qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
-#else
 						vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
-#endif
 					}
 					else if (i==qLevelSize-1){ // because i can reach qLevelSize when rlevelSize=qLevelSize+1, but then we have nothing to do
 						// Lefttmost chunk
@@ -583,18 +494,10 @@ namespace flopoco{
 						else
 							vhdl << out << range (subQSize+rSize-1, rSize) << ";"  << endl;
 						if( (subQSize <= (1<<(level-1))*alpha) ) {
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-							vhdl << tab << declare(qs, subQSize) << " <= " << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
-#else
 							vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + " << qsr << ";  -- partial quotient so far"  << endl;
-#endif
 						}
 						else {
-#if INTCONSTDIV_OLDTABLEINTERFACE // deprecated overloading of Table method
-							vhdl << tab << declare(qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
-#else
 							vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
-#endif
 						}
 
 						
@@ -656,14 +559,14 @@ namespace flopoco{
 			mpz_class tdiv = (mpz_class(1)<<optkp) / d; // This is the floor
 			
 			mpz_class ap = (tmod==0? tdiv : tdiv+1);
-			IntConstMult* multp = new IntConstMult(target, wIn, ap);
+			IntConstMult* multp = new IntConstMult(parentOp, target, wIn, ap);
 			int costp = multp -> getArea(); 
 			
 			// Attempt to build the optkm
 			// We need the ceil of 2^k/d
 			mpz_class am = (mpz_class(1)<<optkm) / d; // This is the floor
 
-			IntConstMult* multm = new IntConstMult(target, wIn, am);
+			IntConstMult* multm = new IntConstMult(parentOp, target, wIn, am);
 			// TODO this interface is ugly
 			int costm = multm -> getArea() + wIn; 
 
@@ -788,10 +691,10 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "computeRemainder", &computeRemainder);
 		
 		if(divisors.size()==1) {
-			return new IntConstDiv(target, wIn, divisors[0], alpha, arch, computeQuotient, computeRemainder);
+			return new IntConstDiv(parentOp, target, wIn, divisors[0], alpha, arch, computeQuotient, computeRemainder);
 		}
 		else { // composite divisor
-			return new IntConstDiv(target, wIn, divisors, alpha, arch, computeQuotient, computeRemainder);
+			return new IntConstDiv(parentOp, target, wIn, divisors, alpha, arch, computeQuotient, computeRemainder);
 		}
 	}
 

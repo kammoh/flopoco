@@ -1,6 +1,9 @@
 #include "UserInterface.hpp"
+#include "Targets/AllTargetsHeaders.hpp"
+#include "TestBenches/TestBench.hpp"
+
 #include "AutoTest/AutoTest.hpp"
-#include "FloPoCo.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
@@ -19,7 +22,8 @@ namespace flopoco
 	const char COLOR_REVERSEVIDEO_BLACK_GREEN[] = { 0x1b, '[', '7', ';', '3', '0', ';', '4', '2', 'm', 0 };
 	const char COLOR_BOLD_MAGENTA_NORMAL[] = { 0x1b, '[', '1', ';', '3', '5', ';', '4', '9', 'm', 0 };
 
-	const char* defaultFPGA="Zynq7000";
+	//	const char* defaultFPGA="Zynq7000";
+	const char* defaultFPGA="kintex7";
 
 	// Allocation of the global objects
 	string UserInterface::outputFileName;

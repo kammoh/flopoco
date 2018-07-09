@@ -1,10 +1,6 @@
 #ifndef FixFunctionBySimplePoly_HPP
 #define FixFunctionBySimplePoly_HPP
 #include <vector>
-#include <sstream>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
 
 #include "../Operator.hpp"
 #include "FixFunction.hpp"
@@ -31,7 +27,7 @@ namespace flopoco{
 			 This would require quite a lot of work for non-trivial functions (isolating roots of the derivative etc).
 			 So this is currently left to the user.
 		 */
-		FixFunctionBySimplePoly(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, bool finalRounding = true,  map<string, double> inputDelays = emptyDelayMap);
+		FixFunctionBySimplePoly(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, bool finalRounding = true);
 
 		/**
 		 * FixFunctionBySimplePoly destructor
@@ -41,6 +37,8 @@ namespace flopoco{
 		void emulate(TestCase * tc);
 
 		void buildStandardTestCases(TestCaseList* tcl);
+
+		static TestList unitTest(int index);
 
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
 

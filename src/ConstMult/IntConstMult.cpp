@@ -172,13 +172,13 @@ namespace flopoco{
 	 * Starting from the leaves, we accumulate partial delays until target_period is reached.
 	 * Then pipeline level will be inserted.
 	 */
-	void IntConstMult::build_pipeline(ShiftAddOp* sao, double &partial_delay) {
+	void IntConstMult::build_pipeline(ShiftAddOp* sao) {
 		string iname, jname, isignal, jsignal;
-		double idelay=0,jdelay=0, max_children_delay;
-		int size, isize, jsize, shift, adder_size; 
 		bool use_pipelined_adder;
 		IntAdder* adder=0;
+		int size, isize, jsize, shift;
 
+		
 		if (sao==NULL)
 			return;
 		else {
@@ -199,8 +199,6 @@ namespace flopoco{
 
 			switch(op) {
 				case X:
-					partial_delay=0;
-					setCycle(0, false);
 					return;
 
 				case Add:
@@ -210,49 +208,21 @@ namespace flopoco{
 					isize = sao->i->size;
 					jsize = sao->j->size;
 
-					build_pipeline(sao->i, idelay);
+					build_pipeline(sao->i);
 					if(sao->i != sao->j) {
-						build_pipeline(sao->j, jdelay);
+						build_pipeline(sao->j);
 					}
 					iname = sao->i->name; 
 					jname = sao->j->name; 
 
-					adder_size = sao->cost_in_full_adders+1;
+					//					adder_size = sao->cost_in_full_adders+1;
 					vhdl << endl << tab << "-- " << *sao <<endl; // comment what we're doing
 
-					max_children_delay = max(idelay,jdelay);
 
 					// Now decide what kind of adder we will use, and compute the remaining delay
 
 					use_pipelined_adder=false;
-#if 0 // Code from previous pipeline framework, should be replaced with systematic IntAdders
-					if (false && isSequential()) {
-						// First case: using a plain adder fits within the current pipeline level
-						double tentative_delay = max_children_delay + getTarget()->adderDelay(adder_size) + getTarget()->localWireDelay();
-						if(tentative_delay <= 1./getTarget()->frequency()) {
-							use_pipelined_adder=false;
-							partial_delay = tentative_delay;					
-						}
-						else { 
-							// register the children 
-							nextCycle();
-							// Is a standard adder OK ?
-							tentative_delay = getTarget()->ffDelay() + getTarget()->localWireDelay() + getTarget()->adderDelay(adder_size);
-							if(tentative_delay <= 1./getTarget()->frequency()) {
-								use_pipelined_adder=false;
-								partial_delay = tentative_delay;					
-							}
-							else { // Need to instantiate an IntAdder
-								use_pipelined_adder=true;
-								adder = new IntAdder(this, getTarget(), adder_size);
-								adder->changeName(getName() + "_" + sao->name + "_adder");
-								addSubComponent(adder);
 
-								partial_delay =  (adder->getOutDelayMap())["R"]; //  getTarget()->adderDelay(adder->getLastChunkSize());
-							}
-						}
-					}
-#endif
 					// Now generate the VHDL
 					if(shift==0) { // Add with no shift -- this shouldn't happen with current DAGs so the following code is mostly untested
 						if(op==Sub || op==RSub)
@@ -279,7 +249,7 @@ namespace flopoco{
 							vhdl << instance(adder, sao->name + "_adder");
 						}
 						else
-							vhdl << tab << declare(sao->name, size) << " <= " << isignal << " + " << jsignal << ";" << endl;
+							vhdl << tab << declare(getTarget()->adderDelay(size), sao->name, size) << " <= " << isignal << " + " << jsignal << ";" << endl;
 					}
 
 
@@ -305,6 +275,8 @@ namespace flopoco{
 									if(sao->j->n < 0) { 
 										vhdl <<" + (" << sao->size-1 <<" downto " <<  shift <<" => " << jname << "(" << jsize-1 << ")) "
 											<< ";   -- sum of higher bits"<<endl;
+										// need to set the critical path contribution by hand, because the signal is not redeclared
+										getSignalByName(sao->name)->setCriticalPathContribution(getTarget()->adderDelay(sao->size-shift));
 									}
 									else 
 										vhdl << ";   -- higher bits also untouched"<<endl;
@@ -317,6 +289,7 @@ namespace flopoco{
 									else
 										vhdl <<"(" << sao->size-1 << " downto " <<  shift <<" => '0') ";
 									vhdl << " - " << iname << ";   -- sum of higher bits"<<endl;
+									getSignalByName(sao->name)->setCriticalPathContribution(getTarget()->adderDelay(sao->size-shift));
 								}
 							} // end if (shift >= jsize)
 							else{ 
@@ -362,20 +335,19 @@ namespace flopoco{
 									outPortMap (adder, "R",resname);
 									vhdl << instance(adder, sao->name + "_adder");
 
-									syncCycleFromSignal(resname, false);
-									//nextCycle();
 									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " << resname + ";" << endl;
 								}
-								else
-									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " // vz (size-1 downto s)
+								else{
+									vhdl << tab << declare(getTarget()->adderDelay(size), sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " // vz (size-1 downto s)
 										<< jsignal << (op==Add ? " + " : "-") << isignal << ";   -- sum of higher bits" << endl; 
-
+								}
 								// In both cases the lower bits of the result (s-1 downto 0) are untouched
 								vhdl << tab << sao->name << "("<<shift-1<<" downto 0) <= " << jname <<"("<< shift-1<<" downto 0);   -- lower bits untouched"<<endl;
 
 							} // end if (shift >= jsize) else
 						} // end if(op == Add || op == RSub) 
-						else { // op=Sub 
+						else { // op=Sub
+							THROWERROR("This seems to be dead code");
 							// Do a normal subtraction of size size
 							isignal = sao->name + "_L";  
 							jsignal = sao->name + "_R"; 
@@ -406,8 +378,6 @@ namespace flopoco{
 								outPortMap (adder, "R",resname);
 								vhdl << instance(adder, sao->name + "_adder");
 
-								syncCycleFromSignal(resname, false);
-								//nextCycle();
 								vhdl << tab << declare(sao->name, size) << " <=  " << resname + ";" << endl;
 
 							}
@@ -421,29 +391,10 @@ namespace flopoco{
 				case Neg:
 					isize = sao->i->size;
 
-					double local_delay;
-					if(op == Neg){   
-						local_delay = getTarget()->adderDelay(sao->cost_in_full_adders);
-					}
-					else 
-						local_delay=0;
-
-					build_pipeline(sao->i, idelay);
+					build_pipeline(sao->i);
 
 					iname = sao->i->name; 
-					setCycleFromSignal(iname, false);
 
-					if(isSequential() 
-							&& idelay +  getTarget()->localWireDelay() + local_delay > 1./getTarget()->frequency()
-							&& sao->i->op != X)
-					{
-						// This resets the partial delay to that of this ShiftAddOp
-						nextCycle();
-						partial_delay =  getTarget()->ffDelay() + getTarget()->adderDelay(sao->cost_in_full_adders);
-					}
-					else{ // this ShiftAddOp and its child will be in the same pipeline level
-						partial_delay = idelay + getTarget()->localWireDelay() + local_delay;
-					}
 					vhdl << tab << declare(sao->name, size) << " <= " ;
 					// TODO use a pipelined IntAdder when necessary
 					if(op == Neg)   
@@ -473,8 +424,8 @@ namespace flopoco{
 
 
 
-	IntConstMult::IntConstMult(Target* _target, int _xsize, mpz_class n) :
-		Operator(_target), n(n), xsize(_xsize)
+	IntConstMult::IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize, mpz_class n) :
+		Operator(parentOp, _target), n(n), xsize(_xsize)
 	{
 			ostringstream name; 
 
@@ -580,16 +531,14 @@ namespace flopoco{
 				REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
 				REPORT(INFO, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
 
-				double delay=0.0;
 				// recursively build the pipeline in the vhdl stream
-				build_pipeline(implementation->result, delay);
+				build_pipeline(implementation->result);
 
 				// copy the top of the DAG into variable R
 				vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
 #else
 				// TODO Switch to the new bit heap framework if this code is ever plugged back
 				//experimenting with bitheaps
-				double delay;
 				delete implementation;
 				implementation = buildMultBoothTreeBitheap(n, 1);
 
@@ -598,8 +547,7 @@ namespace flopoco{
 
 				for(int i=0; (unsigned)i<implementation->saoHeadlist.size(); i++)
 				{
-					delay = 0.0;
-					build_pipeline(implementation->saoHeadlist[i], delay);
+					build_pipeline(implementation->saoHeadlist[i]);
 
 					//add the bits to the bitheap
 					vhdl << endl << tab << "-- adding " << implementation->saoHeadlist[i]->name
@@ -644,8 +592,8 @@ namespace flopoco{
 
 	// The constructor for rational constants
 
-	IntConstMult::IntConstMult(Target* _target, int _xsize, mpz_class n, mpz_class period, int periodMSBZeroes, int periodSize, mpz_class header, int headerSize, int i, int j) :
-		Operator(_target), xsize(_xsize){
+	IntConstMult::IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize, mpz_class n, mpz_class period, int periodMSBZeroes, int periodSize, mpz_class header, int headerSize, int i, int j) :
+		Operator(parentOp, _target), xsize(_xsize){
 			ostringstream name; 
 
 			srcFileName="IntConstMult (periodic)";
@@ -716,9 +664,8 @@ namespace flopoco{
 			REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
 			REPORT(INFO, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
 
-			double delay=0.0;
 			// recursively build the pipeline in the vhdl stream
-			build_pipeline(implementation->result, delay);
+			build_pipeline(implementation->result);
 
 			// copy the top of the DAG into variable R
 			vhdl << endl << tab << "R <= " << implementation->result->name << "("<< rsize-1 <<" downto 0);"<<endl;
@@ -726,8 +673,8 @@ namespace flopoco{
 		}
 
 
-	IntConstMult::IntConstMult(Target* _target, int _xsize) :
-			Operator(_target), xsize(_xsize)
+	IntConstMult::IntConstMult(OperatorPtr parentOp, Target* _target, int _xsize) :
+		Operator(parentOp, _target), xsize(_xsize)
 	{
 
 	}
@@ -1692,11 +1639,37 @@ namespace flopoco{
 	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
 	TestList IntConstMult::unitTest(int index)
 	{
-		throw ("TestList IntConstDiv::unitTest : TODO, plz FIXME");
-		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
+		if(index==-1) {// Unit tests
+			// Only exhaustive tests here
+			paramList.push_back(make_pair("n", "17"));
+			paramList.push_back(make_pair("wIn", "12"));
+			paramList.push_back(make_pair("TestBench n=", "-2"));
+			testStateList.push_back(paramList);
+			
+			paramList[0] = make_pair("n", "42");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "65535");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "65536");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "65537");
+			testStateList.push_back(paramList);
+
+			paramList[0] = make_pair("n", "12345");
+			testStateList.push_back(paramList);
+			
+			paramList[0] = make_pair("n", "1234567");
+			testStateList.push_back(paramList);
+			paramList.clear();
+		}
+		else {//	enumeration of a random test space, TODO
+		}
 		return testStateList;
 	}
 
@@ -1708,7 +1681,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
 		UserInterface::parseString(args, "n", &n);
 		mpz_class nz(n); // TODO catch exceptions here?
-		return new IntConstMult(target, wIn, nz);
+		return new IntConstMult(parentOp, target, wIn, nz);
 	}
 
 	void IntConstMult::registerFactory(){

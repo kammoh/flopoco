@@ -12,11 +12,11 @@ include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 #####################For packaging (source file distrib so far)#######
 # Use  make package_source to build a release
@@ -42,183 +42,183 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 
 # Detect GMP / GMPXX
 FIND_PATH(GMPXX_H
-	  gmpxx.h
-)
+  gmpxx.h
+  )
 
 FIND_LIBRARY(GMP_LIB
-	NAMES gmp gmp.lib
-	DOC "Directory of the GMP library")
+  NAMES gmp gmp.lib
+  DOC "Directory of the GMP library")
 
 FIND_PATH(GMP_H
-	  gmp.h
-)
+  gmp.h
+  )
 
 FIND_LIBRARY(GMPXX_LIB
-	NAMES gmpxx gmpxx.lib
-	DOC "Directory of the GMPXX library")
+  NAMES gmpxx gmpxx.lib
+  DOC "Directory of the GMPXX library")
 
 IF (GMPXX_H AND GMPXX_LIB AND GMP_H AND GMP_LIB)
-    MESSAGE(STATUS "Found gmp and gmpxx: ${GMP_H},${GMP_LIB},${GMPXX_H},${GMPXX_LIB}")
+  MESSAGE(STATUS "Found gmp and gmpxx: ${GMP_H},${GMP_LIB},${GMPXX_H},${GMPXX_LIB}")
 ELSE (GMPXX_H AND GMPXX_LIB AND GMP_H AND GMP_LIB)
-    MESSAGE(FATAL_ERROR "Could not find gmp and/or gmpxx (found: ${GMP_H},${GMP_LIB},${GMPXX_H},${GMPXX_LIB})")
+  MESSAGE(FATAL_ERROR "Could not find gmp and/or gmpxx (found: ${GMP_H},${GMP_LIB},${GMPXX_H},${GMPXX_LIB})")
 ENDIF (GMPXX_H AND GMPXX_LIB AND GMP_H AND GMP_LIB)
 
 
 # Detect MPFR
 
 FIND_PATH(MPFR_H
-	  mpfr.h
-	  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/include"
-	  DOC "Path of mpfr.h, the include file for GNU MPFR library"
-)
+  mpfr.h
+  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/include"
+  DOC "Path of mpfr.h, the include file for GNU MPFR library"
+  )
 
 FIND_LIBRARY(MPFR_LIB
-	NAMES mpfr mpfr.lib
-	HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
-	DOC "Directory of the MPFR library")
+  NAMES mpfr mpfr.lib
+  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
+  DOC "Directory of the MPFR library")
 
 IF (MPFR_H AND MPFR_LIB)
-    MESSAGE(STATUS "Found mpfr: ${MPFR_H},${MPFR_LIB}")
+  MESSAGE(STATUS "Found mpfr: ${MPFR_H},${MPFR_LIB}")
 ELSE (MPFR_H AND MPFR_LIB)
-    MESSAGE(FATAL_ERROR "Could not find MPFR (found: ${MPFR_H},${MPFR_LIB}).\nOn Debian-based systems type: 'sudo apt-get install libmpfr-dev'")
+  MESSAGE(FATAL_ERROR "Could not find MPFR (found: ${MPFR_H},${MPFR_LIB}).\nOn Debian-based systems type: 'sudo apt-get install libmpfr-dev'")
 ENDIF (MPFR_H AND MPFR_LIB)
 
 
 # Detect MPFI
 FIND_PATH(MPFI_H
-	  mpfi.h
-	  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/include"
-	  DOC "Path of mpfi.h"
-)
+  mpfi.h
+  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/include"
+  DOC "Path of mpfi.h"
+  )
 
 FIND_LIBRARY(MPFI_LIB
-	NAMES mpfi mpfi.lib
-	HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
-	DOC "Directory of the MPFI library")
+  NAMES mpfi mpfi.lib
+  HINTS "C:/Program Files/Microsoft Visual Studio 9.0/VC/lib"
+  DOC "Directory of the MPFI library")
 
 IF (MPFI_H AND MPFI_LIB)
-    MESSAGE(STATUS "Found mpfi: ${MPFI_H},${MPFI_LIB}")
+  MESSAGE(STATUS "Found mpfi: ${MPFI_H},${MPFI_LIB}")
 ELSE (MPFI_H AND MPFI_LIB)
-    MESSAGE(FATAL_ERROR "Could not find MPFI (found: ${MPFI_H},${MPFI_LIB})")
+  MESSAGE(FATAL_ERROR "Could not find MPFI (found: ${MPFI_H},${MPFI_LIB})")
 ENDIF (MPFI_H AND MPFI_LIB)
 
 # Detect Python
 FIND_PATH(PYTHON_H
-	  python2.7/Python.h
-	  DOC "Path of Python.h"
-)
+  python2.7/Python.h
+  DOC "Path of Python.h"
+  )
 
 FIND_LIBRARY(PYTHON_LIB
-	NAMES libpython2.7.so libpython2.7.dylib
-	HINTS "/usr/lib/x86_64-linux-gnu"
-	DOC "Directory of the Python library"
-)
+  NAMES libpython2.7.so libpython2.7.dylib
+  HINTS "/usr/lib/x86_64-linux-gnu"
+  DOC "Directory of the Python library"
+  )
 
 IF ( PYTHON_H AND PYTHON_LIB )
-    SET(PYTHON_FOUND TRUE)
+  SET(PYTHON_FOUND TRUE)
 ENDIF ( PYTHON_H AND PYTHON_LIB )
 
 IF ( PYTHON_FOUND )
-	MESSAGE ( STATUS "Found Python : ${PYTHON_H},${PYTHON_LIB}" )
+  MESSAGE ( STATUS "Found Python : ${PYTHON_H},${PYTHON_LIB}" )
 ELSE ( PYTHON_FOUND )
-	MESSAGE ( STATUS "Could not find (found: ${PYTHON_H},${PYTHON_LIB}), no flopoco_soaktest will be available")
+  MESSAGE ( STATUS "Could not find (found: ${PYTHON_H},${PYTHON_LIB}), no flopoco_soaktest will be available")
 ENDIF ( PYTHON_FOUND )
 
 # Detect Sollya
 FIND_LIBRARY( SOLLYA_LIB
-	NAMES libsollya.so libsollya.dylib
-	HINTS "/usr/lib/x86_64-linux-gnu"
-	)
+  NAMES libsollya.so libsollya.dylib
+  HINTS "/usr/lib/x86_64-linux-gnu"
+  )
 
 FIND_PATH(SOLLYA_H
-	  sollya.h
-)
+  sollya.h
+  )
 
 IF (SOLLYA_H AND SOLLYA_H)
-	MESSAGE(STATUS "Found Sollya: ${SOLLYA_LIB},${SOLLYA_H}")
+  MESSAGE(STATUS "Found Sollya: ${SOLLYA_LIB},${SOLLYA_H}")
 ELSE (SOLLYA_H AND SOLLYA_H)
-	MESSAGE(FATAL_ERROR "Sollya not found (found: ${SOLLYA_LIB},${SOLLYA_H})")
+  MESSAGE(FATAL_ERROR "Sollya not found (found: ${SOLLYA_LIB},${SOLLYA_H})")
 ENDIF (SOLLYA_H AND SOLLYA_H)
 
 
 FIND_PATH(WCPG_H
-	  wcpg.h
-	  DOC "Path of wcpg.h, the include file for GNU MPFR library"
-		)
+  wcpg.h
+  DOC "Path of wcpg.h, the include file for GNU MPFR library"
+  )
 
 FIND_LIBRARY(WCPG_LIB
-	NAMES wcpg
-	DOC "Directory of the WCPG library"
-	)
+  NAMES wcpg
+  DOC "Directory of the WCPG library"
+  )
 
 IF (WCPG_H AND WCPG_LIB)
-    SET(WCPG_FOUND TRUE)
+  SET(WCPG_FOUND TRUE)
 ENDIF (WCPG_H AND WCPG_LIB)
 
 IF ( WCPG_FOUND )
-	MESSAGE ( STATUS "Found WCPG : ${WCPG_H},${WCPG_LIB}" )
+  MESSAGE ( STATUS "Found WCPG : ${WCPG_H},${WCPG_LIB}" )
   ADD_DEFINITIONS(-DHAVE_WCPG)
 ELSE ( WCPG_FOUND )
-	MESSAGE ( STATUS "Could not find WCPG (found: ${WCPG_H},${WCPG_LIB}), this will affect the FixIIR operator" )
+  MESSAGE ( STATUS "Could not find WCPG (found: ${WCPG_H},${WCPG_LIB}), this will affect the FixIIR operator" )
 ENDIF ( WCPG_FOUND )
 
 # dectect if scalp is available
 FIND_PATH(SCALP_H
-          ScaLP/Solver.h
-	  HINTS "/usr/local/include"
-	  DOC "Path of main header of scalp"
-)
+  ScaLP/Solver.h
+  HINTS "/usr/local/include/" "~/.local/include"
+  DOC "Path of main header of scalp"
+  )
 FIND_LIBRARY(SCALP_LIB
-        NAMES libScaLP libScaLP.so  libScaLP.dylib
-	HINTS "/usr/local/lib64/"
-	DOC "Directory of the SCALP main library")
+  NAMES libScaLP libScaLP.so  libScaLP.dylib
+  HINTS "/usr/local/lib64/" "~/.local/lib/"
+  DOC "Directory of the SCALP main library")
 
 FIND_LIBRARY(SCALP_CPLEX_LIB
-        NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
-	HINTS "/usr/local/lib64/"
-	DOC "Directory of the SCALP library for cplex solver backend")
+  NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
+  HINTS "/usr/local/lib64/"
+  DOC "Directory of the SCALP library for cplex solver backend")
 
 FIND_LIBRARY(SCALP_GUROBI_LIB
-        NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
-	HINTS "/usr/local/lib64/"
-	DOC "Directory of the SCALP library for Gurobi solver backend")
+  NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
+  HINTS "/usr/local/lib64/"
+  DOC "Directory of the SCALP library for Gurobi solver backend")
 
 FIND_LIBRARY(SCALP_SCIP_LIB
-        NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
-	HINTS "/usr/local/lib64/"
-	DOC "Directory of the SCALP library for SCIP solver backend")
+  NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
+  HINTS "/usr/local/lib64/"
+  DOC "Directory of the SCALP library for SCIP solver backend")
 
 FIND_LIBRARY(SCALP_LPSOLVE_LIB
-        NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSOLVE.dylib
-	HINTS "/usr/local/lib64/"
-	DOC "Directory of the SCALP library for LPSOLVE solver backend")
+  NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSOLVE.dylib
+  HINTS "/usr/local/lib64/"
+  DOC "Directory of the SCALP library for LPSOLVE solver backend")
 
 IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
   SET(SCALP_FOUND TRUE)
 ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
 
 IF (SCALP_FOUND)
-	ADD_DEFINITIONS(-DHAVE_SCALP)
-    set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
-	IF (SCALP_CPLEX_LIB)
-		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_CPLEX_LIB})
-	ENDIF (SCALP_CPLEX_LIB)
-	IF (SCALP_GUROBI_LIB)
-		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_GUROBI_LIB})
-	ENDIF (SCALP_GUROBI_LIB)
-	
-	IF (SCALP_SCIP_LIB)
-		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_SCIP_LIB})
-	ENDIF (SCALP_SCIP_LIB)
-	
-	IF (SCALP_LPSOLVE_LIB)
-		set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
-	ENDIF (SCALP_LPSOLVE_LIB)
-	
-	MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
-	MESSAGE(STATUS "      Using the following ILP solver libraries: ${SCALP_LIBS}")  
+  ADD_DEFINITIONS(-DHAVE_SCALP)
+  set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
+  IF (SCALP_CPLEX_LIB)
+	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_CPLEX_LIB})
+  ENDIF (SCALP_CPLEX_LIB)
+  IF (SCALP_GUROBI_LIB)
+	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_GUROBI_LIB})
+  ENDIF (SCALP_GUROBI_LIB)
+  
+  IF (SCALP_SCIP_LIB)
+	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_SCIP_LIB})
+  ENDIF (SCALP_SCIP_LIB)
+  
+  IF (SCALP_LPSOLVE_LIB)
+	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
+  ENDIF (SCALP_LPSOLVE_LIB)
+  
+  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
+  MESSAGE(STATUS "      Using the following ILP solver libraries: ${SCALP_LIBS}")  
 ELSE (SCALP_FOUND)
-	MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (found: ${SCALP_H},${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
+  MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (found: ${SCALP_H},${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
 ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
@@ -226,338 +226,105 @@ ADD_DEFINITIONS(-DHAVE_LNS)
 #
 # Create custom command for flex++/lex (note the outputs)
 FIND_PROGRAM(FLEXPP_EXECUTABLE
-	NAMES flex
-	PATHS /usr/bin
-	DOC "Flex++ executable")
+  NAMES flex
+  PATHS /usr/bin
+  DOC "Flex++ executable")
 
 IF(FLEXPP_EXECUTABLE)
-	MESSAGE(STATUS "Found lex: ${FLEXPP_EXECUTABLE}")
+  MESSAGE(STATUS "Found lex: ${FLEXPP_EXECUTABLE}")
 ELSE(FLEXPP_EXECUTABLE)
-  	MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
+  MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
 ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT VHDLLexer.cpp
+  OUTPUT src/VHDLLexer.cpp
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-	COMMAND ${FLEXPP_EXECUTABLE} 
-	ARGS -o ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-		)
+  COMMAND ${FLEXPP_EXECUTABLE} 
+  ARGS --nounput -o ${CMAKE_CURRENT_BINARY_DIR}/src/VHDLLexer.cpp 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+  )
 
 #SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
 
-
 # Create custom command for bison/yacc (note the outputs)
 FIND_PROGRAM(BISON_EXECUTABLE
-	NAMES bison
-	PATHS /usr/bin
-	DOC "Bison executable")
+  NAMES bison
+  PATHS /usr/bin
+  DOC "Bison executable")
 
 IF(BISON_EXECUTABLE)
-	MESSAGE(STATUS "Found bison: ${BISON_EXECUTABLE}")
+  MESSAGE(STATUS "Found bison: ${BISON_EXECUTABLE}")
 ELSE(BISON_EXECUTABLE)
-  	MESSAGE(FATAL_ERROR "Could not find Bison.\nOn Debian-based systems install bison")
+  MESSAGE(FATAL_ERROR "Could not find Bison.\nOn Debian-based systems install bison")
 ENDIF(BISON_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT ExpressionParser.cpp
-	COMMAND ${BISON_EXECUTABLE}
-	ARGS -y -d --defines=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.h --output=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.cpp --name-prefix=FlopocoExpression
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
-)
+  OUTPUT ExpressionParser.cpp
+  COMMAND ${BISON_EXECUTABLE}
+  ARGS -y -d --defines=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.h --output=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.cpp --name-prefix=FlopocoExpression
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
+  )
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED) 
 
 # Create custom command for flex/lex (note the outputs)
 FIND_PROGRAM(FLEX_EXECUTABLE
-	NAMES flex
-	PATHS /usr/bin
-	DOC "Flex executable")
+  NAMES flex
+  PATHS /usr/bin
+  DOC "Flex executable")
 
 IF(FLEX_EXECUTABLE)
-	MESSAGE(STATUS "Found flex: ${FLEX_EXECUTABLE}")
+  MESSAGE(STATUS "Found flex: ${FLEX_EXECUTABLE}")
 ELSE(FLEX_EXECUTABLE)
-  	MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
+  MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
 ENDIF(FLEX_EXECUTABLE)
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT ExpressionScanner.cpp
-	COMMAND ${FLEX_EXECUTABLE} 
-	ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
-    ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
-	)
+  OUTPUT ExpressionScanner.cpp
+  COMMAND ${FLEX_EXECUTABLE} 
+  ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
+  ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
+  )
 
 SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
 
-ADD_LIBRARY(FloPoCoLib STATIC
+ADD_CUSTOM_COMMAND(
+  OUTPUT src/Factories.cpp
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/Interfaced.txt  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
+  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories
+  )
 
-#--------------------------------------------------------------------
-#               FRAMEWORK
-#--------------------------------------------------------------------
+SET_SOURCE_FILES_PROPERTIES(src/Factories GENERATED)
+#Thanks SOF https://stackoverflow.com/questions/4346412/how-to-prepend-all-filenames-on-the-list-with-common-path#27630120
 
-# src/FloPoCo.hpp
- src/Operator
- src/UserInterface
- src/Factories
- src/Signal
- src/utils
- src/FlopocoStream
- VHDLLexer # generated from .l
- 
- src/Instance
- 
-# Resource Estimation related ---------------------------------------
-  src/Tools/ResourceEstimationHelper
- 
- # Floorplanning related ---------------------------------------------
- src/Tools/FloorplanningHelper
+# PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args]
+FUNCTION(PREPEND var prefix)
+  SET(listVar "")
+  FOREACH(f ${ARGN})
+    LIST(APPEND listVar "${prefix}${f}")
+  ENDFOREACH(f)
+  SET(${var} "${listVar}" PARENT_SCOPE)
+ENDFUNCTION(PREPEND)
 
- # Targets -----------------------------------------------------------
- src/Targets/DSP
- src/Target 
- #src/TargetModel
- 
-# src/Targets/Spartan3 
-# src/Targets/Virtex4 
-# src/Targets/Virtex5 
- src/Targets/Virtex6 
- src/Targets/Zynq7000 
- src/Targets/Kintex7 
- 
-# src/Targets/StratixII 
-# src/Targets/StratixIII 
-# src/Targets/StratixIV
- src/Targets/StratixV
- 
- #src/Targets/CycloneII 
- #src/Targets/CycloneIII 
- #src/Targets/CycloneIV 
- #src/Targets/CycloneV 
+execute_process(
+  COMMAND ./tools/EraseComments.sh src/SourceFileList.txt tolink.txt
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
-# AutoTest ------------------------------------------------------------
-src/AutoTest/AutoTest
+FILE(STRINGS ${CMAKE_SOURCE_DIR}/tolink.txt ACTIVE_THINGS)
+PREPEND(PATH_ACTIVE_THINGS ${CMAKE_SOURCE_DIR}/src/ ${ACTIVE_THINGS})
 
-# TestBench-related -------------------------------------------------
- src/TestBenches/TestCase
- src/TestBenches/FPNumber
- src/TestBenches/IEEENumber
- src/TestBenches/Wrapper
- src/TestBenches/TestBench 
+execute_process(
+  COMMAND rm tolink.txt
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
-
-
-# Bit heap  ------------------------------------------------
-# src/BitHeap/BitHeap
-# src/BitHeap/WeightedBit
-# src/BitHeap/Plotter
- 
- src/BitHeap/Bit
- src/BitHeap/Compressor
- src/BitHeap/BitHeap
- src/BitHeap/CompressionStrategy
- src/BitHeap/BitHeapPlotter
- src/BitHeap/Solution
- 
- src/BitHeap/BitHeapTest
-
- src/BitHeap/FirstFittingCompressionStrategy
- src/BitHeap/ParandehAfsharCompressionStrategy
- src/BitHeap/MaxEfficiencyCompressionStrategy
- src/BitHeap/OptimalCompressionStrategy
-# src/BitHeap/VariableColumnCompressor
-
-#--------------------------------------------------------------------
-#               OPERATORS          
-#--------------------------------------------------------------------
-
-src/TutorialOperator
-
-#src/OperatorPipeline/OperatorPipeline
-#src/FPExpressions/ExpressionParserData
-
-
-
-# Conversions ----------------------------------------------------
-#src/Conversions/InputIEEE
-#src/Conversions/OutputIEEE
-#src/Conversions/FP2Fix
-#src/Conversions/Fix2FP
-
-# Shifters/LZOC ----------------------------------------------------
- src/ShiftersEtc/LZOC 
- src/ShiftersEtc/LZOCShifterSticky
- src/ShiftersEtc/Shifters
-
-# FixFilters ----------------------------------------------------------
- src/ShiftReg
- src/FixFilters/FixSOPC
- src/FixFilters/FixFIR
- src/FixFilters/FixHalfSine
- src/FixFilters/FixIIR 
-
-
-# pipelined Integer addition -------------------------------------------------
- src/IntAddSubCmp/IntAdder  
-# src/IntAddSubCmp/IntAdderClassical 
-# src/IntAddSubCmp/IntAdderAlternative 
-# src/IntAddSubCmp/IntAdderShortLatency
-# src/IntAddSubCmp/IntComparator
- src/IntAddSubCmp/IntDualAddSub
- src/IntAddSubCmp/BasicCompressor
-src/IntAddSubCmp/IntMultiAdder
- 
-# ---------- First generation of fast large adders ------------------------
-# src/IntAddSubCmp/LongIntAdderAddAddMuxGen1 
-# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen1 
-# src/IntAddSubCmp/LongIntAdderCmpAddIncGen1
-
-# ---------- Second Generation of fast large adders -----------------------
-# src/IntAddSubCmp/IntAdderSpecific 
-# src/IntAddSubCmp/IntComparatorSpecific 
-# src/IntAddSubCmp/CarryGenerationCircuit 
-# src/IntAddSubCmp/LongIntAdderAddAddMuxGen2 
-# src/IntAddSubCmp/LongIntAdderCmpCmpAddGen2 
-# src/IntAddSubCmp/LongIntAdderCmpAddIncGen2
-# src/IntAddSubCmp/LongIntAdderMuxNetwork
-
-# Constant multiplications and divisions
- src/ConstMult/ShiftAddOp 
- src/ConstMult/ShiftAddDag 
-# src/ConstMult/IntConstMult 
-# src/ConstMult/IntConstMCM  
-# src/ConstMult/KCMTable
-# src/ConstMult/IntIntKCM 
-# src/ConstMult/FPConstMult 
-# src/ConstMult/CRFPConstMult 
- src/ConstMult/FixRealKCM
-# src/ConstMult/FPRealKCM
-# src/ConstMult/IntConstDiv 
-# src/ConstMult/FPConstDiv 
-
- 
-# Multiplication related --------------------------------------------
-src/IntMult/IntMultiplier
-src/IntMult/TilingStrategy
-src/IntMult/TilingStrategyOptimalILP
-# src/IntMult/FixMultAdd
-src/IntMult/MultiplierBlock
-# src/IntMult/IntSquarer
-src/IntMult/DSPBlock
-src/IntMult/BaseMultiplier
-src/IntMult/BaseMultiplier2xk
-src/IntMult/BaseMultiplierCollection
-src/IntMult/BaseMultiplierDSP
-src/IntMult/BaseMultiplierDSPSuperTilesXilinx
-src/IntMult/BaseMultiplierLUT
-src/IntMult/IntKaratsubaRectangular
-
-# Complex numbers ---------------------------------------------------
-src/Complex/FixComplexKCM
-# TODO for Matei
-#src/Complex/FixedComplexAdder
-
-# Floating-point adders and subtracters -----------------------------
- src/FPAddSub/FPAdd
- src/FPAddSub/FPAddDualPath
- src/FPAddSub/FPAddSinglePath
-# src/FPAddSub/FPAdd3Input
-# src/FPAddSub/FPAddSub
-
-# Floating-point multipliers and squarers
-# src/FPMultSquare/FPMult
-#  src/FPMultSquare/FPMultKaratsuba # See TODO
-# src/FPMultSquare/FPSquare
-
-# Floating-point dividers and square roots
-src/FPDivSqrt/FPDiv
-src/FPDivSqrt/FPSqrt
-#src/FPDivSqrt/Tools/NbBitsMin
-# src/FPDivSqrt/FPSqrtPoly # Resurrect some day?
-
-
-# Composite operators
-#src/FPComposite/FPLargeAcc 
-#src/FPComposite/LargeAccToFP 
-#src/FPComposite/FPDotProduct 
-#src/FPComposite/FP2DNorm
-
-# Generic fixed-point function evaluators ---------------------------
- src/Table 
- src/DualTable 
- 
- src/FixConstant
-
- src/FixFunctions/FixFunction
- src/FixFunctions/FixFunctionByTable
- #src/FixFunctions/BasicPolyApprox
- #src/FixFunctions/PiecewisePolyApprox
- #src/FixFunctions/FixHornerEvaluator
- #src/FixFunctions/FixFunctionBySimplePoly
- #src/FixFunctions/FixFunctionByPiecewisePoly
-
- src/FixFunctions/GenericTable
- src/FixFunctions/BipartiteTable
-# src/FixFunctions/Multipartite 
-# src/FixFunctions/FixFunctionByMultipartiteTable
-# src/FixFunctions/QuineMcCluskey
-
-# Trigonometric functions ------------------------------------------
-#src/Trigs/ConstDiv3ForSinPoly
-#src/Trigs/FixSinPoly
-# src/Trigs/FixSinCos
-# src/Trigs/CordicSinCos
-# src/Trigs/CordicSinOrCos
-# src/Trigs/FixAtan2
-#! does not compile with clang under mac os X: src/Trigs/FixAtan2ByCORDIC
-#src/Trigs/FixAtan2ByRecipMultAtan
-#src/Trigs/FixAtan2ByBivariateApprox
-src/Trigs/Atan2Table
-
-#src/Trigs/Fix2DNorm
-
-# Primitive Components ----------------------------------------------
-src/PrimitiveComponents/BooleanEquation
-src/PrimitiveComponents/GenericLut
-src/PrimitiveComponents/Primitive
-src/PrimitiveComponents/GenericAddSub
-src/PrimitiveComponents/GenericMux
-
-src/PrimitiveComponents/Xilinx/Xilinx_Primitive
-src/PrimitiveComponents/Xilinx/Xilinx_LUT_compute
-src/PrimitiveComponents/Xilinx/Xilinx_CARRY4
-src/PrimitiveComponents/Xilinx/Xilinx_LUT5
-src/PrimitiveComponents/Xilinx/Xilinx_LUT6
-src/PrimitiveComponents/Xilinx/Xilinx_MUXF7
-src/PrimitiveComponents/Xilinx/Xilinx_MUXF8
-src/PrimitiveComponents/Xilinx/Xilinx_FDCE
-src/PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder
-src/PrimitiveComponents/Xilinx/Xilinx_Comparator
-src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub
-src/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub_slice
-src/PrimitiveComponents/Xilinx/Xilinx_GenericMux
-src/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
-src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State
-src/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice
-src/PrimitiveComponents/Xilinx/XilinxGPC
-src/PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor
-#
-#src/PrimitiveComponents/Altera/Altera_LCELL
-#
-src/Tools/Plane
-src/Tools/Point
-
-# Exp, Log and Power
-#src/ExpLog/FPExp
-#src/ExpLog/IterativeLog //depends on IntSquarer
-#src/ExpLog/FPPow
-
-# If you want to add your operator, feel free
-src/TutorialOperator
-)
+ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS})
 
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
@@ -567,42 +334,42 @@ TARGET_LINK_LIBRARIES(
   )
 
 IF (SOLLYA_LIB)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib
-  ${SOLLYA_LIB}
+  TARGET_LINK_LIBRARIES(
+	FloPoCoLib
+	${SOLLYA_LIB}
 	)
 ENDIF (SOLLYA_LIB)
 
 IF (PYTHON_LIB)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib
-  ${PYTHON_LIB}
-  )
+  TARGET_LINK_LIBRARIES(
+	FloPoCoLib
+	${PYTHON_LIB}
+	)
 ENDIF (PYTHON_LIB)
 
 IF (WCPG_FOUND)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib
-  ${WCPG_LIB}
-  )
-INCLUDE_DIRECTORIES(${WCPG_H})  
+  TARGET_LINK_LIBRARIES(
+	FloPoCoLib
+	${WCPG_LIB}
+	)
+  INCLUDE_DIRECTORIES(${WCPG_H})  
 ENDIF (WCPG_FOUND)
 
 IF (SCALP_FOUND)
-TARGET_LINK_LIBRARIES(
-  FloPoCoLib
-  ${SCALP_LIBS}
-  )
-	INCLUDE_DIRECTORIES(${SCALP_H})
+  TARGET_LINK_LIBRARIES(
+	FloPoCoLib
+	${SCALP_LIBS}
+	)
+  INCLUDE_DIRECTORIES(${SCALP_H})
 ENDIF (SCALP_FOUND)
 
 ADD_EXECUTABLE(flopoco
- src/main 
-)
- 
+  src/main 
+  )
+
 TARGET_LINK_LIBRARIES(
   flopoco  
-	FloPoCoLib 
+  FloPoCoLib 
   )
 
 # unplugged for now to speed up compilation, to revive some day

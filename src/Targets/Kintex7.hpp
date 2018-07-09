@@ -33,6 +33,7 @@ namespace flopoco{
 		double fanoutDelay(int fanout = 1);
 		double ffDelay();
 		long   sizeOfMemoryBlock();
+		double tableDelay(int wIn, int wOut, bool logicTable);
 
 		// The following is a list of methods that are not totally useful: TODO in Target.hpp
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
@@ -90,7 +91,7 @@ namespace flopoco{
 		const double fanoutConstant_ = 1e-9/65 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65 */
 		const double typicalLocalRoutingDelay_ = 0.5e-9;
 		const double DSPMultiplierDelay_ = 0; // TODO
-		const double RAMDelay_ = 0; // TODO
+		const double RAMDelay_ = 1e-9; // TODO
 		const double RAMToLogicWireDelay_= 0; // TODO
 	};
 

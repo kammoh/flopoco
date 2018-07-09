@@ -13,50 +13,42 @@
 
   */
 
-
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <math.h>
-#include <string.h>
-
-#include <gmp.h>
-#include <mpfr.h>
-
-#include <gmpxx.h>
 #include "../utils.hpp"
-
 #include "FixFunctionByTable.hpp"
 
 using namespace std;
 
 namespace flopoco{
 
-	FixFunctionByTable::FixFunctionByTable(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, int logicTable):
-		Table(target, -lsbIn + (signedIn?1:0), msbOut-lsbOut+1, 0, -1, logicTable){ // This sets wIn
-
-		f = new FixFunction(func, signedIn, lsbIn, msbOut, lsbOut);
-		ostringstream name;
+	FixFunctionByTable::FixFunctionByTable(OperatorPtr parentOp_, Target* target_, string func_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
+		Table(parentOp_, target_)
+	{
 		srcFileName="FixFunctionByTable";
-
+		ostringstream name;
 		name<<"FixFunctionByTable";
 		setNameWithFreqAndUID(name.str());
+		setCopyrightString("Florent de Dinechin (2010-2018)");
 
-		setCopyrightString("Florent de Dinechin (2010-2014)");
+		f = new FixFunction(func_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
-
+		wIn = f->wIn;
+		wOut = f->wOut;
+		vector<mpz_class> v;
+		for(int i=0; i<(1<<wIn); i++) {
+			mpz_class rn, devnull;
+			f->eval(mpz_class(i), rn, devnull, true);
+			v.push_back(rn);
+			//REPORT(FULL, "f("<< i << ") = " << function(i) );
+		};
+		Table::init(v, join("f", getNewUId()), wIn, wOut);
 	}
 
+
+	
 	FixFunctionByTable::~FixFunctionByTable() {
-		free(f);
+		delete f;
 	}
 
-	//overloading the method from table
-	mpz_class FixFunctionByTable::function(int x){
-		mpz_class ru, rd;
-		f->eval(mpz_class(x), rd, ru, true);
-		return rd;
-	}
 
 
 	void FixFunctionByTable::emulate(TestCase* tc){
@@ -73,7 +65,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		return new FixFunctionByTable(target, f, signedIn, lsbIn, msbOut, lsbOut);
+		return new FixFunctionByTable(parentOp, target, f, signedIn, lsbIn, msbOut, lsbOut);
 	}
 
 	void FixFunctionByTable::registerFactory()

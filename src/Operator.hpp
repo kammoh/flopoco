@@ -376,15 +376,6 @@ public:
 	 */
 	void changeName(std::string operatorName);
 
-	/**
-	 * Sets Operator name to prefix_(uniqueName_)_postfix
-	 * @param prefix the prefix string which will be placed in front of the operator name
-	 *               formed with the operator internal parameters
-	 * @param postfix the postfix string which will be placed at the end of the operator name
-	 *                formed with the operator internal parameters
-	 */
-	void setName(std::string prefix, std::string postfix);
-
 
 	/**
 	 * Adds a comment before the entity declaration, along with the copyright string etc.
@@ -693,7 +684,7 @@ public:
 	void useHardRAM(Operator* t);
 
 	/**
-	 * Adds attributes to the generated VHDL so that the tools use LUT-based RAM blocks for an instance
+	 * Adds attributes to the generated VHDL so that the tools use LUT-based RAM for an instance
 	 * @param t a pointer to this instance
 	 */
 	void useSoftRAM(Operator* t);

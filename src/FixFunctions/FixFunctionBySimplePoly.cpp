@@ -8,10 +8,17 @@
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
-  2008-2014.
+  2008-2018.
   All rights reserved.
 
   */
+
+/* 
+
+Error analysis: see FixFunctionByPiecewisePoly.cpp
+
+
+*/
 
 #include <iostream>
 #include <sstream>
@@ -27,7 +34,7 @@
 
 
 #include "FixFunctionBySimplePoly.hpp"
-#include "IntMult/FixMultAdd.hpp"
+#include "FixHornerEvaluator.hpp"
 
 using namespace std;
 
@@ -36,8 +43,9 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FixFunctionBySimplePoly::FixFunctionBySimplePoly(Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, bool finalRounding_, map<string, double> inputDelays):
-		Operator(target, inputDelays), finalRounding(finalRounding_){
+	FixFunctionBySimplePoly::FixFunctionBySimplePoly(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int msbOut, int lsbOut, bool finalRounding_):
+		Operator(parentOp, target), finalRounding(finalRounding_){
+
 		f = new FixFunction(func, signedIn, lsbIn, msbOut, lsbOut);
 
 		srcFileName="FixFunctionBySimplePoly";
@@ -47,7 +55,11 @@ namespace flopoco{
 		}
 
 		ostringstream name;
+<<<<<<< HEAD
 		name<<"FixFunctionBySimplePoly_"<<getNewUId();
+=======
+		name<<"FixFunctionBySimplePoly_";
+>>>>>>> master
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin (2014)");
@@ -56,7 +68,6 @@ namespace flopoco{
 		int outputSize = msbOut-lsbOut+1;
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
-		setCriticalPath( getMaxInputDelays(inputDelays) + getTarget()->localWireDelay() );
 
 		if(f->signedIn)
 			vhdl << tab << declareFixPoint("Xs", true, 0, lsbIn) << " <= signed(X);" << endl;
@@ -64,20 +75,31 @@ namespace flopoco{
 			vhdl << tab << declareFixPoint("Xs", true, 0, lsbIn) << " <= signed('0' & X);  -- sign extension of X" << endl;
 
 		// Polynomial approximation
-		double targetApproxError = pow(2,lsbOut-1);
+		double targetApproxError = exp2(lsbOut-2);
 		poly = new BasicPolyApprox(f, targetApproxError, -1);
 		double approxErrorBound = poly->approxErrorBound;
 
 		int degree = poly->degree;
-		if(msbOut<poly->coeff[0]->MSB) {
+		if(msbOut < poly->coeff[0]->MSB) {
 			REPORT(INFO, "user-provided msbO smaller that the MSB of the constant coefficient, I am worried it won't work");
 		}
 		vhdl << tab << "-- With the following polynomial, approx error bound is " << approxErrorBound << " ("<< log2(approxErrorBound) << " bits)" << endl;
 
 		// Adding the round bit to the degree-0 coeff
-		REPORT(DEBUG, "   A0 before adding round bit: " <<  poly->coeff[0]->report());
+		int oldLSB0 = poly->coeff[0]->LSB;
 		poly->coeff[0]->addRoundBit(lsbOut-1);
-		REPORT(DEBUG, "   A0 after adding round bit: " <<  poly->coeff[0]->report());
+		// The following is probably dead code. It was a fix for cases
+		// where BasicPolyApprox found LSB=lsbOut, hence the round bit is outside of MSB[0]..LSB
+		// In this case recompute the poly, it would give better approx error 
+		if(oldLSB0 != poly->coeff[0]->LSB) {
+			// deliberately at info level, I want to see if it happens
+			REPORT(INFO, "   addRoundBit has changed the LSB to " << poly->coeff[0]->LSB << ", recomputing the coefficients");
+			for(int i=0; i<=degree; i++) {
+				REPORT(DEBUG, poly->coeff[i]->report());
+			}
+			poly = new BasicPolyApprox(f->fS, degree, poly->coeff[0]->LSB, signedIn);
+		}
+
 
 		for(int i=0; i<=degree; i++) {
 			coeffMSB.push_back(poly->coeff[i]->MSB);
@@ -97,57 +119,65 @@ namespace flopoco{
 			vhdl << endl;
 		}
 
-		// TODO: error analysis for evaluation.
-		// The following comment is no longer true
-		// Here we assume all the coefficients already include the proper number of guard bits
-		int sigmaMSB=coeffMSB[degree];
-		int sigmaLSB=coeffLSB[degree];
-		vhdl << tab << declareFixPoint(join("Sigma", degree), true, sigmaMSB, sigmaLSB)
-				 << " <= " << join("A", degree)  << ";" << endl;
 
-		for(int i=degree-1; i>=0; i--) {
-
-			int xTruncLSB = max(lsbIn, sigmaLSB-sigmaMSB);
-
-			int pMSB=sigmaMSB+0 + 1;
-			sigmaMSB = max(pMSB-1, coeffMSB[i]) +1; // +1 to absorb addition overflow
-			sigmaLSB = coeffLSB[i];
-
-			resizeFixPoint(join("XsTrunc", i), "Xs", 0, xTruncLSB);
-
-			if(getTarget()->plainVHDL()) {				// No pipelining here
-				vhdl << tab << declareFixPoint(join("P", i), true, pMSB,  sigmaLSB  + xTruncLSB /*LSB*/)
-						 <<  " <= "<< join("XsTrunc", i) <<" * Sigma" << i+1 << ";" << endl;
-				// However the bit of weight pMSB is a 0. We want to keep the bits from  pMSB-1
-				resizeFixPoint(join("Ptrunc", i), join("P", i), sigmaMSB, sigmaLSB);
-				resizeFixPoint(join("Aext", i), join("A", i), sigmaMSB, sigmaLSB);
-
-				vhdl << tab << declareFixPoint(join("Sigma", i), true, sigmaMSB, sigmaLSB)   << " <= " << join("Aext", i) << " + " << join("Ptrunc", i) << ";" << endl;
+		// In principle we should compute the rounding error budget and pass it to FixHornerEval
+		// REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
+		
+#if 0
+		FixHornerEvaluator* h = new  FixHornerEvaluator(parentOp, target, 
+																										lsbIn,
+																										msbOut,
+																										lsbOut,
+																										degree, 
+																										coeffMSB, 
+																										poly->coeff[0]->LSB // it is the smaller LSB
+																										);
+		addSubComponent(h);
+		inPortMap(h, "X", "Xs");
+		for(int i=0; i<=degree; i++) {
+			inPortMap(h, join("A",i), join("A",i));
 		}
-
-			else { // using FixMultAdd
-				REPORT(DETAILED, " i=" << i);
-				FixMultAdd::newComponentAndInstance(this,
-																						join("Step",i),     // instance name
-																						join("XsTrunc",i),  // x
-																						join("Sigma", i+1), // y
-																						join("A", i),       // a
-																						join("Sigma", i),   // result
-																						sigmaMSB, sigmaLSB  // outMSB, outLSB
-																						);
-				syncCycleFromSignal(join("Sigma", i));
-			}
+		outPortMap(h, "R", "Ys");
+		vhdl << instance(h, "horner") << endl;
+#else
+		// This is the same order as newwInstance() would do, but does not require to write a factory for this Operator
+		schedule();
+		OperatorPtr h = nullptr;
+		inPortMap(h, "X", "Xs");
+		for(int i=0; i<=degree; i++) {
+			inPortMap(h, join("A",i), join("A",i));
 		}
-
-		resizeFixPoint("Ys", "Sigma0",  msbOut, lsbOut);
-
+		outPortMap(h, "R", "Ys");
+		h = new  FixHornerEvaluator(this, target, 
+																lsbIn,
+																msbOut,
+																lsbOut,
+																degree, 
+																coeffMSB, 
+																poly->coeff[0]->LSB // it is the smaller LSB
+																);
+		//		addSubComponent(h); ????
+		vhdl << instance(h, "horner", false);
+		
+#endif
+#if 0
+		ostringstream params, inputs, outputs;
+		params << "d=" << degree << " lsbIn=" << lsbIn << " msbOut=" << msbOut << " lsbOut=" << lsbOut;
+		inputs <<  "X=>Xs";
+		for(int i=0; i<=degree; i++) {
+			inputs << join(", A",i) << "=>" << join("A",i);
+		}
+		outputs <<  "R=>Ys";
+		REPORT(0, params.str() << " " << inputs.str() << " " << outputs.str());
+		newInstance("FixHornerEvaluator","horner", params.str(), inputs.str(), outputs.str());
+#endif		
 		vhdl << tab << "Y <= " << "std_logic_vector(Ys);" << endl;
 	}
 
 
 
 	FixFunctionBySimplePoly::~FixFunctionBySimplePoly() {
-		free(f);
+		delete f;
 	}
 
 
@@ -181,6 +211,73 @@ namespace flopoco{
 		}
 	}
 
+
+
+
+
+	TestList FixFunctionBySimplePoly::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			// A few regression tests
+			// ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="sin(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
+			paramList.push_back(make_pair("f","\"sin(x)\""));
+			paramList.push_back(make_pair("plainVHDL","true"));
+			paramList.push_back(make_pair("lsbIn","-16"));
+			paramList.push_back(make_pair("lsbOut","-16"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("signedIn","true"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+			
+			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("plainVHDL","true"));
+			paramList.push_back(make_pair("lsbIn","-16"));
+			paramList.push_back(make_pair("lsbOut","-16"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("signedIn","true"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+			
+
+#if 0
+
+			for(int wF=5; wF<53; wF+=1) {
+				for(int dualPath = 0; dualPath <2; dualPath++)	{
+					for(int sub = 0; sub <2; sub++)	{
+						int wE = 6+(wF/10);
+						while(wE>wF)
+							wE -= 2;
+					
+						paramList.push_back(make_pair("wF",to_string(wF)));
+						paramList.push_back(make_pair("wE",to_string(wE)));
+						paramList.push_back(make_pair("sub",to_string(sub)));
+						paramList.push_back(make_pair("dualPath",to_string(dualPath)));
+						testStateList.push_back(paramList);
+						paramList.clear();
+					}
+					
+				}
+			}
+#endif
+
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
+
+
+
+
+	
 	OperatorPtr FixFunctionBySimplePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 	{
 		string f;
@@ -193,9 +290,12 @@ namespace flopoco{
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 
-		return new FixFunctionBySimplePoly(target, f, signedIn, lsbIn, msbOut, lsbOut);
+		return new FixFunctionBySimplePoly(parentOp, target, f, signedIn, lsbIn, msbOut, lsbOut);
 	}
 
+
+
+	
 	void FixFunctionBySimplePoly::registerFactory()
 	{
 		UserInterface::add("FixFunctionBySimplePoly",
@@ -209,7 +309,9 @@ lsbOut(int): weight of output LSB;\
 signedIn(bool)=true: defines the input range : [0,1) if false, and [-1,1) otherwise\
 ",
 						   "This operator uses a table for coefficients, and Horner evaluation with truncated multipliers sized just right.<br>For more details, see <a href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>.",
-						   FixFunctionBySimplePoly::parseArguments
+											 FixFunctionBySimplePoly::parseArguments,
+											 FixFunctionBySimplePoly::unitTest
+
 							);
 	}
 

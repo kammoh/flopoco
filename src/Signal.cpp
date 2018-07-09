@@ -80,7 +80,7 @@ namespace flopoco{
 
 	// table
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const int width, const std::string tableValue) :
-		parentOp_(parentOp), name_(name), type_(type), width_(width), resetType_(noReset), constValue_(0.0), tableAttributes_(tableValue), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(width), constValue_(0.0), tableAttributes_(tableValue), numberOfPossibleValues_(1),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -494,7 +494,7 @@ namespace flopoco{
 		o << toVHDLType();
 		o << ";";
 
-		if((type_ == Signal::table) && (tableAttributes_ != ""))
+		if(tableAttributes_ != "")
 			o << endl << tableAttributes_;
 
 		return o.str();

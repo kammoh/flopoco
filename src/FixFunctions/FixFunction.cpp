@@ -39,8 +39,9 @@ namespace flopoco{
 			completeDescription << " on [0,1)";
 
 		if(lsbIn!=0) // we have an IO specification
-			completeDescription << " for lsbIn=" << lsbIn << " (wIn=" << wIn << "), msbout=" << msbOut << ", lsbOut=" << lsbOut ;
+			completeDescription << " for lsbIn=" << lsbIn << " (wIn=" << wIn << "), msbout=" << msbOut << ", lsbOut=" << lsbOut << " (wOut=" << wOut << ")";
 		description = completeDescription.str();
+		// cout << description;
 
 		// Now do the parsing in Sollya
 		fS= sollya_lib_parse_string(sollyaString_.c_str());
@@ -126,10 +127,21 @@ namespace flopoco{
 		 */
 		if(correctlyRounded){
 			mpfr_get_z(rNorD.get_mpz_t(), mpR, GMP_RNDN);
+			// convert to two's complement
+			if(rNorD<0) {
+				rNorD += (1<<wOut);
+			}
+			
 		}
 		else{
 			mpfr_get_z(rNorD.get_mpz_t(), mpR, GMP_RNDD);
+			if(rNorD<0) {
+				rNorD += (1<<(wOut));
+			}
 			mpfr_get_z(ru.get_mpz_t(), mpR, GMP_RNDU);
+			if(ru<0) {
+				ru += (1<<wOut);
+			}
 		}
 
 		//		REPORT(FULL,"function() output r = ["<<rd<<", " << ru << "]");

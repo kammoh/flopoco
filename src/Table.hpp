@@ -43,24 +43,31 @@ namespace flopoco{
 		public:
 		/**
 		 * The Table constructor
+		 * @param[in] parentOp 	the parent operator in the component hierarchy
 		 * @param[in] target 		the target device
-		 * @param[in] values 		the values used to fill the table
+		 * @param[in] values 		the values used to fill the table. Each value is a bit vector given as positive mpz_class.
+		 * @param[in] name      a new name for the VHDL entity
 		 * @param[in] wIn    		the with of the input in bits (optional, may be deduced from values)
 		 * @param[in] wOut   		the with of the output in bits  (optional, may be deduced from values)
-		 * @param[in] logicTable 	true if the table is intended to be implemented as logic; 
-		 * 							false (default value) if the table is intended to be implemented as BRAM
+		 * @param[in] logicTable 1 if the table is intended to be implemented as logic; 
+                            -1 if it is intended to be implemented as embedded RAM; 
+	                        	 0 (default): let the constructor decide, depending on the size and target
 		 * @param[in] minIn			minimal input value, to which value[0] will be mapped (default 0)
 		 * @param[in] maxIn			maximal input value (default: values.size()-1)
-		 */
-		Table(OperatorPtr parentOp, Target* target, vector<mpz_class> _values, int _wIn = -1, int _wOut = -1, string name="", int _logicTable = -1, int _minIn = -1, int _maxIn = -1);
+		 */ 
+		Table(OperatorPtr parentOp, Target* target, vector<mpz_class> _values, string name="",
+					int _wIn = -1, int _wOut = -1, int _logicTable = 0, int _minIn = -1, int _maxIn = -1);
 
 		Table(OperatorPtr parentOp, Target* target);
 
 		virtual ~Table() {};
 
+		/** A function that does tha actual constructor work, so that it can be called from operators that overload Table.  See FixFunctionByTable for an example */
 
+		void init(vector<mpz_class> _values, string name="", int _wIn = -1, int _wOut = -1, int _logicTable = 0, int _minIn = -1, int _maxIn = -1);
+ 
+	
 		/** get one element of the table */
-
 	  mpz_class val(int x);
 
 
@@ -71,7 +78,6 @@ namespace flopoco{
 		bool logicTable; 			/**< true: LUT-based table; false: BRAM-based */
 		double cpDelay;  				/**< For a LUT-based table, its delay; */
 
-
 	public:
 
 		vector<mpz_class> values;	/**< the values used to fill the table */
@@ -81,7 +87,6 @@ namespace flopoco{
 
 		/** Output width (in bits)*/
 		int wOut;
-
 		
 		/** minimal input value (default 0) */
 		mpz_class minIn;
@@ -94,16 +99,6 @@ namespace flopoco{
 
 
 
-
-		public:
-		/**
-		 * The obsolete Table constructor
-		 * @param[in] target the target device
-		 * @param[in] wIn    the with of the input in bits
-		 * @param[in] wOut   the with of the output in bits
-     	 * @param[in] logicTable   1 if the table is intended to be implemented as logic; -1 if the table is intended to be implemented as BRAM; 0: let the constructor decide
-		 */
-		Table(Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1, int logicTable = 0,  map<string, double> inputDelays = emptyDelayMap );
 
 };
 

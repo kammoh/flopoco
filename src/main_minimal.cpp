@@ -22,11 +22,9 @@
 
 */
 
-
-
-#include "FloPoCo.hpp" 
-
-
+#include "UserInterface.hpp"
+#include "Targets/Virtex6.hpp"
+#include "FPAddSub/FPAddSinglePath.hpp"
 using namespace flopoco;
 
 

@@ -22,7 +22,7 @@ namespace flopoco{
 			int msbA_, int msbB_, int msbC_,
 			int msbD_, int msbE_, int msbF_,
 			map<string, double> inputDelays) :
-		Table(target, wIn_, wOut_, 0, ((1<<wIn_)-1), false, inputDelays),
+		Table(target, wIn_, wOut_, 0, ((1<<wIn_)-1), false),
 		wIn(wIn_), wOut(wOut_), archType(archType_),
 		msbA(msbA_), msbB(msbB_), msbC(msbC_),
 		msbD(msbD_), msbE(msbE_), msbF(msbF_)
