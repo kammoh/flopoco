@@ -141,6 +141,18 @@ ELSE (SOLLYA_H AND SOLLYA_H)
 ENDIF (SOLLYA_H AND SOLLYA_H)
 
 
+# Detect sed
+FIND_PATH(SED
+	sed
+	DOC "sed command"
+	)
+
+IF (SED)
+	MESSAGE( STATUS "Found sed: ${SED}" )
+ELSE (SED)
+	MESSAGE( FATAL_ERROR "Could not find sed" )
+ENDIF(SED)
+
 FIND_PATH(WCPG_H
   wcpg.h
   DOC "Path of wcpg.h, the include file for GNU MPFR library"
