@@ -131,42 +131,40 @@ namespace flopoco
 		return si;
 	}
 
-	static int countBits(int val)
+	// counts the size of the input
+	// more or less intlog2(abs(val))
+	static int countBits(mpz_class val)
 	{
-		int calcval = abs(val);
+		mpz_class calcval = abs(val);
 		int count = 0;
 		while((calcval >> count) != 0)
 			count++;
 		if(val >= 0)
 			return count;
-		return count + 1;
+		else
+			return count + 1;
 	}
+
+
 
 	void Multipartite::compressAndUpdateTIV(int inputSize, int outputSize)
 	{
-		vector<int> values;
-		//vector<expression> exprs;
-
-		for(int i = 0; i < (1 << inputSize); i++)
-		{
-			values.push_back(tiv->function(i).get_ui());
-		}
-
 		int maxBitsCounted;
 		int size = -1;
 		int betterS;
 		for(int s = 0; s < inputSize; s++)
 		{
 			int maxBits = 0;
-			for(int i = 0; i < intpow2(inputSize - s); i++)
+			for(int i = 0; i < (1<<(inputSize - s)); i++)
 			{
-				int value = values[intpow2(s) * i];
-				for(int j = 0; j < intpow2(s); j++)
+				mpz_class value = tiv->val( i*(1<<s) );
+				for(int j = 0; j < (1<<s); j++)
 				{
-					maxBits = max(maxBits, countBits(values[i * intpow2(s) + j] - value));
+					mpz_class diff = tiv->val(i * (1<<s) + j)  -  value;
+					maxBits = max(maxBits, countBits(diff));
 				}
 			}
-			int sSize = intpow2(inputSize - s) * outputSize + intpow2(inputSize) * maxBits;
+			int sSize = outputSize*(1<<(inputSize - s))  +  maxBits*(1<<inputSize) ;
 
 			if(sSize < size || size < 0)
 			{
@@ -177,25 +175,27 @@ namespace flopoco
 		}
 
 		string srcFileName = mpt->getSrcFileName();
-		REPORT(DEBUG, "TIV compression : s=" << betterS << ", w'=" << maxBitsCounted << ", size=" << size);
-
+		REPORT(DETAILED, "TIV compression found: s=" << betterS << ", w'=" << maxBitsCounted << ", size=" << size);
 		vector<mpz_class> valsa;
-		vector<mpz_class> valsw;
-		for(int i = 0; i < intpow2(inputSize - betterS); i++)
+		vector<mpz_class> valsDiff;
+		for(int i = 0; i < (1<<(inputSize - betterS)); i++)
 		{
-			int value = values[intpow2(betterS) * i];
+			mpz_class value = tiv->val(i*(1<<betterS));
 			valsa.push_back(mpz_class(value));
 			for(int j = 0; j < intpow2(betterS); j++)
 			{
-				valsw.push_back(mpz_class((values[i * intpow2(betterS) + j] - value) & ((1 << (maxBitsCounted+1)) - 1)));
+				mpz_class diff = tiv->val(i*(1<<betterS) + j) - value;
+				// managing two's complement
+				diff = (diff + (1 << (maxBitsCounted+1)))    &  ((1<<(maxBitsCounted+1)) - 1);
+				valsDiff.push_back(diff);
 			}
 		}
 
-		Table* raTiV = new Table(mpt, mpt->getTarget(), valsa, "raTIV", inputSize - betterS, outputSize);
+		raTiV = new Table(mpt, mpt->getTarget(), valsa, "raTIV", inputSize - betterS, outputSize);
 
-		Table* rwTiV = new Table(mpt, mpt->getTarget(), valsw, "rxTIV", inputSize, maxBitsCounted);
+		rDiffTiV = new Table(mpt, mpt->getTarget(), valsDiff, "rxTIV", inputSize, maxBitsCounted);
 
-		cTiv = new compressedTIV(mpt, mpt->getTarget(), raTiV, rwTiV, betterS, maxBitsCounted, inputSize, outputSize);
+		//		cTiv = new compressedTIV(mpt, mpt->getTarget(), raTiV, rwTiV, betterS, maxBitsCounted, inputSize, outputSize);
 	}
 
 
@@ -211,15 +211,21 @@ namespace flopoco
 
 	void Multipartite::mkTables(Target* target)
 	{
-		tiv = new TIV(this, target, alpha, f->wOut + guardBits, 0, intpow2(alpha) - 1);
+		// The TIV
+		vector<mpz_class> tivval;
+		for (int j=0; j < 1<<alpha; j++)
+				tivval.push_back(TIVFunction(j));
+		tiv = new Table(mpt, target, tivval, mpt->getName() + "_TIV", alpha, f->wOut + guardBits);
+		
+		// The TOIs
 		toi = vector<Table*>(m);
 		for(int i = 0; i < m; ++i)
 		{
 			vector<mpz_class> values;
 			for (int j=0; j < 1<<(gammai[i]+betai[i]-1); j++)
 				values.push_back(TOiFunction(j, i));
-			string name = getName() + join("_TO",i);
-			toi[i] = new Table(this, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
+			string name = mpt->getName() + join("_TO",i);
+			toi[i] = new Table(mpt, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
 		}
 
 		compressAndUpdateTIV(alpha, f->wOut + guardBits);
@@ -228,17 +234,6 @@ namespace flopoco
 
 
 	//------------------------------------------------------------------------------------- Public classes
-
-#if 0
-	Multipartite::TOi::TOi(Multipartite *mp_, int tableIndex, Target *target, int wIn, int wOut, int min, int max):
-		Table(target, wIn, wOut, min, max), mp(mp_), ti(tableIndex)
-	{
-		stringstream name("");
-		name << "TOi_table_" << tableIndex;
-		setNameWithFreqAndUID(name.str());
-	}
-#endif
-	
 	mpz_class Multipartite::TOiFunction(int x, int ti)
 	{
 		int TOi;
@@ -274,6 +269,9 @@ namespace flopoco
 
 
 	mpz_class Multipartite::TIV::function(int x)
+=======
+	mpz_class Multipartite::TIVFunction(int x)
+>>>>>>> Improvements to the Table Operator
 	{
 		int TIVval;
 		double dTIVval;
@@ -283,34 +281,34 @@ namespace flopoco
 		double offsetMatula;
 
 		// to lighten the notation and bring them closer to the paper
-		int wO = mp->outputSize;
-		int g = mp->guardBits;
+		int wO = outputSize;
+		int g = guardBits;
 
 
-		for (unsigned int i = 0; i < mp->pi.size(); i++) {
-			offsetX+= intpow2(mp->pi[i]) * (intpow2(mp->betai[i]) -1);
+		for (unsigned int i = 0; i < pi.size(); i++) {
+			offsetX+= intpow2(pi[i]) * (intpow2(betai[i]) -1);
 		}
 
-		offsetX = offsetX / ((double)mp->inputRange);
+		offsetX = offsetX / ((double)inputRange);
 
-		if (mp->m % 2 == 1) // odd
-					offsetMatula = 0.5*(mp->m-1);
+		if (m % 2 == 1) // odd
+					offsetMatula = 0.5*(m-1);
 				else //even
-					offsetMatula = 0.5 * mp->m;
+					offsetMatula = 0.5 * m;
 
 		offsetMatula += intpow2(g-1); //for the final rounding
 
-		double xVal = (mp->f->signedIn ? -1 : 0) + (mp->f->signedIn ? 2 : 1) * x * intpow2(-mp->alpha);
+		double xVal = (f->signedIn ? -1 : 0) + (f->signedIn ? 2 : 1) * x * intpow2(-alpha);
 		// we compute the function at the left and at the right of
 		// the interval
-		yl = mp->f->eval(xVal) * intpow2(mp->f->lsbIn - mp->f->lsbOut) * intpow2(mp->inputSize - mp->outputSize);
-		yr = mp->f->eval(xVal+offsetX) * intpow2(mp->f->lsbIn - mp->f->lsbOut) * intpow2(mp->inputSize - mp->outputSize);
+		yl = f->eval(xVal) * intpow2(f->lsbIn - f->lsbOut) * intpow2(inputSize - outputSize);
+		yr = f->eval(xVal+offsetX) * intpow2(f->lsbIn - f->lsbOut) * intpow2(inputSize - outputSize);
 
 		// and we take the mean of these values
 		y =  0.5 * (yl + yr);
 		dTIVval = y * intpow2(g + wO);
 
-		if(mp->m % 2 == 1)
+		if(m % 2 == 1)
 			TIVval = (int) round(dTIVval + offsetMatula);
 		else
 			TIVval = (int) floor(dTIVval + offsetMatula);
@@ -319,7 +317,7 @@ namespace flopoco
 	}
 
 
-
+#if 0
 	Multipartite::compressedTIV::compressedTIV(Target *target, Table *compressedAlpha, Table *compressedout, int s, int wOC, int wI, int wO)
 		: Operator(target), wO_corr(wOC)
 	{
@@ -347,7 +345,7 @@ namespace flopoco
 
 		vhdl << tab << instance(compressedout, "TIV_correction_part");
 	}
-
+#endif
 
 
 }

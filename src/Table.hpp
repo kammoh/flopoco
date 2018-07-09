@@ -24,15 +24,16 @@
 	 If the input to your table are negative, etc, or if you want to
 	 define errors, or... then derive a class from this one.
 
-	 A Table is, so far, always combinatorial. It does increase the critical path,
-	 taking into account inputDelays and reporting outputDelay.
+	 To derive a class with a user interface from Table, see FixFunctions/FixFunctionByTable
+	 To use a Table as a sub-component of a larger operator, see FixFunctions/FixFunctionByPiecewisePoly
+
+	 A Table is, so far, always combinatorial. It does increase the critical path
 
 	 On logic tables versus blockRam tables:
 	 This has unfortunately to be managed twice,
 	   firstly by passing the proper bool value to the logicTable argument of the constructor
-	   and  secondly by calling useSoftRAM() or useHardRAM() on each instance to set the synthesis attributes.
+	   and secondly by calling useSoftRAM() or useHardRAM() on each instance to set the synthesis attributes.
 
-	 You may want to force buffering the inputs to a table to be sure it will be synthesized as a BlockRAM.
 */
 
 namespace flopoco{
@@ -62,7 +63,7 @@ namespace flopoco{
 
 		virtual ~Table() {};
 
-		/** A function that does tha actual constructor work, so that it can be called from operators that overload Table.  See FixFunctionByTable for an example */
+		/** A function that does the actual constructor work, so that it can be called from operators that overload Table.  See FixFunctionByTable for an example */
 
 		void init(vector<mpz_class> _values, string name="", int _wIn = -1, int _wOut = -1, int _logicTable = 0, int _minIn = -1, int _maxIn = -1);
  
@@ -70,6 +71,16 @@ namespace flopoco{
 		/** get one element of the table */
 	  mpz_class val(int x);
 
+		/** Table has no factory because passing the values vector would be a pain. This replaces it.  
+		 * @param[in] op            The Operator that will be the parent of this Table (usually "this")
+		 * @param[in] actualInput   The actual input name
+		 * @param[in] actualOutput  The actual input name
+		 * @param[in] values        The vector of mpz_class values to be passed to the Table constructor
+ */
+		static OperatorPtr newUniqueInstance(OperatorPtr op,
+																				 string actualInput, string actualOutput,
+																				 vector<mpz_class> values, string name,
+																				 int wIn = -1, int wOut = -1);
 
 		/** A function that returns an estimation of the size of the table in LUTs. Your mileage may vary thanks to boolean optimization */
 		int size_in_LUTs();

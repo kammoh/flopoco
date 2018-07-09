@@ -29,8 +29,8 @@ namespace flopoco
 			//------------------------------------------------------------------------------------- Public classes
 
 
+		mpz_class TIVFunction(int x);
 		mpz_class TOiFunction(int x, int ti);
-
 #if 0
 	/**
 			 * @brief The TOi class : Used to store one of the multipartite method TO tables
@@ -45,7 +45,6 @@ namespace flopoco
 					Multipartite* mp;
 					int ti;
 			};
-#endif
 			/**
 			 * @brief The TIV class : Used to store the multipartite method TIV table
 			 */
@@ -71,6 +70,7 @@ namespace flopoco
 					int wO_corr;
 			};
 
+#endif
 			//------------------------------------------------------------------------------------- Public methods
 
 			/**
@@ -108,8 +108,13 @@ namespace flopoco
 
 
 			/** The Table of Initial Values, just as the ARITH 15 article */
-			TIV* tiv;
-			compressedTIV* cTiv;
+			Table* tiv;
+
+		/** The first part of the compressed TIV table, just as in the Hsiao article */
+		Table* raTiV;
+		/** The second part of the compressed TIV table, just as in the Hsiao article */
+		Table* rDiffTiV;
+
 
 			/** The m Tables of Offset , just as the ARITH 15 article */
 			vector<Table*> toi;

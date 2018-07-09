@@ -46,8 +46,8 @@ namespace flopoco
 	 @param[int]	nbTables_	number of tables which will be created
 	 @param[bool]	signedIn_	true if the input range is [-1,1)
 	 */
-	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(Target *target, string functionName_, int nbTables_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_, map<string, double> inputDelays):
-		Operator(target, inputDelays), nbTables(nbTables_)
+	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTables_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
+		Operator(parentOp, target), nbTables(nbTables_)
 	{
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 
@@ -56,8 +56,6 @@ namespace flopoco
 		ostringstream name;
 		name << "FixFunctionByMultipartiteTable_" << getNewUId();
 		setNameWithFreqAndUID(name.str());
-
-		setCriticalPath(getMaxInputDelays(inputDelays));
 
 		setCopyrightString("Franck Meyer, Florent de Dinechin (2015)");
 		addHeaderComment("-- Evaluator for " +  f->getDescription() + "\n");
@@ -83,8 +81,7 @@ namespace flopoco
 
 		vhdl << tab << declare("in_tiv", bestMP->alpha) <<" <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->alpha) << ";" << endl;
 
-		addSubComponent(bestMP->cTiv);
-		//addSubComponent(bestMP->tiv);
+		schedule();
 		inPortMap(bestMP->cTiv, "X", "in_tiv");
 		outPortMap(bestMP->cTiv, "Y1", "out_tiv_comp");
 		outPortMap(bestMP->cTiv, "Y2", "out_tiv_corr");
@@ -569,8 +566,6 @@ namespace flopoco
 	}
 
 	void FixFunctionByMultipartiteTable::registerFactory(){
-		try
-		{
 		UserInterface::add("FixFunctionByMultipartiteTable", // name
 											 "A function evaluator using the multipartite method.",
 											 "FunctionApproximation", // category
@@ -586,11 +581,6 @@ signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) other
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
 											 FixFunctionByMultipartiteTable::parseArguments
 											 ) ;
-		}
-		catch(string s)
-		{
-			cerr << s << endl;
-		}
 
 	}
 }

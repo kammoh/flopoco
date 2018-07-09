@@ -38,8 +38,8 @@ namespace flopoco
 			 * @param[int]	nbTables_	number of tables which will be created
 			 * @param[bool]	signedIn_	true if the input range is [-1,1)
 			 */
-			FixFunctionByMultipartiteTable(Target* target, string function, int nbTables, bool signedIn,
-							  int lsbIn, int msbOut, int lsbOut, map<string, double> inputDelays = emptyDelayMap);
+			FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target* target, string function, int nbTables, bool signedIn,
+							  int lsbIn, int msbOut, int lsbOut);
 
 			virtual ~FixFunctionByMultipartiteTable();
 

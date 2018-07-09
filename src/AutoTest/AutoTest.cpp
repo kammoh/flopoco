@@ -276,7 +276,10 @@ namespace flopoco
 
 	string AutoTest::defaultTestBenchSize(map<string,string> * unitTestParam)
 	{
-#if 0 // This  was definitely fragile, we can't rely on information extracted this way
+		// This  was definitely fragile, we can't rely on information extracted this way
+		// Better make it explicit in the unitTest methods
+
+#if 0
 		string testBench = " TestBench n=";
 
 		int bitsSum = 0;
@@ -298,7 +301,7 @@ namespace flopoco
 		}
 #endif
 
-		string testBench = " TestBench n=10000";
+		string testBench = " TestBench n=1000";
 		
 		return testBench;
 	}

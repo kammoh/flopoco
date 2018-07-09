@@ -210,9 +210,24 @@ namespace flopoco{
 		return values[x];
 	}
 
+
 	int Table::size_in_LUTs() {
 		return wOut*int(intpow2(wIn-getTarget()->lutInputs()));
 	}
+
+
+	OperatorPtr Table::newUniqueInstance(OperatorPtr op,
+																			 string actualInput, string actualOutput,
+																			 vector<mpz_class> values, string name,
+																			 int wIn, int wOut){
+		op->schedule();
+		op->inPortMap(nullptr, "X", actualInput);
+		op->outPortMap(nullptr, "Y", actualOutput);
+		Table* t = new Table(op, op->getTarget(), values, name, wIn, wOut); 
+		op->vhdl << op->instance(t, name, false);
+		return t;
+	}
+	
 
 	
 }

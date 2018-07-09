@@ -82,7 +82,7 @@ namespace flopoco{
 		setNameWithFreqAndUID(name.str()); 
 
 
-		setCopyrightString("Florent de Dinechin (2014)");
+		setCopyrightString("Florent de Dinechin (2014,2018)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n"); 
 		REPORT(DETAILED, "Entering: FixFunctionByPiecewisePoly \"" << func << "\" " << lsbIn << " " << msbOut << " " << lsbOut << " " << degree);
  		int wX=-lsbIn;
@@ -137,18 +137,17 @@ namespace flopoco{
 			vhdl << tab << declare("Zs", wX-alpha)  << " <= (not Z(" << wX-alpha-1 << ")) & Z" << range(wX-alpha-2, 0) << "; -- centering the interval" << endl;
 
 #if 0
-			
-			inPortMap(coeffTable, "X", "A");
-			outPortMap(coeffTable, "Y", "Coeffs");
-			vhdl << instance(coeffTable, "coeffTable") << endl;
-#endif
 			// This is the same order as newInstance() would do, but does not require to write a factory for this Operator
 			schedule();
 			inPortMap(nullptr, "X", "A");
 			outPortMap(nullptr, "Y", "Coeffs");
 			Table* coeffTable = new Table(parentOp, target, coeffTableVector, "coeffTable", alpha, polyTableOutputSize); 
 			vhdl << instance(coeffTable, "coeffTable", false);
-
+#else
+			Table::newUniqueInstance(this, "A", "Coeffs",
+															 coeffTableVector, "coeffTable", alpha, polyTableOutputSize );
+#endif
+			
 			// Split the table output into each coefficient
 			int currentShift=0;
 			for(int i=polyApprox->degree; i>=0; i--) {
@@ -359,20 +358,7 @@ namespace flopoco{
 
 	}
 
-	
-	
-#if 0
-				sollya_lib_evaluate_function_over_interval(res, sigmaS, a);
-				mpfi_get_left   (left, res);
-				mpfi_get_right   (right, res);
-				
-				double l=mpfr_get_d(left, GMP_RNDN);
-				double r=mpfr_get_d(right, GMP_RNDN);
-				REPORT(INFO, "i=" << i << "  j=" << j << "  left=" << l << " right=" << r);
-		mpfi_clear(a);
-		mpfi_clear(res);
-#endif
-
+ 
 
 
 	void FixFunctionByPiecewisePoly::emulate(TestCase* tc){
@@ -391,10 +377,63 @@ namespace flopoco{
 		tc->addInput("X", (mpz_class(1) << f->wIn) -1);
 		emulate(tc);
 		tcl->add(tc);
-
 	}
 
 
+	TestList FixFunctionByPiecewisePoly::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			// A few regression tests, first deg2, exhaustive on 15 bits, then deg 3 for 24 bits 
+			paramList.push_back(make_pair("f","\"sin(x)\""));
+			paramList.push_back(make_pair("plainVHDL","true"));
+			paramList.push_back(make_pair("lsbIn","-15"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("lsbOut","-15"));
+			paramList.push_back(make_pair("d","3"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+
+			paramList.push_back(make_pair("f","\"sin(x)\""));
+			paramList.push_back(make_pair("plainVHDL","true"));
+			paramList.push_back(make_pair("lsbIn","-25"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("lsbOut","-25"));
+			paramList.push_back(make_pair("d","5"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+			
+			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("plainVHDL","true"));
+			paramList.push_back(make_pair("lsbIn","-16"));
+			paramList.push_back(make_pair("lsbOut","-16"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("d","2"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+		 
+			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("plainVHDL","true"));
+			paramList.push_back(make_pair("lsbIn","-26"));
+			paramList.push_back(make_pair("lsbOut","-26"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("d","4"));
+			testStateList.push_back(paramList);
+
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
 
 	
 	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
@@ -422,7 +461,8 @@ namespace flopoco{
                         d(int): degree of the polynomial;\
                         approxErrorBudget(real)=0.25: error budget in ulp for the approximation, between 0 and 0.5",                        
 											 "This operator uses a table for coefficients, and Horner evaluation with truncated multipliers sized just right.<br>For more details, see <a href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>.",
-											 FixFunctionByPiecewisePoly::parseArguments
+											 FixFunctionByPiecewisePoly::parseArguments,
+											 FixFunctionByPiecewisePoly::unitTest
 											 ) ;
 		
 	}
