@@ -1,0 +1,4 @@
+local .gitignore
+fake main (src file and lines in CMake)
+This File !
+

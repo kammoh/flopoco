@@ -407,7 +407,8 @@ TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 ADD_EXECUTABLE(longacc2fp src/Tools/longacc2fp  src/utils)
 TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 
-
+ADD_EXECUTABLE(fftest src/Complex/fakemain)
+TARGET_LINK_LIBRARIES(fftest ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 #add_subdirectory(src/random)
 #target_link_libraries(FloPoCoLib flopoco_random_lib)

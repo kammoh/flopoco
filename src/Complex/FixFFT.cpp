@@ -1,6 +1,4 @@
 #include "FixFFT.hpp"
-#include <iostream>
-#include <math.h>
 
 using namespace std;
 
@@ -18,11 +16,4 @@ namespace flopoco{
 			return Cmplx;
 		return Exact;
 	}
-}
-
-int main(){
-	for(int i=0;i<16;i++)
-		cout << flopoco::FixFFT::getComponent(i,3) << '\n';
-		
-	return 0;
 }

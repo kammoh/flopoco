@@ -107,3 +107,5 @@ PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor
 Tools/Plane
 Tools/Point
 TutorialOperator
+
+Complex/FixFFT
