@@ -34,3 +34,5 @@ Xilinx_TernaryAdd_2State
 XilinxGPC
 XilinxFourToTwoCompressor
 TutorialOperator
+
+FixComplexKCM
