@@ -34,15 +34,19 @@ namespace flopoco{
 	}
 
 	pair<FixFFT::fftSize, FixFFT::fftError> calcDim(FixFFT::fftPrec &fft){
-		unsigned int lay = fft.size(); // the layers of the FFT
-		unsigned int pts = 1<<lay; // the points of the FFT
+		unsigned int nbLay = fft.size(); // the layers of the FFT
+		unsigned int nbPts = 1<<lay; // the points of the FFT
 		if (fft[0].size() != pts)
 			throw "not an FFT";
 		
 		FixFFT::fftSize sizes(lay, FixFFT::laySize(pts, pair<int,int> (0,0)));
 		FixFFT::fftError errors(lay, vector<float>(pts, 0.0));
-		
-		
+
+		for(int lay=1; lay<=nbLay; lay++){
+			for(int pt=0; pt<nbPts; pt++){
+				
+			}
+		}
 		
 		return make_pair(sizes,errors);
 	}

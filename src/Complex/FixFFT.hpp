@@ -7,8 +7,15 @@
 
 using namespace std;
 
-namespace flopoco {
 
+/* Radix-2 FFT
+   A n=2^k points FFT is represented as a bidimentional array of size (k+1, n);
+   each cell represents a signal. The first layer is the input, and the layer
+   k is the output.   
+ */
+
+namespace flopoco {
+	
 	/**
 	 * @brief a Fix FFT in FloPoCo
 	 */	
@@ -36,8 +43,8 @@ namespace flopoco {
 
 		/**
 		 * @brief get the exponant of the twiddle factor of a butterfly
-		 * @param[in] signal the line of the signal coming into the butterfly
 		 * @param[in] layer the layer of the signal
+		 * @param[in] signal the line of the signal coming into the butterfly
 
 		 * @return p such as \f$\omega_{2^{\ell}}^{p} \f$ is the twiddle factor
 		 * of the butterfly, with \f$\ell\f$ the layer.
@@ -51,8 +58,8 @@ namespace flopoco {
 		/**
 		 * @brief say if the signal enters in the non-multiplied(top) part
 		 * of its outcoming Butterfly
-		 * @param[in] signal the line of the signal coming into the butterfly
 		 * @param[in] layer the layer of the signal
+		 * @param[in] signal the line of the signal coming into the butterfly
 		 * @ret true IFF the signal is the input of the top part of its
 		 * outcoming Butterfly
 		 */
@@ -61,8 +68,8 @@ namespace flopoco {
 		/**
 		 * @brief given one output signal of a butterfly, returns its two input
 		 * signals 
-		 * @param[in] signal the line of the butterfly's output
 		 * @param[in] layer the layer of the butterfly's output
+		 * @param[in] signal the line of the butterfly's output
 
 		 */
 
@@ -70,8 +77,8 @@ namespace flopoco {
 				
 		/**
 		 * @brief gets the component in which the signal enter
-		 * @param[in] signal the line of the signal coming into the butterfly
 		 * @param[in] layer the layer of the signal
+		 * @param[in] signal the line of the signal coming into the butterfly
 		 
 		 * @ret the component in which the signal enter
 		 */
