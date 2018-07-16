@@ -7,14 +7,33 @@
 
 using namespace std;
 
-
 /* Radix-2 FFT
    A n=2^k points FFT is represented as a bidimentional array of size (k+1, n);
    each cell represents a signal. The first layer is the input, and the layer
-   k is the output.   
+   k is the output.
+
+
+   Radix-4 FFT
+   A n=4^k poinst FFT is represented as a bidimensional array of size (k+1,n);
+   each cell represents a signal. The first layer is the input, and the layer k
+   is the output.
+
+   What I'm trying to achieve :
+   Precision -> Dimension -> Components -> Costs
+   What is easy ?
+   Dimension <-> Components
+   Components -> Costs
+   Dimension -> Precision
  */
 
 namespace flopoco {
+	/**
+	 * @brief computes the smallest k such as 4**k >= n
+	 * @param[in] n the function variable
+	 * @ret ceil(log4(n))
+	 */
+	
+	int log4Int(int n);
 	
 	/**
 	 * @brief a Fix FFT in FloPoCo
@@ -52,7 +71,7 @@ namespace flopoco {
 		 * @pre layer < size
 		 */
 		
-		static int getTwiddleExp(int layer, int signal);
+		static int getTwiddleExp(const int layer, const int signal);
 
 
 		/**
@@ -63,14 +82,14 @@ namespace flopoco {
 		 * @ret true IFF the signal is the input of the top part of its
 		 * outcoming Butterfly
 		 */
-		static bool isTop(int layer, int signal);
+		static bool isTop(const int layer, const int signal);
 		
 		/**
 		 * @brief given one output signal of a butterfly, returns its two input
-		 * signals 
+		 * signals
 		 * @param[in] layer the layer of the butterfly's output
 		 * @param[in] signal the line of the butterfly's output
-
+		 * @ret the lines of both parents
 		 */
 
 		static pair<int, int> pred(int layer, int signal);
@@ -88,12 +107,35 @@ namespace flopoco {
 		/**
 		 * @brief computes the error made on each signal in an FFT
 		 * @param[in] fft the precision of each element (KCM or Truncate)
-		 * @return the error made on each element 
-	 
-		 fft dimensions must be (p, 2**p)
+		 * @return the size of each signal and the error made on each element 
+		 * fft dimensions must be (p, 2**p)
 		*/
 	
 		static pair<fftSize,fftError> calcDim(fftPrec &fft);
+
+		/**
+		 * @brief computes the number of bits of a signal in a radix-4 FFT
+		 * @param[in] msbIn the position of the msb of the input
+		 * @param[in] lsbIn the position of the lsb of the input 
+		 * @param[in] lsbOut precision required, multiplied by sqrt(2)
+		 * @param[in] nbLay the number of layers (log 4 pts) of the FFT
+		 * @param[in] lay the layer of the signal
+		 * @return (a,b) the msb and the lsb of the (signed) signal
+		 * This calculation uses the "Projet Ariane" in base 4 formula
+		 msbIn is assumed to be 0
+		*/
+
+		static pair<int, int> sizeSignal(int msbIn, int lsbIn,
+		                                 int lsbOut, int nbLay, int lay);
+		
+		/**
+		 * @brief computes the dimension of each signal in a radix-4 FFT
+		 * @param[in] nbLay the numbers of layers (log4 points)
+		 * @return the size of each signal and the error made on each element
+		 * here we use the "Projet Ariane" formula
+		 */
+		
+		static fftSize calcDim4(int msbIn, int lsbIn, int lsbOut, int nbLay);
 	};
 }//namespace
 #endif
