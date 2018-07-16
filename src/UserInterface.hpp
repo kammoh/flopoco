@@ -23,6 +23,10 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
 namespace flopoco
 {
+	class Operator;
+	typedef Operator* OperatorPtr;
+	typedef vector<vector<pair<string,string>>> TestList;
+	typedef TestList (*unitTest_func_t)(int);
 
 	typedef OperatorPtr (*parser_func_t)(OperatorPtr, Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function taking as parameters Target* etc., and returning an OperatorPtr
 	class OperatorFactory;
