@@ -11,7 +11,8 @@ ostream& operator<<(ostream& flux, pair<int,int> p){
 int main(int argc, char** argv){
 	cout << argc << endl;
 	if(argc < 5){
-		cerr << "hello";
+		for(int i=1; i<18; i++)
+			cout << uplog2(i) << " ";
 		return 1;
 	}
 	int msbIn = stoi(argv[1]);
@@ -20,11 +21,16 @@ int main(int argc, char** argv){
 	int nbLay = stoi(argv[4]);
 	int nbPts = 1<<(2*nbLay);
 	
-	FixFFT::fftSize out = FixFFT::calcDim4(msbIn, lsbIn, lsbOut, nbLay);
-
+	
 	for(int lay=0; lay <= nbLay; lay++){
-		cout << out[lay][0] << " ";
+		cout << FixFFT::sizeSignalAr(msbIn, lsbIn, lsbOut, nbLay, lay) << " ";
 	}
 	cout << endl;
+	
+	for(int lay=0; lay <= nbLay; lay++){
+		cout << FixFFT::sizeSignalSfsg(msbIn, lsbIn, lsbOut, nbLay, lay) << " ";
+	}
+	cout << endl;
+
 	return 0;
 }

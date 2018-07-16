@@ -26,14 +26,9 @@ using namespace std;
    Dimension -> Precision
  */
 
+int uplog2(int);
+
 namespace flopoco {
-	/**
-	 * @brief computes the smallest k such as 4**k >= n
-	 * @param[in] n the function variable
-	 * @ret ceil(log4(n))
-	 */
-	
-	int log4Int(int n);
 	
 	/**
 	 * @brief a Fix FFT in FloPoCo
@@ -49,15 +44,16 @@ namespace flopoco {
 			  Cmplx, /**< a complex multiplication (other roots) */
 			} CompType;
 
-		/** the size of each bus on a layer */
-		typedef vector<pair<int, int>> laySize;
+		/** @brief the size of each bus on a layer */
+		typedef vector<fdim> laySize;
 
-		/** the size of each bus of the FFT */
+		/** @brief the size of each bus of the FFT */
 		typedef vector<laySize> fftSize;
 		
-		/** the precision required for each bus of the FFT */
-		typedef vector<vector<unsigned int>> fftPrec;
-		/** the error accumulated from the beginning for each bus of the FFT */
+		/** @brief the precision required for each bus of the FFT */
+		typedef vector<vector<int>> fftPrec;
+		/** @brief the error accumulated from the beginning for each bus of 
+		    the FFT */
 		typedef vector<vector<float>> fftError;
 
 		/**
@@ -92,7 +88,7 @@ namespace flopoco {
 		 * @ret the lines of both parents
 		 */
 
-		static pair<int, int> pred(int layer, int signal);
+		static fdim pred(int layer, int signal);
 				
 		/**
 		 * @brief gets the component in which the signal enter
@@ -111,7 +107,7 @@ namespace flopoco {
 		 * fft dimensions must be (p, 2**p)
 		*/
 	
-		static pair<fftSize,fftError> calcDim(fftPrec &fft);
+		//static pair<fftSize,fftError> calcDim(fftPrec &fft);
 
 		/**
 		 * @brief computes the number of bits of a signal in a radix-4 FFT
@@ -125,8 +121,24 @@ namespace flopoco {
 		 msbIn is assumed to be 0
 		*/
 
-		static pair<int, int> sizeSignal(int msbIn, int lsbIn,
-		                                 int lsbOut, int nbLay, int lay);
+		static fdim sizeSignalAr(int msbIn, int lsbIn,
+		                         int lsbOut, int nbLay, int lay);
+
+		/**
+		 * @brief computes the number of bits of a signal in a radix-4 FFT
+		 * @param[in] msbIn the position of the msb of the input
+		 * @param[in] lsbIn the position of the lsb of the input 
+		 * @param[in] lsbOut precision required, multiplied by sqrt(2)
+		 * @param[in] nbLay the number of layers (log 4 pts) of the FFT
+		 * @param[in] lay the layer of the signal
+		 * @return (a,b) the msb and the lsb of the (signed) signal
+		 * This calculation uses the "Projet Ariane" in base 4 formula, and the
+		 So Far So Good principle (exact first layer)
+		 msbIn is assumed to be 0
+		*/
+
+		static fdim sizeSignalSfsg(int msbIn, int lsbIn, int lsbOut, int nbLay,
+		                           int lay);
 		
 		/**
 		 * @brief computes the dimension of each signal in a radix-4 FFT
@@ -135,7 +147,7 @@ namespace flopoco {
 		 * here we use the "Projet Ariane" formula
 		 */
 		
-		static fftSize calcDim4(int msbIn, int lsbIn, int lsbOut, int nbLay);
+		// static laySize calcDim4(int msbIn, int lsbIn, int lsbOut, int nbLay);
 	};
 }//namespace
 #endif
