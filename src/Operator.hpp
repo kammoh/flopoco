@@ -27,16 +27,7 @@
 
 using namespace std;
 
-namespace flopoco {
-	class Operator;
-	typedef Operator* OperatorPtr;
-	typedef vector<vector<pair<string,string>>> TestList;
-	typedef TestList (*unitTest_func_t)(int);
-}
-
 #include "UserInterface.hpp"
-
-
 
 namespace flopoco {
 	// global const variables
