@@ -5,7 +5,6 @@
 #include <map>
 
 #include "FixFunction.hpp"
-#include "../Table.hpp"
 #include "../Operator.hpp"
 
 
@@ -18,130 +17,96 @@ namespace flopoco
 
 	class Multipartite
 	{
-		public:
+	public:
 		const string uniqueName_=""; // for REPORT to work
-			//---------------------------------------------------------------------------- Constructors/Destructor
+		//---------------------------------------------------------------------------- Constructors/Destructor
 
-			Multipartite(FixFunction *f_, int m_, int alpha_, int beta_, vector<int> gammai_, vector<int> betai_, FixFunctionByMultipartiteTable* mpt_);
+		Multipartite(FixFunction *f_, int m_, int alpha_, int beta_, vector<int> gammai_, vector<int> betai_, FixFunctionByMultipartiteTable* mpt_);
 
-			Multipartite(FixFunctionByMultipartiteTable* mpt_, FixFunction* f_, int inputSize_, int outputSize_);
-
-			//------------------------------------------------------------------------------------- Public classes
-
+		Multipartite(FixFunctionByMultipartiteTable* mpt_, FixFunction* f_, int inputSize_, int outputSize_);
 
 		mpz_class TIVFunction(int x);
 		mpz_class TOiFunction(int x, int ti);
-#if 0
-	/**
-			 * @brief The TOi class : Used to store one of the multipartite method TO tables
-			 */
-			class TOi : public Table
-			{
-				public:
-					TOi(Multipartite *mp_, int tableIndex, Target* target, int wIn, int wOut, int min, int max);
+		//------------------------------------------------------------------------------------- Public methods
 
-					mpz_class function(int x);
+		/**
+		 * @brief buildGuardBitsAndSizes : Builds decomposition's guard bits and tables sizes
+		 */
+		void buildGuardBitsAndSizes();
 
-					Multipartite* mp;
-					int ti;
-			};
-			/**
-			 * @brief The TIV class : Used to store the multipartite method TIV table
-			 */
-			class TIV : public Table
-			{
-				public:
-					TIV(Multipartite *mp, Target* target, int wIn, int wOut, int min, int max);
+		/**
+		 * @brief mkTables : fill  the TIV and TOs tables
+		 * @param target : The target FPGA
+		 */
+		void mkTables(Target* target);
 
-					mpz_class function(int x);
+		/**
+		 * @brief descriptionString(): describe the various parameters in textual form
+		 */
+		string descriptionString();
+		
+		//---------------------------------------------------------------------------------- Public attributes
+		FixFunction* f;
 
+		int inputSize;
+		int inputRange;
+		int outputSize;
 
-					Multipartite* mp;
-			};
+		double epsilonT;
 
-			/**
-			 * @brief The compressedTIV class : Used to store a slightly compressed version of the TIV table
-			 */
-			class compressedTIV : public Operator
-			{
-				public:
-				compressedTIV(OperatorPtr parentOp, Target* target, Table* compressedAlpha, Table* compressedout, int s, int wOC, int wI, int wO);
+		/** The number of TOi */
+		int m;
+		/** Just as in the article  */
+		int alpha;
+		/** the number of bits that address the first part of a compressed TIV (alpha -s) */
+		int rho;
+		/** Just as in the article */
+		int beta;
+		/** Just as in the article */
+		vector<int> gammai;
+		/** Just as in the article */
+		vector<int> betai;
+		/** Just as in the article */
+		vector<int> pi;
 
-					int wO_corr;
-			};
-
-#endif
-			//------------------------------------------------------------------------------------- Public methods
-
-			/**
-			 * @brief buildGuardBitsAndSizes : Builds decomposition's guard bits and tables sizes
-			 */
-			void buildGuardBitsAndSizes();
-
-			/**
-			 * @brief mkTables : Creates the TIV and TOs tables (they will be automatically filled)
-			 * @param target : The target FPGA
-			 */
-			void mkTables(Target* target);
-
-			//---------------------------------------------------------------------------------- Public attributes
-			FixFunction* f;
-
-			int inputSize;
-			int inputRange;
-			int outputSize;
-
-			double epsilonT;
-
-			/** The number of tables of intermediate values */
-			int m;
-			/** Just as in the article  */
-			int alpha;
-			/** Just as in the article */
-			int beta;
-			/** Just as in the article */
-			vector<int> gammai;
-			/** Just as in the article */
-			vector<int> betai;
-			/** Just as in the article */
-			vector<int> pi;
-
-
-			/** The Table of Initial Values, just as the ARITH 15 article */
-			Table* tiv;
-
+		/** The Table of Initial Values, just as the ARITH 15 article */
+		vector<mpz_class> tiv;
+		
 		/** The first part of the compressed TIV table, just as in the Hsiao article */
-		Table* raTiV;
+		vector<mpz_class> aTIV;
+
 		/** The second part of the compressed TIV table, just as in the Hsiao article */
-		Table* rDiffTiV;
+		vector<mpz_class> diffTIV;
 
 
-			/** The m Tables of Offset , just as the ARITH 15 article */
-			vector<Table*> toi;
+		/** The m Tables of Offset , just as the ARITH 15 article */
+		vector<vector<mpz_class>> toi;
 
-			double mathError;
+		double mathError;
 
-			int guardBits;
-			vector<int> outputSizeTOi;
-			vector<int> sizeTOi;
-			int totalSize;
+		int guardBits;
+		int outputSizeATIV;
+		int outputSizeDiffTIV;
+		vector<int> outputSizeTOi;
+		vector<int> sizeTOi;
+		int totalSize;
 
-			// holds precalculated TOi math errors. Valid as long as we don't change m!
-			FixFunctionByMultipartiteTable *mpt;
+		// holds precalculated TOi math errors. Valid as long as we don't change m!
+		FixFunctionByMultipartiteTable *mpt;
 
-		private:
+	private:
 
-			//------------------------------------------------------------------------------------ Private methods
-			void computeGuardBits();
-			void computeMathErrors();
-			void computeSizes();
-			void computeTOiSize (int i);
+		//------------------------------------------------------------------------------------ Private methods
+		void computeGuardBits();
+		void computeMathErrors();
+		void computeSizes();
+		void computeTOiSize (int i);
 
-			double deltai(int i);
-			double mui(int i, int Bi);
-			double si(int i, int Ai);
+		double deltai(int i);
+		double mui(int i, int Bi);
+		double si(int i, int Ai);
 
-			void compressAndUpdateTIV(int inputSize, int outputSize);
+		void compressAndUpdateTIV();
 
 	};
 

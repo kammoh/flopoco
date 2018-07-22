@@ -34,7 +34,7 @@ namespace flopoco{
 			sizeOfBlock_ 			= 36864;	// the size of a primitive block is 2^11 * 9
 			        // The blocks are 36kb configurable as dual 18k so I don't know.
 
-			// See also all the parameters at the end of Kintex7.hpp
+			// See also all the constant parameters at the end of Kintex7.hpp
 	}
 
 	Kintex7::~Kintex7() {};
@@ -101,8 +101,13 @@ namespace flopoco{
 	};
 
 
-	double Kintex7::tableDelay(int wIn_, int wOut_, bool logicTable_){
-		return 1e-9;
+	double Kintex7::tableDelay(int wIn, int wOut, bool logicTable){
+		if(logicTable) {
+			return logicDelay(wIn);
+		}
+		else {
+			return RAMDelay_;
+		}
 	}
 
 	

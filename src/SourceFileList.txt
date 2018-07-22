@@ -79,8 +79,8 @@ FixFunctions/FixHornerEvaluator
 FixFunctions/FixFunctionBySimplePoly
 FixFunctions/PiecewisePolyApprox
 FixFunctions/FixFunctionByPiecewisePoly
-#FixFunctions/Multipartite
-#FixFunctions/FixFunctionByMultipartiteTable
+FixFunctions/Multipartite
+FixFunctions/FixFunctionByMultipartiteTable
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive

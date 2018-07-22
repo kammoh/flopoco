@@ -147,55 +147,58 @@ namespace flopoco
 
 
 
-	void Multipartite::compressAndUpdateTIV(int inputSize, int outputSize)
+	void Multipartite::compressAndUpdateTIV()
 	{
 		int maxBitsCounted;
 		int size = -1;
 		int betterS;
-		for(int s = 0; s < inputSize; s++)
+		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
+
+		// First find the optimal value of s
+		for(int s = 0; s < alpha; s++)
 		{
 			int maxBits = 0;
-			for(int i = 0; i < (1<<(inputSize - s)); i++)
+			for(int i = 0; i < (1<<(alpha - s)); i++)
 			{
-				mpz_class value = tiv->val( i*(1<<s) );
+				mpz_class value = tiv[ i*(1<<s) ];
 				for(int j = 0; j < (1<<s); j++)
 				{
-					mpz_class diff = tiv->val(i * (1<<s) + j)  -  value;
+					mpz_class diff = tiv[ i * (1<<s) + j]  -  value;
 					maxBits = max(maxBits, countBits(diff));
 				}
 			}
-			int sSize = outputSize*(1<<(inputSize - s))  +  maxBits*(1<<inputSize) ;
+			int sSize = (outputSize+guardBits)*(1<<(alpha - s))  +  maxBits*(1<<alpha) ;
 
-			if(sSize < size || size < 0)
-			{
+			if(sSize < size || size < 0)			{
 				betterS = s;
 				size = sSize;
 				maxBitsCounted = maxBits;
+				REPORT(DEBUG, "found better s=" << s << ", maxBitsCounted=" << maxBitsCounted);
 			}
 		}
 
-		string srcFileName = mpt->getSrcFileName();
-		REPORT(DETAILED, "TIV compression found: s=" << betterS << ", w'=" << maxBitsCounted << ", size=" << size);
-		vector<mpz_class> valsa;
-		vector<mpz_class> valsDiff;
-		for(int i = 0; i < (1<<(inputSize - betterS)); i++)
-		{
-			mpz_class value = tiv->val(i*(1<<betterS));
-			valsa.push_back(mpz_class(value));
-			for(int j = 0; j < intpow2(betterS); j++)
+		// set the class attribute 
+		rho = alpha - betterS;
+
+		REPORT(DETAILED, "TIV compression found: s=" << betterS << ", rho=" << rho << ", diffOutputSize=" << maxBitsCounted << ", size=" << size);
+
+
+		// Now actually fill the table
+		for(int i = 0; i < (1<<rho); i++)		{
+			mpz_class value = tiv[ i*(1<<betterS) ];
+			aTIV.push_back(mpz_class(value));
+			for(int j = 0; j < (1<<betterS); j++)
 			{
-				mpz_class diff = tiv->val(i*(1<<betterS) + j) - value;
+				mpz_class diff = tiv[ i*(1<<betterS) + j] - value;
 				// managing two's complement
 				diff = (diff + (1 << (maxBitsCounted+1)))    &  ((1<<(maxBitsCounted+1)) - 1);
-				valsDiff.push_back(diff);
+				diffTIV.push_back(diff);
+				REPORT(FULL, "building diffTIV, i=" << i << " j=" << j);
 			}
 		}
-
-		raTiV = new Table(mpt, mpt->getTarget(), valsa, "raTIV", inputSize - betterS, outputSize);
-
-		rDiffTiV = new Table(mpt, mpt->getTarget(), valsDiff, "rxTIV", inputSize, maxBitsCounted);
-
-		//		cTiv = new compressedTIV(mpt, mpt->getTarget(), raTiV, rwTiV, betterS, maxBitsCounted, inputSize, outputSize);
+		// set up attributes
+		outputSizeATIV = outputSize+guardBits;
+		outputSizeDiffTIV = maxBitsCounted;
 	}
 
 
@@ -213,22 +216,27 @@ namespace flopoco
 	{
 		// The TIV
 		vector<mpz_class> tivval;
-		for (int j=0; j < 1<<alpha; j++)
-				tivval.push_back(TIVFunction(j));
-		tiv = new Table(mpt, target, tivval, mpt->getName() + "_TIV", alpha, f->wOut + guardBits);
+		for (int j=0; j < 1<<alpha; j++) {
+				tiv.push_back(TIVFunction(j));
+		}
+		//		tiv = new Table(mpt, target, tivval, mpt->getName() + "_TIV", alpha, f->wOut + guardBits);
 		
 		// The TOIs
-		toi = vector<Table*>(m);
+		//toi = vector<Table*>(m);
 		for(int i = 0; i < m; ++i)
 		{
 			vector<mpz_class> values;
-			for (int j=0; j < 1<<(gammai[i]+betai[i]-1); j++)
+			for (int j=0; j < 1<<(gammai[i]+betai[i]-1); j++) {
 				values.push_back(TOiFunction(j, i));
-			string name = mpt->getName() + join("_TO",i);
-			toi[i] = new Table(mpt, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
+			}
+			toi.push_back(values);
+			
+			//			string name = mpt->getName() + join("_TO",i);
+			//toi[i] = new Table(mpt, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
 		}
 
-		compressAndUpdateTIV(alpha, f->wOut + guardBits);
+		// TIV compression as per Hsiao
+		compressAndUpdateTIV();
 	}
 
 
@@ -254,6 +262,7 @@ namespace flopoco
 		y = slope * intpow2(-wI + pi[ti]) * (Bi+0.5);
 		dTOi = y * intpow2(wO+g) * intpow2(f->lsbIn - f->lsbOut) * intpow2(inputSize - outputSize);
 		TOi = (int)floor(dTOi);
+	 
 
 		return mpz_class(TOi);
 	}
@@ -261,17 +270,7 @@ namespace flopoco
 
 
 
-	Multipartite::TIV::TIV(Multipartite *mp, Target* target, int wIn, int wOut, int min, int max):
-		Table(target, wIn, wOut, min, max), mp(mp)
-	{
-		setNameWithFreqAndUID("TIV_table");
-	}
-
-
-	mpz_class Multipartite::TIV::function(int x)
-=======
 	mpz_class Multipartite::TIVFunction(int x)
->>>>>>> Improvements to the Table Operator
 	{
 		int TIVval;
 		double dTIVval;
@@ -317,6 +316,17 @@ namespace flopoco
 	}
 
 
+	string 	Multipartite::descriptionString(){
+		ostringstream s;
+		s << "alpha=" << alpha << ", rho=" << rho << "   ";
+		for (size_t i =0; i< gammai.size(); i++) {
+			s << " gamma" << i << "=" << gammai[i] << " p"<<i<<"=" << pi[i]; 
+		}
+		return s.str();
+	}
+
+
+	
 #if 0
 	Multipartite::compressedTIV::compressedTIV(Target *target, Table *compressedAlpha, Table *compressedout, int s, int wOC, int wI, int wO)
 		: Operator(target), wO_corr(wOC)

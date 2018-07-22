@@ -215,6 +215,7 @@ namespace flopoco{
 		else     
 		{
 				// finite number of random test computed out of index
+			// TODO
 		}	
 
 		return testStateList;

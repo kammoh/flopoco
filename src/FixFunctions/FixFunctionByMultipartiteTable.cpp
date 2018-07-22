@@ -29,6 +29,7 @@
 #include "FixFunctionByMultipartiteTable.hpp"
 #include "Multipartite.hpp"
 #include "../BitHeap/BitHeap.hpp"
+#include "../Table.hpp"
 
 
 using namespace std;
@@ -48,7 +49,7 @@ namespace flopoco
 	 */
 	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTables_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
 		Operator(parentOp, target), nbTables(nbTables_)
-	{
+{
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 
 		srcFileName="FixFunctionByMultipartiteTable";
@@ -79,14 +80,45 @@ namespace flopoco
 
 		vhdl << endl;
 
-		vhdl << tab << declare("in_tiv", bestMP->alpha) <<" <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->alpha) << ";" << endl;
+		// instance of the compressed TIV 
+		vhdl << tab << declare("in_ativ", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
+		vhdl << tab << declare("in_difftiv", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+
+		Table::newUniqueInstance(this, "in_ativ", "out_ativ",
+														 bestMP->aTIV, "aTIV", bestMP->rho, bestMP->outputSizeATIV );
+		Table::newUniqueInstance(this, "in_difftiv", "out_difftiv",
+														 bestMP->diffTIV, "diffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
+
+		int p = 0;
+		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)
+		{
+			string a = join("a", i);
+			string b = join("b", i);
+			string out = join("out", i);
+
+			p += bestMP->betai[i];
+			vhdl << tab << declare(a, bestMP->gammai[i]) << " <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->gammai[i]) << ";" << endl;
+			vhdl << tab << declare(b, bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
+		}
+		
+#if 0
+		// instance of the compressed TIV 
+		Table* raTIV = bestMP->raTIV;
+		Table* diffTIV = bestMP->rDiffTIV;
+		vhdl << tab << declare("in_rativ", raTIV->wIn) << " <= X" << range(f->wIn-1, f->wIn-raTIV->wIn) << ";" << endl;
+		vhdl << tab << declare("in_difftiv", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+
 
 		schedule();
-		inPortMap(bestMP->cTiv, "X", "in_tiv");
-		outPortMap(bestMP->cTiv, "Y1", "out_tiv_comp");
+		inPortMap(raTIV, "X", "in_rativ");
+		outPortMap(raTIV, "Y", "out_rativ");
+		vhdl << instance(raTIV, "raTIVTable") << endl;
+
+		inPortMap(raTIV, "X", "in_rativ");
+		outPortMap(raTIV, "Y", "out_rativ");
+		
 		outPortMap(bestMP->cTiv, "Y2", "out_tiv_corr");
 		vhdl << instance(bestMP->cTiv, "cTivTable") << endl;
-
 
 		//addSubComponent(bestMP->cTiv);
 		//vhdl << instance(bestMP->cTiv, "cTivTableTest") << endl;
@@ -156,6 +188,7 @@ namespace flopoco
 		//bh->generateSupertileVHDL();
 
 		vhdl << tab << "Y <= " << /* "sum" */bh->getSumName() << range(bestMP->outputSize + bestMP->guardBits - 1, bestMP->guardBits) << ";" << endl;
+#endif
 	}
 
 
@@ -195,6 +228,7 @@ namespace flopoco
 
 	//------------------------------------------------------------------------------------ Private classes
 
+#if 0
 	FixFunctionByMultipartiteTable::TOXor::TOXor(Target* target, FixFunctionByMultipartiteTable* mpt, int toIndex, map<string, double> inputDelays):
 		Operator(target, inputDelays)
 	{
@@ -239,6 +273,8 @@ namespace flopoco
 
 	//------------------------------------------------------------------------------------ Private methods
 
+#endif
+	
 	// enumerating the alphas is much simpler
 	vector<vector<int>> FixFunctionByMultipartiteTable::alphaenum(int alpha, int m)
 	{
@@ -484,8 +520,9 @@ namespace flopoco
 		}
 		/* If  parse error throw an exception */
 		if (smallest->totalSize == sizeMax)
-			throw("It seems we could not find a decomposition");
+			THROWERROR("It seems we could not find a decomposition");
 
+		REPORT(DETAILED, "Best decomposition found: " << smallest->descriptionString());					 
 		return smallest;
 	}
 
@@ -562,7 +599,7 @@ namespace flopoco
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		return new FixFunctionByMultipartiteTable(target, f, nbTables, signedIn, lsbIn, msbOut, lsbOut);
+		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTables, signedIn, lsbIn, msbOut, lsbOut);
 	}
 
 	void FixFunctionByMultipartiteTable::registerFactory(){

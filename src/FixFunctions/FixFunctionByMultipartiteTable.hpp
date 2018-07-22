@@ -52,7 +52,8 @@ namespace flopoco
 
 		private:
 
-			//------------------------------------------------------------------------------------ Private classes
+#if 0
+		//------------------------------------------------------------------------------------ Private classes
 			/**
 			 * @brief The TOXor class defines the xor operator needed to retrieve the correct output from the TO table with the given input
 			 */
@@ -62,6 +63,7 @@ namespace flopoco
 					TOXor(Target* target, FixFunctionByMultipartiteTable* mpt, int toIndex, map<string, double> inputDelays = emptyDelayMap);
 
 			};
+#endif
 
 			//------------------------------------------------------------------------------------ Private methods
 
