@@ -31,8 +31,8 @@ namespace flopoco
 	Multipartite::Multipartite(FixFunctionByMultipartiteTable* mpt_, FixFunction *f_, int inputSize_, int outputSize_):
 		f(f_), inputSize(inputSize_), outputSize(outputSize_), mpt(mpt_)
 	{
-		inputRange = intpow2(inputSize_);
-		epsilonT = 1 / (intpow2(outputSize+1));
+		inputRange = 1<<inputSize_;
+		epsilonT = 1.0 / (1<<(outputSize+1));
 	}
 
 	Multipartite::Multipartite(FixFunction *f_, int m_, int alpha_, int beta_, vector<int> gammai_, vector<int> betai_, FixFunctionByMultipartiteTable *mpt_):
@@ -46,7 +46,7 @@ namespace flopoco
 		for (int i = 1; i < m; i++)
 			pi[i] = pi[i-1] + betai[i-1];
 
-		epsilonT = 1 / (intpow2(outputSize+1));
+		epsilonT = 1 / (1<<(outputSize+1));
 		computeMathErrors();
 	}
 
@@ -73,7 +73,7 @@ namespace flopoco
 
 	void Multipartite::computeSizes()
 	{
-		int size = (int) intpow2(alpha) * (outputSize + guardBits);
+		int size = (1<<alpha) * (outputSize + guardBits);
 		outputSizeTOi = vector<int>(m);
 		sizeTOi = vector<int>(m);
 		for (int i=0; i<m; i++)
@@ -90,21 +90,20 @@ namespace flopoco
 		double r1, r2, r;
 		double delta = deltai(i);
 		r1 = abs( delta * si(i,0) );
-		r2 = abs( delta * si(i, (int)(intpow2(gammai[i]) - 1)));
-		if (r1 > r2)
-			r = r1;
-		else
-			r = r2;
-		outputSizeTOi[i]= (int)ceil( outputSize + guardBits + log2(r));
+		r2 = abs( delta * si(i,  (1<<gammai[i]) - 1));
+		r = max(r1,r2);
+		// This r is a float, the following line scales it to the output
+		outputSizeTOi[i]= (int)floor( outputSize + guardBits + log2(r));
 
-		sizeTOi[i] = (int)intpow2( gammai[i]+betai[i]-1 ) * (outputSizeTOi[i]-1);
+		// the size computation takes into account that we exploit the symmetry by using the xor trick
+		sizeTOi[i] = (1<< (gammai[i]+betai[i]-1)) * outputSizeTOi[i];
 	}
 
 
 	/** Just as in the article */
 	double Multipartite::deltai(int i)
 	{
-		return mui(i, (int)(intpow2(betai[i]) - 1)) - mui(i, 0);
+		return mui(i, (1<<betai[i])-1) - mui(i, 0);
 	}
 
 
@@ -286,7 +285,7 @@ namespace flopoco
 
 
 		for (unsigned int i = 0; i < pi.size(); i++) {
-			offsetX+= intpow2(pi[i]) * (intpow2(betai[i]) -1);
+			offsetX+= (1<<pi[i]) * ((1<<betai[i]) -1);
 		}
 
 		offsetX = offsetX / ((double)inputRange);

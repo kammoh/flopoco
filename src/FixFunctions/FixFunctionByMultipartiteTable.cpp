@@ -32,6 +32,13 @@
 #include "../Table.hpp"
 
 
+
+/*
+ TODOs:
+ A loop on m to find an area-minimizing solution
+ Handle TIV compression properly in the optimization
+*/
+
 using namespace std;
 
 namespace flopoco
