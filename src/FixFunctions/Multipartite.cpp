@@ -180,7 +180,8 @@ namespace flopoco
 		// set the class attribute 
 		rho = alpha - betterS;
 
-		REPORT(DETAILED, "TIV compression found: s=" << betterS << ", rho=" << rho << ", diffOutputSize=" << maxBitsCounted << ", size=" << size);
+		REPORT(DETAILED, "TIV compression found: s=" << betterS << ", rho=" << rho << ", diffOutputSize=" << maxBitsCounted
+					 << ", size=" << size << " (was " << ((outputSize +guardBits)<<alpha) <<")");
 
 
 		// Now actually fill the table
@@ -320,7 +321,7 @@ namespace flopoco
 		ostringstream s;
 		s << "alpha=" << alpha << ", rho=" << rho << "   ";
 		for (size_t i =0; i< gammai.size(); i++) {
-			s << " gamma" << i << "=" << gammai[i] << " p"<<i<<"=" << pi[i]; 
+			s << "   gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
 		}
 		return s.str();
 	}

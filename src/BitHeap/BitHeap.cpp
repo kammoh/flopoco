@@ -519,6 +519,7 @@ namespace flopoco {
 				for(int w=sMSB; w<=this->msb-shift; w++) {
 					addConstantOneBit(w+shift);
 				}
+				REPORT(FULL, "addSignal: constant string now " << hex << constantBits); 
 			}
 		}
 

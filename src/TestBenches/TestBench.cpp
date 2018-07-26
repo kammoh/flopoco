@@ -670,6 +670,7 @@ namespace flopoco{
 
 		/** Return the total simulation time*/
 		int TestBench::getSimulationTime(){
+			//			cerr << endl << endl<< simulationTime << endl << endl ;
 			return simulationTime;
 		}
 

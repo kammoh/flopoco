@@ -78,117 +78,51 @@ namespace flopoco
 		bestMP = enumerateDec();
 		bestMP->mkTables(target);
 
+		
+
+		// instance of the compressed TIV 
+		vhdl << tab << declare("inATIV", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
+		Table::newUniqueInstance(this, "inATIV", "outATIV",
+														 bestMP->aTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
 		vhdl << endl;
 
-		// instance of the compressed TIV 
-		vhdl << tab << declare("in_ativ", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
-		vhdl << tab << declare("in_difftiv", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
-
-		Table::newUniqueInstance(this, "in_ativ", "out_ativ",
-														 bestMP->aTIV, "aTIV", bestMP->rho, bestMP->outputSizeATIV );
-		Table::newUniqueInstance(this, "in_difftiv", "out_difftiv",
-														 bestMP->diffTIV, "diffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
+		vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+		Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
+														 bestMP->diffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
+		// No need to sign-extend it, it is already taken care of in the construction of the table.
 
 		int p = 0;
-		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)
-		{
-			string a = join("a", i);
-			string b = join("b", i);
-			string out = join("out", i);
+		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
+			string ai = join("a", i);
+			string bi = join("b", i);
+			string inTOi = join("inTO", i);
+			string outTOi = join("outTO", i);
+			string deltai = join("delta", i);
+			string nameTOi = join("TO", i);
+			string signi = join("sign", i);
 
 			p += bestMP->betai[i];
-			vhdl << tab << declare(a, bestMP->gammai[i]) << " <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->gammai[i]) << ";" << endl;
-			vhdl << tab << declare(b, bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
+			vhdl << tab << declare(ai, bestMP->gammai[i]) << " <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->gammai[i]) << ";" << endl;
+			vhdl << tab << declare(bi, bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
+			vhdl << tab << declare(signi) << " <= not(" << bi << of( bestMP->betai[i] - 1) << ");" << endl;
+			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
+			Table::newUniqueInstance(this, inTOi, outTOi,
+															 bestMP->toi[i], nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]-1);
+			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]) << " <= " << signi << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-2,0, signi)<< ");" << endl;
+			getSignalByName(deltai)->setIsSigned(); // so that it is sign-extended in the bit heap
 		}
 		
-#if 0
-		// instance of the compressed TIV 
-		Table* raTIV = bestMP->raTIV;
-		Table* diffTIV = bestMP->rDiffTIV;
-		vhdl << tab << declare("in_rativ", raTIV->wIn) << " <= X" << range(f->wIn-1, f->wIn-raTIV->wIn) << ";" << endl;
-		vhdl << tab << declare("in_difftiv", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+		// Throwing everything into a bit heap
 
-
-		schedule();
-		inPortMap(raTIV, "X", "in_rativ");
-		outPortMap(raTIV, "Y", "out_rativ");
-		vhdl << instance(raTIV, "raTIVTable") << endl;
-
-		inPortMap(raTIV, "X", "in_rativ");
-		outPortMap(raTIV, "Y", "out_rativ");
-		
-		outPortMap(bestMP->cTiv, "Y2", "out_tiv_corr");
-		vhdl << instance(bestMP->cTiv, "cTivTable") << endl;
-
-		//addSubComponent(bestMP->cTiv);
-		//vhdl << instance(bestMP->cTiv, "cTivTableTest") << endl;
-
-		ostringstream oss("");
-		for(int i = 0; i < bestMP->m; i++)
-		{
-			oss << "TO" << i << ":" << ((bestMP->outputSizeTOi[i]-1) << ( bestMP->gammai[i]+bestMP->betai[i]-1 ))
-				<< " (" + (bestMP->outputSizeTOi[i]-1) << ".2^"
-				<< ( bestMP->gammai[i]+bestMP->betai[i]-1 ) << endl;
+		BitHeap *bh = new BitHeap(this, bestMP->outputSize + bestMP->guardBits); // TODO this is using an adder tree
+		bh->addSignal("outATIV");
+		bh->addSignal("outDiffTIV");
+		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
+			bh->addSignal(join("delta", i) );
 		}
-
-		oss << "Total:" << bestMP->totalSize << endl;
-
-		REPORT(DEBUG, "g=" << bestMP->guardBits);
-		REPORT(DEBUG, "size:" << endl << oss.str());
-		;
-		// Déclaration des composants xor
-		int p = 0;
-
-		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)
-		{
-			stringstream a("");
-			a << "a_" << i;
-
-			stringstream b("");
-			b << "b_" << i;
-
-			stringstream out("");
-			out << "out_" << i;
-
-			TOXor* xor_toi = new TOXor(target, this, i);
-			addSubComponent(xor_toi);
-
-			p += bestMP->betai[i];
-			vhdl << declare(a.str(), bestMP->gammai[i]) << " <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->gammai[i]) << ";" << endl;
-			vhdl << declare(b.str(), bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
-
-
-			inPortMap(xor_toi, "a", a.str());
-			inPortMap(xor_toi, "b", b.str());
-			outPortMap(xor_toi, "r", out.str());
-
-			ostringstream name("");
-			name << "xor_to_" << i;
-			vhdl << instance(xor_toi, name.str()) << endl;
-		}
-
-		BitHeap *bh = new BitHeap(this, bestMP->outputSize + bestMP->guardBits, false, "final_sum");
-
-		bh->setSignedIO(false);
-
-		bh->addUnsignedBitVector(0, "out_tiv_comp", bestMP->outputSize + bestMP->guardBits);
-		bh->addUnsignedBitVector(0, "out_tiv_corr", bestMP->cTiv->wO_corr);
-
-		//vhdl << tab << declare("sum", bestMP->outputSize + bestMP->guardBits) << " <= std_logic_vector(signed(out_tiv)";
-		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)
-		{
-			stringstream ss("");
-			ss << "out_" << i;
-			bh->addUnsignedBitVector(0, ss.str(), bestMP->outputSize + bestMP->guardBits);
-		}
-		/*vhdl << " + signed(out_" << i << ")";
-		vhdl << ");" << endl;*/
-
-		bh->generateCompressorVHDL();
-		//bh->generateSupertileVHDL();
+		bh->startCompression();
 
 		vhdl << tab << "Y <= " << /* "sum" */bh->getSumName() << range(bestMP->outputSize + bestMP->guardBits - 1, bestMP->guardBits) << ";" << endl;
-#endif
 	}
 
 
@@ -227,53 +161,6 @@ namespace flopoco
 	}
 
 	//------------------------------------------------------------------------------------ Private classes
-
-#if 0
-	FixFunctionByMultipartiteTable::TOXor::TOXor(Target* target, FixFunctionByMultipartiteTable* mpt, int toIndex, map<string, double> inputDelays):
-		Operator(target, inputDelays)
-	{
-		ostringstream name;
-		name << "toXor_" << toIndex << "_" << getNewUId();
-		setNameWithFreqAndUID(name.str());
-
-		Multipartite* mp = mpt->bestMP;
-		Table* toi = mp->toi[toIndex];
-
-		int wI = mp->gammai[toIndex] + mp->betai[toIndex] - 1;
-		int wO = mp->outputSizeTOi[toIndex] - 1;
-
-		int wA = mp->gammai[toIndex];
-		int wB = mp->betai[toIndex];
-
-		setCopyrightString("Franck Meyer (2015)");
-
-		// Component I/O
-		addInput("a", mp->gammai[toIndex]);
-		addInput("b", mp->betai[toIndex]);
-
-		addOutput("r", mp->outputSize + mp->guardBits);
-
-
-		vhdl << tab << declare("sign") << " <= not(b(" << mp->betai[toIndex] - 1 << "));" << endl;
-
-		vhdl << tab << declare("in_t", wI) << range(wI - 1, wB - 1) << " <= a" << range(wA - 1, 0) << ";" << endl;
-
-		for(int i = 0; i < wB - 1; i++)
-			vhdl << tab << "in_t(" << i << ") <= b(" << i << ") xor sign;" << endl;
-
-		addSubComponent(toi);
-		inPortMap(toi, "X", "in_t");
-		outPortMap(toi, "Y", "out_t");
-		vhdl << instance(toi, "to_table") << endl;
-
-		vhdl << tab << "r" << range(mp->outputSize + mp->guardBits - 1, wO) << " <= (" << (mp->outputSize + mp->guardBits - 1) << " downto " << wO << " => sign);" << endl;
-		for(int i = 0; i < wO; i++)
-			vhdl << tab << "r(" << i << ") <= out_t(" << i << ") xor sign;" << endl;
-	}
-
-	//------------------------------------------------------------------------------------ Private methods
-
-#endif
 	
 	// enumerating the alphas is much simpler
 	vector<vector<int>> FixFunctionByMultipartiteTable::alphaenum(int alpha, int m)
