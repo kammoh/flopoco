@@ -318,7 +318,8 @@ namespace flopoco
 
 	string 	Multipartite::descriptionString(){
 		ostringstream s;
-		s << "alpha=" << alpha << ", rho=" << rho << "   ";
+		s << "alpha=" << alpha;
+		//s << ", rho=" << rho << "   ";
 		for (size_t i =0; i< gammai.size(); i++) {
 			s << "   gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
 		}

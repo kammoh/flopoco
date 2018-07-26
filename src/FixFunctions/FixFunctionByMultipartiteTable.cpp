@@ -74,17 +74,46 @@ namespace flopoco
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
 
+		obj = new Multipartite(this, f, f->wIn, f->wOut); 
 
-		obj = new Multipartite(this, f, f->wIn, f->wOut);
+		if(nbTables==0) {
+			// The following code is quite ugly because all the original code was written with nbTables a global variable...
+			int sizeMax = obj->outputSize * obj->inputRange;
+			Multipartite* 		smallest = new Multipartite(this, f, f->wIn, f->wOut);
+			smallest->totalSize = sizeMax;
+			nbTables=1;
+			int smallestNbTables=1;
+			try {
+				while (true) {
+					REPORT(INFO, "Exploring nbTables=" << nbTables);
+					buildOneTableError();
+					buildGammaiMin();
+					bestMP = enumerateDec();
+					if(bestMP->totalSize < smallest->totalSize) {
+						delete smallest;
+						smallestNbTables=nbTables;
+						smallest = bestMP;
+					}
+					else {
+						delete bestMP;
+					}
+					REPORT(INFO, "Best size found is nbTables="<< smallestNbTables << "  size=" << smallest->totalSize);
+					nbTables ++;
+				}
+			} catch(std::string &s){
+				REPORT(INFO, "No decomposition found for nbTables=" << nbTables << ", stopping search.");
+				bestMP=smallest;
+				nbTables=smallestNbTables;
+			}
+		}
+		else	{
+				// build the required tables of errors
+				buildOneTableError();
+				buildGammaiMin();
+				bestMP = enumerateDec();
+			}
 
-		// build the required tables of errors
-		buildOneTableError();
-
-		buildGammaiMin();
-
-		bestMP = enumerateDec();
-		bestMP->mkTables(target);
-
+			bestMP->mkTables(target);
 		
 
 		// instance of the compressed TIV 
@@ -347,8 +376,7 @@ namespace flopoco
 		for(pi=0; pi<wi; pi++) {
 			for(betai=1; betai<wi-pi-1; betai++) {
 				for(gammai=1; gammai<= wi-pi-betai; gammai++) {
-					oneTableError[pi][betai][gammai] =
-							errorForOneTable(pi, betai,gammai);
+					oneTableError[pi][betai][gammai] =	errorForOneTable(pi, betai,gammai);
 				}
 			}
 		}
@@ -395,20 +423,23 @@ namespace flopoco
 				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)
 				{
 					gammai = alphaEnum[ae];
-
 					mpt = new Multipartite(f, nbTables,
-										   alpha, beta,
-										   gammai, betai, this);
-
-					if(mpt->mathError < obj->epsilonT)
-					{
+																 alpha, beta,
+																 gammai, betai, this);
+					if(mpt->mathError < obj->epsilonT){
 						mpt->buildGuardBitsAndSizes();
 					}
 					else
 						mpt->totalSize = sizeMax;
 
-					if(mpt->totalSize < smallest->totalSize)
+					if(mpt->totalSize < smallest->totalSize) {
+						delete smallest;
 						smallest = mpt;
+						REPORT(DETAILED, "new best found " << mpt->descriptionString()  << "   Size=" << smallest->totalSize);
+					}
+					else {
+						delete mpt;
+					}
 				}
 			}
 		}
@@ -488,7 +519,7 @@ namespace flopoco
 		bool signedIn;
 		int lsbIn, lsbOut, msbOut, nbTables;
 		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseStrictlyPositiveInt(args, "nbTables", &nbTables);
+		UserInterface::parsePositiveInt(args, "nbTables", &nbTables);
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
@@ -502,10 +533,10 @@ namespace flopoco
 											 "FunctionApproximation", // category
 											 "",
 						   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-nbTables(int): the number of tables used to decompose the function, between 2 (bipartite) to 4 or 5 for large input sizes;\
 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
+nbTables(int)=0: the number of tables used to decompose the function, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
 signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise\
 ",
 
