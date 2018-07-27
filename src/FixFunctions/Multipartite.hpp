@@ -44,7 +44,10 @@ namespace flopoco
 		 * @brief descriptionString(): describe the various parameters in textual form
 		 */
 		string descriptionString();
-		
+		/**
+		 * @brief fullTableDump(): as the name suggests, for debug
+		 */
+		string 	fullTableDump(); 
 		//---------------------------------------------------------------------------------- Public attributes
 		FixFunction* f;
 
@@ -78,7 +81,6 @@ namespace flopoco
 		/** The second part of the compressed TIV table, just as in the Hsiao article */
 		vector<mpz_class> diffTIV;
 
-
 		/** The m Tables of Offset , just as the ARITH 15 article */
 		vector<vector<mpz_class>> toi;
 
@@ -89,6 +91,7 @@ namespace flopoco
 		int outputSizeDiffTIV;
 		vector<int> outputSizeTOi;
 		vector<int> sizeTOi;
+		vector<bool> negativeTOi;
 		int totalSize;
 
 		// holds precalculated TOi math errors. Valid as long as we don't change m!

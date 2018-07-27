@@ -35,7 +35,9 @@
 
 /*
  TODOs:
+ One bit could sometimes be saved in the diffTIV table if it never contains 0 
  Handle TIV compression properly in the optimization
+ compress TIV only if it saves at least one adder; in general resurrect uncompressed TIV
  attempt final reduction of g
 */
 
@@ -116,22 +118,32 @@ namespace flopoco
 				buildOneTableError();
 				buildGammaiMin();
 				bestMP = enumerateDec();
-			}
+		}
 
-			bestMP->mkTables(target);
+		bestMP->mkTables(target);
 		
+		REPORT(FULL,"Full table dump:" <<endl << bestMP->fullTableDump()); 
 
-		// instance of the compressed TIV 
-		vhdl << tab << declare("inATIV", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
-		Table::newUniqueInstance(this, "inATIV", "outATIV",
-														 bestMP->aTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
-		vhdl << endl;
-
-		vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
-		Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
-														 bestMP->diffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
-		// No need to sign-extend it, it is already taken care of in the construction of the table.
-
+		if(bestMP->rho==-1) { // uncompressed TIV
+			vhdl << tab << declare("inTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+			Table::newUniqueInstance(this, "inTIV", "outTIV",
+															 bestMP->tiv, "TIV", bestMP->alpha, f->wOut );
+				vhdl << endl;
+		}else
+			{ // Hsiao-compressed TIV
+				vhdl << tab << declare("inATIV", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
+				Table::newUniqueInstance(this, "inATIV", "outATIV",
+																 bestMP->aTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
+				vhdl << endl;
+				
+				vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+				Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
+																 bestMP->diffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
+				// TODO need to sign-extend for 1/(1+x), but it makes an error for sin(x)
+				//  getSignalByName("outDiffTIV")->setIsSigned(); // so that it is sign-extended in the bit heap
+				// No need to sign-extend it, it is already taken care of in the construction of the table.
+			}
+		
 		int p = 0;
 		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
 			string ai = join("a", i);
@@ -149,15 +161,23 @@ namespace flopoco
 			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
 			Table::newUniqueInstance(this, inTOi, outTOi,
 															 bestMP->toi[i], nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]-1);
-			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]) << " <= " << signi << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-2,0, signi)<< ");" << endl;
+			string trueSign = (bestMP->negativeTOi[i] ? "(not "+signi+")" : signi);
+			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]) << " <= " << trueSign << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-2,0, trueSign)<< ");" << endl;
 			getSignalByName(deltai)->setIsSigned(); // so that it is sign-extended in the bit heap
 		}
 		
 		// Throwing everything into a bit heap
 
 		BitHeap *bh = new BitHeap(this, bestMP->outputSize + bestMP->guardBits); // TODO this is using an adder tree
-		bh->addSignal("outATIV");
-		bh->addSignal("outDiffTIV");
+
+		if(bestMP->rho==-1) { // uncompressed TIV
+			bh->addSignal("outTIV");
+		}else
+			{ // Hsiao-compressed TIV
+				bh->addSignal("outATIV");
+				bh->addSignal("outDiffTIV");
+			}
+
 		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
 			bh->addSignal(join("delta", i) );
 		}
@@ -546,18 +566,29 @@ namespace flopoco
 			paramList.clear();
 			
 			paramList.push_back(make_pair("f","\"1/(x+1)\""));
-			paramList.push_back(make_pair("lsbIn","-16"));
-			paramList.push_back(make_pair("lsbOut","-16"));
-			paramList.push_back(make_pair("msbOut","1"));
+			paramList.push_back(make_pair("lsbIn","-8"));
+			paramList.push_back(make_pair("lsbOut","-8"));
+			paramList.push_back(make_pair("msbOut","0"));
 			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
 			paramList.clear();
 		 
 			paramList.push_back(make_pair("f","\"1/(x+1)\""));
-			paramList.push_back(make_pair("lsbIn","-23"));
-			paramList.push_back(make_pair("lsbOut","-23"));
-			paramList.push_back(make_pair("msbOut","1"));
+			paramList.push_back(make_pair("lsbIn","-12"));
+			paramList.push_back(make_pair("lsbOut","-12"));
+			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
+			paramList.clear();
+		 
+			paramList.push_back(make_pair("f","\"1/(x+1)\""));
+			paramList.push_back(make_pair("lsbIn","-16"));
+			paramList.push_back(make_pair("lsbOut","-16"));
+			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+		 
 
 		}
 		else     

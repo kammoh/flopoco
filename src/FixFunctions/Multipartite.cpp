@@ -145,7 +145,32 @@ namespace flopoco
 	}
 
 
-
+	/**
+		 fdedinec@haridell:~/local/flopocos/flopoco$ ./flopoco verbose=2 FixFunctionByMultipartiteTable f="sin(x)" lsbIn=-12 lsbOut=-12 msbOut=0 nbTOi=0 signedIn=false TestBench n=-2
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Entering: FixFunctionByMultipartiteTable "sin(x)" 0 0 -12 0 -12 
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=1
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=5 beta0=6   Size=9152
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=7   gamma0=5 beta0=5   Size=4864
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=8   gamma0=4 beta0=4   Size=4224
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best decomposition found: alpha=8   gamma0=4 beta0=4
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best size found is nbTOi=1  size=4224
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=2
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=4 beta0=2   gamma1=5 beta1=4   Size=3840
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=5 beta0=2   gamma1=5 beta1=4   Size=3648
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=5 beta0=3   gamma1=5 beta1=3   Size=3264
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=7   gamma0=3 beta0=2   gamma1=5 beta1=3   Size=3152
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=7   gamma0=4 beta0=2   gamma1=5 beta1=3   Size=2944
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best decomposition found: alpha=7   gamma0=4 beta0=2   gamma1=5 beta1=3
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best size found is nbTOi=2  size=2944
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=3
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=4 beta0=2   gamma1=6 beta1=2   gamma2=5 beta2=2   Size=2944
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best decomposition found: alpha=6   gamma0=4 beta0=2   gamma1=6 beta1=2   gamma2=5 beta2=2
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best size found is nbTOi=2  size=2944
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=4
+> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: No decomposition found for nbTOi=4, stopping search.
+> FixFunctionByMultipartiteTable : TIV compression found: s=3, rho=4, diffOutputSize=10, size=1520 (was 1920)
+>
+	 */
 	void Multipartite::compressAndUpdateTIV()
 	{
 		int maxBitsCounted;
@@ -153,6 +178,7 @@ namespace flopoco
 		int betterS;
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
 
+#if 0
 		// First find the optimal value of s
 		for(int s = 0; s < alpha; s++)
 		{
@@ -199,6 +225,7 @@ namespace flopoco
 		// set up attributes
 		outputSizeATIV = outputSize+guardBits;
 		outputSizeDiffTIV = maxBitsCounted;
+#endif
 	}
 
 
@@ -228,6 +255,28 @@ namespace flopoco
 			vector<mpz_class> values;
 			for (int j=0; j < 1<<(gammai[i]+betai[i]-1); j++) {
 				values.push_back(TOiFunction(j, i));
+			}
+			// If the TOi values are negative, we will store their opposite
+			bool allnegative=true;
+			bool allpositive=true;
+			for (size_t j=0; j < values.size(); j++) {
+				if(values[j]>0)
+					allnegative=false;
+				if(values[j]<0)
+					allpositive=false;
+			}
+			if((!allnegative) && (!allpositive)) {
+				const string srcFileName="Multipartite";
+				THROWERROR("TO"<< i << " doesn't have a constant sign, please report this as a bug");
+			}
+			if(allnegative) {
+				negativeTOi.push_back(true);
+				for (size_t j=0; j < values.size(); j++) {
+					values[j] = -values[j];
+				}
+			}
+			else {
+				negativeTOi.push_back(false);
 			}
 			toi.push_back(values);
 			
@@ -261,9 +310,10 @@ namespace flopoco
 
 		y = slope * intpow2(-wI + pi[ti]) * (Bi+0.5);
 		dTOi = y * intpow2(wO+g) * intpow2(f->lsbIn - f->lsbOut) * intpow2(inputSize - outputSize);
-		TOi = (int)floor(dTOi);
-	 
-
+		if(dTOi>0)
+			TOi = (int)floor(dTOi);
+		else
+			TOi = (int)ceil(dTOi);
 		return mpz_class(TOi);
 	}
 
@@ -327,16 +377,33 @@ namespace flopoco
 		return s.str();
 	}
 
-#if 0
+
+
 	string 	Multipartite::fullTableDump(){
 		ostringstream s;
 		if(rho==-1) { //uncompressed TIV
+			for(size_t i=0; i<tiv.size(); i++ ) {
+				s << "TIV[" << i << "] \t= " << tiv[i] <<endl;
+			}
 		}
 		else {// compressed TIV
+			for(size_t i=0; i<aTIV.size(); i++ ) {
+				s << "aTIV[" << i << "] \t= " << aTIV[i] <<endl;
+			}
+			s << endl;
+			for(size_t i=0; i<diffTIV.size(); i++ ) {
+				s << "diffTIV[" << i << "] \t= " << diffTIV[i] <<endl;
+			}
 		}
+		for(size_t t=0; t<toi.size(); t++ ) {
+			s << endl;
+			for(size_t i=0; i<toi[t].size(); i++ ) {
+				s << "TO" << t << "[" << i << "] \t= " << toi[t][i] <<endl;
+			}
+		}
+
 		return s.str();
 	}
-#endif
 
 	
 
