@@ -35,8 +35,8 @@
 
 /*
  TODOs:
- A loop on m to find an area-minimizing solution
  Handle TIV compression properly in the optimization
+ attempt final reduction of g
 */
 
 using namespace std;
@@ -51,11 +51,11 @@ namespace flopoco
 	 @param[int]    lsbIn_		input LSB weight
 	 @param[int]    msbOut_		output MSB weight, used to determine wOut
 	 @param[int]    lsbOut_		output LSB weight
-	 @param[int]	nbTables_	number of tables which will be created
+	 @param[int]	nbTOi_	number of tables which will be created
 	 @param[bool]	signedIn_	true if the input range is [-1,1)
 	 */
-	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTables_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
-		Operator(parentOp, target), nbTables(nbTables_)
+	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTOi_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
+		Operator(parentOp, target), nbTOi(nbTOi_)
 {
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 
@@ -67,7 +67,7 @@ namespace flopoco
 
 		setCopyrightString("Franck Meyer, Florent de Dinechin (2015)");
 		addHeaderComment("-- Evaluator for " +  f->getDescription() + "\n");
-		REPORT(DETAILED, "Entering: FixFunctionByMultipartiteTable \"" << functionName_ << "\" " << nbTables_ << " " << signedIn_ << " " << lsbIn_ << " " << msbOut_ << " " << lsbOut_ << " ");
+		REPORT(DETAILED, "Entering: FixFunctionByMultipartiteTable \"" << functionName_ << "\" " << nbTOi_ << " " << signedIn_ << " " << lsbIn_ << " " << msbOut_ << " " << lsbOut_ << " ");
 		int wX=-lsbIn_;
 		addInput("X", wX);
 		int outputSize = msbOut_-lsbOut_+1; // TODO finalRounding would impact this line
@@ -76,34 +76,34 @@ namespace flopoco
 
 		obj = new Multipartite(this, f, f->wIn, f->wOut); 
 
-		if(nbTables==0) {
-			// The following code is quite ugly because all the original code was written with nbTables a global variable...
+		if(nbTOi==0) {
+			// The following is not as clean as it should be because the code was first written with nbTOi a global variable...
 			int sizeMax = obj->outputSize * obj->inputRange;
 			Multipartite* 		smallest = new Multipartite(this, f, f->wIn, f->wOut);
 			smallest->totalSize = sizeMax;
-			nbTables=1;
+			nbTOi=1;
 			int smallestNbTables=1;
 			try {
 				while (true) {
-					REPORT(INFO, "Exploring nbTables=" << nbTables);
+					REPORT(INFO, "Exploring nbTOi=" << nbTOi);
 					buildOneTableError();
 					buildGammaiMin();
 					bestMP = enumerateDec();
 					if(bestMP->totalSize < smallest->totalSize) {
 						delete smallest;
-						smallestNbTables=nbTables;
+						smallestNbTables=nbTOi;
 						smallest = bestMP;
 					}
 					else {
 						delete bestMP;
 					}
-					REPORT(INFO, "Best size found is nbTables="<< smallestNbTables << "  size=" << smallest->totalSize);
-					nbTables ++;
+					REPORT(INFO, "Best size found is nbTOi="<< smallestNbTables << "  size=" << smallest->totalSize);
+					nbTOi ++;
 				}
 			} catch(std::string &s){
-				REPORT(INFO, "No decomposition found for nbTables=" << nbTables << ", stopping search.");
+				REPORT(INFO, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
 				bestMP=smallest;
-				nbTables=smallestNbTables;
+				nbTOi=smallestNbTables;
 			}
 		}
 		else	{
@@ -408,22 +408,22 @@ namespace flopoco
 		for (int alpha = alphamin; alpha <= alphamax; alpha++)
 		{
 			beta = n-alpha;
-			betaEnum = betaenum(beta, nbTables);
+			betaEnum = betaenum(beta, nbTOi);
 			for(unsigned int e = 0; e < betaEnum.size(); e++) {
 				betai = betaEnum[e];
 
-				gammaimin = vector<int>(nbTables);
+				gammaimin = vector<int>(nbTOi);
 				p = 0;
-				for(int i = nbTables-1; i >= 0; i--) {
+				for(int i = nbTOi-1; i >= 0; i--) {
 					gammaimin[i] = gammaiMin[p][betai[i]];
 					p += betai[i];
 				}
 
-				alphaEnum = alphaenum(alpha,nbTables,gammaimin);
+				alphaEnum = alphaenum(alpha,nbTOi,gammaimin);
 				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)
 				{
 					gammai = alphaEnum[ae];
-					mpt = new Multipartite(f, nbTables,
+					mpt = new Multipartite(f, nbTOi,
 																 alpha, beta,
 																 gammai, betai, this);
 					if(mpt->mathError < obj->epsilonT){
@@ -514,17 +514,68 @@ namespace flopoco
 
 
 
+
+	TestList FixFunctionByMultipartiteTable::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			// A few regression tests, first deg2, exhaustive on 15 bits, then deg 3 for 24 bits 
+			paramList.push_back(make_pair("f","\"sin(x)\""));
+			paramList.push_back(make_pair("lsbIn","-8"));
+			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("lsbOut","-8"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+
+			paramList.push_back(make_pair("f","\"sin(x)\""));
+			paramList.push_back(make_pair("lsbIn","-12"));
+			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("lsbOut","-12"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+			
+			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("lsbIn","-16"));
+			paramList.push_back(make_pair("lsbOut","-16"));
+			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+		 
+			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("lsbIn","-23"));
+			paramList.push_back(make_pair("lsbOut","-23"));
+			paramList.push_back(make_pair("msbOut","4"));
+			testStateList.push_back(paramList);
+
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
+
+	
+
 	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string f;
 		bool signedIn;
-		int lsbIn, lsbOut, msbOut, nbTables;
+		int lsbIn, lsbOut, msbOut, nbTOi;
 		UserInterface::parseString(args, "f", &f);
-		UserInterface::parsePositiveInt(args, "nbTables", &nbTables);
+		UserInterface::parsePositiveInt(args, "nbTOi", &nbTOi);
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTables, signedIn, lsbIn, msbOut, lsbOut);
+		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTOi, signedIn, lsbIn, msbOut, lsbOut);
 	}
 
 	void FixFunctionByMultipartiteTable::registerFactory(){
@@ -536,12 +587,13 @@ namespace flopoco
 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
-nbTables(int)=0: the number of tables used to decompose the function, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
+nbTOi(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
 signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise\
 ",
 
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
-											 FixFunctionByMultipartiteTable::parseArguments
+											 FixFunctionByMultipartiteTable::parseArguments,
+											 FixFunctionByMultipartiteTable::unitTest
 											 ) ;
 
 	}

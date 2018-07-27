@@ -35,43 +35,34 @@ namespace flopoco
 		 * @param[int]    lsbIn_		input LSB weight
 		 * @param[int]    msbOut_		output MSB weight, used to determine wOut
 		 * @param[int]    lsbOut_		output LSB weight
-		 * @param[int]	nbTables_	number of tables which will be created
+		 * @param[int]	nbTOi_	number of tables which will be created
 		 * @param[bool]	signedIn_	true if the input range is [-1,1)
 		 */
-		FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target* target, string function, int nbTables, bool signedIn,
+		FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target* target, string function, int nbTOi, bool signedIn,
 																	 int lsbIn, int msbOut, int lsbOut);
 
 		virtual ~FixFunctionByMultipartiteTable();
 
-		//------------------------------------------------------------------------------------- Public methods
+		//---------------------------------------Public standard methods
 		void buildStandardTestCases(TestCaseList* tcl);
 		void emulate(TestCase * tc);
-
+		static TestList unitTest(int index);
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
 		static void registerFactory();
 
 	private:
 
-#if 0
-		//------------------------------------------------------------------------------------ Private classes
-		/**
-		 * @brief The TOXor class defines the xor operator needed to retrieve the correct output from the TO table with the given input
-		 */
-		class TOXor : public Operator
-		{
-		public:
-			TOXor(Target* target, FixFunctionByMultipartiteTable* mpt, int toIndex, map<string, double> inputDelays = emptyDelayMap);
 
-		};
-#endif
-
-		//------------------------------------------------------------------------------------ Private methods
+		//----------------------------------Private methods
 
 		/**
-		 * @brief buildOneTableError : Builds the error for every beta_i and gamma_i, to evaluate precision
+		 * @brief buildOneTableError : pre-computes the error for every beta_i and gamma_i, to speed up exploration
 		 */
 		void buildOneTableError();
 
+		/**
+		 * @brief buildOneTableError : pre-computes the min gamma for for every beta_i, to speed up exploration
+		 */
 		void buildGammaiMin();
 
 		/**
@@ -101,12 +92,10 @@ namespace flopoco
 		Multipartite* obj; // just there to hold things like epsilonT etc. To get rid of some day.
 		Multipartite* bestMP;
 
-		vector<vector<vector<double>>> oneTableError;
-		vector<vector<int>> gammaiMin;
-
-		int g;				/**< the number of extra guard bits to be used for the computations */
-		int nbTables;		/**< The number of tables used */
-
+		// The following is not very well encapsulated, but no need to fix it
+		int nbTOi;		/**< The number of tables used */
+		vector<vector<vector<double>>> oneTableError;   /** for nbTOi fixed, the errors of each possible table configuration, precomputed  here to speed up exploration  */
+		vector<vector<int>> gammaiMin;  /** for nbTOi fixed, the min value of gamma, precomputed  here to speed up exploration */
 
 	};
 
