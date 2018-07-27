@@ -29,18 +29,18 @@ namespace flopoco
 {
 	//--------------------------------------------------------------------------------------- Constructors
 	Multipartite::Multipartite(FixFunctionByMultipartiteTable* mpt_, FixFunction *f_, int inputSize_, int outputSize_):
-		f(f_), inputSize(inputSize_), outputSize(outputSize_), mpt(mpt_)
+		f(f_), inputSize(inputSize_), outputSize(outputSize_), rho(-1), mpt(mpt_)
 	{
 		inputRange = 1<<inputSize_;
 		epsilonT = 1.0 / (1<<(outputSize+1));
 	}
 
 	Multipartite::Multipartite(FixFunction *f_, int m_, int alpha_, int beta_, vector<int> gammai_, vector<int> betai_, FixFunctionByMultipartiteTable *mpt_):
-		f(f_), m(m_), alpha(alpha_), beta(beta_), gammai(gammai_), betai(betai_), mpt(mpt_)
+		f(f_), m(m_), alpha(alpha_), rho(-1), beta(beta_), gammai(gammai_), betai(betai_), mpt(mpt_)
 	{
-		inputRange = mpt_->obj->inputRange;
-		inputSize = mpt_->obj->inputSize;
-		outputSize = mpt_->obj->outputSize;
+		inputRange = 1 << f->wIn;
+		inputSize = f->wIn;
+		outputSize = f->wOut;
 		pi = vector<int>(m);
 		pi[0] = 0;
 		for (int i = 1; i < m; i++)
@@ -319,44 +319,26 @@ namespace flopoco
 	string 	Multipartite::descriptionString(){
 		ostringstream s;
 		s << "alpha=" << alpha;
-		//s << ", rho=" << rho << "   ";
+		if(rho!=-1)
+			s << ", rho=" << rho << "   ";
 		for (size_t i =0; i< gammai.size(); i++) {
 			s << "   gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
 		}
 		return s.str();
 	}
 
-
-	
 #if 0
-	Multipartite::compressedTIV::compressedTIV(Target *target, Table *compressedAlpha, Table *compressedout, int s, int wOC, int wI, int wO)
-		: Operator(target), wO_corr(wOC)
-	{
-		stringstream name("");
-		name << "Compressed_TIV_decoder_" << getuid();
-		setNameWithFreqAndUID(name.str());
-
-		setCopyrightString("Franck Meyer (2015)");
-
-		addInput("X", wI);
-		addOutput("Y1", wO);
-		addOutput("Y2", wOC);
-
-		vhdl << tab << declare("XComp", wI-s) << " <= X" << range(wI-1, s) << ";" << endl;
-		addSubComponent(compressedAlpha);
-		inPortMap(compressedAlpha, "X", "XComp");
-		outPortMap(compressedAlpha, "Y", "Y1", false);
-
-		vhdl << tab << instance(compressedAlpha, "TIV_compressed_part");
-
-
-		addSubComponent(compressedout);
-		inPortMap(compressedout, "X", "X");
-		outPortMap(compressedout, "Y", "Y2", false);
-
-		vhdl << tab << instance(compressedout, "TIV_correction_part");
+	string 	Multipartite::fullTableDump(){
+		ostringstream s;
+		if(rho==-1) { //uncompressed TIV
+		}
+		else {// compressed TIV
+		}
+		return s.str();
 	}
 #endif
+
+	
 
 
 }

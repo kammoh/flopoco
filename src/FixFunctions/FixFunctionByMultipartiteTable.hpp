@@ -89,7 +89,7 @@ namespace flopoco
 		//--------------------------------------------------------------------------------- Private attributes
 
 		FixFunction *f;
-		Multipartite* obj; // just there to hold things like epsilonT etc. To get rid of some day.
+		double epsilonT;
 		Multipartite* bestMP;
 
 		// The following is not very well encapsulated, but no need to fix it

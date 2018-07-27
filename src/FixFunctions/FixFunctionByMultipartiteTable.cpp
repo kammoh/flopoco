@@ -58,6 +58,7 @@ namespace flopoco
 		Operator(parentOp, target), nbTOi(nbTOi_)
 {
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
+		epsilonT = 1.0 / (1<<(f->wOut+1));
 
 		srcFileName="FixFunctionByMultipartiteTable";
 
@@ -74,11 +75,10 @@ namespace flopoco
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
 
-		obj = new Multipartite(this, f, f->wIn, f->wOut); 
 
 		if(nbTOi==0) {
 			// The following is not as clean as it should be because the code was first written with nbTOi a global variable...
-			int sizeMax = obj->outputSize * obj->inputRange;
+			int sizeMax = f->wOut * (1<<f->wIn); // size of a plain table
 			Multipartite* 		smallest = new Multipartite(this, f, f->wIn, f->wOut);
 			smallest->totalSize = sizeMax;
 			nbTOi=1;
@@ -102,8 +102,13 @@ namespace flopoco
 				}
 			} catch(std::string &s){
 				REPORT(INFO, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
-				bestMP=smallest;
-				nbTOi=smallestNbTables;
+				if(smallest->totalSize==sizeMax) {
+					THROWERROR("\nSorry, the multipartite method doesn't seem to work for this function. \nTry another of the FixFunction* operators");
+				}
+				else{
+					bestMP=smallest;
+					nbTOi=smallestNbTables;
+				}
 			}
 		}
 		else	{
@@ -347,7 +352,7 @@ namespace flopoco
 	/** See the article p5, right. */
 	void FixFunctionByMultipartiteTable::buildGammaiMin()
 	{
-		int wi = obj->inputSize;
+		int wi = f->wIn;
 		int gammai;
 		gammaiMin = vector<vector<int>>(wi, vector<int>(wi));
 		for(int pi = 0; pi < wi; pi++)
@@ -355,7 +360,7 @@ namespace flopoco
 			for(int betai = 1; betai < (wi-pi-1); betai++)
 			{
 				gammai=1;
-				while ( (gammai < wi) && (oneTableError[pi][betai][gammai] > obj->epsilonT) )
+				while ( (gammai < wi) && (oneTableError[pi][betai][gammai] > epsilonT) )
 					gammai++;
 
 				gammaiMin[pi][betai] = gammai;
@@ -369,7 +374,7 @@ namespace flopoco
 	 */
 	void FixFunctionByMultipartiteTable::buildOneTableError()
 	{
-		int wi = obj->inputSize;
+		int wi = f->wIn;
 		int gammai, betai, pi;
 		oneTableError = vector<vector<vector<double>>>(wi, vector<vector<double>>(wi, vector<double>(wi))); // there will be holes
 
@@ -392,8 +397,8 @@ namespace flopoco
 	{
 		Multipartite *smallest, *mpt;
 		int beta, p;
-		int n = obj->inputSize;
-		int alphamin = 1;
+		int n = f->wIn;
+		int alphamin = 2;
 		int alphamax = (2*n)/3;
 		vector<vector<int>> betaEnum;
 		vector<vector<int>> alphaEnum;
@@ -401,7 +406,7 @@ namespace flopoco
 		vector<int> gammai;
 		vector<int> betai;
 
-		int sizeMax = obj->outputSize * obj->inputRange;
+		int sizeMax = f->wOut * (1<<f->wIn); // size of a plain table
 		smallest = new Multipartite(this, f, f->wIn, f->wOut);
 		smallest->totalSize = sizeMax;
 
@@ -426,7 +431,7 @@ namespace flopoco
 					mpt = new Multipartite(f, nbTOi,
 																 alpha, beta,
 																 gammai, betai, this);
-					if(mpt->mathError < obj->epsilonT){
+					if(mpt->mathError < epsilonT){
 						mpt->buildGuardBitsAndSizes();
 					}
 					else
@@ -455,7 +460,7 @@ namespace flopoco
 	/** 5th equation implementation */
 	double FixFunctionByMultipartiteTable::epsilon(int ci_, int gammai, int betai, int pi)
 	{
-		int wi = obj->inputSize; // for the notations of the paper
+		int wi = f->wIn; // for the notations of the paper
 		double ci = (double)ci_; // for the notations of the paper
 
 		double xleft = (f->signedIn ? -1 : 0) + (f->signedIn ? 2 : 1) * intpow2(-gammai) * ci;
@@ -473,7 +478,7 @@ namespace flopoco
 
 	double FixFunctionByMultipartiteTable::epsilon2ndOrder(int Ai, int gammai, int betai, int pi)
 	{
-		int wi = obj->inputSize;
+		int wi = f->wIn;
 		double xleft = (f->signedIn ? -1 : 0) + (f->signedIn ? 2 : 1) * intpow2(-gammai)  * ((double)Ai);
 		double delta = (f->signedIn ? 2 : 1) * ( intpow2(pi-wi) * (intpow2(betai) - 1));
 		double epsilon = 0.5 * (f->eval(xleft + (delta-1)/2)
@@ -488,9 +493,9 @@ namespace flopoco
 	{
 		double eps1, eps2, eps;
 
-		// Beware when gammai+betai+pi=obj->inputSize,
+		// Beware when gammai+betai+pi = inputSize,
 		// we then have to compute a second order term for the error
-		if(gammai+betai+pi==obj->inputSize)
+		if(gammai+betai+pi==f->wIn)
 		{
 			eps1 = abs(epsilon2ndOrder(0, gammai, betai, pi));
 			eps2 = abs(epsilon2ndOrder( (int)intpow2(gammai) -1, gammai, betai, pi));
@@ -540,18 +545,18 @@ namespace flopoco
 			testStateList.push_back(paramList);
 			paramList.clear();
 			
-			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("f","\"1/(x+1)\""));
 			paramList.push_back(make_pair("lsbIn","-16"));
 			paramList.push_back(make_pair("lsbOut","-16"));
-			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("msbOut","1"));
 			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
 			paramList.clear();
 		 
-			paramList.push_back(make_pair("f","\"exp(x)\""));
+			paramList.push_back(make_pair("f","\"1/(x+1)\""));
 			paramList.push_back(make_pair("lsbIn","-23"));
 			paramList.push_back(make_pair("lsbOut","-23"));
-			paramList.push_back(make_pair("msbOut","4"));
+			paramList.push_back(make_pair("msbOut","1"));
 			testStateList.push_back(paramList);
 
 		}
