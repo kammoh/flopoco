@@ -71,19 +71,6 @@ namespace flopoco
 	}
 
 
-	void Multipartite::computeSizes()
-	{
-		int size = (1<<alpha) * (outputSize + guardBits);
-		outputSizeTOi = vector<int>(m);
-		sizeTOi = vector<int>(m);
-		for (int i=0; i<m; i++)
-		{
-			computeTOiSize(i);
-			size += sizeTOi[i];
-		}
-		totalSize = size;
-	}
-
 
 	void Multipartite::computeTOiSize(int i)
 	{
@@ -130,19 +117,6 @@ namespace flopoco
 		return si;
 	}
 
-	// counts the size of the input
-	// more or less intlog2(abs(val))
-	static int countBits(mpz_class val)
-	{
-		mpz_class calcval = abs(val);
-		int count = 0;
-		while((calcval >> count) != 0)
-			count++;
-		if(val >= 0)
-			return count;
-		else
-			return count + 1;
-	}
 
 
 	/**
@@ -171,62 +145,48 @@ namespace flopoco
 > FixFunctionByMultipartiteTable : TIV compression found: s=3, rho=4, diffOutputSize=10, size=1520 (was 1920)
 >
 	 */
-	void Multipartite::compressAndUpdateTIV()
-	{
-		int maxBitsCounted;
-		int size = -1;
-		int betterS;
+
+	void Multipartite::computeTIVCompressionParameters() {
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
 
-#if 0
-		// First find the optimal value of s
-		for(int s = 0; s < alpha; s++)
-		{
-			int maxBits = 0;
-			for(int i = 0; i < (1<<(alpha - s)); i++)
-			{
-				mpz_class value = tiv[ i*(1<<s) ];
-				for(int j = 0; j < (1<<s); j++)
-				{
-					mpz_class diff = tiv[ i * (1<<s) + j]  -  value;
-					maxBits = max(maxBits, countBits(diff));
-				}
-			}
-			int sSize = (outputSize+guardBits)*(1<<(alpha - s))  +  maxBits*(1<<alpha) ;
+		REPORT(FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV); 
 
-			if(sSize < size || size < 0)			{
-				betterS = s;
-				size = sSize;
-				maxBitsCounted = maxBits;
-				REPORT(DEBUG, "found better s=" << s << ", maxBitsCounted=" << maxBitsCounted);
+		int bestS = 0; 
+		for(int s = 1; s < alpha; s++) {
+			
+			vector<mpz_class> deltas;
+			mpz_class deltaMax = 0;
+			for(int i = 0; i < (1<<(alpha - s)); i++)	{
+				mpz_class valLeft  = TIVFunction( i<<s );
+				mpz_class valRight = TIVFunction( ((i+1)<<s)-1 );
+				mpz_class delta = abs(valLeft-valRight);
+				deltas.push_back(delta);
+				deltaMax = max(delta, deltaMax);
 			}
+			int deltaBits = intlog2(deltaMax);
+			mpz_class slack = 0;
+			for(int i = 0; i < (1<<(alpha - s)); i++)	{
+				slack = max(slack, (1<<deltaBits)-1-deltas[i]);
+			}
+			int saved_LSBs_in_ATIV = intlog2(slack);
+			int tempRho = alpha - s;
+			int tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
+			int tempSizeDiffTIV = deltaBits<<alpha;
+			int tempCompressedSize = tempSizeATIV + tempSizeDiffTIV; 
+			REPORT(FULL, "computeTIVCompressionParameters: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize << "  slack=" << slack <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV); 
+			if (tempCompressedSize < sizeTIV) {
+				bestS = s;
+				// tentatively set the attributes of the Multipartite class
+				rho = alpha - s;
+				sizeATIV = tempSizeATIV;
+				sizeDiffTIV = tempSizeDiffTIV;
+				sizeTIV = tempCompressedSize; 
+				nbZeroLSBsInATIV = saved_LSBs_in_ATIV; 
+			}				
 		}
-
-		// set the class attribute 
-		rho = alpha - betterS;
-
-		REPORT(DETAILED, "TIV compression found: s=" << betterS << ", rho=" << rho << ", diffOutputSize=" << maxBitsCounted
-					 << ", size=" << size << " (was " << ((outputSize +guardBits)<<alpha) <<")");
-
-
-		// Now actually fill the table
-		for(int i = 0; i < (1<<rho); i++)		{
-			mpz_class value = tiv[ i*(1<<betterS) ];
-			aTIV.push_back(mpz_class(value));
-			for(int j = 0; j < (1<<betterS); j++)
-			{
-				mpz_class diff = tiv[ i*(1<<betterS) + j] - value;
-				// managing two's complement
-				diff = (diff + (1 << (maxBitsCounted+1)))    &  ((1<<(maxBitsCounted+1)) - 1);
-				diffTIV.push_back(diff);
-				REPORT(FULL, "building diffTIV, i=" << i << " j=" << j);
-			}
-		}
-		// set up attributes
-		outputSizeATIV = outputSize+guardBits;
-		outputSizeDiffTIV = maxBitsCounted;
-#endif
+		REPORT(FULL, "Exiting computeTIVCompressionParameters: bestS=" << bestS << "  rho=" << rho  << "  nbZeroLSBsInATIV=" << nbZeroLSBsInATIV<< "  sizeTIV=" << sizeTIV); 
 	}
+
 
 
 
@@ -235,7 +195,18 @@ namespace flopoco
 	void Multipartite::buildGuardBitsAndSizes()
 	{
 		computeGuardBits();
-		computeSizes();
+		
+		sizeTIV = (outputSize + guardBits)<<alpha;
+		int size = sizeTIV;
+		outputSizeTOi = vector<int>(m);
+		sizeTOi = vector<int>(m);
+		for (int i=0; i<m; i++)		{
+			computeTOiSize(i);
+			size += sizeTOi[i];
+		}
+		totalSize = size;
+
+		computeTIVCompressionParameters();
 	}
 
 
@@ -284,10 +255,27 @@ namespace flopoco
 			//toi[i] = new Table(mpt, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
 		}
 
-		// TIV compression as per Hsiao
-		compressAndUpdateTIV();
+		// TIV compression as per Hsiao with improvements
+		int s = alpha-rho;
+		for(int i = 0; i < (1<<rho); i++)	{
+			mpz_class valLeft  = TIVFunction( i<<s );
+			mpz_class valRight = TIVFunction( ((i+1)<<s)-1 );
+			mpz_class refVal;
+			// life is simpler if the diff table is always positive
+			if(valLeft<=valRight) 
+				refVal=valLeft;
+			else  
+				refVal=valRight;
+			// the improvement: we may shave a few bits from the LSB
+			//			mpz_class mask = ((1<<outputSize)-1) - ((1<<nbZeroLSBsInATIV)-1);
+			refVal = refVal >> nbZeroLSBsInATIV ;
+			aTIV.push_back(refVal);
+			for(int j = 0; j < (1<<s); j++)		{
+				mpz_class diff = tiv[ (i<<s) + j] - (refVal << nbZeroLSBsInATIV);
+				diffTIV.push_back(diff);
+			}	
+		}
 	}
-
 
 
 	//------------------------------------------------------------------------------------- Public classes
@@ -368,12 +356,17 @@ namespace flopoco
 
 	string 	Multipartite::descriptionString(){
 		ostringstream s;
-		s << "alpha=" << alpha;
+		s << "    alpha=" << alpha;
 		if(rho!=-1)
-			s << ", rho=" << rho << "   ";
+			s << ", rho=" << rho << ", nbZeroLSBsInATIV=" << nbZeroLSBsInATIV << "   ";
 		for (size_t i =0; i< gammai.size(); i++) {
 			s << "   gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
 		}
+		s << endl;
+		if(rho!=-1){
+			s << "    sizeATIV=" << sizeATIV << " sizeDiffTIV=" << sizeDiffTIV ;
+		}
+		s << "  sizeTIV=" << sizeTIV << " totalSize=" << totalSize ;
 		return s.str();
 	}
 

@@ -174,7 +174,8 @@ namespace flopoco
 			bh->addSignal("outTIV");
 		}else
 			{ // Hsiao-compressed TIV
-				bh->addSignal("outATIV");
+				bh->addSignal("outATIV", bestMP->nbZeroLSBsInATIV); // shifted because its LSB bits were shaved in the Hsiao compression
+				//bh->addSignal("outATIV"); // shifted because its LSB bits were shaved in the Hsiao compression
 				bh->addSignal("outDiffTIV");
 			}
 
@@ -189,6 +190,7 @@ namespace flopoco
 
 	FixFunctionByMultipartiteTable::~FixFunctionByMultipartiteTable() {
 		delete f;
+		delete bestMP;
 	}
 
 
@@ -472,7 +474,7 @@ namespace flopoco
 		if (smallest->totalSize == sizeMax)
 			THROWERROR("It seems we could not find a decomposition");
 
-		REPORT(DETAILED, "Best decomposition found: " << smallest->descriptionString());					 
+		REPORT(INFO, "Best decomposition found: "<< endl << smallest->descriptionString());					 
 		return smallest;
 	}
 
@@ -580,7 +582,8 @@ namespace flopoco
 			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
 			paramList.clear();
-		 
+
+#if 0			
 			paramList.push_back(make_pair("f","\"1/(x+1)\""));
 			paramList.push_back(make_pair("lsbIn","-16"));
 			paramList.push_back(make_pair("lsbOut","-16"));
@@ -588,7 +591,7 @@ namespace flopoco
 			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
 			paramList.clear();
-		 
+#endif
 
 		}
 		else     

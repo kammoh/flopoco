@@ -92,6 +92,10 @@ namespace flopoco
 		vector<int> outputSizeTOi;
 		vector<int> sizeTOi;
 		vector<bool> negativeTOi;
+		int sizeTIV;
+		int sizeATIV;
+		int nbZeroLSBsInATIV;
+		int sizeDiffTIV;
 		int totalSize;
 
 		// holds precalculated TOi math errors. Valid as long as we don't change m!
@@ -102,14 +106,13 @@ namespace flopoco
 		//------------------------------------------------------------------------------------ Private methods
 		void computeGuardBits();
 		void computeMathErrors();
-		void computeSizes();
 		void computeTOiSize (int i);
 
 		double deltai(int i);
 		double mui(int i, int Bi);
 		double si(int i, int Ai);
 
-		void compressAndUpdateTIV();
+		void computeTIVCompressionParameters();
 
 	};
 
