@@ -56,8 +56,8 @@ namespace flopoco
 	 @param[int]	nbTOi_	number of tables which will be created
 	 @param[bool]	signedIn_	true if the input range is [-1,1)
 	 */
-	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTOi_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
-		Operator(parentOp, target), nbTOi(nbTOi_)
+	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTOi_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_, bool compressTIV_):
+		Operator(parentOp, target), nbTOi(nbTOi_), compressTIV(compressTIV_)
 {
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
 		epsilonT = 1.0 / (1<<(f->wOut+1));
@@ -550,7 +550,14 @@ namespace flopoco
 		
 		if(index==-1) 
 		{ // The unit tests
-			// A few regression tests, first deg2, exhaustive on 15 bits, then deg 3 for 24 bits 
+			paramList.push_back(make_pair("f","\"exp2(x)\""));
+			paramList.push_back(make_pair("lsbIn","-12"));
+			paramList.push_back(make_pair("lsbOut","-11"));
+			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+
 			paramList.push_back(make_pair("f","\"sin(x)\""));
 			paramList.push_back(make_pair("lsbIn","-8"));
 			paramList.push_back(make_pair("msbOut","0"));
@@ -606,7 +613,7 @@ namespace flopoco
 
 	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string f;
-		bool signedIn;
+		bool signedIn, compressTIV;
 		int lsbIn, lsbOut, msbOut, nbTOi;
 		UserInterface::parseString(args, "f", &f);
 		UserInterface::parsePositiveInt(args, "nbTOi", &nbTOi);
@@ -614,7 +621,8 @@ namespace flopoco
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTOi, signedIn, lsbIn, msbOut, lsbOut);
+		UserInterface::parseBoolean(args, "compressTIV", &compressTIV);
+		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTOi, signedIn, lsbIn, msbOut, lsbOut, compressTIV);
 	}
 
 	void FixFunctionByMultipartiteTable::registerFactory(){
@@ -627,8 +635,8 @@ lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
 nbTOi(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
-signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise\
-",
+signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise;\
+compressTIV(bool)=true: use Hsiao TIV compression, or not",
 
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
 											 FixFunctionByMultipartiteTable::parseArguments,

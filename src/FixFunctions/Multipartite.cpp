@@ -180,7 +180,12 @@ namespace flopoco
 				rho = alpha - s;
 				sizeATIV = tempSizeATIV;
 				sizeDiffTIV = tempSizeDiffTIV;
-				sizeTIV = tempCompressedSize; 
+				sizeTIV = tempCompressedSize;
+				totalSize = sizeATIV + sizeDiffTIV;
+				for (int i=0; i<m; i++)		{
+					totalSize += sizeTOi[i];
+				}
+				
 				nbZeroLSBsInATIV = saved_LSBs_in_ATIV; 
 			}				
 		}
@@ -206,7 +211,9 @@ namespace flopoco
 		}
 		totalSize = size;
 
-		computeTIVCompressionParameters();
+		if(mpt->compressTIV)
+			computeTIVCompressionParameters(); // may change sizeTIV and totalSize
+		// else leave rho=-1
 	}
 
 

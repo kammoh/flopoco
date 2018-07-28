@@ -39,7 +39,7 @@ namespace flopoco
 		 * @param[bool]	signedIn_	true if the input range is [-1,1)
 		 */
 		FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target* target, string function, int nbTOi, bool signedIn,
-																	 int lsbIn, int msbOut, int lsbOut);
+																	 int lsbIn, int msbOut, int lsbOut, bool compressTIV);
 
 		virtual ~FixFunctionByMultipartiteTable();
 
@@ -94,6 +94,7 @@ namespace flopoco
 
 		// The following is not very well encapsulated, but no need to fix it
 		int nbTOi;		/**< The number of tables used */
+		bool compressTIV; /**< use Hsiao TIV compression or not */
 		vector<vector<vector<double>>> oneTableError;   /** for nbTOi fixed, the errors of each possible table configuration, precomputed  here to speed up exploration  */
 		vector<vector<int>> gammaiMin;  /** for nbTOi fixed, the min value of gamma, precomputed  here to speed up exploration */
 
