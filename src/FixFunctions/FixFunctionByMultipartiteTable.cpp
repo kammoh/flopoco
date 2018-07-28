@@ -475,7 +475,8 @@ namespace flopoco
 			THROWERROR("It seems we could not find a decomposition");
 
 		REPORT(INFO, "Best decomposition found: "<< endl << smallest->descriptionString());	 
-		REPORT(INFO, endl << smallest->descriptionStringLaTeX() );					 
+		REPORT(INFO, endl << smallest->descriptionStringLaTeX() );
+		cerr << smallest->outputSize << " " << smallest->guardBits << " " << smallest->nbZeroLSBsInATIV <<endl;
 		return smallest;
 	}
 
@@ -554,7 +555,7 @@ namespace flopoco
 			paramList.push_back(make_pair("f","\"2^x\""));
 			paramList.push_back(make_pair("lsbIn","-12"));
 			paramList.push_back(make_pair("lsbOut","-11"));
-			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("msbOut","1"));
 			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
 			paramList.clear();

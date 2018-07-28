@@ -144,7 +144,6 @@ namespace flopoco
 				// tentatively set the attributes of the Multipartite class
 				rho = alpha - s;
 				sizeATIV = tempSizeATIV;
-				outputSizeATIV = outputSize+guardBits-saved_LSBs_in_ATIV;
 				sizeDiffTIV = tempSizeDiffTIV;
 				sizeTIV = tempCompressedSize;
 				totalSize = sizeATIV + sizeDiffTIV;
@@ -153,9 +152,11 @@ namespace flopoco
 				}
 				
 				nbZeroLSBsInATIV = saved_LSBs_in_ATIV; 
+				outputSizeATIV = outputSize+guardBits-nbZeroLSBsInATIV;				
+				outputSizeDiffTIV = deltaBits;
 			}				
 		}
-		REPORT(FULL, "Exiting computeTIVCompressionParameters: bestS=" << bestS << "  rho=" << rho  << "  nbZeroLSBsInATIV=" << nbZeroLSBsInATIV<< "  sizeTIV=" << sizeTIV); 
+		REPORT(FULL, "Exiting computeTIVCompressionParameters: bestS=" << bestS << "  rho=" << rho  << "  nbZeroLSBsInATIV=" << nbZeroLSBsInATIV<< "  sizeTIV=" << sizeTIV  << "  outputSizeATIV" << outputSizeATIV); 
 	}
 
 
@@ -168,7 +169,7 @@ namespace flopoco
 		guardBits =  (int) floor(-outputSize - 1
 								 + log2(m /
 										(intpow2(-outputSize - 1) - mathError)));
-		
+
 		sizeTIV = (outputSize + guardBits)<<alpha;
 		int size = sizeTIV;
 		outputSizeTOi = vector<int>(m);
