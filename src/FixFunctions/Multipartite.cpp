@@ -47,28 +47,20 @@ namespace flopoco
 			pi[i] = pi[i-1] + betai[i-1];
 
 		epsilonT = 1 / (1<<(outputSize+1));
-		computeMathErrors();
-	}
 
-	//------------------------------------------------------------------------------------ Private methods
-
-	void Multipartite::computeGuardBits()
-	{
-		guardBits =  (int) floor(-outputSize - 1
-								 + log2(m /
-										(intpow2(-outputSize - 1) - mathError)));
-	}
-
-
-	/** Computes the math errors from the values precalculated in the multipartiteTable */
-	void Multipartite::computeMathErrors()
-	{
+		// compute approximation error out of the precomputed tables of MPT
+		// poor encapsulation: mpt will test it it is low enough
 		mathError=0;
 		for (int i=0; i<m; i++)
 		{
 			mathError += mpt->oneTableError[pi[i]][betai[i]][gammai[i]];
 		}
 	}
+
+	//------------------------------------------------------------------------------------ Private methods
+
+
+
 
 
 
@@ -119,33 +111,6 @@ namespace flopoco
 
 
 
-	/**
-		 fdedinec@haridell:~/local/flopocos/flopoco$ ./flopoco verbose=2 FixFunctionByMultipartiteTable f="sin(x)" lsbIn=-12 lsbOut=-12 msbOut=0 nbTOi=0 signedIn=false TestBench n=-2
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Entering: FixFunctionByMultipartiteTable "sin(x)" 0 0 -12 0 -12 
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=1
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=5 beta0=6   Size=9152
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=7   gamma0=5 beta0=5   Size=4864
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=8   gamma0=4 beta0=4   Size=4224
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best decomposition found: alpha=8   gamma0=4 beta0=4
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best size found is nbTOi=1  size=4224
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=2
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=4 beta0=2   gamma1=5 beta1=4   Size=3840
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=5 beta0=2   gamma1=5 beta1=4   Size=3648
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=5 beta0=3   gamma1=5 beta1=3   Size=3264
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=7   gamma0=3 beta0=2   gamma1=5 beta1=3   Size=3152
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=7   gamma0=4 beta0=2   gamma1=5 beta1=3   Size=2944
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best decomposition found: alpha=7   gamma0=4 beta0=2   gamma1=5 beta1=3
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best size found is nbTOi=2  size=2944
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=3
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: new best found alpha=6   gamma0=4 beta0=2   gamma1=6 beta1=2   gamma2=5 beta2=2   Size=2944
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best decomposition found: alpha=6   gamma0=4 beta0=2   gamma1=6 beta1=2   gamma2=5 beta2=2
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Best size found is nbTOi=2  size=2944
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: Exploring nbTOi=4
-> FixFunctionByMultipartiteTable FixFunctionByMultipartiteTable_2_F400_uid3: No decomposition found for nbTOi=4, stopping search.
-> FixFunctionByMultipartiteTable : TIV compression found: s=3, rho=4, diffOutputSize=10, size=1520 (was 1920)
->
-	 */
-
 	void Multipartite::computeTIVCompressionParameters() {
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
 
@@ -179,6 +144,7 @@ namespace flopoco
 				// tentatively set the attributes of the Multipartite class
 				rho = alpha - s;
 				sizeATIV = tempSizeATIV;
+				outputSizeATIV = outputSize+guardBits-saved_LSBs_in_ATIV;
 				sizeDiffTIV = tempSizeDiffTIV;
 				sizeTIV = tempCompressedSize;
 				totalSize = sizeATIV + sizeDiffTIV;
@@ -199,7 +165,9 @@ namespace flopoco
 
 	void Multipartite::buildGuardBitsAndSizes()
 	{
-		computeGuardBits();
+		guardBits =  (int) floor(-outputSize - 1
+								 + log2(m /
+										(intpow2(-outputSize - 1) - mathError)));
 		
 		sizeTIV = (outputSize + guardBits)<<alpha;
 		int size = sizeTIV;
@@ -374,6 +342,30 @@ namespace flopoco
 			s << "    sizeATIV=" << sizeATIV << " sizeDiffTIV=" << sizeDiffTIV ;
 		}
 		s << "  sizeTIV=" << sizeTIV << " totalSize=" << totalSize ;
+		return s.str();
+	}
+
+	string 	Multipartite::descriptionStringLaTeX(){
+		ostringstream s;
+		s << "    \\alpha=" << alpha;
+		if(rho!=-1)
+			s << ", rho=" << rho << ", nbZeroLSBsInATIV=" << nbZeroLSBsInATIV << "   ";
+		for (size_t i =0; i< gammai.size(); i++) {
+			s << "   \\gamma_" << i << "=" << gammai[i] << " \\beta_"<<i<<"=" << betai[i]; 
+		}
+		s << endl;
+		s << "         totalSize=" << totalSize << "   =   " ;
+
+		if(rho!=-1){
+			s << "    " << outputSizeATIV << ".2^" << rho << " + " << outputSizeDiffTIV << ".2^" << alpha;
+		}
+		else
+			s << "    " << outputSize+guardBits << ".2^" << alpha;
+
+		s << "     ";
+		for(int t=m-1; t>=0; t-- ) {
+			s << " + " << outputSizeTOi[t] << ".2^" << gammai[t] + betai[t] -1;
+		}
 		return s.str();
 	}
 

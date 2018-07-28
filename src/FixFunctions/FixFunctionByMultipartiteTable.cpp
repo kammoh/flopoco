@@ -462,7 +462,7 @@ namespace flopoco
 					if(mpt->totalSize < smallest->totalSize) {
 						delete smallest;
 						smallest = mpt;
-						REPORT(DETAILED, "new best found " << mpt->descriptionString()  << "   Size=" << smallest->totalSize);
+						REPORT(DETAILED, "new best found " << mpt->descriptionString());
 					}
 					else {
 						delete mpt;
@@ -474,7 +474,8 @@ namespace flopoco
 		if (smallest->totalSize == sizeMax)
 			THROWERROR("It seems we could not find a decomposition");
 
-		REPORT(INFO, "Best decomposition found: "<< endl << smallest->descriptionString());					 
+		REPORT(INFO, "Best decomposition found: "<< endl << smallest->descriptionString());	 
+		REPORT(INFO, endl << smallest->descriptionStringLaTeX() );					 
 		return smallest;
 	}
 
@@ -550,7 +551,7 @@ namespace flopoco
 		
 		if(index==-1) 
 		{ // The unit tests
-			paramList.push_back(make_pair("f","\"exp2(x)\""));
+			paramList.push_back(make_pair("f","\"2^x\""));
 			paramList.push_back(make_pair("lsbIn","-12"));
 			paramList.push_back(make_pair("lsbOut","-11"));
 			paramList.push_back(make_pair("msbOut","0"));

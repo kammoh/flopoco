@@ -45,6 +45,10 @@ namespace flopoco
 		 */
 		string descriptionString();
 		/**
+		 * @brief descriptionString(): describe the various parameters in textual form
+		 */
+		string descriptionStringLaTeX();
+		/**
 		 * @brief fullTableDump(): as the name suggests, for debug
 		 */
 		string 	fullTableDump(); 
@@ -104,8 +108,6 @@ namespace flopoco
 	private:
 
 		//------------------------------------------------------------------------------------ Private methods
-		void computeGuardBits();
-		void computeMathErrors();
 		void computeTOiSize (int i);
 
 		double deltai(int i);
