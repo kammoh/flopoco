@@ -117,8 +117,9 @@ namespace flopoco
 		REPORT(FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV); 
 
 		int bestS = 0; 
-		for(int s = 1; s < alpha; s++) {
+		for(int s = 1; s < alpha-1; s++) {
 			
+#if 0 // This works without the convexity hypothesis but is hugely slower
 			vector<mpz_class> deltas;
 			mpz_class deltaMax = 0;
 			for(int i = 0; i < (1<<(alpha - s)); i++)	{
@@ -131,14 +132,32 @@ namespace flopoco
 			int deltaBits = intlog2(deltaMax);
 			mpz_class slack = 0;
 			for(int i = 0; i < (1<<(alpha - s)); i++)	{
-				slack = max(slack, (1<<deltaBits)-1-deltas[i]);
+				slack = max(slack, (1<<deltaBits)-1-deltas[i]);				
 			}
-			int saved_LSBs_in_ATIV = intlog2(slack);
+#else
+			// Under convexity hypothesis, the maximum slack is either left or right of the interval
+			// (I think we assume here convexity of the first derivative, too)
+			mpz_class  valLeft, valRight, deltaLeft, deltaRight, deltaMax, slackMax;
+			int i = 0;
+			valLeft	 = TIVFunction( i<<s );
+			valRight = TIVFunction( ((i+1)<<s)-1 );
+			deltaLeft = abs(valLeft-valRight);
+
+			i = (1<<(alpha - s))-1;
+			valLeft	 = TIVFunction( i<<s );
+			valRight = TIVFunction( ((i+1)<<s)-1 );
+			deltaRight = abs(valLeft-valRight);
+
+			deltaMax = max(deltaLeft, deltaRight);
+			int deltaBits = intlog2(deltaMax);
+			slackMax = max( (1<<deltaBits)-1-deltaLeft,	(1<<deltaBits)-1-deltaRight);			
+#endif
+			int saved_LSBs_in_ATIV = intlog2(slackMax);
 			int tempRho = alpha - s;
 			int tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
 			int tempSizeDiffTIV = deltaBits<<alpha;
 			int tempCompressedSize = tempSizeATIV + tempSizeDiffTIV; 
-			REPORT(FULL, "computeTIVCompressionParameters: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize << "  slack=" << slack <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV); 
+			REPORT(FULL, "computeTIVCompressionParameters: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize << "  slack=" << slackMax <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV); 
 			if (tempCompressedSize < sizeTIV) {
 				bestS = s;
 				// tentatively set the attributes of the Multipartite class
@@ -332,7 +351,7 @@ namespace flopoco
 
 	string 	Multipartite::descriptionString(){
 		ostringstream s;
-		s << "    alpha=" << alpha;
+		s << "m=" << m << "    alpha=" << alpha;
 		if(rho!=-1)
 			s << ", rho=" << rho << ", nbZeroLSBsInATIV=" << nbZeroLSBsInATIV << "   ";
 		for (size_t i =0; i< gammai.size(); i++) {
@@ -342,12 +361,13 @@ namespace flopoco
 		if(rho!=-1){
 			s << "    sizeATIV=" << sizeATIV << " sizeDiffTIV=" << sizeDiffTIV ;
 		}
-		s << "  sizeTIV=" << sizeTIV << " totalSize=" << totalSize ;
+		s << "  sizeTIV=" << sizeTIV << " totalSize = " << totalSize ;
 		return s.str();
 	}
 
 	string 	Multipartite::descriptionStringLaTeX(){
 		ostringstream s;
+#if 0
 		s << "    \\alpha=" << alpha;
 		if(rho!=-1)
 			s << ", rho=" << rho << ", nbZeroLSBsInATIV=" << nbZeroLSBsInATIV << "   ";
@@ -355,7 +375,8 @@ namespace flopoco
 			s << "   \\gamma_" << i << "=" << gammai[i] << " \\beta_"<<i<<"=" << betai[i]; 
 		}
 		s << endl;
-		s << "         totalSize=" << totalSize << "   =   " ;
+#endif
+		s << "         totalSize = " << totalSize << "   =   " ;
 
 		if(rho!=-1){
 			s << "    " << outputSizeATIV << ".2^" << rho << " + " << outputSizeDiffTIV << ".2^" << alpha;

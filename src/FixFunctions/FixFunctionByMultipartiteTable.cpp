@@ -31,7 +31,12 @@
 #include "../BitHeap/BitHeap.hpp"
 #include "../Table.hpp"
 
+/*
+To replicate the functions used in the 2017 Hsiao paper
 
+./flopoco FixFunctionByMultipartiteTable f="sin(pi/4*x)"  msbOut=-1 lsbIn=-24 lsbOut=-24 nbTOi=0 compressTIV=false
+
+*/
 
 /*
  TODOs:
@@ -87,7 +92,7 @@ namespace flopoco
 			int smallestNbTables=1;
 			try {
 				while (true) {
-					REPORT(INFO, "Exploring nbTOi=" << nbTOi);
+					//					REPORT(INFO, "Exploring nbTO=" << nbTOi);
 					buildOneTableError();
 					buildGammaiMin();
 					bestMP = enumerateDec();
@@ -99,7 +104,6 @@ namespace flopoco
 					else {
 						delete bestMP;
 					}
-					REPORT(INFO, "Best size found is nbTOi="<< smallestNbTables << "  size=" << smallest->totalSize);
 					nbTOi ++;
 				}
 			} catch(std::string &s){
@@ -120,6 +124,11 @@ namespace flopoco
 				bestMP = enumerateDec();
 		}
 
+		// time to report
+		REPORT(INFO, "And the winner is" << endl
+					 << tab << bestMP->descriptionString() << endl
+					 << tab<< bestMP->descriptionStringLaTeX());
+		
 		bestMP->mkTables(target);
 		
 		REPORT(FULL,"Full table dump:" <<endl << bestMP->fullTableDump()); 
@@ -160,9 +169,9 @@ namespace flopoco
 			vhdl << tab << declare(signi) << " <= not(" << bi << of( bestMP->betai[i] - 1) << ");" << endl;
 			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
 			Table::newUniqueInstance(this, inTOi, outTOi,
-															 bestMP->toi[i], nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]-1);
+															 bestMP->toi[i], nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
 			string trueSign = (bestMP->negativeTOi[i] ? "(not "+signi+")" : signi);
-			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]) << " <= " << trueSign << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-2,0, trueSign)<< ");" << endl;
+			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]+1) << " <= " << trueSign << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-1,0, trueSign)<< ");" << endl;
 			getSignalByName(deltai)->setIsSigned(); // so that it is sign-extended in the bit heap
 		}
 		
@@ -474,9 +483,10 @@ namespace flopoco
 		if (smallest->totalSize == sizeMax)
 			THROWERROR("It seems we could not find a decomposition");
 
-		REPORT(INFO, "Best decomposition found: "<< endl << smallest->descriptionString());	 
-		REPORT(INFO, endl << smallest->descriptionStringLaTeX() );
-		cerr << smallest->outputSize << " " << smallest->guardBits << " " << smallest->nbZeroLSBsInATIV <<endl;
+		REPORT(INFO, "Best decomposition found for nbTO=" << smallest->m << endl
+					 <<  tab << smallest->descriptionString()  << endl
+					 << tab << smallest->descriptionStringLaTeX()
+					 );	 
 		return smallest;
 	}
 
@@ -552,6 +562,44 @@ namespace flopoco
 		
 		if(index==-1) 
 		{ // The unit tests
+#if 0
+			vector<string> function;
+			vector<int> msbOut;
+			vector<bool> scaleOutput;			// multiply output by (1-2^lsbOut) to prevent it  reaching 2^(msbOut+1) due to faithful rounding  
+
+			function.push_back("2^x");			// input in [0,1) output in [1, 2) : need scaleOutput
+			msbOut.push_back(0);
+			scaleOutput.push_back(true);
+			
+			function.push_back("1/(x+1)");  // input in [0,1) output in [0.5,1] but we don't want scaleOutput
+			msbOut.push_back(0);
+			scaleOutput.push_back(false); 
+			msbOut.push_back(0);
+
+			function.push_back("sin(pi/4*x)"); 
+			msbOut.push_back(-1);
+			scaleOutput.push_back(false); 
+
+			for (int lsbIn=-8; lsbIn >= -16; lsbIn--) {
+				for (size_t i =0; i<function.size(); i++) {
+					paramList.clear();
+					string f = function[i];
+					int lsbOut = lsbIn - msbOut[i]+1; // to have inputSize=outputSize
+					if(scaleOutput[i]) {
+						f = "(1-1b"+to_string(lsbOut) + ")*" + f;				
+					}
+					cerr << endl << f;
+					paramList.push_back(make_pair("f", f));
+					paramList.push_back(make_pair("lsbIn", to_string(lsbIn)));
+					paramList.push_back(make_pair("lsbOut", to_string(lsbOut)));
+					paramList.push_back(make_pair("msbOut", to_string(msbOut[i])));
+					if(lsbIn>-14)
+						paramList.push_back(make_pair("TestBench n=","-2"));
+					testStateList.push_back(paramList);
+				}
+			}
+			
+#else
 			paramList.push_back(make_pair("f","\"2^x\""));
 			paramList.push_back(make_pair("lsbIn","-12"));
 			paramList.push_back(make_pair("lsbOut","-11"));
@@ -564,6 +612,14 @@ namespace flopoco
 			paramList.push_back(make_pair("lsbIn","-8"));
 			paramList.push_back(make_pair("msbOut","0"));
 			paramList.push_back(make_pair("lsbOut","-8"));
+			paramList.push_back(make_pair("TestBench n=","-2"));
+			testStateList.push_back(paramList);
+			paramList.clear();
+
+			paramList.push_back(make_pair("f","\"sin(x)\""));
+			paramList.push_back(make_pair("lsbIn","-12"));
+			paramList.push_back(make_pair("msbOut","0"));
+			paramList.push_back(make_pair("lsbOut","-12"));
 			paramList.push_back(make_pair("TestBench n=","-2"));
 			testStateList.push_back(paramList);
 			paramList.clear();
@@ -601,7 +657,7 @@ namespace flopoco
 			testStateList.push_back(paramList);
 			paramList.clear();
 #endif
-
+#endif
 		}
 		else     
 		{
