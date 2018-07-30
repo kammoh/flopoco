@@ -600,7 +600,7 @@ namespace flopoco
 				for (size_t i =0; i<function.size(); i++) {
 					paramList.clear();
 					string f = function[i];
-					int lsbOut = lsbIn - msbOut[i]+1; // to have inputSize=outputSize
+					int lsbOut = lsbIn + msbOut[i]+1; // to have inputSize=outputSize
 					if(scaleOutput[i]) {
 						f = "(1-1b"+to_string(lsbOut) + ")*" + f;				
 					}

@@ -186,7 +186,7 @@ namespace flopoco
 
 	void Multipartite::buildGuardBitsAndSizes()
 	{
-		guardBits =  (int) floor(-outputSize - 1
+		guardBits =  (int) ceil(-outputSize - 1
 								 + log2(m /
 										(intpow2(-outputSize - 1) - mathError)));
 
