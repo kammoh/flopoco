@@ -25,8 +25,8 @@ namespace flopoco
 
 		Multipartite(FixFunctionByMultipartiteTable* mpt_, FixFunction* f_, int inputSize_, int outputSize_);
 
-		mpz_class TIVFunction(int x);
-		mpz_class TOiFunction(int x, int ti);
+		int64_t TIVFunction(int x);
+		int64_t TOiFunction(int x, int ti);
 		//------------------------------------------------------------------------------------- Public methods
 
 		/**
@@ -52,7 +52,10 @@ namespace flopoco
 		 * @brief fullTableDump(): as the name suggests, for debug
 		 */
 		string 	fullTableDump(); 
-		//---------------------------------------------------------------------------------- Public attributes
+
+		double exhaustiveTest();
+
+	//---------------------------------------------------------------------------------- Public attributes
 		FixFunction* f;
 
 		int inputSize;
@@ -77,16 +80,16 @@ namespace flopoco
 		vector<int> pi;
 
 		/** The Table of Initial Values, just as the ARITH 15 article */
-		vector<mpz_class> tiv;
+		vector<int64_t> tiv;
 		
 		/** The first part of the compressed TIV table, just as in the Hsiao article */
-		vector<mpz_class> aTIV;
+		vector<int64_t> aTIV;
 
 		/** The second part of the compressed TIV table, just as in the Hsiao article */
-		vector<mpz_class> diffTIV;
+		vector<int64_t> diffTIV;
 
 		/** The m Tables of Offset , just as the ARITH 15 article */
-		vector<vector<mpz_class>> toi;
+		vector<vector<int64_t>> toi;
 
 		double mathError;
 

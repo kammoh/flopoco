@@ -120,24 +120,25 @@ namespace flopoco
 		for(int s = 1; s < alpha-1; s++) {
 			
 #if 0 // This works without the convexity hypothesis but is hugely slower
-			vector<mpz_class> deltas;
-			mpz_class deltaMax = 0;
+			vector<int64_t> deltas;
+			int64_t deltaMax = 0;
 			for(int i = 0; i < (1<<(alpha - s)); i++)	{
-				mpz_class valLeft  = TIVFunction( i<<s );
-				mpz_class valRight = TIVFunction( ((i+1)<<s)-1 );
-				mpz_class delta = abs(valLeft-valRight);
+				int64_t valLeft  = TIVFunction( i<<s );
+				int64_t valRight = TIVFunction( ((i+1)<<s)-1 );
+				int64_t delta = abs(valLeft-valRight);
 				deltas.push_back(delta);
-				deltaMax = max(delta, deltaMax);
+				if (delta>deltaMax)
+					deltaMax=delta;
 			}
 			int deltaBits = intlog2(deltaMax);
-			mpz_class slack = 0;
+			int64_t slack = 0;
 			for(int i = 0; i < (1<<(alpha - s)); i++)	{
 				slack = max(slack, (1<<deltaBits)-1-deltas[i]);				
 			}
 #else
 			// Under convexity hypothesis, the maximum slack is either left or right of the interval
 			// (I think we assume here convexity of the first derivative, too)
-			mpz_class  valLeft, valRight, deltaLeft, deltaRight, deltaMax, slackMax;
+			int64_t  valLeft, valRight, deltaLeft, deltaRight, deltaMax, slackMax;
 			int i = 0;
 			valLeft	 = TIVFunction( i<<s );
 			valRight = TIVFunction( ((i+1)<<s)-1 );
@@ -148,9 +149,9 @@ namespace flopoco
 			valRight = TIVFunction( ((i+1)<<s)-1 );
 			deltaRight = abs(valLeft-valRight);
 
-			deltaMax = max(deltaLeft, deltaRight);
+			deltaMax = deltaLeft>deltaRight? deltaLeft: deltaRight;
 			int deltaBits = intlog2(deltaMax);
-			slackMax = max( (1<<deltaBits)-1-deltaLeft,	(1<<deltaBits)-1-deltaRight);			
+			slackMax = (1<<deltaBits)-1-deltaMax;			
 #endif
 			int saved_LSBs_in_ATIV = intlog2(slackMax);
 			int tempRho = alpha - s;
@@ -208,7 +209,7 @@ namespace flopoco
 	void Multipartite::mkTables(Target* target)
 	{
 		// The TIV
-		vector<mpz_class> tivval;
+		vector<int64_t> tivval;
 		for (int j=0; j < 1<<alpha; j++) {
 				tiv.push_back(TIVFunction(j));
 		}
@@ -218,7 +219,7 @@ namespace flopoco
 		//toi = vector<Table*>(m);
 		for(int i = 0; i < m; ++i)
 		{
-			vector<mpz_class> values;
+			vector<int64_t> values;
 			for (int j=0; j < 1<<(gammai[i]+betai[i]-1); j++) {
 				values.push_back(TOiFunction(j, i));
 			}
@@ -253,20 +254,20 @@ namespace flopoco
 		// TIV compression as per Hsiao with improvements
 		int s = alpha-rho;
 		for(int i = 0; i < (1<<rho); i++)	{
-			mpz_class valLeft  = TIVFunction( i<<s );
-			mpz_class valRight = TIVFunction( ((i+1)<<s)-1 );
-			mpz_class refVal;
+			int64_t valLeft  = TIVFunction( i<<s );
+			int64_t valRight = TIVFunction( ((i+1)<<s)-1 );
+			int64_t refVal;
 			// life is simpler if the diff table is always positive
 			if(valLeft<=valRight) 
 				refVal=valLeft;
 			else  
 				refVal=valRight;
 			// the improvement: we may shave a few bits from the LSB
-			//			mpz_class mask = ((1<<outputSize)-1) - ((1<<nbZeroLSBsInATIV)-1);
+			//			int64_t mask = ((1<<outputSize)-1) - ((1<<nbZeroLSBsInATIV)-1);
 			refVal = refVal >> nbZeroLSBsInATIV ;
 			aTIV.push_back(refVal);
 			for(int j = 0; j < (1<<s); j++)		{
-				mpz_class diff = tiv[ (i<<s) + j] - (refVal << nbZeroLSBsInATIV);
+				int64_t diff = tiv[ (i<<s) + j] - (refVal << nbZeroLSBsInATIV);
 				diffTIV.push_back(diff);
 			}	
 		}
@@ -274,7 +275,7 @@ namespace flopoco
 
 
 	//------------------------------------------------------------------------------------- Public classes
-	mpz_class Multipartite::TOiFunction(int x, int ti)
+	int64_t Multipartite::TOiFunction(int x, int ti)
 	{
 		int TOi;
 		double dTOi;
@@ -297,13 +298,13 @@ namespace flopoco
 			TOi = (int)floor(dTOi);
 		else
 			TOi = (int)ceil(dTOi);
-		return mpz_class(TOi);
+		return int64_t(TOi);
 	}
 
 
 
 
-	mpz_class Multipartite::TIVFunction(int x)
+	int64_t Multipartite::TIVFunction(int x)
 	{
 		int TIVval;
 		double dTIVval;
@@ -345,7 +346,7 @@ namespace flopoco
 		else
 			TIVval = (int) floor(dTIVval + offsetMatula);
 
-		return mpz_class(TIVval);
+		return int64_t(TIVval);
 	}
 
 
@@ -357,7 +358,7 @@ namespace flopoco
 		for (size_t i =0; i< gammai.size(); i++) {
 			s << "   gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
 		}
-		s << endl;
+		s << "     g=" << guardBits << endl;
 		if(rho!=-1){
 			s << "    sizeATIV=" << sizeATIV << " sizeDiffTIV=" << sizeDiffTIV ;
 		}
@@ -420,7 +421,32 @@ namespace flopoco
 	}
 
 	
+	double Multipartite::exhaustiveTest(){
+		double maxError=0;
+		for (int x=0; x<1<<inputSize; x++) {
+			int aa = x>>(inputSize-rho);
+			int64_t yATIV = aTIV[aa];
 
+			int adiff = x>>(inputSize-alpha);
+			int64_t yDiffTIV = diffTIV[adiff];
+
+			int64_t result = yATIV + yDiffTIV;
+
+			for(int i=0; i<m; i++) {
+				int aTOi = (x>>pi[i]) & ((1<<betai[i])-1);
+				int sign = aTOi >> (betai[i]-1);
+				aTOi = (aTOi & ((1<<(betai[i]-1))-1))   +  ((x>>(inputSize-gammai[i])) << (betai[i]-1));
+				if(sign==1)
+					aTOi = (~aTOi) & ((1<<(gammai[i]+betai[i]-1))-1); 
+				int64_t yTOi = toi[i][aTOi];
+				if(sign==1)
+					yTOi = ~yTOi;
+				result += yTOi;
+			}
+			
+		}
+		return maxError;
+	}
 
 }
 

@@ -35,7 +35,7 @@
 To replicate the functions used in the 2017 Hsiao paper
 
 ./flopoco FixFunctionByMultipartiteTable f="sin(pi/4*x)"  msbOut=-1 lsbIn=-24 lsbOut=-24 nbTOi=0 compressTIV=false
-
+./flopoco FixFunctionByMultipartiteTable f="2^x" lsbIn=-16 lsbOut=-15 msbOut=-1 nbTOi=0 compressTIV=true
 */
 
 /*
@@ -135,19 +135,28 @@ namespace flopoco
 
 		if(bestMP->rho==-1) { // uncompressed TIV
 			vhdl << tab << declare("inTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+			vector<mpz_class> mpzTIV;
+			for (auto i : bestMP->tiv)
+				mpzTIV.push_back(mpz_class(i));
 			Table::newUniqueInstance(this, "inTIV", "outTIV",
-															 bestMP->tiv, "TIV", bestMP->alpha, f->wOut );
+															 mpzTIV, "TIV", bestMP->alpha, f->wOut );
 				vhdl << endl;
 		}else
 			{ // Hsiao-compressed TIV
 				vhdl << tab << declare("inATIV", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
+				vector<mpz_class> mpzaTIV;
+				for (auto i : bestMP->aTIV)
+					mpzaTIV.push_back(mpz_class(i));
 				Table::newUniqueInstance(this, "inATIV", "outATIV",
-																 bestMP->aTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
+																 mpzaTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
 				vhdl << endl;
 				
 				vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+				vector<mpz_class> mpzDiffTIV;
+				for (auto i : bestMP->diffTIV)
+					mpzDiffTIV.push_back(mpz_class(i));
 				Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
-																 bestMP->diffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
+																 mpzDiffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
 				// TODO need to sign-extend for 1/(1+x), but it makes an error for sin(x)
 				//  getSignalByName("outDiffTIV")->setIsSigned(); // so that it is sign-extended in the bit heap
 				// No need to sign-extend it, it is already taken care of in the construction of the table.
@@ -168,8 +177,11 @@ namespace flopoco
 			vhdl << tab << declare(bi, bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
 			vhdl << tab << declare(signi) << " <= not(" << bi << of( bestMP->betai[i] - 1) << ");" << endl;
 			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
+			vector<mpz_class> mpzTOi;
+			for (auto i : bestMP->toi[i])
+				mpzTOi.push_back(mpz_class(i));
 			Table::newUniqueInstance(this, inTOi, outTOi,
-															 bestMP->toi[i], nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
+															 mpzTOi, nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
 			string trueSign = (bestMP->negativeTOi[i] ? "(not "+signi+")" : signi);
 			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]+1) << " <= " << trueSign << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-1,0, trueSign)<< ");" << endl;
 			getSignalByName(deltai)->setIsSigned(); // so that it is sign-extended in the bit heap
@@ -562,7 +574,7 @@ namespace flopoco
 		
 		if(index==-1) 
 		{ // The unit tests
-#if 0
+#if 1
 			vector<string> function;
 			vector<int> msbOut;
 			vector<bool> scaleOutput;			// multiply output by (1-2^lsbOut) to prevent it  reaching 2^(msbOut+1) due to faithful rounding  
@@ -580,6 +592,10 @@ namespace flopoco
 			msbOut.push_back(-1);
 			scaleOutput.push_back(false); 
 
+			function.push_back("sin(pi/2*x)"); 
+			msbOut.push_back(-1);
+			scaleOutput.push_back(true); 
+
 			for (int lsbIn=-8; lsbIn >= -16; lsbIn--) {
 				for (size_t i =0; i<function.size(); i++) {
 					paramList.clear();
@@ -588,7 +604,7 @@ namespace flopoco
 					if(scaleOutput[i]) {
 						f = "(1-1b"+to_string(lsbOut) + ")*" + f;				
 					}
-					cerr << endl << f;
+					f="\"" + f + "\"";
 					paramList.push_back(make_pair("f", f));
 					paramList.push_back(make_pair("lsbIn", to_string(lsbIn)));
 					paramList.push_back(make_pair("lsbOut", to_string(lsbOut)));
