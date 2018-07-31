@@ -82,55 +82,90 @@ namespace flopoco
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
 
+		int sizeMax = f->wOut<<f->wIn; // size of a plain table
+		topTen=vector<Multipartite*>(ten);
+		for (int i=0; i<ten; i++){
+			topTen[i] = new Multipartite(this, f, f->wIn, f->wOut);
+			topTen[i]-> totalSize =	sizeMax;
+		}
 
-		if(nbTOi==0) {
-			// The following is not as clean as it should be because the code was first written with nbTOi a global variable...
-			int sizeMax = f->wOut * (1<<f->wIn); // size of a plain table
-			Multipartite* 		smallest = new Multipartite(this, f, f->wIn, f->wOut);
-			smallest->totalSize = sizeMax;
-			nbTOi=1;
-			int smallestNbTables=1;
-			try {
-				while (true) {
-					//					REPORT(INFO, "Exploring nbTO=" << nbTOi);
+
+		// Outer loop on guardBitSlack;
+		guardBitsSlack =-1; // first  try the exploration with one guard bit less than the safe value
+		Multipartite* bestMP;
+		bool successWithguardBitsSlack = false;
+		int rank;
+		while (guardBitsSlack<=0 && !successWithguardBitsSlack) {
+
+			bool decompositionFound;
+			if(nbTOi==0) {
+				// The following is not as clean as it should be because the code was first written with nbTOi a global variable...
+				nbTOi=1;
+				decompositionFound=true;
+				while (decompositionFound) {
+					REPORT(INFO, "Exploring nbTO=" << nbTOi);
 					buildOneTableError();
 					buildGammaiMin();
-					bestMP = enumerateDec();
-					if(bestMP->totalSize < smallest->totalSize) {
-						delete smallest;
-						smallestNbTables=nbTOi;
-						smallest = bestMP;
-					}
-					else {
-						delete bestMP;
-					}
+					decompositionFound = enumerateDec(); 
+					if(!decompositionFound)
+						REPORT(INFO, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
 					nbTOi ++;
 				}
-			} catch(std::string &s){
-				REPORT(INFO, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
-				if(smallest->totalSize==sizeMax) {
-					THROWERROR("\nSorry, the multipartite method doesn't seem to work for this function. \nTry another of the FixFunction* operators");
-				}
-				else{
-					bestMP=smallest;
-					nbTOi=smallestNbTables;
+				if(topTen[0]->totalSize == sizeMax) {
+					THROWERROR("\nSorry, the multipartite method doesn't seem to work for this function. \nTry another of the FixFunction* operators. At least FixFunctionByTable should work...");
 				}
 			}
-		}
-		else	{
-				// build the required tables of errors
+			else	{ // nbTOi was given
+ 				// build the required tables of errors
 				buildOneTableError();
 				buildGammaiMin();
-				bestMP = enumerateDec();
+				decompositionFound = enumerateDec();
+				if(!decompositionFound)
+					THROWERROR("No decomposition found for nbTOi=" << nbTOi << ", aborting");
+			}
+
+			// Parameter space exploration complete. Now checking the results
+			rank = 0 ;
+			bool tryAgain = true;
+			while (rank < ten && tryAgain) {
+				// time to report
+				bestMP = topTen[rank];
+				if(bestMP->totalSize==sizeMax) { // This is one of the dummy mpts
+					tryAgain=false;
+				}
+				else {						
+					REPORT(INFO, "Now running exhaustive test on candidate #" << rank << " :" << endl
+								 << tab << bestMP->descriptionString() << endl
+								 << tab<< bestMP->descriptionStringLaTeX()  );
+					bestMP->mkTables(target);
+					if (bestMP->exhaustiveTest()) {
+						REPORT(INFO, "... passed, now building the operator");
+						tryAgain = false;
+					}
+					else {
+						REPORT(INFO, "... failed, trying next candidate");
+						rank++;
+					}
+				}
+			}
+				
+			if(rank==ten || bestMP->totalSize==sizeMax) {
+				REPORT(INFO, "It seems we have to use the safe value of g... starting again");
+				for (int i=0; i<ten; i++){
+					topTen[i]-> totalSize =	sizeMax; 
+				}
+				guardBitsSlack ++;
+				nbTOi=0;
+			}
+			else {
+				successWithguardBitsSlack=true;
+			}
 		}
 
-		// time to report
-		REPORT(INFO, "And the winner is" << endl
-					 << tab << bestMP->descriptionString() << endl
-					 << tab<< bestMP->descriptionStringLaTeX());
-		
-		bestMP->mkTables(target);
-		
+		// Exploration complete. Now building the operator
+
+		bestMP = topTen[rank];
+
 		REPORT(FULL,"Full table dump:" <<endl << bestMP->fullTableDump()); 
 
 		if(bestMP->rho==-1) { // uncompressed TIV
@@ -211,7 +246,8 @@ namespace flopoco
 
 	FixFunctionByMultipartiteTable::~FixFunctionByMultipartiteTable() {
 		delete f;
-		delete bestMP;
+		for (int i=0; i<ten; i++)
+			delete topTen[i];
 	}
 
 
@@ -397,6 +433,7 @@ namespace flopoco
 	{
 		int wi = f->wIn;
 		int gammai;
+		gammaiMin.clear();
 		gammaiMin = vector<vector<int>>(wi, vector<int>(wi));
 		for(int pi = 0; pi < wi; pi++)
 		{
@@ -419,6 +456,7 @@ namespace flopoco
 	{
 		int wi = f->wIn;
 		int gammai, betai, pi;
+		oneTableError.clear();
 		oneTableError = vector<vector<vector<double>>>(wi, vector<vector<double>>(wi, vector<double>(wi))); // there will be holes
 
 		for(pi=0; pi<wi; pi++) {
@@ -436,9 +474,9 @@ namespace flopoco
 	 * @return The smallest Multipartite decomposition.
 	 * @throw "It seems we could not find a decomposition" if there isn't any decomposition with an acceptable error
 	 */
-	Multipartite* FixFunctionByMultipartiteTable::enumerateDec()
+	bool FixFunctionByMultipartiteTable::enumerateDec()
 	{
-		Multipartite *smallest, *mpt;
+		Multipartite *mpt;
 		int beta, p;
 		int n = f->wIn;
 		int alphamin = 2;
@@ -449,12 +487,11 @@ namespace flopoco
 		vector<int> gammai;
 		vector<int> betai;
 
-		int sizeMax = f->wOut * (1<<f->wIn); // size of a plain table
-		smallest = new Multipartite(this, f, f->wIn, f->wOut);
-		smallest->totalSize = sizeMax;
+		int sizeMax = f->wOut <<f->wIn; // size of a plain table
 
-		for (int alpha = alphamin; alpha <= alphamax; alpha++)
-		{
+		bool decompositionFound=false;
+		
+		for (int alpha = alphamin; alpha <= alphamax; alpha++)		{
 			beta = n-alpha;
 			betaEnum = betaenum(beta, nbTOi);
 			for(unsigned int e = 0; e < betaEnum.size(); e++) {
@@ -468,38 +505,25 @@ namespace flopoco
 				}
 
 				alphaEnum = alphaenum(alpha,nbTOi,gammaimin);
-				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)
-				{
+				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)		{
 					gammai = alphaEnum[ae];
 					mpt = new Multipartite(f, nbTOi,
 																 alpha, beta,
 																 gammai, betai, this);
 					if(mpt->mathError < epsilonT){
+						decompositionFound=true;
 						mpt->buildGuardBitsAndSizes();
+						insertInTopTen(mpt);
 					}
 					else
 						mpt->totalSize = sizeMax;
-
-					if(mpt->totalSize < smallest->totalSize) {
-						delete smallest;
-						smallest = mpt;
-						REPORT(DETAILED, "new best found " << mpt->descriptionString());
-					}
-					else {
-						delete mpt;
-					}
 				}
 			}
+			// exit this loop as soon as 2^alpha > best totalSize
+			if( (f->wOut << (alpha+1)) > topTen[0]->totalSize)
+				alpha =  alphamax+1 ; // exit
 		}
-		/* If  parse error throw an exception */
-		if (smallest->totalSize == sizeMax)
-			THROWERROR("It seems we could not find a decomposition");
-
-		REPORT(INFO, "Best decomposition found for nbTO=" << smallest->m << endl
-					 <<  tab << smallest->descriptionString()  << endl
-					 << tab << smallest->descriptionStringLaTeX()
-					 );	 
-		return smallest;
+		return decompositionFound;
 	}
 
 
@@ -563,7 +587,30 @@ namespace flopoco
 		return eps;
 	}
 
+	
+	void  FixFunctionByMultipartiteTable::insertInTopTen(Multipartite* mp) {
+		REPORT(DEBUG, "Entering  insertInTopTen");
+		int rank=ten-1;
+		Multipartite* current = topTen[rank];
+		while(rank >= 0 &&  // mp strictly smaller than current 
+						(mp->totalSize < current->totalSize   ||    (mp->totalSize == current->totalSize &&  mp->m < current->m))) {
+			rank--;
+			if(rank>=0) current = topTen[rank];
+		} 
 
+		if(rank<ten-1) { // this mp belongs to the top ten,
+			rank ++; // the last rank for which mp was strictly smaller than topTen[rank]
+			REPORT(INFO, "The following is now top #" << rank <<" : " << mp->descriptionString());
+			delete(topTen[ten-1]);
+			// shift the bottom
+			for (int i=ten-1; i>rank; i--)
+				topTen[i] = topTen[i-1];
+			topTen[rank] = mp;
+			//debug
+			for (rank=0; rank<ten; rank++)
+				REPORT(DETAILED, "top "<< rank << " size is " << topTen[rank]->totalSize);
+		}
+	}
 
 
 	TestList FixFunctionByMultipartiteTable::unitTest(int index)
@@ -574,7 +621,6 @@ namespace flopoco
 		
 		if(index==-1) 
 		{ // The unit tests
-#if 1
 			vector<string> function;
 			vector<int> msbOut;
 			vector<bool> scaleOutput;			// multiply output by (1-2^lsbOut) to prevent it  reaching 2^(msbOut+1) due to faithful rounding  
@@ -613,67 +659,7 @@ namespace flopoco
 						paramList.push_back(make_pair("TestBench n=","-2"));
 					testStateList.push_back(paramList);
 				}
-			}
-			
-#else
-			paramList.push_back(make_pair("f","\"2^x\""));
-			paramList.push_back(make_pair("lsbIn","-12"));
-			paramList.push_back(make_pair("lsbOut","-11"));
-			paramList.push_back(make_pair("msbOut","1"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-
-			paramList.push_back(make_pair("f","\"sin(x)\""));
-			paramList.push_back(make_pair("lsbIn","-8"));
-			paramList.push_back(make_pair("msbOut","0"));
-			paramList.push_back(make_pair("lsbOut","-8"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-
-			paramList.push_back(make_pair("f","\"sin(x)\""));
-			paramList.push_back(make_pair("lsbIn","-12"));
-			paramList.push_back(make_pair("msbOut","0"));
-			paramList.push_back(make_pair("lsbOut","-12"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-
-			paramList.push_back(make_pair("f","\"sin(x)\""));
-			paramList.push_back(make_pair("lsbIn","-12"));
-			paramList.push_back(make_pair("msbOut","0"));
-			paramList.push_back(make_pair("lsbOut","-12"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-			
-			paramList.push_back(make_pair("f","\"1/(x+1)\""));
-			paramList.push_back(make_pair("lsbIn","-8"));
-			paramList.push_back(make_pair("lsbOut","-8"));
-			paramList.push_back(make_pair("msbOut","0"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-		 
-			paramList.push_back(make_pair("f","\"1/(x+1)\""));
-			paramList.push_back(make_pair("lsbIn","-12"));
-			paramList.push_back(make_pair("lsbOut","-12"));
-			paramList.push_back(make_pair("msbOut","0"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-
-#if 0			
-			paramList.push_back(make_pair("f","\"1/(x+1)\""));
-			paramList.push_back(make_pair("lsbIn","-16"));
-			paramList.push_back(make_pair("lsbOut","-16"));
-			paramList.push_back(make_pair("msbOut","0"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-#endif
-#endif
+			}			
 		}
 		else     
 		{

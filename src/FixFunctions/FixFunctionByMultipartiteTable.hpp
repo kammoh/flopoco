@@ -66,11 +66,10 @@ namespace flopoco
 		void buildGammaiMin();
 
 		/**
-		 * @brief enumerateDec : This function enumerates all the decompositions and returns the smallest one
-		 * @return The smallest Multipartite decomposition.
-		 * @throw "It seems we could not find a decomposition" if there isn't any decomposition with an acceptable error
+		 * @brief enumerateDec : This function enumerates all the decompositions and inserts the best ones in topTen
+		 * @return true if no decomposition found with an acceptable error
 		 */
-		Multipartite* enumerateDec();
+		bool enumerateDec();
 
 
 		/** Some needed methods, extracted from the article */
@@ -86,18 +85,20 @@ namespace flopoco
 		double epsilon(int ci_, int gammai, int betai, int pi);
 		double epsilon2ndOrder(int Ai, int gammai, int betai, int pi);
 
-		//--------------------------------------------------------------------------------- Private attributes
 
 		FixFunction *f;
 		double epsilonT;
-		Multipartite* bestMP;
-
 		// The following is not very well encapsulated, but no need to fix it
 		int nbTOi;		/**< The number of tables used */
 		bool compressTIV; /**< use Hsiao TIV compression or not */
 		vector<vector<vector<double>>> oneTableError;   /** for nbTOi fixed, the errors of each possible table configuration, precomputed  here to speed up exploration  */
 		vector<vector<int>> gammaiMin;  /** for nbTOi fixed, the min value of gamma, precomputed  here to speed up exploration */
 
+	private:
+		const int ten=10;
+		vector<Multipartite*> topTen; /**< the top 10 best candidates (for some value of ten), sorted by size */ 
+		int guardBitsSlack; /* this allows first to try the exploration with one guard bit less than the safe value */ 
+		void insertInTopTen(Multipartite* mp);
 	};
 
 }

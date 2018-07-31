@@ -184,12 +184,16 @@ namespace flopoco
 
 	//------------------------------------------------------------------------------------- Public methods
 
-	void Multipartite::buildGuardBitsAndSizes()
+	void Multipartite::buildGuardBitsAndSizes(bool computeGuardBits)
 	{
-		guardBits =  (int) ceil(-outputSize - 1
-								 + log2(m /
-										(intpow2(-outputSize - 1) - mathError)));
 
+		if(computeGuardBits) {
+			guardBits =  (int) ceil(-outputSize - 1
+															 + log2(m /(intpow2(-outputSize - 1) - mathError)));
+			// With a slack of 1 it works 97% of the time
+			guardBits += mpt->guardBitsSlack; 
+		}
+		
 		sizeTIV = (outputSize + guardBits)<<alpha;
 		int size = sizeTIV;
 		outputSizeTOi = vector<int>(m);
@@ -209,14 +213,14 @@ namespace flopoco
 	void Multipartite::mkTables(Target* target)
 	{
 		// The TIV
-		vector<int64_t> tivval;
+		tiv.clear();
 		for (int j=0; j < 1<<alpha; j++) {
 				tiv.push_back(TIVFunction(j));
 		}
-		//		tiv = new Table(mpt, target, tivval, mpt->getName() + "_TIV", alpha, f->wOut + guardBits);
 		
 		// The TOIs
 		//toi = vector<Table*>(m);
+		toi.clear();
 		for(int i = 0; i < m; ++i)
 		{
 			vector<int64_t> values;
@@ -251,25 +255,29 @@ namespace flopoco
 			//toi[i] = new Table(mpt, target, values, name, gammai[i] + betai[i] - 1, outputSizeTOi[i]-1);
 		}
 
-		// TIV compression as per Hsiao with improvements
-		int s = alpha-rho;
-		for(int i = 0; i < (1<<rho); i++)	{
-			int64_t valLeft  = TIVFunction( i<<s );
-			int64_t valRight = TIVFunction( ((i+1)<<s)-1 );
-			int64_t refVal;
-			// life is simpler if the diff table is always positive
-			if(valLeft<=valRight) 
-				refVal=valLeft;
-			else  
-				refVal=valRight;
-			// the improvement: we may shave a few bits from the LSB
-			//			int64_t mask = ((1<<outputSize)-1) - ((1<<nbZeroLSBsInATIV)-1);
-			refVal = refVal >> nbZeroLSBsInATIV ;
-			aTIV.push_back(refVal);
-			for(int j = 0; j < (1<<s); j++)		{
-				int64_t diff = tiv[ (i<<s) + j] - (refVal << nbZeroLSBsInATIV);
-				diffTIV.push_back(diff);
-			}	
+		if(mpt->compressTIV) {
+			aTIV.clear();
+			diffTIV.clear();
+			// TIV compression as per Hsiao with improvements
+			int s = alpha-rho;
+			for(int i = 0; i < (1<<rho); i++)	{
+				int64_t valLeft  = TIVFunction( i<<s );
+				int64_t valRight = TIVFunction( ((i+1)<<s)-1 );
+				int64_t refVal;
+				// life is simpler if the diff table is always positive
+				if(valLeft<=valRight) 
+					refVal=valLeft;
+				else  
+					refVal=valRight;
+				// the improvement: we may shave a few bits from the LSB
+				//			int64_t mask = ((1<<outputSize)-1) - ((1<<nbZeroLSBsInATIV)-1);
+				refVal = refVal >> nbZeroLSBsInATIV ;
+				aTIV.push_back(refVal);
+				for(int j = 0; j < (1<<s); j++)		{
+					int64_t diff = tiv[ (i<<s) + j] - (refVal << nbZeroLSBsInATIV);
+					diffTIV.push_back(diff);
+				}	
+			}
 		}
 	}
 
@@ -421,31 +429,60 @@ namespace flopoco
 	}
 
 	
-	double Multipartite::exhaustiveTest(){
+	bool Multipartite::exhaustiveTest(){
 		double maxError=0;
-		for (int x=0; x<1<<inputSize; x++) {
-			int aa = x>>(inputSize-rho);
-			int64_t yATIV = aTIV[aa];
+		double rulp=1;
+		int lsbIn=mpt->f->lsbIn;
+		int lsbOut=mpt->f->lsbOut;
+		if(lsbOut<0)
+				rulp = 1.0 / ((double) (1<<(-lsbOut)));
+		if(lsbOut>0)
+			rulp =  (double) (1<<lsbOut);
+		double ulp = rulp / ((double) (1<<guardBits));
+		for (int x=0; x<(1<<inputSize); x++) {
+			int64_t result;
+			if(rho==-1) {
+				int a = x>>(inputSize-alpha);
+				int64_t yTIV = tiv[a];
+				result = yTIV;
+				//cerr << " tiv=" << result;
+			}
+			else { //compressed table
+				int aa = x>>(inputSize-rho);
+				int64_t yATIV = aTIV[aa];
 
-			int adiff = x>>(inputSize-alpha);
-			int64_t yDiffTIV = diffTIV[adiff];
-
-			int64_t result = yATIV + yDiffTIV;
-
+				int adiff = x>>(inputSize-alpha);
+				int64_t yDiffTIV = diffTIV[adiff];
+			
+				result = (yATIV << nbZeroLSBsInATIV) + yDiffTIV;
+			}
 			for(int i=0; i<m; i++) {
 				int aTOi = (x>>pi[i]) & ((1<<betai[i])-1);
-				int sign = aTOi >> (betai[i]-1);
-				aTOi = (aTOi & ((1<<(betai[i]-1))-1))   +  ((x>>(inputSize-gammai[i])) << (betai[i]-1));
+				int sign = 1-(aTOi >> (betai[i]-1) );
+				//cerr << " i=" << i << "  " << aTOi << "  s=" << sign << "  ";
+				aTOi = (aTOi & ((1<<(betai[i]-1))-1));
 				if(sign==1)
-					aTOi = (~aTOi) & ((1<<(gammai[i]+betai[i]-1))-1); 
+					aTOi =  ((1<<(betai[i]-1))-1)  - aTOi; 
+				aTOi +=   ((x>>(inputSize-gammai[i])) << (betai[i]-1));
 				int64_t yTOi = toi[i][aTOi];
+				//cerr<< " aTOi=" << aTOi << "  yTOi="  << yTOi << "  " ;
+				if(negativeTOi[i])
+					sign=1-sign; 
 				if(sign==1)
 					yTOi = ~yTOi;
 				result += yTOi;
+				//				cerr << yTOi << "     "<< result << "    " ;
 			}
-			
+			double fresult = ((double) result) * ulp;
+			double ref = f->eval(   ((double)x) / ((double)(1<<(-lsbIn))) );
+			double error = abs(fresult-ref);
+			maxError = max(maxError, error);
+#if 0 //debug
+			cerr //<< ((double)x) / ((double)(1<<(-lsbIn)))
+				<< "x=" << x  << "  result=" << fresult << " ref=" <<ref << "   e=" << error << "   u=" <<rulp << (error > rulp ? " *******  Error here":"") <<  endl;
+#endif
 		}
-		return maxError;
+		return (maxError < rulp);
 	}
 
 }

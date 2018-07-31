@@ -32,7 +32,7 @@ namespace flopoco
 		/**
 		 * @brief buildGuardBitsAndSizes : Builds decomposition's guard bits and tables sizes
 		 */
-		void buildGuardBitsAndSizes();
+		void buildGuardBitsAndSizes(bool computeGuardBits=true);
 
 		/**
 		 * @brief mkTables : fill  the TIV and TOs tables
@@ -53,7 +53,10 @@ namespace flopoco
 		 */
 		string 	fullTableDump(); 
 
-		double exhaustiveTest();
+		/**
+		 * @brief returns true if the architecture is correct; false if it exceeds the target error
+		 */
+		bool exhaustiveTest();
 
 	//---------------------------------------------------------------------------------- Public attributes
 		FixFunction* f;
