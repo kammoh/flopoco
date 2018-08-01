@@ -431,6 +431,7 @@ namespace flopoco
 	}
 
 	
+#define ETDEBUG 0
 	bool Multipartite::exhaustiveTest(){
 		double maxError=0;
 		double rulp=1;
@@ -440,14 +441,15 @@ namespace flopoco
 				rulp = 1.0 / ((double) (1<<(-lsbOut)));
 		if(lsbOut>0)
 			rulp =  (double) (1<<lsbOut);
-		double ulp = rulp / ((double) (1<<guardBits));
 		for (int x=0; x<(1<<inputSize); x++) {
 			int64_t result;
 			if(rho==-1) {
 				int a = x>>(inputSize-alpha);
 				int64_t yTIV = tiv[a];
 				result = yTIV;
-				//cerr << " tiv=" << result;
+#if ETDEBUG 
+				cerr 	<< "  x=" << x<< " tiv=" << result;
+#endif
 			}
 			else { //compressed table
 				int aa = x>>(inputSize-rho);
@@ -455,33 +457,40 @@ namespace flopoco
 
 				int adiff = x>>(inputSize-alpha);
 				int64_t yDiffTIV = diffTIV[adiff];
-			
 				result = (yATIV << nbZeroLSBsInATIV) + yDiffTIV;
+#if ETDEBUG 
+				cerr 	<< "  x=" << x<< " yaTIV=" << yATIV << " yDiffTIV=" << yDiffTIV ;
+#endif
 			}
 			for(int i=0; i<m; i++) {
 				int aTOi = (x>>pi[i]) & ((1<<betai[i])-1);
 				int sign = 1-(aTOi >> (betai[i]-1) );
-				//cerr << " i=" << i << "  " << aTOi << "  s=" << sign << "  ";
+#if ETDEBUG 
+				cerr << "  aTO" << i << "I=" << aTOi << "  s=" << sign << "  ";
+#endif
 				aTOi = (aTOi & ((1<<(betai[i]-1))-1));
 				if(sign==1)
 					aTOi =  ((1<<(betai[i]-1))-1)  - aTOi; 
 				aTOi +=   ((x>>(inputSize-gammai[i])) << (betai[i]-1));
 				int64_t yTOi = toi[i][aTOi];
-				//cerr<< " aTOi=" << aTOi << "  yTOi="  << yTOi << "  " ;
+#if ETDEBUG 
+				cerr << " aTO" << i << "F=" << aTOi << " yTOi="  << yTOi;
+#endif
 				if(negativeTOi[i])
 					sign=1-sign; 
 				if(sign==1)
 					yTOi = ~yTOi;
 				result += yTOi;
-				//				cerr << yTOi << "     "<< result << "    " ;
 			}
-			double fresult = ((double) result) * ulp;
+			//final rounding
+			result = result >> guardBits;
+			double fresult = ((double) result) * rulp;
 			double ref = f->eval(   ((double)x) / ((double)(1<<(-lsbIn))) );
 			double error = abs(fresult-ref);
 			maxError = max(maxError, error);
-#if 0 //debug
+#if ETDEBUG 
 			cerr //<< ((double)x) / ((double)(1<<(-lsbIn)))
-				<< "x=" << x  << "  result=" << fresult << " ref=" <<ref << "   e=" << error << "   u=" <<rulp << (error > rulp ? " *******  Error here":"") <<  endl;
+			  << "  sum=" << result<< " fresult=" << fresult << "ref=" <<ref << "   e=" << error << " u=" <<rulp << (error > rulp ? " *******  Error here":"") <<  endl;
 #endif
 		}
 		return (maxError < rulp);
