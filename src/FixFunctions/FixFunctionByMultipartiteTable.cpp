@@ -35,16 +35,14 @@
 /*
 To replicate the functions used in the 2017 Hsiao paper
 
-./flopoco FixFunctionByMultipartiteTable f="sin(pi/4*x)"  msbOut=-1 lsbIn=-24 lsbOut=-24 nbTOi=0 compressTIV=false
-./flopoco FixFunctionByMultipartiteTable f="2^x" lsbIn=-16 lsbOut=-15 msbOut=-1 nbTOi=0 compressTIV=true
+./flopoco FixFunctionByMultipartiteTable f="sin(pi/4*x)"  msbOut=-1 lsbIn=-24 lsbOut=-24
+./flopoco FixFunctionByMultipartiteTable f="2^x-1" lsbIn=-16 lsbOut=-15 msbOut=-1 
+./flopoco FixFunctionByMultipartiteTable f="" lsbIn=-16 lsbOut=-15 msbOut=-1 
 */
 
 /*
  TODOs:
- One bit could sometimes be saved in the diffTIV table if it never contains 0 
- Handle TIV compression properly in the optimization
  compress TIV only if it saves at least one adder; in general resurrect uncompressed TIV
- attempt final reduction of g
 */
 
 using namespace std;
@@ -156,18 +154,21 @@ namespace flopoco
 					topTen[i]-> totalSize =	sizeMax; 
 				}
 				guardBitsSlack ++;
-				nbTOi=0;
+				//REPORT(0,"guardBitsSlack now " << guardBitsSlack);
+				nbTOi=nbTOi_;
 			}
 			else {
 				successWithguardBitsSlack=true;
 			}
 		}
 
+		if(guardBitsSlack>0)
+			THROWERROR("Unable to reach faithful rounding with this value of NbTOi");
 		// Exploration complete. Now building the operator
 
 		bestMP = topTen[rank];
 
-		REPORT(FULL,"Full table dump:" <<endl << bestMP->fullTableDump()); 
+		REPORT(DEBUG,"Full table dump:" <<endl << bestMP->fullTableDump()); 
 
 		if(bestMP->rho==-1) { // uncompressed TIV
 			vhdl << tab << declare("inTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
