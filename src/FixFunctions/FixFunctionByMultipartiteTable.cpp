@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sstream>
 #include <vector>
+#include <cmath> //for abs(double)
 
 #include <gmp.h>
 #include <gmpxx.h>
@@ -172,7 +173,7 @@ namespace flopoco
 			vhdl << tab << declare("inTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
 			vector<mpz_class> mpzTIV;
 			for (auto i : bestMP->tiv)
-				mpzTIV.push_back(mpz_class(i));
+				mpzTIV.push_back(mpz_class((long) i));
 			Table::newUniqueInstance(this, "inTIV", "outTIV",
 															 mpzTIV, "TIV", bestMP->alpha, f->wOut );
 				vhdl << endl;
@@ -181,7 +182,7 @@ namespace flopoco
 				vhdl << tab << declare("inATIV", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
 				vector<mpz_class> mpzaTIV;
 				for (auto i : bestMP->aTIV)
-					mpzaTIV.push_back(mpz_class(i));
+					mpzaTIV.push_back(mpz_class((long) i));
 				Table::newUniqueInstance(this, "inATIV", "outATIV",
 																 mpzaTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
 				vhdl << endl;
@@ -189,7 +190,7 @@ namespace flopoco
 				vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
 				vector<mpz_class> mpzDiffTIV;
 				for (auto i : bestMP->diffTIV)
-					mpzDiffTIV.push_back(mpz_class(i));
+					mpzDiffTIV.push_back(mpz_class((long) i));
 				Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
 																 mpzDiffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
 				// TODO need to sign-extend for 1/(1+x), but it makes an error for sin(x)
@@ -214,7 +215,7 @@ namespace flopoco
 			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
 			vector<mpz_class> mpzTOi;
 			for (auto i : bestMP->toi[i])
-				mpzTOi.push_back(mpz_class(i));
+				mpzTOi.push_back(mpz_class((long) i));
 			Table::newUniqueInstance(this, inTOi, outTOi,
 															 mpzTOi, nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
 			string trueSign = (bestMP->negativeTOi[i] ? "(not "+signi+")" : signi);

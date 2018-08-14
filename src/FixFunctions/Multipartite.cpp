@@ -22,6 +22,8 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include <cmath> //for abs(double)
+
 using namespace std;
 using namespace flopoco;
 
