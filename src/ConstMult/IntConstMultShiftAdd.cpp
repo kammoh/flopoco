@@ -22,7 +22,7 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "ConstMultPAG.hpp"
+#include "IntConstMultShiftAdd.hpp"
 #include "PrimitiveComponents/Primitive.hpp"
 //#include "rpag/rpag.h"
 
@@ -31,7 +31,7 @@ using namespace std;
 
 namespace flopoco {
 
-ConstMultPAG::ConstMultPAG(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_)
+IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_)
     : Operator(parentOp, target),
       wIn(wIn_),
       syncInOut(syncInOut_),
@@ -95,7 +95,7 @@ ConstMultPAG::ConstMultPAG(Operator* parentOp, Target* target, int wIn_, string 
     }*/
 };
 
-ConstMultPAG::ConstMultPAG(Operator* parentOp, Target *target, int wIn_, vector<vector<int64_t> >& coefficients, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_)
+IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target *target, int wIn_, vector<vector<int64_t> >& coefficients, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_)
     : Operator(parentOp, target),
       wIn(wIn_),
       syncInOut(syncInOut_),
@@ -125,9 +125,9 @@ ConstMultPAG::ConstMultPAG(Operator* parentOp, Target *target, int wIn_, vector<
     ProcessConstMultPAG(target,pipelined_realisation);
 };
 
-void ConstMultPAG::ProcessConstMultPAG(Target* target, string pipelined_realization_str)
+void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_realization_str)
 {
-    REPORT( INFO, "ConstMultPAG started with syncoptions:")
+    REPORT( INFO, "IntConstMultShiftAdd started with syncoptions:")
             REPORT( INFO, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
             REPORT( INFO, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
             REPORT( INFO, "\tsync every " << syncEveryN << " stages" << std::endl )
@@ -527,12 +527,12 @@ void ConstMultPAG::ProcessConstMultPAG(Target* target, string pipelined_realizat
     pipelined_adder_graph.clear();
 }
 
-list<ConstMultPAG::output_signal_info> &ConstMultPAG::GetOutputList()
+list<IntConstMultShiftAdd::output_signal_info> &IntConstMultShiftAdd::GetOutputList()
 {
     return output_signals;
 }
 
-void ConstMultPAG::emulate(TestCase * tc)
+void IntConstMultShiftAdd::emulate(TestCase * tc)
 {
     vector<mpz_class> input_vec;
 
@@ -621,7 +621,7 @@ void ConstMultPAG::emulate(TestCase * tc)
         emu_conf=0;
 }
 
-void ConstMultPAG::buildStandardTestCases(TestCaseList * tcl)
+void IntConstMultShiftAdd::buildStandardTestCases(TestCaseList * tcl)
 {
     TestCase* tc;
 
@@ -699,7 +699,7 @@ void ConstMultPAG::buildStandardTestCases(TestCaseList * tcl)
     }
 }
 
-string ConstMultPAG::generateSignalName(adder_graph_base_node_t *node)
+string IntConstMultShiftAdd::generateSignalName(adder_graph_base_node_t *node)
 {
     stringstream signalName;
     signalName << "x";
@@ -727,7 +727,7 @@ string ConstMultPAG::generateSignalName(adder_graph_base_node_t *node)
     return signalName.str();
 }
 
-ConstMultPAG_TYPES::ConstMultPAG_BASE* ConstMultPAG::identifyNodeType(adder_graph_base_node_t *node)
+ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(adder_graph_base_node_t *node)
 {
     if(is_a<adder_subtractor_node_t>(*node))
     {
@@ -952,7 +952,7 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* ConstMultPAG::identifyNodeType(adder_grap
     return NULL;
 }
 
-void ConstMultPAG::identifyOutputConnections(adder_graph_base_node_t *node, map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*> &infoMap)
+void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *node, map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*> &infoMap)
 {
     if(is_a<adder_subtractor_node_t>(*node))
     {
@@ -994,7 +994,7 @@ void ConstMultPAG::identifyOutputConnections(adder_graph_base_node_t *node, map<
     }
 }
 
-void ConstMultPAG::printAdditionalNodeInfo(map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*> &infoMap)
+void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*> &infoMap)
 {
     stringstream nodeInfoString;
     for( map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*>::iterator nodeInfo = infoMap.begin();
@@ -1042,7 +1042,7 @@ void ConstMultPAG::printAdditionalNodeInfo(map<adder_graph_base_node_t *, ConstM
     REPORT( DETAILED, nodeInfoString.str())
 }
 
-string ConstMultPAG::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
+string IntConstMultShiftAdd::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
 {
     stringstream tmp;
     if(!signedConversion) tmp << "std_logic_vector(";
@@ -1058,7 +1058,7 @@ string ConstMultPAG::getShiftAndResizeString(string signalName, int outputWordsi
     return tmp.str();
 }
 
-string ConstMultPAG::getBinary(int value, int Wordsize)
+string IntConstMultShiftAdd::getBinary(int value, int Wordsize)
 {
     string tmp;
     while(value>0)
@@ -1074,7 +1074,7 @@ string ConstMultPAG::getBinary(int value, int Wordsize)
     return tmp;
 }
 
-bool ConstMultPAG::TryRunRPAG(string realisation, string& out)
+bool IntConstMultShiftAdd::TryRunRPAG(string realisation, string& out)
 {
     /// \todo Add rpag library call instead of running rpag.
 
@@ -1139,7 +1139,7 @@ bool ConstMultPAG::TryRunRPAG(string realisation, string& out)
 
 
 
-OperatorPtr flopoco::ConstMultPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
+OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
 {
   if( target->getVendor() != "Xilinx" )
     throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
@@ -1155,12 +1155,12 @@ OperatorPtr flopoco::ConstMultPAG::parseArguments(OperatorPtr parentOp, Target *
   UserInterface::parseBoolean( args, "sync_muxes", &sync_muxes );
   UserInterface::parseInt( args, "sync_every", &sync_every );
 
-  return new ConstMultPAG(parentOp, target, wIn, graph, pipeline,sync_inout,sync_every,sync_muxes );
+  return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline,sync_inout,sync_every,sync_muxes );
 }
 
-void flopoco::ConstMultPAG::registerFactory()
+void flopoco::IntConstMultShiftAdd::registerFactory()
 {
-  UserInterface::add( "ConstMultPAG", // name
+  UserInterface::add( "IntConstMultShiftAdd", // name
                       "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
                       "BasicInteger", // category, from the list defined in UserInterface.cpp
                       "",
@@ -1171,7 +1171,7 @@ void flopoco::ConstMultPAG::registerFactory()
                        sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
                        sync_every(int)=1: Count of stages after which will be pipelined",
                       "",
-                      ConstMultPAG::parseArguments
+                      IntConstMultShiftAdd::parseArguments
   );
 }
 
