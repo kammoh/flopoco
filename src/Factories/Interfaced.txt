@@ -36,3 +36,4 @@ XilinxFourToTwoCompressor
 TutorialOperator
 
 FixComplexKCM
+ConstMultPAG

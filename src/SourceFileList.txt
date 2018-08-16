@@ -50,6 +50,8 @@ ConstMult/ShiftAddDag
 ConstMult/FixRealKCM
 ConstMult/IntConstMult
 ConstMult/IntConstDiv
+ConstMult/ConstMultPAG
+ConstMult/ConstMultPAG_types
 IntMult/IntMultiplier
 IntMult/FixMultAdd
 IntMult/TilingStrategy
@@ -109,3 +111,9 @@ Tools/Point
 TutorialOperator
 
 Complex/FixFFT
+
+#ConstMultPAG/FullyParallelFFT
+#ConstMultPAG/IntConstMultOpt
+#ConstMultPAG/IntConstMultOptTernary
+#ConstMultPAG/scm_solutions
+#ConstMultPAG/tscm_solutions

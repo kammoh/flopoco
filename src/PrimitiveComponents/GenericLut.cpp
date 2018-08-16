@@ -9,7 +9,7 @@
 using namespace std;
 
 namespace flopoco {
-    GenericLut::GenericLut( Target *target, const std::string &name, const std::map<unsigned int, unsigned int> &pairs, const unsigned int &wIn, const unsigned int &wOut ) : Operator( target ) {
+    GenericLut::GenericLut(Operator* parentOp, Target *target, const std::string &name, const std::map<unsigned int, unsigned int> &pairs, const unsigned int &wIn, const unsigned int &wOut ) : Operator( parentOp,target) {
 
         setCopyrightString( "Marco Kleinlein" );
         setCombinatorial();
@@ -302,7 +302,7 @@ namespace flopoco {
         }
     }
 
-    GenericLut::GenericLut( Target *target, const std::string &name, const std::vector<bool_eq> &equations ): Operator( target ), equations_( equations ) {
+    GenericLut::GenericLut(Operator* parentOp, Target *target, const std::string &name, const std::vector<bool_eq> &equations ): Operator( parentOp,target), equations_( equations ) {
         setCopyrightString( "Marco Kleinlein" );
         Xilinx_Primitive::checkTargetCompatibility( target );
         setCombinatorial();

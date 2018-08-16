@@ -226,6 +226,8 @@ use withing matrix-multiplication scenarios ------------------ */
 #include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 #include "PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
 
+#include "ConstMultPAG/ConstMultPAG.hpp"
+
 /*Internshiping shit making*/
 #include "Internshiping/MAC.hpp"
 
