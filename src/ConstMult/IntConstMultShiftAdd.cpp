@@ -82,11 +82,11 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, i
             }
         }
 
-        ProcessConstMultPAG(target,pipelined_realisation);
+        ProcessIntConstMultShiftAdd(target,pipelined_realisation);
     }
     else
     {
-        ProcessConstMultPAG(target,t);
+        ProcessIntConstMultShiftAdd(target,t);
     }
 
     /* for(OperatorPtr sc : getSubComponents())
@@ -122,10 +122,10 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target *target, i
         throw runtime_error("ERROR: Could not run RPAG");
     }
 
-    ProcessConstMultPAG(target,pipelined_realisation);
+    ProcessIntConstMultShiftAdd(target,pipelined_realisation);
 };
 
-void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_realization_str)
+void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str)
 {
     REPORT( INFO, "IntConstMultShiftAdd started with syncoptions:")
             REPORT( INFO, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
@@ -182,15 +182,15 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
                 if(noOfConfigurations>1)
                 addInput("config_no",configurationSignalWordsize);
 
-        ConstMultPAG_TYPES::ConstMultPAG_BASE::target_ID = target->getID();
-        ConstMultPAG_TYPES::ConstMultPAG_BASE::noOfConfigurations = noOfConfigurations;
-        ConstMultPAG_TYPES::ConstMultPAG_BASE::noOfInputs = noOfInputs;
-        ConstMultPAG_TYPES::ConstMultPAG_BASE::configurationSignalWordsize = configurationSignalWordsize;
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::target_ID = target->getID();
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::noOfConfigurations = noOfConfigurations;
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::noOfInputs = noOfInputs;
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::configurationSignalWordsize = configurationSignalWordsize;
 
         //IDENTIFY NODE
         REPORT(INFO,"identifiing nodes..")
 
-                map<adder_graph_base_node_t*,ConstMultPAG_TYPES::ConstMultPAG_BASE*> additionalNodeInfoMap;
+                map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
         map<int,list<adder_graph_base_node_t*> > stageNodesMap;
         for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
              iter != pipelined_adder_graph.nodes_list.end();
@@ -200,37 +200,37 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
 
             stageNodesMap[(*iter)->stage].push_back(*iter);
 
-            ConstMultPAG_TYPES::ConstMultPAG_BASE* t = identifyNodeType(*iter);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* t = identifyNodeType(*iter);
             t->outputSignalName = generateSignalName(*iter);
             t->target = target;
 
-            if      (  t->nodeType == ConstMultPAG_TYPES::NODETYPE_ADDSUB2_CONF
-                       || t->nodeType == ConstMultPAG_TYPES::NODETYPE_ADDSUB3_2STATE
-                       || t->nodeType == ConstMultPAG_TYPES::NODETYPE_ADDSUB3_CONF
+            if      (  t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB2_CONF
+                       || t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB3_2STATE
+                       || t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB3_CONF
                        ){
                 REPORT(DEBUG,"has decoder")
 
                         conf_adder_subtractor_node_t* cc = new conf_adder_subtractor_node_t();
                 cc->stage = (*iter)->stage-1;
                 stageNodesMap[(*iter)->stage-1].push_back( cc );
-                ((ConstMultPAG_TYPES::ConstMultPAG_BASE_CONF*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
+                ((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
                 additionalNodeInfoMap.insert(
-                            make_pair<adder_graph_base_node_t*,ConstMultPAG_TYPES::ConstMultPAG_BASE*>(cc,((ConstMultPAG_TYPES::ConstMultPAG_BASE_CONF*)t)->decoder)
+                            make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder)
                             );
-            }else if(t->nodeType == ConstMultPAG_TYPES::NODETYPE_MUX){
+            }else if(t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX){
                 REPORT(DEBUG,"has decoder")
 
                         mux_node_t* cc = new mux_node_t();
                 cc->stage = (*iter)->stage-1;
                 stageNodesMap[(*iter)->stage-1].push_back( cc );
-                ((ConstMultPAG_TYPES::ConstMultPAG_MUX*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
+                ((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
                 additionalNodeInfoMap.insert(
-                            make_pair<adder_graph_base_node_t*,ConstMultPAG_TYPES::ConstMultPAG_BASE*>(cc,((ConstMultPAG_TYPES::ConstMultPAG_MUX*)t)->decoder)
+                            make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder)
                             );
             }
             t->wordsize  = computeWordSize( *iter,wIn );
             t->base_node = (*iter);
-            //additionalNodeInfoMap.insert( std::make_pair<adder_graph_base_node_t*,ConstMultPAG_TYPES::ConstMultPAG_BASE*>(*iter,t) );
+            //additionalNodeInfoMap.insert( std::make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(*iter,t) );
             additionalNodeInfoMap.insert( {*iter,t} );
         }
         //IDENTIFY CONNECTIONS
@@ -252,11 +252,11 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
             int current_id = 0;
             for( list<adder_graph_base_node_t*>::iterator iter = stageNodesMap[i].begin();iter!=stageNodesMap[i].end();++iter )
             {
-                ConstMultPAG_AdditionalNodeInfo operationNodeInfo = additionalNodeInfoMap[(*iter)];
+                IntConstMultShiftAdd_AdditionalNodeInfo operationNodeInfo = additionalNodeInfoMap[(*iter)];
                 if( is_a<adder_subtractor_node_t>(*(*iter)) )
                 {
-                    if( operationNodeInfo.nodeType == ConstMultPAG_NODETYPE_ADD2 ||
-                        operationNodeInfo.nodeType == ConstMultPAG_NODETYPE_SUB2_1N)
+                    if( operationNodeInfo.nodeType == IntConstMultShiftAdd_NODETYPE_ADD2 ||
+                        operationNodeInfo.nodeType == IntConstMultShiftAdd_NODETYPE_SUB2_1N)
                     {
                         adder_subtractor_node_t* t = (adder_subtractor_node_t*)*iter;
                         int lut_inp_count = 0;
@@ -264,7 +264,7 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
                         {
                             if( is_a<mux_node_t>(*t->inputs[j]) )
                             {
-                                vector<ConstMultPAG_muxInfo>* muxInfoMap = (vector<ConstMultPAG_muxInfo>*)additionalNodeInfoMap[t->inputs[j]].extendedInfo;
+                                vector<IntConstMultShiftAdd_muxInfo>* muxInfoMap = (vector<IntConstMultShiftAdd_muxInfo>*)additionalNodeInfoMap[t->inputs[j]].extendedInfo;
                                 lut_inp_count += muxInfoMap->size();
                             }
                             else if(  is_a<register_node_t>(*t->inputs[j]) )
@@ -323,10 +323,10 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
                  operationNode != stageNodesMap[currentStage].end();
                  ++operationNode)
             {
-                ConstMultPAG_TYPES::ConstMultPAG_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
                 REPORT( INFO, op_node->outputSignalName << " as " << op_node->get_name())
 
-                        if(op_node->nodeType == ConstMultPAG_TYPES::NODETYPE_INPUT)
+                        if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
                 {
                     input_node_t* t = (input_node_t*)op_node->base_node;
 
@@ -345,8 +345,8 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
                 else
                 vhdl << op_node->get_realisation( additionalNodeInfoMap );
 
-                if(op_node->nodeType == ConstMultPAG_TYPES::NODETYPE_MUX ||
-                        op_node->nodeType == ConstMultPAG_TYPES::NODETYPE_AND)
+                if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX ||
+                        op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_AND)
                     isMuxStage = true;
 
                 for(list<pair<string,int> >::iterator declare_it=op_node->declare_list.begin();declare_it!=op_node->declare_list.end();++declare_it  )
@@ -406,7 +406,7 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
                  ++operationNode)
             {
                 if (is_a<output_node_t>(*(*operationNode))){
-                    ConstMultPAG_TYPES::ConstMultPAG_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
+                    IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
                     stringstream outputSignalName;
                     outputSignalName << "x_out" << realizedOutputNodes;
                     realizedOutputNodes++;
@@ -496,7 +496,7 @@ void IntConstMultShiftAdd::ProcessConstMultPAG(Target* target, string pipelined_
 
                         REPORT(DETAILED, "FOUND!")
                                 found = true;
-                        ConstMultPAG_TYPES::ConstMultPAG_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
+                        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
                         addOutput(outputSignalName.str(), op_node->wordsize + norm_factor);
                         vector<vector<int64_t> > outer;
                         outer.push_back(*iter);
@@ -727,7 +727,7 @@ string IntConstMultShiftAdd::generateSignalName(adder_graph_base_node_t *node)
     return signalName.str();
 }
 
-ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(adder_graph_base_node_t *node)
+IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* IntConstMultShiftAdd::identifyNodeType(adder_graph_base_node_t *node)
 {
     if(is_a<adder_subtractor_node_t>(*node))
     {
@@ -736,12 +736,12 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
         {
             if(t->input_is_negative[0] || t->input_is_negative[1])
             {
-                ConstMultPAG_TYPES::ConstMultPAG_SUB2_1N* new_node = new ConstMultPAG_TYPES::ConstMultPAG_SUB2_1N(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB2_1N* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB2_1N(this);
                 return new_node;
             }
             else
             {
-                ConstMultPAG_TYPES::ConstMultPAG_ADD2* new_node = new ConstMultPAG_TYPES::ConstMultPAG_ADD2(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD2* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD2(this);
                 return new_node;
             }
         }
@@ -755,17 +755,17 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
 
             if(negative_count == 0)
             {
-                ConstMultPAG_TYPES::ConstMultPAG_ADD3* new_node = new ConstMultPAG_TYPES::ConstMultPAG_ADD3(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD3* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD3(this);
                 return new_node;
             }
             else if(negative_count == 1)
             {
-                ConstMultPAG_TYPES::ConstMultPAG_SUB3_1N* new_node = new ConstMultPAG_TYPES::ConstMultPAG_SUB3_1N(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_1N* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_1N(this);
                 return new_node;
             }
             else if(negative_count == 2)
             {
-                ConstMultPAG_TYPES::ConstMultPAG_SUB3_2N* new_node = new ConstMultPAG_TYPES::ConstMultPAG_SUB3_2N(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_2N* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_2N(this);
                 return new_node;
             }
         }
@@ -810,8 +810,8 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
 
         if(t->inputs.size() == 2)
         {
-            ConstMultPAG_TYPES::ConstMultPAG_ADDSUB2_CONF* new_node = new ConstMultPAG_TYPES::ConstMultPAG_ADDSUB2_CONF(this);
-            ConstMultPAG_TYPES::ConstMultPAG_DECODER* new_dec = new ConstMultPAG_TYPES::ConstMultPAG_DECODER(this);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB2_CONF* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB2_CONF(this);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
             new_dec->decoder_size = 2;
             new_node->decoder = new_dec;
             new_dec->node = new_node;
@@ -824,8 +824,8 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
             needs_unisim = true;
             if(adder_states.size() == 2 && this->getTarget()->getVendor() == "Xilinx" )
             {
-                ConstMultPAG_TYPES::ConstMultPAG_ADDSUB3_2STATE* new_node = new ConstMultPAG_TYPES::ConstMultPAG_ADDSUB3_2STATE(this);
-                ConstMultPAG_TYPES::ConstMultPAG_DECODER* new_dec = new ConstMultPAG_TYPES::ConstMultPAG_DECODER(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_2STATE* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_2STATE(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
                 new_dec->decoder_size = 1;
                 new_node->decoder = new_dec;
                 new_dec->node = new_node;
@@ -835,8 +835,8 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
             }
             else
             {
-                ConstMultPAG_TYPES::ConstMultPAG_ADDSUB3_CONF* new_node = new ConstMultPAG_TYPES::ConstMultPAG_ADDSUB3_CONF(this);
-                ConstMultPAG_TYPES::ConstMultPAG_DECODER* new_dec = new ConstMultPAG_TYPES::ConstMultPAG_DECODER(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_CONF* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_CONF(this);
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
                 new_dec->decoder_size = 3;
                 new_node->decoder = new_dec;
                 new_dec->node = new_node;
@@ -848,20 +848,20 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
     }
     else if(is_a<register_node_t>(*node) || is_a<output_node_t>(*node) )
     {
-        ConstMultPAG_TYPES::ConstMultPAG_REG* new_node = new ConstMultPAG_TYPES::ConstMultPAG_REG(this);
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_REG* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_REG(this);
         return new_node;
     }
     else if(is_a<mux_node_t>(*node))
     {
         mux_node_t* t = (mux_node_t*)node;
         vector<int> dontCareConfig;
-        ConstMultPAG_TYPES::ConstMultPAG_muxInput zeroInput;
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput zeroInput;
         zeroInput.node = NULL;
         zeroInput.shift = 0;
-        ConstMultPAG_TYPES::ConstMultPAG_muxInput dontCareInput;
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput dontCareInput;
         dontCareInput.node = NULL;
         dontCareInput.shift = -1;
-        vector<ConstMultPAG_TYPES::ConstMultPAG_muxInput> muxInfoMap;
+        vector<IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput> muxInfoMap;
         for(unsigned int i=0;i<t->inputs.size();i++)
         {
             bool found=false;
@@ -877,7 +877,7 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
                 continue;
             }
 
-            for( vector<ConstMultPAG_TYPES::ConstMultPAG_muxInput>::iterator iter = muxInfoMap.begin();
+            for( vector<IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput>::iterator iter = muxInfoMap.begin();
                  iter!=muxInfoMap.end();
                  ++iter)
             {
@@ -890,7 +890,7 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
 
             if( !found )
             {
-                ConstMultPAG_TYPES::ConstMultPAG_muxInput newInfo;
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput newInfo;
                 newInfo.node = t->inputs[i];
                 newInfo.shift = t->input_shifts[i];
                 newInfo.configurations.push_back(i);
@@ -908,7 +908,7 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
         for (unsigned int n=muxInfoMap.size(); n>1; n=n-1){
             for (unsigned int i=0; i<n-1; i=i+1){
                 if (muxInfoMap.at(i).configurations.size() > muxInfoMap.at(i+1).configurations.size()){
-                    ConstMultPAG_TYPES::ConstMultPAG_muxInput tmpInfo = muxInfoMap[i];
+                    IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput tmpInfo = muxInfoMap[i];
                     muxInfoMap[i] = muxInfoMap[i+1];
                     muxInfoMap[i+1] = tmpInfo;
                 }
@@ -926,14 +926,14 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
 
         if( nonZeroOutputCount == 1 )
         {
-            ConstMultPAG_TYPES::ConstMultPAG_AND* new_node = new ConstMultPAG_TYPES::ConstMultPAG_AND(this);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_AND* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_AND(this);
             new_node->inputs = muxInfoMap;
             return new_node;
         }
         else
         {
-            ConstMultPAG_TYPES::ConstMultPAG_MUX* new_node = new ConstMultPAG_TYPES::ConstMultPAG_MUX(this);
-            ConstMultPAG_TYPES::ConstMultPAG_DECODER* new_dec = new ConstMultPAG_TYPES::ConstMultPAG_DECODER(this);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX(this);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
             new_node->decoder = new_dec;
             new_dec->node = new_node;
             new_node->inputs = muxInfoMap;
@@ -942,7 +942,7 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
     }
     else if(is_a<input_node_t>(*node))
     {
-        ConstMultPAG_TYPES::ConstMultPAG_INPUT* new_node = new ConstMultPAG_TYPES::ConstMultPAG_INPUT(this);
+        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_INPUT* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_INPUT(this);
         return new_node;
     }
     else
@@ -952,7 +952,7 @@ ConstMultPAG_TYPES::ConstMultPAG_BASE* IntConstMultShiftAdd::identifyNodeType(ad
     return NULL;
 }
 
-void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *node, map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*> &infoMap)
+void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *node, map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
 {
     if(is_a<adder_subtractor_node_t>(*node))
     {
@@ -994,10 +994,10 @@ void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *no
     }
 }
 
-void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*> &infoMap)
+void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
 {
     stringstream nodeInfoString;
-    for( map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE*>::iterator nodeInfo = infoMap.begin();
+    for( map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>::iterator nodeInfo = infoMap.begin();
          nodeInfo != infoMap.end();
          ++nodeInfo)
     {

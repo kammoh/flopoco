@@ -1,9 +1,9 @@
-/*  CONSTMULTPAG_TYPES.cpp
+/*  IntConstMultShiftAdd_TYPES.cpp
  *  Version:
  *  Datum: 20.11.2014
  */
 #ifdef HAVE_PAGSUITE
-#include "ConstMultPAG_types.hpp"
+#include "IntConstMultShiftAddTypes.hpp"
 
 //#include "FloPoCo.hpp"
 #include "PrimitiveComponents/GenericAddSub.hpp"
@@ -12,19 +12,19 @@
 #include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
 //#include "PrimitiveComponents/Altera/Altera_TernaryAdd.hpp"
 
-namespace ConstMultPAG_TYPES {
-string ConstMultPAG_BASE::target_ID = "NONE";
-int ConstMultPAG_BASE::noOfConfigurations = 0;
-int ConstMultPAG_BASE::configurationSignalWordsize = 0;
-int ConstMultPAG_BASE::noOfInputs = 0;
+namespace IntConstMultShiftAdd_TYPES {
+string IntConstMultShiftAdd_BASE::target_ID = "NONE";
+int IntConstMultShiftAdd_BASE::noOfConfigurations = 0;
+int IntConstMultShiftAdd_BASE::configurationSignalWordsize = 0;
+int IntConstMultShiftAdd_BASE::noOfInputs = 0;
 
 
-string ConstMultPAG_INPUT::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     return "";
 }
 
-string ConstMultPAG_REG::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_REG::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     register_node_t* t = (register_node_t*)(base_node);
     
@@ -50,7 +50,7 @@ string ConstMultPAG_REG::get_realisation(map<adder_graph_base_node_t *, ConstMul
     return "";
 }
 
-string ConstMultPAG_ADD2::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADD2::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
 
@@ -58,7 +58,7 @@ string ConstMultPAG_ADD2::get_realisation(map<adder_graph_base_node_t *, ConstMu
     //cerr << "-->" << addsub->getName() << endl;
     base_op->addSubComponent(addsub);
     for(int i=0;i<2;i++){
-        ConstMultPAG_BASE* t_in=InfoMap[t->inputs[i]];
+        IntConstMultShiftAdd_BASE* t_in=InfoMap[t->inputs[i]];
         string t_name = t_in->getTemporaryName();
         base_op->declare(t_name,wordsize);
         base_op->vhdl << t_name << " <= std_logic_vector(" << getShiftAndResizeString( t_in,wordsize,t->input_shifts[i]) << ");" << endl;
@@ -73,7 +73,7 @@ string ConstMultPAG_ADD2::get_realisation(map<adder_graph_base_node_t *, ConstMu
     return "";//base_op->vhdl.str();
 }
 
-string ConstMultPAG_ADD3::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADD3::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     base_op->vhdl << "\t" << base_op->declare( "add3_" + outputSignalName + "_x",wordsize   ) << " <= "
@@ -96,7 +96,7 @@ string ConstMultPAG_ADD3::get_realisation(map<adder_graph_base_node_t *, ConstMu
     return "";
 }
 
-string ConstMultPAG_SUB2_1N::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_SUB2_1N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     vector<int> inputOrder;
@@ -118,7 +118,7 @@ string ConstMultPAG_SUB2_1N::get_realisation(map<adder_graph_base_node_t *, Cons
     return "";
 }
 
-string ConstMultPAG_SUB3_1N::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_SUB3_1N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     vector<int> inputOrder;
@@ -143,7 +143,7 @@ string ConstMultPAG_SUB3_1N::get_realisation(map<adder_graph_base_node_t *, Cons
     return "";
 }
 
-string ConstMultPAG_SUB3_2N::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_SUB3_2N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     vector<int> inputOrder;
@@ -168,13 +168,13 @@ string ConstMultPAG_SUB3_2N::get_realisation(map<adder_graph_base_node_t *, Cons
     return "";
 }
 
-string ConstMultPAG_DECODER::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_DECODER::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     map<uint,uint > decoder_content;
     if( node->nodeType == NODETYPE_ADDSUB3_2STATE ){
         int i=0;
-        for(map<short,vector<int> >::iterator iter=((ConstMultPAG_ADDSUB3_2STATE*)node)->adder_states.begin();
-            iter!=((ConstMultPAG_ADDSUB3_2STATE*)node)->adder_states.end();++iter)
+        for(map<short,vector<int> >::iterator iter=((IntConstMultShiftAdd_ADDSUB3_2STATE*)node)->adder_states.begin();
+            iter!=((IntConstMultShiftAdd_ADDSUB3_2STATE*)node)->adder_states.end();++iter)
         {
             for(vector<int>::iterator iter2=(*iter).second.begin();iter2!=(*iter).second.end();++iter2){
                 decoder_content[ (*iter2) ] = i;
@@ -182,10 +182,10 @@ string ConstMultPAG_DECODER::get_realisation(map<adder_graph_base_node_t *, Cons
             i++;
         }
     }else if( node->nodeType == NODETYPE_MUX ){
-        ConstMultPAG_MUX* t = ((ConstMultPAG_MUX*)node);
+        IntConstMultShiftAdd_MUX* t = ((IntConstMultShiftAdd_MUX*)node);
         int i=0;
-        for( vector<ConstMultPAG_muxInput>::iterator iter=t->inputs.begin();iter!=t->inputs.end();++iter ){
-            ConstMultPAG_muxInput inp = *iter;
+        for( vector<IntConstMultShiftAdd_muxInput>::iterator iter=t->inputs.begin();iter!=t->inputs.end();++iter ){
+            IntConstMultShiftAdd_muxInput inp = *iter;
 
             for(vector<int>::iterator iter2=inp.configurations.begin();iter2!=inp.configurations.end();++iter2){
                 decoder_content[ (*iter2) ] = i;
@@ -202,8 +202,8 @@ string ConstMultPAG_DECODER::get_realisation(map<adder_graph_base_node_t *, Cons
         //cerr << "Mux Decoder size " << i << endl;
     }
     else{
-        for(map<short,vector<int> >::iterator iter=((ConstMultPAG_BASE_CONF*)node)->adder_states.begin();
-            iter!=((ConstMultPAG_BASE_CONF*)node)->adder_states.end();++iter)
+        for(map<short,vector<int> >::iterator iter=((IntConstMultShiftAdd_BASE_CONF*)node)->adder_states.begin();
+            iter!=((IntConstMultShiftAdd_BASE_CONF*)node)->adder_states.end();++iter)
         {
             for(vector<int>::iterator iter2=(*iter).second.begin();iter2!=(*iter).second.end();++iter2){
                 if(decoder_size >= 3 && (*iter).first==3){
@@ -231,14 +231,14 @@ string ConstMultPAG_DECODER::get_realisation(map<adder_graph_base_node_t *, Cons
     return "";
 }
 
-string ConstMultPAG_ADDSUB2_CONF::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADDSUB2_CONF::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
     GenericAddSub* addsub = new GenericAddSub(base_op, target,wordsize);
     base_op->addSubComponent(addsub);
     for(int i=0;i<2;i++){
-        ConstMultPAG_BASE* t_in=InfoMap[t->inputs[i]];
+        IntConstMultShiftAdd_BASE* t_in=InfoMap[t->inputs[i]];
         string t_name = t_in->getTemporaryName();
         base_op->declare(t_name,wordsize);
         base_op->vhdl << t_name << " <= std_logic_vector(" << getShiftAndResizeString( t_in,wordsize,t->input_shifts[i]) << ");" << endl;
@@ -253,7 +253,7 @@ string ConstMultPAG_ADDSUB2_CONF::get_realisation(map<adder_graph_base_node_t *,
     return "";
 }
 
-string ConstMultPAG_ADDSUB3_2STATE::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
@@ -263,7 +263,7 @@ string ConstMultPAG_ADDSUB3_2STATE::get_realisation(map<adder_graph_base_node_t 
     ++stateIter;
     adderStates[1] = ( *stateIter ).first;
 
-    if( ConstMultPAG_BASE::target_ID == "Virtex5" || ConstMultPAG_BASE::target_ID == "Virtex6" )
+    if( IntConstMultShiftAdd_BASE::target_ID == "Virtex5" || IntConstMultShiftAdd_BASE::target_ID == "Virtex6" )
     {
         Xilinx_TernaryAdd_2State* add3 = new Xilinx_TernaryAdd_2State(base_op, target,wordsize,adderStates[0],adderStates[1]);
         base_op->addSubComponent(add3);
@@ -296,7 +296,7 @@ string ConstMultPAG_ADDSUB3_2STATE::get_realisation(map<adder_graph_base_node_t 
     return "";
 }
 
-string ConstMultPAG_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
@@ -305,7 +305,7 @@ string ConstMultPAG_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *,
     base_op->addSubComponent(addsub);
     base_op->addSubComponent(addsub2);
     for(int i=0;i<3;i++){
-        ConstMultPAG_BASE* t_in=InfoMap[t->inputs[i]];
+        IntConstMultShiftAdd_BASE* t_in=InfoMap[t->inputs[i]];
         string t_name = t_in->getTemporaryName();
         base_op->declare(t_name,wordsize);
         base_op->vhdl << t_name << " <= std_logic_vector(" << getShiftAndResizeString( t_in,wordsize,t->input_shifts[i]) << ");" << endl;
@@ -331,7 +331,7 @@ string ConstMultPAG_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *,
     return "";
 }
 
-string ConstMultPAG_AND::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_AND::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     mux_node_t* t = (mux_node_t*)(base_node);
     short configurationIndex=-1;
@@ -347,18 +347,18 @@ string ConstMultPAG_AND::get_realisation(map<adder_graph_base_node_t *, ConstMul
     base_op->vhdl << getShiftAndResizeString(InfoMap[t->inputs[configurationIndex]]
             ,wordsize
             ,t->input_shifts[configurationIndex],false);
-    base_op->vhdl << " when config_no=" << getBinary(configurationIndex,ConstMultPAG_BASE::configurationSignalWordsize);
+    base_op->vhdl << " when config_no=" << getBinary(configurationIndex,IntConstMultShiftAdd_BASE::configurationSignalWordsize);
     base_op->vhdl << " else (others=>'0')";
     base_op->vhdl << ";" << endl;
     return "";
 }
 
-string ConstMultPAG_MUX::get_realisation(map<adder_graph_base_node_t *, ConstMultPAG_BASE *> &InfoMap)
+string IntConstMultShiftAdd_MUX::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     GenericMux* new_mux = new GenericMux(base_op, target,wordsize,inputs.size());
     base_op->addSubComponent(new_mux);
     int i=0;
-    for( vector<ConstMultPAG_muxInput>::iterator iter=inputs.begin();iter!=inputs.end();++iter ){
+    for( vector<IntConstMultShiftAdd_muxInput>::iterator iter=inputs.begin();iter!=inputs.end();++iter ){
         if( iter->node == NULL )
         {
             if( iter->shift == -1 )
@@ -367,7 +367,7 @@ string ConstMultPAG_MUX::get_realisation(map<adder_graph_base_node_t *, ConstMul
                 base_op->inPortMapCst(new_mux,new_mux->getInputName(i),"(others=>'0')");
         }
         else{
-            ConstMultPAG_BASE* t_in=InfoMap[ iter->node ];
+            IntConstMultShiftAdd_BASE* t_in=InfoMap[ iter->node ];
             string t_name = t_in->getTemporaryName();
             base_op->vhdl << base_op->declare(t_name,wordsize) << " <= " <<  getShiftAndResizeString(t_in
                                                     ,wordsize
@@ -393,7 +393,7 @@ string ConstMultPAG_MUX::get_realisation(map<adder_graph_base_node_t *, ConstMul
     int muxStatesWritten=0;
     for(int inp=0;inp<(int)inputs.size();inp++)
     {
-        ConstMultPAG_muxInput cur_inp = inputs[inp];
+        IntConstMultShiftAdd_muxInput cur_inp = inputs[inp];
         int configsInMux = cur_inp.configurations.size();
         if( inp == ((int)inputs.size()) - 1 )
             configsInMux=1;
@@ -431,7 +431,7 @@ string ConstMultPAG_MUX::get_realisation(map<adder_graph_base_node_t *, ConstMul
             base_op->vhdl << ") WHEN ";
             if( inp < ((int)inputs.size()) - 1 )
             {
-                base_op->vhdl << getBinary(cur_inp.configurations[i],ConstMultPAG_BASE::configurationSignalWordsize) << "," << endl;
+                base_op->vhdl << getBinary(cur_inp.configurations[i],IntConstMultShiftAdd_BASE::configurationSignalWordsize) << "," << endl;
             }
             else
             {
@@ -443,7 +443,7 @@ string ConstMultPAG_MUX::get_realisation(map<adder_graph_base_node_t *, ConstMul
     return "";
 }
 
-string ConstMultPAG_BASE::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
+string IntConstMultShiftAdd_BASE::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
 {
     stringstream tmp;
     if(!signedConversion) tmp << "std_logic_vector(";
@@ -459,7 +459,7 @@ string ConstMultPAG_BASE::getShiftAndResizeString(string signalName, int outputW
     return tmp.str();
 }
 
-string ConstMultPAG_BASE::getShiftAndResizeString(ConstMultPAG_BASE *input_node, int outputWordsize, int inputShift,bool signedConversion)
+string IntConstMultShiftAdd_BASE::getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int outputWordsize, int inputShift,bool signedConversion)
 {
     int neg_shift=0;
     if( is_a<adder_subtractor_node_t>(*base_node) ){
@@ -533,7 +533,7 @@ string ConstMultPAG_BASE::getShiftAndResizeString(ConstMultPAG_BASE *input_node,
 }
 
 
-string ConstMultPAG_BASE::getNegativeShiftString(string signalName,int outputWordsize, adder_graph_base_node_t* base_node)
+string IntConstMultShiftAdd_BASE::getNegativeShiftString(string signalName,int outputWordsize, adder_graph_base_node_t* base_node)
 {
     int neg_shift=0;
     if( is_a<adder_subtractor_node_t>(*base_node) ){
@@ -564,7 +564,7 @@ string ConstMultPAG_BASE::getNegativeShiftString(string signalName,int outputWor
     return "";
 }
 
-string ConstMultPAG_BASE::getNegativeResizeString(string signalName,int outputWordsize)
+string IntConstMultShiftAdd_BASE::getNegativeResizeString(string signalName,int outputWordsize)
 {
     if(outputWordsize != this->wordsize)
     {
@@ -578,7 +578,7 @@ string ConstMultPAG_BASE::getNegativeResizeString(string signalName,int outputWo
     return "";
 }
 
-void ConstMultPAG_BASE::getInputOrder(vector<bool> &inputIsNegative, vector<int> &inputOrder)
+void IntConstMultShiftAdd_BASE::getInputOrder(vector<bool> &inputIsNegative, vector<int> &inputOrder)
 {
     for(int i=0;i<(int)inputIsNegative.size();i++)
     {
@@ -593,7 +593,7 @@ void ConstMultPAG_BASE::getInputOrder(vector<bool> &inputIsNegative, vector<int>
     }
 }
 
-string ConstMultPAG_BASE::getBinary(int value, int Wordsize)
+string IntConstMultShiftAdd_BASE::getBinary(int value, int Wordsize)
 {
     string tmp;
     while(value>0)
@@ -609,12 +609,12 @@ string ConstMultPAG_BASE::getBinary(int value, int Wordsize)
     return tmp;
 }
 
-string ConstMultPAG_BASE::declare(string signalName, int wordsize)
+string IntConstMultShiftAdd_BASE::declare(string signalName, int wordsize)
 {
     return base_op->declare(signalName,wordsize);
 }
 
-string ConstMultPAG_BASE::getTemporaryName()
+string IntConstMultShiftAdd_BASE::getTemporaryName()
 {
     stringstream t_name;
     t_name << outputSignalName << "_t" << ++outputSignalUsageCount;

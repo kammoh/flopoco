@@ -1,7 +1,7 @@
-#ifndef  CONSTMULTPAG_HPP
-#define CONSTMULTPAG_HPP
+#ifndef  IntConstMultShiftAdd_HPP
+#define IntConstMultShiftAdd_HPP
 
-/*  CONSTMULTPAG.hpp
+/*  IntConstMultShiftAdd.hpp
  *  Version:
  *  Datum: 20.11.2014
  */
@@ -10,20 +10,20 @@
 #include "Operator.hpp"
 #include "utils.hpp"
 #include "pag_lib/adder_graph.h"
-#include "ConstMultPAG_types.hpp"
+#include "IntConstMultShiftAddTypes.hpp"
 
 using namespace std;
 
 namespace flopoco {
-  class ConstMultPAG : public Operator {
+  class IntConstMultShiftAdd : public Operator {
     public:
      static ostream nostream;
      int noOfPipelineStages;
 
-     ConstMultPAG(Operator* parentOp, Target* target,int wIn_, string pipelined_realization_str, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1,bool syncMux_=true);
-     ConstMultPAG(Operator* parentOp, Target* target, int wIn_, vector<vector<int64_t> > &coefficients, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1, bool syncMux_=true);
+     IntConstMultShiftAdd(Operator* parentOp, Target* target,int wIn_, string pipelined_realization_str, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1,bool syncMux_=true);
+     IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, vector<vector<int64_t> > &coefficients, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1, bool syncMux_=true);
 
-      ~ConstMultPAG() {}
+      ~IntConstMultShiftAdd() {}
 
      void emulate(TestCase * tc);
      void buildStandardTestCases(TestCaseList* tcl);
@@ -55,15 +55,15 @@ namespace flopoco {
      int noOfConfigurations;
      bool needs_unisim;
 
-     void ProcessConstMultPAG(Target* target, string pipelined_realization_str);
+     void ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str);
 
 
      string generateSignalName(adder_graph_base_node_t* node);
-     ConstMultPAG_TYPES::ConstMultPAG_BASE* identifyNodeType(adder_graph_base_node_t* node);
+     IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* identifyNodeType(adder_graph_base_node_t* node);
      bool TryRunRPAG(string pipelined_realization_str,string& out);
 
-     void identifyOutputConnections(adder_graph_base_node_t* node, map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE *> &infoMap);
-     void printAdditionalNodeInfo(map<adder_graph_base_node_t *, ConstMultPAG_TYPES::ConstMultPAG_BASE *> &infoMap );
+     void identifyOutputConnections(adder_graph_base_node_t* node, map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap);
+     void printAdditionalNodeInfo(map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );
      string getShiftAndResizeString(string signalName, int outputWordsize, int inputShift, bool signedConversion=true);
      string getBinary(int value, int wordsize);
 
