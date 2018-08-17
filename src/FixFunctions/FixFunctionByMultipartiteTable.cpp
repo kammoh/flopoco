@@ -214,7 +214,7 @@ namespace flopoco
 			vhdl << tab << declare(signi) << " <= not(" << bi << of( bestMP->betai[i] - 1) << ");" << endl;
 			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
 			vector<mpz_class> mpzTOi;
-			for (auto i : bestMP->toi[i])
+			for (long i : bestMP->toi[i])
 				mpzTOi.push_back(mpz_class((long) i));
 			Table::newUniqueInstance(this, inTOi, outTOi,
 															 mpzTOi, nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
