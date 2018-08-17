@@ -101,6 +101,9 @@ if __name__ == '__main__':
         part="xc7k70tfbv484-3"
     elif target.lower()=="zynq7000":
         part="xc7z020clg484-1"
+    elif target.lower()=="virtex7":
+#        part="xc7v2000tflg1925-1" # virtex 7 with largest I/O count (1100 I/Os)
+        part="xc7vx330tffg1157-1" # virtex 7 with 600 I/Os
     else:
         raise BaseException("Target " + target + " not supported")
         
@@ -160,6 +163,9 @@ if __name__ == '__main__':
         tclscriptfile.write("launch_runs " + result_name + "\n")
         tclscriptfile.write("wait_on_run " + result_name + "\n")
         tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
+
+    tclscriptfile.write("set_property IOB FALSE [all_inputs]\n")    
+    tclscriptfile.write("set_property IOB FALSE [all_outputs]\n")
     tclscriptfile.write("report_utilization  -file "+  utilization_report_file +"\n")
 
 
