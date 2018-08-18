@@ -37,12 +37,15 @@ To replicate the functions used in the 2017 Hsiao paper
 
 ./flopoco FixFunctionByMultipartiteTable f="sin(pi/4*x)"  msbOut=-1 lsbIn=-24 lsbOut=-24
 ./flopoco FixFunctionByMultipartiteTable f="2^x-1" lsbIn=-16 lsbOut=-15 msbOut=-1 
-./flopoco FixFunctionByMultipartiteTable f="" lsbIn=-16 lsbOut=-15 msbOut=-1 
+./flopoco FixFunctionByMultipartiteTable f="1/(x+1)-0.5" lsbIn=-15 lsbOut=-15 msbOut=-1 
+
+>
 */
 
 /*
  TODOs:
  compress TIV only if it saves at least one adder; in general resurrect uncompressed TIV
+
 */
 
 using namespace std;
@@ -476,6 +479,7 @@ namespace flopoco
 	 * @return The smallest Multipartite decomposition.
 	 * @throw "It seems we could not find a decomposition" if there isn't any decomposition with an acceptable error
 	 */
+#if 0
 	bool FixFunctionByMultipartiteTable::enumerateDec()
 	{
 		Multipartite *mpt;
@@ -528,7 +532,63 @@ namespace flopoco
 		return decompositionFound;
 	}
 
+#else // only betai=2 or 3 is useful
+	bool FixFunctionByMultipartiteTable::enumerateDec()
+	{
+		Multipartite *mpt;
+		int beta, p;
+		int n = f->wIn;
+		int alphamin = n/3;
+		int alphamax = (2*n)/3;
+		vector<vector<int>> betaEnum;
+		vector<vector<int>> alphaEnum;
+		vector<int> gammaimin;
+		vector<int> gammai;
+		vector<int> betai;
 
+		int sizeMax = f->wOut <<f->wIn; // size of a plain table
+
+		bool decompositionFound=false;
+		
+		for (int alpha = alphamin; alpha <= alphamax; alpha++)		{
+			beta = n-alpha;
+			betaEnum = betaenum(beta, nbTOi);
+			for(unsigned int e = 0; e < betaEnum.size(); e++) {
+				betai = betaEnum[e];
+
+				gammaimin = vector<int>(nbTOi);
+				p = 0;
+				for(int i = nbTOi-1; i >= 0; i--) {
+					gammaimin[i] = gammaiMin[p][betai[i]];
+					p += betai[i];
+				}
+
+				alphaEnum = alphaenum(alpha,nbTOi,gammaimin);
+				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)		{
+					gammai = alphaEnum[ae];
+					mpt = new Multipartite(f, nbTOi,
+																 alpha, beta,
+																 gammai, betai, this);
+					if(mpt->mathError < epsilonT){
+						decompositionFound=true;
+						mpt->buildGuardBitsAndSizes();
+						insertInTopTen(mpt);
+					}
+					else
+						mpt->totalSize = sizeMax;
+				}
+			}
+			// exit this loop as soon as 2^alpha > best totalSize
+			if( (f->wOut << (alpha+1)) > topTen[0]->totalSize)
+				alpha =  alphamax+1 ; // exit
+		}
+		return decompositionFound;
+	}
+	
+#endif
+
+
+	
 	/** 5th equation implementation */
 	double FixFunctionByMultipartiteTable::epsilon(int ci_, int gammai, int betai, int pi)
 	{
