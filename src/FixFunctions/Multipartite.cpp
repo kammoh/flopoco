@@ -112,55 +112,43 @@ namespace flopoco
 	}
 
 
-
+	int64_t max(int64_t x, int64_t y) { // ?? it doesn't seem to exist
+		return (x>y? x:y);
+	}
+	
 	void Multipartite::computeTIVCompressionParameters() {
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
 
 		REPORT(FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV); 
-
-		int bestS = 0; 
+		int64_t bestS;
+		// compression using only positive numbers
+		bestS = 0; 
 		for(int s = 1; s < alpha-1; s++) {
-			
-#if 0 // This works without the convexity hypothesis but is hugely slower
-			vector<int64_t> deltas;
-			int64_t deltaMax = 0;
-			for(int i = 0; i < (1<<(alpha - s)); i++)	{
-				int64_t valLeft  = TIVFunction( i<<s );
-				int64_t valRight = TIVFunction( ((i+1)<<s)-1 );
-				int64_t delta = abs(valLeft-valRight);
-				deltas.push_back(delta);
-				if (delta>deltaMax)
-					deltaMax=delta;
-			}
-			int deltaBits = intlog2(deltaMax);
-			int64_t slack = 0;
-			for(int i = 0; i < (1<<(alpha - s)); i++)	{
-				slack = max(slack, (1<<deltaBits)-1-deltas[i]);				
-			}
-#else
 			// Under convexity hypothesis, the maximum slack is either left or right of the interval
 			// (I think we assume here convexity of the first derivative, too)
-			int64_t  valLeft, valRight, deltaLeft, deltaRight, deltaMax, slackMax;
-			int i = 0;
-			valLeft	 = TIVFunction( i<<s );
-			valRight = TIVFunction( ((i+1)<<s)-1 );
-			deltaLeft = abs(valLeft-valRight);
+			int64_t  yLL, yLR, yRL, yRR, deltaLeft, deltaRight, deltaMax, deltaBits, slackMax, saved_LSBs_in_ATIV, tempRho, tempSizeATIV, tempSizeDiffTIV, tempCompressedSize;
+			int i = 0; // compute extremal yues on the left of the interval
+			yLL	 = TIVFunction( i<<s );
+			yLR = TIVFunction( ((i+1)<<s)-1 );
+			deltaLeft = abs(yLL-yLR);
+			i = (1<<(alpha - s))-1; // compute extremal values on the right of the interval
+			yRL	 = TIVFunction( i<<s );
+			yRR = TIVFunction( ((i+1)<<s)-1 );
 
-			i = (1<<(alpha - s))-1;
-			valLeft	 = TIVFunction( i<<s );
-			valRight = TIVFunction( ((i+1)<<s)-1 );
-			deltaRight = abs(valLeft-valRight);
-
-			deltaMax = deltaLeft>deltaRight? deltaLeft: deltaRight;
-			int deltaBits = intlog2(deltaMax);
-			slackMax = (1<<deltaBits)-1-deltaMax;			
-#endif
-			int saved_LSBs_in_ATIV = intlog2(slackMax);
-			int tempRho = alpha - s;
-			int tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
-			int tempSizeDiffTIV = deltaBits<<alpha;
-			int tempCompressedSize = tempSizeATIV + tempSizeDiffTIV; 
-			REPORT(FULL, "computeTIVCompressionParameters: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize << "  slack=" << slackMax <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV); 
+			deltaRight = abs(yRL-yRR);
+			deltaMax = max(deltaLeft,deltaRight);
+			deltaBits = intlog2(deltaMax);
+			slackMax = (1<<deltaBits)-1 - deltaMax;			
+			saved_LSBs_in_ATIV = intlog2(slackMax);
+			tempRho = alpha - s;
+			tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
+			tempSizeDiffTIV = deltaBits<<alpha;
+			tempCompressedSize = tempSizeATIV + tempSizeDiffTIV; 
+			REPORT(DETAILED, "computeTIVCompressionParameters, unsigned: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize
+						 << " =" << outputSize+guardBits-saved_LSBs_in_ATIV << ".2^" << tempRho
+						 << " + " << deltaBits << ".2^" << alpha
+						 << "  ( slack=" << slackMax <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV <<" )"); 
+			
 			if (tempCompressedSize < sizeTIV) {
 				bestS = s;
 				// tentatively set the attributes of the Multipartite class
@@ -178,6 +166,60 @@ namespace flopoco
 				outputSizeDiffTIV = deltaBits;
 			}				
 		}
+
+#if 0 // Unplugged for now because it actually increases size for 16-bit operands
+		// compression using symmetry and a second-order term: will require one more table and a row of xors on the output
+		bestS = 0; 
+		for(int s = 1; s < alpha-1; s++) {
+			// Under convexity hypothesis, the maximum slack is either left or right of the interval
+			// (I think we assume here convexity of the first derivative, too)
+			int64_t  yLL, yLR, yRL, yRR, deltaLeft, deltaRight, deltaMax, deltaBits, slackMax, saved_LSBs_in_ATIV, tempRho, tempSizeATIV, tempSizeDiffTIV, tempCompressedSize;
+			int i = 0; // compute extremal yues on the left of the interval
+			yLL	 = TIVFunction( i<<s );
+			yLR = TIVFunction( ((i+1)<<s)-1 );
+			deltaLeft = abs(yLL-yLR);
+			i = (1<<(alpha - s))-1; // compute extremal values on the right of the interval
+			yRL	 = TIVFunction( i<<s );
+			yRR = TIVFunction( ((i+1)<<s)-1 );
+
+			int64_t centerL, centerR;
+			centerL = (yLL+yLR)>>1;
+			centerR = (yRL+yRR)>>1;
+			deltaLeft = max( abs(yLL-centerL), abs(yLR-centerL));
+			deltaRight = max( abs(yRL-centerR), abs(yRR-centerR));
+			deltaMax = max(deltaLeft,deltaRight);
+			deltaBits = intlog2(deltaMax);
+			slackMax = (1<<deltaBits)-1 - deltaMax;			
+			saved_LSBs_in_ATIV = intlog2(slackMax);
+			tempRho = alpha - s;
+			tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
+			tempSizeDiffTIV = deltaBits<<alpha;
+			tempCompressedSize = tempSizeATIV + tempSizeDiffTIV; 
+			REPORT(DETAILED, "computeTIVCompressionParameters,   signed: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize
+						 << " =" << outputSize+guardBits-saved_LSBs_in_ATIV << ".2^" << tempRho
+						 << " + " << deltaBits << ".2^" << alpha
+						 << "  ( slack=" << slackMax <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV <<" )"); 
+			
+			if (tempCompressedSize < sizeTIV) {
+				bestS = s;
+				// tentatively set the attributes of the Multipartite class
+				rho = alpha - s;
+				sizeATIV = tempSizeATIV;
+				sizeDiffTIV = tempSizeDiffTIV;
+				sizeTIV = tempCompressedSize;
+				totalSize = sizeATIV + sizeDiffTIV;
+				for (int i=0; i<m; i++)		{
+					totalSize += sizeTOi[i];
+				}
+				
+				nbZeroLSBsInATIV = saved_LSBs_in_ATIV; 
+				outputSizeATIV = outputSize+guardBits-nbZeroLSBsInATIV;				
+				outputSizeDiffTIV = deltaBits;
+			}
+		}
+#endif
+
+
 		REPORT(FULL, "Exiting computeTIVCompressionParameters: bestS=" << bestS << "  rho=" << rho  << "  nbZeroLSBsInATIV=" << nbZeroLSBsInATIV<< "  sizeTIV=" << sizeTIV  << "  outputSizeATIV" << outputSizeATIV); 
 	}
 
@@ -362,15 +404,15 @@ namespace flopoco
 
 	string 	Multipartite::descriptionString(){
 		ostringstream s;
-		s << "m=" << m << "    alpha=" << alpha;
+		s << "m=" << m << " alpha=" << alpha;
 		if(rho!=-1)
-			s << ", rho=" << rho << ", nbZeroLSBsInATIV=" << nbZeroLSBsInATIV << "   ";
+			s << " rho=" << rho << " nbZeroLSBsInATIV=" << nbZeroLSBsInATIV << " ";
 		for (size_t i =0; i< gammai.size(); i++) {
-			s << "   gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
+			s << "  gamma" << i << "=" << gammai[i] << " beta"<<i<<"=" << betai[i]; 
 		}
-		s << "     g=" << guardBits << endl;
+		s << "  g=" << guardBits << endl;
 		if(rho!=-1){
-			s << "    sizeATIV=" << sizeATIV << " sizeDiffTIV=" << sizeDiffTIV ;
+			s << "  sizeATIV=" << sizeATIV << " sizeDiffTIV=" << sizeDiffTIV ;
 		}
 		s << "  sizeTIV=" << sizeTIV << " totalSize = " << totalSize ;
 		return s.str();
@@ -431,6 +473,7 @@ namespace flopoco
 	}
 
 	
+#define ETDEBUG 0
 	bool Multipartite::exhaustiveTest(){
 		double maxError=0;
 		double rulp=1;
@@ -440,14 +483,15 @@ namespace flopoco
 				rulp = 1.0 / ((double) (1<<(-lsbOut)));
 		if(lsbOut>0)
 			rulp =  (double) (1<<lsbOut);
-		double ulp = rulp / ((double) (1<<guardBits));
 		for (int x=0; x<(1<<inputSize); x++) {
 			int64_t result;
 			if(rho==-1) {
 				int a = x>>(inputSize-alpha);
 				int64_t yTIV = tiv[a];
 				result = yTIV;
-				//cerr << " tiv=" << result;
+#if ETDEBUG 
+				cerr 	<< "  x=" << x<< " tiv=" << result;
+#endif
 			}
 			else { //compressed table
 				int aa = x>>(inputSize-rho);
@@ -455,33 +499,40 @@ namespace flopoco
 
 				int adiff = x>>(inputSize-alpha);
 				int64_t yDiffTIV = diffTIV[adiff];
-			
 				result = (yATIV << nbZeroLSBsInATIV) + yDiffTIV;
+#if ETDEBUG 
+				cerr 	<< "  x=" << x<< " yaTIV=" << yATIV << " yDiffTIV=" << yDiffTIV ;
+#endif
 			}
 			for(int i=0; i<m; i++) {
 				int aTOi = (x>>pi[i]) & ((1<<betai[i])-1);
 				int sign = 1-(aTOi >> (betai[i]-1) );
-				//cerr << " i=" << i << "  " << aTOi << "  s=" << sign << "  ";
+#if ETDEBUG 
+				cerr << "  aTO" << i << "I=" << aTOi << "  s=" << sign << "  ";
+#endif
 				aTOi = (aTOi & ((1<<(betai[i]-1))-1));
 				if(sign==1)
 					aTOi =  ((1<<(betai[i]-1))-1)  - aTOi; 
 				aTOi +=   ((x>>(inputSize-gammai[i])) << (betai[i]-1));
 				int64_t yTOi = toi[i][aTOi];
-				//cerr<< " aTOi=" << aTOi << "  yTOi="  << yTOi << "  " ;
+#if ETDEBUG 
+				cerr << " aTO" << i << "F=" << aTOi << " yTOi="  << yTOi;
+#endif
 				if(negativeTOi[i])
 					sign=1-sign; 
 				if(sign==1)
 					yTOi = ~yTOi;
 				result += yTOi;
-				//				cerr << yTOi << "     "<< result << "    " ;
 			}
-			double fresult = ((double) result) * ulp;
+			//final rounding
+			result = result >> guardBits;
+			double fresult = ((double) result) * rulp;
 			double ref = f->eval(   ((double)x) / ((double)(1<<(-lsbIn))) );
 			double error = abs(fresult-ref);
 			maxError = max(maxError, error);
-#if 0 //debug
+#if ETDEBUG 
 			cerr //<< ((double)x) / ((double)(1<<(-lsbIn)))
-				<< "x=" << x  << "  result=" << fresult << " ref=" <<ref << "   e=" << error << "   u=" <<rulp << (error > rulp ? " *******  Error here":"") <<  endl;
+			  << "  sum=" << result<< " fresult=" << fresult << "ref=" <<ref << "   e=" << error << " u=" <<rulp << (error > rulp ? " *******  Error here":"") <<  endl;
 #endif
 		}
 		return (maxError < rulp);

@@ -1158,22 +1158,28 @@ OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, 
   return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline,sync_inout,sync_every,sync_muxes );
 }
 
-void flopoco::IntConstMultShiftAdd::registerFactory()
-{
-  UserInterface::add( "IntConstMultShiftAdd", // name
-                      "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
-                      "BasicInteger", // category, from the list defined in UserInterface.cpp
-                      "",
-                      "wIn(int): Wordsize of pag inputs; \
+
+}//namespace
+#endif // HAVE_PAGSUITE
+
+
+namespace flopoco {
+    void flopoco::IntConstMultShiftAdd::registerFactory()
+    {
+#ifdef HAVE_PAGSUITE
+      UserInterface::add( "IntConstMultShiftAdd", // name
+                          "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
+                          "BasicInteger", // category, from the list defined in UserInterface.cpp
+                          "",
+                          "wIn(int): Wordsize of pag inputs; \
                        graph(string): Realization string of the pag; \
                        pipeline(bool)=true: Enable pipelining of the pag; \
                        sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
                        sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
                        sync_every(int)=1: Count of stages after which will be pipelined",
-                      "",
-                      IntConstMultShiftAdd::parseArguments
-  );
-}
-
-}//namespace
+                          "",
+                          IntConstMultShiftAdd::parseArguments
+      );
 #endif // HAVE_PAGSUITE
+    }
+}//namespace
