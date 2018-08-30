@@ -153,7 +153,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
     emu_conf = 0;
 
     bool validParse;
-    srcFileName="PipelinedFlexibleMultiplication";
+    srcFileName="IntConstMultShiftAdd";
 
     useNumericStd();
 
