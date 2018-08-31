@@ -1,4 +1,6 @@
 // general c++ library for manipulating streams
+#include "IntConstMultShiftAdd.hpp"
+
 #ifdef HAVE_PAGSUITE
 #include <iostream>
 #include <sstream>
@@ -22,7 +24,6 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "IntConstMultShiftAdd.hpp"
 #include "PrimitiveComponents/Primitive.hpp"
 //#include "rpag/rpag.h"
 

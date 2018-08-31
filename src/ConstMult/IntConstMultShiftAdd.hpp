@@ -1,21 +1,20 @@
 #ifndef  IntConstMultShiftAdd_HPP
 #define IntConstMultShiftAdd_HPP
 
-/*  IntConstMultShiftAdd.hpp
- *  Version:
- *  Datum: 20.11.2014
- */
+#include "Operator.hpp"
+
 #ifdef HAVE_PAGSUITE
 
-#include "Operator.hpp"
 #include "utils.hpp"
 #include "pag_lib/adder_graph.h"
 #include "IntConstMultShiftAddTypes.hpp"
 
 using namespace std;
 
+#endif // HAVE_PAGSUITE
 namespace flopoco {
   class IntConstMultShiftAdd : public Operator {
+#ifdef HAVE_PAGSUITE
     public:
      static ostream nostream;
      int noOfPipelineStages;
@@ -34,7 +33,10 @@ namespace flopoco {
      list<output_signal_info>& GetOutputList();
 
      static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
+
+#endif // HAVE_PAGSUITE
      static void registerFactory();
+#ifdef HAVE_PAGSUITE
 
   protected:
      int wIn;
@@ -68,7 +70,7 @@ namespace flopoco {
      string getBinary(int value, int wordsize);
 
 
+#endif // HAVE_PAGSUITE
  };
 }//namespace
-#endif // HAVE_PAGSUITE
 #endif
