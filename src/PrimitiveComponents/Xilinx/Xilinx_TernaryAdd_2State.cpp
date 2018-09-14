@@ -66,24 +66,24 @@ namespace flopoco {
         vhdl << tab << "z <= z_i;" << std::endl;
 
         if( num_slices == 1 ) {
-            Xilinx_TernaryAdd_2State_slice *single_slice = new Xilinx_TernaryAdd_2State_slice( parentOp, target, wIn, true, lut_content );
+            Xilinx_TernaryAdd_2State_slice *single_slice = new Xilinx_TernaryAdd_2State_slice( this, target, wIn, true, lut_content );
             addSubComponent( single_slice );
             inPortMap( single_slice, "x_in", "x" );
             inPortMap( single_slice, "y_in", "y" );
             inPortMap( single_slice, "z_in", "z" );
             inPortMap( single_slice, "sel_in", "sel_i" );
-            inPortMap( single_slice, "bbus_in", "bbus" + range( wIn, 0 ) );
+            inPortMap( single_slice, "bbus_in", "bbus" + range( wIn-1, 0 ) );
             inPortMap( single_slice, "carry_in", "carry_cct" );
-            outPortMap( single_slice, "bbus_out", "bbus" + range( wIn, 0 ));
-            outPortMap( single_slice, "carry_out", "carry" + range(0, 0 ));
-            outPortMap( single_slice, "sum_out", "sum_o" + range( wIn, 0 ));
+            outPortMap( single_slice, "bbus_out", "bbus" + range( wIn, 1 ));
+            outPortMap( single_slice, "carry_out", "carry" + of( 0 ));
+            outPortMap( single_slice, "sum_out", "sum_o" + range( wIn-1, 0 ));
             vhdl << instance( single_slice, "slice_i" );
         }
 
         if ( num_slices > 1 ) {
             for( uint i = 0; i < num_slices; ++i ) {
                 if( i == 0 ) {  // FIRST SLICE
-                    Xilinx_TernaryAdd_2State_slice *first_slice = new Xilinx_TernaryAdd_2State_slice( parentOp, target, 4, true, lut_content );
+                    Xilinx_TernaryAdd_2State_slice *first_slice = new Xilinx_TernaryAdd_2State_slice( this, target, 4, true, lut_content );
                     addSubComponent( first_slice );
                     inPortMap( first_slice, "x_in", "x" + range( 3, 0 ) );
                     inPortMap( first_slice, "y_in", "y" + range( 3, 0 ) );
@@ -96,7 +96,7 @@ namespace flopoco {
                     outPortMap( first_slice, "sum_out", "sum_o" + range( 3, 0 ));
                     vhdl << instance( first_slice, join( "slice_", i ) ) << endl;
                 } else if( i == (num_slices - 1) ) { // LAST SLICE
-                    Xilinx_TernaryAdd_2State_slice *last_slice = new Xilinx_TernaryAdd_2State_slice( parentOp, target, wIn - ( 4 * i ), false, lut_content );
+                    Xilinx_TernaryAdd_2State_slice *last_slice = new Xilinx_TernaryAdd_2State_slice( this, target, wIn - ( 4 * i ), false, lut_content );
                     addSubComponent( last_slice );
                     inPortMap( last_slice, "x_in", "x" + range( wIn - 1, 4 * i ) );
                     inPortMap( last_slice, "y_in", "y" + range( wIn - 1, 4 * i ) );
@@ -109,7 +109,7 @@ namespace flopoco {
                     outPortMap( last_slice, "sum_out", "sum_o" + range( wIn - 1, 4 * i ));
                     vhdl << instance( last_slice, join( "slice_", i ) ) << endl;
                 } else {
-                    Xilinx_TernaryAdd_2State_slice *full_slice = new Xilinx_TernaryAdd_2State_slice( parentOp, target, 4, false, lut_content );
+                    Xilinx_TernaryAdd_2State_slice *full_slice = new Xilinx_TernaryAdd_2State_slice( this, target, 4, false, lut_content );
                     addSubComponent( full_slice );
                     inPortMap( full_slice, "x_in", "x" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap( full_slice, "y_in", "y" + range( ( 4 * i ) + 3, 4 * i ) );
@@ -371,7 +371,7 @@ namespace flopoco {
 	OperatorPtr Xilinx_TernaryAdd_2State::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ){
 		if( target->getVendor() != "Xilinx" )
 			throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
-			
+
 		int wIn;
 		int mode,mode2;
 		UserInterface::parseInt(args,"wIn",&wIn );
@@ -382,15 +382,16 @@ namespace flopoco {
 
 	void Xilinx_TernaryAdd_2State::registerFactory(){
 		 UserInterface::add( "XilinxTernaryAddSub", // name
-                                "A ternary adder subtractor build of xilinx primitives.", // description, string
-                                "Primitives", // category, from the list defined in UserInterface.cpp
-                                "",
-                                "wIn(int): The wordsize of the adder; \
-                                mode(int)=0: First bitmask for input negation; \
-                                mode2(int)=-1: Second bitmask for configurable input negation;",
-                                "",
-                                Xilinx_TernaryAdd_2State::parseArguments
-                                );
+                             "A ternary adder subtractor build of xilinx primitives.", // description, string
+                             "Primitives", // category, from the list defined in UserInterface.cpp
+                             "",
+                             "wIn(int): The wordsize of the adder; \
+                             mode(int)=0: First bitmask for input negation; \
+                             mode2(int)=-1: Second bitmask for configurable input negation;",
+                             "",
+                             Xilinx_TernaryAdd_2State::parseArguments,
+							 Xilinx_TernaryAdd_2State::unitTest
+		 );
 	 }
 
 	void Xilinx_TernaryAdd_2State::emulate(TestCase *tc){
@@ -424,9 +425,35 @@ namespace flopoco {
 		else
 			s += z;
 
-		mpz_class mask = ((1<<wIn_)-1);
+
+		mpz_class one = 1;
+
+		mpz_class mask = ((one<<wIn_)-1);
 		s = s & mask;
+
 		tc->addExpectedOutput("sum_o", s);
+	}
+
+	TestList Xilinx_TernaryAdd_2State::unitTest(int index)
+	{
+        TestList testStateList;
+        vector<pair<string,string>> paramList;
+
+        if(index==-1)
+        { // The unit tests
+            for(int w=2; w <= 32; w++)
+            {
+                paramList.push_back(make_pair("wIn", to_string(w)));
+                testStateList.push_back(paramList);
+                paramList.clear();
+            }
+        }
+        else
+        {
+            // finite number of random test computed out of index
+        }
+
+        return testStateList;
 	}
 
 }//namespace

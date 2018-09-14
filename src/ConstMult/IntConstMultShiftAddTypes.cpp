@@ -55,7 +55,8 @@ string IntConstMultShiftAdd_ADD2::get_realisation(map<adder_graph_base_node_t *,
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
 
     GenericAddSub* addsub = new GenericAddSub(base_op,target,wordsize);
-    //cerr << "-->" << addsub->getName() << endl;
+
+    cerr << "-->" << addsub->getName() << endl;
     base_op->addSubComponent(addsub);
     for(int i=0;i<2;i++){
         IntConstMultShiftAdd_BASE* t_in=InfoMap[t->inputs[i]];

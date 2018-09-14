@@ -327,7 +327,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                 IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
                 REPORT( INFO, op_node->outputSignalName << " as " << op_node->get_name())
 
-                        if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
+                if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
                 {
                     input_node_t* t = (input_node_t*)op_node->base_node;
 
@@ -454,8 +454,11 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                 do
                 {
                     normalize = true;
+                    cout << "!!! node_output = ";
                     for(unsigned int i=0;i<node_output.size();i++)
                     {
+                        cout << node_output[i] << " ";
+                        if(node_output[i] == 0) THROWERROR( "Node output is zero! " );
                         if( abs(node_output[i]) % 2 == 1) normalize=false;
                     }
                     if(normalize)
@@ -466,7 +469,10 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                             node_output[i] /= 2;
                         }
                     }
+                    cout << endl;
+                    cout << "!!! while( normalize )" << endl;
                 }while( normalize );
+
                 if(norm_factor > 0){
                     std::stringstream o;
                     o << "Fundamental [";
@@ -1081,7 +1087,7 @@ bool IntConstMultShiftAdd::TryRunRPAG(string realisation, string& out)
 
 
     string RPAG_ENV_VAR = "RPAG_ARGS";
-    if(realisation.find("{")!=string::npos)
+    if(realisation.find("{")!=string::npos) //!!! there should be a better way doing this!
     {
         RPAGused = false;
         return false;
@@ -1173,11 +1179,11 @@ namespace flopoco {
                           "BasicInteger", // category, from the list defined in UserInterface.cpp
                           "",
                           "wIn(int): Wordsize of pag inputs; \
-                       graph(string): Realization string of the pag; \
-                       pipeline(bool)=true: Enable pipelining of the pag; \
-                       sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
-                       sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
-                       sync_every(int)=1: Count of stages after which will be pipelined",
+                          graph(string): Realization string of the pag; \
+                          pipeline(bool)=true: Enable pipelining of the pag; \
+                          sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
+                          sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
+                          sync_every(int)=1: Count of stages after which will be pipelined",
                           "",
                           IntConstMultShiftAdd::parseArguments
       );

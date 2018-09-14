@@ -15,7 +15,7 @@
 using namespace std;
 namespace flopoco {
 	Xilinx_FDCE::Xilinx_FDCE(Operator *parentOp, Target *target ) : Xilinx_Primitive(parentOp, target ) {
-        setNameWithFreqAndUID( "FDCE" );
+        setName( "FDCE" );
         srcFileName = "Xilinx_FDCE";
         addInput( "clr" );
         addInput( "ce" );

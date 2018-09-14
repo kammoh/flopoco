@@ -29,6 +29,7 @@ namespace flopoco {
         // Operator interface
 	    
 	    virtual void emulate(TestCase *tc);
+		static TestList unitTest(int index);
     };
 }//namespace
 

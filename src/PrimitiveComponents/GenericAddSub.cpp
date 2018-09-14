@@ -9,6 +9,7 @@
 using namespace std;
 namespace flopoco {
     GenericAddSub::GenericAddSub(Operator* parentOp, Target* target, const uint32_t &wIn, const uint32_t &flags) : Operator( parentOp,target), flags_(flags) {
+      setShared();
         setCopyrightString("Marco Kleinlein");
         this->useNumericStd();
         srcFileName="GenericAddSub";

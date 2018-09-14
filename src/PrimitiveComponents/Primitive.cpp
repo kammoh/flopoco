@@ -26,7 +26,9 @@ namespace flopoco {
         if( target->getVendor() == "Xilinx" ){
 			o << "library UNISIM;" << std::endl;
 			o << "use UNISIM.Vcomponents.all;" << std::endl;
-        }else if(target->getVendor() == "Altera"){
+        }
+        else if(target->getVendor() == "Altera")
+        {
             o << "library wysiwyg;" << std::endl;
             o << "use wysiwyg.";
             if( target->getID() == "CycloneII" ){
@@ -57,13 +59,13 @@ namespace flopoco {
             op->addAdditionalHeaderInformation(o.str());
         }
     }
-
+/*
     void Primitive::checkTargetCompatibility( Target *target ) {
-        if( target->getVendor() != "Xilinx" || target->getID() != "Virtex6" ) {
-            throw std::runtime_error( "This component is only suitable for target Xilinx Virtex6 and above." );
+        if( target->getVendor() != "Xilinx" || !(target->getID() == "Virtex6" || target->getID() == "Zynq7000" || target->getID() == "Kintex7") ) {
+            throw std::runtime_error( "This component is only suitable for target Xilinx Virtex6, Zynq7000 and Kintex7." );
         }
     }
-
+*/
 
     /* The new interface, similar to instance()*/
     string Primitive::primitiveInstance(string instanceName)

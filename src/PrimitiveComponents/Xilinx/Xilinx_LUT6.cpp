@@ -22,24 +22,24 @@ namespace flopoco {
     }
 
 	Xilinx_LUT6::Xilinx_LUT6(Operator *parentOp, Target *target ) : Xilinx_LUT6_base( parentOp, target ) {
-        setNameWithFreqAndUID( "LUT6" );
+		setName( "LUT6" );
         addOutput( "o" );
         vhdl << "o <= i0" << endl;
     }
 
 	Xilinx_LUT6_2::Xilinx_LUT6_2(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
-        setNameWithFreqAndUID( "LUT6_2" );
+		setName( "LUT6_2" );
         addOutput( "o5" );
         addOutput( "o6" );
     }
 
 	Xilinx_LUT6_L::Xilinx_LUT6_L(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
-        setNameWithFreqAndUID( "LUT6_L" );
+		setName( "LUT6_L" );
         addOutput( "lo" );
     }
 
 	Xilinx_LUT6_D::Xilinx_LUT6_D(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {
-        setNameWithFreqAndUID( "LUT6_D" );
+        setName( "LUT6_D" );
         addOutput( "o" );
         addOutput( "lo" );
     }
