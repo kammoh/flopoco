@@ -17,31 +17,29 @@
 using namespace std;
 namespace flopoco {
 
-    Xilinx_TernaryAdd_2State::Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target, const int &wIn, const short &state, const short &state2 )
-        : Operator( parentOp, target ), wIn_(wIn), state_(state),state2_(state2) {
+    Xilinx_TernaryAdd_2State::Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target, const int &wIn, const short &bitmask, const short &bitmask2 )
+        : Operator( parentOp, target ), wIn_(wIn), bitmask_(bitmask),bitmask2_(bitmask2) {
         setCopyrightString( "Marco Kleinlein" );
-        if( state2_ == -1 ) {
-            state2_ = state_;
+        if( bitmask2_ == -1 ) {
+            bitmask2_ = bitmask_;
         }
 
         srcFileName = "Xilinx_TernaryAdd_2State";
         stringstream namestr;
-        namestr << "Xilinx_TernaryAdd_2State_ws" << wIn << "_s" << ( state_ & 0x7 );
+        namestr << "Xilinx_TernaryAdd_2State_ws" << wIn << "_s" << ( bitmask_ & 0x7 );
 
-        if( state2_ != state_ ) {
-            namestr << "_s" << ( state2_ & 0x7 );
+        if( bitmask2_ != bitmask_ ) {
+            namestr << "_s" << ( bitmask2_ & 0x7 );
         }
 
         setNameWithFreqAndUID( namestr.str() );
         string lut_content = computeLUT( );
         setCombinatorial();
-        //addGeneric("input_word_size","integer","10");
-        //addGeneric("use_carry_in","boolean","false");
         addInput( "x_i", wIn );
         addInput( "y_i", wIn );
         addInput( "z_i", wIn );
 
-        if( state_ == state2_ ) {
+        if( bitmask_ == bitmask2_ ) {
             vhdl << declare( "sel_i" ) << " <= '0';" << std::endl;
         } else {
             addInput( "sel_i" );
@@ -137,11 +135,11 @@ namespace flopoco {
 
             for( int j = 0; j < 3; j++ ) {
                 if( i & ( 0x8 ) ) {
-                    if( ( ( state2_ & ( 1 << ( 2 - j ) ) ) && !( i & ( 1 << j ) ) ) || ( !( state2_ & ( 1 << ( 2 - j ) ) ) && ( i & ( 1 << j ) ) ) ) {
+                    if( ( ( bitmask2_ & ( 1 << ( 2 - j ) ) ) && !( i & ( 1 << j ) ) ) || ( !( bitmask2_ & ( 1 << ( 2 - j ) ) ) && ( i & ( 1 << j ) ) ) ) {
                         s++;
                     }
                 } else {
-                    if( ( ( state_ & ( 1 << ( 2 - j ) ) ) && !( i & ( 1 << j ) ) ) || ( !( state_ & ( 1 << ( 2 - j ) ) ) && ( i & ( 1 << j ) ) ) ) {
+                    if( ( ( bitmask_ & ( 1 << ( 2 - j ) ) ) && !( i & ( 1 << j ) ) ) || ( !( bitmask_ & ( 1 << ( 2 - j ) ) ) && ( i & ( 1 << j ) ) ) ) {
                         s++;
                     }
                 }
@@ -181,28 +179,26 @@ namespace flopoco {
         }
 
         lut_init lut_add3( add_o5_co, add_o6_so );
-        //cerr << "Lut for {" << state << "," << state2 << "} is " << lut_add3.get_hex() << endl;
-        //cerr << lut_add3.truth_table() << endl << endl;
         return lut_add3.get_hex();
     }
 
     void Xilinx_TernaryAdd_2State::insertCarryInit() {
-        int state_ccount = 0, state2_ccount = 0;
+        int bitmask_ccount = 0, bitmask2_ccount = 0;
 
         for( int i = 0; i < 3; i++ ) {
-            if( state_ & ( 1 << i ) ) {
-                state_ccount++;
+            if( bitmask_ & ( 1 << i ) ) {
+                bitmask_ccount++;
             }
 
-            if( state2_ & ( 1 << i ) ) {
-                state2_ccount++;
+            if( bitmask2_ & ( 1 << i ) ) {
+                bitmask2_ccount++;
             }
         }
 
         string carry_cct, bbus;
 
-        if( abs( state_ccount - state2_ccount ) == 0 ) {
-            switch( state2_ccount ) {
+        if( abs( bitmask_ccount - bitmask2_ccount ) == 0 ) {
+            switch( bitmask2_ccount ) {
                 case 0:
                     carry_cct = "'0'";
                     bbus = "'0'";
@@ -218,24 +214,24 @@ namespace flopoco {
                     bbus = "'1'";
                     break;
             }
-        } else if( abs( state_ccount - state2_ccount ) == 1 ) {
-            if( state_ccount == 1 ) {
-                if( state2_ccount == 2 ) {
+        } else if( abs( bitmask_ccount - bitmask2_ccount ) == 1 ) {
+            if( bitmask_ccount == 1 ) {
+                if( bitmask2_ccount == 2 ) {
                     carry_cct = "'1'";
                     bbus = "sel_i";
                 } else {
                     carry_cct = "'0'";
                     bbus = "not sel_i";
                 }
-            } else if( state_ccount == 0 ) {
+            } else if( bitmask_ccount == 0 ) {
                 carry_cct = "'0'";
                 bbus = "sel_i";
             } else {
                 carry_cct = "'1'";
                 bbus = "not sel_i";
             }
-        } else if( abs( state_ccount - state2_ccount ) == 2 ) {
-            if( state_ccount == 0 ) {
+        } else if( abs( bitmask_ccount - bitmask2_ccount ) == 2 ) {
+            if( bitmask_ccount == 0 ) {
                 carry_cct = "sel_i";
                 bbus = "sel_i";
             } else {
@@ -253,16 +249,16 @@ namespace flopoco {
     }
 
     void Xilinx_TernaryAdd_2State::computeState() {
-        if( state_ == state2_ ) {
-            state2_ = -1;
+        if( bitmask_ == bitmask2_ ) {
+            bitmask2_ = -1;
         }
 
-        short states[] = {state_, state2_};
+        short states[] = {bitmask_, bitmask2_};
         bool lock[] = {false, false, false};
         stringstream debug;
         int k_max = 2;
 
-        if( state2_ == -1 ) {
+        if( bitmask2_ == -1 ) {
             k_max = 1;
         }
 
@@ -296,7 +292,7 @@ namespace flopoco {
             }
         }
 
-        debug << "Ternary_2State with states {" << state_ << "," << state2_ << "}" << endl;
+        debug << "Ternary_2State with states {" << bitmask_ << "," << bitmask2_ << "}" << endl;
         short states_postmap[] = {0, 0};
 
         for( int k = 0; k < k_max; k++ ) {
@@ -307,7 +303,7 @@ namespace flopoco {
             }
         }
 
-        if( state2_ == -1 ) {
+        if( bitmask2_ == -1 ) {
             states_postmap[1] = -1;
         } else {
             if( ( states_postmap[0] & 0x6 ) == 6 && ( states_postmap[1] & 0x6 ) == 2 ) {
@@ -363,7 +359,7 @@ namespace flopoco {
         //cerr << debug.str();
         REPORT( DEBUG, debug.str() );
 
-        if( state_ > 0 && state_type == 0 ) {
+        if( bitmask_ > 0 && state_type == 0 ) {
             throw "2State type not valid";
         }
         
@@ -373,11 +369,11 @@ namespace flopoco {
 			throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
 		int wIn;
-		int mode,mode2;
+		int bitmask,bitmask2;
 		UserInterface::parseInt(args,"wIn",&wIn );
-		UserInterface::parseInt(args,"mode",&mode);
-		UserInterface::parseInt(args,"mode2",&mode2);
-		return new Xilinx_TernaryAdd_2State(parentOp,target,wIn,mode,mode2);
+		UserInterface::parseInt(args,"bitmask",&bitmask);
+		UserInterface::parseInt(args,"bitmask2",&bitmask2);
+		return new Xilinx_TernaryAdd_2State(parentOp,target,wIn,bitmask,bitmask2);
 	}
 
 	void Xilinx_TernaryAdd_2State::registerFactory(){
@@ -386,8 +382,8 @@ namespace flopoco {
                              "Primitives", // category, from the list defined in UserInterface.cpp
                              "",
                              "wIn(int): The wordsize of the adder; \
-                             mode(int)=0: First bitmask for input negation; \
-                             mode2(int)=-1: Second bitmask for configurable input negation;",
+                             bitmask(int)=0: First bitmask for input negation; \
+                             bitmask2(int)=-1: Second bitmask for configurable input negation;",
                              "",
                              Xilinx_TernaryAdd_2State::parseArguments,
 							 Xilinx_TernaryAdd_2State::unitTest
@@ -400,14 +396,14 @@ namespace flopoco {
 		mpz_class z = tc->getInputValue("z_i");
 		mpz_class s = 0;
 		mpz_class sel = 0;
-		if( state_ != state2_  ){
+		if( bitmask_ != bitmask2_  ){
 			sel = tc->getInputValue("sel_i");
 		}
 		short signs = 0;
 		if(sel==0){
-			signs = state_;
+			signs = bitmask_;
 		}else{
-			signs = state2_;
+			signs = bitmask2_;
 		}
 
 		if(0x1&signs)
