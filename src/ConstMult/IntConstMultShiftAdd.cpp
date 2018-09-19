@@ -42,7 +42,7 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, i
     syncMux=syncMux_;
 
     ostringstream name;
-    name << "PipelinedFlexibleMultiplication_" << wIn;
+    name << "IntConstMultShiftAdd_" << wIn;
     setName(name.str());
 
     if(pipelined_realization_str.empty()) return; //in case the realization string is not defined, don't further process it.
@@ -569,8 +569,7 @@ void IntConstMultShiftAdd::emulate(TestCase * tc)
 
     for(list<output_signal_info>::iterator out_it= output_signals.begin();out_it!=output_signals.end();++out_it  )
     {
-        REPORT( INFO, "testing: ")
-                expectedResult = 0;
+		expectedResult = 0;
         stringstream comment;
         for(int i=0; i < noOfInputs; i++)
         {
