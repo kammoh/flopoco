@@ -28,8 +28,8 @@ using namespace std;
 
 namespace flopoco{
 
-	LZOC::LZOC(Target* target, int wIn) :
-		Operator(target), wIn_(wIn) {
+	LZOC::LZOC(OperatorPtr parentOp, Target* target, int wIn) :
+			Operator( parentOp, target), wIn_(wIn) {
 		ostringstream currLevel, currDigit, nextLevel;
 
 		srcFileName = "LZOC";
@@ -55,7 +55,7 @@ namespace flopoco{
 		else padStr << "& ("<<intpow2(wOut_)-wIn_-1 << " downto 0 => not(sozb))";
 
 		vhdl << tab << declare(currLevel.str(),intpow2(wOut_)) << "<= I" << padStr.str() <<";"<<endl; //zero padding if necessary
-		//each operation is formed of a comparisson folloewd by a multiplexing
+		//each operation is formed of a comparisson followed by a multiplexing
 
 		for (int i=wOut_;i>=1;i--){
 			currDigit.str(""); currDigit << "digit" << i ;
@@ -68,7 +68,7 @@ namespace flopoco{
 				  << " else '0';"<<endl;
 
 			if (i>1){
-				double levelDelay =  getTarget()->lutDelay();
+				double levelDelay =  getTarget()->logicDelay(6);
 				vhdl << tab << declare(levelDelay, nextLevel.str(),intpow2(i-1)) << "<= "<<currLevel.str() << "("<<intpow2(i-1)-1<<" downto 0) when " << currDigit.str()<<"='1' "
 					  <<"else "<<currLevel.str()<<"("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<");"<<endl;
 			}
@@ -113,7 +113,7 @@ namespace flopoco{
 	OperatorPtr LZOC::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-		return new LZOC(target, wIn);
+		return new LZOC(parentOp, target, wIn);
 	}
 
 
