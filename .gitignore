@@ -14,6 +14,7 @@ cmake_install.cmake
 flopoco
 flopoco.o
 flopoco.vhdl
+flopoco.dot
 flopoco_soaktest
 fp2bin
 longacc2fp

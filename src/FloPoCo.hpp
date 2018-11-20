@@ -44,8 +44,8 @@
 /* shifters + lzoc ------------------------------------------- */
 #include "ShiftersEtc/Shifters.hpp"
 #include "ShiftersEtc/LZOC.hpp"
+#include "ShiftersEtc/LZOC3.hpp"
 #include "ShiftersEtc/LZOCShifterSticky.hpp"
-
 
 /* FixFilters ------------------------------------------------ */
 #include "FixFilters/FixSOPC.hpp"
