@@ -75,20 +75,6 @@ namespace flopoco{
 
 
 
-	mpz_class IEEENumber::getMantissaSignalValue()
-	{
-		return mantissa;
-	}
-
-	mpz_class IEEENumber::getSignSignalValue() { 
-		return sign; 
-	}
-
-	mpz_class IEEENumber::getExponentSignalValue()
-	{
-		return exponent;
-	}
-
 
 
 	mpz_class IEEENumber::getSignalValue()
