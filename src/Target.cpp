@@ -80,6 +80,11 @@ namespace flopoco{
 		return lutInputs_;
 	}
 
+	int Target::maxLutInputs() {
+		// Default behavior : return the basic lut size
+		return lutInputs_;
+	}
+
 	double Target::frequency(){
 		return frequency_;
 	}

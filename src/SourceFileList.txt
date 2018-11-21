@@ -34,6 +34,7 @@ BitHeap/MaxEfficiencyCompressionStrategy
 BitHeap/OptimalCompressionStrategy
 TutorialOperator
 ShiftersEtc/LZOC
+ShiftersEtc/LZOC3
 ShiftersEtc/LZOCShifterSticky
 ShiftersEtc/Shifters
 ShiftReg

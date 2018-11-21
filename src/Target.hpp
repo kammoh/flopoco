@@ -149,10 +149,19 @@ namespace flopoco{
         /** should target specific optimizations be performed */
         void  setUseTargetOptimizations(bool b);
 
-		/** Returns the number of inputs that the LUTs have on the specific device
-		 * @return the number of inputs for the look-up tables (LUTs) of the device
-		 */
+		/** On LUT-based FPGAs, number of inputs of the basic architectural LUT.
+		  * Look-up tables with lutInput() input bits can be used independently
+		  * without constraint. When the architecture of a logic bloc allows to
+		  * combine several basic LUTs into larger ones, see maxLutInputs()
+		  */
 		int lutInputs();
+
+		/**On LUT-based FPGAs, this is the maximum value of n such that an n-bit
+		 * in, 1-bit out look-up-table can be implemented without resorting to
+		 * general routing. See the documentation of this method in each each
+		 * specific Target for more information
+		 */
+		virtual int maxLutInputs();
 
 
 		/* -------------------- Perf declaration methods  ------------------------

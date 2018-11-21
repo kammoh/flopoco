@@ -6,6 +6,7 @@ Compressor
 BitheapTest
 Shifter
 LZOC
+LZOC3
 LZOCShifterSticky
 ShiftReg
 IntAdder

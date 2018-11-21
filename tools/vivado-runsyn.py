@@ -6,6 +6,7 @@
 ## All rights reserved
 ################################################################################
 
+from __future__ import print_function
 import os
 import sys
 import re
@@ -13,7 +14,7 @@ import string
 import argparse
 
 def report(text):
-    print "vivado_runsyn: " + text
+    print("vivado_runsyn: ", text)
 
     
 def get_compile_info(filename):
