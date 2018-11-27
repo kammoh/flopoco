@@ -49,8 +49,6 @@ namespace flopoco{
 		 */
 		IEEENumber(int wE, int wF, mpfr_t m);
 
-
-
 		/**
 		 * Converts the currently stored IEEENumber to an mpfr_t
 		 * @param[out] m a preinitialized mpfr_t where to store the floating point

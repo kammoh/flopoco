@@ -19,6 +19,7 @@ AutoTest/AutoTest
 TestBenches/TestCase
 TestBenches/FPNumber
 TestBenches/IEEENumber
+TestBenches/PositNumber
 TestBenches/Wrapper
 TestBenches/TestBench
 BitHeap/Bit

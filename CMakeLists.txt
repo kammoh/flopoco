@@ -465,3 +465,31 @@ TARGET_LINK_LIBRARIES(fftest ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 #add_subdirectory(src/random)
 #target_link_libraries(FloPoCoLib flopoco_random_lib)
+
+OPTION(BUILD_UNIT_TEST "Build the flopoco unit tests") 
+if(BUILD_UNIT_TEST)
+	find_package(Boost 1.55 REQUIRED COMPONENTS unit_test_framework)
+	enable_testing()
+	add_executable(NumberFormatTest_exe tests/TestBenches/PositNumber.cpp)		
+	target_include_directories(NumberFormatTest_exe PUBLIC ${Boost_INCLUDE_DIR}) 
+	target_link_libraries(NumberFormatTest_exe FloPoCoLib ${Boost_LIBRARIES})
+
+	find_library(SOFTPOSIT_LIB softposit)
+	find_path(SOFTPOSIT_H softposit.h)
+
+	if(SOFTPOSIT_LIB AND SOFTPOSIT_H)
+		MESSAGE(STATUS "softposit found : ${SOFTPOSIT_LIB}, ${SOFTPOSIT_H}")
+		OPTION(POSIT32_TEST "Exhaustive test of conversion from and back posit32
+		(long)")
+		target_compile_definitions(NumberFormatTest_exe PRIVATE SOFTPOSIT)
+		if(POSIT32_TEST)
+			target_compile_definitions(NumberFormatTest_exe PRIVATE POSIT32TEST)
+		endif()
+		target_link_libraries(NumberFormatTest_exe ${SOFTPOSIT_LIB})
+		target_include_directories(NumberFormatTest_exe PRIVATE ${SOFTPOSIT_H})
+	else()
+		Message(WARNING "Softposit not found, will not check if mpfr conversion from value is correct")
+	endif()
+
+	add_test(NumberFormatTest NumberFormatTest_exe)
+endif()
