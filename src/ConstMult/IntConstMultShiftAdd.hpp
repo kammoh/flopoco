@@ -6,7 +6,7 @@
 #ifdef HAVE_PAGSUITE
 
 #include "utils.hpp"
-#include "pag_lib/adder_graph.h"
+#include "paglib/adder_graph.h"
 #include "IntConstMultShiftAddTypes.hpp"
 
 using namespace std;

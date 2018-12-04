@@ -160,14 +160,16 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 
 //    setCopyrightString(UniKs::getAuthorsString(UniKs::AUTHOR_MKLEINLEIN|UniKs::AUTHOR_MKUMM|UniKs::AUTHOR_KMOELLER));
 
+    pipelined_adder_graph.quiet = true; //disable debug output, except errors
     REPORT( INFO, "parse graph...")
             validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str,false);
 
     if(validParse)
     {
         REPORT( INFO,  "check graph...")
-                pipelined_adder_graph.check_and_correct(pipelined_realization_str);
-        pipelined_adder_graph.drawdot("pag_input_graph.dot",true);
+		pipelined_adder_graph.check_and_correct(pipelined_realization_str);
+		pipelined_adder_graph.print_graph();
+        pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
         noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
