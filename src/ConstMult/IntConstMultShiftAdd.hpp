@@ -3,7 +3,7 @@
 
 #include "Operator.hpp"
 
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 
 #include "utils.hpp"
 #include "paglib/adder_graph.h"
@@ -70,7 +70,7 @@ namespace flopoco {
      string getBinary(int value, int wordsize);
 
 
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
  };
 }//namespace
 #endif

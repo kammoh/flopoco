@@ -1,7 +1,7 @@
 // general c++ library for manipulating streams
 #include "IntConstMultShiftAdd.hpp"
 
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -1188,6 +1188,6 @@ namespace flopoco {
                           "",
                           IntConstMultShiftAdd::parseArguments
       );
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
     }
 }//namespace
