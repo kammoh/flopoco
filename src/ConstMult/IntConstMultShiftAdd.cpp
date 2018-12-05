@@ -1168,13 +1168,13 @@ OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, 
 
 
 }//namespace
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
 
 
 namespace flopoco {
     void flopoco::IntConstMultShiftAdd::registerFactory()
     {
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
       UserInterface::add( "IntConstMultShiftAdd", // name
                           "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
                           "BasicInteger", // category, from the list defined in UserInterface.cpp
