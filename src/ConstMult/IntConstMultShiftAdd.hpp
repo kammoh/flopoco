@@ -11,10 +11,10 @@
 
 using namespace std;
 
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
 namespace flopoco {
   class IntConstMultShiftAdd : public Operator {
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
     public:
      static ostream nostream;
      int noOfPipelineStages;
