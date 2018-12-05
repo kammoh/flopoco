@@ -5,9 +5,9 @@
  *  Datum: 20.11.2014
  */
 
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 
-#include "pag_lib/adder_graph.h"
+#include "paglib/adder_graph.h"
 #include "utils.hpp"
 #include "Target.hpp"
 #include "Operator.hpp"
@@ -204,5 +204,5 @@ public:
     string get_name(){return "MUX";}
 };
 }
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
 #endif

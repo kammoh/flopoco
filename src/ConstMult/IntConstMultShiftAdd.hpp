@@ -34,9 +34,9 @@ namespace flopoco {
 
      static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
 
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
      static void registerFactory();
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 
   protected:
      int wIn;

@@ -2,7 +2,7 @@
  *  Version:
  *  Datum: 20.11.2014
  */
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 #include "IntConstMultShiftAddTypes.hpp"
 
 //#include "FloPoCo.hpp"
