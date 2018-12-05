@@ -186,6 +186,12 @@ FIND_LIBRARY(SCALP_LIB
   HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP main library")
 
+IF (SCALP_H AND SCALP_LIB)
+  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
+	ELSE(SCALP_H AND SCALP_LIB)
+  MESSAGE(STATUS "SCALP not found (used for advanced bit heap compression and large multipliers) download and compile it from https://digidev.digi.e-technik.uni-kassel.de/scalp/")
+ENDIF(SCALP_H AND SCALP_LIB)
+
 FIND_LIBRARY(SCALP_CPLEX_LIB
   NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
   HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
@@ -210,6 +216,7 @@ IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP
   SET(SCALP_FOUND TRUE)
 ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
 
+
 IF (SCALP_FOUND)
   ADD_DEFINITIONS(-DHAVE_SCALP)
   set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
@@ -228,10 +235,9 @@ IF (SCALP_FOUND)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
   ENDIF (SCALP_LPSOLVE_LIB)
   
-  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
-  MESSAGE(STATUS "      Using the following ILP solver libraries: ${SCALP_LIBS}")  
+  MESSAGE(STATUS "  ScaLP will be using the following ILP solver libraries: ${SCALP_LIBS}")  
 ELSE (SCALP_FOUND)
-  MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (found: ${SCALP_H},${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
+  MESSAGE(STATUS "No ILP solver available, SCALP needs one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
 ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
