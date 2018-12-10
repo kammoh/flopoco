@@ -147,6 +147,7 @@
 //#include "ExpLog/FPPow.hpp"
 
 
+#include "Conversions/Posit2FP.hpp"
 //#include "Conversions/Fix2FP.hpp"
 //#include "Conversions/FP2Fix.hpp"
 //#include "Conversions/InputIEEE.hpp"

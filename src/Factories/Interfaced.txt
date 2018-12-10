@@ -29,6 +29,7 @@ FPDiv
 FixSOPC
 FixFIR
 FixIIR
+Posit2FP
 Xilinx_GenericAddSub
 Xilinx_Comparator
 Xilinx_TernaryAdd_2State

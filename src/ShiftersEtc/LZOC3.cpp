@@ -385,7 +385,7 @@ namespace flopoco{
 		bool useMaxLut;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		UserInterface::parseBoolean(args, "useLargeLut", &useMaxLut);
-		return new LZOC3(nullptr, target, wIn, useMaxLut);
+		return new LZOC3(parentOp, target, wIn, useMaxLut);
 	}
 
 	void LZOC3::registerFactory(){

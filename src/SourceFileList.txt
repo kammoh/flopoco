@@ -68,6 +68,7 @@ IntMult/BaseMultiplierDSPSuperTilesXilinx
 IntMult/BaseMultiplierLUT
 IntMult/IntKaratsubaRectangular
 Complex/FixComplexKCM
+Conversions/Posit2FP
 FPAddSub/FPAdd
 FPAddSub/FPAddDualPath
 FPAddSub/FPAddSinglePath

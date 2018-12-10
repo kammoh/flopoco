@@ -422,7 +422,6 @@ namespace flopoco
 			}
 
 			for (auto opParams: operatorSpecs) {
-
 				string opName = opParams[0];  // operator Name
 				// remove the generic options
 				parseGenericOptions(opParams);
