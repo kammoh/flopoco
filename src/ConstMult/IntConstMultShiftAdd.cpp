@@ -1,7 +1,7 @@
 // general c++ library for manipulating streams
 #include "IntConstMultShiftAdd.hpp"
 
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -160,14 +160,16 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 
 //    setCopyrightString(UniKs::getAuthorsString(UniKs::AUTHOR_MKLEINLEIN|UniKs::AUTHOR_MKUMM|UniKs::AUTHOR_KMOELLER));
 
+    pipelined_adder_graph.quiet = true; //disable debug output, except errors
     REPORT( INFO, "parse graph...")
             validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str,false);
 
     if(validParse)
     {
         REPORT( INFO,  "check graph...")
-                pipelined_adder_graph.check_and_correct(pipelined_realization_str);
-        pipelined_adder_graph.drawdot("pag_input_graph.dot",true);
+		pipelined_adder_graph.check_and_correct(pipelined_realization_str);
+		pipelined_adder_graph.print_graph();
+        pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
         noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
@@ -1166,13 +1168,13 @@ OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, 
 
 
 }//namespace
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
 
 
 namespace flopoco {
     void flopoco::IntConstMultShiftAdd::registerFactory()
     {
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
       UserInterface::add( "IntConstMultShiftAdd", // name
                           "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
                           "BasicInteger", // category, from the list defined in UserInterface.cpp
@@ -1186,6 +1188,6 @@ namespace flopoco {
                           "",
                           IntConstMultShiftAdd::parseArguments
       );
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
     }
 }//namespace

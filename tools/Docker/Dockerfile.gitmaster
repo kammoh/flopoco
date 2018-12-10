@@ -1,0 +1,13 @@
+FROM debian
+RUN apt-get update -y && apt-get install -y git cmake sollya wget g++ libsollya-dev flex bison libboost-dev \
+  && git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git \
+	&& cd flopoco/ \
+	&& cmake . \
+	&& make -j4 \
+	&& ./flopoco BuildHTMLDoc
+
+ENTRYPOINT ["/flopoco/flopoco"]
+
+VOLUME ["/flopoco_workspace"]
+
+WORKDIR /flopoco_workspace

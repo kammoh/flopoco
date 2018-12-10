@@ -3,10 +3,11 @@ This directory contains classes used for the implementation of multipliers by co
 
 There are two main algorithms. 
 
-The KCM algorithm (I am unable to explain what the K stands for) uses LUTs to store sub-products.  The *KCM* classes implement the table-based KCM method.
+The KCM algorithm (this stands for Ken Chapman Multipliers, long life to him) uses LUTs to store sub-products.  The *KCM* classes implement the table-based KCM method.
 
-Shift-and-add multipliers express an integer multiplier as a sequence of shift-and-add operations. 
+Shift-and-add multipliers express an integer multiplier as a sequence of shift-and-add operations. There are currently two implementations
 
+-- The obsolete implementation,
 The class ShiftAddOp defines such an operation.
 The class ShiftAddDag defines a directed acyclic graph (DAG) of such operations.
 The class IntConstMult builds such a DAG for integer multiplication. It inherits Operator.

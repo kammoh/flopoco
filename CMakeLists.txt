@@ -178,37 +178,44 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
   ScaLP/Solver.h
-  HINTS "/usr/local/include/" "~/.local/include"
+  HINTS "/usr/local/include/" "~/.local/include" "${SCALP_PREFIX_DIR}/include/" 
   DOC "Path of main header of scalp"
   )
 FIND_LIBRARY(SCALP_LIB
-  NAMES libScaLP libScaLP.so  libScaLP.dylib
-  HINTS "/usr/local/lib64/" "~/.local/lib/"
+  NAMES libScaLP.dylib libScaLP libScaLP.so  
+  HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP main library")
+
+IF (SCALP_H AND SCALP_LIB)
+  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
+	ELSE(SCALP_H AND SCALP_LIB)
+  MESSAGE(STATUS "SCALP not found (used for advanced bit heap compression and large multipliers) download and compile it from https://digidev.digi.e-technik.uni-kassel.de/scalp/")
+ENDIF(SCALP_H AND SCALP_LIB)
 
 FIND_LIBRARY(SCALP_CPLEX_LIB
   NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for cplex solver backend")
 
 FIND_LIBRARY(SCALP_GUROBI_LIB
   NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for Gurobi solver backend")
 
 FIND_LIBRARY(SCALP_SCIP_LIB
   NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for SCIP solver backend")
 
 FIND_LIBRARY(SCALP_LPSOLVE_LIB
   NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSOLVE.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for LPSOLVE solver backend")
 
 IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
   SET(SCALP_FOUND TRUE)
 ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
+
 
 IF (SCALP_FOUND)
   ADD_DEFINITIONS(-DHAVE_SCALP)
@@ -228,10 +235,9 @@ IF (SCALP_FOUND)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
   ENDIF (SCALP_LPSOLVE_LIB)
   
-  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
-  MESSAGE(STATUS "      Using the following ILP solver libraries: ${SCALP_LIBS}")  
+  MESSAGE(STATUS "  ScaLP will be using the following ILP solver libraries: ${SCALP_LIBS}")  
 ELSE (SCALP_FOUND)
-  MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (found: ${SCALP_H},${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
+  MESSAGE(STATUS "No ILP solver available, SCALP needs one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
 ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
@@ -248,10 +254,11 @@ ELSE( RPAG_LIB AND RPAG_INCLUDE_DIR)
     Message(STATUS "Could not find rpag (RPAG_LIB=${RPAG_LIB}, RPAG_INCLUDE_DIR=${RPAG_INCLUDE_DIR})")
 ENDIF(RPAG_LIB AND RPAG_INCLUDE_DIR )
 
-FIND_LIBRARY( PAGLIB_LIB NAMES pag_lib )
-FIND_PATH( PAGLIB_INCLUDE_DIR NAMES pag_lib/adder_graph.h )
+FIND_LIBRARY( PAGLIB_LIB NAMES pag )
+FIND_PATH( PAGLIB_INCLUDE_DIR NAMES paglib/adder_graph.h )
 IF( PAGLIB_LIB AND PAGLIB_INCLUDE_DIR )
     SET(PAGLIB_FOUND true)
+    ADD_DEFINITIONS(-DHAVE_PAGLIB)
     Message(STATUS "Found paglib: ${PAGLIB_LIB} (${PAGLIB_INCLUDE_DIR})")
     mark_as_advanced( PAGLIB_FOUND PAGLIB_LIB PAGLIB_INCLUDE_DIR )
 ELSE( PAGLIB_LIB AND PAGLIB_INCLUDE_DIR )
@@ -417,6 +424,13 @@ IF (SCALP_FOUND)
     INCLUDE_DIRECTORIES(${SCALP_H})
 ENDIF (SCALP_FOUND)
 
+IF (PAGLIB_FOUND)
+    TARGET_LINK_LIBRARIES(
+            FloPoCoLib
+            ${PAGLIB_LIB}
+    )
+    INCLUDE_DIRECTORIES(${PAGLIB_INCLUDE_DIR})
+ENDIF (PAGLIB_FOUND)
 
 IF (PAGSUITE_FOUND)
     TARGET_LINK_LIBRARIES(

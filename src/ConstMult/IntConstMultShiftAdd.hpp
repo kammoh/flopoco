@@ -3,18 +3,18 @@
 
 #include "Operator.hpp"
 
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 
 #include "utils.hpp"
-#include "pag_lib/adder_graph.h"
+#include "paglib/adder_graph.h"
 #include "IntConstMultShiftAddTypes.hpp"
 
 using namespace std;
 
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
 namespace flopoco {
   class IntConstMultShiftAdd : public Operator {
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
     public:
      static ostream nostream;
      int noOfPipelineStages;
@@ -34,9 +34,9 @@ namespace flopoco {
 
      static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
 
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
      static void registerFactory();
-#ifdef HAVE_PAGSUITE
+#ifdef HAVE_PAGLIB
 
   protected:
      int wIn;
@@ -70,7 +70,7 @@ namespace flopoco {
      string getBinary(int value, int wordsize);
 
 
-#endif // HAVE_PAGSUITE
+#endif // HAVE_PAGLIB
  };
 }//namespace
 #endif
