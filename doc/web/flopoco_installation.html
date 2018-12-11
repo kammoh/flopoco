@@ -34,13 +34,18 @@
 	<li> Download and compile FloPoCo and its dependencies by the following command:
 	<p><kbd>
     docker build -t flopoco -f Dockerfile.4.1.2 .
-		</kbd></p>
+	</kbd></p>
+	(replace Dockerfile.4.1.2 with the one you selected)
 	</li> 
 	<li> The following command sets up a convenient alias (in linux)
 	<p><kbd>
     alias flopoco="docker run --rm=true -v $PWD:/flopoco_workspace flopoco"
-		</kbd></p>
-	</li> 
+	</kbd></p>
+	Now if you type for instance 
+	<p><kbd>
+    flopoco FPAdd we=8 wf=23
+	</kbd></p>	</li>
+	you will obtain a flopoco.vhdl file containing a single-precision floating-point adder.
 	<li> If your terminal is Bash, the following command will help you get autocompletion for the FloPoCo operators and their arguments:
 	<p><kbd>
     flopoco BuildAutocomplete
@@ -53,6 +58,26 @@
 <h2><a name="linux">Installation in Ubuntu and other Debian derivative</a></h2>
 
 Simply look at the DockerFile and run the same commands in a terminal.
+
+You should arrive at something like this (to copy in a dash/bash shell, and enter your password when prompted):
+
+
+<h4>Version 4.1.2, the last one with the old pipelining framework</h4>
+
+<p><kbd>yes | sudo apt-get install g++ libgmp3-dev libmpfr-dev libfplll-dev libxml2-dev bison libmpfi-dev flex cmake libboost-all-dev libgsl0-dev && wget https://gforge.inria.fr/frs/download.php/33151/sollya-4.1.tar.gz   && tar xzf sollya-4.1.tar.gz && cd sollya-4.1/   && ./configure && make -j4  && sudo make install   && cd .. && wget   https://gforge.inria.fr/frs/download.php/file/37213/flopoco-4.1.2.tgz   && tar xzf flopoco-4.1.2.tgz && cd flopoco-4.1.2/  && cmake . && make -j4  && ./flopoco &&  ./flopoco BuildHTMLDoc </kbd></p>
+
+<p>In addition, enable bash autocompletion by typing <kbd>./flopoco BuildAutocomplete</kbd> and following the instructions</p>
+
+
+
+<h4>Version 2.5.0, the last version before the transition to Sollya4 broke everything that bit heaps had not yet broken</h4>
+<p><kbd>yes | sudo apt-get install g++ libgmp3-dev libmpfr-dev libxml2-dev bison libmpfi-dev flex cmake libboost-all-dev libgsl0-dev && wget https://gforge.inria.fr/frs/download.php/file/34429/libfplll-3.0.12.tar.gz && tar xzf libfplll-3.0.12.tar.gz && cd libfplll-3.0.12/ && ./configure && make -j2  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/28571/sollya-3.0.tar.gz && tar xzf sollya-3.0.tar.gz && cd sollya-3.0/ && ./configure && make -j4  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/file/32591/flopoco-2.5.0.tgz  && tar xzf flopoco-2.5.0.tgz && cd flopoco-2.5.0/ && cmake . && make -j4  && ./flopoco</kbd></p>
+
+<h4>Version 2.3.2, the last version before the Great Leader embarked the project in the bit heap hazardous adventure</h4>
+<p><kbd>yes | sudo apt-get install g++ libgmp3-dev libmpfr-dev libxml2-dev bison libmpfi-dev flex cmake libboost-all-dev libgsl0-dev && wget https://gforge.inria.fr/frs/download.php/file/34429/libfplll-3.0.12.tar.gz && tar xzf libfplll-3.0.12.tar.gz && cd libfplll-3.0.12/ && ./configure && make -j2  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/28571/sollya-3.0.tar.gz && tar xzf sollya-3.0.tar.gz && cd sollya-3.0/ && ./configure && make -j4  && sudo make install && cd .. && wget https://gforge.inria.fr/frs/download.php/file/35206/flopoco-2.3.2.tgz  && tar xzf flopoco-2.3.2.tgz && cd flopoco-2.3.2/ && cmake . && make -j4  && ./flopoco</kbd></p>
+
+<h4>Older versions may include operators that have later been deprecated. Look up the <a href="https://gforge.inria.fr/scm/?group_id=1030">source code repository</a></h4>
+
 
 
 <hr/>
