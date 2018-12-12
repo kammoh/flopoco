@@ -57,10 +57,15 @@
 <hr/>
 <h2><a name="linux">Installation in Ubuntu and other Debian derivative</a></h2>
 
-Simply look at the DockerFile and run the same commands in a terminal.
+For Debian/Ubuntu, simply look at the DockerFile and run the same commands in a terminal.  If your distribution is not Debian based, you will have to install dependencies using your distribution's package manager.
 
-You should arrive at something like this (to copy in a dash/bash shell, and enter your password when prompted):
 
+Version 5.0 and later (including the git master) depend on <a href="https://digidev.digi.e-technik.uni-kassel.de/scalp/">ScaLP</a> which provides a uniform interface to several ILP solver.
+The instructions provided in the Dockerfiles build ScaLP with the LPSolve back-end, which is the only backend for which installation can be fully automated.
+Better results may be obtained using other backends: SCIP, Gurobi (both freely available for academic purpose) or CPlex.
+You are therefore encouraged to download one of these, install it, then recompile ScaLP (adding the relevant arguments to its cmake command), then FloPoCo.
+
+The following are one-line instructions installations for older FloPoCo versions (copy in a dash/bash shell, and enter your password when prompted).
 
 <h4>Version 4.1.2, the last one with the old pipelining framework</h4>
 
