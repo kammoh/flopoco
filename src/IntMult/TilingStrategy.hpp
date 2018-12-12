@@ -10,8 +10,8 @@ namespace flopoco {
 class TilingStrategy {
 
 public:
-	typedef pair<unsigned int, unsigned int> multiplier_op_size_t;
-	typedef pair<base_multiplier_id_t, multiplier_op_size_t> mult_tile_t;
+	typedef pair<int, int> multiplier_coordinates_t;
+	typedef pair<base_multiplier_id_t, multiplier_coordinates_t> mult_tile_t;
 	TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection* baseMultiplierCollection);
 
 	virtual void solve() = 0;

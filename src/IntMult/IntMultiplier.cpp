@@ -25,8 +25,8 @@
 #include "IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "BaseMultiplierCollection.hpp"
-
 #include "TilingStrategyOptimalILP.hpp"
+#include "TilingStrategyBasicTiling.hpp"
 
 using namespace std;
 
@@ -56,7 +56,7 @@ namespace flopoco {
         // Set up the IO signals
         addInput(xname, wX, true);
         addInput(yname, wY, true);
-        addOutput("R", wOut, 2 , true);
+        addOutput("R", wOut, 2, true);
 
 		// The larger of the two inputs
 		vhdl << tab << declare(addUID("XX"), wX, true) << " <= " << xname << " ;" << endl;
@@ -79,19 +79,25 @@ namespace flopoco {
 		BaseMultiplierCollection baseMultiplierCollection(getTarget(), wX, wY);
 
 		REPORT(DEBUG, "Creating TilingStrategy");
-		TilingStrategyOptimalILP tilingStrategy = TilingStrategyOptimalILP(wX, wY, wOut, signedIO, &baseMultiplierCollection);
+		TilingStrategyBasicTiling tilingStrategy(
+				wX, 
+				wY, 
+				wOut,
+				signedIO, 
+				&baseMultiplierCollection,
+				baseMultiplierCollection.getPreferedMultiplier()
+			);
 
 		REPORT(DEBUG, "Solving tiling problem");
 		tilingStrategy.solve();
 
-		list<pair< unsigned int, pair<unsigned int, unsigned int> > > &solution = tilingStrategy.getSolution();
+		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
 
 		unsigned int posInList = 0;    //needed as id to differ between inputvectors
         unsigned int totalOffset = 0; //!!! multiplierSolutionParser->getOffset();
 
-
-        for(list<pair< unsigned int, pair<unsigned int, unsigned int> > >::iterator it = solution.begin(); it != solution.end(); it++){
-            unsigned int type = (*it).first;
+        for(auto it = solution.begin(); it != solution.end(); it++){
+            base_multiplier_id_t type = (*it).first;
             unsigned int xPos = (*it).second.first;
             unsigned int yPos = (*it).second.second;
 
@@ -103,8 +109,6 @@ namespace flopoco {
 
             //unsigned int outputLength = getOutputLength(baseMultiplier, xPos, yPos);
 			//Operator *op = baseMultiplier->getOperator();
-
-
             //lets assume, that baseMultiplier ix 3x3, Unsigned ...
 
             unsigned int xInputLength = baseMultiplier->getXWordSize();

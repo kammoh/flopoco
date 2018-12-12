@@ -9,7 +9,7 @@
 #include "BaseMultiplier.hpp"
 
 namespace flopoco {
-	typedef base_multiplier_id_t size_t;
+	typedef size_t base_multiplier_id_t;
     class BaseMultiplierCollection {
 
 	public:
@@ -17,6 +17,7 @@ namespace flopoco {
         ~BaseMultiplierCollection();
 
         BaseMultiplier* getBaseMultiplier(base_multiplier_id_t multRef);
+		base_multiplier_id_t getPreferedMultiplier();
 
 		vector<base_multiplier_id_t> getMultipliersIDByArea(bool desc=false);
 		

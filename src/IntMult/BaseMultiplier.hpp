@@ -17,9 +17,9 @@ namespace flopoco {
 
         virtual ~BaseMultiplier();
 
-        int getXWordSize() { return wX; }
-        int getYWordSize() { return wY; }
-        int getOutWordSize() { return wR; }
+        int getXWordSize() const { return wX; }
+        int getYWordSize() const { return wY; }
+        int getOutWordSize() const { return wR; }
 
         /**
          * @brief generateOperator generates an instance of the corresponding Operator that realizes the given shape

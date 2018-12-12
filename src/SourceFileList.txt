@@ -58,6 +58,7 @@ IntMult/IntMultiplier
 IntMult/FixMultAdd
 IntMult/TilingStrategy
 IntMult/TilingStrategyOptimalILP
+IntMult/TilingStrategyBasicTiling
 IntMult/MultiplierBlock
 IntMult/DSPBlock
 IntMult/BaseMultiplier

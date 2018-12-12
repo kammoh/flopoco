@@ -7,12 +7,12 @@
 #include "BaseMultiplierDSPSuperTilesXilinx.hpp"
 
 namespace flopoco {
-	vector<base_multiplier_id_t> BaseMultiplierCollection::getMultipliersIDByArea(bool desc=false) {
+	vector<base_multiplier_id_t> BaseMultiplierCollection::getMultipliersIDByArea(bool desc) {
 		vector<base_multiplier_id_t> result(baseMultipliers.size());	
 		std::iota(result.begin(), result.end(), 0);
-		std::sort(result.begin(), result.end, [desc](
+		std::sort(result.begin(), result.end(), [this, desc](
 					const base_multiplier_id_t& first, 
-					const base_multiplier_id_t& second)->{
+					const base_multiplier_id_t& second)->bool{
 					auto const & bm1 = *getBaseMultiplier(first);
 					auto const & bm2 = *getBaseMultiplier(second);
 					int area1 = bm1.getXWordSize() + bm1.getYWordSize();
@@ -26,6 +26,12 @@ namespace flopoco {
 		return result;
 	}
 
+base_multiplier_id_t BaseMultiplierCollection::getPreferedMultiplier()
+{
+	//TODO replace 
+	return 0;
+}
+
 BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int wX, unsigned int wY, bool pipelineDSPs){
     srcFileName = "BaseMultiplierCollection";
     uniqueName_ = "BaseMultiplierCollection";
@@ -33,7 +39,6 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int 
     this->target = target;
     this->wX = wX;
     this->wY = wY;
-
 
     //create DSP-based multipliers:
 	baseMultipliers.push_back(new BaseMultiplierDSP(false, false, 17, 24, pipelineDSPs));
@@ -95,8 +100,8 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int 
 
 BaseMultiplier* BaseMultiplierCollection::getBaseMultiplier(base_multiplier_id_t multRef)
 {
-    if(shape < baseMultipliers.size())
-        return baseMultipliers[shape];
+    if(multRef < baseMultipliers.size())
+        return baseMultipliers[multRef];
     else
         return nullptr;
 }
