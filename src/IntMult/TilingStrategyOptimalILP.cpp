@@ -10,7 +10,7 @@ void TilingStrategyOptimalILP::solve()
 #else
      solver = new ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
 
-     pair< unsigned int, pair<unsigned int, unsigned int> > solutionitem;
+     mult_tile_t solutionitem;
 
      solutionitem.first = 0;
      solutionitem.second = make_pair(0,0);

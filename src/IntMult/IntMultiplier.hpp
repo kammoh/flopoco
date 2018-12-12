@@ -13,8 +13,6 @@
 #include "IntMult/BaseMultiplier.hpp"
 
 namespace flopoco {
-
-
 	class IntMultiplier : public Operator {
 
 	public:
@@ -29,7 +27,6 @@ namespace flopoco {
          **/
         IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false);
 
-
 		/**
 		 * The emulate function.
 		 * @param[in] tc               a test-case
@@ -38,7 +35,6 @@ namespace flopoco {
 
 		void buildStandardTestCases(TestCaseList* tcl);
 		
-
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 

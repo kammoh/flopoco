@@ -73,9 +73,9 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int 
     }
 }
 
-BaseMultiplier* BaseMultiplierCollection::getBaseMultiplier(int shape)
+BaseMultiplier* BaseMultiplierCollection::getBaseMultiplier(base_multiplier_id_t multRef)
 {
-    if(shape < ((int) baseMultipliers.size()))
+    if(shape < baseMultipliers.size())
         return baseMultipliers[shape];
     else
         return nullptr;

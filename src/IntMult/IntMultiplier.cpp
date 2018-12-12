@@ -48,15 +48,15 @@ namespace flopoco {
         multiplierUid=parentOp->getNewUId();
 
 		if(wOut == 0)
-			wOut=wX+wY;
+			wOut = wX+wY;
 
 		string xname="X";
 		string yname="Y";
 
         // Set up the IO signals
-        addInput ( xname  , wX, true );
-        addInput ( yname  , wY, true );
-        addOutput ( "R"  , wOut, 2 , true );
+        addInput(xname, wX, true);
+        addInput(yname, wY, true);
+        addOutput("R", wOut, 2 , true);
 
 		// The larger of the two inputs
 		vhdl << tab << declare(addUID("XX"), wX, true) << " <= " << xname << " ;" << endl;
