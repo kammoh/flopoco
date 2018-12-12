@@ -20,11 +20,13 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		/**
 		 * @return the effective area of the Box
 		 */
-		int shrinkBox(int xright, int ytop, int xdim, int ydim, int offset);
-		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, offset);
+		int shrinkBox(int& xright, int& ytop, int& xdim, int& ydim, int offset);
+		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, int offset, int curArea);
 		base_multiplier_id_t prefered_multiplier_;
 		size_t numUsedMults_;
 		float occupation_threshold=.875;
+		vector<base_multiplier_id_t> orderedBmc;
+		bool truncated;
 };
 
 }

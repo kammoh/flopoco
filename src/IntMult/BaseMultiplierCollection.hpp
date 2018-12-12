@@ -18,7 +18,7 @@ namespace flopoco {
 
         BaseMultiplier* getBaseMultiplier(base_multiplier_id_t multRef);
 
-		vector<base_multiplier_id_t> getMultipliersIDByArea();
+		vector<base_multiplier_id_t> getMultipliersIDByArea(bool desc=false);
 		
         string getName(){ return uniqueName_; }
 		
