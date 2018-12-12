@@ -31,11 +31,11 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int offset)
 	{
 		// Come into the frame
-		if (xdim + xright > wX + 1) {
-			xdim = wX - xright + 1;
+		if (xdim + xright > wX) {
+			xdim = wX - xright;
 		}
-		if (ydim + ytop > wY + 1) {
-			ydim = wY - ytop + 1;
+		if (ydim + ytop > wY) {
+			ydim = wY - ytop;
 		}
 		if (xright < 0) {
 			xdim += xright;
@@ -46,7 +46,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			ytop = 0;
 		}
 
-		int curOffset = xright + ytop - offset;
+		int curOffset = offset - xright - ytop;
 		if (curOffset > xdim && curOffset > ydim) {
 			xright = ytop = -1;
 			xdim = ydim = 0;
@@ -66,7 +66,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			xdim -= deltaX;
 		}
 
-		curOffset = max(xright + ytop - offset, 0);
+		curOffset = max(offset - xright - ytop, 0);
 		int area = xdim * ydim - (curOffset * (curOffset + 1))/2;
 		return area;
 	}
@@ -80,14 +80,14 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int curArea
 		) 
 	{
-		int thresholdArea = curDeltaX + curDeltaY;
+		int thresholdArea = curDeltaX * curDeltaY;
 		auto cur = std::lower_bound(
 				orderedBmc.begin(),
 				orderedBmc.end(),
 				thresholdArea,
 				[this, thresholdArea](const base_multiplier_id_t & id, const int val)->bool{
 					auto const & multiplier = *(baseMultiplierCollection->getBaseMultiplier(id));
-					int multArea = multiplier.getXWordSize() + multiplier.getYWordSize();
+					int multArea = multiplier.getXWordSize() * multiplier.getYWordSize();
 					return multArea > thresholdArea;
 				}
 			);			
@@ -95,7 +95,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		bool canOverflowLeft = not truncated;
 		bool canOverflowRight = false;
 		bool canOverflowTop = (curY == 0);
-		bool canOverflowBottom = (curY == wY - 1);
+		bool canOverflowBottom;
 		int xleft = curX + curDeltaX - 1;
 		int ybottom = curY + curDeltaY - 1;
 		int xanchor, yanchor, xendmultbox, yendmultbox;
@@ -116,6 +116,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			}
 			xendmultbox = xanchor + xMult - 1;
 			yendmultbox = yanchor + yMult - 1;
+			canOverflowBottom = false;
 
 			// Test if multiplier does not overflow on already handled data
 			if (((yanchor < curY) && !canOverflowTop) ||
@@ -137,9 +138,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					copyYMult, 
 					offset
 				);
-			if (effectiveArea != xMult + yMult ) {
+			if (effectiveArea == xMult * yMult ) {
 				// We have found our multiplier
-				break;	
+				break;
 			}
 		}
 		if (yMult < curDeltaY) {
@@ -159,7 +160,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					xStartUpDownbox, 
 					yStartUpDownbox, 
 					deltaXUpDownbox, 
-					deltaXUpDownbox, 
+					deltaYUpDownbox, 
 					offset
 				);
 			if (subboxArea != 0) {
@@ -190,7 +191,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					xStartUpDownbox, 
 					yStartUpDownbox, 
 					deltaXUpDownbox, 
-					deltaXUpDownbox, 
+					deltaYUpDownbox, 
 					offset
 				);
 			if (subboxArea != 0) {

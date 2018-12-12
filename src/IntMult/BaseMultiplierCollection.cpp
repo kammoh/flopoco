@@ -15,8 +15,8 @@ namespace flopoco {
 					const base_multiplier_id_t& second)->bool{
 					auto const & bm1 = *getBaseMultiplier(first);
 					auto const & bm2 = *getBaseMultiplier(second);
-					int area1 = bm1.getXWordSize() + bm1.getYWordSize();
-					int area2 = bm2.getXWordSize() + bm2.getYWordSize();
+					int area1 = bm1.getXWordSize() * bm1.getYWordSize();
+					int area2 = bm2.getXWordSize() * bm2.getYWordSize();
 					if (desc) {
 						return (area2 < area1);
 					} else {
