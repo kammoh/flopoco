@@ -110,7 +110,7 @@ namespace flopoco{
 		int64_t rangeRL_;
 		
 		/** The value of the exponent field */
-		int64_t exponentShift_;
+		int32_t exponentShift_;
 
 		/** The value of the mantissa field  */
 		mpz_class mantissa_;
