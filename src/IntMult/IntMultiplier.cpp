@@ -249,7 +249,7 @@ namespace flopoco {
         }
         vhdl << ";" << endl;
 
-        //real thing
+        //realize it:
         inPortMap(op, "X", join(addUID("x",blockUid),"_",id));
         inPortMap(op, "Y", join(addUID("y",blockUid),"_",id));
         outPortMap(op, "R", join(addUID("r",blockUid),"_",id));
