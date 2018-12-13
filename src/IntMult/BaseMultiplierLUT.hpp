@@ -8,7 +8,6 @@
 #include <gmpxx.h>
 #include "Target.hpp"
 #include "Operator.hpp"
-#include "Table.hpp"
 #include "BaseMultiplier.hpp"
 
 namespace flopoco {
@@ -21,8 +20,6 @@ namespace flopoco {
 			BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int wY);
 
 			virtual Operator *generateOperator(Operator *parentOp, Target *target);
-			mpz_class function(int x);
 	};
-
 }
 #endif
