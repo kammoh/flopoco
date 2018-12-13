@@ -16,7 +16,6 @@ BaseMultiplierLUT::BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int
 
 Operator* BaseMultiplierLUT::generateOperator(Operator *parentOp, Target* target)
 {
-
 	vector<mpz_class> val;
 	for (int yx=0; yx<1<<(wX+wY); yx++) {
 		val.push_back(function(yx));
@@ -25,7 +24,6 @@ Operator* BaseMultiplierLUT::generateOperator(Operator *parentOp, Target* target
   //  srcFileName="BaseMultiplierLUTTable";
 
 	//   name <<"BaseMultiplierLUTTable"<< (negate?"M":"P") << dy << "x" << dx << "r" << wO << (signedX?"Xs":"Xu") << (signedY?"Ys":"Yu");
-
 	return new Table(parentOp, target, val);
 }
 
