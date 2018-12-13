@@ -979,11 +979,11 @@ namespace flopoco
 		file << endl;
 		tabber("lastOp=`_getLastOp \"$saisie\"`");
 		file << endl;
-		tabber("#If the operator is a special target, we stop the completion here");
+		tabber("#Si l'opérateur est une cible finale on s'arrête");
 		tabber("spetrgtlst=\""+specialtargetList+"\"");
 		tabber("case $lastOp in");
 		indent_level++;
-		tabber("${spetrgtlst// /|} ) return ;;");
+		tabber("@(${spetrgtlst// /|}) ) return ;;");
 		indent_level--;
 		tabber("esac");
 		file << endl;
