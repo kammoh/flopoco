@@ -1,8 +1,10 @@
 #include "IntMultiplierLUT.hpp"
 #include "Table.hpp"
 
+namespace flopoco
+{
 
-IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool flipXY) : Operator (parentOp, target), isSignedX(isSignedX), isSignedY(isSignedY), wX(wX), wY(wY)
+IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, int wY, bool isSignedX, bool isSignedY, bool flipXY) : Operator (parentOp, target), wX(wX), wY(wY), isSignedX(isSignedX), isSignedY(isSignedY)
 {
 	if(isSignedX || isSignedY)
 		THROWERROR("signed input currently not supported by IntMultiplierLUT, sorry");
@@ -27,19 +29,19 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, bool isSi
 	addInput("R", wR);
 
 	vector<mpz_class> val;
-	for (int yx=0; yx<1<<(wX+wY); yx++) {
+	for (int yx=0; yx < 1<<(wX+wY); yx++)
+	{
 		val.push_back(function(yx));
 	}
-	Operator *op = new Table(parentOp, target, val);
-
+	Operator *op = new Table(this, target, val, "MultTable", wX+wY, wR);
+	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 
-/*
-	inPortMap(op, "X", join(addUID("x",blockUid),"_",id));
-	inPortMap(op, "Y", join(addUID("y",blockUid),"_",id));
-	outPortMap(op, "R", join(addUID("r",blockUid),"_",id));
-	vhdl << instance(op, join(addUID("Mult",blockUid),"_", id));
-*/
+	vhdl << declare(0.0,"Xtable",wX+wY) << " <= X & Y;" << endl;
+
+	inPortMap(op, "X", "Xtable");
+	outPortMap(op, "Y", "R");
+	vhdl << instance(op, "TableMult");
 }
 
 mpz_class IntMultiplierLUT::function(int yx)
@@ -76,5 +78,56 @@ mpz_class IntMultiplierLUT::function(int yx)
 	//if(!negate && isSignedX && isSignedY) cerr << "  rfinal=" << r << endl;
 
 	return r;
+
+}
+
+OperatorPtr IntMultiplierLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+{
+	int wX,wY;
+
+	UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
+	UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
+
+	return new IntMultiplierLUT(parentOp,target,wX,wY);
+}
+
+void IntMultiplierLUT::registerFactory(){
+	UserInterface::add("IntMultiplierLUT", // name
+					   "Implements a LUT multiplier by simply tabulating all results in the LUT, should only be used for very small word sizes",
+					   "BasicInteger", // categories
+					   "",
+					   "wX(int): size of input X;wY(int): size of input Y",
+					   "",
+					   IntMultiplierLUT::parseArguments,
+					   IntMultiplierLUT::unitTest
+	) ;
+}
+
+void IntMultiplierLUT::emulate(TestCase* tc)
+{
+	mpz_class svX = tc->getInputValue("X");
+	mpz_class svY = tc->getInputValue("Y");
+	mpz_class svR = svX * svY;
+	tc->addExpectedOutput("R", svR);
+}
+
+TestList IntMultiplierLUT::unitTest(int index)
+{
+	// the static list of mandatory tests
+	TestList testStateList;
+	vector<pair<string,string>> paramList;
+
+	//test square multiplications:
+	for(int w=1; w <= 6; w++)
+	{
+		paramList.push_back(make_pair("wX", to_string(w)));
+		paramList.push_back(make_pair("wY", to_string(w)));
+		testStateList.push_back(paramList);
+		paramList.clear();
+	}
+
+	return testStateList;
+}
+
 
 }

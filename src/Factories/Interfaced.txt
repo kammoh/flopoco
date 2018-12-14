@@ -16,6 +16,7 @@ IntConstMult
 IntConstDiv
 DSPBlock
 IntMultiplier
+IntMultiplierLUT
 FixFunctionByTable
 FixFunctionBySimplePoly
 FixFunctionByPiecewisePoly
