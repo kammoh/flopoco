@@ -17,13 +17,7 @@ BaseMultiplierLUT::BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int
 
 Operator* BaseMultiplierLUT::generateOperator(Operator *parentOp, Target* target)
 {
-	// ostringstream name;
-  //  srcFileName="BaseMultiplierLUTTable";
-
-	//   name <<"BaseMultiplierLUTTable"<< (negate?"M":"P") << dy << "x" << dx << "r" << wO << (signedX?"Xs":"Xu") << (signedY?"Ys":"Yu");
-
-//	return new Table(parentOp, target, val);
-	return new IntMultiplierLUT(parentOp, target, isSignedX, isSignedY, wX, wY);
+	return new IntMultiplierLUT(parentOp, target, wX, wY, isSignedX, isSignedY);
 }
 
 
