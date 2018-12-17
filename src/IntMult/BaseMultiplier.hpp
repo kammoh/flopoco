@@ -8,11 +8,11 @@
 #include "Operator.hpp"
 
 namespace flopoco {
-
-
     class BaseMultiplier {
-
+	protected:
+		struct BaseMultiplierParametrization;
 	public:
+		typedef BaseMultiplierParametrization base_multiplier_parametrization_t;	
         BaseMultiplier(bool isSignedX, bool isSignedY);
 
         virtual ~BaseMultiplier();
@@ -46,6 +46,14 @@ namespace flopoco {
         string srcFileName; //for debug outputs
 
         string uniqueName_; /**< useful only to enable same kind of reporting as for FloPoCo operators. */
+
+		struct BaseMultiplierParametrization {
+			int wX_;
+			int wY_;
+			bool isFlippedXY;
+			bool signedX;
+			bool signedY;
+		};
 	
 	};
 }
