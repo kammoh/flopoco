@@ -128,10 +128,20 @@ namespace flopoco{
     }
 
 
-    void  Target::setUseTargetOptimizations(bool b)
+    void Target::setUseTargetOptimizations(bool b)
     {
       useTargetOptimizations_ = b;
     }
+
+	void Target::setCompressionMethod(string compression)
+	{
+		compression_ = compression;
+	}
+
+	string Target::getCompressionMethod()
+	{
+		return compression_;
+	}
 
     bool Target::hasHardMultipliers(){
 		return hasHardMultipliers_ ;

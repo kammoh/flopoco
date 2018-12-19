@@ -143,11 +143,17 @@ namespace flopoco{
 		/** should flopoco generate SVG figures */
 		void setGenerateFigures(bool b);
 
-        /** should target specific optimizations be performed */
-        bool  useTargetOptimizations();
+		/** should target specific optimizations be performed */
+		bool  useTargetOptimizations();
 
-        /** should target specific optimizations be performed */
-        void  setUseTargetOptimizations(bool b);
+		/** should target specific optimizations be performed */
+		void  setUseTargetOptimizations(bool b);
+
+		/** should target specific optimizations be performed */
+		string  getCompressionMethod();
+
+		/** should target specific optimizations be performed */
+		void  setCompressionMethod(string compression);
 
 		/** On LUT-based FPGAs, number of inputs of the basic architectural LUT.
 		  * Look-up tables with lutInput() input bits can be used independently
@@ -730,6 +736,8 @@ namespace flopoco{
 		bool   plainVHDL_;     /**< True if we want the VHDL code to be concise and readable, with + and * instead of optimized FloPoCo operators. */
 		bool   generateFigures_;  /**< If true, some operators may generate some figures in SVG format */
         bool   useTargetOptimizations_; /**< If true, target specific optimizations using primitives are performed. Vendor specific libraries are necessary for simulation. */
+
+		string compression_; /**< Defines the BitHeap compression method*/
 	};
 
 }

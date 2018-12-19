@@ -8,9 +8,9 @@ using namespace std;
 namespace flopoco{
 
 
-	OptimalCompressionStrategy::OptimalCompressionStrategy(BitHeap* bitheap) : CompressionStrategy(bitheap)
+	OptimalCompressionStrategy::OptimalCompressionStrategy(BitHeap* bitheap, bool optimalMinStages) : CompressionStrategy(bitheap)
 	{
-
+		this->optimalMinStages = optimalMinStages;
 	}
 
 
@@ -23,8 +23,6 @@ namespace flopoco{
 #ifndef HAVE_SCALP
 		THROWERROR("For the optimal compressor tree generation scalp is needed");
 #else
-
-		bool optimalMinStages = true;
 
 		//for debugging it might be better to order the compressors by efficiency
 		orderCompressorsByCompressionEfficiency();

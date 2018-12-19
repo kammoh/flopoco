@@ -25,11 +25,13 @@ class BitHeap;
 		/**
 		 * A basic constructor for a compression strategy
 		 */
-		OptimalCompressionStrategy(BitHeap *bitheap);
+		OptimalCompressionStrategy(BitHeap *bitheap, bool optimalMinStages=false);
 
 
 
 	private:
+		bool optimalMinStages;
+
 		/**
 		 *	@brief starts the compression algorithm. It will call parandehAfshar()
 		 */
