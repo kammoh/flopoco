@@ -299,7 +299,7 @@ FLEX_TARGET(
 
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT src/Factories.cpp
+  OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories.cpp  # Not clean, should go to the build dir
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/Interfaced.txt  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
   ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories
@@ -419,8 +419,9 @@ TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 ADD_EXECUTABLE(longacc2fp src/Tools/longacc2fp  src/utils)
 TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 
-ADD_EXECUTABLE(fftest src/Complex/fakemain)
-TARGET_LINK_LIBRARIES(fftest ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
+# To resurrect some day if we finish the work on FFT
+# ADD_EXECUTABLE(fftest src/Complex/fakemain)
+# TARGET_LINK_LIBRARIES(fftest ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 #add_subdirectory(src/random)
 #target_link_libraries(FloPoCoLib flopoco_random_lib)
