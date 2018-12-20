@@ -1,11 +1,9 @@
 # List of active source files, without extension (CMakeLists-like)
 Operator
 UserInterface 
-Factories
 Signal
 Target
 utils
-VHDLLexer
 FlopocoStream
 Instance
 Tools/ResourceEstimationHelper

@@ -1,7 +1,7 @@
 PROJECT(FloPoCo C CXX)
 
 MESSAGE("Trying to build FloPoCo on " ${CMAKE_SYSTEM_NAME} ", compiler is " ${CMAKE_C_COMPILER})
-
+Message("CMAKE_CURRENT_BINARY_DIR is " ${CMAKE_CURRENT_BINARY_DIR}  ", CMAKE_CURRENT_SOURCE_DIR is " ${CMAKE_CURRENT_SOURCE_DIR})
 # CMake's way of handling various versions
 cmake_minimum_required(VERSION 2.4)
 if(COMMAND cmake_policy)
@@ -287,25 +287,24 @@ find_package(FLEX)
 
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
 FLEX_TARGET(
 	VHDLLexer ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-	${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexer.cpp  # Not clean, should go to the build dir
+	${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp  # Not clean, should go to the build dir
 	COMPILE_FLAGS --nounput
 	)
 
 
-
-
 ADD_CUSTOM_COMMAND(
-  OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories.cpp  # Not clean, should go to the build dir
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp  
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/Interfaced.txt  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
-  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories
+  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp
   )
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp GENERATED)
 
-SET_SOURCE_FILES_PROPERTIES(src/Factories GENERATED)
+
 #Thanks SOF https://stackoverflow.com/questions/4346412/how-to-prepend-all-filenames-on-the-list-with-common-path#27630120
 
 # PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args]
@@ -333,6 +332,7 @@ execute_process(
 ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS})
 
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
+
 
 TARGET_LINK_LIBRARIES(
   FloPoCoLib 
@@ -389,6 +389,8 @@ ENDIF (PAGSUITE_FOUND)
 
 ADD_EXECUTABLE(flopoco
   src/main 
+	${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp	 
+	${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp	
   )
 
 TARGET_LINK_LIBRARIES(

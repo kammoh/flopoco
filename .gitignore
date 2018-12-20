@@ -8,7 +8,6 @@ CMakeFiles/
 CPackConfig.cmake
 CPackSourceConfig.cmake
 Makefile
-VHDLLexer.cpp
 bin2fp
 cmake_install.cmake
 flopoco
@@ -25,8 +24,6 @@ PiecewisePoly*.cache
 work-obj93.cf
 test.input
 *.vcd
-
-src/Factories.cpp
 
 # Autotest
 TestResults
