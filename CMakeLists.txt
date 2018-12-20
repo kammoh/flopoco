@@ -283,74 +283,19 @@ IF( RPAG_FOUND AND PAGLIB_FOUND AND COPA_FOUND )
     ADD_DEFINITIONS(-DHAVE_PAGSUITE)
 ENDIF( RPAG_FOUND AND PAGLIB_FOUND AND COPA_FOUND )
 
+find_package(FLEX)
 
-#
-# Create custom command for flex++/lex (note the outputs)
-FIND_PROGRAM(FLEXPP_EXECUTABLE
-  NAMES flex
-  PATHS /usr/bin
-  DOC "Flex++ executable")
-
-IF(FLEXPP_EXECUTABLE)
-  MESSAGE(STATUS "Found lex: ${FLEXPP_EXECUTABLE}")
-ELSE(FLEXPP_EXECUTABLE)
-  MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
-ENDIF(FLEXPP_EXECUTABLE)
 
 # necessary to include generated files
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT src/VHDLLexer.cpp
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-  COMMAND ${FLEXPP_EXECUTABLE} 
-  ARGS --nounput -o ${CMAKE_CURRENT_BINARY_DIR}/src/VHDLLexer.cpp 
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-  )
+FLEX_TARGET(
+	VHDLLexer ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+	${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexer.cpp  # Not clean, should go to the build dir
+	COMPILE_FLAGS --nounput
+	)
 
-#SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
 
-# Create custom command for bison/yacc (note the outputs)
-FIND_PROGRAM(BISON_EXECUTABLE
-  NAMES bison
-  PATHS /usr/bin
-  DOC "Bison executable")
-
-IF(BISON_EXECUTABLE)
-  MESSAGE(STATUS "Found bison: ${BISON_EXECUTABLE}")
-ELSE(BISON_EXECUTABLE)
-  MESSAGE(FATAL_ERROR "Could not find Bison.\nOn Debian-based systems install bison")
-ENDIF(BISON_EXECUTABLE)
-
-ADD_CUSTOM_COMMAND(
-  OUTPUT ExpressionParser.cpp
-  COMMAND ${BISON_EXECUTABLE}
-  ARGS -y -d --defines=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.h --output=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.cpp --name-prefix=FlopocoExpression
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
-  )
-
-SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED) 
-
-# Create custom command for flex/lex (note the outputs)
-FIND_PROGRAM(FLEX_EXECUTABLE
-  NAMES flex
-  PATHS /usr/bin
-  DOC "Flex executable")
-
-IF(FLEX_EXECUTABLE)
-  MESSAGE(STATUS "Found flex: ${FLEX_EXECUTABLE}")
-ELSE(FLEX_EXECUTABLE)
-  MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
-ENDIF(FLEX_EXECUTABLE)
-
-ADD_CUSTOM_COMMAND(
-  OUTPUT ExpressionScanner.cpp
-  COMMAND ${FLEX_EXECUTABLE} 
-  ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
-  ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
-  )
-
-SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
 
 
 ADD_CUSTOM_COMMAND(
