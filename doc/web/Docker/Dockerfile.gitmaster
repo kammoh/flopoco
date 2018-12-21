@@ -2,16 +2,16 @@ FROM debian
 RUN apt-get update -y && apt-get install -y subversion git cmake sollya wget g++ libsollya-dev flex bison libboost-all-dev liblpsolve55-dev lp-solve \
   && svn checkout https://digidev.digi.e-technik.uni-kassel.de/home/svn/scalp/ \
     && cd scalp/trunk && mkdir build && cd build && cmake -DUSE_LPSOLVE=ON -DLPSOLVE_LIBRARIES="/usr/lib/lp_solve/liblpsolve55.so" -DLPSOLVE_INCLUDE_DIRS="/usr/include/" .. \
-	  && make -j5 && cd ../../..\
+	  && make -j8 && cd ../../..\
 #  && svn checkout  https://digidev.digi.e-technik.uni-kassel.de/home/svn/pagsuite/ \
 #	  && cd pagsuite/trunk/ && mkdir build && cd build && cmake .. && make -j5  && cd ../../..\
 	&& git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git \
 	&& cd flopoco/ \
-	&& cmake . -DSCALP_PREFIX_DIR="/scalp/trunk/build/" \
-	&& make -j4 \
-	&& ./flopoco BuildHTMLDoc
+	&& mkdir build && cd build && cmake .. -DSCALP_PREFIX_DIR="/scalp/trunk/build/" \
+	&& make -j8 && cd .. \
+	&& ./build/flopoco BuildHTMLDoc
 
-ENTRYPOINT ["/flopoco/flopoco"]
+ENTRYPOINT ["/flopoco/build/flopoco"]
 
 VOLUME ["/flopoco_workspace"]
 
