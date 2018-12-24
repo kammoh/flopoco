@@ -1861,6 +1861,10 @@ namespace flopoco{
 			if ( s->resetType() != Signal::noReset )
 				return true;
 		}
+		for(auto op: getSubComponentList()) {
+			if ( op->hasReset() )
+				return true;
+		}
 		return false;
 	}
 	

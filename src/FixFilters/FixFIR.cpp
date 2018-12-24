@@ -54,7 +54,7 @@ namespace flopoco {
 			omap += join("Xd", i) + "=>" +  join("Xd", i) + (i<n-1?",":"") ;
 		}
 		newInstance("ShiftReg", "inputShiftReg",
-								join("w=",1-lsbInOut) + join(" n=", n-1), // the parameters
+								join("w=",1-lsbInOut) + join(" n=", n-1) + join(" reset=", 1), // the parameters
 								"X=>X", omap);  // the in and out port maps
 
 
