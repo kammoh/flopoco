@@ -33,6 +33,26 @@ namespace flopoco{
 
 	FixHalfSine::~FixHalfSine(){}
 
+	OperatorPtr FixHalfSine::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		int lsbInOut;
+		UserInterface::parseInt(args, "lsbInOut", &lsbInOut);
+		int n;
+		UserInterface::parseStrictlyPositiveInt(args, "n", &n);
+		OperatorPtr tmpOp = new FixHalfSine(parentOp, target, lsbInOut, n);
+		return tmpOp;
+	}
+
+	void FixHalfSine::registerFactory(){
+		UserInterface::add("FixHalfSine", // name
+											 "A generator of fixed-point Half-Sine filters",
+											 "FiltersEtc", // categories
+											 "",
+											 "lsbInOut(int): integer size in bits;\
+                        n(int): number of taps",
+											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
+											 FixHalfSine::parseArguments
+											 ) ;
+	}
 
 }
 

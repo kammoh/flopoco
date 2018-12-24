@@ -28,6 +28,7 @@ FPAdd
 FPDiv
 FixSOPC
 FixFIR
+FixHalfSine
 FixIIR
 Posit2FP
 Xilinx_GenericAddSub

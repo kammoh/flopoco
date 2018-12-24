@@ -22,6 +22,10 @@ namespace flopoco{
 
 		virtual ~FixHalfSine();
 
+		/** Factory method */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static void registerFactory();
+
 	private: 
 		int N; /* FixFIR::n = 2*N */
 	};
