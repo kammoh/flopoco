@@ -251,7 +251,7 @@ namespace flopoco {
 											 "",
 											 "lsbIn(int): integer size in bits;\
 											 lsbOut(int): integer size in bits;								\
-           						 isSymmetric(bool)=false: If true, will use half the number of multipliers; \
+           						 isSymmetric(bool)=false: use a symmetric architecture with half the number of multipliers. Beware, use it only if your coeff list is symmetric, and we don't check this yet ; \
                        rescale(bool)=false: If true, divides all coefficients by 1/sum(|coeff|);\
                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
