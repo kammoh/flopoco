@@ -179,7 +179,10 @@ namespace flopoco {
 
 		if(isSymmetric){
 			// For the emulate() computation we need to build the standard SOPC that doesn't exploit symmetry
+			UserInterface::pushAndClearGlobalOpList();
 			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, lsbOut, coeff);
+			REPORT(INFO, "Created reference SOPC called " << refFixSOPC->getName() );
+			UserInterface::popGlobalOpList();
 		}
 		else {
 			refFixSOPC = fixSOPC;

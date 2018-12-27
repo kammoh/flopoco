@@ -195,8 +195,18 @@ namespace flopoco
 
 	vector<OperatorPtr>  UserInterface::globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 
+	vector<vector<OperatorPtr>>  UserInterface::globalOpListStack; 
 
 
+	void UserInterface::pushAndClearGlobalOpList() {
+		globalOpListStack.push_back(globalOpList);
+		globalOpList.clear();
+	}
+	void UserInterface::popGlobalOpList() {
+		globalOpList = globalOpListStack.back();
+		globalOpListStack.pop_back();
+	}
+		
 
 	OperatorPtr UserInterface::addToGlobalOpList(OperatorPtr op) {
 		OperatorPtr alreadyPresent=nullptr;

@@ -106,6 +106,16 @@ namespace flopoco
 		*/
 		static OperatorPtr addToGlobalOpList(OperatorPtr op);
 
+		/** Saves the current globalOpList on globalOpListStack, then clears globalOpList. 
+				Typical use is when you want to build various variants of a subcomponent before chosing the best one.
+				TODO: a variant that leaves in globalOpList a deep copy of the saved one, so that such comparisons can be done in context 
+		*/
+		static void pushAndClearGlobalOpList();
+
+		/** Restores the globalOpList from top of globalOpListStack. 
+				Typical use is when you want to build various variants of a subcomponent before chosing the best one.
+		*/
+		static void popGlobalOpList();
 
 		/** generates the code for operators in globalOpList, and all their subcomponents */
 		static void outputVHDLToFile(ofstream& file);
@@ -138,6 +148,7 @@ namespace flopoco
 
 	public:
 		static vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
+		static vector<vector<OperatorPtr>>  globalOpListStack;  /**< a stack on which to save globalOpList when you don't want to mess with it */
 		static int    verbose;
 	private:
 		static string outputFileName;
