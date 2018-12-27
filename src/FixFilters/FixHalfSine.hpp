@@ -18,7 +18,7 @@ namespace flopoco{
 	{
 	public:
 
-		FixHalfSine(OperatorPtr parentOp, Target* target, int lsb_, int N_);
+		FixHalfSine(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, int N);
 
 		virtual ~FixHalfSine();
 

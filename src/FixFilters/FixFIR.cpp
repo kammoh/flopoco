@@ -16,14 +16,16 @@ namespace flopoco {
 
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
-	FixFIR::FixFIR(OperatorPtr parentOp, Target* target):		Operator(target) {};
+	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_):
+		Operator(parentOp, target), lsbIn(lsbIn_), lsbOut(lsbOut_)
+	{
+		initFilter();
+	};
 
 
 	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, bool isSymmetric_, bool rescale_) :
 		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), isSymmetric(isSymmetric_), rescale(rescale_)
-	{
-		initFilter();
-	};
+	{	};
 
 
 	void FixFIR::initFilter(){
@@ -34,7 +36,6 @@ namespace flopoco {
 		name << "FixFIR_uid" << getNewUId();
 		setNameWithFreqAndUID( name.str() );
 
-		buildVHDL();
 	}
 
 

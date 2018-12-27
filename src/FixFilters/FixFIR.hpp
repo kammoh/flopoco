@@ -29,7 +29,7 @@ namespace flopoco{
 		/**
 		 * @brief 				empty constructor, to be called by subclasses.
 		*/
-		FixFIR(OperatorPtr parentOp, Target* target);
+		FixFIR(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut);
 
 		/** @brief Destructor */
 		~FixFIR();
