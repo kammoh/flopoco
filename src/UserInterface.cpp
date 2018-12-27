@@ -622,7 +622,7 @@ namespace flopoco
 	}
 
 
-	void UserInterface::parseIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption){
+	void UserInterface::parseColonSeparatedStringList(vector<string> &args, string key, vector<string>* variable, bool genericOption){
 		string val=getVal(args, key);
 		if(val=="") {
 			if(genericOption)
@@ -636,12 +636,38 @@ namespace flopoco
     ss.str(val);
     std::string item;
 		try {
-			while (std::getline(ss, item, ',')) {
+			while (std::getline(ss, item, ':')) {
+				variable->push_back(item);
+			}
+		}
+		catch(std::exception &s){
+			std::cerr << "Problem in parseColonSeparatedStringList for "<< val << endl << "got exception : "<<s.what()<<"\n";
+			//factory->Usage(std::cerr);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	
+	void UserInterface::parseColonSeparatedIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption){
+		string val=getVal(args, key);
+		if(val=="") {
+			if(genericOption)
+				return; // do nothing
+			// key not given, use default value
+			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			if (val=="")
+				throwMissingArgError(args[0], key);
+		}
+		std::stringstream ss;
+    ss.str(val);
+    std::string item;
+		try {
+			while (std::getline(ss, item, ':')) {
 				variable->push_back(std::stoi(item));
 			}
 		}
 		catch(std::exception &s){
-			std::cerr << "Problem in parseIntList for "<< val << endl << "got exception : "<<s.what()<<"\n";
+			std::cerr << "Problem in parseColonSeparatedIntList for "<< val << endl << "got exception : "<<s.what()<<"\n";
 			//factory->Usage(std::cerr);
 			exit(EXIT_FAILURE);
 		}

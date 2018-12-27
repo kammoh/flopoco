@@ -684,7 +684,7 @@ namespace flopoco{
 		vector<int> divisors;
 		bool computeQuotient, computeRemainder;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
-		UserInterface::parseIntList(args, "d", &divisors);
+		UserInterface::parseColonSeparatedIntList(args, "d", &divisors);
 		UserInterface::parseInt(args, "alpha", &alpha);
 		UserInterface::parsePositiveInt(args, "arch", &arch);
 		UserInterface::parseBoolean(args, "computeQuotient",  &computeQuotient);
@@ -704,7 +704,7 @@ namespace flopoco{
 											 "ConstMultDiv",
 											 "", // seeAlso
 											 "wIn(int): input size in bits; \
-											 d(intlist): integer to divide by. Either a small integer, or a comma-separated list of small integers, in which case a composite divider by the product is built;  \
+											 d(intlist): integer to divide by. Either a small integer, or a colon-separated list of small integers, in which case a composite divider by the product is built;  \
 											 arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal; \
 											 computeQuotient(bool)=true: if true, the architecture outputs the quotient; \
 											 computeRemainder(bool)=true: if true, the architecture outputs the remainder; \

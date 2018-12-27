@@ -68,8 +68,9 @@ namespace flopoco{
 		pair<mpz_class,mpz_class> computeSOPCForEmulate(vector<mpz_class> x);
 
 		// User-interface stuff
-		/** Factory method */
+		/** Factory method - these are for internal use, by default FixSOPC should not be listed in Interfaced.txt */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArgumentsFull(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static TestList unitTest(int index);
 		static void registerFactory();
 

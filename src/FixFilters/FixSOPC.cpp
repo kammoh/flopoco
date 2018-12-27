@@ -280,10 +280,15 @@ namespace flopoco{
 			mpfr_add(s, s, t, GMP_RNDN); 							// same comment as above
 			mpfr_clears (x, NULL);
 		}
-
 		// now we should have in s the (very accurate) sum
 		// round it up and down
-
+#if 0
+		if(mpfr_get_d(s, GMP_RNDN)>=0)
+			cerr << "+";
+		else
+			cerr << "-";
+#endif
+		
 		// make s an integer -- no rounding here
 		mpfr_mul_2si (s, s, -lsbOut, GMP_RNDN);
 
@@ -324,18 +329,32 @@ namespace flopoco{
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		vector<string> input;
-		string in;
-		UserInterface::parseString(args, "coeff", &in);
-		// tokenize a string, thanks Stack Overflow
-		stringstream ss(in);
-		while( ss.good() )	{
-				string substr;
-				getline( ss, substr, ':' );
-				input.push_back( substr );
-			}
+
+		vector<string> coeffs;
+		UserInterface::parseColonSeparatedStringList( args, "coeff", &coeffs);
 		
-		return new FixSOPC(parentOp, target, lsbIn, lsbOut, input);
+		return new FixSOPC(parentOp, target, lsbIn, lsbOut, coeffs);
+	}
+
+
+	OperatorPtr FixSOPC::parseArgumentsFull(OperatorPtr parentOp, Target *target, vector<string> &args) {
+
+		vector<int> msbIn;
+		UserInterface::parseColonSeparatedIntList(args, "msbIn", &msbIn);
+
+		vector<int> lsbIn;
+		UserInterface::parseColonSeparatedIntList(args, "lsbIn", &lsbIn);
+
+		int msbOut;
+		UserInterface::parseInt(args, "msbOut", &msbOut);
+
+		int lsbOut;
+		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+
+		vector<string> coeffs;
+		UserInterface::parseColonSeparatedStringList( args, "coeff", &coeffs);
+		
+		return new FixSOPC(parentOp, target, msbIn, lsbIn, msbOut, lsbOut, coeffs);
 	}
 
 
@@ -353,6 +372,18 @@ namespace flopoco{
 											 "",
 											 FixSOPC::parseArguments,
 											 FixSOPC::unitTest
+											 ) ;
+		UserInterface::add("FixSOPCfull", // name
+											 "A fix-point Sum of Product by Constants (detailed interface).",
+											 "FiltersEtc", // categories
+											 "",
+											 "msbIn(string): colon-separated string of ints, input's last significant bit;\
+                        lsbIn(string): colon-separated string of ints, input's last significant bit;\
+                        msbOut(int): output's most significant bit;\
+                        lsbOut(int): output's last significant bit;\
+                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
+											 "",
+											 FixSOPC::parseArgumentsFull
 											 ) ;
 	}
 

@@ -88,7 +88,8 @@ namespace flopoco
 		static void parseStrictlyPositiveInt(vector<string> &args, string key, int* variable, bool genericOption=false);
 		static void parseFloat(vector<string> &args, string key, double* variable, bool genericOption=false);
 		static void parseString(vector<string> &args, string key, string* variable, bool genericOption=false);
-		static void parseIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption=false);
+		static void parseColonSeparatedStringList(vector<string> &args, string key, vector<string>* variable, bool genericOption=false);
+		static void parseColonSeparatedIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption=false);
 
 		/** Provide a string with the full documentation.*/
 		static string getFullDoc();
