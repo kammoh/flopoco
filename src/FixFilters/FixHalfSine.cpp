@@ -21,6 +21,8 @@ namespace flopoco{
 
 		setCopyrightString("Louis Besème, Florent de Dinechin, Matei Istoan (2014-2018)");
 
+		isSymmetric=true;
+		rescale=true;
 		// define the coefficients
 		for (int i=1; i<2*N; i++) {
 			ostringstream c;
@@ -51,7 +53,7 @@ namespace flopoco{
 											 "",
 											 "lsbIn(int): weight of the integer size in bits;\
 											  lsbOut(int): integer size in bits;\
-                        n(int): number of taps",
+                        n(int): filter order (number of taps will be 2n)",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
 											 FixHalfSine::parseArguments
 											 ) ;

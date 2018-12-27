@@ -100,6 +100,7 @@ namespace flopoco {
 				s << "(" << coeff[i] << ")/" << setprecision(20) << sumAbs;
 				coeff[i] = s.str();
 			}
+			sumAbs=0.999999999999999;
 		}
 
 		// now sumAbs is the max value that the SOPC can take.
