@@ -73,10 +73,12 @@ namespace flopoco{
 		vector<string> coeffSymmetric;	  	/**< the coefficients as strings, in case of a symmetric filter */
 		int symmetry;					/**< flag that shows if the filter is implemented as a symmetric filter */
 		bool rescale; 						/**< if true, the output is rescaled to [-1,1]  (to the same format as input) */
+	private:
 		mpz_class xHistory[10000]; 			// history of x used by emulate
 		int currentIndex;
 		FixSOPC *fixSOPC; 					/**< the SOPC used for VHDL generation  */
 		FixSOPC *refFixSOPC;				/**< usually equal to fixSOPC, except in the case of a symmetric filter, where it is a virtual, nave SOPC that is used only in emulate() */
+		vector<double> coeffD;	  	/**< the coefficients rounded to doubles, used for symmetry checks */
 	};
 
 }

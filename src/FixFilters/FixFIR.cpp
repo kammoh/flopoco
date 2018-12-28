@@ -69,12 +69,12 @@ namespace flopoco {
 		double sumAbs;
 		// Most of this code is copypasted from SOPC, which is redundant: to fix some day if it doesn't jeopardize readability.
 		// parse the coeffs from the string, with Sollya parsing
-		mpfr_t sumAbsCoeff, absCoeff;
+		mpfr_t sumAbsCoeff, mpfrCoeff;
 		mpfr_init2 (sumAbsCoeff, 1-lsbIn);
 		mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
 		
 		for (int i=0; i< n; i++)	{
-			mpfr_init2 (absCoeff, veryLargePrec);
+			mpfr_init2 (mpfrCoeff, veryLargePrec);
 			sollya_obj_t node;
 			node = sollya_lib_parse_string(coeff[i].c_str());
 			// If conversion did not succeed (i.e. parse error)
@@ -83,13 +83,16 @@ namespace flopoco {
 				error << srcFileName << ": Unable to parse string " << coeff[i] << " as a numeric constant" << endl;
 				throw error.str();
 			}
-			mpfr_init2(absCoeff, veryLargePrec);
-			sollya_lib_get_constant(absCoeff, node);
+			mpfr_init2(mpfrCoeff, veryLargePrec);
+			sollya_lib_get_constant(mpfrCoeff, node);
 			sollya_lib_clear_obj(node);
+
+			// store the coefficient as a double, for error reporting etc
+			coeffD.push_back(mpfr_get_d(mpfrCoeff, GMP_RNDN));
 			// Accumulate the absolute values
-			mpfr_abs(absCoeff, absCoeff, GMP_RNDU);
-			mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
-			mpfr_clears(absCoeff, NULL);
+			mpfr_abs(mpfrCoeff, mpfrCoeff, GMP_RNDU);
+			mpfr_add(sumAbsCoeff, sumAbsCoeff, mpfrCoeff, GMP_RNDU);
+			mpfr_clears(mpfrCoeff, NULL);
 		}
 		// now sumAbsCoeff is the max value that the filter can take.
 		sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU); // round up so that we round towards zero the division
@@ -105,6 +108,36 @@ namespace flopoco {
 			}
 			sumAbs=0.999999999999999;
 		}
+
+		// Symmetry checks
+		if(symmetry!=0) {
+			for (int i=0; i< n/2; i++)	{ // n/2 is floor(n/2) 
+				if(symmetry==1) {
+					if (coeffD[i]!=coeffD[n-i-1]) {
+						REPORT(0, endl << endl  << " **** WARNING **** This filter is supposed to be symmetric, but coefficients " << i << " and " << n-i-1
+									 << " evaluate respectively to " << endl << setprecision(16) << "     " << coeffD[i] << endl << " and " << coeffD[n-i-1]
+									 << endl << " This is could be a numerical artifact, who am I to decide if it is significant to your computation ?"
+									 << endl << " However this discrepancy may prevent TestBench to succeed, and I encourage you to fix it." << endl );									 
+					}
+				}
+				if(symmetry==-1) {
+					if (coeffD[i]!=-coeffD[n-i-1]) {
+						REPORT(0, endl << endl  << " **** WARNING **** This filter is supposed to be anti-symmetric, but coefficients " << i << " and " << n-i-1
+									 << " evaluate respectively to " << endl << setprecision(16) << "     " << coeffD[i] << endl << " and " << coeffD[n-i-1]
+									 << endl << " This is could be a numerical artifact, who am I to decide if it is significant to your computation ?"
+									 << endl << " However this discrepancy may prevent TestBench to succeed, and I encourage you to fix it."  << endl );									 
+					}
+				}
+			}
+			if((symmetry==-1) && (n%2 == 1)) {
+				if (coeffD[n/2]!=0) {
+					REPORT(0, endl << endl << " **** WARNING **** This filter is supposed to be anti-symmetric, but coefficient " << n/2 << " evaluates to "
+								 << setprecision(16) << "  " << coeffD[n/2] << "   which is not exactly equal to zero." 
+								 << endl << " This is could be a numerical artifact, who am I to decide if it is significant to your computation ?"
+								 << endl << " However this discrepancy may prevent TestBench to succeed, and I encourage you to fix it." << endl );									 
+				}
+			}
+		} // End symmetry checks
 
 		// now sumAbs is the max value that the SOPC can take.
 		REPORT(DETAILED, "sumAbs=" << sumAbs);
