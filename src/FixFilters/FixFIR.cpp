@@ -23,9 +23,12 @@ namespace flopoco {
 	};
 
 
-	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, bool isSymmetric_, bool rescale_) :
-		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), isSymmetric(isSymmetric_), rescale(rescale_)
-	{	};
+	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, int symmetry_, bool rescale_) :
+		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), symmetry(symmetry_), rescale(rescale_)
+	{
+			initFilter();
+			buildVHDL();
+	};
 
 
 	void FixFIR::initFilter(){
@@ -123,7 +126,7 @@ namespace flopoco {
 		string lsbInString = "";
 		string parameters;
 		
-		if(isSymmetric)		{
+		if(symmetry!=0)		{
 			/* To exploit the symmetry, we must
 			 1/ pre-add the symmetric inputs
 			 2/ create the half-size list of coefficients: coeffSymmetric
@@ -136,7 +139,9 @@ namespace flopoco {
 			int i;
 			for (i=0; i< n/2; i++)	{ // n/2 is floor(n/2) 
 				vhdl << tab << declare(join("PreSum", i),  1-lsbIn+1, true) << " <= "
-						<< "(Xd" << i << "(" << 0-lsbIn << ") & Xd" << i << ") + (Xd" << n-i-1 << "(" << 0-lsbIn << ") & Xd" << n-i-1 << ");" << endl;
+						 << "(Xd" << i << "(" << 0-lsbIn << ") & Xd" << i << ")"
+						 << (symmetry==1 ? " + " : " - ")
+						 << "(Xd" << n-i-1 << "(" << 0-lsbIn << ") & Xd" << n-i-1 << ");" << endl;
 				coeffString += coeff[i] + (i<n/2-1? ":":"");
 				msbInString += to_string(1) + (i<n/2-1? ":":""); // msb for these terms is 1
 				lsbInString += to_string(lsbIn) + (i<n/2-1? ":":"");
@@ -179,7 +184,7 @@ namespace flopoco {
 																		 inportmap, // the in port maps
 																		 "R=>Rtmp" );  // the out port map
 
-		if(isSymmetric){
+		if(symmetry!=0){
 			// For the emulate() computation we need to build the standard SOPC that doesn't exploit symmetry
 			UserInterface::pushAndClearGlobalOpList();
 			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, lsbOut, coeff);
@@ -232,14 +237,14 @@ namespace flopoco {
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		bool isSymm;
-		UserInterface::parseBoolean(args, "isSymmetric", &isSymm);
+		int symmetry;
+		UserInterface::parseInt(args, "symmetry", &symmetry);
 		bool rescale;
 		UserInterface::parseBoolean(args, "rescale", &rescale);
 		vector<string> coeffs;
 		UserInterface::parseColonSeparatedStringList(args, "coeff", &coeffs);
 
-		OperatorPtr tmpOp = new FixFIR(parentOp, target, lsbIn, lsbOut, coeffs, isSymm, rescale);
+		OperatorPtr tmpOp = new FixFIR(parentOp, target, lsbIn, lsbOut, coeffs, symmetry, rescale);
 
 		return tmpOp;
 	}
@@ -251,7 +256,7 @@ namespace flopoco {
 											 "",
 											 "lsbIn(int): integer size in bits;\
 											 lsbOut(int): integer size in bits;								\
-           						 isSymmetric(bool)=false: use a symmetric architecture with half the number of multipliers. Beware, use it only if your coeff list is symmetric, and we don't check this yet ; \
+           						 symmetry(int)=0: 0 for normal filter, 1 for symmetric, -1 for antisymmetric. If not 0, only the first half of the coeff list is used.; \
                        rescale(bool)=false: If true, divides all coefficients by 1/sum(|coeff|);\
                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",

@@ -18,13 +18,13 @@ namespace flopoco{
 		 * Input is assumed to be in [-1,1], with msb (sign bit) at position 0 and lsb at postion lsbInOut.
 		 * @param lsbIn			Input has lsb at position lsbIn.
 		 * @param lsbOut		Output has lsb at position lsbOut.
-		 * @param isSymmetric	the coefficients of the filter are symmetric, or not. We could probably attempt to detect it 
+		 * @param symmetry	0 for normal filter, 1 if the coefficients are symmetric, -1 if they are antisymmetric. We could probably attempt to detect it 
 		 * @param rescale
 		 *						If rescale=false, the msb of the output is computed so as to avoid overflow.
 		 *						If rescale=true, all the coefficients are rescaled by 1/sum(|coeffs|).
 		 * This way the output is also in [-1,1], output size is equal to input size, and the output signal makes full use of the output range.
 		*/
-		FixFIR(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeff, bool isSymmetric=false, bool rescale=false);
+		FixFIR(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeff, int symmetry=0, bool rescale=false);
 
 		/**
 		 * @brief 				empty constructor, to be called by subclasses.
@@ -71,7 +71,7 @@ namespace flopoco{
 		int msbOut;							/**< msbOut of the filter, if different from lsbIn */
 		vector<string> coeff;			  	/**< the coefficients as strings */
 		vector<string> coeffSymmetric;	  	/**< the coefficients as strings, in case of a symmetric filter */
-		bool isSymmetric;					/**< flag that shows if the filter is implemented as a symmetric filter */
+		int symmetry;					/**< flag that shows if the filter is implemented as a symmetric filter */
 		bool rescale; 						/**< if true, the output is rescaled to [-1,1]  (to the same format as input) */
 		mpz_class xHistory[10000]; 			// history of x used by emulate
 		int currentIndex;

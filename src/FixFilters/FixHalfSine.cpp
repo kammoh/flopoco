@@ -21,8 +21,8 @@ namespace flopoco{
 
 		setCopyrightString("Louis Besème, Florent de Dinechin, Matei Istoan (2014-2018)");
 
-		isSymmetric=true;
-		rescale=true;
+		symmetry = 1; // this is a FIR attribute, Half-sine is a symmetric filter
+		rescale=true; // also a FIR attribute
 		// define the coefficients
 		for (int i=1; i<2*N; i++) {
 			ostringstream c;
