@@ -46,7 +46,6 @@ namespace flopoco{
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static void registerFactory();
 
-	private:
 	protected:
 		/**
 		 * @brief The method that does the bulk of operator construction, isolated to enable sub-classes such as FixHalfSine etc
