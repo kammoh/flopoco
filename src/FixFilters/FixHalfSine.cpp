@@ -46,6 +46,37 @@ namespace flopoco{
 		return tmpOp;
 	}
 
+
+	TestList FixHalfSine::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			for(int lsbIn=-1; lsbIn>=-18; lsbIn-=3) {
+				for(int lsbOut = min(lsbIn,-3); lsbOut>=-18; lsbOut-=3)	{
+					for(int n = 3; n<6; n++)	{
+						paramList.push_back(make_pair("lsbIn",to_string(lsbIn)));
+						paramList.push_back(make_pair("lsbOut",to_string(lsbOut)));
+						paramList.push_back(make_pair("n",to_string(n)));
+						testStateList.push_back(paramList);
+						paramList.clear();
+					}					
+				}
+			}
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+			// TODO
+		}	
+		return testStateList;
+	}
+
+
+	
 	void FixHalfSine::registerFactory(){
 		UserInterface::add("FixHalfSine", // name
 											 "A generator of fixed-point Half-Sine filters",
@@ -55,7 +86,8 @@ namespace flopoco{
 											  lsbOut(int): integer size in bits;\
                         n(int): filter order (number of taps will be 2n)",
 											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
-											 FixHalfSine::parseArguments
+											 FixHalfSine::parseArguments,
+											 FixHalfSine::unitTest
 											 ) ;
 	}
 
