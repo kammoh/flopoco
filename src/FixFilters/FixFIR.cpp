@@ -39,6 +39,7 @@ namespace flopoco {
 		name << "FixFIR_uid" << getNewUId();
 		setNameWithFreqAndUID( name.str() );
 
+		sollya_lib_set_roundingwarnings(sollya_lib_parse_string("off"));
 	}
 
 
