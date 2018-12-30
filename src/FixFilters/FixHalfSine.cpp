@@ -55,9 +55,9 @@ namespace flopoco{
 		
 		if(index==-1) 
 		{ // The unit tests
-			for(int lsbIn=-1; lsbIn>=-18; lsbIn-=3) {
-				for(int lsbOut = min(lsbIn,-3); lsbOut>=-18; lsbOut-=3)	{
-					for(int n = 3; n<6; n++)	{
+			for(int lsbIn=-1; lsbIn>=-12; lsbIn-=1) {
+				for(int lsbOut = min(lsbIn,-5); lsbOut>=-18; lsbOut-=3)	{
+					for(int n = 3; n<8; n++)	{
 						paramList.push_back(make_pair("lsbIn",to_string(lsbIn)));
 						paramList.push_back(make_pair("lsbOut",to_string(lsbOut)));
 						paramList.push_back(make_pair("n",to_string(n)));
