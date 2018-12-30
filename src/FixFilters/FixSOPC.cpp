@@ -26,6 +26,26 @@ namespace flopoco{
 		n = coeff.size();
 		for (int i=0; i<n; i++) {
 			msbIn.push_back(0);
+			maxAbsX.push_back(1.0);
+			lsbIn.push_back(lsbIn_);
+		}
+		initialize();
+	}
+
+	FixSOPC::FixSOPC(OperatorPtr parentOp_, Target* target_, int lsbIn_, int msbOut_, int lsbOut_, vector<string> coeff_) :
+		Operator(parentOp_, target_),
+		msbOut(msbOut_),
+		lsbOut(lsbOut_),
+		coeff(coeff_),
+		g(-1),
+		computeMSBOut(false),
+		computeGuardBits(true),
+		addFinalRoundBit(true)
+	{
+		n = coeff.size();
+		for (int i=0; i<n; i++) {
+			msbIn.push_back(0);
+			maxAbsX.push_back(1.0);
 			lsbIn.push_back(lsbIn_);
 		}
 		initialize();
@@ -49,7 +69,7 @@ namespace flopoco{
 		
 		if (g==-1)
 			computeGuardBits=true;
-
+		
 		addFinalRoundBit = (g==0 ? false : true);
 
 		initialize();
@@ -121,18 +141,20 @@ namespace flopoco{
 			sollya_lib_get_constant(mpcoeff[i], node);
 			sollya_lib_clear_obj(node);
 		}
-
 		if(computeMSBOut)
 		{
-			mpfr_t sumAbsCoeff, absCoeff;
+			mpfr_t sumAbsCoeff, absCoeff, mpMaxX;
 			mpfr_init2 (sumAbsCoeff, veryLargePrec);
 			mpfr_init2 (absCoeff, veryLargePrec);
+			mpfr_init2 (mpMaxX, veryLargePrec);
 			mpfr_set_d (sumAbsCoeff, 0.0, GMP_RNDN);
 
 			for (int i=0; i< n; i++){
 				// Accumulate the absolute values
-				mpfr_abs(absCoeff, mpcoeff[i], GMP_RNDU);
-				mpfr_add(sumAbsCoeff, sumAbsCoeff, absCoeff, GMP_RNDU);
+				mpfr_abs(absCoeff,  mpcoeff[i], GMP_RNDU);
+				mpfr_set_d(mpMaxX,  maxAbsX[i], GMP_RNDU);
+				mpfr_mul(absCoeff,  absCoeff, mpMaxX, GMP_RNDU);
+				mpfr_add(sumAbsCoeff,  sumAbsCoeff, absCoeff, GMP_RNDU);
 			}
 
 			// now sumAbsCoeff is the max value that the SOPC can take.
@@ -148,7 +170,7 @@ namespace flopoco{
 				msbOut--;
 			}
 			REPORT(INFO, "Computed msbOut=" << msbOut);
-			mpfr_clears(sumAbsCoeff, absCoeff, NULL);
+			mpfr_clears(sumAbsCoeff, absCoeff, mpMaxX, NULL);
 		}
 		else {
 			REPORT(INFO, "Provided msbOut=" << msbOut);

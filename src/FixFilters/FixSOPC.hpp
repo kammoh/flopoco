@@ -23,6 +23,11 @@ namespace flopoco{
 		 */
 		FixSOPC(OperatorPtr parentOp_, Target* target, int lsbIn, int lsbOut, vector<string> coeff);
 
+		/**
+		 * @brief simple constructor for inputs in the fixed-point format (0, lsbIn) with msbOut provided.
+		 */
+		FixSOPC(OperatorPtr parentOp_, Target* target, int lsbIn, int msbOut, int lsbOut, vector<string> coeff);
+
 
 
 

@@ -15,7 +15,7 @@ namespace flopoco{
 		/**
 		 * @brief 				constructor, building the FIR out of the coefficients, with (a possibly different) lsbIn and lsbOut.
 		 * @param coeff			The coefficients are considered as real numbers, provided as string expresssions such as 0.1564565756768 or sin(3*pi/8)
-		 * Input is assumed to be in [-1,1], with msb (sign bit) at position 0 and lsb at postion lsbInOut.
+		 * Input is assumed to be in (-1,1) with lsb at postion lsbIn.
 		 * @param lsbIn			Input has lsb at position lsbIn.
 		 * @param lsbOut		Output has lsb at position lsbOut.
 		 * @param symmetry	0 for normal filter, 1 if the coefficients are symmetric, -1 if they are antisymmetric. We could probably attempt to detect it 

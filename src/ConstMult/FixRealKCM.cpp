@@ -242,9 +242,11 @@ namespace flopoco{
 		
 		// A few sanity checks related to the magnitude of the constant
 		
+		msbOut =   msbIn + msbC;
+		
+#if 0 // commented out because it breaks rescaled FIR filters for large n
 		// A bit of weight l is sent to position l+msbC+1 at most.
 		// msbIn is sent to msbIn+ msbC +1 at most
-		msbOut =   msbIn + msbC;
 		if(msbOut<lsbOut){
 			constantRoundsToZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
@@ -252,7 +254,7 @@ namespace flopoco{
 			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
 			return;
 		}
-
+#endif
 		
 		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
 		// However this depends on how many guard bits we add...

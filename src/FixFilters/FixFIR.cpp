@@ -220,7 +220,7 @@ namespace flopoco {
 		if(symmetry!=0){
 			// For the emulate() computation we need to build the standard SOPC that doesn't exploit symmetry
 			UserInterface::pushAndClearGlobalOpList();
-			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, lsbOut, coeff);
+			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, msbOut, lsbOut, coeff);
 			REPORT(INFO, "Created reference SOPC called " << refFixSOPC->getName() );
 			UserInterface::popGlobalOpList();
 		}
@@ -228,7 +228,7 @@ namespace flopoco {
 			refFixSOPC = fixSOPC;
 		}
 
-		addOutput("R", refFixSOPC->msbOut - refFixSOPC->lsbOut + 1,   true);
+		addOutput("R", fixSOPC->msbOut - fixSOPC->lsbOut + 1,   true);
 		vhdl << tab << "R <= Rtmp;" << endl;
 
 		
