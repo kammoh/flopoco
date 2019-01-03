@@ -59,6 +59,8 @@
 
 For Debian/Ubuntu, simply look at the DockerFile and run the same commands in a terminal.  If your distribution is not Debian based, you will have to install dependencies using your distribution's package manager.
 
+The filter generator FixIIR requires the WCPG library to be installed: <kbd>git clone https://scm.gforge.inria.fr/anonscm/git/metalibm/wcpg.git</kbd>.
+It itself depends on a few standard Debian libraries: see the Dockerfile.
 
 Version 5.0 and later (including the git master) depend on <a href="https://digidev.digi.e-technik.uni-kassel.de/scalp/">ScaLP</a> which provides a uniform interface to several ILP solver.
 The instructions provided in the Dockerfiles build ScaLP with the LPSolve back-end, which is the only backend for which installation can be fully automated.

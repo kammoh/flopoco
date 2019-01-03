@@ -1,5 +1,6 @@
 FROM debian
-RUN apt-get update -y && apt-get install -y cmake sollya wget g++ libsollya-dev flex bison libboost-all-dev \
+RUN apt-get update -y && apt-get install -y cmake sollya wget git g++ libsollya-dev flex bison libboost-all-dev autotools-dev autoconf automake f2c libblas-dev liblapack-dev libtool \
+  && git clone https://scm.gforge.inria.fr/anonscm/git/metalibm/wcpg.git && cd wcpg && sh autogen.sh && ./configure && make && make install && cd .. \
   && wget https://gforge.inria.fr/frs/download.php/file/37213/flopoco-4.1.2.tgz && tar xzf flopoco-4.1.2.tgz \
 	&& cd flopoco-4.1.2/ \
 	&& cmake . \
