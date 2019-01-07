@@ -1,4 +1,4 @@
-cd TestResults/tmp
+cd AutotestResults/tmp
 echo "-------------------------------------------" >> ../$1/report
 echo "./flopoco $*"
 echo "./flopoco $*" >> ../$1/report

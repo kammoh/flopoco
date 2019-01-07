@@ -1,4 +1,4 @@
-cd TestResults/tmp
+cd AutotestResults/tmp
 export DYLD_LIBRARY_PATH=/Users/pluto/research/develop/inst/lib
 echo "-------------------------------------------" >> ../$1/report
 echo "./flopoco $*"
