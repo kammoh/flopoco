@@ -43,10 +43,6 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
 		}
 	}
 
-	baseMultiplierCategories.push_back(
-			new BaseMultiplierLUT(target->maxLutInputs(), score)
-		);
-
 	for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
 		baseMultiplierCategories.push_back(t);
 	}
