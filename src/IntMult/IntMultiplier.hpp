@@ -10,7 +10,7 @@
 #include "BitHeap/BitHeap.hpp"
 
 #include "IntMult/MultiplierBlock.hpp"
-#include "IntMult/BaseMultiplier.hpp"
+#include "IntMult/BaseMultiplierCategory.hpp"
 
 namespace flopoco {
 	class IntMultiplier : public Operator {
@@ -74,9 +74,20 @@ namespace flopoco {
          * xPos, yPos:                  position of lower right corner of the BaseMultiplier
          * totalOffset:                 see placeSingleMultiplier()
          * */
-        unsigned int getOutputLengthNonZeros(BaseMultiplier* bm, unsigned int xPos, unsigned int yPos, unsigned int totalOffset);
+        unsigned int getOutputLengthNonZeros(
+				BaseMultiplierParametrization const & parameter,
+				unsigned int xPos,
+				unsigned int yPos,
+				unsigned int totalOffset
+			);
 
-        unsigned int getLSBZeros(BaseMultiplier* bm, unsigned int xPos, unsigned int yPos, unsigned int totalOffset, int mode);
+        unsigned int getLSBZeros(
+				BaseMultiplierParametrization const & parameter,
+				unsigned int xPos,
+				unsigned int yPos,
+				unsigned int totalOffset,
+				int mode
+			);
 
         /*!
          * add a unique identifier for the multiplier, and possibly for the block inside the multiplier

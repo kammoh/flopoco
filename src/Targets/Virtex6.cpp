@@ -472,6 +472,23 @@ namespace flopoco{
 		return cost;
 	}
 
+	double Virtex6::lutConsumption(int lutInputSize)
+	{
+		if (lutInputSize <= 5) {
+			return .5;
+		}
+		switch (lutInputSize) {
+			case 6:
+				return 1.;
+			case 7:
+				return 2.;
+			case 8:
+				return 4.;
+			default:
+				return -1.;
+		}
+	}
+
 	void Virtex6::delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay)
 	{
 		double targetPeriod, totalPeriod;

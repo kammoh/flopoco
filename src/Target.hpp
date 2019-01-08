@@ -169,6 +169,15 @@ namespace flopoco{
 		 */
 		virtual int maxLutInputs();
 
+		/**
+		 *	@brief return the number n of luts consumed for a given entry word
+		 *	size. If smaller than one, it means that 1/n bits can be computed
+		 *	simultaneously from the same input
+		 *	Returns -1 if a function of lutInputSize cannot be implemented
+		 *	without using routing in general
+		 */
+		virtual double lutConsumption(int lutInputSize) = 0;
+
 
 		/* -------------------- Perf declaration methods  ------------------------
 			 These methods return a delay in seconds.
@@ -185,7 +194,6 @@ namespace flopoco{
 				Default implementation in target uses only lutDelay etc
 		*/
 		virtual double logicDelay(int inputs=1) = 0;
-		
 
 		/** Function which returns addition delay for an n bit addition
 				It includes one level of local routing.
@@ -453,14 +461,12 @@ namespace flopoco{
 
 		/*------------ Resource Estimation - target specific ---------*/
 		/*------------------------------------------------------------*/
-
 		/**
 		 * NOTE: These functions return values that are specific
 		 * to the target FPGA. If the results are not satisfactory,
 		 * the class that implements Target can just as well override
 		 * the functions to provide better ones.
 		 */
-
 
 		/**
 		 * Determine whether a LUT can be split to implement multiple

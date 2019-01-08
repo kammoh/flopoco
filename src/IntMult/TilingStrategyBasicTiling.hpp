@@ -23,9 +23,9 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		int shrinkBox(int& xright, int& ytop, int& xdim, int& ydim, int offset);
 		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, int offset, int curArea);
 		base_multiplier_id_t prefered_multiplier_;
+		base_multiplier_id_t small_tile_mult_;
 		size_t numUsedMults_;
-		float occupation_threshold=.875;
-		vector<base_multiplier_id_t> orderedBmc;
+		float occupation_threshold=.875; //TODO replace by flopoco command line option value
 		bool truncated;
 };
 

@@ -1,42 +1,35 @@
-#include "BaseMultiplier2xk.hpp"
+#include "XilinxBaseMultiplier2xk.hpp"
 #include "../PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
 #include "../PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
 #include "../PrimitiveComponents/Xilinx/Xilinx_LUT_compute.h"
 
 namespace flopoco {
 
-
-BaseMultiplier2xk::BaseMultiplier2xk(bool isSignedX, bool isSignedY, int width, bool flipXY) : BaseMultiplier(isSignedX,isSignedY)
+Operator* XilinxBaseMultiplier2xk::generateOperator(
+		Operator *parentOp, 
+		Target* target,
+		Parametrization const & parameters) const
 {
-
-    srcFileName = "BaseMultiplier2xk";
-    uniqueName_ = "BaseMultiplier2xk";
-
-    this->flipXY = flipXY;
-    this->width = width;
-
-    if(!flipXY)
-    {
-        wX = 2;
-        wY = width;
-        uniqueName_ = string("BaseMultiplier2x") + std::to_string(width);
-    }
-    else
-    {
-        wX = width;
-        wY = 2;
-        uniqueName_ = string("BaseMultiplier") + std::to_string(width) + string("x2");
-    }
-
+	return new XilinxBaseMultiplier2xkOp(
+			parentOp,
+			target,
+			parameters.isSignedX(), 
+			parameters.isSignedY(), 
+			parameters.getXWordSize(),
+			parameters.isFlippedXY()
+		);
 }
 
-Operator* BaseMultiplier2xk::generateOperator(Operator *parentOp, Target* target)
+double XilinxBaseMultiplier2xk::getLUTCost(uint32_t wX, uint32_t wY) const
 {
-	return new BaseMultiplier2xkOp(parentOp, target, isSignedX, isSignedY, width, flipXY);
+	if (wX <= 2)
+		return double(wY + 1);
+	else
+		return double(wX + 1);
 }
 	
 
-BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
+XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
 {
     ostringstream name;
 
@@ -48,7 +41,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
         wY = width;
         in1 = "Y";
         in2 = "X";
-        name << "BaseMultiplier2x" << width;
+        name << "XilinxBaseMultiplier2x" << width;
     }
     else
     {
@@ -66,7 +59,7 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
 
     addOutput("R", width+2, 1, true);
 
-    if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by BaseMultiplier2xkOp, sorry");
+    if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by XilinxBaseMultiplier2xkOp, sorry");
 
     int needed_luts = width+1;//no. of required LUTs
     int needed_cc = ( needed_luts / 4 ) + ( needed_luts % 4 > 0 ? 1 : 0 ); //no. of required carry chains

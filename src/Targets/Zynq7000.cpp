@@ -115,17 +115,33 @@ namespace flopoco{
 		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
 		return delay;
 		
-	};
+	}
 	
+	double Zynq7000::lutConsumption(int lutInputSize)
+	{
+		if (lutInputSize <= 5) {
+			return .5;
+		}
+		switch (lutInputSize) {
+			case 6:
+				return 1.;
+			case 7:
+				return 2.;
+			case 8:
+				return 4.;
+			default:
+				return -1.;
+		}
+	}
+
 	double Zynq7000::lutDelay(){
 		return lutDelay_;
-	};
+	}
 	
 	long Zynq7000::sizeOfMemoryBlock()
 	{
 		return sizeOfBlock_;	
-	};
-	
+	}
 	
 	double Zynq7000::tableDelay(int wIn, int wOut, bool logicTable){
 		if(logicTable) {
@@ -148,7 +164,7 @@ namespace flopoco{
 		DSP* dsp_ = new DSP(dspFixedShift_, x, y);
 		
 		return dsp_;
-	};
+	}
 	
 	bool Zynq7000::suggestSubmultSize(int &x, int &y, int wInX, int wInY){
 		
