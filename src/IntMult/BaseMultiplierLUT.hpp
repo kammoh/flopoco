@@ -8,18 +8,24 @@
 #include <gmpxx.h>
 #include "Target.hpp"
 #include "Operator.hpp"
-#include "BaseMultiplier.hpp"
+#include "BaseMultiplierCategory.hpp"
 
 namespace flopoco {
-
-
-    class BaseMultiplierLUT : public BaseMultiplier
+    class BaseMultiplierLUT : public BaseMultiplierCategory
     {
 
 	public:
-			BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int wY);
+			BaseMultiplierLUT(int maxLutSize, double lutPerOutputBit);
+			double getLUTCost(uint32_t wX, uint32_t wY) const override;
+			int getDSPCost(uint32_t wX, uint32_t wY) const override { return 0; }
 
-			virtual Operator *generateOperator(Operator *parentOp, Target *target);
+			Operator *generateOperator(
+					Operator *parentOp,
+					Target *target,
+					Parametrization const & parameters
+				) const override;
+	private:
+			double lutPerOutputBit_;
 	};
 }
 #endif

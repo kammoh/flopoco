@@ -60,6 +60,8 @@ namespace flopoco{
 		int    getEquivalenceSliceDSP();
 		int    getNumberOfDSPs();
 		int    getIntNAdderCost(int wIn, int n);	
+		int maxLutInputs() {return 8;}
+		double lutConsumption(int lutInputSize);
 
 		
 	private:

@@ -3,23 +3,44 @@
 
 namespace flopoco {
 
+BaseMultiplierLUT::BaseMultiplierLUT(int maxSize, double lutPerOutputBit):
+	BaseMultiplierCategory{
+		maxSize, 
+		maxSize,
+		0,
+		1,
+		1,
+		maxSize
+	}, lutPerOutputBit_{lutPerOutputBit}
+{}
 
-BaseMultiplierLUT::BaseMultiplierLUT(bool isSignedX, bool isSignedY, int wX, int wY) : BaseMultiplier(isSignedX,isSignedY)
+double BaseMultiplierLUT::getLUTCost(uint32_t wX, uint32_t wY) const
 {
+	uint32_t outputSize;
+	if (wY == 1) {
+		outputSize = wX;
+	} else if (wX == 1) {
+		outputSize = wY;
+	} else {
+		outputSize = wX + wY;
+	}
 
-    srcFileName = "BaseMultiplierLUT";
-    uniqueName_ = string("BaseMultiplierLUT") + to_string(wX) + string("x") + to_string(wY);
-
-    this->wX = wX;
-    this->wY = wY;
-
+	return lutPerOutputBit_ * outputSize;
 }
 
-Operator* BaseMultiplierLUT::generateOperator(Operator *parentOp, Target* target)
+Operator* BaseMultiplierLUT::generateOperator(
+		Operator *parentOp, 
+		Target* target,
+		Parametrization const & parameters) const
 {
-	return new IntMultiplierLUT(parentOp, target, wX, wY, isSignedX, isSignedY);
+	return new IntMultiplierLUT(
+			parentOp,
+			target,
+			parameters.getXWordSize(),
+			parameters.getYWordSize(), 
+			parameters.isSignedX(), 
+			parameters.isSignedY()
+		);
 }
-
-
 }   //end namespace flopoco
 

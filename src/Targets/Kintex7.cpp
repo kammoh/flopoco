@@ -100,6 +100,21 @@ namespace flopoco{
 		return sizeOfBlock_;	
 	};
 
+	double Kintex7::lutConsumption(int lutInputSize) {
+		if (lutInputSize <= 5) {
+			return .5;
+		}
+		switch (lutInputSize) {
+			case 6:
+				return 1.;
+			case 7:
+				return 2.;
+			case 8:
+				return 4.;
+			default:
+				return -1.;
+		}
+	}
 
 	double Kintex7::tableDelay(int wIn, int wOut, bool logicTable){
 		if(logicTable) {

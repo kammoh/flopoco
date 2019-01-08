@@ -1,41 +1,34 @@
 #ifndef BaseMultiplierCollection_HPP
 #define BaseMultiplierCollection_HPP
 
-#include <string>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
+
+#include "BaseMultiplierCategory.hpp"
 #include "Target.hpp"
-#include "BaseMultiplier.hpp"
 
 namespace flopoco {
 	typedef size_t base_multiplier_id_t;
     class BaseMultiplierCollection {
 
 	public:
-		BaseMultiplierCollection(Target *target, unsigned int wX, unsigned int wY, bool pipelineDSPs=false);
-        ~BaseMultiplierCollection();
+		BaseMultiplierCollection(Target *target);
 
-        BaseMultiplier* getBaseMultiplier(base_multiplier_id_t multRef);
+        BaseMultiplierCategory& getBaseMultiplier(base_multiplier_id_t multRef);
 		base_multiplier_id_t getPreferedMultiplier();
-
-		vector<base_multiplier_id_t> getMultipliersIDByArea(bool desc=false);
+		vector<BaseMultiplierCategory const*> const getView() const;
 		
         string getName(){ return uniqueName_; }
-		
-    private:
 
-	
+    private:
         Target* target;
 
         string srcFileName; //for debug outputs
-
         string uniqueName_; /**< useful only to enable same kind of reporting as for FloPoCo operators. */
 
-        unsigned int wX;
-        unsigned int wY;
-	
-        vector<BaseMultiplier*> baseMultipliers; //the list of base mutlipliers, index is identical to shape
+        vector<BaseMultiplierCategory*> baseMultiplierCategories; 
 	};
 }
 #endif

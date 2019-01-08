@@ -17,9 +17,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			signedIO,
 			bmc),
 		prefered_multiplier_(prefered_multiplier),
+		small_tile_mult_(1), //Most compact LUT-Based multiplier
 		numUsedMults_(0)
 	{
-		orderedBmc = bmc->getMultipliersIDByArea(true);
 		truncated = (wOut < (wY + wX));
 	}
 
@@ -80,77 +80,81 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int curArea
 		) 
 	{
+		auto& bmc = baseMultiplierCollection->getBaseMultiplier(small_tile_mult_);
 		int thresholdArea = curDeltaX * curDeltaY;
-		auto cur = std::lower_bound(
-				orderedBmc.begin(),
-				orderedBmc.end(),
-				thresholdArea,
-				[this, thresholdArea](const base_multiplier_id_t & id, const int val)->bool{
-					auto const & multiplier = *(baseMultiplierCollection->getBaseMultiplier(id));
-					int multArea = multiplier.getXWordSize() * multiplier.getYWordSize();
-					return multArea > thresholdArea;
-				}
-			);			
-		auto last = orderedBmc.end();
 		bool canOverflowLeft = not truncated;
 		bool canOverflowRight = false;
 		bool canOverflowTop = (curY == 0);
-		bool canOverflowBottom;
+		bool canOverflowBottom = false;
 		int xleft = curX + curDeltaX - 1;
 		int ybottom = curY + curDeltaY - 1;
-		int xanchor, yanchor, xendmultbox, yendmultbox;
-		int xMult;
-		int yMult;
+		int nbInputMult = bmc.getMaxUnsignedWordSize();
 
-		for (; cur != last ; ++cur) {
-			auto& bm = *(baseMultiplierCollection->getBaseMultiplier(*cur));
-			xMult = bm.getXWordSize();
-			yMult = bm.getYWordSize();
+		int bestXMult = 1;
+		int bestYMult = 1;
+		int bestArea = -1;
+		int bestXAnchor = curX;
+		int bestYAnchor = curY;
 
-			if (truncated) {
+		bool found = false;
+
+		for (int i = nbInputMult ; i > 1 && (!found) ; --i) {
+			int xMult, yMult;
+			int xanchor, yanchor, xendmultbox, yendmultbox;
+			for (xMult = nbInputMult - 1 ; xMult > 0 ; --xMult) {
+				yMult = i - xMult;
+				if (truncated) {
 				xanchor = xleft - xMult + 1;
 				yanchor = ybottom - yMult + 1;
-			} else {
-				xanchor = curX;
-				yanchor = curY;	
-			}
-			xendmultbox = xanchor + xMult - 1;
-			yendmultbox = yanchor + yMult - 1;
-			canOverflowBottom = false;
+				} else {
+					xanchor = curX;
+					yanchor = curY;	
+				}
+				xendmultbox = xanchor + xMult - 1;
+				yendmultbox = yanchor + yMult - 1;
 
-			// Test if multiplier does not overflow on already handled data
-			if (((yanchor < curY) && !canOverflowTop) ||
-					((yendmultbox > ybottom) && !canOverflowBottom) ||
-					((xanchor < curX) && !canOverflowRight) || 
-					((xendmultbox > xleft) && !canOverflowLeft)) {
-				continue;
-			}
-			
-			int copyxanchor, copyyanchor, copyXMult, copyYMult;
-			copyxanchor = xanchor;
-			copyyanchor = yanchor;
-			copyXMult = xMult;
-			copyYMult = yMult;
-			int effectiveArea = shrinkBox(
-					copyxanchor, 
-					copyyanchor, 
-					copyXMult, 
-					copyYMult, 
-					offset
-				);
-			if (effectiveArea == xMult * yMult ) {
-				// We have found our multiplier
-				break;
+				// Test if multiplier does not overflow on already handled data
+				if (((yanchor < curY) && !canOverflowTop) ||
+						((yendmultbox > ybottom) && !canOverflowBottom) ||
+						((xanchor < curX) && !canOverflowRight) || 
+						((xendmultbox > xleft) && !canOverflowLeft)) {
+					continue;
+				}
+
+				int copyxanchor, copyyanchor, copyXMult, copyYMult;
+				copyxanchor = xanchor;
+				copyyanchor = yanchor;
+				copyXMult = xMult;
+				copyYMult = yMult;
+				int effectiveArea = shrinkBox(
+						copyxanchor, 
+						copyyanchor, 
+						copyXMult, 
+						copyYMult, 
+						offset
+						);
+				if (effectiveArea == xMult * yMult && effectiveArea > bestArea) {
+					bestXMult = xMult;
+					bestYMult = yMult;
+					bestArea = effectiveArea;
+					bestXAnchor = xanchor;
+					bestYAnchor = yanchor;
+					break;
+				}
 			}
 		}
-		if (yMult < curDeltaY) {
+
+		int xendmultbox = bestXAnchor + bestXMult - 1;
+		int yendmultbox = bestYAnchor + bestYMult - 1;
+		
+		if (bestYMult < curDeltaY) {
 			//We need to tile a subbox above or below the current multiplier
 			int xStartUpDownbox = curX;
 			int deltaXUpDownbox = curDeltaX;
 			int yStartUpDownbox, deltaYUpDownbox;
 			if (truncated) {
 				yStartUpDownbox = curY;
-				deltaYUpDownbox = yanchor - curY;
+				deltaYUpDownbox = bestYAnchor - curY;
 			} else {
 				yStartUpDownbox = yendmultbox + 1;	
 				deltaYUpDownbox = ybottom - yendmultbox;
@@ -174,14 +178,14 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					);
 			}
 		}
-		if (xMult < curDeltaX) {
+		if (bestXMult < curDeltaX) {
 			//we need to tile a subbox left or right from the multiplier
-			int yStartUpDownbox = yanchor;
-			int deltaYUpDownbox = yMult;
+			int yStartUpDownbox = bestYAnchor;
+			int deltaYUpDownbox = bestYMult;
 			int xStartUpDownbox, deltaXUpDownbox;
 			if (truncated) {
 				xStartUpDownbox = curX;
-				deltaXUpDownbox = xanchor - curX;
+				deltaXUpDownbox = bestXAnchor - curX;
 			} else {
 				xStartUpDownbox = xendmultbox + 1;	
 				deltaXUpDownbox = xleft - xendmultbox;
@@ -205,35 +209,44 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					);
 			}
 		}
-
 		//Add the current multiplier
-		mult_tile_t solutionItem;
-		solutionItem.first = *cur;
-		solutionItem.second = make_pair(xanchor, yanchor);
-		solution.push_back(solutionItem);
+		auto param = bmc.parametrize(bestXMult, bestYMult, false, false);
+		auto coord = make_pair(bestXAnchor, bestYAnchor);
+		solution.push_back(make_pair(param, coord));
 	}
 
 	void TilingStrategyBasicTiling::solve()
 	{
-		BaseMultiplier& bm = *(baseMultiplierCollection->
-				getBaseMultiplier(prefered_multiplier_));	
-		int wXmult = bm.getXWordSize();
-		int wYmult = bm.getYWordSize();
+		auto& bm = baseMultiplierCollection->getBaseMultiplier(prefered_multiplier_);	
+		int wXmultMax = bm.getMaxUnsignedWordSize();
+		//TODO Signed int deltaSignedUnsigned = bm.getDeltaWidthSigned();
+		int wXmult = 1;
+		int wYmult = 1;
+		int intMultArea = 1;
+		for (int testValX = 1 ; testValX < wXmultMax ; ++testValX) {
+			int testValY = bm.getMaxSecondWordSize(testValX, false, false);
+			int testMultArea = testValX * testValY;
+			if (testMultArea >= intMultArea) {
+				wXmult = testValX;
+				wYmult = testValY;
+				intMultArea = testMultArea;
+			}
+		}
 
-		double multArea = ((double) wXmult * wYmult);
+		double multArea = double(intMultArea);
 
 		if (truncated) {
 			//Perform tiling from left to right to increase the number of full
 			//multipliers	
 			int offset = wX + wY - wOut;
-			int curX = wX - 1;		
+			int curX = wX - 1;
 			int curY = 0;
 			if (curX < offset) {
 				curY = offset - curX;
 			}
 
 			while (curY < wY) {
-				curX = wX - 1;		
+				curX = wX - 1;	
 				while(curX >= 0) {
 					int rightX = curX - wXmult;
 					int topY = curY;
@@ -247,10 +260,14 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					double occupationRatio = ((double) (area)) /  multArea;
 					if (occupationRatio >= occupation_threshold) {
 						// Emit a preferred multiplier for this block
-						mult_tile_t solutionItem;	
-						solutionItem.first = prefered_multiplier_;
-						solutionItem.second = make_pair(rightX, topY);
-						solution.push_back(solutionItem);
+						auto param = bm.parametrize(
+								wXmult, 
+								wYmult, 
+								false,
+								false										
+							);
+						auto coords = make_pair(rightX, topY);
+						solution.push_back(make_pair(param, coords));
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
@@ -282,10 +299,14 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					double occupationRatio = double(area) /  multArea;
 					if (occupationRatio >= occupation_threshold) {
 						// Emit a preferred multiplier for this block
-						mult_tile_t solutionItem;	
-						solutionItem.first = prefered_multiplier_;
-						solutionItem.second = make_pair(rightX, topY);
-						solution.push_back(solutionItem);
+						auto param = bm.parametrize(
+								wXmult,
+								wYmult,
+								false,
+								false
+							);
+						auto coord = make_pair(rightX, topY);
+						solution.push_back(make_pair(param, coord));
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;

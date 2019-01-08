@@ -6,32 +6,18 @@
 
 namespace flopoco {
 
-
-BaseMultiplierDSP::BaseMultiplierDSP(bool isSignedX, bool isSignedY, int wX, int wY, bool flipXY) : BaseMultiplier(isSignedX,isSignedY)
+Operator* BaseMultiplierDSP::generateOperator(
+		Operator *parentOp, 
+		Target* target,
+		Parametrization const &parameters) const
 {
-
-    srcFileName = "BaseMultiplierDSP";
-    uniqueName_ = "BaseMultiplierDSP" + std::to_string(wX) + "x" + std::to_string(wY);
-
-    this->flipXY = flipXY;
-    this->pipelineDSPs = pipelineDSPs;
-
-    if(!flipXY)
-    {
-        this->wX = wX;
-        this->wY = wY;
-    }
-    else
-    {
-        this->wX = wY;
-        this->wY = wX;
-    }
-
-}
-
-Operator* BaseMultiplierDSP::generateOperator(Operator *parentOp, Target* target)
-{
-	return new DSPBlock(parentOp, target, wX, wY); //ToDo: no fliplr support anymore, find another solution!
+	//ToDo: no fliplr support anymore, find another solution!
+	return new DSPBlock(
+			parentOp, 
+			target, 
+			parameters.getXWordSize(), 
+			parameters.getYWordSize()
+			); 
 }
 
 }   //end namespace flopoco

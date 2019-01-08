@@ -76,7 +76,7 @@ namespace flopoco {
 
 		REPORT(DEBUG, "Creating BaseMultiplierCollection");
 //		BaseMultiplierCollection baseMultiplierCollection(parentOp->getTarget(), wX, wY);
-		BaseMultiplierCollection baseMultiplierCollection(getTarget(), wX, wY);
+		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 
 		REPORT(DEBUG, "Creating TilingStrategy");
 		TilingStrategyBasicTiling tilingStrategy(
@@ -96,40 +96,40 @@ namespace flopoco {
 		unsigned int posInList = 0;    //needed as id to differ between inputvectors
         unsigned int totalOffset = 0; //!!! multiplierSolutionParser->getOffset();
 
-        for(auto it = solution.begin(); it != solution.end(); it++){
-            base_multiplier_id_t type = (*it).first;
-            unsigned int xPos = (*it).second.first;
-            unsigned int yPos = (*it).second.second;
+        for(auto & tile : solution) {
+            //base_multiplier_id_t type = (*it).first;
+			auto& parameters = tile.first;
+			auto& anchor = tile.second;
+            unsigned int xPos = anchor.first;
+            unsigned int yPos = anchor.second;
 
-            BaseMultiplier *baseMultiplier = baseMultiplierCollection.getBaseMultiplier(type);
+            //BaseMultiplier &baseMultiplier = baseMultiplierCollection.getBaseMultiplier(type);
 
-            if(!baseMultiplier) THROWERROR("Multiplier of type " << type << " does not exist");
-
-            cout << "found multiplier " << baseMultiplier->getName() << " (type " <<  type << ") at position (" << (int) (xPos-totalOffset) << "," << (int) (yPos-totalOffset) << ")" << endl;
+            //cout << "found multiplier " << baseMultiplier.getName() << " (type " <<  type << ") at position (" << (int) (xPos-totalOffset) << "," << (int) (yPos-totalOffset) << ")" << endl;
 
             //unsigned int outputLength = getOutputLength(baseMultiplier, xPos, yPos);
 			//Operator *op = baseMultiplier->getOperator();
             //lets assume, that baseMultiplier ix 3x3, Unsigned ...
 
-            unsigned int xInputLength = baseMultiplier->getXWordSize();
-            unsigned int yInputLength = baseMultiplier->getYWordSize();
-            unsigned int outputLength = baseMultiplier->getOutWordSize();
+            unsigned int xInputLength = parameters.getXWordSize();
+            unsigned int yInputLength = parameters.getYWordSize();
+            unsigned int outputLength = parameters.getOutWordSize();
 
-            unsigned int lsbZerosInBM = getLSBZeros(baseMultiplier, xPos, yPos, totalOffset, 1);  //normally, starting position of output is computed by xPos + yPos. But if the output starts at an higher weight, lsbZeros counts the offset
+            unsigned int lsbZerosInBM = getLSBZeros(parameters, xPos, yPos, totalOffset, 1);  //normally, starting position of output is computed by xPos + yPos. But if the output starts at an higher weight, lsbZeros counts the offset
 
-            unsigned int completeOffset = getLSBZeros(baseMultiplier, xPos, yPos, totalOffset, 0);
+            unsigned int completeOffset = getLSBZeros(parameters, xPos, yPos, totalOffset, 0);
             unsigned int resultVectorOffset = completeOffset - lsbZerosInBM;
             unsigned int xInputNonZeros = xInputLength;
             unsigned int yInputNonZeros = yInputLength;
-            unsigned int realBitHeapPosOffset = getLSBZeros(baseMultiplier, xPos, yPos, totalOffset, 2);
+            unsigned int realBitHeapPosOffset = getLSBZeros(parameters, xPos, yPos, totalOffset, 2);
 
             unsigned int outputLengthNonZeros = xInputNonZeros + yInputNonZeros;
 
-            outputLengthNonZeros = getOutputLengthNonZeros(baseMultiplier, xPos, yPos, totalOffset);
+            outputLengthNonZeros = getOutputLengthNonZeros(parameters, xPos, yPos, totalOffset);
 
 //            setCycle(0); //reset to cycle 0
 
-			Operator *op = baseMultiplier->generateOperator(parentOp, getTarget());
+			Operator *op = parameters.generateOperator(parentOp, getTarget());
 //            nextCycle(); //add register after each multiplier
 
 			UserInterface::addToGlobalOpList(op);
@@ -153,7 +153,7 @@ namespace flopoco {
 
             //TODO: check cases, where the lsbZerosInBM != 0
             //outputVectorLSBZeros are the amount of lsb Bits of the outputVector, which we have to discard in the vhdl-code.
-            outputVectorLSBZeros = getLSBZeros(baseMultiplier, xPos, yPos, totalOffset, 0) - getLSBZeros(baseMultiplier, xPos, yPos, totalOffset, 1);
+            outputVectorLSBZeros = getLSBZeros(parameters, xPos, yPos, totalOffset, 0) - getLSBZeros(parameters, xPos, yPos, totalOffset, 1);
             cout << "for position " << xPos << "," << yPos << " we got outputVectorLSBZeros = " << outputVectorLSBZeros << endl;
             cout << "outputLengthNonZeros = " << outputLengthNonZeros << endl;
             cout << "startWeight is " << startWeight << endl;
@@ -283,7 +283,12 @@ namespace flopoco {
         return s.str() ;
     }
 
-    unsigned int IntMultiplier::getOutputLengthNonZeros(BaseMultiplier* bm, unsigned int xPos, unsigned int yPos, unsigned int totalOffset)
+    unsigned int IntMultiplier::getOutputLengthNonZeros(
+			BaseMultiplierParametrization const & parameter, 
+			unsigned int xPos,
+			unsigned int yPos, 
+			unsigned int totalOffset
+		)
     {
 //        unsigned long long int sum = 0;
         mpfr_t sum;
@@ -301,20 +306,18 @@ namespace flopoco {
     flush(cout);
 */
 
-        for(int i = 0; i < bm->getXWordSize(); i++){
-            for(int j = 0; j < bm->getYWordSize(); j++){
+        for(unsigned int i = 0; i < parameter.getXWordSize(); i++){
+            for(unsigned int j = 0; j < parameter.getYWordSize(); j++){
                 if(i + xPos >= totalOffset && j + yPos >= totalOffset){
                     if(i + xPos < (wX + totalOffset) && j + yPos < (wY + totalOffset)){
-                        if(bm->shapeValid(i,j)){
+                        if(parameter.shapeValid(i,j)){
                             //sum += one << (i + j);
                             mpfr_t r;
                             mpfr_t e;
                             mpfr_inits(r, e, NULL);
-
                             mpfr_set_si(e, i+j, GMP_RNDD);
                             mpfr_pow(r, two, e, GMP_RNDD);
                             mpfr_add(sum, sum, r, GMP_RNDD);
-
 //                            cout << " added 2^" << (i+j) << endl;
                         }
                         else{
@@ -343,9 +346,15 @@ namespace flopoco {
 
     /*this function computes the amount of zeros at the lsb position (mode 0). This is done by checking for every output bit position, if there is a) an input of the current BaseMultiplier, and b) an input of the IntMultiplier. if a or b or both are false, then there is a zero at this position and we check the next position. otherwise we break. If mode==1, only condition a) is checked */
     /*if mode is 2, only the offset for the bitHeap is computed. this is done by counting how many diagonals have a position, where is an IntMultiplierInput but not a BaseMultiplier input. */
-    unsigned int IntMultiplier::getLSBZeros(BaseMultiplier* bm, unsigned int xPos, unsigned int yPos, unsigned int totalOffset, int mode){
+    unsigned int IntMultiplier::getLSBZeros(
+			BaseMultiplierParametrization const & param,
+		   	unsigned int xPos,
+			unsigned int yPos,
+			unsigned int totalOffset,
+		    int mode
+		){
         //cout << "mode is " << mode << endl;
-        unsigned int max = min(bm->getXWordSize(), bm->getYWordSize());
+        unsigned int max = min(int(param.getXWordSize()), int(param.getYWordSize()));
         unsigned int zeros = 0;
         unsigned int mode2Zeros = 0;
         bool startCountingMode2 = false;
@@ -358,7 +367,7 @@ namespace flopoco {
             for(unsigned int j = 0; j < steps; j++){
                 bool bmHasInput = false;
                 bool intMultiplierHasBit = false;
-                if(bm->shapeValid(j, steps - (j + 1))){
+                if(param.shapeValid(j, steps - (j + 1))){
                     bmHasInput = true;
                 }
                 if(bmHasInput && mode == 1){

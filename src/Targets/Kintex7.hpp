@@ -68,12 +68,13 @@ namespace flopoco{
 
 		double RAMDelay() { return RAMDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
+		double lutConsumption(int lutInputSize);
 
 		/** 
 		 * The four 6-LUTs of a slice can be combined without routing into a 
 		 * 8-LUT
 		 */
-		virtual int maxLutInputs() { return 8; }
+		int maxLutInputs() { return 8; }
 #if 0
 		
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
