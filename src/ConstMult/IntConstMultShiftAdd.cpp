@@ -175,7 +175,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
         noOfPipelineStages = 0;
         int configurationSignalWordsize = ceil(log2(noOfConfigurations));
-        for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin(); iter != pipelined_adder_graph.nodes_list.end(); ++iter)
+        for (std::list<PAGSuite::adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin(); iter != pipelined_adder_graph.nodes_list.end(); ++iter)
             if ((*iter)->stage > noOfPipelineStages) noOfPipelineStages=(*iter)->stage;
 
         REPORT( INFO, "noOfInputs: " << noOfInputs)
@@ -193,9 +193,9 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         //IDENTIFY NODE
         REPORT(INFO,"identifiing nodes..")
 
-                map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
-        map<int,list<adder_graph_base_node_t*> > stageNodesMap;
-        for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
+                map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
+        map<int,list<PAGSuite::adder_graph_base_node_t*> > stageNodesMap;
+        for (std::list<PAGSuite::adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
              iter != pipelined_adder_graph.nodes_list.end();
              ++iter)
         {
@@ -213,12 +213,12 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                        ){
                 REPORT(DEBUG,"has decoder")
 
-                        conf_adder_subtractor_node_t* cc = new conf_adder_subtractor_node_t();
+                PAGSuite::conf_adder_subtractor_node_t* cc = new PAGSuite::conf_adder_subtractor_node_t();
                 cc->stage = (*iter)->stage-1;
                 stageNodesMap[(*iter)->stage-1].push_back( cc );
                 ((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
                 additionalNodeInfoMap.insert(
-                            make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder)
+                            make_pair<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder)
                             );
             }else if(t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX){
                 REPORT(DEBUG,"has decoder")
@@ -228,17 +228,17 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                 stageNodesMap[(*iter)->stage-1].push_back( cc );
                 ((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
                 additionalNodeInfoMap.insert(
-                            make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder)
+                            make_pair<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder)
                             );
             }
             t->wordsize  = computeWordSize( *iter,wIn );
             t->base_node = (*iter);
-            //additionalNodeInfoMap.insert( std::make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(*iter,t) );
+            //additionalNodeInfoMap.insert( std::make_pair<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(*iter,t) );
             additionalNodeInfoMap.insert( {*iter,t} );
         }
         //IDENTIFY CONNECTIONS
         REPORT(INFO,"identifiing node connections..")
-                for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
+                for (std::list<PAGSuite::adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
                 iter != pipelined_adder_graph.nodes_list.end();
         ++iter)
         {
@@ -253,7 +253,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
             cout << "try stagemerge for stage " << i << " node count "<< stageNodesMap[i].size() << endl;
             bool mergePossible = true;
             int current_id = 0;
-            for( list<adder_graph_base_node_t*>::iterator iter = stageNodesMap[i].begin();iter!=stageNodesMap[i].end();++iter )
+            for( list<PAGSuite::adder_graph_base_node_t*>::iterator iter = stageNodesMap[i].begin();iter!=stageNodesMap[i].end();++iter )
             {
                 IntConstMultShiftAdd_AdditionalNodeInfo operationNodeInfo = additionalNodeInfoMap[(*iter)];
                 if( is_a<adder_subtractor_node_t>(*(*iter)) )
@@ -322,7 +322,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         for(unsigned int currentStage=0;currentStage<=(unsigned int)noOfPipelineStages;currentStage++)
         {
             isMuxStage = false;
-            for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[currentStage].begin();
+            for (std::list<PAGSuite::adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[currentStage].begin();
                  operationNode != stageNodesMap[currentStage].end();
                  ++operationNode)
             {
@@ -404,7 +404,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         {
             output_signal_info sig_info;
             short realizedOutputNodes = 0;
-            for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
+            for (std::list<PAGSuite::adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
                  operationNode != stageNodesMap[noOfPipelineStages].end();
                  ++operationNode)
             {
@@ -496,7 +496,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                     outputSignalName << abs((*iter)[i]);
                 }
                 bool found = false;
-                for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
+                for (std::list<PAGSuite::adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
                      operationNode != stageNodesMap[noOfPipelineStages].end();
                      ++operationNode)
                 {
@@ -707,7 +707,7 @@ void IntConstMultShiftAdd::buildStandardTestCases(TestCaseList * tcl)
     }
 }
 
-string IntConstMultShiftAdd::generateSignalName(adder_graph_base_node_t *node)
+string IntConstMultShiftAdd::generateSignalName(PAGSuite::adder_graph_base_node_t *node)
 {
     stringstream signalName;
     signalName << "x";
@@ -735,7 +735,7 @@ string IntConstMultShiftAdd::generateSignalName(adder_graph_base_node_t *node)
     return signalName.str();
 }
 
-IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* IntConstMultShiftAdd::identifyNodeType(adder_graph_base_node_t *node)
+IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* IntConstMultShiftAdd::identifyNodeType(PAGSuite::adder_graph_base_node_t *node)
 {
     if(is_a<adder_subtractor_node_t>(*node))
     {
@@ -960,7 +960,7 @@ IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* IntConstMultShiftAdd::ide
     return NULL;
 }
 
-void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *node, map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
+void IntConstMultShiftAdd::identifyOutputConnections(PAGSuite::adder_graph_base_node_t *node, map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
 {
     if(is_a<adder_subtractor_node_t>(*node))
     {
@@ -1002,10 +1002,10 @@ void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *no
     }
 }
 
-void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
+void IntConstMultShiftAdd::printAdditionalNodeInfo(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
 {
     stringstream nodeInfoString;
-    for( map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>::iterator nodeInfo = infoMap.begin();
+    for( map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>::iterator nodeInfo = infoMap.begin();
          nodeInfo != infoMap.end();
          ++nodeInfo)
     {
@@ -1032,7 +1032,7 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 
         if( (*nodeInfo).second->outputConnectedTo.size() > 0 )
         {
-            list<adder_graph_base_node_t*>::iterator iter = (*nodeInfo).second->outputConnectedTo.begin();
+            list<PAGSuite::adder_graph_base_node_t*>::iterator iter = (*nodeInfo).second->outputConnectedTo.begin();
             nodeInfoString << "\tOutputConnectedTo: " << endl << "\t\t" << *iter  << "("<< infoMap[*iter ]->outputSignalName << ")";
             for( ++iter;
                  iter!= (*nodeInfo).second->outputConnectedTo.end();

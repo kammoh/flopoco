@@ -7,6 +7,10 @@ The KCM algorithm (this stands for Ken Chapman Multipliers, long life to him) us
 
 Shift-and-add multipliers express an integer multiplier as a sequence of shift-and-add operations. There are currently two implementations
 
+The class IntConstMultShiftAdd
+The class IntConstMultShiftAddTypes
+
+
 -- The obsolete implementation,
 The class ShiftAddOp defines such an operation.
 The class ShiftAddDag defines a directed acyclic graph (DAG) of such operations.

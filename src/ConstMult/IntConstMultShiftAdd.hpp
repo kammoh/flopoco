@@ -48,7 +48,7 @@ namespace flopoco {
      bool RPAGused;
      int emu_conf;
      vector<vector<int64_t> > output_coefficients;
-     adder_graph_t pipelined_adder_graph;
+     PAGSuite::adder_graph_t pipelined_adder_graph;
      list<string> input_signals;
 
      list<output_signal_info> output_signals;
@@ -60,12 +60,12 @@ namespace flopoco {
      void ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str);
 
 
-     string generateSignalName(adder_graph_base_node_t* node);
-     IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* identifyNodeType(adder_graph_base_node_t* node);
+     string generateSignalName(PAGSuite::adder_graph_base_node_t* node);
+     IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* identifyNodeType(PAGSuite::adder_graph_base_node_t* node);
      bool TryRunRPAG(string pipelined_realization_str,string& out);
 
-     void identifyOutputConnections(adder_graph_base_node_t* node, map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap);
-     void printAdditionalNodeInfo(map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );
+     void identifyOutputConnections(PAGSuite::adder_graph_base_node_t* node, map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap);
+     void printAdditionalNodeInfo(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );
      string getShiftAndResizeString(string signalName, int outputWordsize, int inputShift, bool signedConversion=true);
      string getBinary(int value, int wordsize);
 

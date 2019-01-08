@@ -46,7 +46,7 @@ namespace IntConstMultShiftAdd_TYPES {
     };
 
     struct IntConstMultShiftAdd_muxInput{
-        adder_graph_base_node_t* node;
+        PAGSuite::adder_graph_base_node_t* node;
         int shift;
         vector<int> configurations;
     };
@@ -56,12 +56,12 @@ class IntConstMultShiftAdd_BASE{
 public:
     Target* target;
     Operator* base_op;
-    adder_graph_base_node_t* base_node;
+    PAGSuite::adder_graph_base_node_t* base_node;
     NODETYPE nodeType;
     int wordsize;
     string outputSignalName;
     int outputSignalUsageCount;
-    list<adder_graph_base_node_t*> outputConnectedTo;
+    list<PAGSuite::adder_graph_base_node_t*> outputConnectedTo;
     list<pair<string,int> > declare_list;
     list<Operator*> opList;
 
@@ -70,7 +70,7 @@ public:
     static int configurationSignalWordsize;
     static int noOfInputs;
 
-    virtual string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap )
+    virtual string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap )
     { return ""; }
 
     virtual string get_name()
@@ -88,7 +88,7 @@ public:
 
     string declare(string signalName,int wordsize = 1 );
     void getInputOrder(vector<bool>& inputIsNegative,vector<int>& inputOrder );
-    string getNegativeShiftString(string signalName , int wordsize, adder_graph_base_node_t *base_node );
+    string getNegativeShiftString(string signalName , int wordsize, PAGSuite::adder_graph_base_node_t *base_node );
     string getNegativeResizeString(string signalName,int outputWordsize);
     static string getShiftAndResizeString(string signalName, int wordsize, int inputShift, bool signedConversion=true);
     string getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int wordsize, int inputShift, bool signedConversion=true);
@@ -99,49 +99,49 @@ public:
 class IntConstMultShiftAdd_INPUT : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_INPUT(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_INPUT;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "INPUT";}
 };
 
 class IntConstMultShiftAdd_REG : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_REG(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_REG;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "REG";}
 };
 
 class IntConstMultShiftAdd_ADD2 : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_ADD2(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_ADD2;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "ADD2";}
 };
 
 class IntConstMultShiftAdd_SUB2_1N : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_SUB2_1N(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_SUB2_1N;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "SUB2_1N";}
 };
 
 class IntConstMultShiftAdd_ADD3 : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_ADD3(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_ADD3;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "ADD3";}
 };
 
 class IntConstMultShiftAdd_SUB3_1N : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_SUB3_1N(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_SUB3_1N;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "SUB3_1N";}
 };
 
 class IntConstMultShiftAdd_SUB3_2N : public IntConstMultShiftAdd_BASE{
 public:
     IntConstMultShiftAdd_SUB3_2N(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_SUB3_2N;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "SUB3_2N";}
 };
 class IntConstMultShiftAdd_BASE_CONF;
@@ -150,7 +150,7 @@ public:
     int decoder_size;
     IntConstMultShiftAdd_BASE *node;
     IntConstMultShiftAdd_DECODER(Operator* base):IntConstMultShiftAdd_BASE(base){nodeType=NODETYPE_DECODER;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "DECODER";}
 };
 
@@ -165,21 +165,21 @@ public:
 class IntConstMultShiftAdd_ADDSUB2_CONF : public IntConstMultShiftAdd_BASE_CONF{
 public:
     IntConstMultShiftAdd_ADDSUB2_CONF(Operator* base):IntConstMultShiftAdd_BASE_CONF(base){nodeType=NODETYPE_ADDSUB2_CONF;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "ADDSUB2_CONF";}
 };
 
 class IntConstMultShiftAdd_ADDSUB3_2STATE : public IntConstMultShiftAdd_BASE_CONF{
 public:
     IntConstMultShiftAdd_ADDSUB3_2STATE(Operator* base):IntConstMultShiftAdd_BASE_CONF(base){nodeType=NODETYPE_ADDSUB3_2STATE;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "ADDSUB3_2STATE";}
 };
 
 class IntConstMultShiftAdd_ADDSUB3_CONF : public IntConstMultShiftAdd_BASE_CONF{
 public:
     IntConstMultShiftAdd_ADDSUB3_CONF(Operator* base):IntConstMultShiftAdd_BASE_CONF(base){nodeType=NODETYPE_ADDSUB3_CONF;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "ADDSUB3_CONF";}
 };
 
@@ -192,7 +192,7 @@ public:
 class IntConstMultShiftAdd_AND : public IntConstMultShiftAdd_BASE_MUX{
 public:
     IntConstMultShiftAdd_AND(Operator* base):IntConstMultShiftAdd_BASE_MUX(base){nodeType=NODETYPE_AND;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "AND";}
 };
 
@@ -200,7 +200,7 @@ class IntConstMultShiftAdd_MUX : public IntConstMultShiftAdd_BASE_MUX{
 public:
     IntConstMultShiftAdd_DECODER *decoder;
     IntConstMultShiftAdd_MUX(Operator* base):IntConstMultShiftAdd_BASE_MUX(base){nodeType=NODETYPE_MUX;}
-    string get_realisation(map<adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
+    string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "MUX";}
 };
 }
