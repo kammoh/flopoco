@@ -81,7 +81,6 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		) 
 	{
 		auto& bmc = baseMultiplierCollection->getBaseMultiplier(small_tile_mult_);
-		int thresholdArea = curDeltaX * curDeltaY;
 		bool canOverflowLeft = not truncated;
 		bool canOverflowRight = false;
 		bool canOverflowTop = (curY == 0);
@@ -96,9 +95,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		int bestXAnchor = curX;
 		int bestYAnchor = curY;
 
-		bool found = false;
-
-		for (int i = nbInputMult ; i > 1 && (!found) ; --i) {
+		for (int i = nbInputMult ; i > 1 ; --i) {
 			int xMult, yMult;
 			int xanchor, yanchor, xendmultbox, yendmultbox;
 			for (xMult = nbInputMult - 1 ; xMult > 0 ; --xMult) {
@@ -139,7 +136,6 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					bestArea = effectiveArea;
 					bestXAnchor = xanchor;
 					bestYAnchor = yanchor;
-					break;
 				}
 			}
 		}
