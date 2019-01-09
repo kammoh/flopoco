@@ -257,8 +257,8 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					if (occupationRatio >= occupation_threshold) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
-								wXmult, 
-								wYmult, 
+								curDeltaX, 
+								curDeltaY, 
 								false,
 								false										
 							);
@@ -296,8 +296,8 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					if (occupationRatio >= occupation_threshold) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
-								wXmult,
-								wYmult,
+								curDeltaX,
+								curDeltaY,
 								false,
 								false
 							);
