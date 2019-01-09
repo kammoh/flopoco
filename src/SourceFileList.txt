@@ -114,9 +114,3 @@ Tools/Point
 TutorialOperator
 
 Complex/FixFFT
-
-#IntConstMultShiftAdd/FullyParallelFFT
-#IntConstMultShiftAdd/IntConstMultOpt
-#IntConstMultShiftAdd/IntConstMultOptTernary
-#IntConstMultShiftAdd/scm_solutions
-#IntConstMultShiftAdd/tscm_solutions

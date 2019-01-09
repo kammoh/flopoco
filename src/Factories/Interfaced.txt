@@ -40,3 +40,4 @@ TutorialOperator
 
 FixComplexKCM
 IntConstMultShiftAdd
+IntConstMultOpt

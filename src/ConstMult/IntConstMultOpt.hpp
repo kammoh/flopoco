@@ -1,7 +1,7 @@
 #ifndef INTCONSTMULTOPT_HPP
 #define INTCONSTMULTOPT_HPP
 
-#ifdef HAVE_PAGSUITE
+#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
 
 #include <vector>
 #include <sstream>
@@ -32,14 +32,13 @@ namespace flopoco{
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultOpt(Target* target, int wIn, int c, bool syncInOut=true);
+        IntConstMultOpt(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true);
 
 //		void emulate(TestCase* tc);
 //        void buildStandardTestCases(TestCaseList* tcl);
 
-        static OperatorPtr parseArguments( Target *target, vector<string> &args );
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
         static void registerFactory();
-
 	private:
         int coeff;  /**< The constant */
         int wIn;
@@ -49,8 +48,14 @@ namespace flopoco{
 		void generateVHDLOptSCM(int c);
 
         stringstream adderGraph;
+#else
+namespace flopoco{
+	class IntConstMultOpt
+	{
+	public:
+		static void registerFactory();
+#endif //defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
 	};
 }
 
-#endif //HAVE_PAGSUITE
 #endif

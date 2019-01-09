@@ -12,6 +12,8 @@
 #include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
 //#include "PrimitiveComponents/Altera/Altera_TernaryAdd.hpp"
 
+using namespace PAGSuite;
+
 namespace IntConstMultShiftAdd_TYPES {
 string IntConstMultShiftAdd_BASE::target_ID = "NONE";
 int IntConstMultShiftAdd_BASE::noOfConfigurations = 0;
@@ -19,14 +21,14 @@ int IntConstMultShiftAdd_BASE::configurationSignalWordsize = 0;
 int IntConstMultShiftAdd_BASE::noOfInputs = 0;
 
 
-string IntConstMultShiftAdd_INPUT::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     return "";
 }
 
-string IntConstMultShiftAdd_REG::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_REG::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::register_node_t* t = (PAGSuite::register_node_t*)(base_node);
+    register_node_t* t = (register_node_t*)(base_node);
     
     bool negate=false;
     for(unsigned int i=0;i<t->output_factor.size();++i){
@@ -50,9 +52,9 @@ string IntConstMultShiftAdd_REG::get_realisation(map<PAGSuite::adder_graph_base_
     return "";
 }
 
-string IntConstMultShiftAdd_ADD2::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADD2::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)(base_node);
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
 
     GenericAddSub* addsub = new GenericAddSub(base_op,target,wordsize);
 
@@ -74,9 +76,9 @@ string IntConstMultShiftAdd_ADD2::get_realisation(map<PAGSuite::adder_graph_base
     return "";//base_op->vhdl.str();
 }
 
-string IntConstMultShiftAdd_ADD3::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADD3::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)(base_node);
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     base_op->vhdl << "\t" << base_op->declare( "add3_" + outputSignalName + "_x",wordsize   ) << " <= "
          << getShiftAndResizeString( InfoMap[ t->inputs[0] ] , wordsize, t->input_shifts[0],false) << ";" << endl;
     base_op->vhdl << "\t" << base_op->declare( "add3_" + outputSignalName + "_y",wordsize   ) << " <= "
@@ -97,9 +99,9 @@ string IntConstMultShiftAdd_ADD3::get_realisation(map<PAGSuite::adder_graph_base
     return "";
 }
 
-string IntConstMultShiftAdd_SUB2_1N::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_SUB2_1N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)(base_node);
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     vector<int> inputOrder;
     getInputOrder(t->input_is_negative,inputOrder);
 
@@ -119,9 +121,9 @@ string IntConstMultShiftAdd_SUB2_1N::get_realisation(map<PAGSuite::adder_graph_b
     return "";
 }
 
-string IntConstMultShiftAdd_SUB3_1N::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_SUB3_1N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)(base_node);
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     vector<int> inputOrder;
     getInputOrder(t->input_is_negative,inputOrder);
 
@@ -144,9 +146,9 @@ string IntConstMultShiftAdd_SUB3_1N::get_realisation(map<PAGSuite::adder_graph_b
     return "";
 }
 
-string IntConstMultShiftAdd_SUB3_2N::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_SUB3_2N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)(base_node);
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
     vector<int> inputOrder;
     getInputOrder(t->input_is_negative,inputOrder);
 
@@ -169,7 +171,7 @@ string IntConstMultShiftAdd_SUB3_2N::get_realisation(map<PAGSuite::adder_graph_b
     return "";
 }
 
-string IntConstMultShiftAdd_DECODER::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_DECODER::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     map<uint,uint > decoder_content;
     if( node->nodeType == NODETYPE_ADDSUB3_2STATE ){
@@ -232,9 +234,9 @@ string IntConstMultShiftAdd_DECODER::get_realisation(map<PAGSuite::adder_graph_b
     return "";
 }
 
-string IntConstMultShiftAdd_ADDSUB2_CONF::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADDSUB2_CONF::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::conf_adder_subtractor_node_t* t = (PAGSuite::conf_adder_subtractor_node_t*)(base_node);
+    conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
     GenericAddSub* addsub = new GenericAddSub(base_op, target,wordsize);
     base_op->addSubComponent(addsub);
@@ -254,9 +256,9 @@ string IntConstMultShiftAdd_ADDSUB2_CONF::get_realisation(map<PAGSuite::adder_gr
     return "";
 }
 
-string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::conf_adder_subtractor_node_t* t = (PAGSuite::conf_adder_subtractor_node_t*)(base_node);
+    conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
     short adderStates[2] = {0};
     map<short,vector<int> >::iterator stateIter = adder_states.begin();
@@ -297,9 +299,9 @@ string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<PAGSuite::adder_
     return "";
 }
 
-string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    PAGSuite::conf_adder_subtractor_node_t* t = (PAGSuite::conf_adder_subtractor_node_t*)(base_node);
+    conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
     GenericAddSub* addsub = new GenericAddSub(base_op, target,wordsize);
     GenericAddSub* addsub2 = new GenericAddSub(base_op, target,wordsize);
@@ -332,7 +334,7 @@ string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<PAGSuite::adder_gr
     return "";
 }
 
-string IntConstMultShiftAdd_AND::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_AND::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     mux_node_t* t = (mux_node_t*)(base_node);
     short configurationIndex=-1;
@@ -354,7 +356,7 @@ string IntConstMultShiftAdd_AND::get_realisation(map<PAGSuite::adder_graph_base_
     return "";
 }
 
-string IntConstMultShiftAdd_MUX::get_realisation(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+string IntConstMultShiftAdd_MUX::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     GenericMux* new_mux = new GenericMux(base_op, target,wordsize,inputs.size());
     base_op->addSubComponent(new_mux);
@@ -463,15 +465,15 @@ string IntConstMultShiftAdd_BASE::getShiftAndResizeString(string signalName, int
 string IntConstMultShiftAdd_BASE::getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int outputWordsize, int inputShift,bool signedConversion)
 {
     int neg_shift=0;
-    if( is_a<PAGSuite::adder_subtractor_node_t>(*base_node) ){
-        PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)base_node;
+    if( is_a<adder_subtractor_node_t>(*base_node) ){
+        adder_subtractor_node_t* t = (adder_subtractor_node_t*)base_node;
         for(uint i=0;i<t->input_shifts.size();i++){
             if(t->input_shifts[i]<neg_shift )
                 neg_shift = t->input_shifts[i];
         }
     }
-    else if( is_a<PAGSuite::conf_adder_subtractor_node_t>(*base_node) ){
-        PAGSuite::conf_adder_subtractor_node_t* t = (PAGSuite::conf_adder_subtractor_node_t*)base_node;
+    else if( is_a<conf_adder_subtractor_node_t>(*base_node) ){
+        conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)base_node;
         for(uint i=0;i<t->input_shifts.size();i++){
             if(t->input_shifts[i]<neg_shift )
                 neg_shift = t->input_shifts[i];
@@ -534,18 +536,18 @@ string IntConstMultShiftAdd_BASE::getShiftAndResizeString(IntConstMultShiftAdd_B
 }
 
 
-string IntConstMultShiftAdd_BASE::getNegativeShiftString(string signalName,int outputWordsize, PAGSuite::adder_graph_base_node_t* base_node)
+string IntConstMultShiftAdd_BASE::getNegativeShiftString(string signalName,int outputWordsize, adder_graph_base_node_t* base_node)
 {
     int neg_shift=0;
-    if( is_a<PAGSuite::adder_subtractor_node_t>(*base_node) ){
-        PAGSuite::adder_subtractor_node_t* t = (PAGSuite::adder_subtractor_node_t*)base_node;
+    if( is_a<adder_subtractor_node_t>(*base_node) ){
+        adder_subtractor_node_t* t = (adder_subtractor_node_t*)base_node;
         for(uint i=0;i<t->input_shifts.size();i++){
             if(t->input_shifts[i]<neg_shift )
                 neg_shift = t->input_shifts[i];
         }
     }
-    else if( is_a<PAGSuite::conf_adder_subtractor_node_t>(*base_node) ){
-        PAGSuite::conf_adder_subtractor_node_t* t = (PAGSuite::conf_adder_subtractor_node_t*)base_node;
+    else if( is_a<conf_adder_subtractor_node_t>(*base_node) ){
+        conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)base_node;
         for(uint i=0;i<t->input_shifts.size();i++){
             if(t->input_shifts[i]<neg_shift )
                 neg_shift = t->input_shifts[i];

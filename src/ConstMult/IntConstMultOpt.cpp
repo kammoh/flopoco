@@ -11,6 +11,7 @@
   All rights reserved.
 
 */
+#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
 
 #include <iostream>
 #include <sstream>
@@ -23,26 +24,21 @@
 
 #include "IntConstMultOpt.hpp"
 
-//#include "../ConstMultPAG/scm_solutions.hpp"
-//#include "../ConstMultPAG/pagexponents.hpp"
 #include "pagsuite/scm_solutions.hpp"
 #include "pagsuite/pagexponents.hpp"
-#include "rpag/compute_successor_set.h"
-#include "rpag/log2_64.h"
-#include "fundamental_extended.hpp"
-//#include "../ConstMultPAG/paglib/log2_64.hpp"
-//#include "../ConstMultPAG/paglib/fundamental.hpp"
-//#include "../ConstMultPAG/paglib/compute_successor_set.hpp"
+#include "pagsuite/compute_successor_set.h"
+#include "pagsuite/log2_64.h"
+#include "pagsuite/fundamental.h"
 
 #include <algorithm>
 #include <cassert>
 
 using namespace std;
-//using namespace rpag;
+using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultOpt::IntConstMultOpt(Target* target, int wIn, int coeff, bool syncInOut)  : ConstMultPAG(target, wIn, "", false, syncInOut, 1000, false)
+    IntConstMultOpt::IntConstMultOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
     {
         this->coeff = coeff;
 
@@ -58,13 +54,13 @@ namespace flopoco{
         int shift;
         int coeffOdd = fundamental(coeff, &shift);
 
-        if((coeffOdd < MAX_CONST) && (coeffOdd > 1))
+        if((coeffOdd < MAX_SCM_CONST) && (coeffOdd > 1))
         {
           buildAdderGraph(coeffOdd);
         }
         else
         {
-		  cerr << "Error: (Odd) value of constant must be less than " << MAX_CONST << " (is " << coeffOdd << ")" << endl;
+		  cerr << "Error: (Odd) value of constant must be less than " << MAX_SCM_CONST << " (is " << coeffOdd << ")" << endl;
           exit(-1);
         }
 
@@ -81,7 +77,7 @@ namespace flopoco{
                     "adder_graph=" << adderGraphComplete.str()
                     );
 
-        ProcessConstMultPAG(target,adderGraphComplete.str());
+		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str());
 
         ostringstream name;
         name << "IntConstMultOpt_" << coeff << "_" << wIn;
@@ -103,7 +99,7 @@ namespace flopoco{
 
 		if(signA > 0) signAStr = ""; else signAStr = "-";
 		if(signB > 0) signBStr = ""; else signBStr = "-";
-		int stage = fundamental(coeff) == preFactor*c ? 1 : 0;
+//		int stage = fundamental(coeff) == preFactor*c ? 1 : 0;
 
 		int coeffStage=1;
 		int coeffOdd = fundamental(coeff);
@@ -204,19 +200,19 @@ namespace flopoco{
 	}
 
 
-    OperatorPtr flopoco::IntConstMultOpt::parseArguments( Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
         int wIn, constant;
 
         UserInterface::parseInt( args, "wIn", &wIn );
         UserInterface::parseInt( args, "constant", &constant );
 
-        return new IntConstMultOpt( target, wIn, constant, false);
+        return new IntConstMultOpt(parentOp, target, wIn, constant, false);
     }
 
     void flopoco::IntConstMultOpt::registerFactory() {
 
         UserInterface::add( "IntConstMultOpt", // name
-                            "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_CONST) + " (19 bit)", // description, string
+                            "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_SCM_CONST) + " (19 bit)", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
@@ -227,3 +223,13 @@ namespace flopoco{
     }
 
 }
+#else
+
+#include "IntConstMultOpt.hpp"
+namespace flopoco
+{
+	void IntConstMultOpt::registerFactory() { }
+}
+
+#endif //defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
+

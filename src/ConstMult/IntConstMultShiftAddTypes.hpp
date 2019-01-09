@@ -7,7 +7,7 @@
 
 #ifdef HAVE_PAGLIB
 
-#include "paglib/adder_graph.h"
+#include "pagsuite/adder_graph.h"
 #include "utils.hpp"
 #include "Target.hpp"
 #include "Operator.hpp"
