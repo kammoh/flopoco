@@ -130,10 +130,10 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target *target, i
 
 void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str)
 {
-    REPORT( INFO, "IntConstMultShiftAdd started with syncoptions:")
-            REPORT( INFO, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
-            REPORT( INFO, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
-            REPORT( INFO, "\tsync every " << syncEveryN << " stages" << std::endl )
+    REPORT( DETAILED, "IntConstMultShiftAdd started with syncoptions:")
+	REPORT( DETAILED, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
+	REPORT( DETAILED, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
+	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
 
             if(RPAGused)
     {
@@ -163,14 +163,15 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 //    setCopyrightString(UniKs::getAuthorsString(UniKs::AUTHOR_MKLEINLEIN|UniKs::AUTHOR_MKUMM|UniKs::AUTHOR_KMOELLER));
 
     pipelined_adder_graph.quiet = true; //disable debug output, except errors
-    REPORT( INFO, "parse graph...")
-            validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str,false);
+    REPORT( DETAILED, "parse graph...")
+    validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str);
 
     if(validParse)
     {
-        REPORT( INFO,  "check graph...")
+        REPORT( DETAILED,  "check graph...")
 		pipelined_adder_graph.check_and_correct(pipelined_realization_str);
-		pipelined_adder_graph.print_graph();
+		if(UserInterface::verbose >= DETAILED)
+			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
@@ -180,12 +181,12 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin(); iter != pipelined_adder_graph.nodes_list.end(); ++iter)
             if ((*iter)->stage > noOfPipelineStages) noOfPipelineStages=(*iter)->stage;
 
-        REPORT( INFO, "noOfInputs: " << noOfInputs)
-                REPORT( INFO, "noOfConfigurations: " << noOfConfigurations)
-                REPORT( INFO, "noOfPipelineStages: " << noOfPipelineStages)
+        REPORT( DETAILED, "noOfInputs: " << noOfInputs)
+		REPORT( DETAILED, "noOfConfigurations: " << noOfConfigurations)
+		REPORT( DETAILED, "noOfPipelineStages: " << noOfPipelineStages)
 
-                if(noOfConfigurations>1)
-                addInput("config_no",configurationSignalWordsize);
+		if(noOfConfigurations>1)
+		addInput("config_no",configurationSignalWordsize);
 
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::target_ID = target->getID();
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::noOfConfigurations = noOfConfigurations;
@@ -193,7 +194,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::configurationSignalWordsize = configurationSignalWordsize;
 
         //IDENTIFY NODE
-        REPORT(INFO,"identifiing nodes..")
+        REPORT(DETAILED,"identifiing nodes..")
 
                 map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
         map<int,list<adder_graph_base_node_t*> > stageNodesMap;
@@ -239,10 +240,8 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
             additionalNodeInfoMap.insert( {*iter,t} );
         }
         //IDENTIFY CONNECTIONS
-        REPORT(INFO,"identifiing node connections..")
-                for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
-                iter != pipelined_adder_graph.nodes_list.end();
-        ++iter)
+        REPORT(DETAILED,"identifiing node connections..")
+		for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin(); iter != pipelined_adder_graph.nodes_list.end();++iter)
         {
             identifyOutputConnections(*iter,additionalNodeInfoMap);
         }
@@ -318,7 +317,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         */
 
         //START BUILDING NODES
-        REPORT(INFO,"building nodes..")
+        REPORT(DETAILED,"building nodes..")
                 int unpiped_stage_count=0;
         bool isMuxStage = false;
         for(unsigned int currentStage=0;currentStage<=(unsigned int)noOfPipelineStages;currentStage++)
@@ -329,7 +328,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                  ++operationNode)
             {
                 IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
-                REPORT( INFO, op_node->outputSignalName << " as " << op_node->get_name())
+                REPORT( DETAILED, op_node->outputSignalName << " as " << op_node->get_name())
 
                 if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
                 {

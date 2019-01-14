@@ -66,7 +66,7 @@ namespace flopoco{
 
         if(coeff != coeffOdd)
         {
-            adderGraph << "{" << coeff << ",1," << coeffOdd << ",0," << shift << ",0,0,0},";
+            adderGraph << "{'O',[" << coeff << "],1,[" << coeffOdd << "],0," << shift << ",0,0,0},";
         }
 
         stringstream adderGraphComplete;
@@ -105,7 +105,7 @@ namespace flopoco{
 		int coeffOdd = fundamental(coeff);
 		if((coeffOdd == preFactor*c) && (coeff == coeffOdd)) coeffStage=2; //All (even) output coefficients are defined to be in stage 2 (workaround until node type 'O' is supported)
 
-		adderGraph << "{" << preFactor*c << "," << coeffStage << "," << signAStr << preFactor*a << "," << (preFactor*a == 1?0:1) << "," << eA << "," << signBStr << preFactor*b << "," << (preFactor*b == 1?0:1) << "," << eB << "},";
+		adderGraph << "{'A',[" << preFactor*c << "]," << coeffStage << ",[" << signAStr << preFactor*a << "]," << (preFactor*a == 1?0:1) << "," << eA << ",[" << signBStr << preFactor*b << "]," << (preFactor*b == 1?0:1) << "," << eB << "},";
 	}
 
 	void IntConstMultOpt::buildAdderGraph(int c, int preFactor)
