@@ -78,17 +78,24 @@ namespace flopoco{
                     "adder_graph=" << adderGraphComplete.str()
                     );
 
-		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str());
+		ProcessIntConstMultSrpagp->filename=hiftAdd(target,adderGraphComplete.str());
 */
-		rpag_pointer *rpagp = NULL;
-		rpagp = new rpag(); //default is RPAG with 2 input adders
-		rpagp->target_vec.push_back("123");
+		rpag_base<int_t> *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
+		rpag->target_set->insert(coeff);
 		PAGSuite::cost_model_t cost_model = PAGSuite::HL_FPGA;// with default value
-		PAGSuite::global_verbose = 10;
-		//rpagp->cost_model = cost_model;
-		((rpag_base<vec_t>*)rpagp)->set_cost_model(cost_model);
-		cout << "rpagp->filename=" << rpagp->filename << endl;
-		rpagp->optimize();
+		PAGSuite::global_verbose = 0;
+		rpag->set_cost_model(cost_model);
+		rpag->optimize();
+
+		vector<set<int_t>> pipeline_set = rpag->get_best_pipeline_set();
+
+		list<realization_row<int_t> > pipelined_adder_graph;
+		pipeline_set_to_adder_graph(pipeline_set, pipelined_adder_graph, true, rpag->get_c_max());
+		string adderGraph = output_adder_graph(pipelined_adder_graph,true);
+
+		cout << "adderGraph=" << adderGraph << endl;
+
+		ProcessIntConstMultShiftAdd(target,adderGraph);
 
         ostringstream name;
         name << "IntConstMultRPAG_" << coeff << "_" << wIn;
