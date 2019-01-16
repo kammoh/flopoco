@@ -20,7 +20,6 @@ namespace flopoco {
         int noOfPipelineStages;
 
         IntConstMultShiftAdd(Operator* parentOp, Target* target,int wIn_, string pipelined_realization_str, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1,bool syncMux_=true);
-        IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, vector<vector<int64_t> > &coefficients, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1, bool syncMux_=true);
 
         ~IntConstMultShiftAdd() {}
 
@@ -62,7 +61,6 @@ namespace flopoco {
 
         string generateSignalName(PAGSuite::adder_graph_base_node_t* node);
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* identifyNodeType(PAGSuite::adder_graph_base_node_t* node);
-        bool TryRunRPAG(string pipelined_realization_str,string& out);
 
         void identifyOutputConnections(PAGSuite::adder_graph_base_node_t* node, map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap);
         void printAdditionalNodeInfo(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );

@@ -49,83 +49,7 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, i
 
     if(pipelined_realization_str.empty()) return; //in case the realization string is not defined, don't further process it.
 
-    string pipelined_realisation,t(pipelined_realization_str);
-
-    if( TryRunRPAG(t,pipelined_realisation) )
-    {
-        size_t pos=0;
-        string tmp=t;
-        vector<int64_t> inner;
-        while(tmp.size()>0)
-        {
-            pos=tmp.find_first_of(",; ");
-
-            if(pos != string::npos)
-            {
-                switch (tmp[pos]) {
-                case ',':
-                    inner.push_back( atol(tmp.substr(0,pos).c_str()) );
-                    break;
-                case ' ':
-                case ';':
-                    inner.push_back( atol(tmp.substr(0,pos).c_str()) );
-                    output_coefficients.push_back(inner);
-                    inner.clear();
-                    break;
-                default:
-                    break;
-                }
-                tmp = tmp.substr(pos+1);
-            }
-            else
-            {
-                inner.push_back( atol(tmp.c_str()) );
-                output_coefficients.push_back(inner);
-                tmp = "";
-            }
-        }
-
-        ProcessIntConstMultShiftAdd(target,pipelined_realisation);
-    }
-    else
-    {
-        ProcessIntConstMultShiftAdd(target,t);
-    }
-
-    /* for(OperatorPtr sc : getSubComponents())
-    {
-        cerr << "--> sub component: " << sc->getName() << endl;
-    }*/
-};
-
-IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target *target, int wIn_, vector<vector<int64_t> >& coefficients, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_)
-    : Operator(parentOp, target),
-      wIn(wIn_),
-      syncInOut(syncInOut_),
-      pipelined(pipelined_),
-      syncEveryN(syncEveryN_)
-{
-    syncMux=syncMux_;
-    output_coefficients = coefficients;
-
-    stringstream coefficients_str;
-    for(int i=0;i<(int)coefficients.size();i++)
-    {
-        if(i>0) coefficients_str << ";";
-        for(int j=0;j<(int)coefficients[i].size();j++)
-        {
-            if(j>0) coefficients_str << ",";
-            coefficients_str << coefficients[i][j];
-        }
-    }
-
-    string pipelined_realisation;
-    if( !TryRunRPAG(coefficients_str.str(),pipelined_realisation) )
-    {
-        throw runtime_error("ERROR: Could not run RPAG");
-    }
-
-    ProcessIntConstMultShiftAdd(target,pipelined_realisation);
+    ProcessIntConstMultShiftAdd(target,pipelined_realization_str);
 };
 
 void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str)
@@ -135,23 +59,6 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 	REPORT( DETAILED, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
 
-            if(RPAGused)
-    {
-        std::stringstream o;
-        o <<  "Starting with coefficients ";
-
-        for(int j=0;j<(int)output_coefficients.size();j++)
-        {
-            if(j>0) o << ",";
-            o << "[";
-            for(int i=0;i<(int)output_coefficients[j].size();i++){
-                if(i>0)o <<",";
-                o << output_coefficients[j][i];
-            }
-            o << "]";
-        }
-        REPORT(DETAILED,o.str())
-    }
     needs_unisim = false;
     emu_conf = 0;
 
@@ -401,134 +308,34 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 
         }
 
-        if( !RPAGused )
+        output_signal_info sig_info;
+        short realizedOutputNodes = 0;
+        for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
+             operationNode != stageNodesMap[noOfPipelineStages].end();
+             ++operationNode)
         {
-            output_signal_info sig_info;
-            short realizedOutputNodes = 0;
-            for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
-                 operationNode != stageNodesMap[noOfPipelineStages].end();
-                 ++operationNode)
-            {
-                if (is_a<output_node_t>(*(*operationNode))){
-                    IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
-                    stringstream outputSignalName;
-                    outputSignalName << "x_out" << realizedOutputNodes;
-                    realizedOutputNodes++;
-                    for(int j=0; j < noOfConfigurations; j++) {
-                        outputSignalName << "_c";
-                        for(int i=0; i < noOfInputs; i++)
-                        {
-                            if(i>0) outputSignalName << "v" ;
-                            outputSignalName << (((*operationNode)->output_factor[j][i] < 0) ? "m" : "");
-                            outputSignalName << abs((*operationNode)->output_factor[j][i]);
-                        }
-                    }
-                    addOutput(outputSignalName.str(), op_node->wordsize);
-
-                    sig_info.output_factors = (*operationNode)->output_factor;
-                    sig_info.signal_name = outputSignalName.str();
-                    sig_info.wordsize = op_node->wordsize;
-                    output_signals.push_back( sig_info );
-                    vhdl << "\t" << outputSignalName.str() << " <= " << op_node->outputSignalName << ";" << endl;
-                }
-            }
-        }
-        else
-        {
-            output_signal_info sig_info;
-            REPORT( INFO, "Matching outputs... ")
-                    short realizedOutputNodes = 0;
-            for(vector<vector<int64_t> >::iterator iter=output_coefficients.begin();iter!=output_coefficients.end();++iter )
-            {
-                {
-                    std::stringstream o;
-                    o << "Searching [";
-                    for(int i=0;i<(int)(*iter).size();i++){
-                        if(i>0)o <<",";
-                        o << (*iter)[i];
-                    }
-                    o << "]... ";
-                    REPORT(DETAILED,o.str());
-                }
-
-                vector<int64_t> node_output(*iter);
-                int norm_factor=0;
-                bool normalize=true;
-                do
-                {
-                    normalize = true;
-                    cout << "!!! node_output = ";
-                    for(unsigned int i=0;i<node_output.size();i++)
-                    {
-                        cout << node_output[i] << " ";
-                        if(node_output[i] == 0) THROWERROR( "Node output is zero! " );
-                        if( abs(node_output[i]) % 2 == 1) normalize=false;
-                    }
-                    if(normalize)
-                    {
-                        norm_factor++;
-                        for(unsigned int i=0;i<node_output.size();i++)
-                        {
-                            node_output[i] /= 2;
-                        }
-                    }
-                    cout << endl;
-                    cout << "!!! while( normalize )" << endl;
-                }while( normalize );
-
-                if(norm_factor > 0){
-                    std::stringstream o;
-                    o << "Fundamental [";
-                    for(int i=0;i<(int)node_output.size();i++){
-                        if(i>0)o <<",";
-                        o << node_output[i];
-                    }
-                    o << "] norm "<< norm_factor;
-                    REPORT(DETAILED,o.str())
-                }
-
+            if (is_a<output_node_t>(*(*operationNode))){
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
                 stringstream outputSignalName;
-                outputSignalName << "x_out" << realizedOutputNodes << "_";
+                outputSignalName << "x_out" << realizedOutputNodes;
                 realizedOutputNodes++;
-                for(int i=0; i < (int)(*iter).size(); i++)
-                {
-                    if(i>0) outputSignalName << "v" ;
-                    outputSignalName << (((*iter)[i] < 0) ? "m" : "");
-                    outputSignalName << abs((*iter)[i]);
-                }
-                bool found = false;
-                for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
-                     operationNode != stageNodesMap[noOfPipelineStages].end();
-                     ++operationNode)
-                {
-                    if( (*operationNode)->output_factor[0] == node_output )
+                for(int j=0; j < noOfConfigurations; j++) {
+                    outputSignalName << "_c";
+                    for(int i=0; i < noOfInputs; i++)
                     {
-
-                        REPORT(DETAILED, "FOUND!")
-                                found = true;
-                        IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
-                        addOutput(outputSignalName.str(), op_node->wordsize + norm_factor);
-                        vector<vector<int64_t> > outer;
-                        outer.push_back(*iter);
-                        sig_info.output_factors = outer;
-                        sig_info.signal_name = outputSignalName.str();
-                        sig_info.wordsize = op_node->wordsize + norm_factor;
-                        output_signals.push_back( sig_info );
-                        if( norm_factor == 0 )
-                        {
-                            vhdl << "\t" << outputSignalName.str() << " <= " << op_node->outputSignalName << ";" << endl;
-                        }
-                        else
-                        {
-                            vhdl << "\t" << outputSignalName.str() << " <= " << getShiftAndResizeString(op_node->outputSignalName,op_node->wordsize + norm_factor,norm_factor,false) << ";" << endl;
-                        }
+                        if(i>0) outputSignalName << "v" ;
+                        outputSignalName << (((*operationNode)->output_factor[j][i] < 0) ? "m" : "");
+                        outputSignalName << abs((*operationNode)->output_factor[j][i]);
                     }
                 }
-                if(!found)
-                    THROWERROR( "MISSING!" );
+                addOutput(outputSignalName.str(), op_node->wordsize);
 
+                sig_info.output_factors = (*operationNode)->output_factor;
+                sig_info.signal_name = outputSignalName.str();
+                sig_info.wordsize = op_node->wordsize;
+                output_signals.push_back( sig_info );
+                vhdl << "\t" << outputSignalName.str() << " <= " << op_node->outputSignalName << ";" << endl;
             }
-
         }
     }
 
@@ -1082,70 +889,6 @@ string IntConstMultShiftAdd::getBinary(int value, int Wordsize)
     tmp += '\"';
     return tmp;
 }
-
-bool IntConstMultShiftAdd::TryRunRPAG(string realisation, string& out)
-{
-    /// \todo Add rpag library call instead of running rpag.
-
-
-    string RPAG_ENV_VAR = "RPAG_ARGS";
-    if(realisation.find("{")!=string::npos) //!!! there should be a better way doing this!
-    {
-        RPAGused = false;
-        return false;
-    }
-    else
-    {
-        RPAGused = true;
-        REPORT( INFO, "INFO: Recognized coefficient input, try running RPAG")
-                string args,cmd;
-        char* env_buf = NULL;
-        env_buf = getenv( RPAG_ENV_VAR.c_str() );
-        if( env_buf != NULL )
-            args = string(env_buf);
-
-        if( realisation.find(",") != string::npos )
-        {
-            args += " --cmm";
-        }
-        cmd = "rpag " + args + " " + realisation + " --file_output=true";
-        cout << "running->" << cmd << endl;
-        FILE* cmd_ex = popen(cmd.c_str(),"r");
-
-        if( cmd_ex == NULL )
-        {
-            THROWERROR( "ERROR: Could not run RPAG (PATH set?)" )
-        }
-        else
-        {
-            REPORT( INFO, "RPAG running")
-                    REPORT( DETAILED, cmd )
-                    string output;
-            char buf[256];
-
-            while( fgets(buf,256,cmd_ex) != NULL )
-                output += string(buf);
-
-
-            int pos_a=output.find("=",output.find("pipelined_adder_graph="))+1;
-            int pos_b=output.find_first_of("\r\n",pos_a);
-
-            output = output.substr(pos_a,pos_b-pos_a);
-
-            if( output.size() > 0 )
-                REPORT( INFO, "RESULT: " << output)
-                        else
-                {
-                    THROWERROR("RPAG failed, could not create graph")
-                }
-                    out=output;
-
-            pclose(cmd_ex);
-        }
-        return true;
-    }
-}
-
 
 
 OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
