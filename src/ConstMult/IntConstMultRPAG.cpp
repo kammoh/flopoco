@@ -40,48 +40,14 @@ namespace flopoco{
 
     IntConstMultRPAG::IntConstMultRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
     {
-/*
-        this->coeff = coeff;
+    	set<int_t> target_set;
+    	target_set.insert(coeff);
 
-        cout << "wIn=" << wIn << ", coeff=" << coeff << endl;
+		PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
 
-
-        if(coeff <= 0)
-        {
-		  cerr << "Error: Value of constant must be positive and non-zero" << endl;
-          exit(-1);
-        }
-
-        int shift;
-        int coeffOdd = fundamental(coeff, &shift);
-
-        if((coeffOdd < MAX_SCM_CONST) && (coeffOdd > 1))
-        {
-          buildAdderGraph(coeffOdd);
-        }
-        else
-        {
-		  cerr << "Error: (Odd) value of constant must be less than " << MAX_SCM_CONST << " (is " << coeffOdd << ")" << endl;
-          exit(-1);
-        }
-
-        if(coeff != coeffOdd)
-        {
-            adderGraph << "{'O',[" << coeff << "],1,[" << coeffOdd << "],0," << shift << ",0,0,0},";
-        }
-
-        stringstream adderGraphComplete;
-        adderGraphComplete << "{" << adderGraph.str().substr(0,adderGraph.str().length()-1) << "}";
-
-        REPORT(
-                    DEBUG,
-                    "adder_graph=" << adderGraphComplete.str()
-                    );
-
-		ProcessIntConstMultSrpagp->filename=hiftAdd(target,adderGraphComplete.str());
-*/
-		rpag_base<int_t> *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
-		rpag->target_set->insert(coeff);
+		for(int_t t : target_set)
+			rpag->target_set->insert(t);
+		
 		PAGSuite::cost_model_t cost_model = PAGSuite::HL_FPGA;// with default value
 		PAGSuite::global_verbose = 0;
 		rpag->set_cost_model(cost_model);
@@ -91,6 +57,8 @@ namespace flopoco{
 
 		list<realization_row<int_t> > pipelined_adder_graph;
 		pipeline_set_to_adder_graph(pipeline_set, pipelined_adder_graph, true, rpag->get_c_max());
+		append_targets_to_adder_graph(pipeline_set, pipelined_adder_graph, target_set);
+
 		string adderGraph = output_adder_graph(pipelined_adder_graph,true);
 
 		cout << "adderGraph=" << adderGraph << endl;
