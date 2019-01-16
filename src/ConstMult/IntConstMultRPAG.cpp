@@ -47,9 +47,11 @@ namespace flopoco{
 
 		for(int_t t : target_set)
 			rpag->target_set->insert(t);
-		
+
+
+		PAGSuite::global_verbose = UserInterface::verbose-1; //set rpag to one less than verbose of FloPoCo
+
 		PAGSuite::cost_model_t cost_model = PAGSuite::HL_FPGA;// with default value
-		PAGSuite::global_verbose = 0;
 		rpag->set_cost_model(cost_model);
 		rpag->optimize();
 
