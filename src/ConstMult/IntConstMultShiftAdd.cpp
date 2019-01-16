@@ -69,7 +69,11 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 
 //    setCopyrightString(UniKs::getAuthorsString(UniKs::AUTHOR_MKLEINLEIN|UniKs::AUTHOR_MKUMM|UniKs::AUTHOR_KMOELLER));
 
-    pipelined_adder_graph.quiet = true; //disable debug output, except errors
+    if(UserInterface::verbose >= 3)
+        pipelined_adder_graph.quiet = false; //enable debug output
+    else
+        pipelined_adder_graph.quiet = true; //disable debug output, except errors
+
     REPORT( DETAILED, "parse graph...")
     validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str);
 
