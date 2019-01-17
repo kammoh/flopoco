@@ -22,7 +22,7 @@
 #include "../utils.hpp"
 #include "../Operator.hpp"
 
-#include "IntConstMultOpt.hpp"
+#include "IntConstMultShiftAddOpt.hpp"
 
 #include "pagsuite/scm_solutions.hpp"
 #include "pagsuite/pagexponents.hpp"
@@ -38,7 +38,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultOpt::IntConstMultOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
+    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
     {
         this->coeff = coeff;
 
@@ -64,18 +64,16 @@ namespace flopoco{
           exit(-1);
         }
 
-        if(coeff != coeffOdd)
-        {
-            adderGraph << "{'O',[" << coeff << "],1,[" << coeffOdd << "],0," << shift << ",0,0,0},";
-        }
+        //add output:
+		adderGraph << "{'O',[" << coeff << "],1,[" << coeffOdd << "],1," << shift << "},";
 
         stringstream adderGraphComplete;
         adderGraphComplete << "{" << adderGraph.str().substr(0,adderGraph.str().length()-1) << "}";
 
         REPORT(
-                    DEBUG,
-                    "adder_graph=" << adderGraphComplete.str()
-                    );
+				INFO,
+				"adder_graph=" << adderGraphComplete.str()
+                );
 
 		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str());
 
@@ -84,7 +82,7 @@ namespace flopoco{
         setName(name.str());
     }
 
-    void IntConstMultOpt::generateAOp(int a, int b, int c, int eA, int eB, int signA, int signB, int preFactor)
+    void IntConstMultShiftAddOpt::generateAOp(int a, int b, int c, int eA, int eB, int signA, int signB, int preFactor)
 	{
 		string signAStr,signBStr;
 
@@ -99,16 +97,12 @@ namespace flopoco{
 
 		if(signA > 0) signAStr = ""; else signAStr = "-";
 		if(signB > 0) signBStr = ""; else signBStr = "-";
-//		int stage = fundamental(coeff) == preFactor*c ? 1 : 0;
 
-		int coeffStage=1;
-		int coeffOdd = fundamental(coeff);
-		if((coeffOdd == preFactor*c) && (coeff == coeffOdd)) coeffStage=2; //All (even) output coefficients are defined to be in stage 2 (workaround until node type 'O' is supported)
-
+		int coeffStage=1; //its all combinatorial, so the adders are defined to be all in stage 1
 		adderGraph << "{'A',[" << preFactor*c << "]," << coeffStage << ",[" << signAStr << preFactor*a << "]," << (preFactor*a == 1?0:1) << "," << eA << ",[" << signBStr << preFactor*b << "]," << (preFactor*b == 1?0:1) << "," << eB << "},";
 	}
 
-	void IntConstMultOpt::buildAdderGraph(int c, int preFactor)
+	void IntConstMultShiftAddOpt::buildAdderGraph(int c, int preFactor)
 	{
 		int i = (c-1)/2-1;
 
@@ -200,35 +194,35 @@ namespace flopoco{
 	}
 
 
-    OperatorPtr flopoco::IntConstMultOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
         int wIn, constant;
 
         UserInterface::parseInt( args, "wIn", &wIn );
         UserInterface::parseInt( args, "constant", &constant );
 
-        return new IntConstMultOpt(parentOp, target, wIn, constant, false);
+        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, false);
     }
 
-    void flopoco::IntConstMultOpt::registerFactory() {
+    void flopoco::IntConstMultShiftAddOpt::registerFactory() {
 
-        UserInterface::add( "IntConstMultOpt", // name
+        UserInterface::add( "IntConstMultShiftAddOpt", // name
                             "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_SCM_CONST) + " (19 bit)", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
                             constant(int): constant;",
                             "Nope.",
-                            IntConstMultOpt::parseArguments
+                            IntConstMultShiftAddOpt::parseArguments
                           ) ;
     }
 
 }
 #else
 
-#include "IntConstMultOpt.hpp"
+#include "IntConstMultShiftAddOpt.hpp"
 namespace flopoco
 {
-	void IntConstMultOpt::registerFactory() { }
+	void IntConstMultShiftAddOpt::registerFactory() { }
 }
 
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_OSCM)

@@ -28,11 +28,11 @@
 
 namespace flopoco{
 
-    class IntConstMultOpt : public IntConstMultShiftAdd
+    class IntConstMultShiftAddOpt : public IntConstMultShiftAdd
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultOpt(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true);
+        IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true);
 
 //		void emulate(TestCase* tc);
 //        void buildStandardTestCases(TestCaseList* tcl);
@@ -50,7 +50,7 @@ namespace flopoco{
         stringstream adderGraph;
 #else
 namespace flopoco{
-	class IntConstMultOpt
+	class IntConstMultShiftAddOpt
 	{
 	public:
 		static void registerFactory();

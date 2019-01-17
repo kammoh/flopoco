@@ -22,7 +22,7 @@
 #include "../utils.hpp"
 #include "../Operator.hpp"
 
-#include "IntConstMultRPAG.hpp"
+#include "IntConstMultShiftAddRPAG.hpp"
 
 #include "pagsuite/scm_solutions.hpp"
 #include "pagsuite/pagexponents.hpp"
@@ -38,7 +38,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultRPAG::IntConstMultRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
     {
     	set<int_t> target_set;
     	target_set.insert(coeff);
@@ -72,35 +72,35 @@ namespace flopoco{
         setName(name.str());
     }
 
-    OperatorPtr flopoco::IntConstMultRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
         int wIn, constant;
 
         UserInterface::parseInt( args, "wIn", &wIn );
         UserInterface::parseInt( args, "constant", &constant );
 
-        return new IntConstMultRPAG(parentOp, target, wIn, constant, false);
+        return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false);
     }
 
-    void flopoco::IntConstMultRPAG::registerFactory() {
+    void flopoco::IntConstMultShiftAddRPAG::registerFactory() {
 
-        UserInterface::add( "IntConstMultRPAG", // name
+        UserInterface::add( "IntConstMultShiftAddRPAG", // name
                             "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_SCM_CONST) + " (19 bit)", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
                             constant(int): constant;",
                             "Nope.",
-                            IntConstMultRPAG::parseArguments
+                            IntConstMultShiftAddRPAG::parseArguments
                           ) ;
     }
 
 }
 #else
 
-#include "IntConstMultRPAG.hpp"
+#include "IntConstMultShiftAddRPAG.hpp"
 namespace flopoco
 {
-	void IntConstMultRPAG::registerFactory() { }
+	void IntConstMultShiftAddRPAG::registerFactory() { }
 }
 
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)

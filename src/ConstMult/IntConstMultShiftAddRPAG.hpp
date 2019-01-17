@@ -1,3 +1,14 @@
+/**
+	Integer constant multiplication using minimum number of adders due to
+
+	Gustafsson, O., Dempster, A., Johansson, K., Macleod, M., & Wanhammar, L. (2006).
+	Simplified Design of Constant Coefficient Multipliers. Circuits, Systems, and Signal Processing, 25(2), 225–251.
+
+
+	All constants up to 19 bit will be realized optimal using precomputed tables provided by the SPIRAL project (http://spiral.ece.cmu.edu/mcm/).
+
+*/
+
 #ifndef INTCONSTMULTOPT_HPP
 #define INTCONSTMULTOPT_HPP
 
@@ -13,25 +24,15 @@
 #include "IntConstMultShiftAdd.hpp"
 #include "pagsuite/rpag.h"
 
-/**
-	Integer constant multiplication using minimum number of adders due to
-
-	Gustafsson, O., Dempster, A., Johansson, K., Macleod, M., & Wanhammar, L. (2006).
-	Simplified Design of Constant Coefficient Multipliers. Circuits, Systems, and Signal Processing, 25(2), 225–251.
-
-
-	All constants up to 19 bit will be realized optimal using precomputed tables provided by the SPIRAL project (http://spiral.ece.cmu.edu/mcm/).
-
-*/
 
 
 namespace flopoco{
 
-    class IntConstMultRPAG : public IntConstMultShiftAdd
+    class IntConstMultShiftAddRPAG : public IntConstMultShiftAdd
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultRPAG(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true);
+        IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true);
 
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
         static void registerFactory();
@@ -39,7 +40,7 @@ namespace flopoco{
         stringstream adderGraph;
 #else
 namespace flopoco{
-	class IntConstMultRPAG
+	class IntConstMultShiftAddRPAG
 	{
 	public:
 		static void registerFactory();

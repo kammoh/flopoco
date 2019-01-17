@@ -40,5 +40,5 @@ TutorialOperator
 
 FixComplexKCM
 IntConstMultShiftAdd
-IntConstMultOpt
-IntConstMultRPAG
+IntConstMultShiftAddOpt
+IntConstMultShiftAddRPAG
