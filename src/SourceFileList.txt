@@ -53,7 +53,7 @@ ConstMult/IntConstDiv
 ConstMult/IntConstMultShiftAdd
 ConstMult/IntConstMultShiftAddTypes
 ConstMult/IntConstMultShiftAddOpt
-ConstMult/IntConstMultShiftAddRPag
+ConstMult/IntConstMultShiftAddRPAG
 IntMult/IntMultiplier
 IntMult/FixMultAdd
 IntMult/TilingStrategy
