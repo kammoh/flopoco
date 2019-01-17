@@ -2,16 +2,34 @@ This directory contains classes used for the implementation of multipliers by co
 
 
 There are two main algorithms. 
+The KCM algorithm (this stands for Ken Chapman Multipliers, long life to him) uses LUTs to store sub-products. 
+The Shift-and-add multipliers express an integer multiplier as a sequence of shift-and-add operations.
+The *KCM* classes implement the table-based KCM method while the *ConstMultShiftAdd* implement the shift-and-add methods.
 
-The KCM algorithm (this stands for Ken Chapman Multipliers, long life to him) uses LUTs to store sub-products.  The *KCM* classes implement the table-based KCM method.
+Their implementation is currently done in the following classes:
 
-Shift-and-add multipliers express an integer multiplier as a sequence of shift-and-add operations. There are currently two implementations
+KCM classes:
 
-The class IntConstMultShiftAdd
-The class IntConstMultShiftAddTypes
+The class FPConstDiv ...?
+The class FPRealKCM ...?
+The class FixRealKCM ...?
+The class IntConstDiv ...?
+The class IntConstMCM ...?
+The class IntIntKCM ...?
+The class KCMTable ...?
 
+Shift-and-add related classes:
 
--- The obsolete implementation,
+The class IntConstMultShiftAdd implements the operator that takes an adder graph as a string, it requires the paglib of PAGSuite (http://www.uni-kassel.de/go/pagsuite). For the adder graph string definition, see Appendix C of Konrads Moellers Phd thesis available at http://doi.org/10.19211/KUP9783737603772)
+The class IntConstMultShiftAddTypes is a helper class for IntConstMultShiftAdd
+The class IntConstMultShiftAddOpt is derived from IntConstMultShiftAdd and implements optimal (=minimal adder count) single constant multiplications up to 19 bit coefficients, it requires the oscmlib of PAGSuite
+The class IntConstMultShiftAddRPAG is derived from IntConstMultShiftAdd and implements a heuristc single constant multiplications using the RPAG algorithm, it requires the rpaglib of PAGSuite
+
+Other classes:
+
+The class CRFPConstMult ...?
+
+Obsolete classes:
 The class ShiftAddOp defines such an operation.
 The class ShiftAddDag defines a directed acyclic graph (DAG) of such operations.
 The class IntConstMult builds such a DAG for integer multiplication. It inherits Operator.
