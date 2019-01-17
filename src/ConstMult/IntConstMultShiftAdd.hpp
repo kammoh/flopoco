@@ -19,7 +19,18 @@ namespace flopoco {
         static ostream nostream;
         int noOfPipelineStages;
 
-        IntConstMultShiftAdd(Operator* parentOp, Target* target,int wIn_, string pipelined_realization_str, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1,bool syncMux_=true, int epsilon_=0);
+        IntConstMultShiftAdd(
+				Operator* parentOp,
+				Target* target,
+				int wIn_,
+				string pipelined_realization_str,
+				bool pipelined_=true,
+				bool syncInOut_=true,
+				int syncEveryN_=1,
+				bool syncMux_=true,
+				int  epsilon_=0,
+				string truncations="none"
+			);
 
         ~IntConstMultShiftAdd() {}
 
@@ -33,6 +44,16 @@ namespace flopoco {
 
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
 
+		class TruncationRegister {
+			public:
+				TruncationRegister(string truncationList);
+				vector<int> const & getTruncationFor(int factor, int stage);
+
+			private:
+				void parseRecord(string record);
+				map<pair<int, int>, vector<int> > truncationVal_;
+				static vector<int> nullVec_;
+		};
 #endif // HAVE_PAGLIB
         static void registerFactory();
 #ifdef HAVE_PAGLIB
@@ -57,7 +78,11 @@ namespace flopoco {
         int noOfConfigurations;
         bool needs_unisim;
 
-        void ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str);
+        void ProcessIntConstMultShiftAdd(
+				Target* target, 
+				string pipelined_realization_str,
+				string truncations = ""
+			);
 
 
         string generateSignalName(PAGSuite::adder_graph_base_node_t* node);
@@ -67,7 +92,6 @@ namespace flopoco {
         void printAdditionalNodeInfo(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );
         string getShiftAndResizeString(string signalName, int outputWordsize, int inputShift, bool signedConversion=true);
         string getBinary(int value, int wordsize);
-
 
 #endif // HAVE_PAGLIB
     };

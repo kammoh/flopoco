@@ -26,7 +26,7 @@ namespace flopoco {
             addInput("iL_c",1,false);
         if( hasFlags(CONF_RIGHT) )
             addInput("iR_c",1,false);
-        if( hasFlags(TERNARY|CONF_MID) )
+        if( hasFlags(TERNARY) && hasFlags(CONF_MID) )
             addInput("iM_c",1,false);
 
         addOutput("sum_o",wIn);
@@ -58,13 +58,13 @@ namespace flopoco {
             vhdl << declare( "CONF", c_count ) << " <= ";
             if( hasFlags(CONF_LEFT) ){
                 vhdl << "iL_c";
-				if( hasFlags(TERNARY&CONF_MID) ){
+				if( hasFlags(TERNARY) and hasFlags(CONF_MID)){
                     vhdl << "& iM_c";
                 }
                 if( hasFlags(CONF_RIGHT) ){
                     vhdl << "& iR_c";
                 }
-			}else if( hasFlags(TERNARY&CONF_MID) ){
+			}else if( hasFlags(TERNARY) and hasFlags(CONF_MID) ){
                 vhdl << "iM_c";
                 if( hasFlags(CONF_RIGHT) ){
                     vhdl << "& iM_c";
@@ -110,7 +110,7 @@ namespace flopoco {
 			vhdl << "\tsum_o <= std_logic_vector(" << (hasFlags(SUB_LEFT)?"-":"");
             if(hasFlags(TERNARY))
             {
-                vhdl << "signed(iM)" << (hasFlags(SUB_MID)?"-":"+") << " signed(iM)";
+                vhdl << "signed(iM)" << (hasFlags(SUB_MID)?"-":"+") ;
             }
             vhdl << "signed(iL)" << (hasFlags(SUB_RIGHT)?"-":"+") << " signed(iR));" << endl;
         }
@@ -136,7 +136,7 @@ namespace flopoco {
     const uint32_t GenericAddSub::getInputCount() const{
         uint32_t c = (hasFlags(TERNARY)?3:2);
         if(hasFlags(CONF_LEFT)) c++;
-        if(hasFlags(TERNARY|CONF_MID)) c++;
+        if(hasFlags(TERNARY) && hasFlags(CONF_MID)) c++;
         if(hasFlags(CONF_RIGHT)) c++;
         return c;
     }

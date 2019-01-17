@@ -11,6 +11,7 @@
 #include "utils.hpp"
 #include "Target.hpp"
 #include "Operator.hpp"
+#include "PrimitiveComponents/GenericAddSub.hpp"
 
 #include <string>
 #include <sstream>
@@ -64,6 +65,7 @@ public:
     list<PAGSuite::adder_graph_base_node_t*> outputConnectedTo;
     list<pair<string,int> > declare_list;
     list<Operator*> opList;
+	vector<int> truncations;
 
     static string target_ID;
     static int noOfConfigurations;
@@ -94,6 +96,24 @@ public:
     string getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int wordsize, int inputShift, bool signedConversion=true);
     static string getBinary(int value, int wordsize);
     string getTemporaryName();
+
+protected:
+	void binary_adder(
+			IntConstMultShiftAdd_BASE* left,
+			IntConstMultShiftAdd_BASE* right,
+			int left_shift,
+			int right_shift,
+			int left_trunc,
+			int right_trunc, 
+			string result_name
+		);
+
+	void handle_sub(
+			size_t nb_inputs, 
+			int flag,
+			map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap
+		);
+			
 };
 
 class IntConstMultShiftAdd_INPUT : public IntConstMultShiftAdd_BASE{

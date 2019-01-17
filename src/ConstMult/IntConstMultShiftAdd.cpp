@@ -34,7 +34,20 @@ using namespace PAGSuite;
 
 namespace flopoco {
 
-IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_, int epsilon_)
+vector<int> IntConstMultShiftAdd::TruncationRegister::nullVec_ = {0,0,0};
+
+IntConstMultShiftAdd::IntConstMultShiftAdd(
+		Operator* parentOp, 
+		Target* target, 
+		int wIn_, 
+		string pipelined_realization_str, 
+		bool pipelined_, 
+		bool syncInOut_, 
+		int syncEveryN_, 
+		bool syncMux_,
+		int epsilon_,
+		string truncations
+	)
     : Operator(parentOp, target),
       wIn(wIn_),
       syncInOut(syncInOut_),
@@ -50,15 +63,21 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, i
 
     if(pipelined_realization_str.empty()) return; //in case the realization string is not defined, don't further process it.
 
-    ProcessIntConstMultShiftAdd(target,pipelined_realization_str);
+    ProcessIntConstMultShiftAdd(target, pipelined_realization_str, truncations);
 };
 
-void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pipelined_realization_str)
+void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
+		Target* target, 
+		string pipelined_realization_str,
+		string truncations
+	)
 {
     REPORT( DETAILED, "IntConstMultShiftAdd started with syncoptions:")
 	REPORT( DETAILED, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
+	TruncationRegister truncationMap(truncations);
+
 
     needs_unisim = false;
     emu_conf = 0;
@@ -100,15 +119,19 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
         noOfPipelineStages = 0;
         int configurationSignalWordsize = ceil(log2(noOfConfigurations));
-        for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin(); iter != pipelined_adder_graph.nodes_list.end(); ++iter)
-            if ((*iter)->stage > noOfPipelineStages) noOfPipelineStages=(*iter)->stage;
+		for(auto nodePtr : pipelined_adder_graph.nodes_list) {
+            if (nodePtr->stage > noOfPipelineStages) {
+			   	noOfPipelineStages=nodePtr->stage;
+			}
+		}
 
         REPORT( DETAILED, "noOfInputs: " << noOfInputs)
 		REPORT( DETAILED, "noOfConfigurations: " << noOfConfigurations)
 		REPORT( DETAILED, "noOfPipelineStages: " << noOfPipelineStages)
 
-		if(noOfConfigurations>1)
-		addInput("config_no",configurationSignalWordsize);
+		if(noOfConfigurations > 1) {
+			addInput("config_no", configurationSignalWordsize);
+		}
 
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::target_ID = target->getID();
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::noOfConfigurations = noOfConfigurations;
@@ -118,18 +141,15 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
         //IDENTIFY NODE
         REPORT(DETAILED,"identifiing nodes..")
 
-                map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
+		map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
         map<int,list<adder_graph_base_node_t*> > stageNodesMap;
-        for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin();
-             iter != pipelined_adder_graph.nodes_list.end();
-             ++iter)
+        for (auto nodePtr : pipelined_adder_graph.nodes_list)
         {
-            if( (*iter)->stage > noOfPipelineStages ) noOfPipelineStages = (*iter)->stage;
 
-            stageNodesMap[(*iter)->stage].push_back(*iter);
+            stageNodesMap[nodePtr->stage].push_back(nodePtr);
 
-            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* t = identifyNodeType(*iter);
-            t->outputSignalName = generateSignalName(*iter);
+            IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* t = identifyNodeType(nodePtr);
+            t->outputSignalName = generateSignalName(nodePtr);
             t->target = target;
 
             if      (  t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB2_CONF
@@ -139,8 +159,8 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                 REPORT(DEBUG,"has decoder")
 
                 conf_adder_subtractor_node_t* cc = new conf_adder_subtractor_node_t();
-                cc->stage = (*iter)->stage-1;
-                stageNodesMap[(*iter)->stage-1].push_back( cc );
+                cc->stage = nodePtr->stage-1;
+                stageNodesMap[nodePtr->stage-1].push_back( cc );
                 ((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
                 additionalNodeInfoMap.insert(
                             make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder)
@@ -149,107 +169,52 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                 REPORT(DEBUG,"has decoder")
 
                 mux_node_t* cc = new mux_node_t();
-                cc->stage = (*iter)->stage-1;
-                stageNodesMap[(*iter)->stage-1].push_back( cc );
+                cc->stage = nodePtr->stage-1;
+                stageNodesMap[nodePtr->stage-1].push_back( cc );
                 ((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
                 additionalNodeInfoMap.insert(
                             make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder)
                             );
-            }
-            t->wordsize  = computeWordSize( *iter,wIn );
-            t->base_node = (*iter);
-            //additionalNodeInfoMap.insert( std::make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(*iter,t) );
-            additionalNodeInfoMap.insert( {*iter,t} );
+            } else if(
+					t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADD2 ||
+					t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_SUB2_1N ||
+					t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADD3 ||
+					t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_SUB3_1N ||
+					t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_SUB3_2N
+				) {
+				//Store the truncation if it exists
+				int computedConstant = nodePtr->output_factor[0][0];
+				t->truncations = truncationMap.getTruncationFor(
+						computedConstant, 
+						nodePtr->stage
+					);
+			}
+            t->wordsize  = computeWordSize( nodePtr,wIn );
+            t->base_node = nodePtr;
+            //additionalNodeInfoMap.insert( std::make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(nodePtr,t) );
+            additionalNodeInfoMap.insert( {nodePtr,t} );
         }
         //IDENTIFY CONNECTIONS
         REPORT(DETAILED,"identifiing node connections..")
-		for (std::list<adder_graph_base_node_t*>::iterator iter = pipelined_adder_graph.nodes_list.begin(); iter != pipelined_adder_graph.nodes_list.end();++iter)
+		for (auto nodePtr : pipelined_adder_graph.nodes_list)
         {
-            identifyOutputConnections(*iter,additionalNodeInfoMap);
+            identifyOutputConnections(nodePtr ,additionalNodeInfoMap);
         }
         printAdditionalNodeInfo(additionalNodeInfoMap);
-
-        /*
-            //IDENTIFY STAGE MERGES
-        for( int i=1;i<=noOfPipelineStages;i++ )
-        {
-            cout << "try stagemerge for stage " << i << " node count "<< stageNodesMap[i].size() << endl;
-            bool mergePossible = true;
-            int current_id = 0;
-            for( list<adder_graph_base_node_t*>::iterator iter = stageNodesMap[i].begin();iter!=stageNodesMap[i].end();++iter )
-            {
-                IntConstMultShiftAdd_AdditionalNodeInfo operationNodeInfo = additionalNodeInfoMap[(*iter)];
-                if( is_a<adder_subtractor_node_t>(*(*iter)) )
-                {
-                    if( operationNodeInfo.nodeType == IntConstMultShiftAdd_NODETYPE_ADD2 ||
-                        operationNodeInfo.nodeType == IntConstMultShiftAdd_NODETYPE_SUB2_1N)
-                    {
-                        adder_subtractor_node_t* t = (adder_subtractor_node_t*)*iter;
-                        int lut_inp_count = 0;
-                        for(unsigned int j =0;j<t->inputs.size();j++)
-                        {
-                            if( is_a<mux_node_t>(*t->inputs[j]) )
-                            {
-                                vector<IntConstMultShiftAdd_muxInfo>* muxInfoMap = (vector<IntConstMultShiftAdd_muxInfo>*)additionalNodeInfoMap[t->inputs[j]].extendedInfo;
-                                lut_inp_count += muxInfoMap->size();
-                            }
-                            else if(  is_a<register_node_t>(*t->inputs[j]) )
-                            {
-                                lut_inp_count ++;
-                            }
-                            else
-                            {
-                                cout << "stage "<< i << " node " << current_id << " input "<< j <<" break node missfit " << endl;
-                                lut_inp_count = 10000;
-                                break;
-                            }
-                        }
-                        cout << "stage "<<i << " node " << current_id << " lut_size " << lut_inp_count << endl;
-                        if(lut_inp_count > 5)
-                        {
-                            mergePossible = false;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        cout << "stage "<< i << " node " << current_id << " break node missfit " << endl;
-                        mergePossible = false;
-                        break;
-                    }
-                }
-                else if( is_a<register_node_t>(*(*iter)) )
-                {
-
-                }
-                else
-                {
-                    cout << "stage "<< i << " node " << current_id << " break node missfit " << endl;
-                    mergePossible = false;
-                    break;
-                }
-                current_id++;
-            }
-
-            if(mergePossible)
-            {
-                IF_VERBOSE(1) cout << "Found possible stagemerge between " << i-1 << " and " << i << endl;
-            }
-        }
-        */
-
+        
         //START BUILDING NODES
         REPORT(DETAILED,"building nodes..")
                 int unpiped_stage_count=0;
         bool isMuxStage = false;
-        for(unsigned int currentStage=0;currentStage<=(unsigned int)noOfPipelineStages;currentStage++)
-        {
+        for (
+				unsigned int currentStage=0 ;
+				currentStage <= (unsigned int) noOfPipelineStages ;
+				currentStage++
+		) {
             isMuxStage = false;
-            for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[currentStage].begin();
-                 operationNode != stageNodesMap[currentStage].end();
-                 ++operationNode)
+            for (auto operationNode : stageNodesMap[currentStage])
             {
-                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[operationNode];
                 REPORT( DETAILED, op_node->outputSignalName << " as " << op_node->get_name())
 
                 if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
@@ -264,12 +229,12 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                     }
 
                     inputSignalName << "x_in" << id;
-                    addInput( inputSignalName.str(),wIn );
+                    addInput(inputSignalName.str(), wIn);
                     vhdl << "\t" << declare(op_node->outputSignalName,wIn) << " <= " << inputSignalName.str() << ";" << endl;
                     input_signals.push_back(inputSignalName.str());
                 }
                 else
-                vhdl << op_node->get_realisation( additionalNodeInfoMap );
+                vhdl << op_node->get_realisation(additionalNodeInfoMap);
 
                 if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX ||
                         op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_AND)
@@ -279,7 +244,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                     declare( (*declare_it).first,(*declare_it).second );
 
                 for(list<Operator* >::iterator declare_it=op_node->opList.begin();declare_it!=op_node->opList.end();++declare_it  )
-                    addSubComponent(  *declare_it);
+                    addSubComponent(*declare_it);
             }
 
 
@@ -325,12 +290,10 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 
         output_signal_info sig_info;
         short realizedOutputNodes = 0;
-        for (std::list<adder_graph_base_node_t*>::iterator operationNode = stageNodesMap[noOfPipelineStages].begin();
-             operationNode != stageNodesMap[noOfPipelineStages].end();
-             ++operationNode)
+        for (auto operationNode : stageNodesMap[noOfPipelineStages])
         {
-            if (is_a<output_node_t>(*(*operationNode))){
-                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[(*operationNode)];
+            if (is_a<output_node_t>(*operationNode)){
+                IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[operationNode];
                 stringstream outputSignalName;
                 outputSignalName << "x_out" << realizedOutputNodes;
                 realizedOutputNodes++;
@@ -339,13 +302,13 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
                     for(int i=0; i < noOfInputs; i++)
                     {
                         if(i>0) outputSignalName << "v" ;
-                        outputSignalName << (((*operationNode)->output_factor[j][i] < 0) ? "m" : "");
-                        outputSignalName << abs((*operationNode)->output_factor[j][i]);
+                        outputSignalName << ((operationNode->output_factor[j][i] < 0) ? "m" : "");
+                        outputSignalName << abs(operationNode->output_factor[j][i]);
                     }
                 }
                 addOutput(outputSignalName.str(), op_node->wordsize);
 
-                sig_info.output_factors = (*operationNode)->output_factor;
+                sig_info.output_factors = operationNode->output_factor;
                 sig_info.signal_name = outputSignalName.str();
                 sig_info.wordsize = op_node->wordsize;
                 output_signals.push_back( sig_info );
@@ -873,6 +836,69 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
     REPORT( DETAILED, nodeInfoString.str())
 }
 
+IntConstMultShiftAdd::TruncationRegister::TruncationRegister(string truncationList)
+{
+	static const string fieldDelimiter{";"};
+	auto getNextField = [](string& val)->string{
+		long unsigned int offset = val.find(fieldDelimiter);
+		string ret = val.substr(0, offset);
+		if (offset != string::npos) {
+			offset += 1;
+		}
+		val.erase(0, offset);
+		return ret;
+	};
+	while(truncationList.length() > 0)
+		parseRecord(getNextField(truncationList));
+}
+
+void IntConstMultShiftAdd::TruncationRegister::parseRecord(string record)
+{
+	static const string identDelimiter{':'};
+	static const string fieldDelimiter{','};
+	
+	auto getNextField = [](string& val)->int{
+		long unsigned int offset = val.find(fieldDelimiter);
+		string ret = val.substr(0, offset);
+		if (offset != string::npos) {
+			offset += 1;
+		}
+		val.erase(0, offset);
+		return stoi(ret);
+	};
+	
+	long unsigned int  offset = record.find(identDelimiter);
+	if (offset == string::npos) {
+		throw string{"IntConstMultShiftAdd::TruncationRegister::parseRecord : "
+		"wrong format "} + record;
+	}
+	string recordIdStr = record.substr(0, offset);
+	record.erase(0, offset + 1);
+	string& valuesStr = record;
+	
+	int factor = getNextField(recordIdStr);	
+	int stage = getNextField(recordIdStr);
+
+	vector<int> truncats;
+
+	while(valuesStr.length() > 0) {
+		truncats.push_back(getNextField(valuesStr));
+	}
+
+	truncationVal_.insert(make_pair(make_pair(factor, stage), truncats));
+}
+
+vector<int> const & IntConstMultShiftAdd::TruncationRegister::getTruncationFor(
+		int factor, 
+		int stage
+	)
+{
+	auto iter = truncationVal_.find(make_pair(factor, stage));
+	if (iter == truncationVal_.end())
+		return nullVec_;
+	return iter->second;
+}
+
 string IntConstMultShiftAdd::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
 {
     stringstream tmp;
@@ -912,19 +938,24 @@ OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, 
 		throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
 
 	int wIn, sync_every = 0;
-	std::string graph;
+	std::string graph, truncations;
 	bool sync_inout, sync_muxes, pipeline;
 	int epsilon;
 
 	UserInterface::parseInt(args, "wIn", &wIn);
 	UserInterface::parseString(args, "graph", &graph);
+	UserInterface::parseString( args, "truncations", &graph );
 	UserInterface::parseBoolean(args, "pipeline", &pipeline);
 	UserInterface::parseInt(args, "epsilon", &epsilon);
 	UserInterface::parseBoolean(args, "sync_inout", &sync_inout);
 	UserInterface::parseBoolean(args, "sync_muxes", &sync_muxes);
 	UserInterface::parseInt(args, "sync_every", &sync_every);
 
-	return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline, sync_inout, sync_every, sync_muxes, epsilon);
+	if (truncations == "\"\"") {
+		truncations = "";
+	}
+
+	return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline, sync_inout, sync_every, sync_muxes, epsilon, truncations);
 }
 
 
@@ -946,7 +977,8 @@ namespace flopoco {
                           pipeline(bool)=true: Enable pipelining of the pag; \
                           sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
                           sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
-                          sync_every(int)=1: Count of stages after which will be pipelined",
+                          sync_every(int)=1: Count of stages after which will be pipelined;"
+						  "truncations(string)=\"\": provides the truncations for subvalues",
                           "",
                           IntConstMultShiftAdd::parseArguments
       );
