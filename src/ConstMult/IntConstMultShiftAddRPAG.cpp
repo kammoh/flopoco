@@ -24,7 +24,6 @@
 
 #include "IntConstMultShiftAddRPAG.hpp"
 
-#include "pagsuite/scm_solutions.hpp"
 #include "pagsuite/pagexponents.hpp"
 #include "pagsuite/compute_successor_set.h"
 #include "pagsuite/log2_64.h"
@@ -84,7 +83,7 @@ namespace flopoco{
     void flopoco::IntConstMultShiftAddRPAG::registerFactory() {
 
         UserInterface::add( "IntConstMultShiftAddRPAG", // name
-                            "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_SCM_CONST) + " (19 bit)", // description, string
+                            "Integer constant multiplication using shift and add using the RPAG algorithm", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \

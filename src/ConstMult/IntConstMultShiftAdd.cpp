@@ -925,7 +925,7 @@ namespace flopoco {
 #ifdef HAVE_PAGLIB
       UserInterface::add( "IntConstMultShiftAdd", // name
                           "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
-                          "BasicInteger", // category, from the list defined in UserInterface.cpp
+                          "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                           "",
                           "wIn(int): Wordsize of pag inputs; \
                           graph(string): Realization string of the pag; \
