@@ -48,6 +48,7 @@ IntAddSubCmp/IntMultiAdder
 ConstMult/ShiftAddOp
 ConstMult/ShiftAddDag
 ConstMult/FixRealKCM
+ConstMult/FixRealShiftAdd
 ConstMult/IntConstMult
 ConstMult/IntConstDiv
 ConstMult/IntConstMultShiftAdd

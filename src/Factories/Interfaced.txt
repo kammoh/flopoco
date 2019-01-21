@@ -22,6 +22,7 @@ FixFunctionByPiecewisePoly
 FixFunctionByMultipartiteTable
 PiecewisePolyApprox
 FixRealKCM
+FixRealShiftAdd
 TestBench
 Wrapper
 FPAdd
