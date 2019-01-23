@@ -90,7 +90,7 @@ void IntConstMultShiftAdd_BASE::binary_adder(
 
 	string copy_as_is = (nb_copy_as_is > 0) ? 
 		"& " + single_trail_input->outputSignalName + 
-		range(nb_trail_zeros, copy_as_is_boundary - 1) : "";
+		range(copy_as_is_boundary - 1, nb_trail_zeros) : "";
 
 	//then it depends whether the two outputs actually overlaps or not
 	bool needs_adder = (min_word_size > max_known_zeros);
