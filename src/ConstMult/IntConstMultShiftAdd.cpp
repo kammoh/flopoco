@@ -34,7 +34,7 @@ using namespace PAGSuite;
 
 namespace flopoco {
 
-IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_, double epsilon_)
+IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_, int epsilon_)
     : Operator(parentOp, target),
       wIn(wIn_),
       syncInOut(syncInOut_),
@@ -89,7 +89,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
 
         if(epsilon > 0.0)
         {
-            REPORT( DETAILED,  "computing word sizes of truncated MCM");
+            REPORT(INFO,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
 
             map<pair<int, int>, vector<int> > wordSizeMap;
 
@@ -908,21 +908,23 @@ string IntConstMultShiftAdd::getBinary(int value, int Wordsize)
 
 OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
 {
-  if( target->getVendor() != "Xilinx" )
-    throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
+	if (target->getVendor() != "Xilinx")
+		throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
 
-  int wIn, sync_every = 0;
-  std::string graph;
-  bool sync_inout,sync_muxes,pipeline;
+	int wIn, sync_every = 0;
+	std::string graph;
+	bool sync_inout, sync_muxes, pipeline;
+	int epsilon;
 
-  UserInterface::parseInt( args, "wIn", &wIn );
-  UserInterface::parseString( args, "graph", &graph );
-  UserInterface::parseBoolean( args, "pipeline", &pipeline );
-  UserInterface::parseBoolean( args, "sync_inout", &sync_inout );
-  UserInterface::parseBoolean( args, "sync_muxes", &sync_muxes );
-  UserInterface::parseInt( args, "sync_every", &sync_every );
+	UserInterface::parseInt(args, "wIn", &wIn);
+	UserInterface::parseString(args, "graph", &graph);
+	UserInterface::parseBoolean(args, "pipeline", &pipeline);
+	UserInterface::parseInt(args, "epsilon", &epsilon);
+	UserInterface::parseBoolean(args, "sync_inout", &sync_inout);
+	UserInterface::parseBoolean(args, "sync_muxes", &sync_muxes);
+	UserInterface::parseInt(args, "sync_every", &sync_every);
 
-  return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline,sync_inout,sync_every,sync_muxes );
+	return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline, sync_inout, sync_every, sync_muxes, epsilon);
 }
 
 
@@ -940,6 +942,7 @@ namespace flopoco {
                           "",
                           "wIn(int): Wordsize of pag inputs; \
                           graph(string): Realization string of the pag; \
+                          epsilon(int)=0: Allowable error for truncated constant multipliers; \
                           pipeline(bool)=true: Enable pipelining of the pag; \
                           sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
                           sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
@@ -947,7 +950,6 @@ namespace flopoco {
                           "",
                           IntConstMultShiftAdd::parseArguments
       );
-//                          epsilon(int)=true: Enable pipelining of the pag; 
 #endif // HAVE_PAGLIB
     }
 }//namespace

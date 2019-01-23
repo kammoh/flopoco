@@ -38,7 +38,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, double epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
         this->coeff = coeff;
 
@@ -195,12 +195,13 @@ namespace flopoco{
 
 
     OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
-        int wIn, constant;
+        int wIn, constant, epsilon;
 
         UserInterface::parseInt( args, "wIn", &wIn );
-        UserInterface::parseInt( args, "constant", &constant );
+		UserInterface::parseInt( args, "constant", &constant );
+		UserInterface::parseInt( args, "epsilon", &epsilon );
 
-        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, false);
+        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, false, epsilon);
     }
 
     void flopoco::IntConstMultShiftAddOpt::registerFactory() {
@@ -210,7 +211,8 @@ namespace flopoco{
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
-                            constant(int): constant;",
+                            constant(int): constant; \
+                            epsilon(int)=0: Allowable error for truncated constant multipliers;",
                             "Nope.",
                             IntConstMultShiftAddOpt::parseArguments
                           ) ;

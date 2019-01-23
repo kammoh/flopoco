@@ -37,7 +37,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, double epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
     	set<int_t> target_set;
     	target_set.insert(coeff);
@@ -73,12 +73,13 @@ namespace flopoco{
     }
 
     OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
-        int wIn, constant;
+        int wIn, constant, epsilon;
 
         UserInterface::parseInt( args, "wIn", &wIn );
-        UserInterface::parseInt( args, "constant", &constant );
+		UserInterface::parseInt( args, "constant", &constant );
+		UserInterface::parseInt( args, "epsilon", &epsilon );
 
-        return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false);
+        return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);
     }
 
     void flopoco::IntConstMultShiftAddRPAG::registerFactory() {
@@ -88,7 +89,8 @@ namespace flopoco{
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
-                            constant(int): constant;",
+                            constant(int): constant; \
+                            epsilon(int)=0: Allowable error for truncated constant multipliers;",
                             "Nope.",
                             IntConstMultShiftAddRPAG::parseArguments
                           ) ;

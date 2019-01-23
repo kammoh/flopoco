@@ -32,7 +32,7 @@ namespace flopoco{
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true, double epsilon=0.0);
+        IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true, int epsilon=0);
 
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
         static void registerFactory();
