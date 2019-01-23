@@ -944,7 +944,7 @@ OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, 
 
 	UserInterface::parseInt(args, "wIn", &wIn);
 	UserInterface::parseString(args, "graph", &graph);
-	UserInterface::parseString( args, "truncations", &graph );
+	UserInterface::parseString( args, "truncations", &truncations);
 	UserInterface::parseBoolean(args, "pipeline", &pipeline);
 	UserInterface::parseInt(args, "epsilon", &epsilon);
 	UserInterface::parseBoolean(args, "sync_inout", &sync_inout);
