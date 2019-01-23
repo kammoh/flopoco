@@ -166,12 +166,17 @@ namespace flopoco{
 			old_settings = cout.flags();
 
 			cout.flags(old_settings);
+
+			break; //break on first coefficient found (just for test)
 		}
 
 
 		//cleanup
 		mpfr_clears(mpOp1, NULL);
 		mpfr_clears(mpOp2, NULL);
+
+
+		//create IntConstMultShiftAdd instance here
 
 
 

@@ -38,7 +38,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
+    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, double epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
         this->coeff = coeff;
 

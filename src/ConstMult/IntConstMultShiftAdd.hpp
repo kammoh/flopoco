@@ -19,7 +19,7 @@ namespace flopoco {
         static ostream nostream;
         int noOfPipelineStages;
 
-        IntConstMultShiftAdd(Operator* parentOp, Target* target,int wIn_, string pipelined_realization_str, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1,bool syncMux_=true);
+        IntConstMultShiftAdd(Operator* parentOp, Target* target,int wIn_, string pipelined_realization_str, bool pipelined_=true, bool syncInOut_=true, int syncEveryN_=1,bool syncMux_=true, double epsilon_=0);
 
         ~IntConstMultShiftAdd() {}
 
@@ -43,6 +43,7 @@ namespace flopoco {
         bool pipelined;
         int syncEveryN;
         bool syncMux;
+        double epsilon;
 
         bool RPAGused;
         int emu_conf;

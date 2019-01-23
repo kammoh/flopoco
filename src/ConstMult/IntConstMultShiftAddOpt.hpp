@@ -32,7 +32,7 @@ namespace flopoco{
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true);
+        IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true, double epsilon=0.0);
 
 //		void emulate(TestCase* tc);
 //        void buildStandardTestCases(TestCaseList* tcl);

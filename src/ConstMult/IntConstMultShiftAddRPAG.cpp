@@ -37,7 +37,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, double epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
     	set<int_t> target_set;
     	target_set.insert(coeff);
@@ -50,7 +50,8 @@ namespace flopoco{
 
 		PAGSuite::global_verbose = UserInterface::verbose-1; //set rpag to one less than verbose of FloPoCo
 
-		PAGSuite::cost_model_t cost_model = PAGSuite::HL_FPGA;// with default value
+		PAGSuite::cost_model_t cost_model = PAGSuite::LL_FPGA;// with default value
+		rpag->input_wordsize = wIn;
 		rpag->set_cost_model(cost_model);
 		rpag->optimize();
 

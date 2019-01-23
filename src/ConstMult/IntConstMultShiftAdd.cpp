@@ -34,12 +34,13 @@ using namespace PAGSuite;
 
 namespace flopoco {
 
-IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_)
+IntConstMultShiftAdd::IntConstMultShiftAdd(Operator* parentOp, Target* target, int wIn_, string pipelined_realization_str, bool pipelined_, bool syncInOut_, int syncEveryN_, bool syncMux_, double epsilon_)
     : Operator(parentOp, target),
       wIn(wIn_),
       syncInOut(syncInOut_),
       pipelined(pipelined_),
-      syncEveryN(syncEveryN_)
+      syncEveryN(syncEveryN_),
+      epsilon(epsilon_)
 {
     syncMux=syncMux_;
 
@@ -81,9 +82,19 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string pi
     {
         REPORT( DETAILED,  "check graph...")
 		pipelined_adder_graph.check_and_correct(pipelined_realization_str);
+
 		if(UserInterface::verbose >= DETAILED)
 			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
+
+        if(epsilon > 0.0)
+        {
+            REPORT( DETAILED,  "computing word sizes of truncated MCM");
+
+            map<pair<int, int>, vector<int> > wordSizeMap;
+
+            REPORT(INFO, "!! ToDo: Compute word sizes here !!");
+        }
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
         noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
@@ -936,6 +947,7 @@ namespace flopoco {
                           "",
                           IntConstMultShiftAdd::parseArguments
       );
+//                          epsilon(int)=true: Enable pipelining of the pag; 
 #endif // HAVE_PAGLIB
     }
 }//namespace
