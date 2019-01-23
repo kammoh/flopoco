@@ -109,9 +109,21 @@ void IntConstMultShiftAdd_BASE::binary_adder(
 		int padding_head_right = wordsize - right_left_bound;
 		int useful_bits_left = left_left_bound - left_right_bound;
 		int useful_bits_right = right_left_bound - right_right_bound;
+		int padding_tail_right = right_right_bound - copy_as_is_boundary;
+		int padding_tail_left = left_right_bound - copy_as_is_boundary;
 
 		string left_add_operand = left->getTemporaryName();
 		string right_add_operand = right->getTemporaryName();
+
+		string pad_tail_left, pad_tail_right;
+		pad_tail_left = pad_tail_right = "";
+
+		if (padding_tail_left > 0) {
+			pad_tail_left = " & " + zg(padding_tail_left);
+		}
+		if (padding_tail_right > 0) {
+			pad_tail_right = " & " + zg(padding_tail_right);
+		}
 		
 		ostringstream left_sign_ext, right_sign_ext;
 		bool concat_left, concat_right;
@@ -152,8 +164,14 @@ void IntConstMultShiftAdd_BASE::binary_adder(
 		string concat_left_str = (concat_left) ? " & " : "";
 		string concat_right_str = (concat_right) ? " & " : "";
 
-		string left_declare = left_sign_ext.str() + concat_left_str + select_range_left; 
-		string right_declare = right_sign_ext.str() + concat_right_str + select_range_right; 
+		string left_declare = left_sign_ext.str() + 
+			concat_left_str + 
+			select_range_left + 
+			pad_tail_left; 
+		string right_declare = right_sign_ext.str() + 
+			concat_right_str + 
+			select_range_right + 
+			pad_tail_right; 
 
 		base_op->vhdl << "\t" << base_op->declare(
 				.0, 
