@@ -490,7 +490,11 @@ string IntConstMultShiftAdd_SUB3_1N::get_realisation(map<adder_graph_base_node_t
 
 string IntConstMultShiftAdd_SUB3_2N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-	handle_sub(3, GenericAddSub::TERNARY|GenericAddSub::SUB_MID, InfoMap);
+	handle_sub(
+			3, 
+			GenericAddSub::TERNARY|GenericAddSub::SUB_MID|GenericAddSub::SUB_RIGHT, 
+			InfoMap
+		);
     return "";
 }
 

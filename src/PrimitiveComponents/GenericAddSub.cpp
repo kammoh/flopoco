@@ -108,11 +108,12 @@ namespace flopoco {
         else
         {
 			vhdl << "\tsum_o <= std_logic_vector(" << (hasFlags(SUB_LEFT)?"-":"");
+			vhdl << "signed(iL)";
             if(hasFlags(TERNARY))
             {
-                vhdl << "signed(iM)" << (hasFlags(SUB_MID)?"-":"+") ;
+                vhdl <<  (hasFlags(SUB_MID)?"-":"+") << "signed(iM)";
             }
-            vhdl << "signed(iL)" << (hasFlags(SUB_RIGHT)?"-":"+") << " signed(iR));" << endl;
+            vhdl << (hasFlags(SUB_RIGHT)?"-":"+") << " signed(iR));" << endl;
         }
     }
 
