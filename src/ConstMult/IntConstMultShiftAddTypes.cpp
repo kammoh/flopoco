@@ -459,7 +459,7 @@ void IntConstMultShiftAdd_BASE::handle_sub(
     GenericAddSub* add = new GenericAddSub(
 			base_op,
 			target,
-			wordsize,
+			adder_word_size,
 			flag
 		);
     base_op->addSubComponent(add);
