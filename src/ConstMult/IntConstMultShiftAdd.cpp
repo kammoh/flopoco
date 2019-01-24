@@ -899,40 +899,8 @@ vector<int> const & IntConstMultShiftAdd::TruncationRegister::getTruncationFor(
 	return iter->second;
 }
 
-string IntConstMultShiftAdd::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
-{
-    stringstream tmp;
-    if(!signedConversion) tmp << "std_logic_vector(";
-    if(inputShift > 0)
-    {
-        tmp << "unsigned(shift_left(resize(signed(" << signalName << ")," << outputWordsize << ")," << inputShift << "))";
-    }
-    else
-    {
-        tmp << "unsigned(resize(signed(" << signalName << ")," << outputWordsize << "))";
-    }
-    if(!signedConversion) tmp << ")";
-    return tmp.str();
-}
 
-string IntConstMultShiftAdd::getBinary(int value, int Wordsize)
-{
-    string tmp;
-    while(value>0)
-    {
-        if(value%2) tmp.insert(0,1,'1');
-        else tmp.insert(0,1,'0');
-        value = (value>>1);
-    }
-    while((int)tmp.length() < Wordsize) tmp.insert(0,1,'0');
-
-    tmp.insert(0,1,'\"');
-    tmp += '\"';
-    return tmp;
-}
-
-
-OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
+	OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
 {
 	if (target->getVendor() != "Xilinx")
 		throw std::runtime_error("Can't build xilinx primitive on non xilinx target");

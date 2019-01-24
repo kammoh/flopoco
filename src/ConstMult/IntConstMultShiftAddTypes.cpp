@@ -773,23 +773,7 @@ string IntConstMultShiftAdd_MUX::get_realisation(map<adder_graph_base_node_t *, 
     return "";
 }
 
-string IntConstMultShiftAdd_BASE::getShiftAndResizeString(string signalName, int outputWordsize, int inputShift,bool signedConversion)
-{
-    stringstream tmp;
-    if(!signedConversion) tmp << "std_logic_vector(";
-    if(inputShift > 0)
-    {
-        tmp << "unsigned(shift_left(resize(signed(" << signalName << ")," << outputWordsize << ")," << inputShift << "))";
-    }
-    else
-    {
-        tmp << "unsigned(resize(signed(" << signalName << ")," << outputWordsize << "))";
-    }
-    if(!signedConversion) tmp << ")";
-    return tmp.str();
-}
-
-string IntConstMultShiftAdd_BASE::getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int outputWordsize, int inputShift,bool signedConversion)
+	string IntConstMultShiftAdd_BASE::getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int outputWordsize, int inputShift,bool signedConversion)
 {
     int neg_shift=0;
     if( is_a<adder_subtractor_node_t>(*base_node) ){

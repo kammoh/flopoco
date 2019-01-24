@@ -42,14 +42,25 @@ namespace flopoco{
     	set<int64_t> target_set;
     	target_set.insert(coeff);
 
-    	cout << "coeff=" << coeff << endl;
+		int depth = log2c_64(nonzeros(coeff));
+
+		REPORT(INFO, "depth=" << depth);
 
 		PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
 
 		for(int_t t : target_set)
 			rpag->target_set->insert(t);
 
-
+		if(depth > 3)
+		{
+			REPORT(DEBUG, "depth is 4 or more, limit search limit to 1");
+			rpag->search_limit = 1;
+		}
+		if(depth > 4)
+		{
+			REPORT(DEBUG, "depth is 5 or more, limit MSD permutation limit");
+			rpag->msd_digit_permutation_limit = 1000;
+		}
 		PAGSuite::global_verbose = UserInterface::verbose-1; //set rpag to one less than verbose of FloPoCo
 
 		PAGSuite::cost_model_t cost_model = PAGSuite::LL_FPGA;// with default value

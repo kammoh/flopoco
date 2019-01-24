@@ -90,8 +90,6 @@ namespace flopoco {
 
         void identifyOutputConnections(PAGSuite::adder_graph_base_node_t* node, map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap);
         void printAdditionalNodeInfo(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );
-        string getShiftAndResizeString(string signalName, int outputWordsize, int inputShift, bool signedConversion=true);
-        string getBinary(int value, int wordsize);
 
 #endif // HAVE_PAGLIB
     };

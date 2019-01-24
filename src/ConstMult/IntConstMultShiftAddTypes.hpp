@@ -92,8 +92,8 @@ public:
     void getInputOrder(vector<bool>& inputIsNegative,vector<int>& inputOrder );
     string getNegativeShiftString(string signalName , int wordsize, PAGSuite::adder_graph_base_node_t *base_node );
     string getNegativeResizeString(string signalName,int outputWordsize);
-    static string getShiftAndResizeString(string signalName, int wordsize, int inputShift, bool signedConversion=true);
-    string getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int wordsize, int inputShift, bool signedConversion=true);
+
+	string getShiftAndResizeString(IntConstMultShiftAdd_BASE *input_node, int wordsize, int inputShift, bool signedConversion=true);
     static string getBinary(int value, int wordsize);
     string getTemporaryName();
 
