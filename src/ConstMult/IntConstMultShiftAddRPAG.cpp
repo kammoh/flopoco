@@ -114,10 +114,11 @@ namespace flopoco{
 	}
 
     OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
-        int wIn, constant, epsilon;
+        int wIn, epsilon;
+		int64_t constant;
 
         UserInterface::parseInt( args, "wIn", &wIn );
-		UserInterface::parseInt( args, "constant", &constant );
+		UserInterface::parseInt64( args, "constant", &constant );
 		UserInterface::parseInt( args, "epsilon", &epsilon );
 
         return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);

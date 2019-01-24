@@ -631,6 +631,23 @@ namespace flopoco
 		*variable= intval;
 	}
 
+	void UserInterface::parseInt64(vector<string>& args, string key, int64_t* variable, bool genericOption){
+		string val=getVal(args, key);
+		if(val=="") {
+			if(genericOption)
+				return; // do nothing
+			// key not given, use default value
+			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			if (val=="")
+				throwMissingArgError(args[0], key);
+		}
+		size_t end;
+		int intval=stoll(val, &end);
+		if (val.length() == 0 || val.length() != end)
+			throw (args[0] +": expecting an int for parameter " + key + ", got "+val);
+		*variable= intval;
+	}
+
 
 	void UserInterface::parseColonSeparatedStringList(vector<string> &args, string key, vector<string>* variable, bool genericOption){
 		string val=getVal(args, key);
