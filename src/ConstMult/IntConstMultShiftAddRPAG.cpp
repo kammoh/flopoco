@@ -37,10 +37,12 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int64_t coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
-    	set<int_t> target_set;
+    	set<int64_t> target_set;
     	target_set.insert(coeff);
+
+    	cout << "coeff=" << coeff << endl;
 
 		PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
 
@@ -120,6 +122,8 @@ namespace flopoco{
         UserInterface::parseInt( args, "wIn", &wIn );
 		UserInterface::parseInt64( args, "constant", &constant );
 		UserInterface::parseInt( args, "epsilon", &epsilon );
+
+		cout << "constant=" << constant << endl;
 
         return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);
     }

@@ -19,6 +19,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <cstdlib>
+#include <cstdint> //for int64_t
 
 #include "../Operator.hpp"
 #include "IntConstMultShiftAdd.hpp"
@@ -32,7 +33,7 @@ namespace flopoco{
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true, int epsilon=0);
+        IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int64_t c, bool syncInOut=true, int epsilon=0);
 
 		static TestList unitTest(int index);
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );

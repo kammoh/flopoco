@@ -642,7 +642,9 @@ namespace flopoco
 				throwMissingArgError(args[0], key);
 		}
 		size_t end;
-		int intval=stoll(val, &end);
+
+		int64_t intval=stoll(val, &end);
+
 		if (val.length() == 0 || val.length() != end)
 			throw (args[0] +": expecting an int for parameter " + key + ", got "+val);
 		*variable= intval;
