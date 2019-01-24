@@ -92,6 +92,7 @@ namespace flopoco{
 			constantList.push_back("43"); //smallest coefficient requiring 3 adders
 			constantList.push_back("683"); //smallest coefficient requiring 4 adders
 			constantList.push_back("14709"); //smallest coefficient requiring 5 adders
+			constantList.push_back("123456789"); //test a relatively large constant
 
 			for(int wIn=3; wIn<16; wIn+=4) // test various input widths
 			{
