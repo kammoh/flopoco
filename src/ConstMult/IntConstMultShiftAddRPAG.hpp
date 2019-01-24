@@ -34,6 +34,7 @@ namespace flopoco{
 		/** The standard constructor, inputs the number to implement */ 
         IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int c, bool syncInOut=true, int epsilon=0);
 
+		static TestList unitTest(int index);
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
         static void registerFactory();
 	private:
