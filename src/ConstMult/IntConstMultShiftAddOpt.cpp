@@ -53,10 +53,19 @@ namespace flopoco{
 
         int shift;
         int coeffOdd = fundamental(coeff, &shift);
+		int outputStage; //stage of the output layer
 
-        if((coeffOdd < MAX_SCM_CONST) && (coeffOdd > 1))
+        if((coeffOdd <= MAX_SCM_CONST) && (coeffOdd >= 1))
         {
-          buildAdderGraph(coeffOdd);
+        	if(coeffOdd > 1)
+			{
+				buildAdderGraph(coeffOdd);
+				outputStage=1;
+			}
+			else //coeffOdd == 1
+			{
+				outputStage=0;
+			}
         }
         else
         {
@@ -64,8 +73,8 @@ namespace flopoco{
           exit(-1);
         }
 
-        //add output:
-		adderGraph << "{'O',[" << coeff << "],1,[" << coeffOdd << "],1," << shift << "},";
+		//add output:
+		adderGraph << "{'O',[" << coeff << "]," << outputStage << ",[" << coeffOdd << "]," << outputStage << "," << shift << "},";
 
         stringstream adderGraphComplete;
         adderGraphComplete << "{" << adderGraph.str().substr(0,adderGraph.str().length()-1) << "}";
@@ -78,7 +87,7 @@ namespace flopoco{
 		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str());
 
         ostringstream name;
-        name << "IntConstMultOpt_" << coeff << "_" << wIn;
+        name << "IntConstMultShiftAddOpt_" << coeff << "_" << wIn;
         setName(name.str());
     }
 
@@ -193,6 +202,47 @@ namespace flopoco{
 	  }
 	}
 
+	TestList IntConstMultShiftAddOpt::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+
+		if(index==-1)
+		{ // The unit tests
+
+			vector<string> constantList; // The list of constants we want to test
+//			constantList.push_back("0"); //should work in future but exceptions have to be implemented!
+			constantList.push_back("1");
+			constantList.push_back("16");
+			constantList.push_back("123");
+			constantList.push_back("3"); //1 adder
+			constantList.push_back("7"); //1 subtractor
+			constantList.push_back("11"); //smallest coefficient requiring 2 adders
+			constantList.push_back("43"); //smallest coefficient requiring 3 adders
+			constantList.push_back("683"); //smallest coefficient requiring 4 adders
+			constantList.push_back("14709"); //smallest coefficient requiring 5 adders
+			constantList.push_back(to_string(MAX_SCM_CONST)); //maximum supported coefficient
+
+			for(int wIn=3; wIn<16; wIn+=4) // test various input widths
+			{
+				for(auto c:constantList) // test various constants
+				{
+					paramList.push_back(make_pair("wIn",  to_string(wIn)));
+					paramList.push_back(make_pair("constant", c));
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
+			}
+		}
+		else
+		{
+			// finite number of random test computed out of index
+		}
+
+		return testStateList;
+	}
+
 
     OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
         int wIn, constant, epsilon;
@@ -214,7 +264,8 @@ namespace flopoco{
                             constant(int): constant; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
                             "Nope.",
-                            IntConstMultShiftAddOpt::parseArguments
+                            IntConstMultShiftAddOpt::parseArguments,
+							IntConstMultShiftAddOpt::unitTest
                           ) ;
     }
 
