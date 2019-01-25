@@ -128,7 +128,7 @@ vector<vector<size_t>> splitNonOverlap(
 	size_t nb_input = word_sizes.size();
 	vector<int> kz(nb_input);
 	vector<int> left_border(nb_input);
-	vector<size_t> order;
+	vector<size_t> order(nb_input);
 
 	for (size_t i = 0 ; i < nb_input ; ++i) {
 		int cur_shift = max(0, shifts[i]);		
