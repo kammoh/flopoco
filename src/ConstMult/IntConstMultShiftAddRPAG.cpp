@@ -37,8 +37,10 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int64_t coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, mpz_class coeffMpz, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
+		int64_t coeff = mpz_get_ui(coeffMpz.get_mpz_t());
+
     	set<int64_t> target_set;
     	target_set.insert(coeff);
 
@@ -128,15 +130,21 @@ namespace flopoco{
 
     OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
         int wIn, epsilon;
-		int64_t constant;
 
-        UserInterface::parseInt( args, "wIn", &wIn );
-		UserInterface::parseInt64( args, "constant", &constant );
-		UserInterface::parseInt( args, "epsilon", &epsilon );
+        UserInterface::parseStrictlyPositiveInt( args, "wIn", &wIn );
+		UserInterface::parsePositiveInt( args, "epsilon", &epsilon );
 
-		cout << "constant=" << constant << endl;
+		string	constStr;
+		UserInterface::parseString(args, "constant", &constStr);
+		try {
+			mpz_class constant(constStr);
+			return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);
+		}
+		catch (const std::invalid_argument &e) {
+			cerr << "Error: Invalid constant " << constStr <<endl;
+			exit(EXIT_FAILURE);
+		}
 
-        return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);
     }
 
     void flopoco::IntConstMultShiftAddRPAG::registerFactory() {

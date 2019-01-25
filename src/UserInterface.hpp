@@ -85,7 +85,6 @@ namespace flopoco
 		////////////////// Helper parsing functions to be used in each Operator parser ///////////////////////////////
 		static void parseBoolean(vector<string> &args, string key, bool* variable, bool genericOption=false);
 		static void parseInt(vector<string> &args, string key, int* variable, bool genericOption=false);
-		static void parseInt64(vector<string> &args, string key, int64_t* variable, bool genericOption=false);
 		static void parsePositiveInt(vector<string> &args, string key, int* variable, bool genericOption=false);
 		static void parseStrictlyPositiveInt(vector<string> &args, string key, int* variable, bool genericOption=false);
 		static void parseFloat(vector<string> &args, string key, double* variable, bool genericOption=false);
