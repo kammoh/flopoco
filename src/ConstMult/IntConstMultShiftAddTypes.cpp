@@ -12,6 +12,7 @@
 #include "PrimitiveComponents/GenericLut.hpp"
 #include "PrimitiveComponents/GenericMux.hpp"
 #include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
+#include "utils.hpp"
 //#include "PrimitiveComponents/Altera/Altera_TernaryAdd.hpp"
 
 using namespace PAGSuite;
@@ -21,6 +22,71 @@ string IntConstMultShiftAdd_BASE::target_ID = "NONE";
 int IntConstMultShiftAdd_BASE::noOfConfigurations = 0;
 int IntConstMultShiftAdd_BASE::configurationSignalWordsize = 0;
 int IntConstMultShiftAdd_BASE::noOfInputs = 0;
+
+vector<int> IntConstMultShiftAdd_TYPES::TruncationRegister::nullVec_ = {0,0,0};
+
+void TruncationRegister::parseRecord(string record)
+{
+	static const string identDelimiter{':'};
+	static const string fieldDelimiter{','};
+	
+	auto getNextField = [](string& val)->int{
+		long unsigned int offset = val.find(fieldDelimiter);
+		string ret = val.substr(0, offset);
+		if (offset != string::npos) {
+			offset += 1;
+		}
+		val.erase(0, offset);
+		return stoi(ret);
+	};
+	
+	long unsigned int  offset = record.find(identDelimiter);
+	if (offset == string::npos) {
+		throw string{"IntConstMultShiftAdd::TruncationRegister::parseRecord : "
+		"wrong format "} + record;
+	}
+	string recordIdStr = record.substr(0, offset);
+	record.erase(0, offset + 1);
+	string& valuesStr = record;
+	
+	int factor = getNextField(recordIdStr);	
+	int stage = getNextField(recordIdStr);
+
+	vector<int> truncats;
+
+	while(valuesStr.length() > 0) {
+		truncats.push_back(getNextField(valuesStr));
+	}
+
+	truncationVal_.insert(make_pair(make_pair(factor, stage), truncats));
+}
+
+vector<int> const & TruncationRegister::getTruncationFor(
+		int factor, 
+		int stage
+	)
+{
+	auto iter = truncationVal_.find(make_pair(factor, stage));
+	if (iter == truncationVal_.end())
+		return nullVec_;
+	return iter->second;
+}
+
+TruncationRegister::TruncationRegister(string truncationList)
+{
+	static const string fieldDelimiter{";"};
+	auto getNextField = [](string& val)->string{
+		long unsigned int offset = val.find(fieldDelimiter);
+		string ret = val.substr(0, offset);
+		if (offset != string::npos) {
+			offset += 1;
+		}
+		val.erase(0, offset);
+		return ret;
+	};
+	while(truncationList.length() > 0)
+		parseRecord(getNextField(truncationList));
+}
 
 string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
@@ -695,34 +761,6 @@ string IntConstMultShiftAdd_BASE::getTemporaryName()
     return t_name.str();
 }
 
-
-int getNodeCost(
-		vector<int> word_sizes, 
-		vector<int> truncations,
-		vector<int> shifts,
-		vector<bool> is_neg,
-		int out_word_size
-	) 
-{
-	size_t nb_inputs = word_sizes.size();
-	vector<int> known_zeros(nb_inputs);
-	vector<size_t> order(nb_inputs);
-	for (size_t i = 0 ; i < nb_inputs ; i++) {
-		known_zeros[i] = truncations[i] + shifts[i];
-		order[i] = i;
-	}
-
-	auto comp = [known_zeros](const size_t & a, const size_t& b)->bool{
-		return known_zeros[a] < known_zeros[b];
-	};
-
-	std::sort(order.begin(), order.end(), comp);
-	int min_kz = known_zeros[order[0]];
-	int second_min_kz = known_zeros[order[1]];
-	int copy_as_is = (is_neg[order[0]]) ? min_kz : second_min_kz;
-
-	return out_word_size - copy_as_is;
-}
 }
 
 

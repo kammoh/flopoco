@@ -34,7 +34,6 @@ using namespace PAGSuite;
 
 namespace flopoco {
 
-vector<int> IntConstMultShiftAdd::TruncationRegister::nullVec_ = {0,0,0};
 
 IntConstMultShiftAdd::IntConstMultShiftAdd(
 		Operator* parentOp, 
@@ -76,8 +75,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 	REPORT( DETAILED, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
-	TruncationRegister truncationMap(truncations);
-
+	IntConstMultShiftAdd_TYPES::TruncationRegister truncationMap(truncations);
 
     needs_unisim = false;
     emu_conf = 0;
@@ -835,70 +833,6 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 
     REPORT( DETAILED, nodeInfoString.str())
 }
-
-IntConstMultShiftAdd::TruncationRegister::TruncationRegister(string truncationList)
-{
-	static const string fieldDelimiter{";"};
-	auto getNextField = [](string& val)->string{
-		long unsigned int offset = val.find(fieldDelimiter);
-		string ret = val.substr(0, offset);
-		if (offset != string::npos) {
-			offset += 1;
-		}
-		val.erase(0, offset);
-		return ret;
-	};
-	while(truncationList.length() > 0)
-		parseRecord(getNextField(truncationList));
-}
-
-void IntConstMultShiftAdd::TruncationRegister::parseRecord(string record)
-{
-	static const string identDelimiter{':'};
-	static const string fieldDelimiter{','};
-	
-	auto getNextField = [](string& val)->int{
-		long unsigned int offset = val.find(fieldDelimiter);
-		string ret = val.substr(0, offset);
-		if (offset != string::npos) {
-			offset += 1;
-		}
-		val.erase(0, offset);
-		return stoi(ret);
-	};
-	
-	long unsigned int  offset = record.find(identDelimiter);
-	if (offset == string::npos) {
-		throw string{"IntConstMultShiftAdd::TruncationRegister::parseRecord : "
-		"wrong format "} + record;
-	}
-	string recordIdStr = record.substr(0, offset);
-	record.erase(0, offset + 1);
-	string& valuesStr = record;
-	
-	int factor = getNextField(recordIdStr);	
-	int stage = getNextField(recordIdStr);
-
-	vector<int> truncats;
-
-	while(valuesStr.length() > 0) {
-		truncats.push_back(getNextField(valuesStr));
-	}
-
-	truncationVal_.insert(make_pair(make_pair(factor, stage), truncats));
-}
-
-vector<int> const & IntConstMultShiftAdd::TruncationRegister::getTruncationFor(
-		int factor, 
-		int stage
-	)
-{
-	auto iter = truncationVal_.find(make_pair(factor, stage));
-	if (iter == truncationVal_.end())
-		return nullVec_;
-	return iter->second;
-}
-
 
 	OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
 {

@@ -23,6 +23,17 @@ using namespace std;
 using namespace flopoco;
 
 namespace IntConstMultShiftAdd_TYPES {
+	class TruncationRegister {
+		public:
+			TruncationRegister(string truncationList);
+			vector<int> const & getTruncationFor(int factor, int stage);
+
+		private:
+			void parseRecord(string record);
+			map<pair<int, int>, vector<int> > truncationVal_;
+			static vector<int> nullVec_;
+	};
+
     enum NODETYPE{
         NODETYPE_INPUT=1,
         NODETYPE_REG=12, // Standart register
@@ -213,16 +224,6 @@ public:
     string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "MUX";}
 };
-
-	int getNodeCost(
-			vector<int> word_sizes, 
-			vector<int> truncations,
-			vector<int> shifts,
-			vector<bool> is_neg,
-			int  out_word_size
-		);
-
-	
 }
 #endif // HAVE_PAGLIB
 #endif

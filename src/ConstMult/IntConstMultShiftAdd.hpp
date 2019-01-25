@@ -43,17 +43,7 @@ namespace flopoco {
         list<output_signal_info>& GetOutputList();
 
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
-
-		class TruncationRegister {
-			public:
-				TruncationRegister(string truncationList);
-				vector<int> const & getTruncationFor(int factor, int stage);
-
-			private:
-				void parseRecord(string record);
-				map<pair<int, int>, vector<int> > truncationVal_;
-				static vector<int> nullVec_;
-		};
+		
 #endif // HAVE_PAGLIB
         static void registerFactory();
 #ifdef HAVE_PAGLIB
