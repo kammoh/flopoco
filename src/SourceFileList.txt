@@ -56,6 +56,7 @@ ConstMult/IntConstMultShiftAddTypes
 ConstMult/IntConstMultShiftAddOpt
 ConstMult/IntConstMultShiftAddRPAG
 ConstMult/adder_cost
+ConstMult/WordLengthCalculator
 IntMult/IntMultiplier
 IntMult/FixMultAdd
 IntMult/TilingStrategy
