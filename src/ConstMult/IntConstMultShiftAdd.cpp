@@ -18,6 +18,8 @@
 #include <vector>
 #include <set>
 
+#include "adder_cost.hpp"
+
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
@@ -103,6 +105,10 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 		if(UserInterface::verbose >= DETAILED)
 			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
+
+        int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
+
+		REPORT( INFO, "adder graph requires " << noOfFullAdders << " full adders");
 
         if(epsilon > 0.0)
         {
