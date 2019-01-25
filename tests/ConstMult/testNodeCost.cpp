@@ -20,6 +20,6 @@ BOOST_AUTO_TEST_CASE(SignedShiftedAdd) {
 			false
 		);
 	
-	BOOST_REQUIRE_MESSAGE(adder_cost == 16 , "AdderCost for graph should be 6, got " <<
+	BOOST_REQUIRE_MESSAGE(adder_cost == 18 , "AdderCost for graph should be 18, got " <<
 			adder_cost << "instead.");
 }
