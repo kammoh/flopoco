@@ -39,7 +39,7 @@ namespace flopoco{
 
     IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, int64_t coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
-    	set<int64_t> target_set;
+    	set<int_t> target_set;
     	target_set.insert(coeff);
 
 		int depth = log2c_64(nonzeros(coeff));
