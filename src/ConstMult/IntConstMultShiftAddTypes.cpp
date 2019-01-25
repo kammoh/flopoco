@@ -22,7 +22,6 @@ int IntConstMultShiftAdd_BASE::noOfConfigurations = 0;
 int IntConstMultShiftAdd_BASE::configurationSignalWordsize = 0;
 int IntConstMultShiftAdd_BASE::noOfInputs = 0;
 
-
 string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     return "";
@@ -54,448 +53,49 @@ string IntConstMultShiftAdd_REG::get_realisation(map<adder_graph_base_node_t *, 
     return "";
 }
 
-void IntConstMultShiftAdd_BASE::binary_adder(
-			IntConstMultShiftAdd_BASE* left,
-			IntConstMultShiftAdd_BASE* right,
-			int left_shift,
-			int right_shift,
-			int left_trunc,
-			int right_trunc,
-			string result_name
-		)
-{
-	int left_word_size_init = left->wordsize;
-	int right_word_size_init = right->wordsize;
-
-	int left_word_size = left_word_size_init + left_shift;
-	int right_word_size = right_word_size_init + right_shift;
-
-	int nb_zeros_left = left_trunc + left_shift;
-	int nb_zeros_right = right_trunc + right_shift;
-	
-	//The two input superposition is cut in three segments:
-	//The rightmost one (lsb) is a certain number of known zeros
-	int nb_trail_zeros = min(nb_zeros_right, nb_zeros_left);
-	string trailing_zeros = (nb_trail_zeros > 0) ? "& " + zg(nb_trail_zeros)  : "";
-	
-	//then if the number of known zeros of the two words are unequal, there is
-	//some bits which are copied without further processing;
-	int max_known_zeros = max(nb_zeros_right, nb_zeros_left);
-	int min_word_size = min(left_word_size, right_word_size);
-	int copy_as_is_boundary = min(max_known_zeros, min_word_size);
-	int nb_copy_as_is = copy_as_is_boundary - nb_trail_zeros;
-
-	IntConstMultShiftAdd_BASE* single_trail_input = 
-		(nb_zeros_left < nb_zeros_right) ? left : right;
-
-	string copy_as_is = (nb_copy_as_is > 0) ? 
-		"& " + single_trail_input->outputSignalName + 
-		range(copy_as_is_boundary - 1, nb_trail_zeros) : "";
-
-	//then it depends whether the two outputs actually overlaps or not
-	bool needs_adder = (min_word_size > max_known_zeros);
-	string msb_part;
-
-	if (true or needs_adder) { //TODO Check signed case for overlap to see if
-							   //we can use the direct extension
-		int adder_word_size = wordsize - copy_as_is_boundary;
-		
-		int left_left_bound = max(copy_as_is_boundary, left_word_size);
-		int right_left_bound = max(copy_as_is_boundary, right_word_size);
-		int left_right_bound = max(copy_as_is_boundary, nb_zeros_left);
-		int right_right_bound = max(copy_as_is_boundary, nb_zeros_right);
-
-		int padding_head_left = wordsize - left_left_bound; 		
-		int padding_head_right = wordsize - right_left_bound;
-		int useful_bits_left = left_left_bound - left_right_bound;
-		int useful_bits_right = right_left_bound - right_right_bound;
-		int padding_tail_right = right_right_bound - copy_as_is_boundary;
-		int padding_tail_left = left_right_bound - copy_as_is_boundary;
-
-		string left_add_operand = left->getTemporaryName();
-		string right_add_operand = right->getTemporaryName();
-
-		string pad_tail_left, pad_tail_right;
-		pad_tail_left = pad_tail_right = "";
-
-		if (padding_tail_left > 0) {
-			pad_tail_left = " & " + zg(padding_tail_left);
-		}
-		if (padding_tail_right > 0) {
-			pad_tail_right = " & " + zg(padding_tail_right);
-		}
-		
-		ostringstream left_sign_ext, right_sign_ext;
-		bool concat_left, concat_right;
-		concat_left = concat_right = true;
-		if (padding_head_left > 0) {
-			left_sign_ext << "(" << padding_head_left - 1 << " downto 0 => " <<
-				left->outputSignalName << of(left->wordsize - 1) <<")";
-		} else {
-			concat_left = false;
-		}
-
-		if (padding_head_right > 0) {
-			right_sign_ext << "(" << padding_head_right - 1 << " downto 0 => " <<
-				right->outputSignalName << of(right->wordsize - 1) <<")";
-		} else {
-			concat_right = false;
-		}
-
-		string select_range_left, select_range_right;
-		select_range_left = select_range_right = "";
-
-		if (useful_bits_left > 0) {
-			int startidx_left = left_right_bound - left_shift;
-			select_range_left = left->outputSignalName + 
-				range(startidx_left + useful_bits_left - 1, startidx_left);
-		} else {
-			concat_left = false;
-		}
-
-		if (useful_bits_right > 0) {
-			int startidx_right = right_right_bound - right_shift;
-			select_range_right = right->outputSignalName + 
-				range(startidx_right + useful_bits_right - 1, startidx_right);
-		} else {
-			concat_right = false;
-		}
-
-		string concat_left_str = (concat_left) ? " & " : "";
-		string concat_right_str = (concat_right) ? " & " : "";
-
-		string left_declare = left_sign_ext.str() + 
-			concat_left_str + 
-			select_range_left + 
-			pad_tail_left; 
-		string right_declare = right_sign_ext.str() + 
-			concat_right_str + 
-			select_range_right + 
-			pad_tail_right; 
-
-		base_op->vhdl << "\t" << base_op->declare(
-				.0, 
-				left_add_operand, 
-				adder_word_size
-			) << " <= " << left_declare << ";" << endl;
-
-		base_op->vhdl << "\t" << base_op->declare(
-				.0, 
-				right_add_operand, 
-				adder_word_size
-			) << " <= " << right_declare << ";" << endl;
-			
-		GenericAddSub* addsub = new GenericAddSub(base_op, target, adder_word_size);
-		cerr << "-->" << addsub->getName() << endl;
-		msb_part = "sum_o_" + outputSignalName;
-		base_op->inPortMap(addsub, addsub->getInputName(0), left_add_operand);
-		base_op->inPortMap(addsub, addsub->getInputName(1), right_add_operand);
-		base_op->outPortMap(addsub, "sum_o", msb_part);
-		base_op->vhdl << base_op->instance(addsub, "adder_"+outputSignalName);
-		base_op->addSubComponent(addsub);
-	} else {
-		IntConstMultShiftAdd_BASE* single_head_input = 
-			(single_trail_input == left) ? right : left;	
-		string right_padd = (copy_as_is_boundary < max_known_zeros) ?
-			" & " + zg(max_known_zeros - copy_as_is_boundary) : "";
-
-		int leftmost_word_size_init = 
-			(single_head_input == left) ? left_word_size_init : right_word_size_init;
-		int leftmost_truncate = 
-			(single_head_input == left) ? left_trunc : right_trunc;
-		msb_part = "\"0\" & " + single_head_input->outputSignalName + 
-			range(leftmost_word_size_init - leftmost_truncate, left_word_size_init); 
-	}
-
-	base_op->vhdl << "\t" <<  result_name << " <= " << 
-		msb_part + copy_as_is + trailing_zeros << ";" << endl ;
-}
-
 string IntConstMultShiftAdd_ADD2::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
-
-	IntConstMultShiftAdd_BASE* left = InfoMap[t->inputs[0]];
-	IntConstMultShiftAdd_BASE* right = InfoMap[t->inputs[1]];
-	int left_trunc = truncations[0];
-	int right_trunc = truncations[1];
-	int left_word_size_init = left->wordsize;
-	int right_word_size_init = right->wordsize;
-	if (
-			right_trunc >= right_word_size_init || 
-			left_trunc >= left_word_size_init 
-	) {
-		throw string{"IntConstMultShiftAdd_ADD2::get_realisation:"
-		" one input truncation is greater than its wordsize"};
-	}
-
-	declare(outputSignalName, wordsize);
-
-	binary_adder(
-			left, 
-			right, 
-			t->input_shifts[0], 
-			t->input_shifts[1], 
-			left_trunc, 
-			right_trunc,
-			outputSignalName
-		);
-
-	return "";//base_op->vhdl.str();
+	base_op->vhdl << "\t-- building binary adder for factor " << 
+		t->output_factor[0][0] << endl;
+	build_operand_realisation(InfoMap);
+	return "";
 }
 
 string IntConstMultShiftAdd_ADD3::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
     adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
-	vector<int> opsize_word(3);
-	vector<int> opsize_shifted_word(3);
-	vector<int> known_zeros(3);
-	vector<IntConstMultShiftAdd_BASE*> inputs_info(3);
-
-	for (size_t i = 0 ; i < 3 ; ++i) {
-		inputs_info[i] = InfoMap[t->inputs[i]];
-		IntConstMultShiftAdd_BASE& currentInput = *(inputs_info[i]);
-		opsize_word[i] = currentInput.wordsize;
-		opsize_shifted_word[i] = currentInput.wordsize + t->input_shifts[i];
-		known_zeros[i] = truncations[i] + t->input_shifts[i];
-	}
-
-	//Find if we have trailing zeros to remove them from the addition
-	auto min_known_zeros_it = min_element(known_zeros.begin(), known_zeros.end());
-	size_t trail_op_idx = min_known_zeros_it - known_zeros.begin();
-
-	//How many bits do we have with exactly two inputs at zero 
-	auto second_min_ptr = max_element(known_zeros.begin(), known_zeros.end());
-	int  second_min = *second_min_ptr;
-	for (size_t i = 0 ; i < 3 ; ++i) {
-		if (i == trail_op_idx) {
-			continue;
-		}
-		if (known_zeros[i] < second_min) {
-			second_min = known_zeros[i];
-		}
-	}
-
-	//If the "trailing" operand fits in he leading zeros, we don't need a
-	//ternary adder
-	string msb_signame = "msb_res_" + outputSignalName;
-	bool needs_ternary_adder = (second_min < opsize_shifted_word[trail_op_idx]);
-
-	int adder_word_size = *(max_element(
-				opsize_shifted_word.begin(),
-				opsize_shifted_word.end()
-				)
-			) + 1 - second_min;
-
-	if (true or needs_ternary_adder) {//TODO check if optimisation is still valid 
-									  //with signed input
-		vector<string> op_tmp_signal_name(3);
-		for (int i = 0 ; i < 3 ; ++i) {
-			IntConstMultShiftAdd_BASE& currentInput = *(inputs_info[i]);
-			int cur_left_bound = max(second_min, opsize_shifted_word[i]);
-			int cur_right_bound = max(second_min, known_zeros[i]);
-			int size_head_padd_co = wordsize - cur_left_bound;
-			int useful_bits_co = cur_left_bound - cur_right_bound;
-			int size_trail_padd_co = cur_right_bound - second_min;
-
-			string trail_zeros = ""; 
-			bool concat_head = true;
-			bool concat_tail = true;
-			if (size_trail_padd_co > 0) {
-				trail_zeros = zg(size_trail_padd_co);	
-			} else {
-				concat_tail = false;
-			}
-
-			ostringstream sign_ext_co;
-			if (size_head_padd_co > 0) {
-				sign_ext_co << "( " << size_head_padd_co- 1 << " downto 0 => " <<
-					currentInput.outputSignalName<< of(currentInput.wordsize - 1) <<
-					")";
-			} else { 
-				concat_head = false ;
-			} 
-
-			string op_range_select;
-			if (useful_bits_co > 0) {
-				int start_select_idx = cur_right_bound - t->input_shifts[i];
-				op_range_select = currentInput.outputSignalName + 
-					range(start_select_idx + useful_bits_co - 1,
-						   start_select_idx);	
-			} else {
-				concat_head = false;
-			}
-
-			string concat_head_str = (concat_head) ? " & " : "";
-			string concat_tail_str = (concat_tail) ? " & " : "";
-			string sig_name = currentInput.getTemporaryName();
-
-			base_op->vhdl << base_op->declare(.0, sig_name, adder_word_size) <<
-				" <= " << 
-				(
-				 	sign_ext_co.str() + 
-				 	concat_head_str + 
-					op_range_select + 
-					concat_tail_str + 
-					trail_zeros) <<  ";" << endl;
-
-			op_tmp_signal_name[i] = sig_name;
-		}
-
-		GenericAddSub* add3 = new GenericAddSub(
-				base_op, 
-				target, 
-				adder_word_size, 
-				GenericAddSub::TERNARY
-			);
-
-		base_op->addSubComponent(add3);
-		for (int i = 0 ; i < 3 ; ++i) {
-			base_op->inPortMap(
-					add3,
-					add3->getInputName(i),
-					op_tmp_signal_name[i]
-				);
-		}
-
-		base_op->outPortMap(add3, add3->getOutputName(), msb_signame);
-		base_op->vhdl << base_op->instance(add3, "ternAdd_"+outputSignalName);
-	} else { //We don't need a ternary adder as the rightmost input is aligned with
-			 //	zeros
-		int min_idx = min_known_zeros_it - known_zeros.begin();
-		vector<int> leftmost_op_idx;
-		for (int i = 0 ; i < 3 ; ++i) {
-			if (i != min_idx)
-				leftmost_op_idx.push_back(i);
-		}
-		
-		int shift_a = t->input_shifts[leftmost_op_idx[0]];
-		int shift_b = t->input_shifts[leftmost_op_idx[1]];
-		int  trunc_a = truncations[leftmost_op_idx[0]];
-		int  trunc_b = truncations[leftmost_op_idx[1]];
-		auto info_a = inputs_info[leftmost_op_idx[0]];
-		auto info_b = inputs_info[leftmost_op_idx[1]];
-		string result_name = "bin_adder_res";
-
-		binary_adder(info_a, info_b, shift_a, shift_b, trunc_a, trunc_b, result_name);
-		//Eliminating useless zeros
-		base_op->vhdl << base_op->declare(.0, msb_signame, adder_word_size) << 
-			" <= " << result_name << range(second_min, wordsize) << ";" << endl;
-	}
-
-	string final_concat = msb_signame;
-	if (second_min > opsize_shifted_word[trail_op_idx] ) {
-		int nb_zeros_pad = second_min - opsize_shifted_word[trail_op_idx];
-		final_concat += " & " + zg(nb_zeros_pad);
-	}
-
-	if (second_min-*(min_known_zeros_it) > 0) {
-		int nb_copy = second_min - *(min_known_zeros_it);
-		final_concat += " & " + inputs_info[trail_op_idx]->outputSignalName + 
-			range(truncations[trail_op_idx] + nb_copy - 1, truncations[trail_op_idx]);
-	}
-
-	if (*min_known_zeros_it > 0) {
-		final_concat += " & " + zg(*min_known_zeros_it);
-	}
-	
-	base_op->vhdl << declare(outputSignalName, wordsize) << " <= " +  final_concat << ";" << endl;
-    return "";
-}
-
-void IntConstMultShiftAdd_BASE::handle_sub(
-		size_t nb_inputs, 
-		int  flag,
-		map<adder_graph_base_node_t*, IntConstMultShiftAdd_BASE*> & InfoMap
-	)
-{
-	string msb_signame = "msb_" + outputSignalName;
-    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
-    vector<int> inputOrder;
-    getInputOrder(t->input_is_negative, inputOrder);
-
-	vector<int> opsize_word(nb_inputs);
-	vector<int> opsize_shifted_word(nb_inputs);
-	vector<int> known_zeros(nb_inputs);
-	vector<IntConstMultShiftAdd_BASE*> inputs_info(nb_inputs);
-
-	for (size_t i = 0 ; i < nb_inputs ; ++i) {
-		inputs_info[i] = InfoMap[t->inputs[i]];
-		IntConstMultShiftAdd_BASE& currentInput = *(inputs_info[i]);
-		opsize_word[i] = currentInput.wordsize;
-		opsize_shifted_word[i] = currentInput.wordsize + t->input_shifts[i];
-		known_zeros[i] = truncations[i] + t->input_shifts[i];
-	}
-
-	int min_known_zeros = *(min_element(known_zeros.begin(), known_zeros.end()));
-	int  adder_word_size = wordsize - min_known_zeros;
-	
-	vector<string> operands(nb_inputs);
-	for (size_t i = 0 ; i < nb_inputs ; ++i) {
-		IntConstMultShiftAdd_BASE& currentInput = *(inputs_info[i]);
-		int useful_bits = opsize_word[i] - truncations[i];
-		int sign_ext_left = wordsize - opsize_shifted_word[i];
-		int pad_zeros_right = adder_word_size - (useful_bits + sign_ext_left);
-		
-		ostringstream sign_ext;
-		if (sign_ext_left > 0) {
-			sign_ext << "(" << sign_ext_left - 1 << " downto 0 => " <<
-			currentInput.outputSignalName << of(currentInput.wordsize - 1) << ") & ";
-		}
-		string right_pad{""};
-		if (pad_zeros_right > 0) {
-			right_pad = " & " + zg(pad_zeros_right);
-		}
-		string select = inputs_info[i]->outputSignalName + 
-			range(inputs_info[i]->wordsize - 1, truncations[i]);
-
-		string signal_name = inputs_info[i]->getTemporaryName();
-		
-		base_op->vhdl << "\t" << base_op->declare(0., signal_name, adder_word_size) <<
-			" <= " << (sign_ext.str() + select + right_pad) << ";" << endl;
-		operands[i] = signal_name;
-	}
-
-    GenericAddSub* add = new GenericAddSub(
-			base_op,
-			target,
-			adder_word_size,
-			flag
-		);
-    base_op->addSubComponent(add);
-	for (size_t i = 0 ; i < nb_inputs ; ++i) {
-		base_op->inPortMap(add,add->getInputName(i), operands[inputOrder[i]]);
-	}
-	base_op->outPortMap(add, add->getOutputName(), msb_signame);
-
-    base_op->vhdl << base_op->instance(add,"add2_"+outputSignalName);
-	string right_padd = 
-		(wordsize - adder_word_size > 0) ? " & " + zg(wordsize - adder_word_size) : "";
-	
-	base_op->vhdl << "\t" << declare(outputSignalName, wordsize) << " <= " << 
-		(msb_signame + right_padd) << ";" << endl;
+	base_op->vhdl << "\t-- building ternary adder for factor " << 
+		t->output_factor[0][0] << endl;
+	build_operand_realisation(InfoMap);
+	return "";
 }
 
 string IntConstMultShiftAdd_SUB2_1N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-	handle_sub(2, GenericAddSub::SUB_RIGHT, InfoMap);
-	    return "";
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
+	base_op->vhdl << "\t-- building binary subtractor for factor " << 
+		t->output_factor[0][0] << endl;
+	build_operand_realisation(InfoMap);
+	return "";
 }
 
 string IntConstMultShiftAdd_SUB3_1N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-	handle_sub(3, GenericAddSub::TERNARY|GenericAddSub::SUB_RIGHT, InfoMap);
-    return "";
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
+	base_op->vhdl << "\t-- building ternary subtractor (1 negative input) for factor " << 
+		t->output_factor[0][0] << endl;
+	build_operand_realisation(InfoMap);
+	return "";
 }
 
 string IntConstMultShiftAdd_SUB3_2N::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-	handle_sub(
-			3, 
-			GenericAddSub::TERNARY|GenericAddSub::SUB_MID|GenericAddSub::SUB_RIGHT, 
-			InfoMap
-		);
-    return "";
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
+	base_op->vhdl << "\t-- building ternary substractor (two negative inputs) for factor " << 
+		t->output_factor[0][0] << endl;
+	build_operand_realisation(InfoMap);
+	return "";
 }
 
 string IntConstMultShiftAdd_DECODER::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
@@ -907,6 +507,166 @@ void IntConstMultShiftAdd_BASE::getInputOrder(vector<bool> &inputIsNegative, vec
     }
 }
 
+void IntConstMultShiftAdd_BASE::build_operand_realisation(
+			map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap
+		)
+{
+    adder_subtractor_node_t* t = (adder_subtractor_node_t*)(base_node);
+	size_t nb_inputs = t->inputs.size();
+
+    vector<size_t> inputOrder(nb_inputs);
+	vector<int> opsize_word(nb_inputs);
+	vector<int> opsize_shifted_word(nb_inputs);
+	vector<int> known_zeros(nb_inputs);
+	vector<IntConstMultShiftAdd_BASE*> inputs_info(nb_inputs);
+	vector<string> input_sig_names(nb_inputs);
+
+	for (size_t i = 0 ; i < nb_inputs ; ++i) {
+		inputs_info[i] = InfoMap[t->inputs[i]];
+		IntConstMultShiftAdd_BASE& currentInput = *(inputs_info[i]);
+		int cur_shift = (t->input_shifts[i] < 0) ? 0 : t->input_shifts[i];
+		opsize_word[i] = currentInput.wordsize;
+		opsize_shifted_word[i] = currentInput.wordsize + cur_shift;
+		known_zeros[i] = truncations[i] + cur_shift;
+		inputOrder[i] = i;
+		input_sig_names[i] = currentInput.outputSignalName;
+	}
+	
+	int finalRightShifts = (t->input_shifts[0] < 0) ? -1 * t->input_shifts[0] : 0;
+
+	auto comp = [known_zeros](const size_t& a, const size_t& b)->bool{
+		return known_zeros[a] < known_zeros[b];
+	};
+
+	sort(inputOrder.begin(), inputOrder.end(), comp);
+
+	int min_kz = known_zeros[inputOrder[0]];
+	int second_min_kz = known_zeros[inputOrder[0]];
+	int copy_as_is_boundary = (t->input_is_negative[inputOrder[0]]) ? min_kz : second_min_kz;
+
+	////// Handle the non-added part of the result //////////
+	size_t min_sig_idx = inputOrder[0];
+	ostringstream copy_as_is;
+	if (copy_as_is_boundary != min_kz) {
+		// We have some non-zero "free" bits
+		int nb_as_is_expand_sign = max(0, copy_as_is_boundary - opsize_shifted_word[min_sig_idx]);
+		if (nb_as_is_expand_sign > 0) {
+			//We have some sign expansion bit
+			copy_as_is << "( " << (nb_as_is_expand_sign - 1) << " downto 0 => " <<
+				input_sig_names[min_sig_idx] << of(opsize_word[min_sig_idx] - 1) <<
+				") & ";
+		}
+		//Copy the previously computed bits
+		int nb_useful_bits = max(
+				opsize_word[min_sig_idx] - truncations[min_sig_idx], 
+				copy_as_is_boundary - t->input_shifts[min_sig_idx]
+			);
+		copy_as_is << input_sig_names[min_sig_idx] << range(
+				truncations[min_sig_idx] + nb_useful_bits - 1,
+				truncations[min_sig_idx]
+			);
+	}
+
+	if (known_zeros[min_sig_idx] > 0) {
+		if (copy_as_is.str().length() > 0) {
+			copy_as_is << " & ";
+		}
+		copy_as_is << zg(known_zeros[min_sig_idx]);
+	}
+
+	string copy_as_is_signame = outputSignalName + "_as_is";
+	if (copy_as_is.str().length() > 0) {
+		base_op->vhdl << "\t" << base_op->declare(.0, copy_as_is_signame, copy_as_is_boundary) <<
+			" <= " << copy_as_is.str() << ";" << endl;
+	}
+
+	string msb_signame = "msb_" + outputSignalName;
+	int  adder_word_size = wordsize - copy_as_is_boundary + finalRightShifts;
+	//TODO
+	vector<string> operands(nb_inputs);
+	for (size_t i = 0 ; i < nb_inputs ; ++i) {
+		ostringstream cur_sig_msb;
+		IntConstMultShiftAdd_BASE& currentInput = *(inputs_info[i]);
+		
+		int left_boundary = max(copy_as_is_boundary, opsize_shifted_word[i]);
+		int right_boundary = max(copy_as_is_boundary, known_zeros[i]);
+		int sign_ext_left = adder_word_size - left_boundary;
+		int pad_zeros_right = right_boundary - copy_as_is_boundary;
+		int useful_bits = left_boundary - right_boundary;
+
+		if (sign_ext_left > 0) {
+			cur_sig_msb << "( " << (sign_ext_left - 1) << " downto 0 => " <<
+				currentInput.outputSignalName << of(currentInput.wordsize - 1) << ")";
+		}
+
+		if (useful_bits > 0) {
+			int start_select_idx = right_boundary - t->input_shifts[i];
+			if (cur_sig_msb.str().length() > 0) {
+				cur_sig_msb << " & ";	
+			}
+			cur_sig_msb << currentInput.outputSignalName <<
+				range(start_select_idx + useful_bits - 1, start_select_idx);
+		}
+
+		if (pad_zeros_right > 0) {
+			cur_sig_msb << " & " << zg(pad_zeros_right);
+		}
+		
+		string signal_name = inputs_info[i]->getTemporaryName();
+		
+		base_op->vhdl << "\t" << base_op->declare(0., signal_name, adder_word_size) <<
+			" <= " << cur_sig_msb.str() << ";" << endl;
+		operands[i] = signal_name;
+	}
+
+	int flag = (nb_inputs == 3) ? GenericAddSub::TERNARY : 0;
+	if (t->input_is_negative[0]) {
+		flag |= GenericAddSub::SUB_LEFT;
+	}
+
+	if (t->input_is_negative[1]) {
+		flag |= (nb_inputs == 3) ? GenericAddSub::SUB_MID : GenericAddSub::SUB_RIGHT;
+	}
+
+	if (nb_inputs > 2 && t->input_is_negative[2]) {
+		flag |= GenericAddSub::SUB_RIGHT;
+	}
+
+    GenericAddSub* add = new GenericAddSub(
+			base_op,
+			target,
+			adder_word_size,
+			flag
+		);
+
+    base_op->addSubComponent(add);
+	for (size_t i = 0 ; i < nb_inputs ; ++i) {
+		base_op->inPortMap(add, add->getInputName(i), operands[i]);
+	}
+	base_op->outPortMap(add, add->getOutputName(), msb_signame);
+
+    base_op->vhdl << base_op->instance(add,"generic_add_sub_"+outputSignalName);
+	
+	string leftshiftedoutput = outputSignalName + "_tmp";
+
+	base_op->vhdl << "\t" << declare(leftshiftedoutput, wordsize + finalRightShifts) << " <= " << 
+		msb_signame;
+
+	if (copy_as_is.str().size() > 0) {
+		base_op->vhdl << " & " << copy_as_is.str();	
+	}
+
+	base_op->vhdl << ";" << endl;
+
+	base_op->vhdl << "\t" << declare(outputSignalName, wordsize) << " <= " <<
+		leftshiftedoutput;
+	if (finalRightShifts > 0) {
+		base_op->vhdl << range(finalRightShifts + wordsize - 1, finalRightShifts);
+	}
+	base_op->vhdl << ";" << endl;
+}
+
+
 string IntConstMultShiftAdd_BASE::getBinary(int value, int Wordsize)
 {
     string tmp;
@@ -933,6 +693,35 @@ string IntConstMultShiftAdd_BASE::getTemporaryName()
     stringstream t_name;
     t_name << outputSignalName << "_t" << ++outputSignalUsageCount;
     return t_name.str();
+}
+
+
+int getNodeCost(
+		vector<int> word_sizes, 
+		vector<int> truncations,
+		vector<int> shifts,
+		vector<bool> is_neg,
+		int out_word_size
+	) 
+{
+	size_t nb_inputs = word_sizes.size();
+	vector<int> known_zeros(nb_inputs);
+	vector<size_t> order(nb_inputs);
+	for (size_t i = 0 ; i < nb_inputs ; i++) {
+		known_zeros[i] = truncations[i] + shifts[i];
+		order[i] = i;
+	}
+
+	auto comp = [known_zeros](const size_t & a, const size_t& b)->bool{
+		return known_zeros[a] < known_zeros[b];
+	};
+
+	std::sort(order.begin(), order.end(), comp);
+	int min_kz = known_zeros[order[0]];
+	int second_min_kz = known_zeros[order[1]];
+	int copy_as_is = (is_neg[order[0]]) ? min_kz : second_min_kz;
+
+	return out_word_size - copy_as_is;
 }
 }
 

@@ -98,19 +98,9 @@ public:
     string getTemporaryName();
 
 protected:
-	void binary_adder(
-			IntConstMultShiftAdd_BASE* left,
-			IntConstMultShiftAdd_BASE* right,
-			int left_shift,
-			int right_shift,
-			int left_trunc,
-			int right_trunc, 
-			string result_name
-		);
-
-	void handle_sub(
-			size_t nb_inputs, 
-			int flag,
+	//TODO class hierarchy is a bit wrong. All the "real" operand types should 
+	//inherit from a derived class which provides this method
+	void build_operand_realisation(
 			map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap
 		);
 			
@@ -223,6 +213,16 @@ public:
     string get_realisation(map<PAGSuite::adder_graph_base_node_t*,IntConstMultShiftAdd_BASE*>& InfoMap);
     string get_name(){return "MUX";}
 };
+
+	int getNodeCost(
+			vector<int> word_sizes, 
+			vector<int> truncations,
+			vector<int> shifts,
+			vector<bool> is_neg,
+			int  out_word_size
+		);
+
+	
 }
 #endif // HAVE_PAGLIB
 #endif
