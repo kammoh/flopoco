@@ -127,7 +127,7 @@ namespace flopoco{
 
 		//compute integer representations of the constant
 
-		int q=3;
+		int q=4;
 		//mx = msbIn
 		//lR = lsbOut
 		mpfr_t s;
@@ -135,8 +135,8 @@ namespace flopoco{
 		mpfr_set_si(s,msbIn-lsbOut+q+1,GMP_RNDN);
 
 		cout << "coefficient word size = " << msbC+msbIn-lsbOut+q+1 << endl;
-		mpfr_t mpCInt;
-		mpfr_init2(mpCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
+		mpfr_t mpfrCInt;
+		mpfr_init2(mpfrCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
 
 		for(int k=-(1<<q); k <= (1<<q); k++)
 		{
@@ -150,35 +150,50 @@ namespace flopoco{
 			mpfr_init2(two_pow_s,100); //msbIn-lsbOut+q+1
 			mpfr_set_si(mpOp1,2,GMP_RNDN);
 			mpfr_pow(two_pow_s,mpOp1,s,GMP_RNDN);
-			mpfr_mul(mpCInt,mpC,two_pow_s,roundingDirection);
+			mpfr_mul(mpfrCInt,mpC,two_pow_s,roundingDirection);
 
 			mpfr_t mpk;
 			mpfr_init2(mpk,64);
 			mpfr_set_si(mpk,k,GMP_RNDN);
-			mpfr_add(mpCInt,mpCInt,mpk,roundingDirection);
+			mpfr_add(mpfrCInt,mpfrCInt,mpk,roundingDirection);
 
-			REPORT(INFO, "k=" << k << ", constant = " << (int) mpfr_get_d(mpCInt, GMP_RNDN) << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN));
+//			REPORT(INFO, "k=" << k << ", constant = " << (int) mpfr_get_d(mpfrCInt, GMP_RNDN) << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN));
+
+			mpz_class mpCInt;
+			mpfr_get_z(mpCInt.get_mpz_t(),mpfrCInt,GMP_RNDN);
+
+			mpz_class isEven = (mpCInt & 0x01) != 1;
+			int shift=0;
+			while(isEven.get_ui())
+			{
+				mpCInt /= 2;
+				isEven = (mpCInt & 0x01) != 1;
+				shift++;
+			}
+
+			REPORT(INFO, "k=" << k << ", constant = " << mpCInt << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN)+shift);
+
 		}
 
 //		int integerConstantWS=msbC-lsbOut;
 /*
 		for(int integerConstantWS=1; integerConstantWS < 20; integerConstantWS++)
 		{
-			mpfr_t mpCInt, mpScale;
-			mpfr_init2(mpCInt, integerConstantWS);
+			mpfr_t mpfrCInt, mpScale;
+			mpfr_init2(mpfrCInt, integerConstantWS);
 			mpfr_init2(mpScale, -lsbOut+1);
 
 			mpfr_set_si(mpOp1,2,GMP_RNDN);
 			mpfr_set_si(mpOp2,integerConstantWS-msbC,GMP_RNDN);
 			mpfr_pow(mpScale,mpOp1,mpOp2,GMP_RNDN); //2^(-lsbOut)
 //			REPORT(DEBUG, "mpScale=" << (int) mpfr_get_d(mpScale, GMP_RNDN));
-			mpfr_mul(mpCInt, mpScale, mpC, GMP_RNDN); //C * 2^(-lsbOut)
+			mpfr_mul(mpfrCInt, mpScale, mpC, GMP_RNDN); //C * 2^(-lsbOut)
 
 			//compute rounding error of the selected integer
 			mpfr_t mpEpsilonCoeff;
 			mpfr_init2(mpEpsilonCoeff, 100);
-			mpfr_div(mpEpsilonCoeff,mpCInt,mpScale,GMP_RNDN); //mpR = mpCInt/mpScale
-			mpfr_sub(mpEpsilonCoeff,mpC,mpEpsilonCoeff,GMP_RNDN); //mpR = mpC - mpCInt/mpScale
+			mpfr_div(mpEpsilonCoeff,mpfrCInt,mpScale,GMP_RNDN); //mpR = mpfrCInt/mpScale
+			mpfr_sub(mpEpsilonCoeff,mpC,mpEpsilonCoeff,GMP_RNDN); //mpR = mpC - mpfrCInt/mpScale
 
 			mpfr_t mpEpsilonCoeffAbs;
 			mpfr_init2(mpEpsilonCoeffAbs, 100);
@@ -195,7 +210,7 @@ namespace flopoco{
 			mpfr_init2(mpEpsilonMultAbs, 100);
 			mpfr_abs(mpEpsilonMultAbs,mpEpsilonMult,GMP_RNDN);
 
-			REPORT(INFO, "Integer constant wordsize=" << integerConstantWS << ", coefficient=" << (int) mpfr_get_d(mpCInt, GMP_RNDN) << "/" << (int) mpfr_get_d(mpScale, GMP_RNDN) << "=" << mpfr_get_d(mpCInt, GMP_RNDN)/mpfr_get_d(mpScale, GMP_RNDN) << ", epsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN) << ", epsilonMult=" << mpfr_get_d(mpEpsilonMult, GMP_RNDN));
+			REPORT(INFO, "Integer constant wordsize=" << integerConstantWS << ", coefficient=" << (int) mpfr_get_d(mpfrCInt, GMP_RNDN) << "/" << (int) mpfr_get_d(mpScale, GMP_RNDN) << "=" << mpfr_get_d(mpfrCInt, GMP_RNDN)/mpfr_get_d(mpScale, GMP_RNDN) << ", epsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN) << ", epsilonMult=" << mpfr_get_d(mpEpsilonMult, GMP_RNDN));
 			old_settings = cout.flags();
 
 			cout.flags(old_settings);
