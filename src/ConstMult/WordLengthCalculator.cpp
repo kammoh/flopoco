@@ -193,17 +193,25 @@ namespace flopoco {
                 {
                     ScaLP::Result r = s.getResult();
 
-                    for(std::pair<const ScaLP::Variable, double>& p : r.values)
-                    {
-                        std::cout << p.first << " = " << p.second << std::endl;
-                    }
+                    //for(std::pair<const ScaLP::Variable, double>& p : r.values)
+                    //{
+                    //    std::cout << p.first << " = " << p.second << std::endl;
+                    //}
                     //pair - constant + stage
                     //vector - inputs in the adder / nb of bits to truncate on those
                     // parse the adder graph nodes
                     vector<size_t> adderOutEdges;
                     for(size_t i{0u}; i < edges.size(); ++i) {
-                        if(is_a<adder_subtractor_node_t>(*edges[i].nodes.first)) 
-                            adderOutEdges.push_back(i);
+                        if(is_a<adder_subtractor_node_t>(*edges[i].nodes.first)) {
+                            bool notFound = true;
+                            for(size_t j{0u}; j < adderOutEdges.size() && notFound; ++j)
+                            {
+                                if(edges[adderOutEdges[j]].nodes.first == edges[i].nodes.first)
+                                    notFound = false;
+                            } 
+                            if(notFound)
+                                adderOutEdges.push_back(i);                           
+                        }
 
                         if(is_a<register_node_t>(*edges[i].nodes.second)) {
                             truncationVal_[make_pair(edges[i].constant, edges[i].nodes.second->stage)].push_back((int)r.values[truncPosition[i]]);
