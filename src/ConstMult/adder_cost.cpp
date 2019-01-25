@@ -47,7 +47,7 @@ int getGraphAdderCost(
 	TruncationRegister truncReg(truncations);
 	int totalCost = 0;
 	for (auto nodePtr : adder_graph.nodes_list) {
-		if (PAGSuite::is_a<PAGSuite::adder_subtractor_node_t*>(*nodePtr)) {
+		if (PAGSuite::is_a<PAGSuite::adder_subtractor_node_t>(*nodePtr)) {
 			PAGSuite::adder_subtractor_node_t* t = 
 				(PAGSuite::adder_subtractor_node_t*) nodePtr;
 			int nodeOpSize = computeWordSize(t, inputWordSize);	
