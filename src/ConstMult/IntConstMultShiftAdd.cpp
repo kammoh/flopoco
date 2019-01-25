@@ -30,6 +30,8 @@
 #include "PrimitiveComponents/Primitive.hpp"
 //#include "rpag/rpag.h"
 
+#include "WordLengthCalculator.hpp"
+
 using namespace std;
 using namespace PAGSuite;
 
@@ -116,7 +118,15 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 
             map<pair<int, int>, vector<int> > wordSizeMap;
 
-            REPORT(INFO, "!! ToDo: Compute word sizes here !!");
+            WordLengthCalculator wlc = WordLengthCalculator(pipelined_adder_graph, wIn, epsilon);
+            wordSizeMap = wlc.optimizeTruncation();
+            REPORT(INFO, "Finished computing word sizes of truncated MCM");
+            //for(auto & it : wordSizeMap) {
+            //    std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
+            //    for(auto & itV : it.second)
+            //        std::cout << itV << " ";
+            //    std::cout << std::endl;
+            //}
         }
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
