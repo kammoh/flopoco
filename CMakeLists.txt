@@ -439,6 +439,7 @@ OPTION(BUILD_UNIT_TEST "Build the flopoco unit tests")
 if(BUILD_UNIT_TEST)
 	find_package(Boost 1.55 REQUIRED COMPONENTS unit_test_framework)
 	enable_testing()
+	## Testing Posit format
 	add_executable(NumberFormatTest_exe tests/TestBenches/PositNumber.cpp)		
 	target_include_directories(NumberFormatTest_exe PUBLIC ${Boost_INCLUDE_DIR}) 
 	target_link_libraries(NumberFormatTest_exe FloPoCoLib ${Boost_LIBRARIES})
@@ -461,4 +462,11 @@ if(BUILD_UNIT_TEST)
 	endif()
 
 	add_test(NumberFormatTest NumberFormatTest_exe)
+	## Testing IntConstMultShiftAdd adder cost computation
+
+	add_executable(IntConstMultShiftAddCostFunction_exe tests/ConstMult/testNodeCost.cpp)
+	target_include_directories(IntConstMultShiftAddCostFunction_exe PUBLIC ${Boost_INCLUDE_DIR} ${PAGSUITE_INCLUDE_DIR})
+	target_link_libraries(IntConstMultShiftAddCostFunction_exe FloPoCoLib ${Boost_LIBRARIES} ${RPAG_LIB})
+
+	add_test(IntConstMultShiftAddCost IntConstMultShiftAddCostFunction_exe)
 endif()
