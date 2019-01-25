@@ -125,10 +125,43 @@ namespace flopoco{
 		REPORT(INFO, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
 		cout.flags(old_settings);
 
-		//compute integer representation of the constant
+		//compute integer representations of the constant
+
+		int q=3;
+		//mx = msbIn
+		//lR = lsbOut
+		mpfr_t s;
+		mpfr_init2(s,64);
+		mpfr_set_si(s,msbIn-lsbOut+q+1,GMP_RNDN);
+
+		cout << "coefficient word size = " << msbC+msbIn-lsbOut+q+1 << endl;
+		mpfr_t mpCInt;
+		mpfr_init2(mpCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
+
+		for(int k=-(1<<q); k <= (1<<q); k++)
+		{
+			mpfr_rnd_t roundingDirection;
+			if(k > 0)
+				roundingDirection = MPFR_RNDD;
+			else
+				roundingDirection = MPFR_RNDU;
+
+			mpfr_t two_pow_s;
+			mpfr_init2(two_pow_s,100); //msbIn-lsbOut+q+1
+			mpfr_set_si(mpOp1,2,GMP_RNDN);
+			mpfr_pow(two_pow_s,mpOp1,s,GMP_RNDN);
+			mpfr_mul(mpCInt,mpC,two_pow_s,roundingDirection);
+
+			mpfr_t mpk;
+			mpfr_init2(mpk,64);
+			mpfr_set_si(mpk,k,GMP_RNDN);
+			mpfr_add(mpCInt,mpCInt,mpk,roundingDirection);
+
+			REPORT(INFO, "k=" << k << ", constant = " << (int) mpfr_get_d(mpCInt, GMP_RNDN) << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN));
+		}
+
 //		int integerConstantWS=msbC-lsbOut;
-
-
+/*
 		for(int integerConstantWS=1; integerConstantWS < 20; integerConstantWS++)
 		{
 			mpfr_t mpCInt, mpScale;
@@ -174,7 +207,7 @@ namespace flopoco{
 		//cleanup
 		mpfr_clears(mpOp1, NULL);
 		mpfr_clears(mpOp2, NULL);
-
+*/
 
 		//create IntConstMultShiftAdd instance here
 
