@@ -1686,7 +1686,7 @@ namespace flopoco{
 
 	void IntConstMult::registerFactory(){
 		UserInterface::add("IntConstMult", // name
-			"Integer multiplier by a constant using a shift-and-add tree.",
+			"Integer multiplier of an unsigned number by a constant using a shift-and-add tree.",
 			"ConstMultDiv",
 											 "FixRealKCM,IntConstDiv", // seeAlso
 											 "wIn(int): input size in bits; \

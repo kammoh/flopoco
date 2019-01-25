@@ -2,7 +2,7 @@ FROM debian
 RUN apt-get update -y && apt-get install -y \
      subversion git cmake sollya wget g++ libsollya-dev flex bison libboost-all-dev \
 		 autotools-dev autoconf automake f2c libblas-dev liblapack-dev libtool liblpsolve55-dev lp-solve  \
-	&& mkdir flopoco_src && cd flopoco_src && BASEDIR=$PWD \ 
+  && BASEDIR=$PWD \ 
   && git clone https://scm.gforge.inria.fr/anonscm/git/metalibm/wcpg.git \
 	 && cd wcpg && sh autogen.sh && ./configure && make && make install && cd $BASEDIR \
   && svn checkout https://digidev.digi.e-technik.uni-kassel.de/home/svn/scalp/ \

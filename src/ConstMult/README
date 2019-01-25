@@ -35,3 +35,5 @@ The class ShiftAddDag defines a directed acyclic graph (DAG) of such operations.
 The class IntConstMult builds such a DAG for integer multiplication. It inherits Operator.
 The class FPConstMult builds an FP constant multiplier using an IntConstMult for the mantissas.
 
+Interface to IntConstMultShiftAdd
+./flopoco verbose=3 IntConstMultShiftAdd wIn=10 graph="{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'O',[123],2,[123],2,0}}" truncations="5,1:2,2"
