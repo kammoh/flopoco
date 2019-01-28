@@ -37,7 +37,7 @@ namespace flopoco{
 
 	// The expert version // TODO define correctRounding
 
-	FPConstMult::FPConstMult(Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int cstSgn_, int cst_exp_, mpz_class cstIntSig_):
+	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int cstSgn_, int cst_exp_, mpz_class cstIntSig_):
 		Operator(target), 
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), 
 		cstSgn(cstSgn_), cst_exp_when_mantissa_int(cst_exp_), cstIntSig(cstIntSig_), constant_is_zero(false)
@@ -89,7 +89,7 @@ namespace flopoco{
 
 			if(!mantissa_is_one) {
 				// sub component
-				icm = new IntConstMult(target, wF_in+1, cstIntSig);
+				icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig);
 			}
 
 		}
@@ -111,7 +111,7 @@ namespace flopoco{
 
 
 	// The rational version
-	FPConstMult::FPConstMult(Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int a_, int b_):
+	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int a_, int b_):
 		Operator(target), 
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), constant_is_zero(false)
 	{
@@ -297,7 +297,7 @@ namespace flopoco{
 			REPORT(DETAILED, "Periodic pattern has " << patternLSBZeroes << " zero(s) at the LSB");
 
 
-			icm = new IntConstMult(target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
+			icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
 
 		}
 		
@@ -323,7 +323,7 @@ namespace flopoco{
 
 
 	// The parser version
-	FPConstMult::FPConstMult(Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int wF_C, string constant):
+	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int wF_C, string constant):
 		Operator(target), 
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), cstWidth(wF_C), mantissa_is_one(false), constant_is_zero(false)
 	{
@@ -365,7 +365,7 @@ namespace flopoco{
 		normalizeCst();
 		
 		if(!constant_is_zero && !mantissa_is_one) {
-			icm = new IntConstMult(target, wF_in+1, cstIntSig);
+			icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig);
 		}
 			
 		
@@ -478,7 +478,7 @@ namespace flopoco{
 
 
 
-	FPConstMult::FPConstMult(Target* target, int wE_in, int wF_in, int wE_out, int wF_out):
+	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out):
 		Operator(target),
 		wE_in(wE_in), wF_in(wF_in), wE_out(wE_out), wF_out(wF_out) 
 	{
@@ -557,7 +557,7 @@ namespace flopoco{
 				vhdl << tab << declare("r_frac", wF_out) << " <= X" << range(wF_in-1, wF_out -wF_in) << ";"<<endl;
 			}
 			vhdl << tab << declare("norm") << " <= '0';"<<endl;
-			setSignalDelay("norm", 0.0); // save the delay for later
+			// TODO setSignalDelay("norm", 0.0); // save the delay for later
 		}
 
 
@@ -567,22 +567,22 @@ namespace flopoco{
 			outPortMap (icm, "R","sig_prod");
 			vhdl << instance(icm, "sig_mult");
 			
-			setCycleFromSignal("sig_prod"); 
-			setCriticalPath(icm->getOutputDelay("R"));
+			// TODO setCycleFromSignal("sig_prod"); 
+			// TODO setCriticalPath(icm->getOutputDelay("R"));
 			vhdl << tab << declare("norm") << " <= sig_prod" << of(icm->rsize -1) << ";"<<endl;
-			setSignalDelay("norm", getCriticalPath()); // save the delay for later
+			// TODO setSignalDelay("norm", getCriticalPath()); // save the delay for later
 			
 			// one mux controlled by the diffusion of the "norm" bit
-			manageCriticalPath(getTarget()->localWireDelay(wF_out+1) + getTarget()->lutDelay());
+			// TODO manageCriticalPath(getTarget()->localWireDelay(wF_out+1) + getTarget()->lutDelay());
 			
 			vhdl << tab << declare("shifted_frac",    wF_out+1) << " <= sig_prod("<<icm->rsize -2<<" downto "<<icm->rsize - wF_out-2 <<")  when norm = '1'"<<endl
 			     << tab << "           else sig_prod("<<icm->rsize -3<<" downto "<<icm->rsize - wF_out - 3<<");"<<endl;  
 		}
 		
 		// Here if mantissa was 1 critical path is 0. Otherwise we want to reset critical path to the norm bit
-		setCycleFromSignal("norm", getSignalDelay("norm"));
+		//TODO		setCycleFromSignal("norm", getSignalDelay("norm"));
 		
-		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_sum+1));
+		// TODO manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_sum+1));
 		vhdl <<endl << tab << "-- exponent processing"<<endl;
 		
 		vhdl << tab << declare("abs_unbiased_cst_exp",wE_sum+1) << " <= \""
@@ -600,7 +600,7 @@ namespace flopoco{
 			vhdl << tab << declare("expfrac_rnd",   wE_out+1+wF_out) << " <= r_exp_br & r_frac;"<<endl;
 		} 
 		else {
-			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_out+1+wF_out+1));
+			// TODO manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_out+1+wF_out+1));
 			vhdl << tab << declare("expfrac_br",   wE_out+1+wF_out+1) << " <= r_exp_br & shifted_frac;"<<endl;
 			// add the rounding bit //TODO: No  round to nearest here. OK for faithful. For CR, does this case ever appear?
 			vhdl << tab << declare("expfrac_rnd1",  wE_out+1+wF_out+1) << " <= (("<<wE_out+1+wF_out <<" downto 1 => '0') & '1') + expfrac_br;"<<endl;
@@ -720,7 +720,7 @@ namespace flopoco{
 		UserInterface::parsePositiveInt(args, "cst_width", &cst_width);
 		UserInterface::parseString(args, "constant", &constant);
 
-		return new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, cst_width, constant);
+		return new FPConstMult(parentOp, target, wE_in, wF_in, wE_out, wF_out, cst_width, constant);
 	}
 
 	OperatorPtr FPConstMult::parseRational(OperatorPtr parentOp, Target* target, vector<string>& args)
@@ -734,7 +734,7 @@ namespace flopoco{
 		UserInterface::parseStrictlyPositiveInt(args, "a", &a);
 		UserInterface::parseStrictlyPositiveInt(args, "b", &b);
 
-		return new FPConstMult(target, wE_in, wF_in, wE_out, wF_out, a, b);
+		return new FPConstMult(parentOp, target, wE_in, wF_in, wE_out, wF_out, a, b);
 	}
 
 	void FPConstMult::registerFactory()

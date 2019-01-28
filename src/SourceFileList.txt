@@ -50,6 +50,7 @@ ConstMult/ShiftAddDag
 ConstMult/FixRealKCM
 ConstMult/FixRealShiftAdd
 ConstMult/IntConstMult
+ConstMult/FPConstMult
 ConstMult/IntConstDiv
 ConstMult/IntConstMultShiftAdd
 ConstMult/IntConstMultShiftAddTypes

@@ -13,6 +13,7 @@ IntAdder
 IntDualAddSub
 IntMultiAdder
 IntConstMult
+FPConstMult
 IntConstDiv
 DSPBlock
 IntMultiplier
