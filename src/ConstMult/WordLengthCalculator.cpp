@@ -74,6 +74,8 @@ namespace flopoco {
                 std::vector<ScaLP::Variable> truncError;
                 std::vector<ScaLP::Variable> edgeError;
                 std::vector<std::vector<ScaLP::Variable>> truncBits;
+                std::vector<ScaLP::Variable> indicatorAdder;
+                size_t adderCount{0u};
                 truncPosition.resize(edges.size());
                 truncError.resize(edges.size());
                 truncBits.resize(edges.size());
@@ -119,6 +121,7 @@ namespace flopoco {
                             }
                         }
                     } else if(is_a<adder_subtractor_node_t>(*edges[i].nodes.first)) {
+                        /*
                         bool inEdgeNotFound = true;
                         ScaLP::Term t(0);
                         size_t secondIt{0u};
@@ -138,6 +141,33 @@ namespace flopoco {
                         }
                         t += (truncError[i] - edgeError[i]);
                         s << ( t == 0 );
+                        */
+                        bool inEdgeNotFound = true;
+                        ScaLP::Term t(0);
+                        size_t secondIt{0u};
+                        for(size_t j{0u}; j < edges.size() && inEdgeNotFound; ++j) {
+                            if(edges[j].nodes.second == edges[i].nodes.first) {
+                                inEdgeNotFound = false;
+                                secondIt = j;
+                                t += pow(2, edges[j].shift) * edgeError[j];
+                            }
+                        }
+                        inEdgeNotFound = true;
+                        for(size_t j{secondIt+1u}; j < edges.size() && inEdgeNotFound; ++j) {
+                            if(edges[j].nodes.second == edges[i].nodes.first) {
+                                inEdgeNotFound = false;
+                                t += pow(2, edges[j].shift) * edgeError[j];
+                            }                        
+                        }
+
+                        strstream vN;
+                        vN << "indicAdder_" << adderCount;
+                        indicatorAdder.push_back(ScaLP::newBinaryVariable(vN.str()));
+                        s << ( edgeError[i] - t >= 0 );
+                        s << ( edgeError[i] - truncError[i] >= 0);
+                        s << ( indicatorAdder[adderCount] == 0 then t - edgeError[i] == 0 );
+                        s << ( indicatorAdder[adderCount] == 1 then edgeError[i] - truncError[i] == 0 );
+                        ++adderCount;
                     }
                     if(is_a<output_node_t>(*edges[i].nodes.second)) {
                         s << ( pow(2, edges[i].shift) * edgeError[i] <= epsilon_ );
@@ -147,34 +177,52 @@ namespace flopoco {
                 std::vector<ScaLP::Variable> faGain;
                 std::vector<ScaLP::Variable> indicVar;
                 std::vector<ScaLP::Term> shiftTerms;
-                size_t adderCount{0u};
+                adderCount = 0u;
+                size_t onlyPositive{0u};
                 for(auto &it : adder_graph_.nodes_list) {
                     if(is_a<adder_subtractor_node_t>(*it)) {
-                        ostrstream vN1, vN2; 
-                        vN1 << "gain_" << adderCount;
-                        vN2 << "indic_" << adderCount;
-                        faGain.push_back(ScaLP::newIntegerVariable(vN1.str()));
-                        indicVar.push_back(ScaLP::newBinaryVariable(vN2.str()));
-                        size_t secondIt{0u};
-                        bool inEdgeNotFound = true;
-                        for(size_t j{0u}; j < edges.size() && inEdgeNotFound; ++j) {
-                            if(edges[j].nodes.second == it) {
-                                inEdgeNotFound = false;
-                                secondIt = j;
-                                shiftTerms.push_back(truncPosition[j]+edges[j].shift);
+                        if (((adder_subtractor_node_t*)it)->input_is_negative[1]) {
+                            ostrstream vN;
+                            vN << "gain_" << adderCount;
+                            faGain.push_back(ScaLP::newIntegerVariable(vN.str()));
+                            //s << ( faGain[adderCount] == 0 );
+                            
+                            size_t operandCount{0u};
+                            for(size_t j{0u}; j < edges.size() && operandCount < 2u; ++j) {
+                                if(edges[j].nodes.second == it) {
+                                    ++operandCount;
+                                    if (operandCount == 2u )
+                                        s << ( faGain[adderCount] - truncPosition[j] == edges[j].shift );
+                                }
                             }
+                        } else { 
+                            ostrstream vN1, vN2; 
+                            vN1 << "gain_" << adderCount;
+                            vN2 << "indic_" << onlyPositive;
+                            faGain.push_back(ScaLP::newIntegerVariable(vN1.str()));
+                            indicVar.push_back(ScaLP::newBinaryVariable(vN2.str()));
+                            size_t secondIt{0u};
+                            bool inEdgeNotFound = true;
+                            for(size_t j{0u}; j < edges.size() && inEdgeNotFound; ++j) {
+                                if(edges[j].nodes.second == it) {
+                                    inEdgeNotFound = false;
+                                    secondIt = j;
+                                    shiftTerms.push_back(truncPosition[j]+edges[j].shift);
+                                }
+                            }
+                            inEdgeNotFound = true;
+                            for(size_t j{secondIt+1u}; j < edges.size() && inEdgeNotFound; ++j) {
+                                if(edges[j].nodes.second == it) {
+                                    inEdgeNotFound = false;
+                                    shiftTerms.push_back(truncPosition[j]+edges[j].shift);
+                                }                        
+                            }
+                            s << ( faGain[adderCount] - shiftTerms[2*onlyPositive] >= 0 );
+                            s << ( faGain[adderCount] - shiftTerms[2*onlyPositive+1] >= 0 );
+                            s << ( indicVar[onlyPositive] == 0 then faGain[adderCount] - shiftTerms[2*onlyPositive] == 0 );
+                            s << ( indicVar[onlyPositive] == 1 then faGain[adderCount] - shiftTerms[2*onlyPositive+1] == 0 );
+                            ++onlyPositive;
                         }
-                        inEdgeNotFound = true;
-                        for(size_t j{secondIt+1u}; j < edges.size() && inEdgeNotFound; ++j) {
-                            if(edges[j].nodes.second == it) {
-                                inEdgeNotFound = false;
-                                shiftTerms.push_back(truncPosition[j]+edges[j].shift);
-                            }                        
-                        }
-                        s << ( faGain[adderCount] - shiftTerms[2*adderCount] >= 0 );
-                        s << ( faGain[adderCount] - shiftTerms[2*adderCount+1] >= 0 );
-                        s << ( indicVar[adderCount] == 0 then faGain[adderCount] - shiftTerms[2*adderCount] == 0 );
-                        s << ( indicVar[adderCount] == 1 then faGain[adderCount] - shiftTerms[2*adderCount+1] == 0 );
                         ++adderCount;
                     }
                 }

@@ -156,7 +156,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::configurationSignalWordsize = configurationSignalWordsize;
 
         //IDENTIFY NODE
-        REPORT(DETAILED,"identifiing nodes..")
+        REPORT(DETAILED,"identifying nodes...")
 
 		map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
         map<int,list<adder_graph_base_node_t*> > stageNodesMap;
