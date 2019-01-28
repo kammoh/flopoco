@@ -39,7 +39,9 @@ namespace flopoco{
 
     IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, mpz_class coeffMpz, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
-    	set<int_t> target_set;
+		srcFileName="IntConstMultShiftAddRPAG";
+
+		set<int_t> target_set;
 		int_t coeff = mpz_get_ui(coeffMpz.get_mpz_t());
 
     	target_set.insert(coeff);
@@ -78,7 +80,7 @@ namespace flopoco{
 
 		string adderGraph = output_adder_graph(pipelined_adder_graph,true);
 
-		cout << "adderGraph=" << adderGraph << endl;
+		REPORT(INFO, "adderGraph=" << adderGraph);
 
 		ProcessIntConstMultShiftAdd(target,adderGraph);
 

@@ -40,6 +40,8 @@ namespace flopoco{
 
     IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
+		srcFileName="IntConstMultShiftAddOpt";
+
         this->coeff = coeff;
 
         cout << "wIn=" << wIn << ", coeff=" << coeff << endl;
