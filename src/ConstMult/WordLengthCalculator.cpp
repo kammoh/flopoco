@@ -67,7 +67,8 @@ namespace flopoco {
 
             try {
                 ScaLP::Solver s = ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
-                s.quiet = true;
+//                s.quiet = true;
+                s.quiet = false;
 
                 std::vector<ScaLP::Variable> truncPosition;
                 std::vector<ScaLP::Variable> truncError;
@@ -186,12 +187,14 @@ namespace flopoco {
                 ScaLP::Objective o = ScaLP::maximize(t);
                 s.setObjective(o);
 
-                //s.writeLP("flopoco.lp");
+                s.writeLP("flopoco_WLCalculator.lp");
                 ScaLP::status stat = s.solve();
                 //std::cout << "The result is " << stat << std::endl;
                 if(stat == ScaLP::status::OPTIMAL || stat == ScaLP::status::FEASIBLE)
                 {
                     ScaLP::Result r = s.getResult();
+
+					std::cout << "result is: " << r << std::endl;
 
                     //for(std::pair<const ScaLP::Variable, double>& p : r.values)
                     //{

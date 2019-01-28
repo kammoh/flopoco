@@ -133,7 +133,7 @@ namespace flopoco{
 		cout.flags(old_settings);
 
 		//compute the different integer representations of the constant
-		int q=4;
+		int q=3;
 		//mx = msbIn
 		//lR = lsbOut
 		mpfr_t s;
@@ -163,29 +163,87 @@ namespace flopoco{
 			mpfr_set_si(mpk,k,GMP_RNDN);
 			mpfr_add(mpfrCInt,mpfrCInt,mpk,roundingDirection);
 
-			mpz_class mpCInt;
-			mpfr_get_z(mpCInt.get_mpz_t(),mpfrCInt,GMP_RNDN);
+			mpz_class mpzCInt;
+			mpfr_get_z(mpzCInt.get_mpz_t(),mpfrCInt,GMP_RNDN);
+//			mpfr_clear(mpfrCInt);
 
-			mpz_class isEven = (mpCInt & 0x01) != 1;
+			mpz_class isEven = (mpzCInt & 0x01) != 1;
 			int shift=0;
 			while(isEven.get_ui())
 			{
-				mpCInt /= 2;
-				isEven = (mpCInt & 0x01) != 1;
+				mpzCInt /= 2;
+				mpfr_div_ui(mpfrCInt,mpfrCInt,2,GMP_RNDN);
 				shift++;
+				isEven = (mpzCInt & 0x01) != 1;
 			}
 
-			REPORT(INFO, "k=" << k << ", constant = " << mpCInt << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN)+shift);
+			//compute epsilon
+			//epsilon_norm = mpC*2^(msbIn-lsbOut+1) - mpzCInt * 2^(shift-q) = mpCScaled + mpCIntScaled
+			mpfr_t epsilon_norm_coeff;
+			mpfr_init2(epsilon_norm_coeff,100);
 
-			PAGSuite::adder_graph_t adder_graph;
-			computeAdderGraph(adder_graph, (PAGSuite::int_t) mpCInt.get_si());
+			//compute mpCScaled
+			mpfr_t mpCScaled;
+			mpfr_init2(mpCScaled,100);
+			mpfr_set_si(mpOp1,2,GMP_RNDN);
+			mpfr_set_si(mpOp2,msbIn-lsbOut+1,GMP_RNDN);
+			mpfr_pow(mpOp1,mpOp1,mpOp2,GMP_RNDN);
+			mpfr_mul(mpCScaled,mpC,mpOp1,roundingDirection);
+
+			//compute mpCIntScaled
+			mpfr_t mpCIntScaled;
+			mpfr_init2(mpCIntScaled,100);
+			mpfr_set_si(mpOp1,2,GMP_RNDN);
+			mpfr_set_si(mpOp2,shift-q,GMP_RNDN);
+			mpfr_pow(mpOp1,mpOp1,mpOp2,GMP_RNDN);
+			mpfr_mul(mpCIntScaled,mpfrCInt,mpOp1,roundingDirection);
+
+			mpfr_sub(epsilon_norm_coeff,mpCScaled,mpCIntScaled,GMP_RNDN);
+
+
+			ios::fmtflags old_settings = cout.flags();
+			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << ((int) mpfr_get_d(s, GMP_RNDN)-shift) << ", epsilon coeff (norm)=" << std::fixed << mpfr_get_d(epsilon_norm_coeff,GMP_RNDN));
+			cout.flags(old_settings);
+
+
+			PAGSuite::adder_graph_t adderGraph;
+			computeAdderGraph(adderGraph, (PAGSuite::int_t) mpzCInt.get_si());
+
+			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, msbIn-lsbIn, false);
+
+			REPORT(INFO, "  adder graph requires " << noOfFullAdders << " full adders");
+
+/*
+		if (epsilon > 0.0)
+		{
+			REPORT(INFO, "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
+
+			map<pair<int, int>, vector<int> > wordSizeMap;
+
+			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilon);
+			wordSizeMap = wlc.optimizeTruncation();
+			REPORT(INFO, "Finished computing word sizes of truncated MCM");
+			if (UserInterface::verbose >= INFO)
+			{
+				for (auto &it : wordSizeMap)
+				{
+					std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
+					for (auto &itV : it.second)
+						std::cout << itV << " ";
+					std::cout << std::endl;
+				}
+			}
+		}
+*/
+
+
 		}
 
 
 	}
 
 
-	void FixRealShiftAdd::computeAdderGraph(PAGSuite::adder_graph_t &adder_graph, long long int coefficient)
+	bool FixRealShiftAdd::computeAdderGraph(PAGSuite::adder_graph_t &adderGraph, long long int coefficient)
 	{
 		set<PAGSuite::int_t> target_set;
 
@@ -225,9 +283,7 @@ namespace flopoco{
 
 		string adderGraphStr = PAGSuite::output_adder_graph(rpag_adder_graph,true);
 
-		REPORT(INFO, "adderGraphStr=" << adderGraphStr);
-
-		PAGSuite::adder_graph_t adderGraph;
+		REPORT(INFO, "  adderGraphStr=" << adderGraphStr);
 
 		if(UserInterface::verbose >= 3)
 			adderGraph.quiet = false; //enable debug output
@@ -247,33 +303,9 @@ namespace flopoco{
 				adderGraph.print_graph();
 			adderGraph.drawdot("pag_input_graph.dot");
 
-			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, rpag->input_wordsize, false);
-
-			REPORT(INFO, "adder graph requires " << noOfFullAdders << " full adders");
-
-/*
-		if (epsilon > 0.0)
-		{
-			REPORT(INFO, "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
-
-			map<pair<int, int>, vector<int> > wordSizeMap;
-
-			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilon);
-			wordSizeMap = wlc.optimizeTruncation();
-			REPORT(INFO, "Finished computing word sizes of truncated MCM");
-			if (UserInterface::verbose >= INFO)
-			{
-				for (auto &it : wordSizeMap)
-				{
-					std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
-					for (auto &itV : it.second)
-						std::cout << itV << " ";
-					std::cout << std::endl;
-				}
-			}
+			return true;
 		}
-*/
-		}
+		return false;
 	}
 
 

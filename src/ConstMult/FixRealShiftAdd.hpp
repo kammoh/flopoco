@@ -85,7 +85,7 @@ namespace flopoco{
 		vector<int> tableOutputSign; /**< +1: table is always positive. -1: table output is always negative. 0: table output is signed */
 
 	protected:
-		void computeAdderGraph(PAGSuite::adder_graph_t &adder_graph, PAGSuite::int_t coefficient);
+		bool computeAdderGraph(PAGSuite::adder_graph_t &adderGraph, PAGSuite::int_t coefficient);
 
 #else
 	namespace flopoco{
