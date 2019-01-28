@@ -18,6 +18,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <gmp.h>
 
 using namespace std;
 using namespace flopoco;
@@ -26,11 +27,14 @@ namespace IntConstMultShiftAdd_TYPES {
 	class TruncationRegister {
 		public:
 			TruncationRegister(string truncationList);
-			vector<int> const & getTruncationFor(int factor, int stage);
+			vector<int> const & getTruncationFor(mpz_class factor, int stage);
+			vector<int> const & getTruncationFor(int factor, int stage) {
+				return getTruncationFor(mpz_class(factor), stage);
+			}
 
 		private:
 			void parseRecord(string record);
-			map<pair<int, int>, vector<int> > truncationVal_;
+			map<pair<mpz_class, int>, vector<int> > truncationVal_;
 			static vector<int> nullVec_;
 	};
 

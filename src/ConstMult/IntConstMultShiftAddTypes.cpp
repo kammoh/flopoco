@@ -30,14 +30,14 @@ void TruncationRegister::parseRecord(string record)
 	static const string identDelimiter{':'};
 	static const string fieldDelimiter{','};
 	
-	auto getNextField = [](string& val)->int{
+	auto getNextField = [](string& val)->mpz_class{
 		long unsigned int offset = val.find(fieldDelimiter);
 		string ret = val.substr(0, offset);
 		if (offset != string::npos) {
 			offset += 1;
 		}
 		val.erase(0, offset);
-		return stoi(ret);
+		return mpz_class(ret);
 	};
 	
 	long unsigned int  offset = record.find(identDelimiter);
@@ -49,20 +49,20 @@ void TruncationRegister::parseRecord(string record)
 	record.erase(0, offset + 1);
 	string& valuesStr = record;
 	
-	int factor = getNextField(recordIdStr);	
-	int stage = getNextField(recordIdStr);
+	mpz_class factor = getNextField(recordIdStr);	
+	int stage = getNextField(recordIdStr).get_si();
 
 	vector<int> truncats;
 
 	while(valuesStr.length() > 0) {
-		truncats.push_back(getNextField(valuesStr));
+		truncats.push_back(getNextField(valuesStr).get_si());
 	}
 
 	truncationVal_.insert(make_pair(make_pair(factor, stage), truncats));
 }
 
 vector<int> const & TruncationRegister::getTruncationFor(
-		int factor, 
+		mpz_class factor, 
 		int stage
 	)
 {
@@ -607,7 +607,7 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 	sort(inputOrder.begin(), inputOrder.end(), comp);
 
 	int min_kz = known_zeros[inputOrder[0]];
-	int second_min_kz = known_zeros[inputOrder[0]];
+	int second_min_kz = known_zeros[inputOrder[1]];
 	int copy_as_is_boundary = (t->input_is_negative[inputOrder[0]]) ? min_kz : second_min_kz;
 
 	////// Handle the non-added part of the result //////////
@@ -623,9 +623,9 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 				") & ";
 		}
 		//Copy the previously computed bits
-		int nb_useful_bits = max(
+		int nb_useful_bits = min(
 				opsize_word[min_sig_idx] - truncations[min_sig_idx], 
-				copy_as_is_boundary - t->input_shifts[min_sig_idx]
+				copy_as_is_boundary - known_zeros[min_sig_idx]
 			);
 		copy_as_is << input_sig_names[min_sig_idx] << range(
 				truncations[min_sig_idx] + nb_useful_bits - 1,
@@ -656,7 +656,7 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 		
 		int left_boundary = max(copy_as_is_boundary, opsize_shifted_word[i]);
 		int right_boundary = max(copy_as_is_boundary, known_zeros[i]);
-		int sign_ext_left = adder_word_size - left_boundary;
+		int sign_ext_left = wordsize - left_boundary;
 		int pad_zeros_right = right_boundary - copy_as_is_boundary;
 		int useful_bits = left_boundary - right_boundary;
 
