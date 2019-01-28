@@ -22,7 +22,10 @@ I don't really understand
 
 */
 
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
+
+#include "pagsuite/types.h"
 
 #include "../Operator.hpp"
 
@@ -36,6 +39,13 @@ I don't really understand
 #include "../utils.hpp"
 #include "FixRealShiftAdd.hpp"
 #include "../IntAddSubCmp/IntAdder.hpp"
+
+#include "pagsuite/log2_64.h"
+#include "pagsuite/csd.h"
+#include "pagsuite/rpag.h"
+
+#include "adder_cost.hpp"
+
 
 using namespace std;
 
@@ -55,10 +65,11 @@ namespace flopoco{
 		lsbIn(lsbIn_),
 		lsbOut(lsbOut_),
 		constant(constant_),
-		targetUlpError(targetUlpError_),
-		addRoundBit(true)
+		targetUlpError(targetUlpError_)
 	{
 		vhdl << "-- This operator multiplies by " << constant << endl;
+
+		srcFileName="FixRealShiftAdd";
 
 		// Convert the input string into a sollya evaluation tree
 		sollya_obj_t node;
@@ -94,12 +105,8 @@ namespace flopoco{
 		mpfr_clears(log2C, NULL);
 
 		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
-		constantIsExactlyZero = false;
-		constantRoundsToZeroInTheStandaloneCase = false;
 		if(mpfr_zero_p(mpC) != 0){
-			constantIsExactlyZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
-			errorInUlps=0;
 			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
 			return;
 		}
@@ -125,8 +132,7 @@ namespace flopoco{
 		REPORT(INFO, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
 		cout.flags(old_settings);
 
-		//compute integer representations of the constant
-
+		//compute the different integer representations of the constant
 		int q=4;
 		//mx = msbIn
 		//lR = lsbOut
@@ -157,8 +163,6 @@ namespace flopoco{
 			mpfr_set_si(mpk,k,GMP_RNDN);
 			mpfr_add(mpfrCInt,mpfrCInt,mpk,roundingDirection);
 
-//			REPORT(INFO, "k=" << k << ", constant = " << (int) mpfr_get_d(mpfrCInt, GMP_RNDN) << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN));
-
 			mpz_class mpCInt;
 			mpfr_get_z(mpCInt.get_mpz_t(),mpfrCInt,GMP_RNDN);
 
@@ -173,164 +177,104 @@ namespace flopoco{
 
 			REPORT(INFO, "k=" << k << ", constant = " << mpCInt << " / 2^" << (int) mpfr_get_d(s, GMP_RNDN)+shift);
 
+			PAGSuite::adder_graph_t adder_graph;
+			computeAdderGraph(adder_graph, (PAGSuite::int_t) mpCInt.get_si());
 		}
 
-//		int integerConstantWS=msbC-lsbOut;
-/*
-		for(int integerConstantWS=1; integerConstantWS < 20; integerConstantWS++)
+
+	}
+
+
+	void FixRealShiftAdd::computeAdderGraph(PAGSuite::adder_graph_t &adder_graph, long long int coefficient)
+	{
+		set<PAGSuite::int_t> target_set;
+
+		target_set.insert(coefficient);
+
+		int depth = PAGSuite::log2c_64(PAGSuite::nonzeros(coefficient));
+
+//		REPORT(INFO, "depth=" << depth);
+
+		PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
+
+		for(PAGSuite::int_t t : target_set)
+			rpag->target_set->insert(t);
+
+		if(depth > 3)
 		{
-			mpfr_t mpfrCInt, mpScale;
-			mpfr_init2(mpfrCInt, integerConstantWS);
-			mpfr_init2(mpScale, -lsbOut+1);
-
-			mpfr_set_si(mpOp1,2,GMP_RNDN);
-			mpfr_set_si(mpOp2,integerConstantWS-msbC,GMP_RNDN);
-			mpfr_pow(mpScale,mpOp1,mpOp2,GMP_RNDN); //2^(-lsbOut)
-//			REPORT(DEBUG, "mpScale=" << (int) mpfr_get_d(mpScale, GMP_RNDN));
-			mpfr_mul(mpfrCInt, mpScale, mpC, GMP_RNDN); //C * 2^(-lsbOut)
-
-			//compute rounding error of the selected integer
-			mpfr_t mpEpsilonCoeff;
-			mpfr_init2(mpEpsilonCoeff, 100);
-			mpfr_div(mpEpsilonCoeff,mpfrCInt,mpScale,GMP_RNDN); //mpR = mpfrCInt/mpScale
-			mpfr_sub(mpEpsilonCoeff,mpC,mpEpsilonCoeff,GMP_RNDN); //mpR = mpC - mpfrCInt/mpScale
-
-			mpfr_t mpEpsilonCoeffAbs;
-			mpfr_init2(mpEpsilonCoeffAbs, 100);
-			mpfr_abs(mpEpsilonCoeffAbs,mpEpsilonCoeff,GMP_RNDN);
-
-			if(mpfr_greater_p(mpEpsilonCoeffAbs, mpEpsilonMax)) continue;
-
-			//compute epsilon for multiplier truncation:
-			mpfr_t mpEpsilonMult;
-			mpfr_init2(mpEpsilonMult, 100);
-			mpfr_sub(mpEpsilonMult,mpEpsilonMax,mpEpsilonCoeffAbs,GMP_RNDN); //epsilon_mult = epsilon_max - |epsilon_coeff|
-
-			mpfr_t mpEpsilonMultAbs;
-			mpfr_init2(mpEpsilonMultAbs, 100);
-			mpfr_abs(mpEpsilonMultAbs,mpEpsilonMult,GMP_RNDN);
-
-			REPORT(INFO, "Integer constant wordsize=" << integerConstantWS << ", coefficient=" << (int) mpfr_get_d(mpfrCInt, GMP_RNDN) << "/" << (int) mpfr_get_d(mpScale, GMP_RNDN) << "=" << mpfr_get_d(mpfrCInt, GMP_RNDN)/mpfr_get_d(mpScale, GMP_RNDN) << ", epsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN) << ", epsilonMult=" << mpfr_get_d(mpEpsilonMult, GMP_RNDN));
-			old_settings = cout.flags();
-
-			cout.flags(old_settings);
-
-			break; //break on first coefficient found (just for test)
+			REPORT(DEBUG, "depth is 4 or more, limit search limit to 1");
+			rpag->search_limit = 1;
 		}
+		if(depth > 4)
+		{
+			REPORT(DEBUG, "depth is 5 or more, limit MSD permutation limit");
+			rpag->msd_digit_permutation_limit = 1000;
+		}
+		PAGSuite::global_verbose = UserInterface::verbose-2; //set rpag to one less than verbose of FloPoCo
 
+		PAGSuite::cost_model_t cost_model = PAGSuite::LL_FPGA;// with default value
+		rpag->input_wordsize = msbIn-lsbIn;
+		rpag->set_cost_model(cost_model);
+		rpag->optimize();
 
-		//cleanup
-		mpfr_clears(mpOp1, NULL);
-		mpfr_clears(mpOp2, NULL);
-*/
+		vector<set<PAGSuite::int_t>> pipeline_set = rpag->get_best_pipeline_set();
 
-		//create IntConstMultShiftAdd instance here
+		list<PAGSuite::realization_row<PAGSuite::int_t> > rpag_adder_graph;
+		PAGSuite::pipeline_set_to_adder_graph(pipeline_set, rpag_adder_graph, true, rpag->get_c_max());
+		PAGSuite::append_targets_to_adder_graph(pipeline_set, rpag_adder_graph, target_set);
 
+		string adderGraphStr = PAGSuite::output_adder_graph(rpag_adder_graph,true);
 
+		REPORT(INFO, "adderGraphStr=" << adderGraphStr);
+
+		PAGSuite::adder_graph_t adderGraph;
+
+		if(UserInterface::verbose >= 3)
+			adderGraph.quiet = false; //enable debug output
+		else
+			adderGraph.quiet = true; //disable debug output, except errors
+
+		REPORT( DETAILED, "parse graph...")
+		bool validParse = adderGraph.parse_to_graph(adderGraphStr);
+
+		if(validParse)
+		{
+
+			REPORT(DETAILED, "check graph...")
+			adderGraph.check_and_correct(adderGraphStr);
+
+			if (UserInterface::verbose >= DETAILED)
+				adderGraph.print_graph();
+			adderGraph.drawdot("pag_input_graph.dot");
+
+			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, rpag->input_wordsize, false);
+
+			REPORT(INFO, "adder graph requires " << noOfFullAdders << " full adders");
 
 /*
-		init();		 // check special cases, computes number of tables and errorInUlps.
+		if (epsilon > 0.0)
+		{
+			REPORT(INFO, "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
 
-		// Now we have everything to compute g
-		computeGuardBits();
-		
-		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
-		REPORT(DETAILED, "FixRealShiftAdd  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
-		
-		addInput("X",  msbIn-lsbIn+1);
-		//		addFixInput("X", signedInput,  msbIn, lsbIn); // The world is not ready yet
-		inputSignalName = "X"; // for buildForBitHeap
-		addOutput("R", msbOut-lsbOut+1);
+			map<pair<int, int>, vector<int> > wordSizeMap;
 
-		// Special cases
-		if(constantRoundsToZeroInTheStandaloneCase || constantIsExactlyZero)	{
-			vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << ";" << endl;
-			return;
-		}
-
-		if(constantIsPowerOfTwo)	{
-			// The code here is different that the one for the bit heap constructor:
-			// In the stand alone case we must compute full negation.
-			string rTempName = createShiftedPowerOfTwo(inputSignalName); 
-			int rTempSize = thisOp->getSignalByName(rTempName)->width();
-
-			if(negativeConstant) { // In this case msbOut was incremented in init()
-				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - ";
-				if(signedInput) {
-					vhdl << "("
-							 <<  rTempName << of(rTempSize-1) << " & " // sign extension 
-							 <<  rTempName << range(rTempSize-1, g)
-							 << ");" << endl;
-				}
-				else{ // unsigned input
-					vhdl <<  rTempName << range(rTempSize-1, g) << ";" << endl;
+			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilon);
+			wordSizeMap = wlc.optimizeTruncation();
+			REPORT(INFO, "Finished computing word sizes of truncated MCM");
+			if (UserInterface::verbose >= INFO)
+			{
+				for (auto &it : wordSizeMap)
+				{
+					std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
+					for (auto &itV : it.second)
+						std::cout << itV << " ";
+					std::cout << std::endl;
 				}
 			}
-			else{		
-				vhdl << tab << "R <= "<< rTempName << range(msbOut-lsbOut+g, g) << ";" << endl;
-			}
-			return;
 		}
-
-
-		// From now we have stuff to do.
-		//create the bitheap
-		//		int bitheaplsb = lsbOut - g;
-		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
-		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
-
-		buildTablesForBitHeap(); // does everything up to bit heap compression
-
-		//compress the bitheap and produce the result
-		bitHeap->startCompression();
-
-		// Retrieve the bits we want from the bit heap
-		vhdl << tab << declare("OutRes",msbOut-lsbOut+1+g) << " <= " << 
-			bitHeap->getSumName() << range(msbOut-lsbOut+g, 0) << ";" << endl; // This range is useful in case there was an overflow?
-
-		vhdl << tab << "R <= OutRes" << range(msbOut-lsbOut+g, g) << ";" << endl;
 */
-
-	}
-	
-
-
-
-	
-	// Just to factor out code.
-	/* This builds the input shifted WRT lsb-g
-	 but doesn't worry about adding or subtracting it,
-	 which depends wether we do a standalone or bit-heap   
-	*/
-	string FixRealShiftAdd::createShiftedPowerOfTwo(string resultSignalName){
-		string rTempName = getName() + "_Rtemp"; // Should be unique in a bit heap if each KCM got a UID.
-		// Compute shift that must be applied to x to align it to lsbout-g.
-		// This is a shift left: negative means shift right.
-		int shift= lsbIn -(lsbOut-g)  + msbC ; 
-		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
-		REPORT(DETAILED,"Power of two, msbC=" << msbC << "     Shift left of " << shift << " bits");
-		// compute the product by the abs constant
-		thisOp->vhdl << tab << thisOp->declare(rTempName, rTempSize) << " <= ";
-		// Still there are two cases: 
-		if(shift>=0) {  // Shift left; pad   THIS SEEMS TO WORK
-			thisOp->vhdl << inputSignalName << " & " << zg(shift);
-			// rtempsize= msbIn-lsbin+1   + shift  =   -lsbIn   + msbIn   +1   - (lsbOut-g -lsbIn +msbC)
 		}
-		else { // shift right; truncate
-			thisOp->vhdl << inputSignalName << range(msbIn-lsbIn, -shift);
-		}
-#if 1 // This used to break the lexer, I keep it as a case study to fix it. TODO
-		thisOp->vhdl <<  "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
-#else
-		ostringstream t;
-		t << "; -- constant is a power of two, shift left of " << shift << " bits" << endl;
-		thisOp->vhdl <<  t.str();
-#endif
-		// copy the signedness into rtemp
-		thisOp->getSignalByName(rTempName)->setIsSigned(signedInput);
-		return rTempName;
 	}
-
 
 
 	// TODO manage correctly rounded cases, at least the powers of two
@@ -399,10 +343,6 @@ namespace flopoco{
 	}
 
 
-
-
-
-	
 	TestList FixRealShiftAdd::unitTest(int index)
 	{
 		// the static list of mandatory tests
@@ -481,8 +421,14 @@ namespace flopoco{
 													);
 	}
 
-	void FixRealShiftAdd::registerFactory()
+
+}//namespace
+#endif // defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+
+namespace flopoco {
+	void flopoco::FixRealShiftAdd::registerFactory()
 	{
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 		UserInterface::add(
 				"FixRealShiftAdd",
 				"Table based real multiplier. Output size is computed",
@@ -498,9 +444,9 @@ namespace flopoco{
 				FixRealShiftAdd::parseArguments,
 				FixRealShiftAdd::unitTest
 		);
+#endif //#defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 	}
-}
-
+}//namespace
 
 
 

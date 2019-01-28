@@ -1,10 +1,14 @@
 #ifndef FIXREALSHIFTADD_HPP
 #define FIXREALSHIFTADD_HPP
+
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+
 #include "../Operator.hpp"
 #include "../Table.hpp"
 #include "../BitHeap/BitHeap.hpp"
 
-
+#include "pagsuite/types.h"
+#include "pagsuite/adder_graph.h"
 
 namespace flopoco{
 #define NEWTABLEINTERFACE 1 // transitional, remove the old table interface at some point
@@ -64,18 +68,9 @@ namespace flopoco{
 		string constant;
 		int msbC;
 		float targetUlpError;
-		bool addRoundBit; /**< If false, do not add the round bit to the bit heap: somebody else will */ 
 		mpfr_t mpC;
 		mpfr_t absC;
-		double errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
-		int g; /**< computed late, either by the parent operator, or out of errorInUlps */
 		bool negativeConstant;
-		bool constantIsExactlyZero; // it is surprising how many filters want to multiply by 0.
-		bool constantRoundsToZeroInTheStandaloneCase; // in the virtual case, it will depend on how many guard bits are added
-		bool constantIsPowerOfTwo;
-		int extraBitForNegativePowerOfTwo;
-;
-
 
 
 		/** The heap of weighted bits that will be used to do the additions */
@@ -89,13 +84,17 @@ namespace flopoco{
 		vector<int> l; /**< LSB of chunk i; l[numberOfTables-1] = lsbIn, or maybe >= lsbIn if not all the input bits are used due to a small constant */
 		vector<int> tableOutputSign; /**< +1: table is always positive. -1: table output is always negative. 0: table output is signed */
 
-	private:
-		string createShiftedPowerOfTwo(string resultSignalName);
+	protected:
+		void computeAdderGraph(PAGSuite::adder_graph_t &adder_graph, PAGSuite::int_t coefficient);
 
-		
-	};
-
+#else
+	namespace flopoco{
+	class FixRealShiftAdd
+	{
+	public:
+		static void registerFactory();
+#endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+};
 }
-
 
 #endif
