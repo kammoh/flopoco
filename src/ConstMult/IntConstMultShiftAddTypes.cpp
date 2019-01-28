@@ -607,7 +607,7 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 	sort(inputOrder.begin(), inputOrder.end(), comp);
 
 	int min_kz = known_zeros[inputOrder[0]];
-	int second_min_kz = known_zeros[inputOrder[0]];
+	int second_min_kz = known_zeros[inputOrder[1]];
 	int copy_as_is_boundary = (t->input_is_negative[inputOrder[0]]) ? min_kz : second_min_kz;
 
 	////// Handle the non-added part of the result //////////
@@ -623,9 +623,9 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 				") & ";
 		}
 		//Copy the previously computed bits
-		int nb_useful_bits = max(
+		int nb_useful_bits = min(
 				opsize_word[min_sig_idx] - truncations[min_sig_idx], 
-				copy_as_is_boundary - t->input_shifts[min_sig_idx]
+				copy_as_is_boundary - known_zeros[min_sig_idx]
 			);
 		copy_as_is << input_sig_names[min_sig_idx] << range(
 				truncations[min_sig_idx] + nb_useful_bits - 1,
@@ -656,7 +656,7 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 		
 		int left_boundary = max(copy_as_is_boundary, opsize_shifted_word[i]);
 		int right_boundary = max(copy_as_is_boundary, known_zeros[i]);
-		int sign_ext_left = adder_word_size - left_boundary;
+		int sign_ext_left = wordsize - left_boundary;
 		int pad_zeros_right = right_boundary - copy_as_is_boundary;
 		int useful_bits = left_boundary - right_boundary;
 
