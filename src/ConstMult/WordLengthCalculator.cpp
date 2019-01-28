@@ -8,7 +8,7 @@ TODO
 
 #include<ScaLP/Solver.h>
 #include<ScaLP/Exception.h>
-#include<ScaLP/SolverGurobi.h>
+#include<ScaLP/SolverDynamic.h>
 #include <strstream>
 #include <cmath>
 
@@ -66,7 +66,7 @@ namespace flopoco {
             }  
 
             try {
-                ScaLP::Solver s = ScaLP::Solver(ScaLP::newSolverGurobi());
+                ScaLP::Solver s = ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
                 s.quiet = true;
 
                 std::vector<ScaLP::Variable> truncPosition;
