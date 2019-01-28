@@ -108,7 +108,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
-        int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
+        int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false,truncations);
 
 		REPORT( INFO, "adder graph requires " << noOfFullAdders << " full adders");
 
