@@ -480,17 +480,22 @@ namespace flopoco{
 
 				// Build in implementation a tree for the constant multiplier
 				unsigned int position=find_best_implementation( tries, 3);
+#define HACK4ARITH2019 1
+#if HACK4ARITH2019
+				position = 1;
+#endif
+				
 				switch (position) {
-					case 1: implementation=implem_try_left;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
-							delete implem_try_right;
+					case 0: implementation=implem_try_right;
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the right was better");
+							delete implem_try_left;
 							delete implem_try_balanced;
 							//delete implem_try_euclidean0;
 							//delete implem_try_Shifts;
 							break;
-					case 0: implementation=implem_try_right;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the right was better");
-							delete implem_try_left;
+					case 1: implementation=implem_try_left;
+							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
+							delete implem_try_right;
 							delete implem_try_balanced;
 							//delete implem_try_euclidean0;
 							//delete implem_try_Shifts;
@@ -526,6 +531,10 @@ namespace flopoco{
 				//implementation=buildMultBoothTreeFromRight(n);
 
 				if(UserInterface::verbose>=DETAILED) showShiftAddDag();
+
+#if HACK4ARITH2019
+				showRPAG();
+#endif
 
 				int cost=compute_total_cost(implementation->result);
 				REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
@@ -1469,6 +1478,19 @@ namespace flopoco{
 		for (uint32_t i=0; i<implementation->saolist.size(); i++) {
 			REPORT(DETAILED, "  "<<*(implementation->saolist[i]));
 		}
+	};
+
+
+	void IntConstMult::showRPAG(){
+		string rpag="{";
+		for (uint32_t i=0; i<implementation->saolist.size(); i++) {
+			if (i>0)
+					rpag+=",";
+			rpag += implementation->saolist[i] -> rpagdesc;
+		}
+		rpag += "}";
+		REPORT(DETAILED, " RPAG description:\n" << rpag);
+		
 	};
 
 

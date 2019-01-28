@@ -49,6 +49,10 @@ namespace flopoco{
 		/** string representation of the constant */
 		string name;
 
+		/** string representation of the constant */
+		string rpagdesc;
+		int rpaglevel;
+
 		/** size of the constant */
 		int size;
 
