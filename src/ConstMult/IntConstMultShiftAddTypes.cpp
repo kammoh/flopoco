@@ -30,14 +30,14 @@ void TruncationRegister::parseRecord(string record)
 	static const string identDelimiter{':'};
 	static const string fieldDelimiter{','};
 	
-	auto getNextField = [](string& val)->int{
+	auto getNextField = [](string& val)->mpz_class{
 		long unsigned int offset = val.find(fieldDelimiter);
 		string ret = val.substr(0, offset);
 		if (offset != string::npos) {
 			offset += 1;
 		}
 		val.erase(0, offset);
-		return stoi(ret);
+		return mpz_class(ret);
 	};
 	
 	long unsigned int  offset = record.find(identDelimiter);
@@ -49,20 +49,20 @@ void TruncationRegister::parseRecord(string record)
 	record.erase(0, offset + 1);
 	string& valuesStr = record;
 	
-	int factor = getNextField(recordIdStr);	
-	int stage = getNextField(recordIdStr);
+	mpz_class factor = getNextField(recordIdStr);	
+	int stage = getNextField(recordIdStr).get_si();
 
 	vector<int> truncats;
 
 	while(valuesStr.length() > 0) {
-		truncats.push_back(getNextField(valuesStr));
+		truncats.push_back(getNextField(valuesStr).get_si());
 	}
 
 	truncationVal_.insert(make_pair(make_pair(factor, stage), truncats));
 }
 
 vector<int> const & TruncationRegister::getTruncationFor(
-		int factor, 
+		mpz_class factor, 
 		int stage
 	)
 {
