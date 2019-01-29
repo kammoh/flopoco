@@ -9,8 +9,7 @@ namespace IntConstMultShiftAdd_TYPES {
 			vector<int> word_sizes, 
 			vector<int> truncations,
 			vector<int> shifts,
-			vector<bool> is_neg,
-			int  out_word_size
+			vector<bool> is_neg
 		);
 
 	vector<vector<size_t> > splitNonOverlap(
