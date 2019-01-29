@@ -50,7 +50,7 @@ int getGraphAdderCost(
 	for (auto nodePtr : adder_graph.nodes_list) {
 		if (PAGSuite::is_a<PAGSuite::adder_subtractor_node_t>(*nodePtr)) {
 			int64_t factor = nodePtr->output_factor[0][0];
-			cout << "Number of adders for factor " << factor << " : ";
+//			cout << "Number of adders for factor " << factor << " : ";
 			PAGSuite::adder_subtractor_node_t* t = 
 				(PAGSuite::adder_subtractor_node_t*) nodePtr;
 			int nodeOpSize = computeWordSize(t, inputWordSize);	
@@ -112,7 +112,7 @@ int getGraphAdderCost(
 						isNegVal,
 						nodeOpSize
 					);
-				cout << tmp << endl;
+//				cout << tmp << endl;
 				totalCost += tmp;
 			}
 		}	

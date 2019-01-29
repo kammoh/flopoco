@@ -45,7 +45,7 @@ I don't really understand
 #include "pagsuite/rpag.h"
 
 #include "adder_cost.hpp"
-
+#include "WordLengthCalculator.hpp"
 
 using namespace std;
 
@@ -112,8 +112,9 @@ namespace flopoco{
 		}
 
 		msbOut = msbIn + msbC;
+		int wIn = msbIn-lsbIn+1;
 
-		REPORT(DEBUG, "Output precisions: msbOut=" << msbOut << ", lsbOut=" << lsbOut);
+		REPORT(INFO, "Output precisions: msbOut=" << msbOut << ", lsbOut=" << lsbOut);
 
 		mpfr_t mpOp1, mpOp2; //temporary variables for operands
 		mpfr_init2(mpOp1, 100);
@@ -141,8 +142,8 @@ namespace flopoco{
 		mpfr_set_si(s,msbIn-lsbOut+q+1,GMP_RNDN);
 
 		cout << "coefficient word size = " << msbC+msbIn-lsbOut+q+1 << endl;
-		mpfr_t mpfrCInt;
-		mpfr_init2(mpfrCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
+		mpfr_t mpCInt;
+		mpfr_init2(mpCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
 
 		for(int k=-(1<<q); k <= (1<<q); k++)
 		{
@@ -156,71 +157,77 @@ namespace flopoco{
 			mpfr_init2(two_pow_s,100); //msbIn-lsbOut+q+1
 			mpfr_set_si(mpOp1,2,GMP_RNDN);
 			mpfr_pow(two_pow_s,mpOp1,s,GMP_RNDN);
-			mpfr_mul(mpfrCInt,mpC,two_pow_s,roundingDirection);
+			mpfr_mul(mpCInt,mpC,two_pow_s,roundingDirection);
 
 			mpfr_t mpk;
 			mpfr_init2(mpk,64);
 			mpfr_set_si(mpk,k,GMP_RNDN);
-			mpfr_add(mpfrCInt,mpfrCInt,mpk,roundingDirection);
+			mpfr_add(mpCInt,mpCInt,mpk,roundingDirection);
 
 			mpz_class mpzCInt;
-			mpfr_get_z(mpzCInt.get_mpz_t(),mpfrCInt,GMP_RNDN);
-//			mpfr_clear(mpfrCInt);
+			mpfr_get_z(mpzCInt.get_mpz_t(),mpCInt,GMP_RNDN);
 
 			mpz_class isEven = (mpzCInt & 0x01) != 1;
 			int shift=0;
 			while(isEven.get_ui())
 			{
 				mpzCInt /= 2;
-				mpfr_div_ui(mpfrCInt,mpfrCInt,2,GMP_RNDN);
+				mpfr_div_ui(mpCInt,mpCInt,2,GMP_RNDN);
 				shift++;
 				isEven = (mpzCInt & 0x01) != 1;
 			}
 
-			//compute epsilon
-			//epsilon_norm = mpC*2^(msbIn-lsbOut+1) - mpzCInt * 2^(shift-q) = mpCScaled + mpCIntScaled
-			mpfr_t epsilon_norm_coeff;
-			mpfr_init2(epsilon_norm_coeff,100);
-
-			//compute mpCScaled
-			mpfr_t mpCScaled;
-			mpfr_init2(mpCScaled,100);
+			//compute epsilons
+			//compute mpEpsilonCoeff = C - Cint * 2^(-(wIn+q-shift));
+			mpfr_t mpEpsilonCoeff;
+			mpfr_init2(mpEpsilonCoeff,100);
 			mpfr_set_si(mpOp1,2,GMP_RNDN);
-			mpfr_set_si(mpOp2,msbIn-lsbOut+1,GMP_RNDN);
+			mpfr_set_si(mpOp2,-(wIn+q-shift),GMP_RNDN);
 			mpfr_pow(mpOp1,mpOp1,mpOp2,GMP_RNDN);
-			mpfr_mul(mpCScaled,mpC,mpOp1,roundingDirection);
+			mpfr_mul(mpOp1,mpCInt,mpOp1,GMP_RNDN);
+			mpfr_sub(mpEpsilonCoeff,mpC,mpOp1,GMP_RNDN);
 
-			//compute mpCIntScaled
-			mpfr_t mpCIntScaled;
-			mpfr_init2(mpCIntScaled,100);
+			//compute mpEpsilonMult = mpEpsilonMax - abs(mpEpsilonCoeff);
+			mpfr_t mpEpsilonMult;
+			mpfr_init2(mpEpsilonMult,100);
+			mpfr_abs(mpOp1,mpEpsilonCoeff,GMP_RNDN);
+			mpfr_sub(mpEpsilonMult,mpEpsilonMax,mpOp1,GMP_RNDN);
+
+			//compute mpEpsilonCoeffNorm = mpEpsilonCoeff*2^(wIn+q-shift-lsbOut);
+			mpfr_t mpEpsilonCoeffNorm;
+			mpfr_init2(mpEpsilonCoeffNorm,100);
 			mpfr_set_si(mpOp1,2,GMP_RNDN);
-			mpfr_set_si(mpOp2,shift-q,GMP_RNDN);
+			mpfr_set_si(mpOp2,wIn+q-shift-lsbOut,GMP_RNDN);
 			mpfr_pow(mpOp1,mpOp1,mpOp2,GMP_RNDN);
-			mpfr_mul(mpCIntScaled,mpfrCInt,mpOp1,roundingDirection);
+			mpfr_mul(mpEpsilonCoeffNorm,mpEpsilonCoeff,mpOp1,GMP_RNDN);
 
-			mpfr_sub(epsilon_norm_coeff,mpCScaled,mpCIntScaled,GMP_RNDN);
-
+			//compute mpEpsilonMultNorm = mpEpsilonMult*2^(wIn+q-shift-lsbOut);
+			mpfr_t mpEpsilonMultNorm;
+			mpfr_init2(mpEpsilonMultNorm,100);
+			mpfr_mul(mpEpsilonMultNorm,mpEpsilonMult,mpOp1,GMP_RNDN);
 
 			ios::fmtflags old_settings = cout.flags();
-			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << ((int) mpfr_get_d(s, GMP_RNDN)-shift) << ", epsilon coeff (norm)=" << std::fixed << mpfr_get_d(epsilon_norm_coeff,GMP_RNDN));
+			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << ((int) mpfr_get_d(s, GMP_RNDN)-shift)
+							  << ", mpEpsilonCoeff=" << std::fixed << mpfr_get_d(mpEpsilonCoeff,GMP_RNDN)
+							  << ", mpEpsilonMult=" << std::fixed << mpfr_get_d(mpEpsilonMult,GMP_RNDN)
+							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm,GMP_RNDN)
+							  << ", mpEpsilonMultNorm=" << std::fixed << mpfr_get_d(mpEpsilonMultNorm,GMP_RNDN));
 			cout.flags(old_settings);
 
+			mpfr_t mpEpsilonMultNormInt;
+			mpfr_init2(mpEpsilonMultNormInt,100);
+			mpfr_floor(mpEpsilonMultNormInt,mpEpsilonMultNorm);
+			long epsilonMultNormInt = mpfr_get_si(mpEpsilonMultNormInt,GMP_RNDN); //should be mpz type instead
 
 			PAGSuite::adder_graph_t adderGraph;
 			computeAdderGraph(adderGraph, (PAGSuite::int_t) mpzCInt.get_si());
 
-			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, msbIn-lsbIn, false);
-
-			REPORT(INFO, "  adder graph requires " << noOfFullAdders << " full adders");
-
-/*
-		if (epsilon > 0.0)
-		{
-			REPORT(INFO, "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
+			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
+			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
 
 			map<pair<int, int>, vector<int> > wordSizeMap;
 
-			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilon);
+			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilonMultNormInt);
 			wordSizeMap = wlc.optimizeTruncation();
 			REPORT(INFO, "Finished computing word sizes of truncated MCM");
 			if (UserInterface::verbose >= INFO)
@@ -233,8 +240,10 @@ namespace flopoco{
 					std::cout << std::endl;
 				}
 			}
-		}
-*/
+
+			string truncations=""; //has to be filled!
+			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncations);
+			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
 
 
 		}

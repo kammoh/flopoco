@@ -67,8 +67,8 @@ namespace flopoco {
 
             try {
                 ScaLP::Solver s = ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
-//                s.quiet = true;
-                s.quiet = false;
+                s.quiet = true;
+//                s.quiet = false;
 
                 std::vector<ScaLP::Variable> truncPosition;
                 std::vector<ScaLP::Variable> truncError;
@@ -242,7 +242,7 @@ namespace flopoco {
                 {
                     ScaLP::Result r = s.getResult();
 
-					std::cout << "result is: " << r << std::endl;
+//					std::cout << "result is: " << r << std::endl;
 
                     //for(std::pair<const ScaLP::Variable, double>& p : r.values)
                     //{
