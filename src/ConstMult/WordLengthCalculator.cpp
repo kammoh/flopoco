@@ -9,7 +9,7 @@ TODO
 #include<ScaLP/Solver.h>
 #include<ScaLP/Exception.h>
 #include<ScaLP/SolverDynamic.h>
-#include <strstream>
+#include <sstream>
 #include <cmath>
 
 #include "WordLengthCalculator.hpp"
@@ -82,16 +82,16 @@ namespace flopoco {
                 edgeError.resize(edges.size());
                 for(size_t i{0u}; i < edges.size(); ++i)
                 {
-                    ostrstream vN;
+                    stringstream vN;
                     vN << "epsilon_" << (int)i;
                     edgeError[i] = ScaLP::newIntegerVariable(vN.str());
                 }
                 for(size_t i{0u}; i < edges.size(); ++i)
                 {
-                    ostrstream vN1;
+                    stringstream vN1;
                     vN1 << "t_" << i;
                     truncPosition[i] = ScaLP::newIntegerVariable(vN1.str());
-                    ostrstream vN2;
+                    stringstream vN2;
                     vN2 << "et_" << i;
                     truncError[i] = ScaLP::newIntegerVariable(vN2.str());
                     // add the associated constraints
@@ -99,7 +99,7 @@ namespace flopoco {
                     ScaLP::Term t2(0);
                     ScaLP::Term t3(0);
                     for(int j{0}; j <= edges[i].wEdge; ++j) {
-                        ostrstream vN;
+                        stringstream vN;
                         vN << "t_" << i << "_" << j;
                         truncBits[i].push_back(ScaLP::newBinaryVariable(vN.str()));
                         t1 += truncBits[i][j];
@@ -160,7 +160,7 @@ namespace flopoco {
                             }                        
                         }
 
-                        strstream vN;
+                        stringstream vN;
                         vN << "indicAdder_" << adderCount;
                         indicatorAdder.push_back(ScaLP::newBinaryVariable(vN.str()));
                         s << ( edgeError[i] - t >= 0 );
@@ -182,7 +182,7 @@ namespace flopoco {
                 for(auto &it : adder_graph_.nodes_list) {
                     if(is_a<adder_subtractor_node_t>(*it)) {
                         if (((adder_subtractor_node_t*)it)->input_is_negative[1]) {
-                            ostrstream vN;
+                            stringstream vN;
                             vN << "gain_" << adderCount;
                             faGain.push_back(ScaLP::newIntegerVariable(vN.str()));
                             //s << ( faGain[adderCount] == 0 );
@@ -196,7 +196,7 @@ namespace flopoco {
                                 }
                             }
                         } else { 
-                            ostrstream vN1, vN2; 
+                            stringstream vN1, vN2; 
                             vN1 << "gain_" << adderCount;
                             vN2 << "indic_" << onlyPositive;
                             faGain.push_back(ScaLP::newIntegerVariable(vN1.str()));
