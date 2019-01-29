@@ -8,13 +8,14 @@ int getNodeCost(
 		vector<int> word_sizes, 
 		vector<int> truncations,
 		vector<int> shifts,
-		vector<bool> is_neg,
-		int out_word_size
+		vector<bool> is_neg
+		//int out_word_size
 	) 
 {
+	int out_word_size = 0;
 	size_t nb_inputs = word_sizes.size();
 	if (nb_inputs < 2) {
-
+		return 0;
 	}
 	vector<int> known_zeros(nb_inputs);
 	vector<size_t> order(nb_inputs);
@@ -22,6 +23,9 @@ int getNodeCost(
 		int cur_shift = max(shifts[i], 0);
 		known_zeros[i] = truncations[i] + cur_shift;
 		order[i] = i;
+		if (word_sizes[i] + shifts[i] > out_word_size) {
+			out_word_size = word_sizes[i] + shifts[i];
+		}
 	}
 
 	int negShifts = max(-1 * shifts[0], 0);
@@ -99,8 +103,7 @@ int getGraphAdderCost(
 								wordSizesGroup,
 								truncationsGroup,
 								shiftsGroup,
-								isNegGroup,
-								nodeOpSize
+								isNegGroup
 							);
 					}
 				}
@@ -109,8 +112,7 @@ int getGraphAdderCost(
 						wordSizesVal,
 						truncationsVal,
 						shiftsVal,
-						isNegVal,
-						nodeOpSize
+						isNegVal
 					);
 				cout << tmp << endl;
 				totalCost += tmp;
