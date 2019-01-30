@@ -146,6 +146,10 @@ namespace flopoco{
 		mpfr_t mpCInt;
 		mpfr_init2(mpCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
 
+		int noOfFullAddersBest=INT32_MAX;
+		mpz_class mpzCIntBest;
+		int shiftTotalBest;
+
 		for(int k=-(1<<q); k <= (1<<q); k++)
 		{
 			mpfr_rnd_t roundingDirection;
@@ -207,8 +211,10 @@ namespace flopoco{
 			mpfr_init2(mpEpsilonMultNorm,100);
 			mpfr_mul(mpEpsilonMultNorm,mpEpsilonMult,mpOp1,GMP_RNDN);
 
+			int shiftTotal = mpfr_get_si(s, GMP_RNDN)-shift;
+
 			ios::fmtflags old_settings = cout.flags();
-			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << ((int) mpfr_get_d(s, GMP_RNDN)-shift)
+			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << shiftTotal
 							  << ", mpEpsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff,GMP_RNDN)
 							  << ", mpEpsilonMult=" << std::scientific << mpfr_get_d(mpEpsilonMult,GMP_RNDN)
 							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm,GMP_RNDN)
@@ -247,8 +253,17 @@ namespace flopoco{
 			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
 			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
 
+			if(noOfFullAdders < noOfFullAddersBest)
+			{
+				noOfFullAddersBest = noOfFullAdders;
+				mpzCIntBest = mpzCInt;
+				shiftTotalBest = shiftTotal;
+			}
 
 		}
+		REPORT(INFO, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with " << noOfFullAddersBest << " full adders");
+
+
 
 
 	}
@@ -288,11 +303,11 @@ namespace flopoco{
 
 		vector<set<PAGSuite::int_t>> pipeline_set = rpag->get_best_pipeline_set();
 
-		list<PAGSuite::realization_row<PAGSuite::int_t> > rpag_adder_graph;
-		PAGSuite::pipeline_set_to_adder_graph(pipeline_set, rpag_adder_graph, true, rpag->get_c_max());
-		PAGSuite::append_targets_to_adder_graph(pipeline_set, rpag_adder_graph, target_set);
+		list<PAGSuite::realization_row<PAGSuite::int_t> > rpagAdderGraph;
+		PAGSuite::pipeline_set_to_adder_graph(pipeline_set, rpagAdderGraph, true, rpag->get_c_max());
+		PAGSuite::append_targets_to_adder_graph(pipeline_set, rpagAdderGraph, target_set);
 
-		string adderGraphStr = PAGSuite::output_adder_graph(rpag_adder_graph,true);
+		string adderGraphStr = PAGSuite::output_adder_graph(rpagAdderGraph,true);
 
 		REPORT(INFO, "  adderGraphStr=" << adderGraphStr);
 
@@ -313,6 +328,8 @@ namespace flopoco{
 			if (UserInterface::verbose >= DETAILED)
 				adderGraph.print_graph();
 			adderGraph.drawdot("pag_input_graph.dot");
+
+			REPORT(INFO, "  adderGraph=" << adderGraph.get_adder_graph_as_string());
 
 			return true;
 		}
