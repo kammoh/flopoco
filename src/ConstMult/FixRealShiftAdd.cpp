@@ -333,7 +333,7 @@ namespace flopoco{
 				adderGraph.print_graph();
 			adderGraph.drawdot("pag_input_graph.dot");
 
-			REPORT(INFO, "  adderGraph=" << adderGraph.get_adder_graph_as_string());
+//			REPORT(INFO, "  adderGraph=" << adderGraph.get_adder_graph_as_string());
 
 			return true;
 		}
