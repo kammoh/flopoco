@@ -127,11 +127,10 @@ namespace flopoco{
 		mpfr_t mpEpsilonMax;
 		mpfr_init2(mpEpsilonMax, 100);
 		mpfr_set_si(mpOp1,2,GMP_RNDN);
-		mpfr_set_si(mpOp2,lsbOut,GMP_RNDN);
+//		mpfr_set_si(mpOp2,lsbOut,GMP_RNDN);
+		mpfr_set_si(mpOp2,lsbOut-1,GMP_RNDN); //as we don't round the result, take one bit more here!!
 
-		mpfr_set_si(mpOp1,2,GMP_RNDN);
-		mpfr_set_si(mpOp2,lsbOut,GMP_RNDN);
-		mpfr_pow(mpEpsilonMax,mpOp1,mpOp2,GMP_RNDN); //2^lsbOut
+		mpfr_pow(mpEpsilonMax,mpOp1,mpOp2,GMP_RNDN); //2^(lsbOut-1)
 		ios::fmtflags old_settings = cout.flags();
 		REPORT(INFO, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
 		cout.flags(old_settings);
