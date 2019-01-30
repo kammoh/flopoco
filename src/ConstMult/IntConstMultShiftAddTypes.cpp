@@ -86,7 +86,7 @@ void TruncationRegister::parseRecord(string record)
 vector<int> const & TruncationRegister::getTruncationFor(
 		mpz_class factor, 
 		int stage
-	)
+	) const
 {
 	auto iter = truncationVal_.find(make_pair(factor, stage));
 	if (iter == truncationVal_.end())
