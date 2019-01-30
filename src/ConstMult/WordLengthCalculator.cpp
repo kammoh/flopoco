@@ -18,7 +18,7 @@ using namespace std;
 using namespace PAGSuite;
 
 namespace flopoco {
-    map<pair<mpz_class, int>, vector<int> > WordLengthCalculator::optimizeTruncation()
+    map<pair<mpz_class, int>, vector<int> > WordLengthCalculator::optimizeTruncation(bool useBigM)
     {
             struct edge_info { 
                 pair<adder_graph_base_node_t*, adder_graph_base_node_t*> nodes; 
@@ -80,12 +80,17 @@ namespace flopoco {
                 truncError.resize(edges.size());
                 truncBits.resize(edges.size());
                 edgeError.resize(edges.size());
+                int64_t bigM{0};
                 for(size_t i{0u}; i < edges.size(); ++i)
                 {
                     stringstream vN;
                     vN << "epsilon_" << (int)i;
                     edgeError[i] = ScaLP::newIntegerVariable(vN.str());
+                    if (bigM < edges[i].wEdge)
+                        bigM = edges[i].wEdge;
                 }
+                bigM = (int64_t)pow(2, bigM+2);
+
                 for(size_t i{0u}; i < edges.size(); ++i)
                 {
                     stringstream vN1;
@@ -165,8 +170,15 @@ namespace flopoco {
                         indicatorAdder.push_back(ScaLP::newBinaryVariable(vN.str()));
                         s << ( edgeError[i] - t >= 0 );
                         s << ( edgeError[i] - truncError[i] >= 0);
-                        s << ( indicatorAdder[adderCount] == 0 then t - edgeError[i] == 0 );
-                        s << ( indicatorAdder[adderCount] == 1 then edgeError[i] - truncError[i] == 0 );
+                        if(useBigM) {
+                            s << ( t - bigM - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
+                            s << ( edgeError[i] - t - bigM + bigM*indicatorAdder[adderCount] <= 0 );
+                            s << ( truncError[i] - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
+                            s << ( edgeError[i] - truncError[i] - bigM*indicatorAdder[adderCount] <= 0 );
+                        } else {
+                            s << ( indicatorAdder[adderCount] == 0 then edgeError[i] - t == 0 );
+                            s << ( indicatorAdder[adderCount] == 1 then edgeError[i] - truncError[i] == 0 );
+                        }
                         ++adderCount;
                     }
                     if(is_a<output_node_t>(*edges[i].nodes.second)) {
@@ -219,8 +231,18 @@ namespace flopoco {
                             }
                             s << ( faGain[adderCount] - shiftTerms[2*onlyPositive] >= 0 );
                             s << ( faGain[adderCount] - shiftTerms[2*onlyPositive+1] >= 0 );
-                            s << ( indicVar[onlyPositive] == 0 then faGain[adderCount] - shiftTerms[2*onlyPositive] == 0 );
-                            s << ( indicVar[onlyPositive] == 1 then faGain[adderCount] - shiftTerms[2*onlyPositive+1] == 0 );
+                            // indicator constraints variant
+                            
+                            if(useBigM) {
+                                s << ( shiftTerms[2*onlyPositive+1] - bigM + bigM*indicVar[onlyPositive] - faGain[adderCount] <= 0 );
+                                s << ( faGain[adderCount] - shiftTerms[2*onlyPositive+1] - bigM + bigM*indicVar[onlyPositive] <= 0 );
+                                s << ( shiftTerms[2*onlyPositive] - bigM*indicVar[onlyPositive] - faGain[adderCount] <= 0 );
+                                s << ( faGain[adderCount] - shiftTerms[2*onlyPositive] - bigM*indicVar[onlyPositive] <= 0 );
+                            } else {
+                                s << ( indicVar[onlyPositive] == 1 then faGain[adderCount] - shiftTerms[2*onlyPositive+1] == 0 );
+                                s << ( indicVar[onlyPositive] == 0 then faGain[adderCount] - shiftTerms[2*onlyPositive] == 0 );
+                            }
+
                             ++onlyPositive;
                         }
                         ++adderCount;

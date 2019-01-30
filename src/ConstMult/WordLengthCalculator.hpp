@@ -18,7 +18,7 @@ namespace flopoco {
                 double epsilon) : adder_graph_(adder_graph), wIn_(wIn), epsilon_(epsilon) {}
 
             ~WordLengthCalculator() {}
-            map<pair<mpz_class, int>, vector<int> > optimizeTruncation();
+            map<pair<mpz_class, int>, vector<int> > optimizeTruncation(bool useBigM = false);
 
         private:
             PAGSuite::adder_graph_t adder_graph_;
