@@ -178,10 +178,10 @@ namespace flopoco {
                         s << ( edgeError[i] - t >= 0 );
                         s << ( edgeError[i] - truncError[i] >= 0);
                         if(useBigM) {
-                            s << ( t - bigM - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
-                            s << ( edgeError[i] - t - bigM + bigM*indicatorAdder[adderCount] <= 0 );
-                            s << ( truncError[i] - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
-                            s << ( edgeError[i] - truncError[i] - bigM*indicatorAdder[adderCount] <= 0 );
+                            s << ( truncError[i] - bigM - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
+                            s << ( edgeError[i] - truncError[i] - bigM + bigM*indicatorAdder[adderCount] <= 0 );
+                            s << ( t - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
+                            s << ( edgeError[i] - t - bigM*indicatorAdder[adderCount] <= 0 );
                         } else {
                             s << ( indicatorAdder[adderCount] == 0 then edgeError[i] - t == 0 );
                             s << ( indicatorAdder[adderCount] == 1 then edgeError[i] - truncError[i] == 0 );
