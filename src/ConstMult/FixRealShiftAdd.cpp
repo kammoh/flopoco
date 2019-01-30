@@ -72,6 +72,7 @@ namespace flopoco{
 		vhdl << "-- This operator multiplies by " << constant << endl;
 
 		srcFileName="FixRealShiftAdd";
+		setNameWithFreqAndUID("FixRealShiftAdd");
 
 		// Convert the input string into a sollya evaluation tree
 		sollya_obj_t node;
@@ -151,6 +152,7 @@ namespace flopoco{
 		mpz_class mpzCIntBest;
 		int shiftTotalBest;
 		string adderGraphStrBest;
+		string trunactionStrBest;
 
 		for(int k=-(1<<q); k <= (1<<q); k++)
 		{
@@ -235,14 +237,14 @@ namespace flopoco{
 			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
 			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
 
-			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,"",wIn,cout);
+//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,"",wIn,cout);
 
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
 			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilonMultNormInt);
 			wordSizeMap = wlc.optimizeTruncation();
 			REPORT(DEBUG, "Finished computing word sizes of truncated MCM");
-			if (UserInterface::verbose >= INFO)
+			if (UserInterface::verbose >= DETAILED)
 			{
 				for (auto &it : wordSizeMap)
 				{
@@ -254,11 +256,12 @@ namespace flopoco{
 			}
 			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(wordSizeMap);
 
-			REPORT(INFO, "  truncation: " << truncationReg.convertToString());
+			string trunactionStr = truncationReg.convertToString();
+			REPORT(INFO, "  truncation: " << trunactionStr);
 			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
 			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
 
-			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,truncationReg,wIn,cout);
+//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,truncationReg,wIn,cout);
 
 			if(noOfFullAdders < noOfFullAddersBest)
 			{
@@ -266,14 +269,41 @@ namespace flopoco{
 				mpzCIntBest = mpzCInt;
 				shiftTotalBest = shiftTotal;
 				adderGraphStrBest = adderGraphStr;
+				trunactionStrBest = trunactionStr;
 			}
 
 		}
-		REPORT(INFO, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with " << noOfFullAddersBest << " full adders, adder graph " << adderGraphStrBest);
+		REPORT(INFO, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with " << noOfFullAddersBest << " full adders")
+		REPORT(INFO, "  adder graph " << adderGraphStrBest);
+		REPORT(INFO, "  truncations:" << trunactionStrBest);
 
+		//VHDL code generation:
+		int wOut=msbOut-lsbOut+1;
 
+		mpfr_t tmp;
+		mpfr_init2(tmp, 100);
+		mpfr_set_z(tmp,mpzCIntBest.get_mpz_t(),GMP_RNDN);
+		mpfr_log2(tmp,tmp,GMP_RNDN);
+		mpfr_ceil(tmp,tmp);
+		long wC = mpfr_get_si(tmp,GMP_RNDN);
 
+		int wConstMultRes=wIn+wC;
 
+		addInput("X",wIn);
+		addOutput("R",wOut);
+
+		declare("constMultRes",wConstMultRes);
+
+		stringstream parameters;
+		parameters << "wIn=" << wIn << " graph=" << adderGraphStrBest << " truncations=" << trunactionStrBest;
+		string inPortMaps = "x_in0=>X";
+		stringstream outPortMaps;
+		outPortMaps << "x_out0_c" << mpzCIntBest << "=>constMultRes";
+
+		cout << "outPortMaps: " << outPortMaps.str() << endl;
+		newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps, outPortMaps.str());
+
+		vhdl << tab << "R <= constMultRes(" << wConstMultRes-1 << " downto " << wConstMultRes-wOut << ");" << endl;
 	}
 
 
