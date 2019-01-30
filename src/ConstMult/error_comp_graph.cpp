@@ -169,7 +169,8 @@ namespace IntConstMultShiftAdd_TYPES {
 			int truncation_i = trunc[i];
 			int64_t shift_i = addsub->input_shifts[i];
 			int real_loss = max(truncation_i - kz_i, 0);
-			mpz_class loss_i = ((mpz_class{1} << real_loss) - 1) << shift_i;
+			int extra_shift = truncation_i - real_loss;
+			mpz_class loss_i = ((mpz_class{1} << real_loss) - 1) << (shift_i + extra_shift);
 			if (addsub->input_is_negative[i]) {
 				error.negative_error += loss_i;
 			} else {
