@@ -66,22 +66,20 @@ IntConstMultShiftAdd::IntConstMultShiftAdd(
 
     if(pipelined_realization_str.empty()) return; //in case the realization string is not defined, don't further process it.
 
-    ProcessIntConstMultShiftAdd(target, pipelined_realization_str, truncations);
+	ProcessIntConstMultShiftAdd(target, pipelined_realization_str, truncations, epsilon);
 };
 
 void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 		Target* target, 
 		string pipelined_realization_str,
-		string truncations
+        string truncations,
+        int epsilon
 	)
 {
     REPORT( DETAILED, "IntConstMultShiftAdd started with syncoptions:")
 	REPORT( DETAILED, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
 	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
-	IntConstMultShiftAdd_TYPES::TruncationRegister truncationMap(truncations);
-
-    REPORT( DETAILED, "truncationMap is " << truncationMap.convertToString());
 
     needs_unisim = false;
     emu_conf = 0;
@@ -110,20 +108,18 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
-        int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
+		IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(truncations);
 
-		REPORT( INFO, "adder graph requires " << noOfFullAdders << " full adders");
+		if(truncations.empty() && (epsilon > 0.0))
+		{
+			REPORT(INFO,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
 
-        if(epsilon > 0.0)
-        {
-            REPORT(INFO,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
+			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
-            map<pair<mpz_class, int>, vector<int> > wordSizeMap;
-
-            WordLengthCalculator wlc = WordLengthCalculator(pipelined_adder_graph, wIn, epsilon);
-            wordSizeMap = wlc.optimizeTruncation();
-            REPORT(INFO, "Finished computing word sizes of truncated MCM");
-            if(UserInterface::verbose >= INFO)
+			WordLengthCalculator wlc = WordLengthCalculator(pipelined_adder_graph, wIn, epsilon);
+			wordSizeMap = wlc.optimizeTruncation();
+			REPORT(INFO, "Finished computing word sizes of truncated MCM");
+			if(UserInterface::verbose >= INFO)
 			{
 				for(auto & it : wordSizeMap) {
 					std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
@@ -132,7 +128,18 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 					std::cout << std::endl;
 				}
 			}
-        }
+
+			truncationReg = IntConstMultShiftAdd_TYPES::TruncationRegister(wordSizeMap);
+		}
+
+		REPORT( DETAILED, "truncationReg is " << truncationReg.convertToString());
+
+		int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
+		REPORT( INFO, "adder graph without truncation requires " << noOfFullAdders << " full adders");
+
+        noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false,truncationReg);
+		REPORT( INFO, "truncated adder graph requires " << noOfFullAdders << " full adders");
+
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
         noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
@@ -203,8 +210,8 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 				) {
 				//Store the truncation if it exists
 				int computedConstant = nodePtr->output_factor[0][0];
-				t->truncations = truncationMap.getTruncationFor(
-						computedConstant, 
+				t->truncations = truncationReg.getTruncationFor(
+						computedConstant,
 						nodePtr->stage
 					);
 			}
@@ -220,7 +227,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
             identifyOutputConnections(nodePtr ,additionalNodeInfoMap);
         }
         printAdditionalNodeInfo(additionalNodeInfoMap);
-        
+
         //START BUILDING NODES
         REPORT(DETAILED,"building nodes..")
                 int unpiped_stage_count=0;

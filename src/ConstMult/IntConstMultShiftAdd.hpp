@@ -71,7 +71,8 @@ namespace flopoco {
         void ProcessIntConstMultShiftAdd(
 				Target* target, 
 				string pipelined_realization_str,
-				string truncations = ""
+				string truncations="",
+				int epsilon=0
 			);
 
 
