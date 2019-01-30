@@ -15,10 +15,8 @@
  */
 /*
 
-Remaining 1-ulp bug:
-flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
-It is the limit case of removing one table altogether because it contributes nothng.
-I don't really understand
+
+
 
 */
 
