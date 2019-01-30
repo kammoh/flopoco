@@ -25,6 +25,28 @@ int IntConstMultShiftAdd_BASE::noOfInputs = 0;
 
 vector<int> IntConstMultShiftAdd_TYPES::TruncationRegister::nullVec_ = {0,0,0};
 
+TruncationRegister::TruncationRegister(map<pair<mpz_class, int>, vector<int> > &truncationVal)
+{
+	truncationVal_ = truncationVal; //copy truncation values
+}
+
+TruncationRegister::TruncationRegister(string truncationList)
+{
+	static const string fieldDelimiter{";"};
+	auto getNextField = [](string& val)->string{
+		long unsigned int offset = val.find(fieldDelimiter);
+		string ret = val.substr(0, offset);
+		if (offset != string::npos) {
+			offset += 1;
+		}
+		val.erase(0, offset);
+		return ret;
+	};
+	while(truncationList.length() > 0)
+		parseRecord(getNextField(truncationList));
+}
+
+
 void TruncationRegister::parseRecord(string record)
 {
 	static const string identDelimiter{':'};
@@ -72,21 +94,6 @@ vector<int> const & TruncationRegister::getTruncationFor(
 	return iter->second;
 }
 
-TruncationRegister::TruncationRegister(string truncationList)
-{
-	static const string fieldDelimiter{";"};
-	auto getNextField = [](string& val)->string{
-		long unsigned int offset = val.find(fieldDelimiter);
-		string ret = val.substr(0, offset);
-		if (offset != string::npos) {
-			offset += 1;
-		}
-		val.erase(0, offset);
-		return ret;
-	};
-	while(truncationList.length() > 0)
-		parseRecord(getNextField(truncationList));
-}
 
 string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {

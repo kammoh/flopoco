@@ -230,7 +230,7 @@ namespace flopoco{
 
 			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilonMultNormInt);
 			wordSizeMap = wlc.optimizeTruncation();
-			REPORT(INFO, "Finished computing word sizes of truncated MCM");
+			REPORT(DEBUG, "Finished computing word sizes of truncated MCM");
 			if (UserInterface::verbose >= INFO)
 			{
 				for (auto &it : wordSizeMap)
@@ -242,17 +242,9 @@ namespace flopoco{
 				}
 			}
 
-//			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg;
+			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(wordSizeMap);
 
-			vector<int> truncats;
-
-//			truncationReg.setTruncation()
-//			truncats.push_back(getNextField(valuesStr).get_si());
-//			truncationReg
-//			(factor, stage), truncats));
-
-
-//			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
+			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
 			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
 
 
