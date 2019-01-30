@@ -90,7 +90,7 @@ TruncationRegister::TruncationRegister(string truncationList)
 
 string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    return "";
+	return "";
 }
 
 string IntConstMultShiftAdd_REG::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)

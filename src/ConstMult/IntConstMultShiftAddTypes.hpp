@@ -27,12 +27,14 @@ namespace IntConstMultShiftAdd_TYPES {
 	class TruncationRegister {
 		public:
 			TruncationRegister(string truncationList);
+			TruncationRegister(map<pair<mpz_class, int>, vector<int> > &truncationVal);
+
 			vector<int> const & getTruncationFor(mpz_class factor, int stage);
 			vector<int> const & getTruncationFor(int factor, int stage) {
 				return getTruncationFor(mpz_class(factor), stage);
 			}
 
-		private:
+	private:
 			void parseRecord(string record);
 			map<pair<mpz_class, int>, vector<int> > truncationVal_;
 			static vector<int> nullVec_;

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <pagsuite/adder_graph.h>
+#include "IntConstMultShiftAddTypes.hpp"
 
 namespace IntConstMultShiftAdd_TYPES {
 	int getNodeCost(
@@ -20,6 +21,13 @@ namespace IntConstMultShiftAdd_TYPES {
 			int  out_word_size,
 			vector<int>& groupWordSize
 		);
+
+	int getGraphAdderCost(
+			PAGSuite::adder_graph_t & adder_graph,
+			int inputWordSize,
+			bool unsignedInput,
+			TruncationRegister &truncReg
+	);
 
 	int getGraphAdderCost(
 		PAGSuite::adder_graph_t & adder_graph,			

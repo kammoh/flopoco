@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <iostream>
 #include "adder_cost.hpp"
-#include "IntConstMultShiftAddTypes.hpp"
 
 namespace IntConstMultShiftAdd_TYPES {
 int getNodeCost(
@@ -50,18 +49,24 @@ int getGraphAdderCost(
 	)
 {
 	TruncationRegister truncReg(truncations);
+	return getGraphAdderCost(adder_graph, inputWordSize, unsignedInput, truncReg);
+}
+
+int IntConstMultShiftAdd_TYPES::getGraphAdderCost(PAGSuite::adder_graph_t &adder_graph, int inputWordSize,
+												  bool unsignedInput, TruncationRegister &truncReg)
+{
 	int totalCost = 0;
 	for (auto nodePtr : adder_graph.nodes_list) {
 		if (PAGSuite::is_a<PAGSuite::adder_subtractor_node_t>(*nodePtr)) {
 			int64_t factor = nodePtr->output_factor[0][0];
 //			cout << "Number of adders for factor " << factor << " : ";
-			PAGSuite::adder_subtractor_node_t* t = 
-				(PAGSuite::adder_subtractor_node_t*) nodePtr;
-			int nodeOpSize = computeWordSize(t, inputWordSize);	
+			PAGSuite::adder_subtractor_node_t* t =
+					(PAGSuite::adder_subtractor_node_t*) nodePtr;
+			int nodeOpSize = computeWordSize(t, inputWordSize);
 			vector<int> truncationsVal = truncReg.getTruncationFor(
-					t->output_factor[0][0],	
+					t->output_factor[0][0],
 					t->stage
-				);
+			);
 			vector<int> shiftsVal;
 			for (auto shift : t->input_shifts) {
 				shiftsVal.push_back(shift);
@@ -74,8 +79,8 @@ int getGraphAdderCost(
 						computeWordSize(
 								prevPtr,
 								inputWordSize
-							)
-					);
+						)
+				);
 			}
 			if (unsignedInput) {
 				vector<int> groupWordSize;
@@ -86,7 +91,7 @@ int getGraphAdderCost(
 						isNegVal,
 						nodeOpSize,
 						groupWordSize
-					);
+				);
 				size_t nb_groups = groups.size();
 				for (size_t i = 0 ; i < nb_groups ; ++i) {
 					auto cur_group = groups[i];
@@ -104,7 +109,7 @@ int getGraphAdderCost(
 								truncationsGroup,
 								shiftsGroup,
 								isNegGroup
-							);
+						);
 					}
 				}
 			} else {
@@ -113,11 +118,11 @@ int getGraphAdderCost(
 						truncationsVal,
 						shiftsVal,
 						isNegVal
-					);
+				);
 //				cout << tmp << endl;
 				totalCost += tmp;
 			}
-		}	
+		}
 	}
 
 	return totalCost;
@@ -169,4 +174,5 @@ vector<vector<size_t>> splitNonOverlap(
 	ret.push_back(curSet);
 	return ret;
 }
+
 }
