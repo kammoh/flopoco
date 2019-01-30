@@ -81,6 +81,8 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
 	IntConstMultShiftAdd_TYPES::TruncationRegister truncationMap(truncations);
 
+    REPORT( DETAILED, "truncationMap is " << truncationMap.convertToString());
+
     needs_unisim = false;
     emu_conf = 0;
 
@@ -108,7 +110,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
-        int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false,truncations);
+        int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
 
 		REPORT( INFO, "adder graph requires " << noOfFullAdders << " full adders");
 
@@ -899,7 +901,7 @@ namespace flopoco {
                           sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
                           sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
                           sync_every(int)=1: Count of stages after which will be pipelined;"
-						  "truncations(string)=\"\": provides the truncations for subvalues",
+						  "truncations(string)=\"\": provides the truncations for subvalues", //format: const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...",
                           "",
                           IntConstMultShiftAdd::parseArguments
       );

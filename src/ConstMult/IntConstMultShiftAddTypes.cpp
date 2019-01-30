@@ -94,8 +94,30 @@ vector<int> const & TruncationRegister::getTruncationFor(
 	return iter->second;
 }
 
+string TruncationRegister::convertToString()
+{
+	stringstream truncStr;
 
-string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
+	//format: const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...
+	//data structure: map<pair<mpz_class, int>, vector<int> >
+	bool firstIter=true;
+	for(auto& tv : truncationVal_)
+	{
+		if(!firstIter) truncStr << ";";
+		truncStr << tv.first.first << "," << tv.first.second << ":";
+		for(unsigned i=0; i < tv.second.size(); i++)
+		{
+			truncStr << tv.second[i];
+			if(i != tv.second.size()-1) truncStr << ",";
+		}
+		firstIter=false;
+	}
+
+	return truncStr.str();
+}
+
+
+	string IntConstMultShiftAdd_INPUT::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
 	return "";
 }

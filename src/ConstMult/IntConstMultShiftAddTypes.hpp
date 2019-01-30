@@ -33,6 +33,8 @@ namespace IntConstMultShiftAdd_TYPES {
 				return getTruncationFor(mpz_class(factor), stage);
 			}
 
+			string convertToString();
+
 	private:
 			void parseRecord(string record);
 			map<pair<mpz_class, int>, vector<int> > truncationVal_;
