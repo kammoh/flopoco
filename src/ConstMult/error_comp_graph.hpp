@@ -8,14 +8,22 @@
 using namespace std;
 
 namespace IntConstMultShiftAdd_TYPES {
-void print_aligned_word_graph(
-		PAGSuite::adder_graph_t & adder_graph,	
-		string truncations,
-		int input_word_size,
-		ostream & output_stream
+
+	void print_aligned_word_graph(
+			PAGSuite::adder_graph_t & adder_graph,
+			TruncationRegister truncationReg,
+			int input_word_size,
+			ostream & output_stream
 	);
 
-void print_aligned_word_node(
+	void print_aligned_word_graph(
+			PAGSuite::adder_graph_t & adder_graph,
+			string truncations,
+			int input_word_size,
+			ostream & output_stream
+	);
+
+	void print_aligned_word_node(
 		PAGSuite::adder_graph_base_node_t* node,
 		TruncationRegister const & truncationReg,
 		int right_shift,

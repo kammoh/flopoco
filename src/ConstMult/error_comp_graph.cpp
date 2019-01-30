@@ -59,13 +59,10 @@ namespace IntConstMultShiftAdd_TYPES {
 	}
 
 	void print_aligned_word_graph(
-			adder_graph_t & adder_graph,
-			string truncations,
-			int input_word_size,
-			ostream & output_stream
-		)
+			PAGSuite::adder_graph_t &adder_graph,
+			TruncationRegister truncationReg, int input_word_size,
+			ostream &output_stream)
 	{
-		TruncationRegister truncationReg(truncations);
 		set<input_node_t*> inputs;
 		set<output_node_t*> outputs;
 
@@ -83,8 +80,8 @@ namespace IntConstMultShiftAdd_TYPES {
 		}
 
 		for (auto outNodePtr : outputs) {
-			output_stream << "Decomposition for " << 
-				outNodePtr->output_factor[0][0] << ":" << endl << endl ;
+			output_stream << "Decomposition for " <<
+						  outNodePtr->output_factor[0][0] << ":" << endl << endl ;
 			print_aligned_word_node(
 					outNodePtr,
 					truncationReg,
@@ -93,9 +90,21 @@ namespace IntConstMultShiftAdd_TYPES {
 					input_word_size,
 					0,
 					output_stream
-				);
+			);
 			output_stream << endl;
 		}
 	}
+
+	void print_aligned_word_graph(
+			adder_graph_t & adder_graph,
+			string truncations,
+			int input_word_size,
+			ostream & output_stream
+		)
+	{
+		TruncationRegister truncationReg(truncations);
+		print_aligned_word_graph(adder_graph,truncationReg,input_word_size,output_stream);
+	}
+
 }
 

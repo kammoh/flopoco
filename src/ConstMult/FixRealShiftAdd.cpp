@@ -45,6 +45,7 @@ I don't really understand
 #include "pagsuite/rpag.h"
 
 #include "adder_cost.hpp"
+#include "error_comp_graph.hpp"
 #include "WordLengthCalculator.hpp"
 #include "IntConstMultShiftAddTypes.hpp"
 
@@ -232,6 +233,8 @@ namespace flopoco{
 			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
 			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
 
+			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,"",wIn,cout);
+
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
 			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilonMultNormInt);
@@ -247,11 +250,12 @@ namespace flopoco{
 					std::cout << std::endl;
 				}
 			}
-
 			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(wordSizeMap);
 
 			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
 			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
+
+			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,truncationReg,wIn,cout);
 
 			if(noOfFullAdders < noOfFullAddersBest)
 			{
