@@ -15,8 +15,27 @@
  */
 /*
 
+TODO: IntIntKCM is a special case of FixReal.
+This is the good way of getting rid of IntIntKCM.
 
+Experiment:  fpc FixRealKCM frequency=100 signedinput=1 msbin=23 lsbin=0 lsbout=0 constant=13176795 
+We have the good operator interface.
+The tables are full of zeroes, including a few gard bits that are useless in this case and a round bit.
+Therefore the bit heap is larger than should be.
+Still, we get 188 LUTs where Walters report that Logicore does it in 171
+The delay is quite bad (8ns).
 
+Instead of resurrecting IntIntKCM, let's do the following
+- compute lsbC such that C=I*2^lsbC and I is an integer
+(this lsbC doesn't always exist, e.g. if we input 1/3, so we must place a reasonable limit)
+For an odd integer we will get lsbC=0.
+- compute m_c = intlog2(I)
+- If lsbOut <= lsbC + lsbIn then we have an exact operation.
+ We can actually directly output zeroes for the (lsbC+lsbIn) - lsbOut bits.
+- For each table, check if it is exact (it will be in the case of an exact operation)
+ and avoid adding zero bits to the bit heap.
+
+Then we have a working IntIntKCM, that even does useful optimizations for all sorts of constants.
 
 */
 

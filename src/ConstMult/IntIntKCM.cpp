@@ -7,7 +7,7 @@
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
-  2008-2010.
+  2008-2010, 2019
   All rights reserved.
 
  */
@@ -32,8 +32,8 @@ using namespace std;
 
 namespace flopoco{
 
-	IntIntKCM::IntIntKCM(Target* target, int wIn, mpz_class C, bool inputTwosComplement, map<string, double> inputDelays):
-		Operator(target, inputDelays), wIn_(wIn), signedInput_(inputTwosComplement), C_(C), inputDelays_(inputDelays)
+	IntIntKCM::IntIntKCM(OperatorPtr parentOp, Target* target, int wIn, mpz_class C, bool inputTwosComplement):
+		Operator(parentOp, target), wIn_(wIn), signedInput_(inputTwosComplement), C_(C)
 	{
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2009,2010)");
 		srcFileName="IntIntKCM";
@@ -73,7 +73,7 @@ namespace flopoco{
 
 		REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables, input sizes:  for the first tables, " << lutWidth << ", for the last table: " << lastLutWidth);
 
-		setCriticalPath( getMaxInputDelays(inputDelays) );
+		// TODO		setCriticalPath( getMaxInputDelays(inputDelays) );
 
 		// First get rid of the easy case when there is just one table
 		if(nbOfTables==1)
@@ -91,7 +91,6 @@ namespace flopoco{
 			vhdl << instance(lastTable, "KCMTable");
 
 			vhdl << tab << "R <= Ri;" <<endl;
-			getOutDelayMap()["R"] = getCriticalPath();
 		}
 		else
 		{
@@ -232,10 +231,9 @@ namespace flopoco{
 
 	//operator incorporated into a global compression
 	//	for use as part of a bigger operator
-	IntIntKCM::IntIntKCM(Operator* parentOp_, Target* target, Signal* multiplicandX, int wIn, mpz_class C, bool inputTwosComplement, BitHeap* bitHeap_, map<string, double> inputDelays):
-		Operator(target, inputDelays), wIn_(wIn), signedInput_(inputTwosComplement), C_(C),
-			bitHeap(bitHeap_), parentOp(parentOp_),
-			inputDelays_(inputDelays)
+	IntIntKCM::IntIntKCM(Operator* parentOp_, Target* target, Signal* multiplicandX, int wIn, mpz_class C, bool inputTwosComplement, BitHeap* bitHeap_):
+		Operator(target), wIn_(wIn), signedInput_(inputTwosComplement), C_(C),
+			bitHeap(bitHeap_), parentOp(parentOp_)
 	{
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2009,2010)");
 		srcFileName="IntIntKCM";
@@ -424,5 +422,67 @@ namespace flopoco{
 		tc->addExpectedOutput("R", svR);
 	}
 
+	
+	TestList FixRealKCM::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+			
+		if(index==-1) 
+		{ // The unit tests
 
+			// TODO!
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
+
+	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
+	{
+		int lsbIn, lsbOut, msbIn;
+		bool signedInput;
+		double targetUlpError;
+		string constant;
+		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		UserInterface::parseString(args, "constant", &constant);
+		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		UserInterface::parseInt(args, "msbIn", &msbIn);
+		UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
+		return new FixRealKCM(
+													parentOp,
+													target, 
+													signedInput,
+													msbIn,
+													lsbIn,
+													lsbOut,
+													constant, 
+													targetUlpError
+													);
+	}
+
+	void FixRealKCM::registerFactory()
+	{
+		UserInterface::add(
+				"FixRealKCM",
+				"Table based real multiplier. Output size is computed",
+				"ConstMultDiv",
+				"",
+				"signedInput(bool): 0=unsigned, 1=signed; \
+				msbIn(int): weight associated to most significant bit (including sign bit);\
+				lsbIn(int): weight associated to least significant bit;\
+				lsbOut(int): weight associated to output least significant bit; \
+				constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
+				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
+				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
+				FixRealKCM::parseArguments,
+				FixRealKCM::unitTest
+		);
+	}
+
+	
 }
