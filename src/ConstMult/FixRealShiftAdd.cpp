@@ -46,6 +46,7 @@ I don't really understand
 
 #include "adder_cost.hpp"
 #include "WordLengthCalculator.hpp"
+#include "IntConstMultShiftAddTypes.hpp"
 
 using namespace std;
 
@@ -208,8 +209,8 @@ namespace flopoco{
 
 			ios::fmtflags old_settings = cout.flags();
 			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << ((int) mpfr_get_d(s, GMP_RNDN)-shift)
-							  << ", mpEpsilonCoeff=" << std::fixed << mpfr_get_d(mpEpsilonCoeff,GMP_RNDN)
-							  << ", mpEpsilonMult=" << std::fixed << mpfr_get_d(mpEpsilonMult,GMP_RNDN)
+							  << ", mpEpsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff,GMP_RNDN)
+							  << ", mpEpsilonMult=" << std::scientific << mpfr_get_d(mpEpsilonMult,GMP_RNDN)
 							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm,GMP_RNDN)
 							  << ", mpEpsilonMultNorm=" << std::fixed << mpfr_get_d(mpEpsilonMultNorm,GMP_RNDN));
 			cout.flags(old_settings);
@@ -225,7 +226,7 @@ namespace flopoco{
 			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
 			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
 
-			map<pair<int, int>, vector<int> > wordSizeMap;
+			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
 			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilonMultNormInt);
 			wordSizeMap = wlc.optimizeTruncation();
@@ -241,9 +242,18 @@ namespace flopoco{
 				}
 			}
 
-			string truncations=""; //has to be filled!
-			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncations);
-			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
+//			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg;
+
+			vector<int> truncats;
+
+//			truncationReg.setTruncation()
+//			truncats.push_back(getNextField(valuesStr).get_si());
+//			truncationReg
+//			(factor, stage), truncats));
+
+
+//			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
+			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
 
 
 		}
