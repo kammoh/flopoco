@@ -110,15 +110,14 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 
 		IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(truncations);
 
-		if(truncations.empty() && (epsilon > 0.0))
+		if(truncations.empty() && (epsilon > 0))
 		{
 			REPORT(INFO,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
 
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
 			WordLengthCalculator wlc = WordLengthCalculator(pipelined_adder_graph, wIn, epsilon);
-            bool useBigM = true;
-			wordSizeMap = wlc.optimizeTruncation(useBigM);
+			wordSizeMap = wlc.optimizeTruncation();
 			REPORT(INFO, "Finished computing word sizes of truncated MCM");
 			if(UserInterface::verbose >= INFO)
 			{

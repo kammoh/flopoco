@@ -18,7 +18,7 @@ using namespace std;
 using namespace PAGSuite;
 
 namespace flopoco {
-    map<pair<mpz_class, int>, vector<int> > WordLengthCalculator::optimizeTruncation(bool useBigM)
+    map<pair<mpz_class, int>, vector<int> > WordLengthCalculator::optimizeTruncation()
     {
             struct edge_info { 
                 pair<adder_graph_base_node_t*, adder_graph_base_node_t*> nodes; 
@@ -69,6 +69,13 @@ namespace flopoco {
                 ScaLP::Solver s = ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
                 s.quiet = true;
 //                s.quiet = false;
+
+                bool useBigM;
+				if(!s.featureSupported(ScaLP::Feature::INDICATOR_CONSTRAINTS))
+                {
+                    useBigM = true;
+                    cerr << "big-M constraints were activated as the selected solver does not support indicator constraints" << endl;
+                }
 
                 std::vector<ScaLP::Variable> truncPosition;
                 std::vector<ScaLP::Variable> truncError;

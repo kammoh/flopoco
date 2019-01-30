@@ -86,7 +86,7 @@ namespace flopoco{
 				"adder_graph=" << adderGraphComplete.str()
                 );
 
-		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str());
+		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str(),"",epsilon);
 
         ostringstream name;
         name << "IntConstMultShiftAddOpt_" << coeff << "_" << wIn;

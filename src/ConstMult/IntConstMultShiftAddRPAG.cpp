@@ -82,7 +82,7 @@ namespace flopoco{
 
 		REPORT(INFO, "adderGraph=" << adderGraph);
 
-		ProcessIntConstMultShiftAdd(target,adderGraph);
+		ProcessIntConstMultShiftAdd(target,adderGraph,"",epsilon);
 
         ostringstream name;
         name << "IntConstMultRPAG_" << coeff << "_" << wIn;

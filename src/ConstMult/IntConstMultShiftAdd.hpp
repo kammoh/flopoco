@@ -29,7 +29,7 @@ namespace flopoco {
 				int syncEveryN_=1,
 				bool syncMux_=true,
 				int  epsilon_=0,
-				string truncations="none"
+				string truncations=""
 			);
 
         ~IntConstMultShiftAdd() {}
