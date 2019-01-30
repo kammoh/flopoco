@@ -246,7 +246,7 @@ namespace IntConstMultShiftAdd_TYPES {
 	}
 
 	ErrorStorage getErrorForNode(
-			adder_graph_base_node_t* base_node,
+			output_node_t* output_node,
 			TruncationRegister truncReg
 		)
 	{
@@ -255,7 +255,7 @@ namespace IntConstMultShiftAdd_TYPES {
 		map<adder_graph_base_node_t*, ErrorStorage> errors;
 		map<adder_graph_base_node_t*, int> propagated_zeros;
 		df_accumulate_error(
-				base_node, 
+				output_node, 
 				truncReg,
 				visited,
 				errors,

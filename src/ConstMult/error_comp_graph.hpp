@@ -52,8 +52,8 @@ namespace IntConstMultShiftAdd_TYPES {
 			ErrorStorage& tot_error
 		);
 
-	ErrorStorage getErrorForNode(
-			adder_graph_base_node_t* base_node,
+	ErrorStorage getAccumulatedErrorFor(
+			output_node_t* output_node,
 			TruncationRegister truncReg
 		);
 
