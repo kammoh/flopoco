@@ -18,13 +18,13 @@ using namespace std;
 using namespace PAGSuite;
 
 namespace flopoco {
-    map<pair<int, int>, vector<int> > WordLengthCalculator::optimizeTruncation()
+    map<pair<mpz_class, int>, vector<int> > WordLengthCalculator::optimizeTruncation()
     {
             struct edge_info { 
                 pair<adder_graph_base_node_t*, adder_graph_base_node_t*> nodes; 
                 int wEdge; 
-                int64_t shift; 
-                int64_t constant; 
+                int64_t shift;
+				mpz_class constant;
             };
             vector<edge_info> edges;
 
@@ -51,7 +51,7 @@ namespace flopoco {
                         edges.push_back({ make_pair(currNode->inputs[i], it), 
                                           computeWordSize(currNode->inputs[i], wIn_),
                                           currNode->input_shifts[i],
-                                          currNode->inputs[i]->output_factor[0][0]
+										  mpz_class(std::to_string(currNode->inputs[i]->output_factor[0][0]))
                                         });
                     }
                 } else if(is_a<register_node_t>(*it) || is_a<output_node_t>(*it)) {
@@ -59,7 +59,7 @@ namespace flopoco {
                     edges.push_back( { make_pair(currNode->input, it),
                                        computeWordSize(currNode->input, wIn_),
                                        currNode->input_shift,
-                                       currNode->input->output_factor[0][0]       
+									   mpz_class(std::to_string(currNode->input->output_factor[0][0]))
                     });
                 }
                 
@@ -238,7 +238,7 @@ namespace flopoco {
                 s.writeLP("flopoco_WLCalculator.lp");
                 ScaLP::status stat = s.solve();
                 //std::cout << "The result is " << stat << std::endl;
-                if(stat == ScaLP::status::OPTIMAL || stat == ScaLP::status::FEASIBLE)
+                if(stat == ScaLP::status::OPTIMAL || stat == ScaLP::status::FEASIBLE || stat == ScaLP::status::TIMEOUT_FEASIBLE)
                 {
                     ScaLP::Result r = s.getResult();
 
