@@ -18,6 +18,8 @@ namespace IntConstMultShiftAdd_TYPES {
 
 			ErrorStorage shift(int shift);
 
+			ErrorStorage():positive_error{0}, negative_error{0}{}
+
 			ErrorStorage& operator+=(ErrorStorage const & rhs);
 	};
 
@@ -39,22 +41,22 @@ namespace IntConstMultShiftAdd_TYPES {
 			adder_graph_base_node_t* base_node,
 			TruncationRegister const & truncReg,
 			set<adder_graph_base_node_t*>& visited,
-			map<adder_graph_base_node_t*, ErrorStorage> errors,
-			map<adder_graph_base_node_t*, int> propagated_zeros
+			map<adder_graph_base_node_t*, ErrorStorage>& errors,
+			map<adder_graph_base_node_t*, int>& propagated_zeros
 		);
 
 	void df_accumulate_error(
 			adder_graph_base_node_t* base_node,
 			TruncationRegister const & truncReg,
 			set<adder_graph_base_node_t*>& visited,
-			map<adder_graph_base_node_t*, ErrorStorage> errors,
-			map<adder_graph_base_node_t*, int> propagated_zeros,
+			map<adder_graph_base_node_t*, ErrorStorage>& errors,
+			map<adder_graph_base_node_t*, int>& propagated_zeros,
 			ErrorStorage& tot_error
 		);
 
 	ErrorStorage getAccumulatedErrorFor(
 			output_node_t* output_node,
-			TruncationRegister truncReg
+			TruncationRegister const & truncReg
 		);
 
 	void print_aligned_word_node(

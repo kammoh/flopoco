@@ -127,3 +127,31 @@ BOOST_AUTO_TEST_CASE(LongGraphUntruncated) {
 	BOOST_REQUIRE_MESSAGE(output_stream.str() == expexted_result, 
 			"Expecting [\n" +expexted_result + "\n] got [\n" + output_stream.str() +"\n]" );
 }
+
+BOOST_AUTO_TEST_CASE(ErrorCostNoTruncation) {
+	adder_graph_t adder_graph;
+	string graph_descr = "{{'R',[1],1,[1],0},{'A',[3],1,[1],0,0,[1],0,1},{'A',[11],2,[1],1,3,[3],1,0},{'O',[11],2,[11],2,0}}";
+
+	adder_graph.parse_to_graph(graph_descr);
+	string truncations = "";
+	
+	TruncationRegister trunc(truncations);
+	output_node_t* out_node;
+	for (auto nodePtr : adder_graph.nodes_list) {
+		if (is_a<output_node_t>(*nodePtr)) {
+			out_node = (output_node_t*) nodePtr;
+		}
+	}
+
+	auto error = getAccumulatedErrorFor(out_node, trunc);
+
+	BOOST_REQUIRE_MESSAGE(
+			error.positive_error == mpz_class(0), 
+			"The positive error of an untruncated graph should be zero"
+		);
+	
+	BOOST_REQUIRE_MESSAGE(
+			error.negative_error == mpz_class(0), 
+			"The negative error of an untruncated graph should be zero"
+		);
+}

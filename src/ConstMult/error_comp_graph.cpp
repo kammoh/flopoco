@@ -113,15 +113,15 @@ namespace IntConstMultShiftAdd_TYPES {
 			adder_graph_base_node_t* base_node,
 			TruncationRegister const & truncReg,
 			set<adder_graph_base_node_t*>& visited,
-			map<adder_graph_base_node_t*, ErrorStorage> errors,
-			map<adder_graph_base_node_t*, int> propagated_zeros
+			map<adder_graph_base_node_t*, ErrorStorage>& errors,
+			map<adder_graph_base_node_t*, int>& propagated_zeros
 		)
 	{
 		if (visited.count(base_node) > 0) {
 			return;
 		}
 		if (is_a<input_node_t>(*base_node)) {
-			errors.insert(make_pair(base_node, ErrorStorage{0, 0}));
+			errors.insert(make_pair(base_node, ErrorStorage{}));
 			propagated_zeros.insert(make_pair(base_node, 0));
 			visited.insert(base_node);
 			return;
@@ -132,7 +132,7 @@ namespace IntConstMultShiftAdd_TYPES {
 			if (visited.count(t->input) < 1) {
 				df_fill_error(t->input, truncReg, visited, errors, propagated_zeros);
 			}
-			errors.insert(make_pair(base_node, ErrorStorage{0, 0}));
+			errors.insert(make_pair(base_node, ErrorStorage{}));
 			int input_zero = (propagated_zeros.find(t->input))->second;
 			propagated_zeros.insert(make_pair(base_node, input_zero + t->input_shift));
 			visited.insert(base_node);
@@ -152,7 +152,7 @@ namespace IntConstMultShiftAdd_TYPES {
 				addsub->stage
 			);
 
-		ErrorStorage error{0,0};
+		ErrorStorage error;
 
 		for (auto inputNodePtr : addsub->inputs) {
 			if (visited.count(inputNodePtr) < 1) {
@@ -193,8 +193,8 @@ namespace IntConstMultShiftAdd_TYPES {
 			adder_graph_base_node_t* base_node,
 			TruncationRegister const & truncReg,
 			set<adder_graph_base_node_t*>& visited,
-			map<adder_graph_base_node_t*, ErrorStorage> errors,
-			map<adder_graph_base_node_t*, int> propagated_zeros,
+			map<adder_graph_base_node_t*, ErrorStorage>& errors,
+			map<adder_graph_base_node_t*, int>& propagated_zeros,
 			ErrorStorage& tot_error
 		)
 	{
@@ -207,7 +207,7 @@ namespace IntConstMultShiftAdd_TYPES {
 
 		if (is_a<register_node_t>(*base_node) || is_a<output_node_t>(*base_node)) {
 			auto t = (register_node_t*) base_node;
-			ErrorStorage sub_tot_error{0,0};
+			ErrorStorage sub_tot_error;
 			df_accumulate_error(
 					t->input, 
 					truncReg, 
@@ -221,10 +221,10 @@ namespace IntConstMultShiftAdd_TYPES {
 		} else if (is_a<adder_subtractor_node_t>(*base_node)) {
 			auto t = (adder_subtractor_node_t*) base_node;
 			size_t nb_inputs = t->inputs.size();
-			ErrorStorage sub_tot{0, 0};
+			ErrorStorage sub_tot;
 			int neg_shift = (t->input_shifts[0] < 0) ? -1 * t->input_shifts[0] : 0;
 			for (size_t i = 0 ; i < nb_inputs ; ++i) {
-				ErrorStorage tmp{0, 0};
+				ErrorStorage tmp;
 				int  cur_shift = max(t->input_shifts[i], 0);
 				df_accumulate_error(
 						t->inputs[i],
@@ -245,12 +245,12 @@ namespace IntConstMultShiftAdd_TYPES {
 		}
 	}
 
-	ErrorStorage getErrorForNode(
+	ErrorStorage getAccumulatedErrorFor(
 			output_node_t* output_node,
-			TruncationRegister truncReg
+			TruncationRegister const & truncReg
 		)
 	{
-		ErrorStorage ret{0,0};
+		ErrorStorage ret;
 		set<adder_graph_base_node_t*> visited;
 		map<adder_graph_base_node_t*, ErrorStorage> errors;
 		map<adder_graph_base_node_t*, int> propagated_zeros;
