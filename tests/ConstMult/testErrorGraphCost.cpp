@@ -12,7 +12,7 @@ using namespace std;
 using namespace PAGSuite;
 using namespace IntConstMultShiftAdd_TYPES;
 
-BOOST_AUTO_TEST_CASE(SignedShiftedAdd) {
+BOOST_AUTO_TEST_CASE(SimpleUntruncatedAddGraph) {
 	adder_graph_t adder_graph;
 	string graph_descr = "{{'R',[1],1,[1],0},{'A',[3],1,[1],0,0,[1],0,1},{'A',[11],2,[1],1,3,[3],1,0},{'O',[11],2,[11],2,0}}";
 
@@ -21,12 +21,109 @@ BOOST_AUTO_TEST_CASE(SignedShiftedAdd) {
 	
 	print_aligned_word_graph(adder_graph, "", 8, output_stream);
 
-	string TestVal = "Decomposition for 11:\n\nxxxxxxxxxxxx 11X\n(\n xxxxxxxx    1X\n"
-		"  xxxxxxxxxx 3X\n  (\n    xxxxxxxx 1X\n   xxxxxxxx  1X\n  )\n)\n\n";
+	string TestVal = "Decomposition for 11:\n\n xxxxxxxxxxxx 11X\n (\n  xxxxxxxx    1X\n"
+		"   xxxxxxxxxx 3X\n   (\n     xxxxxxxx 1X\n    xxxxxxxx  1X\n   )\n )\n\n";
 
 	string errorMsg = "Bad message. [\n" + TestVal + "\n] was expected, got [\n" 
 			+ output_stream.str() + "\n]";
 
 	
 	BOOST_REQUIRE_MESSAGE(TestVal == output_stream.str(), errorMsg);
+}
+
+BOOST_AUTO_TEST_CASE(SimpleTruncatedGraph) {
+	adder_graph_t adder_graph;
+	string graph_descr = "{{'R',[1],1,[1],0},{'A',[3],1,[1],0,0,[1],0,1},{'A',[11],2,[1],1,3,[3],1,0},{'O',[11],2,[11],2,0}}";
+	string truncations = "3,1:2,1;11,2:0,2";
+
+	adder_graph.parse_to_graph(graph_descr);
+	ostringstream output_stream;
+	
+	print_aligned_word_graph(adder_graph, truncations, 8, output_stream);
+
+	string TestVal = "Decomposition for 11:\n\n xxxxxxxxxxxx 11X\n (\n  xxxxxxxx    1X\n"
+		"   xxxxxxxx-- 3X\n   (\n     xxxxxx-- 1X\n    xxxxxxx-  1X\n   )\n )\n\n";
+
+	string errorMsg = "Bad message. [\n" + TestVal + "\n] was expected, got [\n" 
+			+ output_stream.str() + "\n]";
+
+	
+	BOOST_REQUIRE_MESSAGE(TestVal == output_stream.str(), errorMsg);
+}
+
+BOOST_AUTO_TEST_CASE(LongGraphUntruncated) {
+	adder_graph_t adder_graph;
+	string graph_descr = "{{'A',[9],1,[1],0,0,[1],0,3},{'A',[17],1,[1],0,0,[1],0,4},{'A',[59],2,[17],1,2,[-9],1,0},{'A',[559],2,[9],1,6,[-17],1,0},{'A',[295],3,[59],2,0,[59],2,2},{'A',[3217],3,[59],2,6,[-559],2,0},{'A',[105414361],4,[3217],3,15,[-295],3,0},{'O',[105414361],4,[105414361],4,0}}";
+
+	string truncations = "";
+
+	string expexted_result = "Decomposition for 105414361:\n\n"
+		" xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 105414361X\n"
+		" (\n"
+		" xxxxxxxxxxxxxxxxxxxx                3217X\n"
+		" (\n"
+		" xxxxxxxxxxxxxx                      59X\n"
+		" (\n"
+		"xxxxxxxxxxxxx                        17X\n"
+		"(\n"
+		"     xxxxxxxx                        1X\n"
+		" xxxxxxxx                            1X\n"
+		")\n"
+		"   xxxxxxxxxxxx                      9X\n"
+		"   (\n"
+		"       xxxxxxxx                      1X\n"
+		"    xxxxxxxx                         1X\n"
+		"   )\n"
+		" )\n"
+		"   xxxxxxxxxxxxxxxxxx                559X\n"
+		"   (\n"
+		"   xxxxxxxxxxxx                      9X\n"
+		"   (\n"
+		"       xxxxxxxx                      1X\n"
+		"    xxxxxxxx                         1X\n"
+		"   )\n"
+		"        xxxxxxxxxxxxx                17X\n"
+		"        (\n"
+		"             xxxxxxxx                1X\n"
+		"         xxxxxxxx                    1X\n"
+		"        )\n"
+		"   )\n"
+		" )\n"
+		"                   xxxxxxxxxxxxxxxxx 295X\n"
+		"                   (\n"
+		"                      xxxxxxxxxxxxxx 59X\n"
+		"                      (\n"
+		"                     xxxxxxxxxxxxx   17X\n"
+		"                     (\n"
+		"                          xxxxxxxx   1X\n"
+		"                      xxxxxxxx       1X\n"
+		"                     )\n"
+		"                        xxxxxxxxxxxx 9X\n"
+		"                        (\n"
+		"                            xxxxxxxx 1X\n"
+		"                         xxxxxxxx    1X\n"
+		"                        )\n"
+		"                      )\n"
+		"                    xxxxxxxxxxxxxx   59X\n"
+		"                    (\n"
+		"                   xxxxxxxxxxxxx     17X\n"
+		"                   (\n"
+		"                        xxxxxxxx     1X\n"
+		"                    xxxxxxxx         1X\n"
+		"                   )\n"
+		"                      xxxxxxxxxxxx   9X\n"
+		"                      (\n"
+		"                          xxxxxxxx   1X\n"
+		"                       xxxxxxxx      1X\n"
+		"                      )\n"
+		"                    )\n"
+		"                   )\n"
+		" )\n\n";
+	adder_graph.parse_to_graph(graph_descr);
+	ostringstream output_stream;
+	
+	print_aligned_word_graph(adder_graph, truncations, 8, output_stream);
+	
+	BOOST_REQUIRE_MESSAGE(output_stream.str() == expexted_result, 
+			"Expecting [\n" +expexted_result + "\n] got [\n" + output_stream.str() +"\n]" );
 }

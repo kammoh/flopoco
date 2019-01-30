@@ -33,6 +33,7 @@ namespace IntConstMultShiftAdd_TYPES {
 		int wordsize = computeWordSize(node->output_factor, input_word_size);
 		int start = total_word_size - (wordsize + right_shift);
 		int64_t output_factor = node->output_factor[0][0];
+
 		output_stream << string(start, ' ');
 		output_stream << string(wordsize - truncation, 'x');
 		output_stream << string(truncation, '-');
@@ -86,7 +87,7 @@ namespace IntConstMultShiftAdd_TYPES {
 					outNodePtr,
 					truncationReg,
 					0,
-					max_word_size,
+					max_word_size + 1,
 					input_word_size,
 					0,
 					output_stream
