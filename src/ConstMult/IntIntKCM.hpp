@@ -12,8 +12,8 @@
 namespace flopoco{
 /** The IntIntKCM class.
 */
-class IntIntKCM : public Operator
-{
+	class IntIntKCM : public Operator
+	{
 	public:
 		/**
 		 * @brief The IntIntKCM constructor
@@ -22,9 +22,9 @@ class IntIntKCM : public Operator
 		 * @param[in] C      the constant
 		 * @param[in] inputDelays the delays for each input
 		 **/
-		IntIntKCM(Target* target, int wIn, mpz_class C, bool inputTwosComplement=false, map<string, double> inputDelays = emptyDelayMap);
+		IntIntKCM(OperatorPtr parentOp, Target* target, int wIn, mpz_class C, bool inputTwosComplement=false);
 
-		IntIntKCM(Operator* parentOp_, Target* target, Signal* multiplicandX, int wIn, mpz_class C, bool inputTwosComplement=false, BitHeap* bitheap_ = NULL, map<string, double> inputDelays = emptyDelayMap);
+		IntIntKCM(Operator* parentOp_ Signal* multiplicandX, int wIn, mpz_class C, bool inputTwosComplement=false, BitHeap* bitheap_ = NULL);
 
 		/**
 		 * @brief Destructor
@@ -32,9 +32,16 @@ class IntIntKCM : public Operator
 		~IntIntKCM();
 
 		void emulate(TestCase* tc);
-
+		
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
+		
+		static TestList unitTest(int index);
+		
+		static void registerFactory();
+		
+		
 		int getOutputWidth();				/**< returns the number of bits of the output */
-
+		
 	protected:
 		int wIn_;							/**< the width for the input X*/
 		bool signedInput_;
@@ -46,7 +53,6 @@ class IntIntKCM : public Operator
 		Operator*	parentOp;				/**< The operator which envelops this constant multiplier */
 
 	private:
-		map<string, double> inputDelays_;	/**< a map between input signal names and their maximum delays */
 
 };
 
