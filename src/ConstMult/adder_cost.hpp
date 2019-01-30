@@ -26,7 +26,7 @@ namespace IntConstMultShiftAdd_TYPES {
 			PAGSuite::adder_graph_t & adder_graph,
 			int inputWordSize,
 			bool unsignedInput,
-			TruncationRegister &truncReg
+			TruncationRegister const &truncReg
 	);
 
 	int getGraphAdderCost(
