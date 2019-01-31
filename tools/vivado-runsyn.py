@@ -18,35 +18,38 @@ def report(text):
 
     
 def get_compile_info(filename):
-    vhdl=open(filename).read()
+    try:
+        vhdl=open(filename).read()
 
-    # last entity
-    endss = [match.end() for match in re.finditer("entity", vhdl)] # list of endpoints of match of "entity"
-    last_entity_name_start = endss[-2] +1 # skip the space
-    i = last_entity_name_start
-    while(vhdl[i]!=" "):
-        i=i+1
-    last_entity_name_end = i
-    entityname=vhdl[last_entity_name_start:last_entity_name_end]
+        # last entity
+        endss = [match.end() for match in re.finditer("entity", vhdl)] # list of endpoints of match of "entity"
+        last_entity_name_start = endss[-2] +1 # skip the space
+        i = last_entity_name_start
+        while(vhdl[i]!=" "):
+            i=i+1
+        last_entity_name_end = i
+        entityname=vhdl[last_entity_name_start:last_entity_name_end]
 
-    # target 
-    endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
-    target_name_start = endss[-1] +1
-    i = target_name_start
-    while(vhdl[i]!=" "):
-        i=i+1
-    target_name_end = i
-    targetname=vhdl[target_name_start:target_name_end]
+        # target 
+        endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
+        target_name_start = endss[-1] +1
+        i = target_name_start
+        while(vhdl[i]!=" "):
+            i=i+1
+        target_name_end = i
+        targetname=vhdl[target_name_start:target_name_end]
     
-    # the frequency follows but we don't need to read it so far
-    frequency_start=target_name_end+3 #  skip " @ "
-    i = frequency_start
-    while(vhdl[i]!=" " and vhdl[i]!="M"): # 400MHz or 400 MHz
-        i=i+1
-    frequency_end = i
-    frequency = vhdl[frequency_start:frequency_end]
+        # the frequency follows but we don't need to read it so far
+        frequency_start=target_name_end+3 #  skip " @ "
+        i = frequency_start
+        while(vhdl[i]!=" " and vhdl[i]!="M"): # 400MHz or 400 MHz
+            i=i+1
+        frequency_end = i
+        frequency = vhdl[frequency_start:frequency_end]
+        return (entityname, targetname, frequency)
 
-    return (entityname, targetname, frequency)
+    except Exception:
+        return ("", "","")
 
 
 
