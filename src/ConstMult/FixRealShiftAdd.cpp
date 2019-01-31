@@ -71,8 +71,10 @@ namespace flopoco{
 	{
 		vhdl << "-- This operator multiplies by " << constant << endl;
 
-		srcFileName="FixRealShiftAdd";
+		srcFileName = "FixRealShiftAdd";
 		setNameWithFreqAndUID("FixRealShiftAdd");
+
+		useNumericStd();
 
 		// Convert the input string into a sollya evaluation tree
 		sollya_obj_t node;
@@ -81,8 +83,8 @@ namespace flopoco{
 		if (sollya_lib_obj_is_error(node))
 		{
 			ostringstream error;
-			error << srcFileName << ": Unable to parse string "<<
-				  constant << " as a numeric constant" <<endl;
+			error << srcFileName << ": Unable to parse string " <<
+				  constant << " as a numeric constant" << endl;
 			throw error.str();
 		}
 
@@ -92,7 +94,7 @@ namespace flopoco{
 		sollya_lib_get_constant(mpC, node);
 
 		//if negative constant, then set negativeConstant
-		negativeConstant = ( mpfr_cmp_si(mpC, 0) < 0 ? true: false );
+		negativeConstant = (mpfr_cmp_si(mpC, 0) < 0 ? true : false);
 
 		signedOutput = negativeConstant || signedInput;
 		mpfr_abs(absC, mpC, GMP_RNDN);
@@ -108,14 +110,15 @@ namespace flopoco{
 		mpfr_clears(log2C, NULL);
 
 		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
-		if(mpfr_zero_p(mpC) != 0){
-			msbOut=lsbOut; // let us return a result on one bit, why not.
+		if (mpfr_zero_p(mpC) != 0)
+		{
+			msbOut = lsbOut; // let us return a result on one bit, why not.
 			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
 			return;
 		}
 
 		msbOut = msbIn + msbC;
-		int wIn = msbIn-lsbIn+1;
+		int wIn = msbIn - lsbIn + 1;
 
 		REPORT(INFO, "Output precisions: msbOut=" << msbOut << ", lsbOut=" << lsbOut);
 
@@ -126,61 +129,64 @@ namespace flopoco{
 		//compute error bounds of the result (epsilon_max)
 		mpfr_t mpEpsilonMax;
 		mpfr_init2(mpEpsilonMax, 100);
-		mpfr_set_si(mpOp1,2,GMP_RNDN);
+		mpfr_set_si(mpOp1, 2, GMP_RNDN);
 //		mpfr_set_si(mpOp2,lsbOut,GMP_RNDN);
-		mpfr_set_si(mpOp2,lsbOut-1,GMP_RNDN); //as we don't round the result, take one bit more here!!
+//		mpfr_set_si(mpOp2,lsbOut-1,GMP_RNDN); //as we don't round the result, take one bit more here!!
+		mpfr_set_si(mpOp2, lsbOut - 2, GMP_RNDN); //one additional guard bit required??
 
-		mpfr_pow(mpEpsilonMax,mpOp1,mpOp2,GMP_RNDN); //2^(lsbOut-1)
+		mpfr_pow(mpEpsilonMax, mpOp1, mpOp2, GMP_RNDN); //2^(lsbOut-1)
 		ios::fmtflags old_settings = cout.flags();
 		REPORT(INFO, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
 		cout.flags(old_settings);
 
 		//compute the different integer representations of the constant
-		int q=3;
+		int q = 3;
 		//mx = msbIn
 		//lR = lsbOut
 		mpfr_t s;
-		mpfr_init2(s,64);
-		mpfr_set_si(s,msbIn-lsbOut+q+1,GMP_RNDN);
+		mpfr_init2(s, 64);
+		mpfr_set_si(s, msbIn - lsbOut + q + 1, GMP_RNDN);
 
-		cout << "coefficient word size = " << msbC+msbIn-lsbOut+q+1 << endl;
+		cout << "coefficient word size = " << msbC + msbIn - lsbOut + q + 1 << endl;
 		mpfr_t mpCInt;
-		mpfr_init2(mpCInt, msbC+msbIn-lsbOut+q+1); //msbC-lsbOut+q+1
+		mpfr_init2(mpCInt, msbC + msbIn - lsbOut + q + 1); //msbC-lsbOut+q+1
 
-		int noOfFullAddersBest=INT32_MAX;
+		int noOfFullAddersBest = INT32_MAX;
 		mpz_class mpzCIntBest;
 		int shiftTotalBest;
 		string adderGraphStrBest;
+		PAGSuite::adder_graph_t adderGraphBest;
 		string trunactionStrBest;
+		IntConstMultShiftAdd_TYPES::TruncationRegister truncationRegBest("");
 
-		for(int k=-(1<<q); k <= (1<<q); k++)
+		for (int k = -(1 << q); k <= (1 << q); k++)
 		{
 			mpfr_rnd_t roundingDirection;
-			if(k > 0)
+			if (k > 0)
 				roundingDirection = MPFR_RNDD;
 			else
 				roundingDirection = MPFR_RNDU;
 
 			mpfr_t two_pow_s;
-			mpfr_init2(two_pow_s,100); //msbIn-lsbOut+q+1
-			mpfr_set_si(mpOp1,2,GMP_RNDN);
-			mpfr_pow(two_pow_s,mpOp1,s,GMP_RNDN);
-			mpfr_mul(mpCInt,mpC,two_pow_s,roundingDirection);
+			mpfr_init2(two_pow_s, 100); //msbIn-lsbOut+q+1
+			mpfr_set_si(mpOp1, 2, GMP_RNDN);
+			mpfr_pow(two_pow_s, mpOp1, s, GMP_RNDN);
+			mpfr_mul(mpCInt, mpC, two_pow_s, roundingDirection);
 
 			mpfr_t mpk;
-			mpfr_init2(mpk,64);
-			mpfr_set_si(mpk,k,GMP_RNDN);
-			mpfr_add(mpCInt,mpCInt,mpk,roundingDirection);
+			mpfr_init2(mpk, 64);
+			mpfr_set_si(mpk, k, GMP_RNDN);
+			mpfr_add(mpCInt, mpCInt, mpk, roundingDirection);
 
 			mpz_class mpzCInt;
-			mpfr_get_z(mpzCInt.get_mpz_t(),mpCInt,GMP_RNDN);
+			mpfr_get_z(mpzCInt.get_mpz_t(), mpCInt, GMP_RNDN);
 
 			mpz_class isEven = (mpzCInt & 0x01) != 1;
-			int shift=0;
-			while(isEven.get_ui())
+			int shift = 0;
+			while (isEven.get_ui())
 			{
 				mpzCInt /= 2;
-				mpfr_div_ui(mpCInt,mpCInt,2,GMP_RNDN);
+				mpfr_div_ui(mpCInt, mpCInt, 2, GMP_RNDN);
 				shift++;
 				isEven = (mpzCInt & 0x01) != 1;
 			}
@@ -188,46 +194,46 @@ namespace flopoco{
 			//compute epsilons
 			//compute mpEpsilonCoeff = C - Cint * 2^(-(wIn+q-shift));
 			mpfr_t mpEpsilonCoeff;
-			mpfr_init2(mpEpsilonCoeff,100);
-			mpfr_set_si(mpOp1,2,GMP_RNDN);
-			mpfr_set_si(mpOp2,-(wIn+q-shift),GMP_RNDN);
-			mpfr_pow(mpOp1,mpOp1,mpOp2,GMP_RNDN);
-			mpfr_mul(mpOp1,mpCInt,mpOp1,GMP_RNDN);
-			mpfr_sub(mpEpsilonCoeff,mpC,mpOp1,GMP_RNDN);
+			mpfr_init2(mpEpsilonCoeff, 100);
+			mpfr_set_si(mpOp1, 2, GMP_RNDN);
+			mpfr_set_si(mpOp2, -(wIn + q - shift), GMP_RNDN);
+			mpfr_pow(mpOp1, mpOp1, mpOp2, GMP_RNDN);
+			mpfr_mul(mpOp1, mpCInt, mpOp1, GMP_RNDN);
+			mpfr_sub(mpEpsilonCoeff, mpC, mpOp1, GMP_RNDN);
 
 			//compute mpEpsilonMult = mpEpsilonMax - abs(mpEpsilonCoeff);
 			mpfr_t mpEpsilonMult;
-			mpfr_init2(mpEpsilonMult,100);
-			mpfr_abs(mpOp1,mpEpsilonCoeff,GMP_RNDN);
-			mpfr_sub(mpEpsilonMult,mpEpsilonMax,mpOp1,GMP_RNDN);
+			mpfr_init2(mpEpsilonMult, 100);
+			mpfr_abs(mpOp1, mpEpsilonCoeff, GMP_RNDN);
+			mpfr_sub(mpEpsilonMult, mpEpsilonMax, mpOp1, GMP_RNDN);
 
 			//compute mpEpsilonCoeffNorm = mpEpsilonCoeff*2^(wIn+q-shift-lsbOut);
 			mpfr_t mpEpsilonCoeffNorm;
-			mpfr_init2(mpEpsilonCoeffNorm,100);
-			mpfr_set_si(mpOp1,2,GMP_RNDN);
-			mpfr_set_si(mpOp2,wIn+q-shift-lsbOut,GMP_RNDN);
-			mpfr_pow(mpOp1,mpOp1,mpOp2,GMP_RNDN);
-			mpfr_mul(mpEpsilonCoeffNorm,mpEpsilonCoeff,mpOp1,GMP_RNDN);
+			mpfr_init2(mpEpsilonCoeffNorm, 100);
+			mpfr_set_si(mpOp1, 2, GMP_RNDN);
+			mpfr_set_si(mpOp2, wIn + q - shift - lsbOut, GMP_RNDN);
+			mpfr_pow(mpOp1, mpOp1, mpOp2, GMP_RNDN);
+			mpfr_mul(mpEpsilonCoeffNorm, mpEpsilonCoeff, mpOp1, GMP_RNDN);
 
 			//compute mpEpsilonMultNorm = mpEpsilonMult*2^(wIn+q-shift-lsbOut);
 			mpfr_t mpEpsilonMultNorm;
-			mpfr_init2(mpEpsilonMultNorm,100);
-			mpfr_mul(mpEpsilonMultNorm,mpEpsilonMult,mpOp1,GMP_RNDN);
+			mpfr_init2(mpEpsilonMultNorm, 100);
+			mpfr_mul(mpEpsilonMultNorm, mpEpsilonMult, mpOp1, GMP_RNDN);
 
-			int shiftTotal = mpfr_get_si(s, GMP_RNDN)-shift;
+			int shiftTotal = mpfr_get_si(s, GMP_RNDN) - shift;
 
 			ios::fmtflags old_settings = cout.flags();
 			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << shiftTotal
-							  << ", mpEpsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff,GMP_RNDN)
-							  << ", mpEpsilonMult=" << std::scientific << mpfr_get_d(mpEpsilonMult,GMP_RNDN)
-							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm,GMP_RNDN)
-							  << ", mpEpsilonMultNorm=" << std::fixed << mpfr_get_d(mpEpsilonMultNorm,GMP_RNDN));
+							  << ", mpEpsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN)
+							  << ", mpEpsilonMult=" << std::scientific << mpfr_get_d(mpEpsilonMult, GMP_RNDN)
+							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm, GMP_RNDN)
+							  << ", mpEpsilonMultNorm=" << std::fixed << mpfr_get_d(mpEpsilonMultNorm, GMP_RNDN));
 			cout.flags(old_settings);
 
 			mpfr_t mpEpsilonMultNormInt;
-			mpfr_init2(mpEpsilonMultNormInt,100);
-			mpfr_floor(mpEpsilonMultNormInt,mpEpsilonMultNorm);
-			long epsilonMultNormInt = mpfr_get_si(mpEpsilonMultNormInt,GMP_RNDN); //should be mpz type instead
+			mpfr_init2(mpEpsilonMultNormInt, 100);
+			mpfr_floor(mpEpsilonMultNormInt, mpEpsilonMultNorm);
+			long epsilonMultNormInt = mpfr_get_si(mpEpsilonMultNormInt, GMP_RNDN); //should be mpz type instead
 
 			PAGSuite::adder_graph_t adderGraph;
 			string adderGraphStr;
@@ -236,7 +242,6 @@ namespace flopoco{
 			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
 			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
 
-//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,"",wIn,cout);
 
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
@@ -260,38 +265,46 @@ namespace flopoco{
 			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
 			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
 
-//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph,truncationReg,wIn,cout);
+			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, "", wIn, cout);
+			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, truncationReg, wIn, cout);
 
-			if(noOfFullAdders < noOfFullAddersBest)
+			if (noOfFullAdders < noOfFullAddersBest)
 			{
 				noOfFullAddersBest = noOfFullAdders;
 				mpzCIntBest = mpzCInt;
 				shiftTotalBest = shiftTotal;
 				adderGraphStrBest = adderGraphStr;
+				adderGraphBest = adderGraph;
 				trunactionStrBest = trunactionStr;
+				truncationRegBest = truncationReg;
 			}
 
 		}
-		REPORT(INFO, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with " << noOfFullAddersBest << " full adders")
+		REPORT(INFO, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with "
+															<< noOfFullAddersBest << " full adders")
 		REPORT(INFO, "  adder graph " << adderGraphStrBest);
 		REPORT(INFO, "  truncations:" << trunactionStrBest);
 
+		IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraphBest, "", wIn, cout);
+		IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraphBest, truncationRegBest, wIn, cout);
+
 		//VHDL code generation:
-		int wOut=msbOut-lsbOut+1;
+		int wOut = msbOut - lsbOut + 1;
 
 		mpfr_t tmp;
 		mpfr_init2(tmp, 100);
-		mpfr_set_z(tmp,mpzCIntBest.get_mpz_t(),GMP_RNDN);
-		mpfr_log2(tmp,tmp,GMP_RNDN);
-		mpfr_ceil(tmp,tmp);
-		long wC = mpfr_get_si(tmp,GMP_RNDN);
+		mpfr_set_z(tmp, mpzCIntBest.get_mpz_t(), GMP_RNDN);
+		mpfr_log2(tmp, tmp, GMP_RNDN);
+		mpfr_ceil(tmp, tmp);
+		long wC = mpfr_get_si(tmp, GMP_RNDN);
 
-		int wConstMultRes=wIn+wC;
+		int wConstMultRes = wIn + wC;
 
-		addInput("X",wIn);
-		addOutput("R",wOut);
+		addInput("X", wIn);
+		addOutput("R", wOut);
 
-		declare("constMultRes",wConstMultRes);
+		declare("tmp", wOut + 1);
+		declare("constMultRes", wConstMultRes);
 
 		stringstream parameters;
 		parameters << "wIn=" << wIn << " graph=" << adderGraphStrBest << " truncations=" << trunactionStrBest;
@@ -300,9 +313,24 @@ namespace flopoco{
 		outPortMaps << "x_out0_c" << mpzCIntBest << "=>constMultRes";
 
 		cout << "outPortMaps: " << outPortMaps.str() << endl;
-		newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps, outPortMaps.str());
+		newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps,
+					outPortMaps.str());
 
-		vhdl << tab << "R <= constMultRes(" << wConstMultRes-1 << " downto " << wConstMultRes-wOut << ");" << endl;
+		bool doProperRouding=true;
+		if(doProperRouding)
+		{
+			stringstream one;
+			for (int i = 0; i < wOut; i++)
+				one << "0";
+			one << "1";
+			vhdl << tab << "tmp <= std_logic_vector(signed(constMultRes(" << wConstMultRes - 1 << " downto "
+				 << wConstMultRes - wOut - 1 << ")) + \"" << one.str() << "\");" << endl;
+			vhdl << tab << "R <= tmp(" << wOut << " downto " << 1 << ");" << endl;
+		}
+		else
+		{
+			vhdl << tab << "R <= constMultRes(" << wConstMultRes-1 << " downto " << wConstMultRes-wOut << ");" << endl;
+		}
 	}
 
 
