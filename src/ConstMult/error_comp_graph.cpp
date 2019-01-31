@@ -236,6 +236,9 @@ namespace IntConstMultShiftAdd_TYPES {
 						tmp
 					);
 				tmp.shift(cur_shift);
+				if (t->input_is_negative[i]) {
+					tmp.swap();
+				}
 				sub_tot += tmp;
 			}
 			if (neg_shift > 0) {
@@ -283,6 +286,11 @@ namespace IntConstMultShiftAdd_TYPES {
 		positive_error += rhs.positive_error;
 		negative_error += rhs.negative_error;
 		return *this;
+	}
+
+	void ErrorStorage::swap()
+	{
+		std::swap(positive_error, negative_error);
 	}
 }
 

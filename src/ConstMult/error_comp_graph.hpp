@@ -21,6 +21,7 @@ namespace IntConstMultShiftAdd_TYPES {
 			ErrorStorage():positive_error{0}, negative_error{0}{}
 
 			ErrorStorage& operator+=(ErrorStorage const & rhs);
+			void swap();
 	};
 
 	void print_aligned_word_graph(

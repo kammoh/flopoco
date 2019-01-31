@@ -271,4 +271,14 @@ BOOST_AUTO_TEST_CASE(ErrorCostSimpleNegTruncation) {
 		);
 }
 
+BOOST_AUTO_TEST_CASE(test_swap)
+{
+	ErrorStorage err;
+	err.positive_error = mpz_class(1);
+	err.negative_error = mpz_class(0);
+	err.swap();
+	BOOST_REQUIRE_MESSAGE(err.positive_error == mpz_class(0), "Error when swapping");
+	BOOST_REQUIRE_MESSAGE(err.negative_error == mpz_class(1), "Error when swapping");
+}
+
 
