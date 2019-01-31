@@ -48,6 +48,7 @@ I don't really understand
 #include "error_comp_graph.hpp"
 #include "WordLengthCalculator.hpp"
 #include "IntConstMultShiftAddTypes.hpp"
+#include "error_comp_graph.hpp"
 
 using namespace std;
 
@@ -77,10 +78,10 @@ namespace flopoco{
 		useNumericStd();
 
 		// Convert the input string into a sollya evaluation tree
-		sollya_obj_t node;
-		node = sollya_lib_parse_string(constant.c_str());
+		sollya_obj_t sollyiaObj;
+		sollyiaObj = sollya_lib_parse_string(constant.c_str());
 		/* If  parse error throw an exception */
-		if (sollya_lib_obj_is_error(node))
+		if (sollya_lib_obj_is_error(sollyiaObj))
 		{
 			ostringstream error;
 			error << srcFileName << ": Unable to parse string " <<
@@ -91,7 +92,7 @@ namespace flopoco{
 		mpfr_init2(mpC, 10000);
 		mpfr_init2(absC, 10000);
 
-		sollya_lib_get_constant(mpC, node);
+		sollya_lib_get_constant(mpC, sollyiaObj);
 
 		//if negative constant, then set negativeConstant
 		negativeConstant = (mpfr_cmp_si(mpC, 0) < 0 ? true : false);
@@ -287,6 +288,24 @@ namespace flopoco{
 
 		IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraphBest, "", wIn, cout);
 		IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraphBest, truncationRegBest, wIn, cout);
+
+		output_node_t* output_node= nullptr;
+		for(adder_graph_base_node_t *node : adderGraphBest.nodes_list)
+		{
+			if(PAGSuite::is_a<PAGSuite::output_node_t>(*node))
+			{
+				if(node->output_factor[0][0] == ((int64_t) mpzCIntBest.get_ui()))
+				{
+					output_node = ((output_node_t*) node);
+					break;
+				}
+			}
+		}
+		if(output_node != nullptr)
+		{
+			IntConstMultShiftAdd_TYPES::ErrorStorage es = getAccumulatedErrorFor(output_node,truncationRegBest);
+			cout << "error is +" << es.positive_error << " / -" << es.negative_error << endl;
+		}
 
 		//VHDL code generation:
 		int wOut = msbOut - lsbOut + 1;
