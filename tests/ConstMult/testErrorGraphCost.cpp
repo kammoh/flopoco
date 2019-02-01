@@ -271,6 +271,33 @@ BOOST_AUTO_TEST_CASE(ErrorCostSimpleNegTruncation) {
 		);
 }
 
+BOOST_AUTO_TEST_CASE(test_error_sub_propagate)
+{
+	adder_graph_t adder_graph;
+	string graph_descr = "{{'R',[1],1,[1],0},{'A',[15],1,[1],0,4,[-1],0,0},"
+		"{'A',[127],1,[1],0,7,[-1],0,0},{'A',[112],2,[127],1,0,[-15],1,0},"
+		"{'A',[624],3,[112],2,0,[1],1,9},{'O',[624],3,[624],3,0}}";
+
+	adder_graph.parse_to_graph(graph_descr);
+	string truncations = "15,1:0,2";
+	
+	TruncationRegister trunc(truncations);
+	output_node_t* out_node;
+	for (auto nodePtr : adder_graph.nodes_list) {
+		if (is_a<output_node_t>(*nodePtr)) {
+			out_node = (output_node_t*) nodePtr;
+		}
+	}
+
+	auto error = getAccumulatedErrorFor(out_node, trunc);
+
+	BOOST_REQUIRE_MESSAGE(error.negative_error == mpz_class(0), 
+			"Negative error should be zero, got " << error.negative_error);
+
+	BOOST_REQUIRE_MESSAGE(error.positive_error == mpz_class(3),
+			"Positive error should be 3, got " << error.positive_error); 
+}
+
 BOOST_AUTO_TEST_CASE(test_swap)
 {
 	ErrorStorage err;
