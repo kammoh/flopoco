@@ -127,13 +127,12 @@ namespace flopoco{
 		mpfr_init2(mpOp1, 100);
 		mpfr_init2(mpOp2, 100);
 
+		int guardBits = 2;  //two additional guard bit required??
 		//compute error bounds of the result (epsilon_max)
 		mpfr_t mpEpsilonMax;
 		mpfr_init2(mpEpsilonMax, 100);
 		mpfr_set_si(mpOp1, 2, GMP_RNDN);
-//		mpfr_set_si(mpOp2,lsbOut,GMP_RNDN);
-//		mpfr_set_si(mpOp2,lsbOut-1,GMP_RNDN); //as we don't round the result, take one bit more here!!
-		mpfr_set_si(mpOp2, lsbOut - 2, GMP_RNDN); //one additional guard bit required??
+		mpfr_set_si(mpOp2, lsbOut - guardBits, GMP_RNDN);
 
 		mpfr_pow(mpEpsilonMax, mpOp1, mpOp2, GMP_RNDN); //2^(lsbOut-1)
 		ios::fmtflags old_settings = cout.flags();
@@ -141,16 +140,17 @@ namespace flopoco{
 		cout.flags(old_settings);
 
 		//compute the different integer representations of the constant
-		int q = 3;
+		int q = 4;
 		//mx = msbIn
 		//lR = lsbOut
+		int wCOut = msbIn - lsbOut + q + 1;
 		mpfr_t s;
 		mpfr_init2(s, 64);
-		mpfr_set_si(s, msbIn - lsbOut + q + 1, GMP_RNDN);
+		mpfr_set_si(s, wCOut, GMP_RNDN);
 
-		cout << "coefficient word size = " << msbC + msbIn - lsbOut + q + 1 << endl;
+		cout << "coefficient word size = " << msbC + wCOut << endl;
 		mpfr_t mpCInt;
-		mpfr_init2(mpCInt, msbC + msbIn - lsbOut + q + 1); //msbC-lsbOut+q+1
+		mpfr_init2(mpCInt, msbC + wCOut); //msbC-lsbOut+q+1
 
 		int noOfFullAddersBest = INT32_MAX;
 		mpz_class mpzCIntBest;
@@ -223,13 +223,13 @@ namespace flopoco{
 
 			int shiftTotal = mpfr_get_si(s, GMP_RNDN) - shift;
 
-			ios::fmtflags old_settings = cout.flags();
+			ios::fmtflags old_settings = cerr.flags();
 			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << shiftTotal
 							  << ", mpEpsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN)
 							  << ", mpEpsilonMult=" << std::scientific << mpfr_get_d(mpEpsilonMult, GMP_RNDN)
 							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm, GMP_RNDN)
 							  << ", mpEpsilonMultNorm=" << std::fixed << mpfr_get_d(mpEpsilonMultNorm, GMP_RNDN));
-			cout.flags(old_settings);
+			cerr.flags(old_settings);
 
 			mpfr_t mpEpsilonMultNormInt;
 			mpfr_init2(mpEpsilonMultNormInt, 100);
@@ -240,8 +240,8 @@ namespace flopoco{
 			string adderGraphStr;
 			computeAdderGraph(adderGraph, adderGraphStr, (PAGSuite::int_t) mpzCInt.get_si());
 
-			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
-			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAdders << " full adders");
+			int noOfFullAddersBeforeTrunc = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
+			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAddersBeforeTrunc << " full adders");
 
 
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
@@ -263,15 +263,28 @@ namespace flopoco{
 
 			string trunactionStr = truncationReg.convertToString();
 			REPORT(INFO, "  truncation: " << trunactionStr);
-			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
-			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAdders << " full adders");
+			int noOfFullAddersAfterTrunc = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
+			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAddersAfterTrunc << " full adders");
 
-			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, "", wIn, cout);
-			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, truncationReg, wIn, cout);
+//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, "", wIn, cout);
+//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, truncationReg, wIn, cout);
 
-			if (noOfFullAdders < noOfFullAddersBest)
+			old_settings = cout.flags();
+			cout << k << " & $" << mpzCInt << "/2^" << shiftTotal << "$"
+				 << " & " << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN)
+				 << " & " << std::scientific << mpfr_get_d(mpEpsilonMult, GMP_RNDN)
+				 << " & " << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm, GMP_RNDN)
+				 << " & " << std::fixed << mpfr_get_d(mpEpsilonMultNorm, GMP_RNDN)
+				 << " & " << std::fixed << noOfFullAddersBeforeTrunc
+				 << " & " << std::fixed << noOfFullAddersAfterTrunc
+				 << " & "
+			;
+			cout.flags(old_settings);
+
+
+			if (noOfFullAddersAfterTrunc < noOfFullAddersBest)
 			{
-				noOfFullAddersBest = noOfFullAdders;
+				noOfFullAddersBest = noOfFullAddersAfterTrunc;
 				mpzCIntBest = mpzCInt;
 				shiftTotalBest = shiftTotal;
 				adderGraphStrBest = adderGraphStr;

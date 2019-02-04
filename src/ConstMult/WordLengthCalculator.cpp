@@ -271,7 +271,7 @@ namespace flopoco {
                 {
                     ScaLP::Result r = s.getResult();
 
-                    cout << "Optimization complete, " << r.objectiveValue << " full adders can be saved" << endl;
+//                    cout << "Optimization complete, " << r.objectiveValue << " full adders can be saved" << endl;
 
 //					std::cout << "result is: " << r << std::endl;
 
