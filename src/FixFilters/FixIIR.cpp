@@ -30,6 +30,13 @@ Remarque: H prend du temps à calculer sur cet exemple.
 A small Butterworth
  ./flopoco generateFigures=1 FixIIR coeffb="0x1.7bdf4656ab602p-9:0x1.1ce774c100882p-7:0x1.1ce774c100882p-7:0x1.7bdf4656ab602p-9" coeffa="-0x1.2fe25628eb285p+1:0x1.edea40cd1955ep+0:-0x1.106c2ec3d0af8p-1" lsbIn=-12 lsbOut=-12 TestBench n=10000
 
+
+The easy IIR8
+./flopoco FixIIR lsbin=-8 lsbout=-8 coeffa="-7.950492486500551e-01:1.316171195258671e+00:-6.348825276850145e-01:4.221584399465901e-01:-1.148028526411250e-01:3.337958526084077e-02:-3.947725765551162e-03:3.076933229437558e-04" coeffb="4.778650621278516e-03:3.822920497022813e-02:1.338022173957985e-01:2.676044347915969e-01:3.345055434894962e-01:2.676044347915969e-01:1.338022173957985e-01:3.822920497022813e-02:4.778650621278516e-03"
+
+The difficult IIR8
+./flopoco FixIIR lsbin=-8 lsbout=-8 coeffb="1.141178044605012e-02:-2.052394720689188e-02:4.328501070380458e-02:-4.176737791619380e-02:5.542991404945895e-02:-4.176737791619380e-02:4.328501070380458e-02:-2.052394720689188e-02:1.141178044605012e-02" coeffa="-5.081533236401664e+00:1.295349903984737e+01:-2.075814350661222e+01:2.265058884827988e+01:-1.712035157843729e+01:8.753862370563619e+00:-2.776525797340274e+00:4.237548320448786e-01"
+
 */
 
 using namespace std;
@@ -40,7 +47,7 @@ namespace flopoco {
 		Operator(parentOp, target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeffb(coeffb_), coeffa(coeffa_), H(H_), Heps(Heps_)
 	{
 		srcFileName="FixIIR";
-		setCopyrightString ( "Florent de Dinechin, Louis Beseme, Matei Istoan (2014-2017)" );
+		setCopyrightString ( "Florent de Dinechin, Louis Beseme, Matei Istoan (2014-2019)" );
 		useNumericStd_Unsigned();
 
 
@@ -118,6 +125,16 @@ namespace flopoco {
 		
 		// guard bits for a faithful result
 		int lsbExt = lsbOut-1-intlog2(Heps);
+
+
+#if 0 // sabotaging, to test if we overestimate
+		// The example with poles close to 1 still passes with lsbExt+=3, fails with lsbExt+=4
+		// The easy IIR8 still passes with lsbExt+=2, fails with lsbExt+=3 
+		// The trickiest IIR8 (with WCPG~8000) still passes with lsbExt+=3, fails with lsbExt+=4
+		
+	  lsbExt +=3 ;
+#endif
+		
 		msbOut = ceil(log2(H)); // see the paper
 		REPORT(INFO, "We ask for a SOPC faithful to lsbExt=" << lsbExt);
 		REPORT(INFO, "msbOut=" << msbOut);
@@ -137,50 +154,32 @@ namespace flopoco {
 			mpfr_set_d(xHistory[i], 0.0, GMP_RNDN);
 		}
 
-#if 0
-		setSequential();
-		getTarget()->setPipelined(true);
-#endif
-		
-		// The shift registers
-#if 0
-		ShiftReg *inputShiftReg = new ShiftReg(parentOp, getTarget(), 1-lsbIn, n);
-		addSubComponent(inputShiftReg);
-		inPortMap(inputShiftReg, "X", "X");
-		for (uint32_t i = 0; i<n; i++) {
-			outPortMap(inputShiftReg, join("Xd", i), join("U", i));
+		// The instance of the shift register for Xd1...Xdn-1
+		vhdl << tab << declare("Xd0", 1-lsbIn)  << " <= X;" << endl;
+		string outportmap="";
+		for(uint32_t i = 1; i<n; i++) {
+			outportmap += join("Xd", i) + "=>" +  join("Xd", i) + (i<n-1?",":"") ;
 		}
-		vhdl << instance(inputShiftReg, "inputShiftReg");
-#else
-		string outputs = "";
-		for (uint32_t i = 1; i<=n; i++) {
-			outputs += join("Xd", i) + "=>" + join("U", i) + (i<n-1?",":"");
+		newInstance("ShiftReg", "inputShiftReg",
+								join("w=",1-lsbIn) + join(" n=", n-1) + join(" reset=", 1), // the parameters
+								"X=>X", outportmap);  // the in and out port maps
+
+
+		vhdl << tab << declare("Y0", msbOut-lsbExt+1) << " <= Yinternal;" << endl; // just so that the inportmap finds it  
+		// The instance of the shift register for Yd1...Ydn-1
+		outportmap = "";
+		for (uint32_t i = 1; i<m+1; i++) {
+			outportmap += join("Xd", i) + "=>" + join("Y", i) + (i<m?",":"");
 		}
-		newInstance("ShiftReg", "inputShiftReg", "w=" + to_string(1-lsbIn) + " n=" + to_string(n), "X=>X", outputs);
-#endif
-		
-		vhdl << tab << declare("YinternalLoopback", msbOut-lsbExt+1) << " <= Yinternal;" << endl; // just so that the inportmap finds it  
-#if 0
-		ShiftReg *outputShiftReg = new ShiftReg(parentOp, getTarget(), msbOut-lsbExt+1, m+1);
-		addSubComponent(outputShiftReg);
-		inPortMap(outputShiftReg, "X", "YinternalLoopback");
-		for (uint32_t i = 1; i<=m; i++) {
-			outPortMap(outputShiftReg, join("Xd", i+1), join("Y", i));
-		}
-		vhdl << instance(outputShiftReg, "outputShiftReg");
-#else
-		outputs = "";
-		for (uint32_t i = 1; i<=m+1; i++) {
-			outputs += join("Xd", i) + "=>" + join("Y", i) + (i<m+1?",":"");
-		}
-		newInstance("ShiftReg", "outputShiftReg", "w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m+1), "X=>YinternalLoopback", outputs);
-#endif
+		newInstance("ShiftReg", "outputShiftReg",
+								"w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m),
+								"X=>Y0", outportmap);
 		
 		// Now building a single SOPC. For this we need the following info:
 		//		FixSOPC(Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1);
 		// We will concatenate coeffb of size n then then coeffa of size m
-		// MaxX
 
+#if 0		
 		vector<double> maxInSOPC;
 		vector<int> lsbInSOPC;
 		vector<string> coeffSOPC;
@@ -195,7 +194,7 @@ namespace flopoco {
 			coeffSOPC.push_back("-("+coeffa[i]+")");
 		}
 		
-		FixSOPC* fixSOPC = new FixSOPC(getParentOp(), getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
+		FixSOPC* fixSOPC = new FixSOPC(getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
 		addSubComponent(fixSOPC);
 		for (uint32_t i=0; i<n; i++) {
 			inPortMap(fixSOPC, join("X",i), join("U", i));
@@ -206,8 +205,10 @@ namespace flopoco {
 		outPortMap(fixSOPC, "R", "Yinternal");
 
 		vhdl << instance(fixSOPC, "fixSOPC");
-		//		syncCycleFromSignal("Yinternal");
-		
+#else
+
+#endif
+
 		//The final rounding must be computed with an addition, no escaping it
 		int sizeYinternal = msbOut - lsbExt + 1;
 		int sizeYfinal = msbOut - lsbOut + 1;
@@ -215,17 +216,13 @@ namespace flopoco {
 
 		addOutput("R", sizeYfinal,   true);
 		vhdl << "R <= Yrounded" << range(msbOut-lsbOut+1, 1) << ";" << endl;
-
-
-
 	};
 
 
 
 	FixIIR::~FixIIR(){
-#if 0 // ??
-		free(coeffb_d);
-		free(coeffa_d);
+		delete(coeffb_d);
+		delete(coeffa_d);
 		for (uint32_t i=0; i<n; i++) {
 			mpfr_clear(coeffb_mp[i]);
 			mpfr_clear(xHistory[i]);
@@ -234,20 +231,19 @@ namespace flopoco {
 			mpfr_clear(coeffa_mp[i]);
 			mpfr_clear(xHistory[i]);
 		}
-		free(coeffa_mp);
-		free(coeffb_mp);
-		free(xHistory);
-		free(yHistory);
-#endif
+		delete(coeffa_mp);
+		delete(coeffb_mp);
+		delete(xHistory);
+		delete(yHistory);
 	};
 
 
 
 
 	void FixIIR::emulate(TestCase * tc){
-
 		mpz_class sx;
 		mpfr_t x, s, t;
+		
 		mpfr_init2 (s, hugePrec);
 		mpfr_init2 (t, hugePrec);
 		mpfr_set_d(s, 0.0, GMP_RNDN); // initialize s to 0
@@ -273,7 +269,7 @@ namespace flopoco {
 		}
 		mpfr_set(yHistory[(currentIndex  +0)%(m+2)], s, GMP_RNDN);
 
-#if 0 // debugging the emulate
+#if 0// debugging the emulate
 		cout << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
 		cout << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
 		for (uint32_t i=0; i< n; i++)		{
@@ -296,6 +292,13 @@ namespace flopoco {
 		// now we should have in s the (exact in most cases) sum
 		// round it up and down
 
+		// debug: with this we observe if the simulation diverges
+		double d =  mpfr_get_d(s, GMP_RNDD);
+		miny=min(d,miny);
+		maxy=max(d,maxy);
+		//		cout << "y=" << d <<  "\t  log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
+
+
 		// make s an integer -- no rounding here
 		mpfr_mul_2si (s, s, -lsbOut, GMP_RNDN);
 
@@ -303,17 +306,13 @@ namespace flopoco {
 
 		mpz_class rdz, ruz;
 		mpfr_get_z (rdz.get_mpz_t(), s, GMP_RNDD); 					// there can be a real rounding here
-#if 0 // to unplug the conversion that fails to see if it diverges further
-		rdz=signedToBitVector(rdz, wO);
+#if 1 // to unplug the conversion that fails to see if it diverges further
+		rdz=signedToBitVector(rdz, msbOut-lsbOut+1);
 		tc->addExpectedOutput ("R", rdz);
 
 		mpfr_get_z (ruz.get_mpz_t(), s, GMP_RNDU); 					// there can be a real rounding here
-		ruz=signedToBitVector(ruz, wO);
+		ruz=signedToBitVector(ruz, msbOut-lsbOut+1);
 		tc->addExpectedOutput ("R", ruz);
-#endif
-#if 0 // debug: with this we observe if the simulation diverges
-		double d =  mpfr_get_d(s, GMP_RNDD);
-		cout << "log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
 #endif
 		
 		mpfr_clears (x, t, s, NULL);
@@ -321,27 +320,105 @@ namespace flopoco {
 	};
 
 
+	void FixIIR::computeImpulseResponse() {
+		// simulate the filter on an impulsion for long enough, until
+		// double threshold = 0.5/(1<<-lsbOut);
+		double threshold = 0; //soyons fous
+		double epsilon=1e15; // initialize with a large value
+		uint64_t k;
+		//initialize the ui and yi
+		for(uint32_t i=0; i<n+m; i++) {
+			ui.push_back(0);
+			yi.push_back(0);		
+		}
+		ui.push_back(1); // input impulse
+		yi.push_back(0);		
+
+		k=0;
+		int storageOffset=n+m;
+		
+		while (epsilon>threshold) {
+			// make room
+			ui.push_back(0);			
+			yi.push_back(0);		
+			// compute the new y
+			double y=0;
+			for(uint32_t i=0; i<n; i++) {
+				y += ui[storageOffset+ k-i]*coeffb_d[i] ;
+			}
+			for(uint32_t i=0; i<m; i++) {
+				//		cout << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;  
+				y -= yi[storageOffset+ k-i]*coeffa_d[i] ;
+			}
+			k++;
+			yi[storageOffset+k] = y;
+				 
+			epsilon = abs(y);
+			//cout << "k=" << k << " yi=" << y << endl;
+			if(k>=300000){
+				REPORT(0, "computeImpulseResponse: giving up for k=" <<k << " with epsilon still at " << epsilon << ", it seems hopeless");
+				epsilon=0;
+			}
+		}
+		vanishingK=k;
+		REPORT(0, "Impulse response vanishes for k=" << k);
+	}
 
 	
 	void FixIIR::buildStandardTestCases(TestCaseList* tcl){
 		// First fill with a few ones, then a few zeroes
 		TestCase *tc;
 
-		
-		for (uint32_t i=0; i<3; i++) {
+#if 0 // Test on the impulse response, useful for debugging 
+		tc = new TestCase(this);
+		tc->addInput("X", (mpz_class(1)<<(-lsbIn))-1 ); // 1 (almost)
+		emulate(tc);
+		tcl->add(tc);
+
+		for (uint32_t i=0; i<100; i++) {
 			tc = new TestCase(this);
-			tc->addInput("X", mpz_class(1)<<(-lsbIn-1)); // 0.5
+			tc->addInput("X", mpz_class(0));
 			emulate(tc);
 			tcl->add(tc);
 		}
 		
-		for (uint32_t i=0; i<3; i++) {
+#endif
+#if 1
+		// compute the impulse response
+		computeImpulseResponse();
+		// Now fill with a signal that follows the sign alternance of the impulse response: this builds a worst-case signal
+		miny=0; maxy=0;
+		int storageOffset=n+m;
+		uint32_t kmax = vanishingK-storageOffset;
+		for (uint32_t i =0; i<kmax; i++) {
+			mpz_class val;
+#if 0
+			if(yi[kmax-i]<0) {
+				val = ((mpz_class(1)<<(-lsbIn)) -1) ; // 011111
+			}
+			else {
+				val = ((mpz_class(1)<<(-lsbIn)) +1); // 100001
+			}
+#else // multiplying by 1 and -1 ensures no rounding error in the FIR part
+			// hence the following code
+			// But no observable difference... 
+			val = ((mpz_class(1)<<(-lsbIn)) -1) * 9 / 10; // 011111;  *9/10 to trigger rounding errors
+			if(yi[kmax-i]>=0) {
+				// two's complement
+				val = ((mpz_class(1)<<(-lsbIn+1)) -1) -val +1 ; // 111111 - val + 1
+			}
+
+#endif
 			tc = new TestCase(this);
-			tc->addInput("X", mpz_class(0)); // 0
+			tc->addInput("X", val); 
 			emulate(tc);
 			tcl->add(tc);
-		}		
+			
+		}
 
+		REPORT(0,"Filter output remains in [" << miny << ", " << maxy<<"]");
+#endif
+		
 	};
 
 

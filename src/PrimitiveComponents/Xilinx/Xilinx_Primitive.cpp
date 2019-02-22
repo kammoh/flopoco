@@ -24,8 +24,8 @@ namespace flopoco {
     Xilinx_Primitive::~Xilinx_Primitive() {}
 
     void Xilinx_Primitive::checkTargetCompatibility( Target *target ) {
-		if( target->getVendor() != "Xilinx" || (target->getID() != "Zynq7000" && target->getID() != "Virtex7" && target->getID() != "Virtex6" && target->getID() != "Virtex5" && target->getID() != "Spartan6") ) {
-			throw std::runtime_error( "This component is only suitable for target Xilinx Virtex6 and above." );
-        }
+		if( target->getVendor() != "Xilinx" || !(target->getID() == "Virtex6" || target->getID() == "Zynq7000" || target->getID() == "Kintex7") ) {
+			throw std::runtime_error( "This component is only suitable for target Xilinx Virtex6, Zynq7000 and Kintex7." );
+		}
     }
 }//namespace

@@ -1,7 +1,7 @@
 PROJECT(FloPoCo C CXX)
 
 MESSAGE("Trying to build FloPoCo on " ${CMAKE_SYSTEM_NAME} ", compiler is " ${CMAKE_C_COMPILER})
-
+Message("CMAKE_CURRENT_BINARY_DIR is " ${CMAKE_CURRENT_BINARY_DIR}  ", CMAKE_CURRENT_SOURCE_DIR is " ${CMAKE_CURRENT_SOURCE_DIR})
 # CMake's way of handling various versions
 cmake_minimum_required(VERSION 2.4)
 if(COMMAND cmake_policy)
@@ -32,7 +32,8 @@ INCLUDE(CPack)
 #Compilation flags
 #SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall")
+SET(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g -pg -Wall") #-pg not supported in Apple LLVM version 10.0.0 (dyld error during execution)
 #SET(CMAKE_CXX_FLAGS_DEBUG "-pg -Wall")
 # Do you want an executable of 30MB ?
 SET(CMAKE_BUILD_TYPE DEBUG)
@@ -177,37 +178,44 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
   ScaLP/Solver.h
-  HINTS "/usr/local/include/" "~/.local/include" "/opt/scalp/include"
+  HINTS "/usr/local/include/" "~/.local/include" "${SCALP_PREFIX_DIR}/include/" 
   DOC "Path of main header of scalp"
   )
 FIND_LIBRARY(SCALP_LIB
-  NAMES libScaLP libScaLP.so  libScaLP.dylib
-  HINTS "/usr/local/lib64/" "~/.local/lib/" "/opt/scalp/lib"
+  NAMES libScaLP.dylib libScaLP libScaLP.so  
+  HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP main library")
+
+IF (SCALP_H AND SCALP_LIB)
+  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
+	ELSE(SCALP_H AND SCALP_LIB)
+  MESSAGE(STATUS "SCALP not found (used for advanced bit heap compression and large multipliers) download and compile it from https://digidev.digi.e-technik.uni-kassel.de/scalp/")
+ENDIF(SCALP_H AND SCALP_LIB)
 
 FIND_LIBRARY(SCALP_CPLEX_LIB
   NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
-  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
+  HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for cplex solver backend")
 
 FIND_LIBRARY(SCALP_GUROBI_LIB
   NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
-  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
+  HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for Gurobi solver backend")
 
 FIND_LIBRARY(SCALP_SCIP_LIB
   NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
-  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
+  HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for SCIP solver backend")
 
 FIND_LIBRARY(SCALP_LPSOLVE_LIB
-  NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSOLVE.dylib
-  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
+  NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSolve.so libScaLP-LPSOLVE.dylib
+  HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP library for LPSOLVE solver backend")
 
 IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
   SET(SCALP_FOUND TRUE)
 ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
+
 
 IF (SCALP_FOUND)
   ADD_DEFINITIONS(-DHAVE_SCALP)
@@ -227,91 +235,67 @@ IF (SCALP_FOUND)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
   ENDIF (SCALP_LPSOLVE_LIB)
   
-  MESSAGE(STATUS "Found SCALP: ${SCALP_H},${SCALP_LIB}")
-  MESSAGE(STATUS "      Using the following ILP solver libraries: ${SCALP_LIBS}")  
+  MESSAGE(STATUS "  ScaLP will be using the following ILP solver libraries: ${SCALP_LIBS}")  
 ELSE (SCALP_FOUND)
-  MESSAGE(STATUS "Could not find SCALP, no ILP solver available (used for advanced bit heap compression and large multipliers), download and compile from https://digidev.digi.e-technik.uni-kassel.de/scalp/ (found: ${SCALP_H},${SCALP_LIB} and one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
+  MESSAGE(STATUS "No ILP solver available, SCALP needs one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
 ENDIF (SCALP_FOUND)
 
 ADD_DEFINITIONS(-DHAVE_LNS)
 
-#
-# Create custom command for flex++/lex (note the outputs)
-FIND_PROGRAM(FLEXPP_EXECUTABLE
-  NAMES flex
-  PATHS /usr/bin
-  DOC "Flex++ executable")
 
-IF(FLEXPP_EXECUTABLE)
-  MESSAGE(STATUS "Found lex: ${FLEXPP_EXECUTABLE}")
-ELSE(FLEXPP_EXECUTABLE)
-  MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
-ENDIF(FLEXPP_EXECUTABLE)
+#detect PAG suite
+FIND_LIBRARY( RPAG_LIB NAMES rpag )
+FIND_PATH( PAGSUITE_INCLUDE_DIR NAMES rpag/rpag.h )
+IF( RPAG_LIB AND PAGSUITE_INCLUDE_DIR)
+    SET(RPAG_FOUND true)
+    ADD_DEFINITIONS(-DHAVE_RPAGLIB)
+    Message(STATUS "Found PAGSuite's rpag: ${RPAG_LIB} (${PAGSUITE_INCLUDE_DIR})")
+ELSE( RPAG_LIB AND PAGSUITE_INCLUDE_DIR)
+    Message(STATUS "Could not find PAGSuite's rpag (RPAG_LIB=${RPAG_LIB}, PAGSUITE_INCLUDE_DIR=${PAGSUITE_INCLUDE_DIR})")
+ENDIF(RPAG_LIB AND PAGSUITE_INCLUDE_DIR )
+
+FIND_LIBRARY( PAG_LIB NAMES pag )
+FIND_PATH( PAGSUITE_INCLUDE_DIR NAMES pagsuite/adder_graph.h )
+IF( PAG_LIB AND PAGSUITE_INCLUDE_DIR )
+    SET(PAGLIB_FOUND true)
+    ADD_DEFINITIONS(-DHAVE_PAGLIB)
+    Message(STATUS "Found PAGSuite's paglib: ${PAG_LIB} (${PAGSUITE_INCLUDE_DIR})")
+ELSE( PAG_LIB AND PAGSUITE_INCLUDE_DIR )
+    Message(STATUS "Could not find PAGSuite's paglib (PAG_LIB=${PAG_LIB}, PAGSUITE_INCLUDE_DIR=${PAGSUITE_INCLUDE_DIR})")
+ENDIF(PAG_LIB AND PAGSUITE_INCLUDE_DIR )
+
+FIND_LIBRARY( OSCM_LIB NAMES oscm )
+FIND_PATH( PAGSUITE_INCLUDE_DIR NAMES pagsuite/oscm.hpp )
+IF( OSCM_LIB AND PAGSUITE_INCLUDE_DIR )
+    SET(OSCM_FOUND true)
+    ADD_DEFINITIONS(-DHAVE_OSCM)
+    Message(STATUS "Found PAGSuite's oscmlib: ${OSCM_LIB} (${PAGSUITE_INCLUDE_DIR})")
+ELSE( OSCM_LIB AND PAGSUITE_INCLUDE_DIR )
+    Message(STATUS "Could not find PAGSuite's oscmlib (OSCM_LIB=${OSCM_LIB}, PAGSUITE_INCLUDE_DIR=${PAGSUITE_INCLUDE_DIR})")
+ENDIF( OSCM_LIB AND PAGSUITE_INCLUDE_DIR )
+
+find_package(FLEX)
+
 
 # necessary to include generated files
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${GMP_H} ${GMPXX_H} ${MPFI_H} ${MPFR_H} ${SOLLYA_H})
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT src/VHDLLexer.cpp
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-  COMMAND ${FLEXPP_EXECUTABLE} 
-  ARGS --nounput -o ${CMAKE_CURRENT_BINARY_DIR}/src/VHDLLexer.cpp 
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
-  )
-
-#SET_SOURCE_FILES_PROPERTIES(VHDLLexer GENERATED) 
-
-# Create custom command for bison/yacc (note the outputs)
-FIND_PROGRAM(BISON_EXECUTABLE
-  NAMES bison
-  PATHS /usr/bin
-  DOC "Bison executable")
-
-IF(BISON_EXECUTABLE)
-  MESSAGE(STATUS "Found bison: ${BISON_EXECUTABLE}")
-ELSE(BISON_EXECUTABLE)
-  MESSAGE(FATAL_ERROR "Could not find Bison.\nOn Debian-based systems install bison")
-ENDIF(BISON_EXECUTABLE)
-
-ADD_CUSTOM_COMMAND(
-  OUTPUT ExpressionParser.cpp
-  COMMAND ${BISON_EXECUTABLE}
-  ARGS -y -d --defines=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.h --output=${CMAKE_CURRENT_BINARY_DIR}/ExpressionParser.cpp --name-prefix=FlopocoExpression
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/FPExpressions/ExpressionParser.y
-  )
-
-SET_SOURCE_FILES_PROPERTIES(ExpressionParser GENERATED) 
-
-# Create custom command for flex/lex (note the outputs)
-FIND_PROGRAM(FLEX_EXECUTABLE
-  NAMES flex
-  PATHS /usr/bin
-  DOC "Flex executable")
-
-IF(FLEX_EXECUTABLE)
-  MESSAGE(STATUS "Found flex: ${FLEX_EXECUTABLE}")
-ELSE(FLEX_EXECUTABLE)
-  MESSAGE(FATAL_ERROR "Could not find LEX.\nOn Debian-based systems install flex++")
-ENDIF(FLEX_EXECUTABLE)
-
-ADD_CUSTOM_COMMAND(
-  OUTPUT ExpressionScanner.cpp
-  COMMAND ${FLEX_EXECUTABLE} 
-  ARGS --prefix=FlopocoExpression --header-file=${CMAKE_CURRENT_BINARY_DIR}/FlopocoScanner.h -o ${CMAKE_CURRENT_BINARY_DIR}/ExpressionScanner.cpp 
-  ${CMAKE_SOURCE_DIR}/src/FPExpressions/ExpressionScanner.l
-  )
-
-SET_SOURCE_FILES_PROPERTIES(ExpressionScanner GENERATED)
+FLEX_TARGET(
+	VHDLLexer ${CMAKE_CURRENT_SOURCE_DIR}/src/VHDLLexerRule.l
+	${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp  # Not clean, should go to the build dir
+	COMPILE_FLAGS --nounput
+	)
 
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT src/Factories.cpp
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp  
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/Interfaced.txt  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
-  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories
+  ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp
   )
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp GENERATED)
 
-SET_SOURCE_FILES_PROPERTIES(src/Factories GENERATED)
+
 #Thanks SOF https://stackoverflow.com/questions/4346412/how-to-prepend-all-filenames-on-the-list-with-common-path#27630120
 
 # PREPEND(var prefix ${args}) set the variable var to the list [${prefix}x, for x in args]
@@ -339,6 +323,7 @@ execute_process(
 ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS})
 
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
+
 
 TARGET_LINK_LIBRARIES(
   FloPoCoLib 
@@ -368,15 +353,51 @@ IF (WCPG_FOUND)
 ENDIF (WCPG_FOUND)
 
 IF (SCALP_FOUND)
-  TARGET_LINK_LIBRARIES(
-	FloPoCoLib
-	${SCALP_LIBS}
-	)
-  INCLUDE_DIRECTORIES(${SCALP_H})
+    TARGET_LINK_LIBRARIES(
+            FloPoCoLib
+            ${SCALP_LIBS}
+    )
+    INCLUDE_DIRECTORIES(${SCALP_H})
 ENDIF (SCALP_FOUND)
+
+IF (RPAG_FOUND)
+    TARGET_LINK_LIBRARIES(
+            FloPoCoLib
+            ${RPAG_LIB}
+    )
+    INCLUDE_DIRECTORIES(${PAGSUITE_INCLUDE_DIR})
+ENDIF (RPAG_FOUND)
+
+IF (PAGLIB_FOUND)
+    TARGET_LINK_LIBRARIES(
+            FloPoCoLib
+            ${PAG_LIB}
+    )
+    INCLUDE_DIRECTORIES(${PAGSUITE_INCLUDE_DIR})
+ENDIF (PAGLIB_FOUND)
+
+IF (OSCM_FOUND)
+    TARGET_LINK_LIBRARIES(
+            FloPoCoLib
+            ${OSCM_LIB}
+    )
+    INCLUDE_DIRECTORIES(${PAGSUITE_INCLUDE_DIR})
+ENDIF (OSCM_FOUND)
+
+#IF (PAGSUITE_FOUND)
+#    TARGET_LINK_LIBRARIES(
+#            FloPoCoLib
+#            ${PAGSUITE_LIBS}
+#    )
+#    INCLUDE_DIRECTORIES(${PAGSUITE_H})
+#ENDIF (PAGSUITE_FOUND)
+
+
 
 ADD_EXECUTABLE(flopoco
   src/main 
+	${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp	 
+	${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp	
   )
 
 TARGET_LINK_LIBRARIES(
@@ -407,7 +428,51 @@ TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 ADD_EXECUTABLE(longacc2fp src/Tools/longacc2fp  src/utils)
 TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
 
-
+# To resurrect some day if we finish the work on FFT
+# ADD_EXECUTABLE(fftest src/Complex/fakemain)
+# TARGET_LINK_LIBRARIES(fftest ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 #add_subdirectory(src/random)
 #target_link_libraries(FloPoCoLib flopoco_random_lib)
+
+OPTION(BUILD_UNIT_TEST "Build the flopoco unit tests") 
+if(BUILD_UNIT_TEST)
+	find_package(Boost 1.55 REQUIRED COMPONENTS unit_test_framework)
+	enable_testing()
+	## Testing Posit format
+	add_executable(NumberFormatTest_exe tests/TestBenches/PositNumber.cpp)		
+	target_include_directories(NumberFormatTest_exe PUBLIC ${Boost_INCLUDE_DIR}) 
+	target_link_libraries(NumberFormatTest_exe FloPoCoLib ${Boost_LIBRARIES})
+
+	find_library(SOFTPOSIT_LIB softposit)
+	find_path(SOFTPOSIT_H softposit.h)
+
+	if(SOFTPOSIT_LIB AND SOFTPOSIT_H)
+		MESSAGE(STATUS "softposit found : ${SOFTPOSIT_LIB}, ${SOFTPOSIT_H}")
+		OPTION(POSIT32_TEST "Exhaustive test of conversion from and back posit32
+		(long)")
+		target_compile_definitions(NumberFormatTest_exe PRIVATE SOFTPOSIT)
+		if(POSIT32_TEST)
+			target_compile_definitions(NumberFormatTest_exe PRIVATE POSIT32TEST)
+		endif()
+		target_link_libraries(NumberFormatTest_exe ${SOFTPOSIT_LIB})
+		target_include_directories(NumberFormatTest_exe PRIVATE ${SOFTPOSIT_H})
+	else()
+		Message(WARNING "Softposit not found, will not check if mpfr conversion from value is correct")
+	endif()
+
+	add_test(NumberFormatTest NumberFormatTest_exe)
+	## Testing IntConstMultShiftAdd adder cost computation
+
+	add_executable(ErrorGraphTest_exe tests/ConstMult/testErrorGraphCost.cpp ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp	)
+	target_include_directories(ErrorGraphTest_exe PUBLIC ${Boost_INCLUDE_DIR} ${PAGSUITE_INCLUDE_DIR})
+	target_link_libraries(ErrorGraphTest_exe FloPoCoLib ${Boost_LIBRARIES} ${RPAG_LIB})
+
+	add_test(ErrorGraphCost ErrorGraphTest_exe)
+
+	add_executable(IntConstMultShiftAddCostFunction_exe tests/ConstMult/testNodeCost.cpp ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp	)
+	target_include_directories(IntConstMultShiftAddCostFunction_exe PUBLIC ${Boost_INCLUDE_DIR} ${PAGSUITE_INCLUDE_DIR})
+	target_link_libraries(IntConstMultShiftAddCostFunction_exe FloPoCoLib ${Boost_LIBRARIES} ${RPAG_LIB})
+
+	add_test(IntConstMultShiftAddCost IntConstMultShiftAddCostFunction_exe)
+endif()

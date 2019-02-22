@@ -44,8 +44,8 @@
 /* shifters + lzoc ------------------------------------------- */
 #include "ShiftersEtc/Shifters.hpp"
 #include "ShiftersEtc/LZOC.hpp"
+#include "ShiftersEtc/LZOC3.hpp"
 #include "ShiftersEtc/LZOCShifterSticky.hpp"
-
 
 /* FixFilters ------------------------------------------------ */
 #include "FixFilters/FixSOPC.hpp"
@@ -147,6 +147,7 @@
 //#include "ExpLog/FPPow.hpp"
 
 
+#include "Conversions/Posit2FP.hpp"
 //#include "Conversions/Fix2FP.hpp"
 //#include "Conversions/FP2Fix.hpp"
 //#include "Conversions/InputIEEE.hpp"
@@ -225,6 +226,8 @@ use withing matrix-multiplication scenarios ------------------ */
 #include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
 #include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 #include "PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
+
+#include "ConstMultPAG/ConstMultPAG.hpp"
 
 /*Internshiping shit making*/
 #include "Internshiping/MAC.hpp"

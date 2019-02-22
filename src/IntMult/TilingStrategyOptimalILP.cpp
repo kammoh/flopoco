@@ -10,7 +10,8 @@ void TilingStrategyOptimalILP::solve()
 #else
      solver = new ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
 
-     pair< unsigned int, pair<unsigned int, unsigned int> > solutionitem;
+/* led to error: no matching constructor for initialization
+     mult_tile_t solutionitem;
 
      solutionitem.first = 0;
      solutionitem.second = make_pair(0,0);
@@ -19,6 +20,7 @@ void TilingStrategyOptimalILP::solve()
      solutionitem.first = 0;
      solutionitem.second = make_pair(17,0);
      solution.push_back(solutionitem);
+*/
 #endif
 }
 

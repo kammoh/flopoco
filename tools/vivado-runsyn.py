@@ -6,6 +6,7 @@
 ## All rights reserved
 ################################################################################
 
+from __future__ import print_function
 import os
 import sys
 import re
@@ -13,39 +14,42 @@ import string
 import argparse
 
 def report(text):
-    print "vivado_runsyn: " + text
+    print("vivado_runsyn: ", text)
 
     
 def get_compile_info(filename):
-    vhdl=open(filename).read()
+    try:
+        vhdl=open(filename).read()
 
-    # last entity
-    endss = [match.end() for match in re.finditer("entity", vhdl)] # list of endpoints of match of "entity"
-    last_entity_name_start = endss[-2] +1 # skip the space
-    i = last_entity_name_start
-    while(vhdl[i]!=" "):
-        i=i+1
-    last_entity_name_end = i
-    entityname=vhdl[last_entity_name_start:last_entity_name_end]
+        # last entity
+        endss = [match.end() for match in re.finditer("entity", vhdl)] # list of endpoints of match of "entity"
+        last_entity_name_start = endss[-2] +1 # skip the space
+        i = last_entity_name_start
+        while(vhdl[i]!=" "):
+            i=i+1
+        last_entity_name_end = i
+        entityname=vhdl[last_entity_name_start:last_entity_name_end]
 
-    # target 
-    endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
-    target_name_start = endss[-1] +1
-    i = target_name_start
-    while(vhdl[i]!=" "):
-        i=i+1
-    target_name_end = i
-    targetname=vhdl[target_name_start:target_name_end]
+        # target 
+        endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
+        target_name_start = endss[-1] +1
+        i = target_name_start
+        while(vhdl[i]!=" "):
+            i=i+1
+        target_name_end = i
+        targetname=vhdl[target_name_start:target_name_end]
     
-    # the frequency follows but we don't need to read it so far
-    frequency_start=target_name_end+3 #  skip " @ "
-    i = frequency_start
-    while(vhdl[i]!=" " and vhdl[i]!="M"): # 400MHz or 400 MHz
-        i=i+1
-    frequency_end = i
-    frequency = vhdl[frequency_start:frequency_end]
+        # the frequency follows but we don't need to read it so far
+        frequency_start=target_name_end+3 #  skip " @ "
+        i = frequency_start
+        while(vhdl[i]!=" " and vhdl[i]!="M"): # 400MHz or 400 MHz
+            i=i+1
+        frequency_end = i
+        frequency = vhdl[frequency_start:frequency_end]
+        return (entityname, targetname, frequency)
 
-    return (entityname, targetname, frequency)
+    except Exception:
+        return ("", "","")
 
 
 
@@ -101,6 +105,9 @@ if __name__ == '__main__':
         part="xc7k70tfbv484-3"
     elif target.lower()=="zynq7000":
         part="xc7z020clg484-1"
+    elif target.lower()=="virtex7":
+#        part="xc7v2000tflg1925-1" # virtex 7 with largest I/O count (1100 I/Os)
+        part="xc7vx330tffg1157-1" # virtex 7 with 600 I/Os
     else:
         raise BaseException("Target " + target + " not supported")
         
@@ -160,6 +167,9 @@ if __name__ == '__main__':
         tclscriptfile.write("launch_runs " + result_name + "\n")
         tclscriptfile.write("wait_on_run " + result_name + "\n")
         tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
+
+    tclscriptfile.write("set_property IOB FALSE [all_inputs]\n")    
+    tclscriptfile.write("set_property IOB FALSE [all_outputs]\n")
     tclscriptfile.write("report_utilization  -file "+  utilization_report_file +"\n")
 
 

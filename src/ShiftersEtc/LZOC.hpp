@@ -20,7 +20,7 @@ namespace flopoco{
 		 * @param[in] target the target device for this operator
 		 * @param[in] wIn the width of the input
 		 */
-		LZOC(Target* target, int wIn);
+		LZOC(OperatorPtr parentOp, Target* target, int wIn);
 	
 		/** The LZOC destructor	*/
 		~LZOC();

@@ -143,16 +143,31 @@ namespace flopoco{
 		/** should flopoco generate SVG figures */
 		void setGenerateFigures(bool b);
 
-        /** should target specific optimizations be performed */
-        bool  useTargetOptimizations();
+		/** should target specific optimizations be performed */
+		bool  useTargetOptimizations();
 
-        /** should target specific optimizations be performed */
-        void  setUseTargetOptimizations(bool b);
+		/** should target specific optimizations be performed */
+		void  setUseTargetOptimizations(bool b);
 
-		/** Returns the number of inputs that the LUTs have on the specific device
-		 * @return the number of inputs for the look-up tables (LUTs) of the device
-		 */
+		/** should target specific optimizations be performed */
+		string  getCompressionMethod();
+
+		/** should target specific optimizations be performed */
+		void  setCompressionMethod(string compression);
+
+		/** On LUT-based FPGAs, number of inputs of the basic architectural LUT.
+		  * Look-up tables with lutInput() input bits can be used independently
+		  * without constraint. When the architecture of a logic bloc allows to
+		  * combine several basic LUTs into larger ones, see maxLutInputs()
+		  */
 		int lutInputs();
+
+		/**On LUT-based FPGAs, this is the maximum value of n such that an n-bit
+		 * in, 1-bit out look-up-table can be implemented without resorting to
+		 * general routing. See the documentation of this method in each each
+		 * specific Target for more information
+		 */
+		virtual int maxLutInputs();
 
 
 		/* -------------------- Perf declaration methods  ------------------------
@@ -721,6 +736,8 @@ namespace flopoco{
 		bool   plainVHDL_;     /**< True if we want the VHDL code to be concise and readable, with + and * instead of optimized FloPoCo operators. */
 		bool   generateFigures_;  /**< If true, some operators may generate some figures in SVG format */
         bool   useTargetOptimizations_; /**< If true, target specific optimizations using primitives are performed. Vendor specific libraries are necessary for simulation. */
+
+		string compression_; /**< Defines the BitHeap compression method*/
 	};
 
 }

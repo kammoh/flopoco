@@ -105,6 +105,7 @@ namespace flopoco{
 		void build_pipeline(ShiftAddOp* sao);
 		string printBoothCode(int* BoothCode, int size);
 		void showShiftAddDag();
+		void showRPAG();
 		void optimizeLefevre(const vector<mpz_class>& constants);
 		ShiftAddOp* buildEuclideanDag(const mpz_class n, ShiftAddDag* constant);
 		int prepareBoothTree(mpz_class &n, ShiftAddDag* &tree_try, ShiftAddOp** &level, ShiftAddOp* &result, ShiftAddOp* &MX, unsigned int* &shifts, int& nonZeroInBoothCode, int& globalshift);

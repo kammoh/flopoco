@@ -19,10 +19,12 @@ namespace flopoco {
     Xilinx_TernaryAdd_2State_slice::Xilinx_TernaryAdd_2State_slice(Operator *parentOp, Target *target, const uint &wIn , const bool &is_initial , const std::string &lut_content ) : Operator( parentOp, target ) {
         setCopyrightString( "Marco Kleinlein" );
 
+
         setNameWithFreqAndUID( "Xilinx_TernaryAdd_2State_slice_s" + std::to_string( wIn ) + ( is_initial ? "_init" : "" ) );
         srcFileName = "Xilinx_TernaryAdd_2State_slice";
         //addToGlobalOpList( this );
         setCombinatorial();
+        setShared();
         addInput( "sel_in" );
         addInput( "x_in", wIn );
         addInput( "y_in", wIn );
@@ -52,7 +54,7 @@ namespace flopoco {
         }
 
         for( uint i = 0; i < wIn; ++i  ) {
-			Xilinx_LUT6_2 *lut_bit_i = new Xilinx_LUT6_2( parentOp,target );
+			Xilinx_LUT6_2 *lut_bit_i = new Xilinx_LUT6_2( this,target );
             lut_bit_i->setGeneric( "init", lut_content, 64 );
             inPortMap( lut_bit_i, "i0", "z_in" + of( i ) );
             inPortMap( lut_bit_i, "i1", "y_in" + of( i ) );
@@ -66,7 +68,7 @@ namespace flopoco {
         }
 
         if( is_initial ) {
-			Xilinx_CARRY4 *init_cc = new Xilinx_CARRY4( parentOp,target );
+			Xilinx_CARRY4 *init_cc = new Xilinx_CARRY4( this,target );
             outPortMap( init_cc, "co", "cc_co");
             outPortMap( init_cc, "o", "cc_o");
             inPortMap( init_cc, "cyinit", "carry_in" );
@@ -75,7 +77,7 @@ namespace flopoco {
             inPortMap( init_cc, "s", "cc_s" );
             vhdl << init_cc->primitiveInstance( "init_cc" );
         } else {
-			Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
+			Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( this,target );
             outPortMap( further_cc, "co", "cc_co");
             outPortMap( further_cc, "o", "cc_o");
             inPortMapCst( further_cc, "cyinit", "'0'" );
@@ -87,6 +89,7 @@ namespace flopoco {
 
         vhdl << tab << "carry_out	<= cc_co" << of( wIn - 1 ) << ";" << std::endl;
         vhdl << tab << "sum_out <= cc_o" << range( wIn-1, 0 ) << ";" << std::endl;
+
 	};
 
 }//namespace

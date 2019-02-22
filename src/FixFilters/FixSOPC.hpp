@@ -23,6 +23,11 @@ namespace flopoco{
 		 */
 		FixSOPC(OperatorPtr parentOp_, Target* target, int lsbIn, int lsbOut, vector<string> coeff);
 
+		/**
+		 * @brief simple constructor for inputs in the fixed-point format (0, lsbIn) with msbOut provided.
+		 */
+		FixSOPC(OperatorPtr parentOp_, Target* target, int lsbIn, int msbOut, int lsbOut, vector<string> coeff);
+
 
 
 
@@ -68,8 +73,9 @@ namespace flopoco{
 		pair<mpz_class,mpz_class> computeSOPCForEmulate(vector<mpz_class> x);
 
 		// User-interface stuff
-		/** Factory method */
+		/** Factory method - these are for internal use, by default FixSOPC should not be listed in Interfaced.txt */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArgumentsFull(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static TestList unitTest(int index);
 		static void registerFactory();
 

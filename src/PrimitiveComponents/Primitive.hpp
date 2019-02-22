@@ -28,7 +28,7 @@ namespace flopoco {
         /// \brief checkTargetCompatibility Deprecated do not use
         /// \param target
         ///
-        static void checkTargetCompatibility( Target *target );
+//        static void checkTargetCompatibility( Target *target );
 
 /*
         ///

@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sstream>
 #include <vector>
+#include <cmath> //for abs(double)
 
 #include <gmp.h>
 #include <gmpxx.h>
@@ -29,7 +30,23 @@
 #include "FixFunctionByMultipartiteTable.hpp"
 #include "Multipartite.hpp"
 #include "../BitHeap/BitHeap.hpp"
+#include "../Table.hpp"
 
+/*
+To replicate the functions used in the 2017 Hsiao paper
+
+./flopoco FixFunctionByMultipartiteTable f="sin(pi/4*x)"  msbOut=-1 lsbIn=-24 lsbOut=-24
+./flopoco FixFunctionByMultipartiteTable f="2^x-1" lsbIn=-16 lsbOut=-15 msbOut=-1 
+./flopoco FixFunctionByMultipartiteTable f="1/(x+1)-0.5" lsbIn=-15 lsbOut=-15 msbOut=-1 
+
+>
+*/
+
+/*
+ TODOs:
+ compress TIV only if it saves at least one adder; in general resurrect uncompressed TIV
+
+*/
 
 using namespace std;
 
@@ -43,13 +60,14 @@ namespace flopoco
 	 @param[int]    lsbIn_		input LSB weight
 	 @param[int]    msbOut_		output MSB weight, used to determine wOut
 	 @param[int]    lsbOut_		output LSB weight
-	 @param[int]	nbTables_	number of tables which will be created
+	 @param[int]	nbTOi_	number of tables which will be created
 	 @param[bool]	signedIn_	true if the input range is [-1,1)
 	 */
-	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTables_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_):
-		Operator(parentOp, target), nbTables(nbTables_)
-	{
+	FixFunctionByMultipartiteTable::FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target *target, string functionName_, int nbTOi_, bool signedIn_, int lsbIn_, int msbOut_, int lsbOut_, bool compressTIV_):
+		Operator(parentOp, target), nbTOi(nbTOi_), compressTIV(compressTIV_)
+{
 		f = new FixFunction(functionName_, signedIn_, lsbIn_, msbOut_, lsbOut_);
+		epsilonT = 1.0 / (1<<(f->wOut+1));
 
 		srcFileName="FixFunctionByMultipartiteTable";
 
@@ -59,101 +77,173 @@ namespace flopoco
 
 		setCopyrightString("Franck Meyer, Florent de Dinechin (2015)");
 		addHeaderComment("-- Evaluator for " +  f->getDescription() + "\n");
-		REPORT(DETAILED, "Entering: FixFunctionByMultipartiteTable \"" << functionName_ << "\" " << nbTables_ << " " << signedIn_ << " " << lsbIn_ << " " << msbOut_ << " " << lsbOut_ << " ");
+		REPORT(DETAILED, "Entering: FixFunctionByMultipartiteTable \"" << functionName_ << "\" " << nbTOi_ << " " << signedIn_ << " " << lsbIn_ << " " << msbOut_ << " " << lsbOut_ << " ");
 		int wX=-lsbIn_;
 		addInput("X", wX);
 		int outputSize = msbOut_-lsbOut_+1; // TODO finalRounding would impact this line
 		addOutput("Y" ,outputSize , 2);
 		useNumericStd();
 
-
-		obj = new Multipartite(this, f, f->wIn, f->wOut);
-
-		// build the required tables of errors
-		buildOneTableError();
-
-		buildGammaiMin();
-
-		bestMP = enumerateDec();
-		bestMP->mkTables(target);
-
-		vhdl << endl;
-
-		vhdl << tab << declare("in_tiv", bestMP->alpha) <<" <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->alpha) << ";" << endl;
-
-		schedule();
-		inPortMap(bestMP->cTiv, "X", "in_tiv");
-		outPortMap(bestMP->cTiv, "Y1", "out_tiv_comp");
-		outPortMap(bestMP->cTiv, "Y2", "out_tiv_corr");
-		vhdl << instance(bestMP->cTiv, "cTivTable") << endl;
-
-
-		//addSubComponent(bestMP->cTiv);
-		//vhdl << instance(bestMP->cTiv, "cTivTableTest") << endl;
-
-		ostringstream oss("");
-		for(int i = 0; i < bestMP->m; i++)
-		{
-			oss << "TO" << i << ":" << ((bestMP->outputSizeTOi[i]-1) << ( bestMP->gammai[i]+bestMP->betai[i]-1 ))
-				<< " (" + (bestMP->outputSizeTOi[i]-1) << ".2^"
-				<< ( bestMP->gammai[i]+bestMP->betai[i]-1 ) << endl;
+		int sizeMax = f->wOut<<f->wIn; // size of a plain table
+		topTen=vector<Multipartite*>(ten);
+		for (int i=0; i<ten; i++){
+			topTen[i] = new Multipartite(this, f, f->wIn, f->wOut);
+			topTen[i]-> totalSize =	sizeMax;
 		}
 
-		oss << "Total:" << bestMP->totalSize << endl;
 
-		REPORT(DEBUG, "g=" << bestMP->guardBits);
-		REPORT(DEBUG, "size:" << endl << oss.str());
-		;
-		// Déclaration des composants xor
+		// Outer loop on guardBitSlack;
+		guardBitsSlack =-1; // first  try the exploration with one guard bit less than the safe value
+		Multipartite* bestMP;
+		bool successWithguardBitsSlack = false;
+		int rank;
+		while (guardBitsSlack<=0 && !successWithguardBitsSlack) {
+
+			bool decompositionFound;
+			if(nbTOi==0) {
+				// The following is not as clean as it should be because the code was first written with nbTOi a global variable...
+				nbTOi=1;
+				decompositionFound=true;
+				while (decompositionFound) {
+					REPORT(INFO, "Exploring nbTO=" << nbTOi);
+					buildOneTableError();
+					buildGammaiMin();
+					decompositionFound = enumerateDec(); 
+					if(!decompositionFound)
+						REPORT(INFO, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
+					nbTOi ++;
+				}
+				if(topTen[0]->totalSize == sizeMax) {
+					THROWERROR("\nSorry, the multipartite method doesn't seem to work for this function. \nTry another of the FixFunction* operators. At least FixFunctionByTable should work...");
+				}
+			}
+			else	{ // nbTOi was given
+ 				// build the required tables of errors
+				buildOneTableError();
+				buildGammaiMin();
+				decompositionFound = enumerateDec();
+				if(!decompositionFound)
+					THROWERROR("No decomposition found for nbTOi=" << nbTOi << ", aborting");
+			}
+
+			// Parameter space exploration complete. Now checking the results
+			rank = 0 ;
+			bool tryAgain = true;
+			while (rank < ten && tryAgain) {
+				// time to report
+				bestMP = topTen[rank];
+				if(bestMP->totalSize==sizeMax) { // This is one of the dummy mpts
+					tryAgain=false;
+				}
+				else {						
+					REPORT(INFO, "Now running exhaustive test on candidate #" << rank << " :" << endl
+								 << tab << bestMP->descriptionString() << endl
+								 << tab<< bestMP->descriptionStringLaTeX()  );
+					bestMP->mkTables(target);
+					if (bestMP->exhaustiveTest()) {
+						REPORT(INFO, "... passed, now building the operator");
+						tryAgain = false;
+					}
+					else {
+						REPORT(INFO, "... failed, trying next candidate");
+						rank++;
+					}
+				}
+			}
+				
+			if(rank==ten || bestMP->totalSize==sizeMax) {
+				REPORT(INFO, "It seems we have to use the safe value of g... starting again");
+				for (int i=0; i<ten; i++){
+					topTen[i]-> totalSize =	sizeMax; 
+				}
+				guardBitsSlack ++;
+				//REPORT(0,"guardBitsSlack now " << guardBitsSlack);
+				nbTOi=nbTOi_;
+			}
+			else {
+				successWithguardBitsSlack=true;
+			}
+		}
+
+		if(guardBitsSlack>0)
+			THROWERROR("Unable to reach faithful rounding with this value of NbTOi");
+		// Exploration complete. Now building the operator
+
+		bestMP = topTen[rank];
+
+		REPORT(DEBUG,"Full table dump:" <<endl << bestMP->fullTableDump()); 
+
+		if(bestMP->rho==-1) { // uncompressed TIV
+			vhdl << tab << declare("inTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+			vector<mpz_class> mpzTIV;
+			for (auto i : bestMP->tiv)
+				mpzTIV.push_back(mpz_class((long) i));
+			Table::newUniqueInstance(this, "inTIV", "outTIV",
+															 mpzTIV, "TIV", bestMP->alpha, f->wOut );
+				vhdl << endl;
+		}else
+			{ // Hsiao-compressed TIV
+				vhdl << tab << declare("inATIV", bestMP->rho) << " <= X" << range(f->wIn-1, f->wIn-bestMP->rho) << ";" << endl;
+				vector<mpz_class> mpzaTIV;
+				for (auto i : bestMP->aTIV)
+					mpzaTIV.push_back(mpz_class((long) i));
+				Table::newUniqueInstance(this, "inATIV", "outATIV",
+																 mpzaTIV, "ATIV", bestMP->rho, bestMP->outputSizeATIV );
+				vhdl << endl;
+				
+				vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
+				vector<mpz_class> mpzDiffTIV;
+				for (auto i : bestMP->diffTIV)
+					mpzDiffTIV.push_back(mpz_class((long) i));
+				Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
+																 mpzDiffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
+				// TODO need to sign-extend for 1/(1+x), but it makes an error for sin(x)
+				//  getSignalByName("outDiffTIV")->setIsSigned(); // so that it is sign-extended in the bit heap
+				// No need to sign-extend it, it is already taken care of in the construction of the table.
+			}
+		
 		int p = 0;
-
-		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)
-		{
-			stringstream a("");
-			a << "a_" << i;
-
-			stringstream b("");
-			b << "b_" << i;
-
-			stringstream out("");
-			out << "out_" << i;
-
-			TOXor* xor_toi = new TOXor(target, this, i);
-			addSubComponent(xor_toi);
+		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
+			string ai = join("a", i);
+			string bi = join("b", i);
+			string inTOi = join("inTO", i);
+			string outTOi = join("outTO", i);
+			string deltai = join("delta", i);
+			string nameTOi = join("TO", i);
+			string signi = join("sign", i);
 
 			p += bestMP->betai[i];
-			vhdl << declare(a.str(), bestMP->gammai[i]) << " <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->gammai[i]) << ";" << endl;
-			vhdl << declare(b.str(), bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
-
-
-			inPortMap(xor_toi, "a", a.str());
-			inPortMap(xor_toi, "b", b.str());
-			outPortMap(xor_toi, "r", out.str());
-
-			ostringstream name("");
-			name << "xor_to_" << i;
-			vhdl << instance(xor_toi, name.str()) << endl;
+			vhdl << tab << declare(ai, bestMP->gammai[i]) << " <= X" << range(bestMP->inputSize - 1, bestMP->inputSize - bestMP->gammai[i]) << ";" << endl;
+			vhdl << tab << declare(bi, bestMP->betai[i]) << " <= X" << range(p - 1, p - bestMP->betai[i]) << ";" << endl;
+			vhdl << tab << declare(signi) << " <= not(" << bi << of( bestMP->betai[i] - 1) << ");" << endl;
+			vhdl << tab << declare(inTOi,bestMP->gammai[i]+bestMP->betai[i]-1) << " <= " << ai << " & ((" << bi << range(bestMP->betai[i]-2, 0) << ") xor " << rangeAssign(bestMP->betai[i]-2,0, signi)<< ");" << endl;
+			vector<mpz_class> mpzTOi;
+			for (long i : bestMP->toi[i])
+				mpzTOi.push_back(mpz_class((long) i));
+			Table::newUniqueInstance(this, inTOi, outTOi,
+															 mpzTOi, nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
+			string trueSign = (bestMP->negativeTOi[i] ? "(not "+signi+")" : signi);
+			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]+1) << " <= " << trueSign << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-1,0, trueSign)<< ");" << endl;
+			getSignalByName(deltai)->setIsSigned(); // so that it is sign-extended in the bit heap
 		}
+		
+		// Throwing everything into a bit heap
 
-		BitHeap *bh = new BitHeap(this, bestMP->outputSize + bestMP->guardBits, false, "final_sum");
+		BitHeap *bh = new BitHeap(this, bestMP->outputSize + bestMP->guardBits); // TODO this is using an adder tree
 
-		bh->setSignedIO(false);
+		if(bestMP->rho==-1) { // uncompressed TIV
+			bh->addSignal("outTIV");
+		}else
+			{ // Hsiao-compressed TIV
+				bh->addSignal("outATIV", bestMP->nbZeroLSBsInATIV); // shifted because its LSB bits were shaved in the Hsiao compression
+				//bh->addSignal("outATIV"); // shifted because its LSB bits were shaved in the Hsiao compression
+				bh->addSignal("outDiffTIV");
+			}
 
-		bh->addUnsignedBitVector(0, "out_tiv_comp", bestMP->outputSize + bestMP->guardBits);
-		bh->addUnsignedBitVector(0, "out_tiv_corr", bestMP->cTiv->wO_corr);
-
-		//vhdl << tab << declare("sum", bestMP->outputSize + bestMP->guardBits) << " <= std_logic_vector(signed(out_tiv)";
-		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)
-		{
-			stringstream ss("");
-			ss << "out_" << i;
-			bh->addUnsignedBitVector(0, ss.str(), bestMP->outputSize + bestMP->guardBits);
+		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
+			bh->addSignal(join("delta", i) );
 		}
-		/*vhdl << " + signed(out_" << i << ")";
-		vhdl << ");" << endl;*/
-
-		bh->generateCompressorVHDL();
-		//bh->generateSupertileVHDL();
+		bh->startCompression();
 
 		vhdl << tab << "Y <= " << /* "sum" */bh->getSumName() << range(bestMP->outputSize + bestMP->guardBits - 1, bestMP->guardBits) << ";" << endl;
 	}
@@ -161,6 +251,8 @@ namespace flopoco
 
 	FixFunctionByMultipartiteTable::~FixFunctionByMultipartiteTable() {
 		delete f;
+		for (int i=0; i<ten; i++)
+			delete topTen[i];
 	}
 
 
@@ -194,51 +286,7 @@ namespace flopoco
 	}
 
 	//------------------------------------------------------------------------------------ Private classes
-
-	FixFunctionByMultipartiteTable::TOXor::TOXor(Target* target, FixFunctionByMultipartiteTable* mpt, int toIndex, map<string, double> inputDelays):
-		Operator(target, inputDelays)
-	{
-		ostringstream name;
-		name << "toXor_" << toIndex << "_" << getNewUId();
-		setNameWithFreqAndUID(name.str());
-
-		Multipartite* mp = mpt->bestMP;
-		Table* toi = mp->toi[toIndex];
-
-		int wI = mp->gammai[toIndex] + mp->betai[toIndex] - 1;
-		int wO = mp->outputSizeTOi[toIndex] - 1;
-
-		int wA = mp->gammai[toIndex];
-		int wB = mp->betai[toIndex];
-
-		setCopyrightString("Franck Meyer (2015)");
-
-		// Component I/O
-		addInput("a", mp->gammai[toIndex]);
-		addInput("b", mp->betai[toIndex]);
-
-		addOutput("r", mp->outputSize + mp->guardBits);
-
-
-		vhdl << tab << declare("sign") << " <= not(b(" << mp->betai[toIndex] - 1 << "));" << endl;
-
-		vhdl << tab << declare("in_t", wI) << range(wI - 1, wB - 1) << " <= a" << range(wA - 1, 0) << ";" << endl;
-
-		for(int i = 0; i < wB - 1; i++)
-			vhdl << tab << "in_t(" << i << ") <= b(" << i << ") xor sign;" << endl;
-
-		addSubComponent(toi);
-		inPortMap(toi, "X", "in_t");
-		outPortMap(toi, "Y", "out_t");
-		vhdl << instance(toi, "to_table") << endl;
-
-		vhdl << tab << "r" << range(mp->outputSize + mp->guardBits - 1, wO) << " <= (" << (mp->outputSize + mp->guardBits - 1) << " downto " << wO << " => sign);" << endl;
-		for(int i = 0; i < wO; i++)
-			vhdl << tab << "r(" << i << ") <= out_t(" << i << ") xor sign;" << endl;
-	}
-
-	//------------------------------------------------------------------------------------ Private methods
-
+	
 	// enumerating the alphas is much simpler
 	vector<vector<int>> FixFunctionByMultipartiteTable::alphaenum(int alpha, int m)
 	{
@@ -388,15 +436,16 @@ namespace flopoco
 	/** See the article p5, right. */
 	void FixFunctionByMultipartiteTable::buildGammaiMin()
 	{
-		int wi = obj->inputSize;
+		int wi = f->wIn;
 		int gammai;
+		gammaiMin.clear();
 		gammaiMin = vector<vector<int>>(wi, vector<int>(wi));
 		for(int pi = 0; pi < wi; pi++)
 		{
 			for(int betai = 1; betai < (wi-pi-1); betai++)
 			{
 				gammai=1;
-				while ( (gammai < wi) && (oneTableError[pi][betai][gammai] > obj->epsilonT) )
+				while ( (gammai < wi) && (oneTableError[pi][betai][gammai] > epsilonT) )
 					gammai++;
 
 				gammaiMin[pi][betai] = gammai;
@@ -410,15 +459,15 @@ namespace flopoco
 	 */
 	void FixFunctionByMultipartiteTable::buildOneTableError()
 	{
-		int wi = obj->inputSize;
+		int wi = f->wIn;
 		int gammai, betai, pi;
+		oneTableError.clear();
 		oneTableError = vector<vector<vector<double>>>(wi, vector<vector<double>>(wi, vector<double>(wi))); // there will be holes
 
 		for(pi=0; pi<wi; pi++) {
 			for(betai=1; betai<wi-pi-1; betai++) {
 				for(gammai=1; gammai<= wi-pi-betai; gammai++) {
-					oneTableError[pi][betai][gammai] =
-							errorForOneTable(pi, betai,gammai);
+					oneTableError[pi][betai][gammai] =	errorForOneTable(pi, betai,gammai);
 				}
 			}
 		}
@@ -430,12 +479,13 @@ namespace flopoco
 	 * @return The smallest Multipartite decomposition.
 	 * @throw "It seems we could not find a decomposition" if there isn't any decomposition with an acceptable error
 	 */
-	Multipartite* FixFunctionByMultipartiteTable::enumerateDec()
+#if 0
+	bool FixFunctionByMultipartiteTable::enumerateDec()
 	{
-		Multipartite *smallest, *mpt;
+		Multipartite *mpt;
 		int beta, p;
-		int n = obj->inputSize;
-		int alphamin = 1;
+		int n = f->wIn;
+		int alphamin = 2;
 		int alphamax = (2*n)/3;
 		vector<vector<int>> betaEnum;
 		vector<vector<int>> alphaEnum;
@@ -443,57 +493,106 @@ namespace flopoco
 		vector<int> gammai;
 		vector<int> betai;
 
-		int sizeMax = obj->outputSize * obj->inputRange;
-		smallest = new Multipartite(this, f, f->wIn, f->wOut);
-		smallest->totalSize = sizeMax;
+		int sizeMax = f->wOut <<f->wIn; // size of a plain table
 
-		for (int alpha = alphamin; alpha <= alphamax; alpha++)
-		{
+		bool decompositionFound=false;
+		
+		for (int alpha = alphamin; alpha <= alphamax; alpha++)		{
 			beta = n-alpha;
-			betaEnum = betaenum(beta, nbTables);
+			betaEnum = betaenum(beta, nbTOi);
 			for(unsigned int e = 0; e < betaEnum.size(); e++) {
 				betai = betaEnum[e];
 
-				gammaimin = vector<int>(nbTables);
+				gammaimin = vector<int>(nbTOi);
 				p = 0;
-				for(int i = nbTables-1; i >= 0; i--) {
+				for(int i = nbTOi-1; i >= 0; i--) {
 					gammaimin[i] = gammaiMin[p][betai[i]];
 					p += betai[i];
 				}
 
-				alphaEnum = alphaenum(alpha,nbTables,gammaimin);
-				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)
-				{
+				alphaEnum = alphaenum(alpha,nbTOi,gammaimin);
+				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)		{
 					gammai = alphaEnum[ae];
-
-					mpt = new Multipartite(f, nbTables,
-										   alpha, beta,
-										   gammai, betai, this);
-
-					if(mpt->mathError < obj->epsilonT)
-					{
+					mpt = new Multipartite(f, nbTOi,
+																 alpha, beta,
+																 gammai, betai, this);
+					if(mpt->mathError < epsilonT){
+						decompositionFound=true;
 						mpt->buildGuardBitsAndSizes();
+						insertInTopTen(mpt);
 					}
 					else
 						mpt->totalSize = sizeMax;
-
-					if(mpt->totalSize < smallest->totalSize)
-						smallest = mpt;
 				}
 			}
+			// exit this loop as soon as 2^alpha > best totalSize
+			if( (f->wOut << (alpha+1)) > topTen[0]->totalSize)
+				alpha =  alphamax+1 ; // exit
 		}
-		/* If  parse error throw an exception */
-		if (smallest->totalSize == sizeMax)
-			throw("It seems we could not find a decomposition");
-
-		return smallest;
+		return decompositionFound;
 	}
 
+#else // only betai=2 or 3 is useful
+	bool FixFunctionByMultipartiteTable::enumerateDec()
+	{
+		Multipartite *mpt;
+		int beta, p;
+		int n = f->wIn;
+		int alphamin = n/3;
+		int alphamax = (2*n)/3;
+		vector<vector<int>> betaEnum;
+		vector<vector<int>> alphaEnum;
+		vector<int> gammaimin;
+		vector<int> gammai;
+		vector<int> betai;
 
+		int sizeMax = f->wOut <<f->wIn; // size of a plain table
+
+		bool decompositionFound=false;
+		
+		for (int alpha = alphamin; alpha <= alphamax; alpha++)		{
+			beta = n-alpha;
+			betaEnum = betaenum(beta, nbTOi);
+			for(unsigned int e = 0; e < betaEnum.size(); e++) {
+				betai = betaEnum[e];
+
+				gammaimin = vector<int>(nbTOi);
+				p = 0;
+				for(int i = nbTOi-1; i >= 0; i--) {
+					gammaimin[i] = gammaiMin[p][betai[i]];
+					p += betai[i];
+				}
+
+				alphaEnum = alphaenum(alpha,nbTOi,gammaimin);
+				for(unsigned int ae = 0; ae < alphaEnum.size(); ae++)		{
+					gammai = alphaEnum[ae];
+					mpt = new Multipartite(f, nbTOi,
+																 alpha, beta,
+																 gammai, betai, this);
+					if(mpt->mathError < epsilonT){
+						decompositionFound=true;
+						mpt->buildGuardBitsAndSizes();
+						insertInTopTen(mpt);
+					}
+					else
+						mpt->totalSize = sizeMax;
+				}
+			}
+			// exit this loop as soon as 2^alpha > best totalSize
+			if( (f->wOut << (alpha+1)) > topTen[0]->totalSize)
+				alpha =  alphamax+1 ; // exit
+		}
+		return decompositionFound;
+	}
+	
+#endif
+
+
+	
 	/** 5th equation implementation */
 	double FixFunctionByMultipartiteTable::epsilon(int ci_, int gammai, int betai, int pi)
 	{
-		int wi = obj->inputSize; // for the notations of the paper
+		int wi = f->wIn; // for the notations of the paper
 		double ci = (double)ci_; // for the notations of the paper
 
 		double xleft = (f->signedIn ? -1 : 0) + (f->signedIn ? 2 : 1) * intpow2(-gammai) * ci;
@@ -511,7 +610,7 @@ namespace flopoco
 
 	double FixFunctionByMultipartiteTable::epsilon2ndOrder(int Ai, int gammai, int betai, int pi)
 	{
-		int wi = obj->inputSize;
+		int wi = f->wIn;
 		double xleft = (f->signedIn ? -1 : 0) + (f->signedIn ? 2 : 1) * intpow2(-gammai)  * ((double)Ai);
 		double delta = (f->signedIn ? 2 : 1) * ( intpow2(pi-wi) * (intpow2(betai) - 1));
 		double epsilon = 0.5 * (f->eval(xleft + (delta-1)/2)
@@ -526,9 +625,9 @@ namespace flopoco
 	{
 		double eps1, eps2, eps;
 
-		// Beware when gammai+betai+pi=obj->inputSize,
+		// Beware when gammai+betai+pi = inputSize,
 		// we then have to compute a second order term for the error
-		if(gammai+betai+pi==obj->inputSize)
+		if(gammai+betai+pi==f->wIn)
 		{
 			eps1 = abs(epsilon2ndOrder(0, gammai, betai, pi));
 			eps2 = abs(epsilon2ndOrder( (int)intpow2(gammai) -1, gammai, betai, pi));
@@ -550,19 +649,102 @@ namespace flopoco
 		return eps;
 	}
 
+	
+	void  FixFunctionByMultipartiteTable::insertInTopTen(Multipartite* mp) {
+		REPORT(DEBUG, "Entering  insertInTopTen");
+		int rank=ten-1;
+		Multipartite* current = topTen[rank];
+		while(rank >= 0 &&  // mp strictly smaller than current 
+						(mp->totalSize < current->totalSize   ||    (mp->totalSize == current->totalSize &&  mp->m < current->m))) {
+			rank--;
+			if(rank>=0) current = topTen[rank];
+		} 
 
+		if(rank<ten-1) { // this mp belongs to the top ten,
+			rank ++; // the last rank for which mp was strictly smaller than topTen[rank]
+			REPORT(INFO, "The following is now top #" << rank <<" : " << mp->descriptionString());
+			delete(topTen[ten-1]);
+			// shift the bottom
+			for (int i=ten-1; i>rank; i--)
+				topTen[i] = topTen[i-1];
+			topTen[rank] = mp;
+			//debug
+			for (rank=0; rank<ten; rank++)
+				REPORT(DETAILED, "top "<< rank << " size is " << topTen[rank]->totalSize);
+		}
+	}
+
+
+	TestList FixFunctionByMultipartiteTable::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			vector<string> function;
+			vector<int> msbOut;
+			vector<bool> scaleOutput;			// multiply output by (1-2^lsbOut) to prevent it  reaching 2^(msbOut+1) due to faithful rounding  
+
+			function.push_back("2^x");			// input in [0,1) output in [1, 2) : need scaleOutput
+			msbOut.push_back(0);
+			scaleOutput.push_back(true);
+			
+			function.push_back("1/(x+1)");  // input in [0,1) output in [0.5,1] but we don't want scaleOutput
+			msbOut.push_back(0);
+			scaleOutput.push_back(false); 
+			msbOut.push_back(0);
+
+			function.push_back("sin(pi/4*x)"); 
+			msbOut.push_back(-1);
+			scaleOutput.push_back(false); 
+
+			function.push_back("sin(pi/2*x)"); 
+			msbOut.push_back(-1);
+			scaleOutput.push_back(true); 
+
+			for (int lsbIn=-8; lsbIn >= -16; lsbIn--) {
+				for (size_t i =0; i<function.size(); i++) {
+					paramList.clear();
+					string f = function[i];
+					int lsbOut = lsbIn + msbOut[i]+1; // to have inputSize=outputSize
+					if(scaleOutput[i]) {
+						f = "(1-1b"+to_string(lsbOut) + ")*" + f;				
+					}
+					f="\"" + f + "\"";
+					paramList.push_back(make_pair("f", f));
+					paramList.push_back(make_pair("lsbIn", to_string(lsbIn)));
+					paramList.push_back(make_pair("lsbOut", to_string(lsbOut)));
+					paramList.push_back(make_pair("msbOut", to_string(msbOut[i])));
+					if(lsbIn>-14)
+						paramList.push_back(make_pair("TestBench n=","-2"));
+					testStateList.push_back(paramList);
+				}
+			}			
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+		}	
+
+		return testStateList;
+	}
+
+	
 
 	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string f;
-		bool signedIn;
-		int lsbIn, lsbOut, msbOut, nbTables;
+		bool signedIn, compressTIV;
+		int lsbIn, lsbOut, msbOut, nbTOi;
 		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseStrictlyPositiveInt(args, "nbTables", &nbTables);
+		UserInterface::parsePositiveInt(args, "nbTOi", &nbTOi);
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		return new FixFunctionByMultipartiteTable(target, f, nbTables, signedIn, lsbIn, msbOut, lsbOut);
+		UserInterface::parseBoolean(args, "compressTIV", &compressTIV);
+		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTOi, signedIn, lsbIn, msbOut, lsbOut, compressTIV);
 	}
 
 	void FixFunctionByMultipartiteTable::registerFactory(){
@@ -571,15 +753,16 @@ namespace flopoco
 											 "FunctionApproximation", // category
 											 "",
 						   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-nbTables(int): the number of tables used to decompose the function, between 2 (bipartite) to 4 or 5 for large input sizes;\
 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
-signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise\
-",
+nbTOi(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
+signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise;\
+compressTIV(bool)=true: use Hsiao TIV compression, or not",
 
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
-											 FixFunctionByMultipartiteTable::parseArguments
+											 FixFunctionByMultipartiteTable::parseArguments,
+											 FixFunctionByMultipartiteTable::unitTest
 											 ) ;
 
 	}

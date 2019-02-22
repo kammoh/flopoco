@@ -17,26 +17,26 @@ namespace flopoco {
 	Xilinx_LUT5_base::Xilinx_LUT5_base(Operator *parentOp, Target *target ) : Xilinx_Primitive( parentOp,target ) {}
 
 	Xilinx_LUT5::Xilinx_LUT5(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
-        setNameWithFreqAndUID( "LUT5" );
+        setName( "LUT5" );
         addOutput( "o" );
         base_init();
     }
 
 	Xilinx_LUT5_L::Xilinx_LUT5_L(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
-        setNameWithFreqAndUID( "LUT5_L" );
+        setName( "LUT5_L" );
         addOutput( "lo" );
         base_init();
     }
 
 	Xilinx_LUT5_D::Xilinx_LUT5_D(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
-        setNameWithFreqAndUID( "LUT5_D" );
+        setName( "LUT5_D" );
         addOutput( "lo" );
         addOutput( "o" );
         base_init();
     }
 
 	Xilinx_CFGLUT5::Xilinx_CFGLUT5(Operator *parentOp, Target *target ) : Xilinx_LUT5_base( parentOp,target ) {
-        setNameWithFreqAndUID( "CFGLUT5" );
+        setName( "CFGLUT5" );
         addInput("clk");
         addInput("ce"); //clk enable
         addInput("cdi");//configuration data in

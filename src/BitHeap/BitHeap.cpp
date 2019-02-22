@@ -519,6 +519,7 @@ namespace flopoco {
 				for(int w=sMSB; w<=this->msb-shift; w++) {
 					addConstantOneBit(w+shift);
 				}
+				REPORT(FULL, "addSignal: constant string now " << hex << constantBits); 
 			}
 		}
 
@@ -712,12 +713,34 @@ namespace flopoco {
 
 	void BitHeap::startCompression()
 	{
+		if(op->getTarget()->getCompressionMethod().compare("heuristicMaxEff") == 0)
+		{
+			compressionStrategy = new MaxEfficiencyCompressionStrategy(this);
+		}
+		else if(op->getTarget()->getCompressionMethod().compare("heuristicPA") == 0)
+		{
+			compressionStrategy = new ParandehAfsharCompressionStrategy(this);
+		}
+		else if(op->getTarget()->getCompressionMethod().compare("heuristicFirstFit") == 0)
+		{
+			compressionStrategy = new FirstFittingCompressionStrategy(this);
+		}
+		else if(op->getTarget()->getCompressionMethod().compare("optimal") == 0)
+		{
+			compressionStrategy = new OptimalCompressionStrategy(this,false);
+		}
+		else if(op->getTarget()->getCompressionMethod().compare("optimalMinStages") == 0)
+		{
+			compressionStrategy = new OptimalCompressionStrategy(this,true);
+		}
+		else
+		{
+			THROWERROR("compression " << op->getTarget()->getCompressionMethod() << " unknown!");
+		}
+
+		REPORT(DETAILED,"Using compression method " << op->getTarget()->getCompressionMethod());
 		//create a new compression strategy, if one isn't present already
 		//if(compressionStrategy == nullptr)
-		//	compressionStrategy = new FirstFittingCompressionStrategy(this);
-        //compressionStrategy = new ParandehAfsharCompressionStrategy(this);
-		compressionStrategy = new MaxEfficiencyCompressionStrategy(this);
-			//compressionStrategy = new OptimalCompressionStrategy(this);
 		//start the compression
         compressionStrategy->startCompression();
         //mark the bitheap compressed

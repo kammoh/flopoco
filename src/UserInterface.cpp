@@ -37,6 +37,7 @@ namespace flopoco
 	bool   UserInterface::generateFigures;
 	double UserInterface::unusedHardMultThreshold;
 	bool   UserInterface::useTargetOptimizations;
+	string   UserInterface::compression;
 	int    UserInterface::resourceEstimation;
 	bool   UserInterface::floorplanning;
 	bool   UserInterface::reDebug;
@@ -110,7 +111,8 @@ namespace flopoco
 				v.push_back(option_t("generateFigures", values));
 				v.push_back(option_t("useHardMults", values));
 				v.push_back(option_t("useTargetOptimizations", values));
-				
+				v.push_back(option_t("compression", values));
+
 				//free options, using an empty vector of values
 				values.clear();
 				v.push_back(option_t("name", values));
@@ -179,6 +181,7 @@ namespace flopoco
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
 		parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
+		parseString(args, "compression", &compression, true);
 		parseBoolean(args, "floorplanning", &floorplanning, true);
 		//		parseBoolean(args, "reDebug", &reDebug, true );
 		parseString(args, "dependencyGraph", &depGraphDrawing, true);
@@ -192,8 +195,18 @@ namespace flopoco
 
 	vector<OperatorPtr>  UserInterface::globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 
+	vector<vector<OperatorPtr>>  UserInterface::globalOpListStack; 
 
 
+	void UserInterface::pushAndClearGlobalOpList() {
+		globalOpListStack.push_back(globalOpList);
+		globalOpList.clear();
+	}
+	void UserInterface::popGlobalOpList() {
+		globalOpList = globalOpListStack.back();
+		globalOpListStack.pop_back();
+	}
+		
 
 	OperatorPtr UserInterface::addToGlobalOpList(OperatorPtr op) {
 		OperatorPtr alreadyPresent=nullptr;
@@ -354,6 +367,7 @@ namespace flopoco
 		targetFrequencyMHz=400;
 		useHardMult=true;
 		unusedHardMultThreshold=0.7;
+		compression = "heuristicMaxEff";
 
 		depGraphFileName = "flopoco.dot";
 		depGraphDrawing = "full";
@@ -422,7 +436,6 @@ namespace flopoco
 			}
 
 			for (auto opParams: operatorSpecs) {
-
 				string opName = opParams[0];  // operator Name
 				// remove the generic options
 				parseGenericOptions(opParams);
@@ -457,6 +470,7 @@ namespace flopoco
 				target->setPlainVHDL(plainVHDL);
 				target->setGenerateFigures(generateFigures);
 				target->setUseTargetOptimizations(useTargetOptimizations);
+				target->setCompressionMethod(compression);
 				// Now build the operator
 				OperatorFactoryPtr fp = getFactoryByName(opName);
 				if (fp==NULL){
@@ -617,8 +631,7 @@ namespace flopoco
 		*variable= intval;
 	}
 
-
-	void UserInterface::parseIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption){
+	void UserInterface::parseColonSeparatedStringList(vector<string> &args, string key, vector<string>* variable, bool genericOption){
 		string val=getVal(args, key);
 		if(val=="") {
 			if(genericOption)
@@ -632,12 +645,38 @@ namespace flopoco
     ss.str(val);
     std::string item;
 		try {
-			while (std::getline(ss, item, ',')) {
+			while (std::getline(ss, item, ':')) {
+				variable->push_back(item);
+			}
+		}
+		catch(std::exception &s){
+			std::cerr << "Problem in parseColonSeparatedStringList for "<< val << endl << "got exception : "<<s.what()<<"\n";
+			//factory->Usage(std::cerr);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	
+	void UserInterface::parseColonSeparatedIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption){
+		string val=getVal(args, key);
+		if(val=="") {
+			if(genericOption)
+				return; // do nothing
+			// key not given, use default value
+			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			if (val=="")
+				throwMissingArgError(args[0], key);
+		}
+		std::stringstream ss;
+    ss.str(val);
+    std::string item;
+		try {
+			while (std::getline(ss, item, ':')) {
 				variable->push_back(std::stoi(item));
 			}
 		}
 		catch(std::exception &s){
-			std::cerr << "Problem in parseIntList for "<< val << endl << "got exception : "<<s.what()<<"\n";
+			std::cerr << "Problem in parseColonSeparatedIntList for "<< val << endl << "got exception : "<<s.what()<<"\n";
 			//factory->Usage(std::cerr);
 			exit(EXIT_FAILURE);
 		}
@@ -735,7 +774,8 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-        s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>:    use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>:    use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "compression" << COLOR_NORMAL << "=<heuristicMaxEff,heuristicPA,heuristicFirstFit,optimal,optimalMinStages>:        compression method (default=heuristicMaxEff)" << COLOR_RED_NORMAL << "(sticky option?)" << COLOR_NORMAL<<endl;
         s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;

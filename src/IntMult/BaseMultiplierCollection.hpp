@@ -9,15 +9,17 @@
 #include "BaseMultiplier.hpp"
 
 namespace flopoco {
-
-
+	typedef size_t base_multiplier_id_t;
     class BaseMultiplierCollection {
 
 	public:
 		BaseMultiplierCollection(Target *target, unsigned int wX, unsigned int wY, bool pipelineDSPs=false);
         ~BaseMultiplierCollection();
 
-        BaseMultiplier* getBaseMultiplier(int shape);
+        BaseMultiplier* getBaseMultiplier(base_multiplier_id_t multRef);
+		base_multiplier_id_t getPreferedMultiplier();
+
+		vector<base_multiplier_id_t> getMultipliersIDByArea(bool desc=false);
 		
         string getName(){ return uniqueName_; }
 		

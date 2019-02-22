@@ -8,8 +8,4 @@ TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMult
 {
 }
 
-TilingStrategy::~TilingStrategy()
-{
-}
-
 }   //end namespace flopoco

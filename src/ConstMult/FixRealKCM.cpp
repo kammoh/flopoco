@@ -15,10 +15,27 @@
  */
 /*
 
-Remaining 1-ulp bug:
-flopoco verbose=3 FixRealKCM lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
-It is the limit case of removing one table altogether because it contributes nothng.
-I don't really understand
+TODO: IntIntKCM is a special case of FixReal.
+This is the good way of getting rid of IntIntKCM.
+
+Experiment:  fpc FixRealKCM frequency=100 signedinput=1 msbin=23 lsbin=0 lsbout=0 constant=13176795 
+We have the good operator interface.
+The tables are full of zeroes, including a few gard bits that are useless in this case and a round bit.
+Therefore the bit heap is larger than should be.
+Still, we get 188 LUTs where Walters report that Logicore does it in 171
+The delay is quite bad (8ns).
+
+Instead of resurrecting IntIntKCM, let's do the following
+- compute lsbC such that C=I*2^lsbC and I is an integer
+(this lsbC doesn't always exist, e.g. if we input 1/3, so we must place a reasonable limit)
+For an odd integer we will get lsbC=0.
+- compute m_c = intlog2(I)
+- If lsbOut <= lsbC + lsbIn then we have an exact operation.
+ We can actually directly output zeroes for the (lsbC+lsbIn) - lsbOut bits.
+- For each table, check if it is exact (it will be in the case of an exact operation)
+ and avoid adding zero bits to the bit heap.
+
+Then we have a working IntIntKCM, that even does useful optimizations for all sorts of constants.
 
 */
 
@@ -73,7 +90,7 @@ namespace flopoco{
 		addOutput("R", msbOut-lsbOut+1);
 
 		// Special cases
-		if(constantRoundsToZero)	{
+		if(constantRoundsToZeroInTheStandaloneCase || constantIsExactlyZero)	{
 			vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << ";" << endl;
 			return;
 		}
@@ -172,7 +189,9 @@ namespace flopoco{
 		srcFileName="FixRealKCM";
 
 		setCopyrightString("Florent de Dinechin (2007-2016)");
-		
+
+		sollya_lib_set_roundingwarnings(sollya_lib_parse_string("off"));
+
 		if(lsbIn>msbIn) 
 			throw string("FixRealKCM: Error, lsbIn>msbIn");
     
@@ -231,9 +250,10 @@ namespace flopoco{
 		mpfr_clears(log2C, NULL);
 
 		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
-		constantRoundsToZero = false;
+		constantIsExactlyZero = false;
+		constantRoundsToZeroInTheStandaloneCase = false;
 		if(mpfr_zero_p(mpC) != 0){
-			constantRoundsToZero = true;
+			constantIsExactlyZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			errorInUlps=0;
 			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
@@ -242,17 +262,17 @@ namespace flopoco{
 		
 		// A few sanity checks related to the magnitude of the constant
 		
+		msbOut =   msbIn + msbC;
+		
 		// A bit of weight l is sent to position l+msbC+1 at most.
 		// msbIn is sent to msbIn+ msbC +1 at most
-		msbOut =   msbIn + msbC;
 		if(msbOut<lsbOut){
-			constantRoundsToZero = true;
+			constantRoundsToZeroInTheStandaloneCase = true;
+			REPORT(INFO, "If nobody adds guard bits, multiplying the input by such a small constant will always returns 0. This could simplify the architecture.");
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			errorInUlps=0.5;// TODO this is an overestimation
-			REPORT(INFO, "Multiplying the input by such a small constant always returns 0. This simplifies the architecture.");
 			return;
 		}
-
 		
 		// Now even if the constant doesn't round completely to zero, it could be small enough that some of the inputs bits will have little impact on the output
 		// However this depends on how many guard bits we add...
@@ -404,10 +424,16 @@ namespace flopoco{
 
 	bool FixRealKCM::specialCasesForBitHeap() {
 	// Special cases
-		if(constantRoundsToZero)		{
-			// do nothing
-			return true;
+		if(constantIsExactlyZero)		{
+			return true; 			// do nothing
 		}
+		// We don't consider constantRoundsToZeroInTheStandaloneCase: 
+		// maybe init() evaluated that the constant rounds to zero, but init() didn't know
+		// how many gard bits will be needed (and at this point of the execution we don't know yet, either).
+		// For enough guard bits, the constant won't round to zero anymore.
+		// An instance of this problem is a large rescaling FixFIR, which has only small constants but adds many guard bits...
+		// And this has been a bug for quite a while...
+
 
 		// In all the following it should be clear that lsbOut is the initial lsb asked by the larger operator.
 		// Some g was computed and we actually compute/tabulate to lsbOut -g

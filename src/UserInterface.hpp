@@ -17,12 +17,17 @@ Copyright © INSA-Lyon, ENS-Lyon, INRIA, CNRS, UCBL,
 
 #include "Operator.hpp"
 #include <memory>
+#include <cstdint> //for int64_t
 
 // Operator Factory, based on the one by David Thomas, with a bit of clean up.
 // For typical use, see src/ShiftersEtc/Shifter  or   src/FPAddSub/FPAdd*
 
 namespace flopoco
 {
+	class Operator;
+	typedef Operator* OperatorPtr;
+	typedef vector<vector<pair<string,string>>> TestList;
+	typedef TestList (*unitTest_func_t)(int);
 
 	typedef OperatorPtr (*parser_func_t)(OperatorPtr, Target *, vector<string> &);	//this defines parser_func_t as a pointer to a function taking as parameters Target* etc., and returning an OperatorPtr
 	class OperatorFactory;
@@ -84,7 +89,8 @@ namespace flopoco
 		static void parseStrictlyPositiveInt(vector<string> &args, string key, int* variable, bool genericOption=false);
 		static void parseFloat(vector<string> &args, string key, double* variable, bool genericOption=false);
 		static void parseString(vector<string> &args, string key, string* variable, bool genericOption=false);
-		static void parseIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption=false);
+		static void parseColonSeparatedStringList(vector<string> &args, string key, vector<string>* variable, bool genericOption=false);
+		static void parseColonSeparatedIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption=false);
 
 		/** Provide a string with the full documentation.*/
 		static string getFullDoc();
@@ -101,6 +107,16 @@ namespace flopoco
 		*/
 		static OperatorPtr addToGlobalOpList(OperatorPtr op);
 
+		/** Saves the current globalOpList on globalOpListStack, then clears globalOpList. 
+				Typical use is when you want to build various variants of a subcomponent before chosing the best one.
+				TODO: a variant that leaves in globalOpList a deep copy of the saved one, so that such comparisons can be done in context 
+		*/
+		static void pushAndClearGlobalOpList();
+
+		/** Restores the globalOpList from top of globalOpListStack. 
+				Typical use is when you want to build various variants of a subcomponent before chosing the best one.
+		*/
+		static void popGlobalOpList();
 
 		/** generates the code for operators in globalOpList, and all their subcomponents */
 		static void outputVHDLToFile(ofstream& file);
@@ -133,6 +149,7 @@ namespace flopoco
 
 	public:
 		static vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
+		static vector<vector<OperatorPtr>>  globalOpListStack;  /**< a stack on which to save globalOpList when you don't want to mess with it */
 		static int    verbose;
 	private:
 		static string outputFileName;
@@ -146,6 +163,7 @@ namespace flopoco
 		static bool   generateFigures;
 		static double unusedHardMultThreshold;
         static bool   useTargetOptimizations;
+		static string compression;
 		static int    resourceEstimation;
 		static bool   floorplanning;
 		static bool   reDebug;

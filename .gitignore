@@ -8,12 +8,12 @@ CMakeFiles/
 CPackConfig.cmake
 CPackSourceConfig.cmake
 Makefile
-VHDLLexer.cpp
 bin2fp
 cmake_install.cmake
 flopoco
 flopoco.o
 flopoco.vhdl
+flopoco.dot
 flopoco_soaktest
 fp2bin
 longacc2fp
@@ -24,8 +24,6 @@ PiecewisePoly*.cache
 work-obj93.cf
 test.input
 *.vcd
-
-src/Factories.cpp
 
 # Autotest
 TestResults
@@ -38,3 +36,6 @@ doc/flopoco_developer_manual/flopoco_developer_manual.pdf
 doc/flopoco_developer_manual/flopoco_developer_manual.toc
 doc/flopoco_developer_manual/flopoco_developer_manual.bbl
 doc/flopoco_developer_manual/flopoco_developer_manual.blg
+
+#tata
+fftest

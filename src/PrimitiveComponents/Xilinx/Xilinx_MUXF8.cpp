@@ -17,19 +17,19 @@ namespace flopoco {
 	Xilinx_MUXF8_base::Xilinx_MUXF8_base(Operator *parentOp, Target *target ) : Xilinx_Primitive( parentOp,target ) {}
 
 	Xilinx_MUXF8::Xilinx_MUXF8(Operator *parentOp, Target *target ) : Xilinx_MUXF8_base( parentOp,target ) {
-        setNameWithFreqAndUID( "MUXF8" );
+        setName( "MUXF8" );
         addOutput( "o" );
         base_init();
     }
 
 	Xilinx_MUXF8_L::Xilinx_MUXF8_L(Operator *parentOp, Target *target ) : Xilinx_MUXF8_base( parentOp,target ) {
-        setNameWithFreqAndUID( "MUXF8_L" );
+        setName( "MUXF8_L" );
         addOutput( "lo" );
         base_init();
     }
 
 	Xilinx_MUXF8_D::Xilinx_MUXF8_D(Operator *parentOp, Target *target ) : Xilinx_MUXF8_base( parentOp,target ) {
-        setNameWithFreqAndUID( "MUXF8_D" );
+        setName( "MUXF8_D" );
         addOutput( "lo" );
         addOutput( "o" );
         base_init();

@@ -50,28 +50,6 @@ namespace flopoco{
 		IEEENumber(int wE, int wF, mpfr_t m);
 
 		/**
-		 * Retrieves the significant.
-		 * @return Returns an mpz_class, representing the
-		 * VHDL signal of the mantissa, without leading 1.
-		 */
-		mpz_class getMantissaSignalValue();
-
-
-
-		/**
-		 * Retrives the sign.
-		 * @return the sign as a VHDL signal.
-		 */
-		mpz_class getSignSignalValue();
-
-		/**
-		 * Retrieves the exponent.
-		 * @return the exponent as a VHDL signal.
-		 */
-		mpz_class getExponentSignalValue();
-
-
-		/**
 		 * Converts the currently stored IEEENumber to an mpfr_t
 		 * @param[out] m a preinitialized mpfr_t where to store the floating point
 		 */
@@ -91,8 +69,8 @@ namespace flopoco{
 		IEEENumber &operator=(mpz_class s);
 
 		/**
-		 * Retrieved the VHDL signal representation of this floating point.
-		 * @return a VHDL signal stored as mpz_class.
+		 * Retrieved the binary signal representation of this floating point.
+		 * @return a mpz_class.
 		 */
 		mpz_class getSignalValue();
 

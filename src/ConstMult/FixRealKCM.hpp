@@ -32,12 +32,12 @@ namespace flopoco{
 		 * @param msbin : power of two associated with input msb. For unsigned 
 		 * 				  input, msb weight will be 2^msb, for signed input, it
 		 * 				  will be -2^msb
-		 * 	@param lsbIn : power of two of input least significant bit
+		 * 	@param lsbIn :  Weight of the least significant bit of the input
 		 * 	@param lsbOut : Weight of the least significant bit of the output
 		 * 	@param constant : string that describes the constant in sollya syntax
-		 * 	@param targetUlpError : exiged error bound on result. Difference
+		 * 	@param targetUlpError :  error bound on result. Difference
 		 * 							between result and real value should be
-		 * 							lesser than targetUlpError * 2^lsbOut.
+		 * 							less than targetUlpError * 2^lsbOut.
 		 * 							Value has to be in ]0.5 ; 1] (if 0.5 wanted,
 		 * 							please consider to create a one bit more
 		 * 							precise KCM with a targetUlpError of 1 and
@@ -138,7 +138,8 @@ namespace flopoco{
 		double errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
 		int g; /**< computed late, either by the parent operator, or out of errorInUlps */
 		bool negativeConstant;
-		bool constantRoundsToZero;
+		bool constantIsExactlyZero; // it is surprising how many filters want to multiply by 0.
+		bool constantRoundsToZeroInTheStandaloneCase; // in the virtual case, it will depend on how many guard bits are added
 		bool constantIsPowerOfTwo;
 		int extraBitForNegativePowerOfTwo;
 ;

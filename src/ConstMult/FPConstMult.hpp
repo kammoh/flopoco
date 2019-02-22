@@ -13,16 +13,16 @@ namespace flopoco{
 	{
 	public:
 		/** @brief The generic constructor */
-		FPConstMult(Target* target, int wE_in, int wF_in, int wE_out, int wF_out, int cst_sgn, int cst_exp, mpz_class cst_sig);
+		FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out, int cst_sgn, int cst_exp, mpz_class cst_sig);
 
 		/** @brief A constructor for rational constants */
-		FPConstMult(Target* target, int wE_in, int wF_in, int wE_out, int wF_out, int a, int b);
+		FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out, int a, int b);
 
 		/** @brief An empty constructor,  used by CRFPConstMult */
-		FPConstMult(Target* target, int wE_in, int wF_in, int wE_out, int wF_out);
+		FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out);
 
 		/** @brief A constructor that parses an expression for the constant */
-		FPConstMult(Target* target, int wE_in, int wF_in, int wE_out, int wF_out, int wF_C, string constant);
+		FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out, int wF_C, string constant);
 
 		~FPConstMult();
 

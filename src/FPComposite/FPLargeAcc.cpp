@@ -623,7 +623,7 @@ namespace flopoco{
 											 "LargeAccToFP", // seeAlso
 											 "wEX(int): the width of the exponent ; \
                         wFX(int): the width of the fractional part;  \
-                        MaxMSBX(int): the weight of the MSB of the expected exponent of X; \
+                        MaxMSBX(int): the maximum possible exponent of X; \
                         MSBA(int): the weight of the least significand bit of the accumulator;\
                         LSBA(int): the weight of the most significand bit of the accumulator",
 											 "Kulisch-like accumulator of floating-point numbers into a large fixed-point accumulator. By tuning the MaxMSB_in, LSB_acc and MSB_acc parameters to a given application, rounding error may be reduced to a provably arbitrarily low level, at a very small hardware cost compared to using a floating-point adder for accumulation. <br> For details on the technique used and an example of application, see <a href=\"bib/flopoco.html#DinechinPascaCret2008:FPT\">this article</a>",

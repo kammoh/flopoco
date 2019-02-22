@@ -23,89 +23,82 @@ namespace flopoco
 
 	class FixFunctionByMultipartiteTable : public Operator
 	{
-			// Multipartite needs to access some private fields of FixFunctionByMultipartiteTable, so we declare it as a friend...
-			friend class Multipartite;
+		// Multipartite needs to access some private fields of FixFunctionByMultipartiteTable, so we declare it as a friend...
+		friend class Multipartite;
 
-		public:
+	public:
 
-			//----------------------------------------------------------------------------- Constructor/Destructor
-			/**
-			 * @brief The FixFunctionByMultipartiteTable constructor
-			 * @param[string] functionName_		a string representing the function, input range should be [0,1) or [-1,1)
-			 * @param[int]    lsbIn_		input LSB weight
-			 * @param[int]    msbOut_		output MSB weight, used to determine wOut
-			 * @param[int]    lsbOut_		output LSB weight
-			 * @param[int]	nbTables_	number of tables which will be created
-			 * @param[bool]	signedIn_	true if the input range is [-1,1)
-			 */
-			FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target* target, string function, int nbTables, bool signedIn,
-							  int lsbIn, int msbOut, int lsbOut);
+		//----------------------------------------------------------------------------- Constructor/Destructor
+		/**
+		 * @brief The FixFunctionByMultipartiteTable constructor
+		 * @param[string] functionName_		a string representing the function, input range should be [0,1) or [-1,1)
+		 * @param[int]    lsbIn_		input LSB weight
+		 * @param[int]    msbOut_		output MSB weight, used to determine wOut
+		 * @param[int]    lsbOut_		output LSB weight
+		 * @param[int]	nbTOi_	number of tables which will be created
+		 * @param[bool]	signedIn_	true if the input range is [-1,1)
+		 */
+		FixFunctionByMultipartiteTable(OperatorPtr parentOp, Target* target, string function, int nbTOi, bool signedIn,
+																	 int lsbIn, int msbOut, int lsbOut, bool compressTIV);
 
-			virtual ~FixFunctionByMultipartiteTable();
+		virtual ~FixFunctionByMultipartiteTable();
 
-			//------------------------------------------------------------------------------------- Public methods
-			void buildStandardTestCases(TestCaseList* tcl);
-			void emulate(TestCase * tc);
+		//---------------------------------------Public standard methods
+		void buildStandardTestCases(TestCaseList* tcl);
+		void emulate(TestCase * tc);
+		static TestList unitTest(int index);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
+		static void registerFactory();
 
-			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-			static void registerFactory();
-
-		private:
-
-			//------------------------------------------------------------------------------------ Private classes
-			/**
-			 * @brief The TOXor class defines the xor operator needed to retrieve the correct output from the TO table with the given input
-			 */
-			class TOXor : public Operator
-			{
-				public:
-					TOXor(Target* target, FixFunctionByMultipartiteTable* mpt, int toIndex, map<string, double> inputDelays = emptyDelayMap);
-
-			};
-
-			//------------------------------------------------------------------------------------ Private methods
-
-			/**
-			 * @brief buildOneTableError : Builds the error for every beta_i and gamma_i, to evaluate precision
-			 */
-			void buildOneTableError();
-
-			void buildGammaiMin();
-
-			/**
-			 * @brief enumerateDec : This function enumerates all the decompositions and returns the smallest one
-			 * @return The smallest Multipartite decomposition.
-			 * @throw "It seems we could not find a decomposition" if there isn't any decomposition with an acceptable error
-			 */
-			Multipartite* enumerateDec();
+	private:
 
 
-			/** Some needed methods, extracted from the article */
+		//----------------------------------Private methods
 
-			static vector<vector<int>> betaenum (int sum, int size);
+		/**
+		 * @brief buildOneTableError : pre-computes the error for every beta_i and gamma_i, to speed up exploration
+		 */
+		void buildOneTableError();
 
-			static vector<vector<int>> alphaenum(int alpha, int m);
-			static vector<vector<int>> alphaenum(int alpha, int m, vector<int> gammaimin);
-			static vector<vector<int>> alphaenumrec(int alpha, int m, vector<int> gammaimin);
+		/**
+		 * @brief buildOneTableError : pre-computes the min gamma for for every beta_i, to speed up exploration
+		 */
+		void buildGammaiMin();
 
-			double errorForOneTable(int pi, int betai, int gammai);
-
-			double epsilon(int ci_, int gammai, int betai, int pi);
-			double epsilon2ndOrder(int Ai, int gammai, int betai, int pi);
-
-			//--------------------------------------------------------------------------------- Private attributes
-
-			FixFunction *f;
-			Multipartite* obj;
-			Multipartite* bestMP;
-
-			vector<vector<vector<double>>> oneTableError;
-			vector<vector<int>> gammaiMin;
-
-			int g;				/**< the number of extra guard bits to be used for the computations */
-			int nbTables;		/**< The number of tables used */
+		/**
+		 * @brief enumerateDec : This function enumerates all the decompositions and inserts the best ones in topTen
+		 * @return true if no decomposition found with an acceptable error
+		 */
+		bool enumerateDec();
 
 
+		/** Some needed methods, extracted from the article */
+
+		static vector<vector<int>> betaenum (int sum, int size);
+
+		static vector<vector<int>> alphaenum(int alpha, int m);
+		static vector<vector<int>> alphaenum(int alpha, int m, vector<int> gammaimin);
+		static vector<vector<int>> alphaenumrec(int alpha, int m, vector<int> gammaimin);
+
+		double errorForOneTable(int pi, int betai, int gammai);
+
+		double epsilon(int ci_, int gammai, int betai, int pi);
+		double epsilon2ndOrder(int Ai, int gammai, int betai, int pi);
+
+
+		FixFunction *f;
+		double epsilonT;
+		// The following is not very well encapsulated, but no need to fix it
+		int nbTOi;		/**< The number of tables used */
+		bool compressTIV; /**< use Hsiao TIV compression or not */
+		vector<vector<vector<double>>> oneTableError;   /** for nbTOi fixed, the errors of each possible table configuration, precomputed  here to speed up exploration  */
+		vector<vector<int>> gammaiMin;  /** for nbTOi fixed, the min value of gamma, precomputed  here to speed up exploration */
+
+	private:
+		const int ten=10;
+		vector<Multipartite*> topTen; /**< the top 10 best candidates (for some value of ten), sorted by size */ 
+		int guardBitsSlack; /* this allows first to try the exploration with one guard bit less than the safe value */ 
+		void insertInTopTen(Multipartite* mp);
 	};
 
 }

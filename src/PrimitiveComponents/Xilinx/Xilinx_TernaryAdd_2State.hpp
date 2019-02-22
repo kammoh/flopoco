@@ -10,12 +10,12 @@
 namespace flopoco {
     class Xilinx_TernaryAdd_2State : public Operator {
         int wIn_;
-        short state_,state2_;
+        short bitmask_,bitmask2_;
       public:
         short mapping[3];
         short state_type;
 
-        Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target,const int &wIn,const short &state,const short &state2 = -1 );
+        Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target,const int &wIn,const short &bitmask,const short &bitmask2 = -1 );
 	    ~Xilinx_TernaryAdd_2State();
 
         void insertCarryInit();
@@ -29,6 +29,7 @@ namespace flopoco {
         // Operator interface
 	    
 	    virtual void emulate(TestCase *tc);
+		static TestList unitTest(int index);
     };
 }//namespace
 

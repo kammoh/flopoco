@@ -1,11 +1,9 @@
 # List of active source files, without extension (CMakeLists-like)
 Operator
 UserInterface 
-Factories
 Signal
 Target
 utils
-VHDLLexer
 FlopocoStream
 Instance
 Tools/ResourceEstimationHelper
@@ -19,6 +17,7 @@ AutoTest/AutoTest
 TestBenches/TestCase
 TestBenches/FPNumber
 TestBenches/IEEENumber
+TestBenches/PositNumber
 TestBenches/Wrapper
 TestBenches/TestBench
 BitHeap/Bit
@@ -34,6 +33,7 @@ BitHeap/MaxEfficiencyCompressionStrategy
 BitHeap/OptimalCompressionStrategy
 TutorialOperator
 ShiftersEtc/LZOC
+ShiftersEtc/LZOC3
 ShiftersEtc/LZOCShifterSticky
 ShiftersEtc/Shifters
 ShiftReg
@@ -48,12 +48,22 @@ IntAddSubCmp/IntMultiAdder
 ConstMult/ShiftAddOp
 ConstMult/ShiftAddDag
 ConstMult/FixRealKCM
+ConstMult/FixRealShiftAdd
 ConstMult/IntConstMult
+ConstMult/FPConstMult
 ConstMult/IntConstDiv
+ConstMult/IntConstMultShiftAdd
+ConstMult/IntConstMultShiftAddTypes
+ConstMult/IntConstMultShiftAddOpt
+ConstMult/IntConstMultShiftAddRPAG
+ConstMult/adder_cost
+ConstMult/error_comp_graph
+ConstMult/WordLengthCalculator
 IntMult/IntMultiplier
 IntMult/FixMultAdd
 IntMult/TilingStrategy
 IntMult/TilingStrategyOptimalILP
+IntMult/TilingStrategyBasicTiling
 IntMult/MultiplierBlock
 IntMult/DSPBlock
 IntMult/BaseMultiplier
@@ -64,6 +74,7 @@ IntMult/BaseMultiplierDSPSuperTilesXilinx
 IntMult/BaseMultiplierLUT
 IntMult/IntKaratsubaRectangular
 Complex/FixComplexKCM
+Conversions/Posit2FP
 FPAddSub/FPAdd
 FPAddSub/FPAddDualPath
 FPAddSub/FPAddSinglePath
@@ -79,8 +90,8 @@ FixFunctions/FixHornerEvaluator
 FixFunctions/FixFunctionBySimplePoly
 FixFunctions/PiecewisePolyApprox
 FixFunctions/FixFunctionByPiecewisePoly
-#FixFunctions/Multipartite
-#FixFunctions/FixFunctionByMultipartiteTable
+FixFunctions/Multipartite
+FixFunctions/FixFunctionByMultipartiteTable
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive
@@ -107,3 +118,5 @@ PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor
 Tools/Plane
 Tools/Point
 TutorialOperator
+
+Complex/FixFFT

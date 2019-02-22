@@ -16,9 +16,9 @@ namespace flopoco {
         unsigned int wIn_;
         unsigned int wOut_;
       public:
-        GenericLut( Target *target, const std::string &name, const std::vector<bool_eq> &equations );
+        GenericLut(Operator* parentOp, Target *target, const std::string &name, const std::vector<bool_eq> &equations );
 
-        GenericLut( Target *target, const std::string &name, const std::map<unsigned int, unsigned int> &groups, const unsigned int &wIn = 0, const unsigned int &wOut = 0 );
+        GenericLut(Operator* parentOp, Target *target, const std::string &name, const std::map<unsigned int, unsigned int> &groups, const unsigned int &wIn = 0, const unsigned int &wOut = 0 );
 
         void build();
 

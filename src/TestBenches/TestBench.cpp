@@ -35,7 +35,8 @@ namespace flopoco{
 	{
 		//We do not set the parent operator to this operator
 		setNoParseNoSchedule();
-		
+
+		useNumericStd();
 		// This allows the op under test to know how long it is being tested.
 		// useful only for testing the long acc, but who knows.
 		op->numberOfTests = n;
@@ -670,6 +671,7 @@ namespace flopoco{
 
 		/** Return the total simulation time*/
 		int TestBench::getSimulationTime(){
+			//			cerr << endl << endl<< simulationTime << endl << endl ;
 			return simulationTime;
 		}
 

@@ -18,9 +18,14 @@ namespace flopoco{
 	{
 	public:
 
-		FixHalfSine(OperatorPtr parentOp, Target* target, int lsb_, int N_);
+		FixHalfSine(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, int N);
 
 		virtual ~FixHalfSine();
+
+		/** Factory method */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static void registerFactory();
+		static TestList unitTest(int index);
 
 	private: 
 		int N; /* FixFIR::n = 2*N */
