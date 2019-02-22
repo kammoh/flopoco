@@ -177,32 +177,32 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
   ScaLP/Solver.h
-  HINTS "/usr/local/include/" "~/.local/include"
+  HINTS "/usr/local/include/" "~/.local/include" "/opt/scalp/include"
   DOC "Path of main header of scalp"
   )
 FIND_LIBRARY(SCALP_LIB
   NAMES libScaLP libScaLP.so  libScaLP.dylib
-  HINTS "/usr/local/lib64/" "~/.local/lib/"
+  HINTS "/usr/local/lib64/" "~/.local/lib/" "/opt/scalp/lib"
   DOC "Directory of the SCALP main library")
 
 FIND_LIBRARY(SCALP_CPLEX_LIB
   NAMES libScaLP-CPLEX libScaLP-CPLEX.so libScaLP-CPLEX.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
   DOC "Directory of the SCALP library for cplex solver backend")
 
 FIND_LIBRARY(SCALP_GUROBI_LIB
   NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
   DOC "Directory of the SCALP library for Gurobi solver backend")
 
 FIND_LIBRARY(SCALP_SCIP_LIB
   NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
   DOC "Directory of the SCALP library for SCIP solver backend")
 
 FIND_LIBRARY(SCALP_LPSOLVE_LIB
   NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSOLVE.dylib
-  HINTS "/usr/local/lib64/"
+  HINTS "/usr/local/lib64/" "/opt/scalp/lib"
   DOC "Directory of the SCALP library for LPSOLVE solver backend")
 
 IF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_SCIP_LIB OR SCALP_LPSOLVE_LIB))
