@@ -1,3 +1,5 @@
+#ifdef HAVE_PAGLIB
+
 #include "error_comp_graph.hpp"
 
 #include<set>
@@ -294,3 +296,4 @@ namespace IntConstMultShiftAdd_TYPES {
 	}
 }
 
+#endif //HAVE_PAGLIB
