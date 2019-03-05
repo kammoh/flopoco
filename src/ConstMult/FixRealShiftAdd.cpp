@@ -21,6 +21,7 @@ It is the limit case of removing one table altogether because it contributes not
 I don't really understand
 
 */
+#include "FixRealShiftAdd.hpp"
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
@@ -37,7 +38,6 @@ I don't really understand
 #include <gmpxx.h>
 #include <sollya.h>
 #include "../utils.hpp"
-#include "FixRealShiftAdd.hpp"
 #include "../IntAddSubCmp/IntAdder.hpp"
 
 #include "pagsuite/log2_64.h"

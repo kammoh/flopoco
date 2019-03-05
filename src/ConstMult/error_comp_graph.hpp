@@ -1,12 +1,16 @@
 #ifndef ERROR_COMP_GRAPH_HPP
 #define ERROR_COMP_GRAPH_HPP
 
+#ifdef HAVE_PAGLIB
+
 #include <iostream>
 #include <map>
 #include <set>
 
 #include <pagsuite/adder_graph.h>
 #include "IntConstMultShiftAddTypes.hpp"
+#include "gmp.h"
+#include "gmpxx.h"
 
 using namespace std;
 using namespace PAGSuite;
@@ -75,5 +79,7 @@ namespace IntConstMultShiftAdd_TYPES {
 		TruncationRegister const & truncReg
 	);
 }
+
+#endif //HAVE_PAGLIB
 
 #endif

@@ -1,3 +1,5 @@
+#ifdef HAVE_PAGLIB
+
 #include <algorithm>
 #include <iostream>
 #include "adder_cost.hpp"
@@ -179,3 +181,5 @@ vector<vector<size_t>> splitNonOverlap(
 }
 
 }
+
+#endif //HAVE_PAGLIB
