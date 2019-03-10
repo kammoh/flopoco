@@ -23,7 +23,11 @@ namespace flopoco{
 			minusInfty,    /**< A negative infinity with random non-zero exponent and fraction bits  */
 			plusZero,      /**< A positive zero */
 			minusZero,     /**< A negative zero  */
-			NaN            /**< Not A Number */
+			NaN,            /**< Not A Number */
+			smallestSubNormal,      /**< The smallest subnormal IEEENumber*/
+			greatestSubNormal,      /**< The greatest subnormal IEEENumber*/
+			smallestNormal,                 /**< The smallest normal IEEENumber*/
+			greatestNormal                  /**< The greatest normal IEEENumber*/
 		} SpecialValue;
 
 		/**
@@ -48,6 +52,22 @@ namespace flopoco{
 		 * @param m the initial value.
 		 */
 		IEEENumber(int wE, int wF, mpfr_t m);
+		
+		/**
+		 * Constructs a new initialised IEEENumber.
+		 * @param wE the width of the exponent
+		 * @param wF the width of the significant
+		 * @param z the initial value, given as an mpz holding the bits of the Number.
+		 */
+		IEEENumber(int wE, int wF, mpz_class z);
+
+		/**
+		 * Retrieves the significant.
+		 * @return Returns an mpz_class, representing the
+		 * VHDL signal of the mantissa, without leading 1.
+		 */
+		mpz_class getMantissaSignalValue();
+
 
 		/**
 		 * Converts the currently stored IEEENumber to an mpfr_t

@@ -89,6 +89,7 @@
 #include "FPAddSub/FPAdd.hpp"
 #include "FPAddSub/FPAddDualPath.hpp"
 #include "FPAddSub/FPAddSinglePath.hpp"
+#include "FPAddSub/FPAddSinglePathIEEE.hpp"
 // #include "FPAddSub/FPAdd3Input.hpp"
 // #include "FPAddSub/FPAddSub.hpp"
 

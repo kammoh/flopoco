@@ -67,19 +67,42 @@ namespace flopoco{
 			mantissa = getLargeRandom(wF);
 			if(mantissa==0) mantissa++; // we want a NaN, not an infinity
 			break;
+		case smallestSubNormal:
+			sign = 0;
+			exponent = 0;
+			mantissa = mpz_class(1);
+			break;
+		case greatestSubNormal:
+			sign = 0;
+			exponent = 0;
+			mantissa = (mpz_class(1) << wF) -1;
+			break;
+		case smallestNormal:
+			sign = 0;
+			exponent = mpz_class(1);
+			mantissa = 0;
+			break;
+		case greatestNormal:
+			sign = 0;
+			exponent = (mpz_class(1) << wE) -2;
+			mantissa = (mpz_class(1) << wF) -1;
+			break;
 		}
 		//		cout << "exponent=" << exponent << " mantissa=" << mantissa << endl;
 	}
 
 
-
-
-
+	IEEENumber::IEEENumber(int wE, int wF, mpz_class z)
+		: wE(wE), wF(wF)
+	{
+		if (wE > 30)
+			throw std::string("IEEENumber::IEEENumber: Using exponents larger than 30 bits is not supported.");
+		operator=(z);
+	}
 
 
 	mpz_class IEEENumber::getSignalValue()
 	{
-
 		/* Sanity checks */
 		if ((sign != 0) && (sign != 1))
 			throw std::string("IEEENumber::getSignal: sign is invalid.");
