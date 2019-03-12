@@ -123,8 +123,8 @@ namespace flopoco{
 				"Convert Posit to floating point",
 				"Conversions",
 				"",
-				"width(int): total size of the encoding,\
-				es(int): exponent field length",
+				"width(int): total size of the encoding;\
+				es(int): exponent field length;",
 				"",
 				Posit2FP::parseArguments
 			);

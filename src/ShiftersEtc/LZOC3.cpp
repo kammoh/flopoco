@@ -393,8 +393,8 @@ namespace flopoco{
 				"A leading zero counter. The output size is computed.",
 				"ShiftersLZOCs", // category
 				"",
-				"wIn(int): input size in bits\
-				useLargeLut(bool)=false: Use max unrouted lut size to build the encoding", // This string will be parsed
+				"wIn(int): input size in bits;\
+				useLargeLut(bool)=false: Use max unrouted lut size to build the encoding;", // This string will be parsed
 				"", // no particular extra doc needed
 				LZOC3::parseArguments
 				) ;

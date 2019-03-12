@@ -27,6 +27,7 @@ FixRealShiftAdd
 TestBench
 Wrapper
 FPAdd
+FPAddSinglePathIEEE
 FPDiv
 FixSOPC
 FixFIR
