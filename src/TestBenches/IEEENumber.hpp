@@ -94,12 +94,14 @@ namespace flopoco{
 		 */
 		mpz_class getSignalValue();
 
+
+#if 0 // Not complete and currently useless, disabled for now
 		/**
 		 * Equality operator. Everything does through MPFR to make sure
 		 * correct rounding occurs.
 		 */
 		IEEENumber &operator=(IEEENumber fp);
-
+#endif
 
 
 		/**
@@ -131,6 +133,11 @@ namespace flopoco{
 		/** The value of the mantissa field  */
 		mpz_class mantissa;
 
+		/** The minimum exponent, assuming a mantissa in [0.5, 1) (MPFR convention) */
+		int emin;
+		
+		/** The maximum exponent, assuming a mantissa in [0.5, 1) (MPFR convention) */
+		int emax;
 	};
 
 }

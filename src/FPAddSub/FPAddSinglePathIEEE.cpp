@@ -274,6 +274,10 @@ namespace flopoco{
 			else
 				mpfr_add(r, x, y, GMP_RNDN);
 
+			// Here we have in MPFR the correctly rounded result, except in the case of over/underflow.
+			// In the case of overflow, it can be handled by IEEE number.
+			// In the case of an underflow, we have a double-rounding issue here: TODO
+			
 			//double d=mpfr_get_d(r, GMP_RNDN);
 			//cout << "R=" << d << endl;
 		// Set outputs

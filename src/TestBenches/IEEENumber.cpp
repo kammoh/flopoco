@@ -24,14 +24,14 @@ namespace flopoco{
 		: wE(wE), wF(wF)
 	{
 		if (wE > 30)
-			throw std::string("IEEENumber::IEEENumber: Using exponents larger than 30 bits is not supported.");
+			throw std::string("IEEENumber::IEEENumber: Exponents larger than 30 bits are not supported.");
 	}
 
 	IEEENumber::IEEENumber(int wE, int wF, mpfr_t m)
 		: wE(wE), wF(wF)
 	{
 		if (wE > 30)
-			throw std::string("IEEENumber::IEEENumber: Using exponents larger than 30 bits is not supported.");
+			throw std::string("IEEENumber::IEEENumber: Exponents larger than 30 bits are not supported.");
 		operator=(m);
 	}
 
@@ -39,7 +39,7 @@ namespace flopoco{
 		: wE(wE), wF(wF)
 	{
 		if (wE > 30)
-			throw std::string("IEEENumber::IEEENumber: Using exponents larger than 30 bits is not supported.");
+			throw std::string("IEEENumber::IEEENumber: Exponents larger than 30 bits are not supported.");
 		switch(v)  {
 		case plusInfty: 
 			sign = 0;
@@ -161,11 +161,18 @@ namespace flopoco{
 
 
 
-
 	IEEENumber& IEEENumber::operator=(mpfr_t mp_)
 	{
 		mpfr_t mp;
 		mpfr_init2(mp, mpfr_get_prec(mp_));
+		// emin and emax are specified for a mantissa in (0.5, 1)
+		// The formula should evaluate to -1073 for doubles, see MPFR doc;
+		emin = -(1<<(wE-1)) - wF + 3; // -1024 - 52 + 3 
+		mpfr_set_emin (emin);
+		// The formula should evaluate to 1024 for doubles, see MPFR doc;
+		emax = (1<<(wE-1));
+		mpfr_set_emax (emax);
+
 		mpfr_set(mp, mp_, GMP_RNDN);
 
 		/* NaN */
@@ -208,6 +215,7 @@ namespace flopoco{
 
 		//cout << "exp=" << exp <<endl;
 		if(exp + ((1<<(wE-1))-1) <=0) {			// subnormal
+			// TODO manage double rounding to subnormals
 			exponent=0;
 			/* Extract mantissa */
 			mpfr_mul_2si(mp, mp, wF-1+((1<<(wE-1))-1), GMP_RNDN);
@@ -218,6 +226,8 @@ namespace flopoco{
 		}
 		else { // Normal number
 			/* Extract mantissa */
+#if 0
+#else
 			mpfr_div_2si(mp, mp, exp, GMP_RNDN);
 			mpfr_sub_ui(mp, mp, 1, GMP_RNDN);
 			mpfr_mul_2si(mp, mp, wF, GMP_RNDN);
@@ -247,6 +257,7 @@ namespace flopoco{
 					exponent = (1<<wE) -1;
 					mantissa = 0;
 				}
+			#endif
 		}
 
 
@@ -271,7 +282,7 @@ namespace flopoco{
 
 
 
-
+#if 0 // Not complete and currently useless, disabled for now
 	IEEENumber& IEEENumber::operator=(IEEENumber fp)
 	{
 
@@ -284,7 +295,7 @@ namespace flopoco{
 
 		return *this;
 	}
-
+#endif
 
 
 	void IEEENumber::getPrecision(int &wE, int &wF)
