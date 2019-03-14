@@ -269,19 +269,21 @@ namespace flopoco{
 			mpfr_init2(r, 1+wF);
 			ieeex.getMPFR(x);
 			ieeey.getMPFR(y);
-			if(sub)
-				mpfr_sub(r, x, y, GMP_RNDN);
-			else
-				mpfr_add(r, x, y, GMP_RNDN);
 
-			// Here we have in MPFR the correctly rounded result, except in the case of over/underflow.
-			// In the case of overflow, it can be handled by IEEE number.
-			// In the case of an underflow, we have a double-rounding issue here: TODO
-			
-			//double d=mpfr_get_d(r, GMP_RNDN);
-			//cout << "R=" << d << endl;
-		// Set outputs
-			IEEENumber  ieeer(wE, wF, r);
+			// Here now we compute in r the MPFR correctly rounded result,
+			// except in the cases of over/underflow.
+			// These cases will be handled by IEEE number.
+			// The ternary info allows us to avoid double-rounding issues
+			// This is useless here, as an addition/subtraction that returns a subnormal is always errorless 
+			// but this code will be copied by other functions
+
+			int ternaryRoundInfo; 
+			if(sub)
+				ternaryRoundInfo = mpfr_sub(r, x, y, GMP_RNDN);
+			else
+				ternaryRoundInfo = mpfr_add(r, x, y, GMP_RNDN);
+
+			IEEENumber  ieeer(wE, wF, r, ternaryRoundInfo); 
 			mpz_class svR = ieeer.getSignalValue();
 			tc->addExpectedOutput("R", svR);
 
@@ -337,6 +339,7 @@ namespace flopoco{
 		emulate(tc);
 		tcl->add(tc);
 
+		//////
 		tc = new TestCase(this);
 		tc->addIEEEInput("X", IEEENumber::NaN);
 		tc->addIEEEInput("Y", IEEENumber::NaN);
@@ -350,8 +353,10 @@ namespace flopoco{
 		tcl->add(tc);
 
 		// Regression tests
+			cout << "JITVBA E" <<endl;
 		tc = new TestCase(this);
 		tc->addIEEEInput("X", 1.0);
+
 		tc->addIEEEInput("Y", -1.0);
 		emulate(tc);
 		tcl->add(tc);
