@@ -26,6 +26,7 @@ namespace flopoco{
 			NaN,            /**< Not A Number */
 			smallestSubNormal,      /**< The smallest subnormal IEEENumber*/
 			greatestSubNormal,      /**< The greatest subnormal IEEENumber*/
+			minusGreatestSubNormal,      /**< The negative greatest subnormal IEEENumber*/
 			smallestNormal,                 /**< The smallest normal IEEENumber*/
 			greatestNormal                  /**< The greatest normal IEEENumber*/
 		} SpecialValue;
@@ -50,6 +51,7 @@ namespace flopoco{
 		 * @param wE the width of the exponent
 		 * @param wF the width of the significant
 		 * @param m the initial value.
+		 * @param ternaryRoundingInfo used to avoid double rounding.
 		 */
 		IEEENumber(int wE, int wF, mpfr_t m,  int ternaryRoundInfo=0);
 		
@@ -82,6 +84,14 @@ namespace flopoco{
 		 * @param[out] m a preinitialized mpfr_t where to store the floating point
 		 */
 		void getMPFR(mpfr_t m);
+
+
+		/**
+		 * imports a MPFR value into an IEEENumber
+		 * @param[in] m the value
+		 * @param  ternaryRoundInfo a ternary rounding value rememberin the rounding history, see mpfr documenation 
+		 */
+		void setMPFR(mpfr_t m, int ternaryRoundInfo);
 
 
 		/**
@@ -132,12 +142,6 @@ namespace flopoco{
 
 		/** The width of the significant (without leading zero) */
 		int wF;
-
-		/** The minimum exponent, assuming a mantissa in [0.5, 1) (MPFR convention) */
-		int emin;
-		
-		/** The maximum exponent, assuming a mantissa in [0.5, 1) (MPFR convention) */
-		int emax;
 
 		/** The value of the sign field */
 		mpz_class sign;

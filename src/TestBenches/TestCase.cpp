@@ -135,6 +135,7 @@ namespace flopoco{
 		int wF=s->wF();
 		IEEENumber  fpx(wE, wF, x);
 		mpz_class mpx = fpx.getSignalValue();
+
 		inputs[name] = mpx;
 	}
 
