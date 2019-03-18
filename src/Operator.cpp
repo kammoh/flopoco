@@ -73,9 +73,8 @@ namespace flopoco{
 		indirectOperator_           = NULL;
 		hasDelay1Feedbacks_         = false;
 
-		isOperatorDrawn_            = false;
-
 		isShared_                   = false;
+		isTopLevelDotDrawn_ 		= false;
 		isLibraryComponent_         = false;
 		noParseNoSchedule_          = false;
 
@@ -150,7 +149,15 @@ namespace flopoco{
 	}
 
 
+	bool Operator::isOperatorDrawn()
+	{
+		return isTopLevelDotDrawn_;
+	}
 
+	void Operator::markOperatorDrawn()
+	{
+		isTopLevelDotDrawn_ = true;
+	}
 
 	void Operator::addInput(const std::string name, const int width, const bool isBus) {
 		//search if the signal has already been declared
@@ -1382,7 +1389,6 @@ namespace flopoco{
 		OperatorFactoryPtr instanceOpFactory = UserInterface::getFactoryByName(opName);
 		OperatorPtr instance = nullptr;
 		vector<string> parametersVector;
-		vector<Signal*>::iterator itSignal;
 		string portName, signalName, mapping;
 
 		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
@@ -2839,17 +2845,10 @@ namespace flopoco{
 		if(mode == 1)
 		{
 			//for global operators, which are not subcomponents of other operators
-			if(isOperatorDrawn_ == true)
+			if(isShared_)
 				//nothing else to do
 				return;
 		}else
-		{
-			//for subcomponents, the logic is reversed
-			if(isOperatorDrawn_ == false)
-				//nothing else to do
-				return;
-		}
-
 		file << "\n";
 
 		//draw a component (a graph) or a subcomponent (a subgraph)
@@ -2857,7 +2856,7 @@ namespace flopoco{
 		{
 			//main component in the globalOpList
 			file << tabs << "digraph " << getName() << "\n";
-		}else if(mode == 2)
+		} else if(mode == 2)
 		{
 			//a subcomponent
 			file << tabs << "subgraph cluster_" << getName() << "\n";
@@ -3000,11 +2999,6 @@ namespace flopoco{
 				if(ioList_[i]->type() == Signal::out)
 					file << drawDotNodeEdges(ioList_[i], tabs);
 		}
-
-		if(mode == 1)
-			setIsOperatorDrawn(true);
-		else
-			setIsOperatorDrawn(false);
 	}
 
 	std::string Operator::drawDotNode(Signal *node, std::string tabs)
@@ -3248,7 +3242,7 @@ namespace flopoco{
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
 
 		isOperatorImplemented_      = op->isOperatorImplemented();
-		isOperatorDrawn_            = op->isOperatorDrawn();
+		isTopLevelDotDrawn_ = op->isOperatorDrawn();
 
 		isShared_                   = op->isShared();
 		isLibraryComponent_         = op->isLibraryComponent();
@@ -3503,15 +3497,6 @@ namespace flopoco{
 	void Operator::setIsOperatorScheduled(bool newValue){
 	  isOperatorScheduled_ = newValue;
 	}
-
-	bool Operator::isOperatorDrawn(){
-		return isOperatorDrawn_;
-	}
-
-	void Operator::setIsOperatorDrawn(bool newValue){
-		isOperatorDrawn_ = newValue;
-	}
-
 
 	void Operator::setShared(){
 		isShared_ = true;
