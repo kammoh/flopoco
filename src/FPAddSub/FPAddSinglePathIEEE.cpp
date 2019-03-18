@@ -133,9 +133,9 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "yIsZero")           << " <= yExpFieldZero and xSigFieldZero;"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <=  xExpFieldZero and yExpFieldZero;" << endl;
 
-		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <= '1' when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <=  xIsNaN or yIsNaN  or  (xIsInfinity and yIsInfinity and EffSub);" << endl;
 		
-		vhdl << tab << declare(target->logicDelay(2*wE + 3), "signR") << " <= '0' when (expNewX=" << zg(wE) << " and expNewY=" << zg(wE) << " and signNewX/=signNewY and bothSubNormalOr0='0') else signNewX;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2*wE + 3), "signR") << " <=  signNewX;"<<endl;
 		vhdl << tab << declare(target->logicDelay(1), "fracNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
 
 
