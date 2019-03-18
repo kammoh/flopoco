@@ -102,7 +102,8 @@ if __name__ == '__main__':
     report("   frequency:  " +  frequency + " MHz")
 
     if target.lower()=="kintex7":
-        part="xc7k70tfbv484-3"
+        #part="xc7k70tfbv484-3"
+        part="xc7k160tfbg484-1"
     elif target.lower()=="zynq7000":
         part="xc7z020clg484-1"
     elif target.lower()=="virtex7":
