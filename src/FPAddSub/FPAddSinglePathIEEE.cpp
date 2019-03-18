@@ -295,124 +295,33 @@ namespace flopoco{
 	void FPAddSinglePathIEEE::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
+		vector<mpz_class> specialCaseList;
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::plusZero).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::smallestSubNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::greatestSubNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::smallestNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::greatestNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::plusInfty).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, 1.0).getSignalValue());
 
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", 1.0);
-		emulate(tc);
-		tcl->add(tc);
+		// First add all the negative special cases 
+		size_t size = specialCaseList.size();
+		for (size_t i=0; i<size; i++){
+			specialCaseList.push_back(specialCaseList[i] + (mpz_class(1)<<(wE+wF)));
+			}
 
-		// Zeroes
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::minusZero);
-		tc->addIEEEInput("Y", IEEENumber::minusZero);
-		emulate(tc);
-		tcl->add(tc);
+		// No build all the possible special case combinations
+		for (size_t i=0; i<specialCaseList.size(); i++){
+			for (size_t j=0; j<specialCaseList.size(); j++){
+				tc = new TestCase(this);
+				tc->addInput("X", specialCaseList[i]);
+				tc->addInput("Y", specialCaseList[j]);
+				emulate(tc);
+				tcl->add(tc);
+			}
+		} 
 
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", IEEENumber::minusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::minusZero);
-		tc->addIEEEInput("Y", IEEENumber::plusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", IEEENumber::plusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		// Zero plus something
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", IEEENumber::smallestSubNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", IEEENumber::greatestSubNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", IEEENumber::smallestNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", 1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		
-	
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::greatestSubNormal);
-		tc->addIEEEInput("Y", IEEENumber::greatestSubNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::greatestNormal);
-		tc->addIEEEInput("Y", IEEENumber::greatestNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", IEEENumber::plusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", IEEENumber::minusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::NaN);
-		tc->addIEEEInput("Y", IEEENumber::NaN);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusInfty);
-		tc->addIEEEInput("Y", IEEENumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		// overflow tests
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusInfty);
-		tc->addIEEEInput("Y", IEEENumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::minusInfty);
-		tc->addIEEEInput("Y", IEEENumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		
-
-		// regression tests
+		// Other regression tests, mostly for single prec
 		tc = new TestCase(this);
 		tc->addIEEEInput("X", 1.1754945e-38);
 		tc->addIEEEInput("Y", 1.1754945e-38);
