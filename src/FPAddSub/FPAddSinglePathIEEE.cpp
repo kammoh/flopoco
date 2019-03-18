@@ -1,16 +1,42 @@
 /*
-  Floating Point Adder for FloPoCo
+  IEEE-compatible Floating Point Adder for FloPoCo
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
 
-  Authors:   BogdFPAddSinglePathIEEEan Pasca, Florent de Dinechin
+  Authors: Valentin Huguet, Florent de Dinechin
 
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 2008-2010.
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 2016-2019.
   All right reserved.
 
   */
+
+
+/* Bugs:
+197
+   1000000000000000 0000000000000000       this is -0 + +0
+   0000000000000000 got 1000000000000000
+
+227
+   1000000000000001 0000000000000001 
+   0000000000000000 got 1000000000000000   ??? -tiny + tiny 
+"when the result is exactly zero, in RNE, it is +0, except x+x and x-(-x) when x is +0 or -0: it has the sign of x"
+
+257
+    1000001111111111 0000001111111111 
+    0000000000000000               got 1000000000000000 : idem
+
+301
+    1 00001 0000000000 1 00001 0000000000 
+    1 00010 0000000000 got 0 00010 0000000000  ???
+
+
+391
+   1 01111 0000000000 1 01111 0000000000   -1 + -1  -> -2, got 2
+   1100000000000000    got 0100000000000000
+
+ */
 
 #include "FPAddSinglePathIEEE.hpp"
 
@@ -93,17 +119,24 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "EffSub") << " <= signNewX xor signNewY;"<<endl;		
 
 		addComment("Special case dectection", tab);		
-		vhdl << tab << declare(target->logicDelay(wE), "subNormalNewXOr0") << " <= '1' when expNewX=" << zg(wE) << " else '0';" << endl;
-		vhdl << tab << declare(target->logicDelay(wE), "subNormalNewYOr0") << " <= '1' when expNewY=" << zg(wE) << " else '0';" << endl;
-		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <= '1' when subNormalNewXOr0='1' and subNormalNewYOr0='1' else '0';" << endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "xIsNaN")   << " <= '1' when expNewX=" << og(wE) << " and newX" << range(wF-1, 0) << "/=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "yIsNaN")   << " <= '1' when expNewY=" << og(wE) << " and newY" << range(wF-1, 0) << "/=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "xIsInfinity")   << " <= '1' when expNewY=" << og(wE) << " and newX" << range(wF-1, 0) << "=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "yIsInfinity")   << " <= '1' when expNewY=" << og(wE) << " and newY" << range(wF-1, 0) << "=" << zg(wF) << " else '0';"<<endl;
+		vhdl << tab << declare(target->logicDelay(wE), "xExpFieldZero")    << " <= '1' when expNewX=" << zg(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "yExpFieldZero")    << " <= '1' when expNewY=" << zg(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "xExpFieldAllOnes") << " <= '1' when expNewX=" << og(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "yExpFieldAllOnes") << " <= '1' when expNewY=" << og(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wF), "xSigFieldZero")    << " <= '1' when newX" << range(wF-1, 0) << "=" << zg(wF) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wF), "ySigFieldZero")    << " <= '1' when newY" << range(wF-1, 0) << "=" << zg(wF) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(2),  "xIsNaN")           << " <= xExpFieldAllOnes and not xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2),  "yIsNaN")           << " <= yExpFieldAllOnes and not ySigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "xIsInfinity")       << " <= xExpFieldAllOnes and xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "yIsInfinity")       << " <= yExpFieldAllOnes and ySigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "xIsZero")           << " <= xExpFieldZero and xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "yIsZero")           << " <= yExpFieldZero and xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <=  xExpFieldZero and yExpFieldZero;" << endl;
+
 		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <= '1' when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else '0';" << endl;
 		
 		vhdl << tab << declare(target->logicDelay(2*wE + 3), "signR") << " <= '0' when (expNewX=" << zg(wE) << " and expNewY=" << zg(wE) << " and signNewX/=signNewY and bothSubNormalOr0='0') else signNewX;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "fracNewY", wF+1) << " <= not(subNormalNewYOr0) & newY" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare(target->logicDelay(1), "fracNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
 
 
 		//=========================================================================|
@@ -115,7 +148,7 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(1), "expDiff",wE+1) << " <= expXmExpY when swap = '0' else expYmExpX;"<<endl;
 		vhdl << tab << declare(target->adderDelay(wE), "shiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
 		vhdl << tab << declare(target->logicDelay(1), "rightShiftValue",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0) when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
-		vhdl << tab << declare(target->adderDelay(sizeRightShift) + target->logicDelay(2), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue-'1' when (subNormalNewYOr0='1' and subNormalNewXOr0='0') else rightShiftValue;" << endl;
+		vhdl << tab << declare(target->adderDelay(sizeRightShift) + target->logicDelay(2), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue-'1' when (yExpFieldZero='1' and xExpFieldZero='0') else rightShiftValue;" << endl;
 		
 		newInstance(
 				"Shifter", 
@@ -136,7 +169,7 @@ namespace flopoco{
   	vhdl << tab << declare(.0, "expSigShiftedNewY", wE+(2*wF)+4) << " <= " << zg(wE) << " & shiftedFracNewY;" << endl;
 		vhdl << tab << declare(.0, "EffSubVector", wE+(2*wF)+4) << " <= (" << wE+(2*wF)+3 << " downto 0 => EffSub);"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "fracNewYfarXorOp", wE+(2*wF)+4) << " <= expSigShiftedNewY xor EffSubVector;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= newX" << range(wE+wF-1, wF) << " & not(subNormalNewXOr0) & newX" << range(wF-1,0) << " & "<< zg(wF+3) <<";" << endl;
+		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= newX" << range(wE+wF-1, wF) << " & not(xExpFieldZero) & newX" << range(wF-1,0) << " & "<< zg(wF+3) <<";" << endl;
 		/*This carry is necessary if it's a substraction, for two's complement*/
 		vhdl << tab << declare(.0, "cInAddFar") << " <= EffSub;"<< endl;
 
