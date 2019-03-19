@@ -255,6 +255,7 @@ The parity problem leads to wrong alignment.
 Nobody should do this if they have read the Muller book, so... people will try this and it is a bug
 ** ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="exp(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
 
+** ./flopoco plainVHDL=1 FixFunctionByPiecewisePoly f="(2^x-1)" d=2 lsbIn=-1 lsbOut=-8 msbout=0 testbench
 * Release-critical (current regressions):
 ** FPPipeline
 ** lut_rng

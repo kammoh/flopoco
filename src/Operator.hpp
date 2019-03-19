@@ -898,6 +898,10 @@ namespace flopoco {
 		 */
 		bool isSignalDeclared(string name);
 
+		/**
+		 * Checks if the operator has already been converted to dot
+		 */
+
 
 		/**
 		 * Return the list of component instances declared in this operator
@@ -1241,17 +1245,6 @@ namespace flopoco {
 		void setIsOperatorScheduled(bool newValue);
 
 		/**
-		 * Get the value of isOperatorScheduled
-		 */
-		bool isOperatorDrawn();
-
-		/**
-		 * Set the value of isOperatorScheduled
-		 */
-		void setIsOperatorDrawn(bool newValue);
-
-
-		/**
 		 * Set the operator to be reused in the design
 		 */
 		void setShared();
@@ -1275,6 +1268,13 @@ namespace flopoco {
 		 * Is this operator just a wrapper to a library component (like primitives)?
 		 */
 		bool isLibraryComponent();
+
+		/**
+		 * Has the dot file having this operator as top level one been produced 
+		 */
+		bool isOperatorDrawn();
+
+		void markOperatorDrawn();
 
 		/**
 		 * Getter for generics (needed for deep copies)
@@ -1733,8 +1733,7 @@ private:
 	bool                   isOperatorScheduled_;            /**< Flag to show whether this operator has already been scheduled, mostly to avoid redundant work */
 	bool                   isOperatorApplyScheduleDone_;    /**< Flag to show whether this operator has already passed applySchedule, mostly to avoid redundant work */
 	bool                   isOperatorImplemented_;          /**< Flag to show whether this operator has already been implemented (down to VHDL output) */
-	bool                   isOperatorDrawn_;                /**< Flag to show whether this operator has already been drawn, or not */
-
+	bool 					isTopLevelDotDrawn_;
 	bool                   noParseNoSchedule_;              /**< Flag instructing the VHDL to go through unchanged */
 	bool                   isShared_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
 	bool                   isLibraryComponent_;             /**< Flag that indicates the the component is a library component (e.g., like primitives) and no code for the component or entity is generated. */

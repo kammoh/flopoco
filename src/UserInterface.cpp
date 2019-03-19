@@ -5,6 +5,7 @@
 #include "AutoTest/AutoTest.hpp"
 
 #include <algorithm>
+#include <sys/stat.h>
 #include <iostream>
 #include <iomanip>
 
@@ -43,7 +44,6 @@ namespace flopoco
 	bool   UserInterface::reDebug;
 	bool   UserInterface::flpDebug;
 
-	string UserInterface::depGraphFileName="";
 	string UserInterface::depGraphDrawing="";
 
 
@@ -153,7 +153,11 @@ namespace flopoco
 			// This creates all the Operators and the dependency graph.
 			buildAll(argc, argv);
 
-			drawDotDiagram();
+			if(depGraphDrawing != "no") 
+			{
+				mkdir("dot", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+				drawDotDiagram(UserInterface::globalOpList);
+			}
 			
 			outputVHDL();
 			finalReport(cerr);
@@ -263,41 +267,6 @@ namespace flopoco
 	}
 
 
-	void UserInterface::outputDotToFile(ofstream& file){
-	  outputDotToFile(UserInterface::globalOpList, file);
-	}
-
-
-	/* The recursive method */
-	void UserInterface::outputDotToFile(vector<OperatorPtr> &oplist, ofstream& file)
-	{
-
-	  for(auto i: oplist) {
-	      try
-	      {
-		  // check for subcomponents
-		  if(! i->getSubComponentListR().empty() ){
-		      //recursively call to print subcomponents
-		      outputDotToFile(i->getSubComponentListR(), file);
-		  }
-
-		  //output the dot code to file
-		  //	for global operators, this is done only once
-		  if(!i->isOperatorDrawn())
-		  {
-		    i->drawDotDiagram(file, 1, depGraphDrawing);
-		    i->setIsOperatorDrawn(true);
-		  }
-	      }catch (std::string &s)
-	      {
-		  cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
-	      }
-	  }
-
-	}
-
-
-
 	void UserInterface::finalReport(ostream& s){
 		s << endl<<"*** Final report ***"<<endl;
 		s << "Output file: " << outputFileName <<endl;
@@ -324,7 +293,7 @@ namespace flopoco
 			s <<  "ghdl -r " << simlibs << op->getName() << " --vcd=" << op->getName() << ".vcd --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			s <<  "gtkwave " << op->getName() << ".vcd" << endl;
 			cerr << "To run the simulation using nvc, type the following in a shell prompt:" <<endl;
-			cerr <<  "nvc  -a " << outputFileName << "  -e " <<  op->getName() << "  -r --exit-severity=failure " << "--wave=" << op->getName() << ".fst --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
+			cerr <<  "nvc  -a " << outputFileName << " --relax=prefer-explicit  -e " <<  op->getName() << "  -r --exit-severity=failure " << "--wave=" << op->getName() << ".fst --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			cerr <<  "gtkwave " << op->getName() << ".fst" << endl;
 		}
 
@@ -369,7 +338,6 @@ namespace flopoco
 		unusedHardMultThreshold=0.7;
 		compression = "heuristicMaxEff";
 
-		depGraphFileName = "flopoco.dot";
 		depGraphDrawing = "full";
 
 	}
@@ -500,18 +468,29 @@ namespace flopoco
 		}
 	}
 
+	void UserInterface::drawDotDiagram(vector<OperatorPtr> & oplist) {
+		ofstream file;
+		for(auto i: oplist) {
+			try {
+				if (i->isOperatorDrawn()) {
+					continue;
+				}
+				file.open(string{"dot/"}+(i->getName()+".dot").c_str(), ios::out);
+				i->drawDotDiagram(file, 1, depGraphDrawing);
+				i->markOperatorDrawn();
+				file.close();
+				// check for subcomponents
+				if(! i->getSubComponentListR().empty() ){
+				//recursively call to print subcomponents
+					drawDotDiagram(i->getSubComponentListR());
+				}
 
-
-	void UserInterface::drawDotDiagram() {
-	  ofstream file;
-
-	  //if dot drawing is disabled, there's nothing else to do
-	  if(depGraphDrawing == "no")
-		  return;
-
-	  file.open(depGraphFileName.c_str(), ios::out);
-	  outputDotToFile(file);
-	  file.close();
+				//output the dot code to file
+				//	for global operators, this is done only once
+			} catch (std::string &s) {
+				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
+			}
+		}
 	}
 
 

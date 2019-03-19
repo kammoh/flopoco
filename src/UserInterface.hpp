@@ -55,7 +55,7 @@ namespace flopoco
 		static void buildAll(int argc, char* argv[]);
 
 		/** starts the dot diagram plotter on the operators */
-		static void drawDotDiagram();
+		static void drawDotDiagram(vector<OperatorPtr> &oplist);
 
 		/** generates the code to the default file */
 		static void outputVHDL();
@@ -124,14 +124,6 @@ namespace flopoco
 		/** generates the code for operators in oplist, and all their subcomponents */
 		static void outputVHDLToFile(vector<OperatorPtr> &oplist, ofstream& file, set<string> &alreadyOutput);
 
-
-		/** generates the dot code for operators in globalOpList, and all their subcomponents */
-		static void outputDotToFile(ofstream& file);
-
-		/** generates the dot code for operators in oplist, and all their subcomponents */
-		static void outputDotToFile(vector<OperatorPtr> &oplist, ofstream& file);
-
-
 	private:
 		/** register a factory */
 		static void registerFactory(OperatorFactoryPtr factory);
@@ -175,9 +167,7 @@ namespace flopoco
 		static const vector<string> special_targets;
 		static const vector<option_t> options;
 
-		static string depGraphFileName;
 		static string depGraphDrawing;
-
 	};
 
 	/** This is the abstract class that each operator factory will inherit.

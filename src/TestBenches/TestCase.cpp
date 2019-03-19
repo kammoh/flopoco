@@ -11,7 +11,7 @@ namespace flopoco{
 
 	void TestCaseList::add(TestCase* tc){
 		v.push_back(tc);
-                tc->setId(v.size()-1); // on enregistre comme identifiant la position du TestCase
+		tc->setId(v.size()-1); // id is the index in this vector
 	}
 
 	void TestCaseList::add(TestCaseList* tcl){
@@ -133,8 +133,7 @@ namespace flopoco{
 		}
 		int wE=s->wE();
 		int wF=s->wF();
-		IEEENumber  fpx(wE, wF);
-		fpx=x;
+		IEEENumber  fpx(wE, wF, x);
 		mpz_class mpx = fpx.getSignalValue();
 
 		inputs[name] = mpx;

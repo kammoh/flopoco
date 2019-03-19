@@ -63,6 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
     parser.add_argument('-t', '--target', help='Target name (default is read from the VHDL file)')
     parser.add_argument('-f', '--frequency', help='Objective frequency (default is read from the VHDL file)')
+    parser.add_argument('-p', '--part', help='Vivado part idx to use')
 
     options=parser.parse_args()
 
@@ -102,7 +103,8 @@ if __name__ == '__main__':
     report("   frequency:  " +  frequency + " MHz")
 
     if target.lower()=="kintex7":
-        part="xc7k70tfbv484-3"
+        #part="xc7k70tfbv484-3"
+        part="xc7k160tfbg484-1"
     elif target.lower()=="zynq7000":
         part="xc7z020clg484-1"
     elif target.lower()=="virtex7":
@@ -110,6 +112,9 @@ if __name__ == '__main__':
         part="xc7vx330tffg1157-1" # virtex 7 with 600 I/Os
     else:
         raise BaseException("Target " + target + " not supported")
+
+    if(options.part != None):
+        part=options.part
         
     workdir="/tmp/vivado_runsyn_"+entity+"_"+target+"_"+frequency
     os.system("rm -R "+workdir)

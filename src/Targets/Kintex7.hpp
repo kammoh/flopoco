@@ -39,7 +39,6 @@ namespace flopoco{
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
 		double carryPropagateDelay(){return 0;};
 		double DSPMultiplierDelay(){ 
-			DSP*   createDSP();
 			return 0;
 			// TODO: return DSPMultiplierDelay_;
 		}

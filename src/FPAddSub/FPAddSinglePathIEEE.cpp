@@ -1,16 +1,34 @@
 /*
-  Floating Point Adder for FloPoCo
+  IEEE-compatible Floating Point Adder for FloPoCo
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
 
-  Authors:   BogdFPAddSinglePathIEEEan Pasca, Florent de Dinechin
+  Authors: Valentin Huguet, Florent de Dinechin
 
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 2008-2010.
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 2016-2019.
   All right reserved.
 
   */
+
+
+/* Bugs:
+211
+   1000000000000000 1000000000000000 
+   1000000000000000 got 0000000000000000
+
+
+301
+    1 00001 0000000000 1 00001 0000000000 
+    1 00010 0000000000 got 0 00010 0000000000  ???
+
+
+391
+   1 01111 0000000000 1 01111 0000000000   -1 + -1  -> -2, got 2
+   1100000000000000    got 0100000000000000
+
+ */
 
 #include "FPAddSinglePathIEEE.hpp"
 
@@ -76,7 +94,7 @@ namespace flopoco{
   	vhdl << tab << declare(target->adderDelay(wE+1), "expXmExpY",wE+1) << " <= ('0' & X" << range(wE+wF-1, wF) << ") - ('0'  & Y" << range(wE+wF-1, wF) << ") " << ";" << endl;
   	vhdl << tab << declare(target->adderDelay(wE+1), "expYmExpX",wE+1) << " <= ('0' & Y" << range(wE+wF-1, wF) << ") - ('0'  & X" << range(wE+wF-1, wF) << ") " << ";" << endl;
 
-  	vhdl << tab << declare(.0, "swap") << " <= '0' when expFracX >= expFracY else '1';" << endl;
+  	vhdl << tab << declare(target->adderDelay(wE+wF), "swap") << " <= '0' when expFracX >= expFracY else '1';" << endl;
 
   	string pmY="Y";
 		if ( sub ) {
@@ -93,17 +111,25 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "EffSub") << " <= signNewX xor signNewY;"<<endl;		
 
 		addComment("Special case dectection", tab);		
-		vhdl << tab << declare(target->logicDelay(wE), "subNormalNewXOr0") << " <= '1' when expNewX=" << zg(wE) << " else '0';" << endl;
-		vhdl << tab << declare(target->logicDelay(wE), "subNormalNewYOr0") << " <= '1' when expNewY=" << zg(wE) << " else '0';" << endl;
-		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <= '1' when subNormalNewXOr0='1' and subNormalNewYOr0='1' else '0';" << endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "xIsNaN")   << " <= '1' when expNewX=" << og(wE) << " and newX" << range(wF-1, 0) << "/=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "yIsNaN")   << " <= '1' when expNewY=" << og(wE) << " and newY" << range(wF-1, 0) << "/=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "xIsInfinity")   << " <= '1' when expNewY=" << og(wE) << " and newX" << range(wF-1, 0) << "=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(wE+wF), "yIsInfinity")   << " <= '1' when expNewY=" << og(wE) << " and newY" << range(wF-1, 0) << "=" << zg(wF) << " else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <= '1' when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "xExpFieldZero")    << " <= '1' when expNewX=" << zg(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "yExpFieldZero")    << " <= '1' when expNewY=" << zg(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "xExpFieldAllOnes") << " <= '1' when expNewX=" << og(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wE), "yExpFieldAllOnes") << " <= '1' when expNewY=" << og(wE) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wF), "xSigFieldZero")    << " <= '1' when newX" << range(wF-1, 0) << "=" << zg(wF) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(wF), "ySigFieldZero")    << " <= '1' when newY" << range(wF-1, 0) << "=" << zg(wF) << " else '0';" << endl;
+		vhdl << tab << declare(target->logicDelay(2),  "xIsNaN")           << " <= xExpFieldAllOnes and not xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2),  "yIsNaN")           << " <= yExpFieldAllOnes and not ySigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "xIsInfinity")       << " <= xExpFieldAllOnes and xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "yIsInfinity")       << " <= yExpFieldAllOnes and ySigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "xIsZero")           << " <= xExpFieldZero and xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "yIsZero")           << " <= yExpFieldZero and ySigFieldZero;"<<endl;
 		
-		vhdl << tab << declare(target->logicDelay(2*wE + 3), "signR") << " <= '0' when (expNewX=" << zg(wE) << " and expNewY=" << zg(wE) << " and signNewX/=signNewY and bothSubNormalOr0='0') else signNewX;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "fracNewY", wF+1) << " <= not(subNormalNewYOr0) & newY" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <=  xExpFieldZero and yExpFieldZero;" << endl;
+
+		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <=  xIsNaN or yIsNaN  or  (xIsInfinity and yIsInfinity and EffSub);" << endl;
+		
+		vhdl << tab << declare("fracNewX", wF+1) << " <= not(xExpFieldZero) & newX" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare("fracNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
 
 
 		//=========================================================================|
@@ -115,7 +141,7 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(1), "expDiff",wE+1) << " <= expXmExpY when swap = '0' else expYmExpX;"<<endl;
 		vhdl << tab << declare(target->adderDelay(wE), "shiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
 		vhdl << tab << declare(target->logicDelay(1), "rightShiftValue",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0) when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
-		vhdl << tab << declare(target->adderDelay(sizeRightShift) + target->logicDelay(2), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue-'1' when (subNormalNewYOr0='1' and subNormalNewXOr0='0') else rightShiftValue;" << endl;
+		vhdl << tab << declare(target->adderDelay(sizeRightShift) + target->logicDelay(2), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue-'1' when (yExpFieldZero='1' and xExpFieldZero='0') else rightShiftValue;" << endl;
 		
 		newInstance(
 				"Shifter", 
@@ -136,15 +162,14 @@ namespace flopoco{
   	vhdl << tab << declare(.0, "expSigShiftedNewY", wE+(2*wF)+4) << " <= " << zg(wE) << " & shiftedFracNewY;" << endl;
 		vhdl << tab << declare(.0, "EffSubVector", wE+(2*wF)+4) << " <= (" << wE+(2*wF)+3 << " downto 0 => EffSub);"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "fracNewYfarXorOp", wE+(2*wF)+4) << " <= expSigShiftedNewY xor EffSubVector;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= newX" << range(wE+wF-1, wF) << " & not(subNormalNewXOr0) & newX" << range(wF-1,0) << " & "<< zg(wF+3) <<";" << endl;
+		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= expNewX & fracNewX & "<< zg(wF+3) <<";" << endl;
 		/*This carry is necessary if it's a substraction, for two's complement*/
-		vhdl << tab << declare(.0, "cInAddFar") << " <= EffSub;"<< endl;
 
 		newInstance(
 				"IntAdder", 
 				"fracAdder", 
 				"wIn=" + to_string(wE+(2*wF)+4),
-				"X=>expSigNewX,Y=>fracNewYfarXorOp,Cin=>cInAddFar",
+				"X=>expSigNewX,Y=>fracNewYfarXorOp,Cin=>EffSub",
 				"R=>expSigAddResult" 
 			);
 
@@ -157,14 +182,14 @@ namespace flopoco{
 
 		vhdl << tab << declare(.0, "sigAddResult", (2*wF)+4) << " <= expSigAddResult" << range((2*wF)+3, 0) << ";" << endl;
 		vhdl << tab << declare(.0, "expAddResult", wE) << " <= expSigAddResult" << range(wE+(2*wF)+3, (2*wF)+4) << ";" << endl;
-		vhdl << tab << declare(.0, "ozbLZOC") << " <= '0';" << endl;
+		vhdl << tab << declare(.0, "whatToCount") << " <= '0';" << endl;
 		
 		/*LZOC if it's a substraction*/
 		newInstance(
 				"LZOC", 
 				"LZOCComponent", 
 				"wIn=" + to_string((2*wF)+4), 
-				"I=>sigAddResult,OZB=>ozbLZOC",
+				"I=>sigAddResult,OZB=>whatToCount",
 				"O=>lzc"
 			);
 
@@ -184,9 +209,9 @@ namespace flopoco{
 		/*compute left shifter value if it's a substraction*/
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "leftShiftSubValue", sizeLeftShift+1) << " <= (" << zg(sizeLeftShift+1-intlog2((2*wF)+4)) << " & lzc) + '1';" << endl;
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift + 1), "cancellation") << " <= '1' when leftShiftSubValue" << range(sizeLeftShift-1, 0) << ">expAddResult else '0';" << endl;		
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "leftShiftedOut") << " <= '1' when (leftShiftSubValue >= "<<(2*wF)+5<<") else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultFracIsZero") << " <= '1' when (leftShiftSubValue >= "<<(2*wF)+5<<") else '0';"<<endl;
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1) + target->logicDelay(1), "leftShiftSubValue2", sizeLeftShift) << " <= (" << zg(sizeLeftShift-wE) << " & expAddResult )+ bothSubNormalOr0 when cancellation='1' else leftShiftSubValue" << range(sizeLeftShift-1, 0) << ";" << endl;
-		vhdl << tab << declare(target->adderDelay(wE) + target->logicDelay(2), "expSubResult", wE) << "<= " << zg(wE) << " when (cancellation = '1' or leftShiftedOut='1') else expAddResult - (leftShiftSubValue2" << range(wE-1, 0) << "-'1');" << endl;
+		vhdl << tab << declare(target->adderDelay(wE) + target->logicDelay(2), "expSubResult", wE) << "<= " << zg(wE) << " when (cancellation = '1' or resultFracIsZero='1') else expAddResult - (leftShiftSubValue2" << range(wE-1, 0) << "-'1');" << endl;
 		
 		vhdl << tab << declare(target->logicDelay(1), "finalLeftShiftValue", sizeLeftShift) << " <= leftShiftAddValue2 when EffSub='0' else leftShiftSubValue2;" << endl;
 
@@ -241,11 +266,18 @@ namespace flopoco{
 		/*Special case NaN*/
 		vhdl << tab << declare(target->logicDelay(5), "expSigResult3", wE+wF) << " <= " << og(wE+wF) << " when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else expSigResult2;" << endl;		
 		
-		/*Update sign if necessary*/
-		vhdl << tab << declare(target->logicDelay(5), "signR2") << " <= '0' when ((resultIsNaN='1' or (leftShiftedOut='1' and xIsInfinity='0' and yIsInfinity='0')) and bothSubNormalOr0='0') else signR;" << endl;
+		/*Computation of the sign.
+			"when the result is exactly zero, in RNE, it is +0, except x+x and x-(-x) when x is +0 or -0: it has the sign of x"
+		*/
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (resultFracIsZero='1' and expSigResult" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
+		vhdl << tab << declare(target->logicDelay(5), "signR") << " <= '0' when ("
+				 << "(resultIsNaN='1' "
+				 << " or (resultIsZero='1' and xIsInfinity='0' and yIsInfinity='0'))"
+				 << " and (xIsZero='0' or yIsZero='0' or (signNewX /= signNewY))"
+				 <<	" )  else signNewX;" << endl;
 
 		/*Result*/
-		vhdl<<tab<< declare(.0, "computedR",wE+wF+1) << " <= signR2 & expSigResult3;"<<endl;
+		vhdl<<tab<< declare(.0, "computedR",wE+wF+1) << " <= signR & expSigResult3;"<<endl;
 		vhdl << tab << "R <= computedR;"<<endl;
 	}
 
@@ -269,19 +301,21 @@ namespace flopoco{
 			mpfr_init2(r, 1+wF);
 			ieeex.getMPFR(x);
 			ieeey.getMPFR(y);
-			if(sub)
-				mpfr_sub(r, x, y, GMP_RNDN);
-			else
-				mpfr_add(r, x, y, GMP_RNDN);
 
-			// Here we have in MPFR the correctly rounded result, except in the case of over/underflow.
-			// In the case of overflow, it can be handled by IEEE number.
-			// In the case of an underflow, we have a double-rounding issue here: TODO
-			
-			//double d=mpfr_get_d(r, GMP_RNDN);
-			//cout << "R=" << d << endl;
-		// Set outputs
-			IEEENumber  ieeer(wE, wF, r);
+			// Here now we compute in r the MPFR correctly rounded result,
+			// except in the cases of over/underflow.
+			// These cases will be handled by IEEE number.
+			// The ternary info allows us to avoid double-rounding issues
+			// This is useless here, as an addition/subtraction that returns a subnormal is always errorless 
+			// but this code will be copied by other functions
+
+			int ternaryRoundInfo; 
+			if(sub)
+				ternaryRoundInfo = mpfr_sub(r, x, y, GMP_RNDN);
+			else
+				ternaryRoundInfo = mpfr_add(r, x, y, GMP_RNDN);
+
+			IEEENumber  ieeer(wE, wF, r, ternaryRoundInfo); 
 			mpz_class svR = ieeer.getSignalValue();
 			tc->addExpectedOutput("R", svR);
 
@@ -293,20 +327,46 @@ namespace flopoco{
 	void FPAddSinglePathIEEE::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
+		vector<mpz_class> specialCaseList;
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::plusZero).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::smallestSubNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::greatestSubNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::smallestNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::greatestNormal).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::plusInfty).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, 1.0).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, 1.5).getSignalValue()); // so we test 1.5-1.0 and 1.0-1.5
 
+		// First add all the negative special cases 
+		size_t size = specialCaseList.size();
+		for (size_t i=0; i<size; i++){
+			specialCaseList.push_back(specialCaseList[i] + (mpz_class(1)<<(wE+wF)));
+			}
+
+		// No build all the possible special case combinations
+		for (size_t i=0; i<specialCaseList.size(); i++){
+			for (size_t j=0; j<specialCaseList.size(); j++){
+				tc = new TestCase(this);
+				tc->addInput("X", specialCaseList[i]);
+				tc->addInput("Y", specialCaseList[j]);
+				emulate(tc);
+				tcl->add(tc);
+			}
+		} 
+
+		// Other regression tests, mostly for single prec
 		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::minusZero);
-		tc->addIEEEInput("Y", IEEENumber::minusZero);
+		tc->addIEEEInput("X", 1.1754945e-38);
+		tc->addIEEEInput("Y", 1.1754945e-38);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", 2.8e-45);
+		tc->addIEEEInput("X", -4.375e1);
+		tc->addIEEEInput("Y", 4.375e1);
 		emulate(tc);
 		tcl->add(tc);
 
-		
 		tc = new TestCase(this);
 		tc->addIEEEInput("X", 2.4e-44);
 		tc->addIEEEInput("Y", 2.8e-45);
@@ -318,81 +378,7 @@ namespace flopoco{
 		tc->addIEEEInput("Y", 4.5e-44);
 		emulate(tc);
 		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::greatestSubNormal);
-		tc->addIEEEInput("Y", IEEENumber::greatestSubNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::greatestNormal);
-		tc->addIEEEInput("Y", IEEENumber::greatestNormal);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.1754945e-38);
-		tc->addIEEEInput("Y", 1.1754945e-38);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::NaN);
-		tc->addIEEEInput("Y", IEEENumber::NaN);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusZero);
-		tc->addIEEEInput("Y", IEEENumber::minusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		// Regression tests
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", -1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", IEEENumber::plusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", 1.0);
-		tc->addIEEEInput("Y", IEEENumber::minusZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusInfty);
-		tc->addIEEEInput("Y", IEEENumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::plusInfty);
-		tc->addIEEEInput("Y", IEEENumber::plusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", IEEENumber::minusInfty);
-		tc->addIEEEInput("Y", IEEENumber::minusInfty);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addIEEEInput("X", -4.375e1);
-		tc->addIEEEInput("Y", 4.375e1);
-		emulate(tc);
-		tcl->add(tc);
-
-	}
+}
 
 
 	TestCase* FPAddSinglePathIEEE::buildRandomTestCase(int i){

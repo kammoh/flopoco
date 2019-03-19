@@ -26,6 +26,7 @@ namespace flopoco{
 			NaN,            /**< Not A Number */
 			smallestSubNormal,      /**< The smallest subnormal IEEENumber*/
 			greatestSubNormal,      /**< The greatest subnormal IEEENumber*/
+			minusGreatestSubNormal,      /**< The negative greatest subnormal IEEENumber*/
 			smallestNormal,                 /**< The smallest normal IEEENumber*/
 			greatestNormal                  /**< The greatest normal IEEENumber*/
 		} SpecialValue;
@@ -50,8 +51,9 @@ namespace flopoco{
 		 * @param wE the width of the exponent
 		 * @param wF the width of the significant
 		 * @param m the initial value.
+		 * @param ternaryRoundingInfo used to avoid double rounding.
 		 */
-		IEEENumber(int wE, int wF, mpfr_t m);
+		IEEENumber(int wE, int wF, mpfr_t m,  int ternaryRoundInfo=0);
 		
 		/**
 		 * Constructs a new initialised IEEENumber.
@@ -60,6 +62,14 @@ namespace flopoco{
 		 * @param z the initial value, given as an mpz holding the bits of the Number.
 		 */
 		IEEENumber(int wE, int wF, mpz_class z);
+
+		/**
+		 * Constructs a new initialised IEEENumber.
+		 * @param wE the width of the exponent
+		 * @param wF the width of the significant
+		 * @param z the initial value, given as an mpz holding the bits of the Number.
+		 */
+		IEEENumber(int wE, int wF, double x);
 
 		/**
 		 * Retrieves the significant.
@@ -75,11 +85,14 @@ namespace flopoco{
 		 */
 		void getMPFR(mpfr_t m);
 
+
 		/**
-		 * Stores an mpfr_t as an internal representation of Flopoco.
-		 * @param m the mpfr_t to store.
+		 * imports a MPFR value into an IEEENumber
+		 * @param[in] m the value
+		 * @param  ternaryRoundInfo a ternary rounding value rememberin the rounding history, see mpfr documenation 
 		 */
-		IEEENumber &operator=(mpfr_t m);
+		void setMPFR(mpfr_t m, int ternaryRoundInfo);
+
 
 		/**
 		 * Assignes a signal value. Converts the signal value to the
@@ -101,6 +114,16 @@ namespace flopoco{
 		 * correct rounding occurs.
 		 */
 		IEEENumber &operator=(IEEENumber fp);
+		
+		/**
+		 * Stores an mpfr_t as an internal representation of Flopoco.
+		 * @param m the mpfr_t to store.
+		 */
+		IEEENumber &operator=(mpfr_t m);
+		/**
+		 * Assigns a double.
+		 */
+		IEEENumber &operator=(double x);
 #endif
 
 
@@ -111,10 +134,6 @@ namespace flopoco{
 		 */
 		void getPrecision(int &wE, int &wF);
 
-		/**
-		 * Assigns a double.
-		 */
-		IEEENumber &operator=(double x);
 
 
 	private:
@@ -133,11 +152,6 @@ namespace flopoco{
 		/** The value of the mantissa field  */
 		mpz_class mantissa;
 
-		/** The minimum exponent, assuming a mantissa in [0.5, 1) (MPFR convention) */
-		int emin;
-		
-		/** The maximum exponent, assuming a mantissa in [0.5, 1) (MPFR convention) */
-		int emax;
 	};
 
 }
