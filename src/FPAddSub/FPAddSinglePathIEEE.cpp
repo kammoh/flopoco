@@ -14,18 +14,10 @@
 
 
 /* Bugs:
-197
-   1000000000000000 0000000000000000       this is -0 + +0
-   0000000000000000 got 1000000000000000
+211
+   1000000000000000 1000000000000000 
+   1000000000000000 got 0000000000000000
 
-227
-   1000000000000001 0000000000000001 
-   0000000000000000 got 1000000000000000   ??? -tiny + tiny 
-"when the result is exactly zero, in RNE, it is +0, except x+x and x-(-x) when x is +0 or -0: it has the sign of x"
-
-257
-    1000001111111111 0000001111111111 
-    0000000000000000               got 1000000000000000 : idem
 
 301
     1 00001 0000000000 1 00001 0000000000 
@@ -102,7 +94,7 @@ namespace flopoco{
   	vhdl << tab << declare(target->adderDelay(wE+1), "expXmExpY",wE+1) << " <= ('0' & X" << range(wE+wF-1, wF) << ") - ('0'  & Y" << range(wE+wF-1, wF) << ") " << ";" << endl;
   	vhdl << tab << declare(target->adderDelay(wE+1), "expYmExpX",wE+1) << " <= ('0' & Y" << range(wE+wF-1, wF) << ") - ('0'  & X" << range(wE+wF-1, wF) << ") " << ";" << endl;
 
-  	vhdl << tab << declare(.0, "swap") << " <= '0' when expFracX >= expFracY else '1';" << endl;
+  	vhdl << tab << declare(target->adderDelay(wE+wF), "swap") << " <= '0' when expFracX >= expFracY else '1';" << endl;
 
   	string pmY="Y";
 		if ( sub ) {
@@ -130,13 +122,14 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "xIsInfinity")       << " <= xExpFieldAllOnes and xSigFieldZero;"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "yIsInfinity")       << " <= yExpFieldAllOnes and ySigFieldZero;"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "xIsZero")           << " <= xExpFieldZero and xSigFieldZero;"<<endl;
-		vhdl << tab << declare(target->logicDelay(2), "yIsZero")           << " <= yExpFieldZero and xSigFieldZero;"<<endl;
+		vhdl << tab << declare(target->logicDelay(2), "yIsZero")           << " <= yExpFieldZero and ySigFieldZero;"<<endl;
+		
 		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <=  xExpFieldZero and yExpFieldZero;" << endl;
 
 		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <=  xIsNaN or yIsNaN  or  (xIsInfinity and yIsInfinity and EffSub);" << endl;
 		
-		vhdl << tab << declare(target->logicDelay(2*wE + 3), "signR") << " <=  signNewX;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "fracNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare("fracNewX", wF+1) << " <= not(xExpFieldZero) & newX" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare("fracNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
 
 
 		//=========================================================================|
@@ -169,15 +162,14 @@ namespace flopoco{
   	vhdl << tab << declare(.0, "expSigShiftedNewY", wE+(2*wF)+4) << " <= " << zg(wE) << " & shiftedFracNewY;" << endl;
 		vhdl << tab << declare(.0, "EffSubVector", wE+(2*wF)+4) << " <= (" << wE+(2*wF)+3 << " downto 0 => EffSub);"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "fracNewYfarXorOp", wE+(2*wF)+4) << " <= expSigShiftedNewY xor EffSubVector;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= newX" << range(wE+wF-1, wF) << " & not(xExpFieldZero) & newX" << range(wF-1,0) << " & "<< zg(wF+3) <<";" << endl;
+		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= expNewX & fracNewX & "<< zg(wF+3) <<";" << endl;
 		/*This carry is necessary if it's a substraction, for two's complement*/
-		vhdl << tab << declare(.0, "cInAddFar") << " <= EffSub;"<< endl;
 
 		newInstance(
 				"IntAdder", 
 				"fracAdder", 
 				"wIn=" + to_string(wE+(2*wF)+4),
-				"X=>expSigNewX,Y=>fracNewYfarXorOp,Cin=>cInAddFar",
+				"X=>expSigNewX,Y=>fracNewYfarXorOp,Cin=>EffSub",
 				"R=>expSigAddResult" 
 			);
 
@@ -190,14 +182,14 @@ namespace flopoco{
 
 		vhdl << tab << declare(.0, "sigAddResult", (2*wF)+4) << " <= expSigAddResult" << range((2*wF)+3, 0) << ";" << endl;
 		vhdl << tab << declare(.0, "expAddResult", wE) << " <= expSigAddResult" << range(wE+(2*wF)+3, (2*wF)+4) << ";" << endl;
-		vhdl << tab << declare(.0, "ozbLZOC") << " <= '0';" << endl;
+		vhdl << tab << declare(.0, "whatToCount") << " <= '0';" << endl;
 		
 		/*LZOC if it's a substraction*/
 		newInstance(
 				"LZOC", 
 				"LZOCComponent", 
 				"wIn=" + to_string((2*wF)+4), 
-				"I=>sigAddResult,OZB=>ozbLZOC",
+				"I=>sigAddResult,OZB=>whatToCount",
 				"O=>lzc"
 			);
 
@@ -217,9 +209,9 @@ namespace flopoco{
 		/*compute left shifter value if it's a substraction*/
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "leftShiftSubValue", sizeLeftShift+1) << " <= (" << zg(sizeLeftShift+1-intlog2((2*wF)+4)) << " & lzc) + '1';" << endl;
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift + 1), "cancellation") << " <= '1' when leftShiftSubValue" << range(sizeLeftShift-1, 0) << ">expAddResult else '0';" << endl;		
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "leftShiftedOut") << " <= '1' when (leftShiftSubValue >= "<<(2*wF)+5<<") else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultFracIsZero") << " <= '1' when (leftShiftSubValue >= "<<(2*wF)+5<<") else '0';"<<endl;
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1) + target->logicDelay(1), "leftShiftSubValue2", sizeLeftShift) << " <= (" << zg(sizeLeftShift-wE) << " & expAddResult )+ bothSubNormalOr0 when cancellation='1' else leftShiftSubValue" << range(sizeLeftShift-1, 0) << ";" << endl;
-		vhdl << tab << declare(target->adderDelay(wE) + target->logicDelay(2), "expSubResult", wE) << "<= " << zg(wE) << " when (cancellation = '1' or leftShiftedOut='1') else expAddResult - (leftShiftSubValue2" << range(wE-1, 0) << "-'1');" << endl;
+		vhdl << tab << declare(target->adderDelay(wE) + target->logicDelay(2), "expSubResult", wE) << "<= " << zg(wE) << " when (cancellation = '1' or resultFracIsZero='1') else expAddResult - (leftShiftSubValue2" << range(wE-1, 0) << "-'1');" << endl;
 		
 		vhdl << tab << declare(target->logicDelay(1), "finalLeftShiftValue", sizeLeftShift) << " <= leftShiftAddValue2 when EffSub='0' else leftShiftSubValue2;" << endl;
 
@@ -274,11 +266,18 @@ namespace flopoco{
 		/*Special case NaN*/
 		vhdl << tab << declare(target->logicDelay(5), "expSigResult3", wE+wF) << " <= " << og(wE+wF) << " when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else expSigResult2;" << endl;		
 		
-		/*Update sign if necessary*/
-		vhdl << tab << declare(target->logicDelay(5), "signR2") << " <= '0' when ((resultIsNaN='1' or (leftShiftedOut='1' and xIsInfinity='0' and yIsInfinity='0')) and bothSubNormalOr0='0') else signR;" << endl;
+		/*Computation of the sign.
+			"when the result is exactly zero, in RNE, it is +0, except x+x and x-(-x) when x is +0 or -0: it has the sign of x"
+		*/
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (resultFracIsZero='1' and expSigResult" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
+		vhdl << tab << declare(target->logicDelay(5), "signR") << " <= '0' when ("
+				 << "(resultIsNaN='1' "
+				 << " or (resultIsZero='1' and xIsInfinity='0' and yIsInfinity='0'))"
+				 << " and (xIsZero='0' or yIsZero='0' or (signNewX /= signNewY))"
+				 <<	" )  else signNewX;" << endl;
 
 		/*Result*/
-		vhdl<<tab<< declare(.0, "computedR",wE+wF+1) << " <= signR2 & expSigResult3;"<<endl;
+		vhdl<<tab<< declare(.0, "computedR",wE+wF+1) << " <= signR & expSigResult3;"<<endl;
 		vhdl << tab << "R <= computedR;"<<endl;
 	}
 
@@ -336,6 +335,7 @@ namespace flopoco{
 		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::greatestNormal).getSignalValue());
 		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::plusInfty).getSignalValue());
 		specialCaseList.push_back(IEEENumber(wE, wF, 1.0).getSignalValue());
+		specialCaseList.push_back(IEEENumber(wE, wF, 1.5).getSignalValue()); // so we test 1.5-1.0 and 1.0-1.5
 
 		// First add all the negative special cases 
 		size_t size = specialCaseList.size();
