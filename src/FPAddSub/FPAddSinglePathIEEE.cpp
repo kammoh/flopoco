@@ -139,7 +139,7 @@ namespace flopoco{
 		vhdl << endl;
 		addComment("Significand alignment", tab);
 
-		vhdl << tab << declare(target->adderDelay(wE), "allShiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(wE), "allShiftedOut") << " <= '1' when (expDiff >= "<<wF+3<<") else '0';"<<endl;
 		vhdl << tab << declare(target->logicDelay(1), "rightShiftValue",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0) when allShiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
 		vhdl << tab << declare(target->logicDelay(2), "shiftCorrection") << " <= '1' when (yExpFieldZero='1' and xExpFieldZero='0') else '0'; -- only other cases are: both normal or both subnormal" << endl;
 		vhdl << tab << declare(target->adderDelay(sizeRightShift), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue - ("<<zg(sizeRightShift-1)<<" & shiftCorrection);" << endl;
