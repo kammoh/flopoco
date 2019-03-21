@@ -4,31 +4,13 @@
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
 
-  Authors: Valentin Huguet, Florent de Dinechin
+  Authors: Florent de Dinechin, Valentin Huguet
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 2016-2019.
   All right reserved.
 
   */
-
-
-/* Bugs:
-211
-   1000000000000000 1000000000000000 
-   1000000000000000 got 0000000000000000
-
-
-301
-    1 00001 0000000000 1 00001 0000000000 
-    1 00010 0000000000 got 0 00010 0000000000  ???
-
-
-391
-   1 01111 0000000000 1 01111 0000000000   -1 + -1  -> -2, got 2
-   1100000000000000    got 0100000000000000
-
- */
 
 #include "FPAddSinglePathIEEE.hpp"
 
@@ -256,7 +238,7 @@ namespace flopoco{
 		
 		vhdl << tab << declare("deltaExp", wE)	 << " <=    -- value to subtract to exponent for normalization" << endl
 				 << tab << tab << zg(wE) << " when ( (z1='0' and z0='1' and xExpFieldZero='0')" << endl // 0: case B.2
-				 <<                         "  or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
+				 << tab << tab <<         "    or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
 				 << tab << tab << "else " << og(wE) << " when ( (z1='1')" // case A/
 				 <<                     "  or  (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
 				 << ")" << endl 
