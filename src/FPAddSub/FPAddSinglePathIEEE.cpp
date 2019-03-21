@@ -87,7 +87,7 @@ namespace flopoco{
 	//                          Swap/Difference                                |
 	// ========================================================================|
 		vhdl << endl;
-		addComment("Swap/Difference", tab);
+		addComment("Exponent difference and swap", tab);
   	
   	vhdl << tab << declare(.0, "expFracX", wE+wF) << " <= X" << range(wE+wF-1, 0) << ";" << endl;
   	vhdl << tab << declare(.0, "expFracY", wE+wF) << " <= Y" << range(wE+wF-1, 0) << ";" << endl;
@@ -104,6 +104,7 @@ namespace flopoco{
 
 		vhdl << tab << declare(target->logicDelay(1), "newX", wE+wF+1) << " <= X when swap = '0' else " << pmY << ";" << endl;
 		vhdl << tab << declare(target->logicDelay(1), "newY", wE+wF+1) << " <= " << pmY << " when swap = '0' else X;" << endl;
+		vhdl << tab << declare(target->logicDelay(1), "expDiff",wE+1) << " <= expXmExpY when swap = '0' else expYmExpX;"<<endl;
 		vhdl << tab << declare(.0, "expNewX", wE) << " <= newX" << range(wE+wF-1, wF) << ";" << endl;
 		vhdl << tab << declare(.0, "expNewY", wE) << " <= newY" << range(wE+wF-1, wF) << ";" << endl;
 		vhdl << tab << declare(.0, "signNewX")   << " <= newX"<<of(wE+wF)<<";"<<endl;
@@ -124,31 +125,31 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "xIsZero")           << " <= xExpFieldZero and xSigFieldZero;"<<endl;
 		vhdl << tab << declare(target->logicDelay(2), "yIsZero")           << " <= yExpFieldZero and ySigFieldZero;"<<endl;
 		
-		vhdl << tab << declare(target->logicDelay(2), "bothSubNormalOr0") << " <=  xExpFieldZero and yExpFieldZero;" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "bothSubNormals") << " <=  xExpFieldZero and yExpFieldZero;" << endl;
 
 		vhdl << tab << declare(target->logicDelay(5), "resultIsNaN") << " <=  xIsNaN or yIsNaN  or  (xIsInfinity and yIsInfinity and EffSub);" << endl;
 		
-		vhdl << tab << declare("fracNewX", wF+1) << " <= not(xExpFieldZero) & newX" << range(wF-1, 0) << ";" << endl;
-		vhdl << tab << declare("fracNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare("significandNewX", wF+1) << " <= not(xExpFieldZero) & newX" << range(wF-1, 0) << ";" << endl;
+		vhdl << tab << declare("significandNewY", wF+1) << " <= not(yExpFieldZero) & newY" << range(wF-1, 0) << ";" << endl;
 
 
 		//=========================================================================|
 		//                             Alignment                                   |
 		// ========================================================================|
 		vhdl << endl;
-		addComment("Alignment", tab);
+		addComment("Significand alignment", tab);
 
-		vhdl << tab << declare(target->logicDelay(1), "expDiff",wE+1) << " <= expXmExpY when swap = '0' else expYmExpX;"<<endl;
-		vhdl << tab << declare(target->adderDelay(wE), "shiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "rightShiftValue",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0) when shiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
-		vhdl << tab << declare(target->adderDelay(sizeRightShift) + target->logicDelay(2), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue-'1' when (yExpFieldZero='1' and xExpFieldZero='0') else rightShiftValue;" << endl;
+		vhdl << tab << declare(target->adderDelay(wE), "allShiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
+		vhdl << tab << declare(target->logicDelay(1), "rightShiftValue",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0) when allShiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "shiftCorrection") << " <= '1' when (yExpFieldZero='1' and xExpFieldZero='0') else '0'; -- only other cases are: both normal or both subnormal" << endl;
+		vhdl << tab << declare(target->adderDelay(sizeRightShift), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue - ("<<zg(sizeRightShift-1)<<" & shiftCorrection);" << endl;
 		
 		newInstance(
 				"Shifter", 
 				"RightShifterComponent", 
-				"wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+3) + " dir=1", 
-				"X=>fracNewY,S=>finalRightShiftValue",
-				"R=>shiftedFracNewY"
+				"wIn=" + to_string(wF+1) + " maxShift=" + to_string(wF+2) + " dir=1", 
+				"X=>significandNewY,S=>finalRightShiftValue",
+				"R=>shiftedSignificandY"
 			);
 
 
@@ -156,120 +157,154 @@ namespace flopoco{
 		//                              Addition                                   |
 		// ========================================================================|
 		vhdl << endl;
-		addComment("Addition", tab);
+		addComment("Significand addition", tab);
 
 		//expSigShiftedNewY size = exponent size + RightShifter's wOut_ size
-  	vhdl << tab << declare(.0, "expSigShiftedNewY", wE+(2*wF)+4) << " <= " << zg(wE) << " & shiftedFracNewY;" << endl;
-		vhdl << tab << declare(.0, "EffSubVector", wE+(2*wF)+4) << " <= (" << wE+(2*wF)+3 << " downto 0 => EffSub);"<<endl;
-		vhdl << tab << declare(target->logicDelay(2), "fracNewYfarXorOp", wE+(2*wF)+4) << " <= expSigShiftedNewY xor EffSubVector;"<<endl;
-		vhdl << tab << declare(target->logicDelay(1), "expSigNewX", wE+(2*wF)+4) << " <= expNewX & fracNewX & "<< zg(wF+3) <<";" << endl;
-		/*This carry is necessary if it's a substraction, for two's complement*/
+		vhdl << tab << declare(target->logicDelay(1), "paddedSignificandX", 2*wF+4) << " <= '0' & significandNewX & "<< zg(wF+2) <<";" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "negatedSignificandY", 2*wF+4) << " <= ('0' & shiftedSignificandY) xor (" << 2*wF+3 << " downto 0 => EffSub);"<<endl;
 
 		newInstance(
 				"IntAdder", 
 				"fracAdder", 
-				"wIn=" + to_string(wE+(2*wF)+4),
-				"X=>expSigNewX,Y=>fracNewYfarXorOp,Cin=>EffSub",
-				"R=>expSigAddResult" 
+				"wIn=" + to_string(2*wF+4),
+				"X=>paddedSignificandX,Y=>negatedSignificandY,Cin=>EffSub", 		/*This carry completes the subtraction*/
+				"R=>significandZ" 
 			);
+		vhdl << endl;
 
 
 		//=========================================================================|
 		//                             Renormalize                                 |
 		// ========================================================================|
-		vhdl << endl;
-		addComment("Renormalize", tab);
 
-		vhdl << tab << declare(.0, "sigAddResult", (2*wF)+4) << " <= expSigAddResult" << range((2*wF)+3, 0) << ";" << endl;
-		vhdl << tab << declare(.0, "expAddResult", wE) << " <= expSigAddResult" << range(wE+(2*wF)+3, (2*wF)+4) << ";" << endl;
-		vhdl << tab << declare(.0, "whatToCount") << " <= '0';" << endl;
-		
-		/*LZOC if it's a substraction*/
+		/* Now we have a significandZ of size 2*wF+4 with the following alignment WRT the exponent expNewX: ab.xxxxxxxxxx (here 2*wF+2 'x')
+			 We first normalize it, then round it.
+			 Let us define "normalize" as: shift significand in such a way that we can drop its MSB to get a fraction, and subtract deltaexp to the exponent 
+			 The various cases are:
+			 A/ lzc=0 <=> a=1 : there was an overflow in the sig. add.:  shift=0=lzc, deltaexp=-1
+			 B/ lzc=1 => a=0, b=1. Two subcases:
+			   B.1/ X was subnormal (hence Y too) and there has been an overflow in the addition. shift=1=lzc, deltaexp=1 so expR will be 0001. roundBit=0 
+				 B.2/ X was normal and there has been no overflow: shift=1, deltaexp=0
+       C/ lzc>=2: there is a cancellation. 
+    			 Again two sub-cases:
+					C.1/ X was subnormal: shift=1, deltaexp=0
+					C.2/ X was normal (expNewX >=1): we have 0 <= lzc <= wF+3
+					    C.2.a  if lzc <= expNewX and lzc<>wF+3
+                   shift = lzc; deltaexp = lzc-1   and we end up with a normal significand
+              C.2.b  if lzc < wf+3   and lzc > expNewX
+                   shift = expNewX, deltaexp =expNewX,    and we end up with a subnormal significand
+              C.2.c  if wF+3 = lzc , whatever expNewX: result is zero
+                   shift = wF+3=lzc, deltaexp =expNewX,    and we end up with a zero
+									 
+			 examples: 
+			   expNewX=3 ab.xxxxxxxxxx = 00.1111111  C.2.a  exp will be 1, sig will be (1)11111100
+				 expNewX=2 ab.xxxxxxxxxx = 00.1111111  C.2.b  exp will be 0, sig will be (0)11111110  
+				 expNewX=1 ab.xxxxxxxxxx = 00.1111111  C.2.b  exp will be 0, sig will be (0)01111111
+
+			 Parameters:
+					1/ LZC: count at most wF+3 bits:
+			     the maximum possible cancellation  is wF+1 bits, ex. when wF=4
+	 	          010000
+						 -  11111
+		        = 0000001  
+						but we also input to the LZC  the leftmost 0 which is the carry-out bit of the adder)
+				 So if lzc=wF+3 we know that the result is zero.
+
+				 2/ Maximum shift distance is full cancellation in the normal case (case C.2.a) so again
+				 After the shift we can do the rounding. The bit to add (roundBit=0 or 1) can simply be computed out of lsb, round and sticky, no need of a g bit.
+				 
+
+				 Implementation finetuning: 
+				 Since the case A and B can be detected by looking at the two first bit, we only need to LZC among the 'x' above, but then we need to add 2 to the computed value.
+				 Probably a win areawise and a loss delaywise: TODO try it;
+				 
+		 */
+
+
+		//						 TODO: all this assumes that wE>log2(wF+2), true for all the standard IEEE formats. We should test properly when it doesnt work anymore
+		addComment("Cancellation detection, renormalization (see explanations in FPAddSinglePathIEEE.cpp) ", tab);
+
+		vhdl << tab << declare(target->logicDelay(2), "lzcZInput", wF+3) << " <= significandZ" << range(2*wF+3, wF+1) << ";"<<endl;
+		vhdl << tab << declare("whatToCount") << " <= '0';" << endl;
 		newInstance(
 				"LZOC", 
-				"LZOCComponent", 
-				"wIn=" + to_string((2*wF)+4), 
-				"I=>sigAddResult,OZB=>whatToCount",
+				"LeadingZeroCounter", 
+				"wIn=" + to_string(wF+3), 
+				"I=>lzcZInput,OZB=>whatToCount",
 				"O=>lzc"
 			);
+		int lzcSize = getSignalByName("lzc")->width();
 
-		if(intlog2((2*wF)+4) < wE+1){
-			sizeLeftShift = wE+1;
-		}else{
-			sizeLeftShift = intlog2((2*wF)+4)+1;
+		if(lzcSize>wE) {
+			THROWERROR("These values of parameters wE and wF are not supported (wE too small WRT wF) -- if you want this to work, contact us");
 		}
 
-
-		/*compute left shifter value if it's an addition*/
-			//subnormal numbers sum with carry out
-		vhdl << tab << declare(target->logicDelay(3), "subNormalSumCarry") << " <= '1' when EffSub='0' and bothSubNormalOr0='1' and sigAddResult" << of((2*wF)+3) << "='1' else '0';" << endl;
-		vhdl << tab << declare(2*target->adderDelay(sizeLeftShift+1), "leftShiftAddValue", sizeLeftShift+1) << " <= '1' - ((" << zg((sizeLeftShift-wE)+1) << " & expAddResult) - (" << zg((sizeLeftShift-wE)+1) << " & expNewX));" << endl;
-		vhdl << tab << declare(target->logicDelay(1), "leftShiftAddValue2", sizeLeftShift) << " <= " << zg(sizeLeftShift) << " when leftShiftAddValue" << of(sizeLeftShift) << "='1' else leftShiftAddValue" << range(sizeLeftShift-1, 0) << ";" << endl;
+		vhdl << tab << declare("z1") << " <=  significandZ" << of(2*wF+3) << "; -- bit of weight 1" << endl;
+		vhdl << tab << declare("z0") << " <=  significandZ" << of(2*wF+2) << "; -- bit of weight 0" << endl;
+		vhdl << tab << declare(target->adderDelay(lzcSize)+target->logicDelay(1), "leftShiftVal", lzcSize)	 << " <= " << endl
+				 << tab << tab << "lzc when ("
+				 << "(z1='1')" // case A/
+				 <<" or (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
+				 <<" or (z1='0' and z0='0' and xExpFieldZero='0' and lzc<=expNewX) " // case C.2.a
+				 <<" or (xExpFieldZero='0' and lzc=" << wF+3 <<") " // case C.2.c
+				 << ") " << endl
+				 << tab << tab << "else (expNewX"<< range(lzcSize-1,0) <<") when ("
+				 << "xExpFieldZero='0' and (lzc /= "<< unsignedBinary(mpz_class(wF+3), lzcSize) << ") and ((" << zg(wE-lzcSize) << "&lzc)>=expNewX)"  // case C.2.b 
+				 << ") " << endl
+				 << tab << tab << " else " << zg(lzcSize-1) << "&'1'"  // case B.2 and C.1 
+				 <<";" << endl;
 		
-		/*compute left shifter value if it's a substraction*/
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "leftShiftSubValue", sizeLeftShift+1) << " <= (" << zg(sizeLeftShift+1-intlog2((2*wF)+4)) << " & lzc) + '1';" << endl;
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift + 1), "cancellation") << " <= '1' when leftShiftSubValue" << range(sizeLeftShift-1, 0) << ">expAddResult else '0';" << endl;		
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultFracIsZero") << " <= '1' when (leftShiftSubValue >= "<<(2*wF)+5<<") else '0';"<<endl;
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1) + target->logicDelay(1), "leftShiftSubValue2", sizeLeftShift) << " <= (" << zg(sizeLeftShift-wE) << " & expAddResult )+ bothSubNormalOr0 when cancellation='1' else leftShiftSubValue" << range(sizeLeftShift-1, 0) << ";" << endl;
-		vhdl << tab << declare(target->adderDelay(wE) + target->logicDelay(2), "expSubResult", wE) << "<= " << zg(wE) << " when (cancellation = '1' or resultFracIsZero='1') else expAddResult - (leftShiftSubValue2" << range(wE-1, 0) << "-'1');" << endl;
-		
-		vhdl << tab << declare(target->logicDelay(1), "finalLeftShiftValue", sizeLeftShift) << " <= leftShiftAddValue2 when EffSub='0' else leftShiftSubValue2;" << endl;
-
-		/*LeftShifter to renormalize number*/
-		vhdl << tab << declare(.0, "finalLeftShift",intlog2((2*wF)+4))  << " <= finalLeftShiftValue" + range(intlog2((2*wF)+4)-1,0) << ";" << endl; 
+		vhdl << tab << declare("deltaExp", wE)	 << " <=    -- value to subtract to exponent for normalization" << endl
+				 << tab << tab << zg(wE) << " when ( (z1='0' and z0='1' and xExpFieldZero='0')" << endl // 0: case B.2
+				 <<                         "  or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
+				 << tab << tab << "else " << og(wE) << " when ( (z1='1')" // case A/
+				 <<                     "  or  (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
+				 << ")" << endl 
+				 << tab << tab << "else (" << zg(wE-lzcSize) << " & lzc)-'1' when (z1='0' and z0='0' and xExpFieldZero='0' and lzc<=expNewX and lzc/=" << wF+3 << ")" // lzc: case C.2.a
+				 << tab << tab << "else expNewX" // case C2.2.=b and C.2.c
+				 <<";" << endl;
+				
+		vhdl << tab << declare(target->adderDelay(lzcSize/target->lutInputs()), "fullCancellation") << " <= '1' when (lzc="<< wF+3<<") else '0';"<<endl;
+		// Now do the shift and the exponent addition, done conservatively (it could probably be smaller)
 
 		newInstance(
 				"Shifter", 
 				"LeftShifterComponent", 
-				"wIn=" + to_string((2*wF)+4) + " maxShift=" + to_string((2*wF)+6) + " dir=0",
-				"X=>sigAddResult,S=>finalLeftShift",
-				"R=>leftShiftedFrac"
-			);
-
-		vhdl << tab << declare(target->adderDelay(wE), "finalExpResult", wE) << " <= expSubResult when EffSub='1' else expAddResult+subNormalSumCarry;" << endl;
-
-
-		//=========================================================================|
-		//                              Rounding                                   |
-		// ========================================================================|
-		vhdl << endl;
-		addComment("Rounding", tab);
-
-		vhdl << tab << declare(.0, "expSigResult", wE+wF+1) << " <=  '0' & finalExpResult & leftShiftedFrac" << range((2*wF)+3, wF+4) << ";" << endl;
+				"wIn=" + to_string(2*wF+4) + " maxShift=" + to_string(wF+3) + " dir=0",
+				"X=>significandZ,S=>leftShiftVal",
+				"R=>normalizedSignificand" // output size will be 3*wF+7
+								); 
 		
-		vhdl << tab << declare(target->adderDelay(wF+2), "stk") << " <= '0' when leftShiftedFrac"<< range(wF+1, 0) << "=" << zg(wF+2) << " else '1';" << endl;
-		vhdl << tab << declare(.0, "rnd") << " <= leftShiftedFrac" << of(wF+2) << ";" << endl;
-		vhdl << tab << declare(.0, "grd") << " <= leftShiftedFrac" << of(wF+3) << ";" << endl;
-		vhdl << tab << declare(.0, "lsb") << " <= leftShiftedFrac" << of(wF+4) << ";" << endl;
+		vhdl << tab << declare("significandPreRound", wF) << " <= normalizedSignificand" << range(2*wF+2, wF+3) << "; -- remove the implicit zero/one" << endl;
+		vhdl << tab << declare("lsb") << " <= normalizedSignificand" << of(wF+3) << ";" << endl;
+		vhdl << tab << declare("roundBit") << " <= normalizedSignificand" << of(wF+2) << ";" << endl;
+		vhdl << tab << declare(target->adderDelay((wF+2)/target->lutInputs()), "stickyBit") << " <= '0' when normalizedSignificand "<< range(wF+1, 0) << "=" << zg(wF+2) << " else '1';" << endl;		
+		vhdl << tab << declare(target->adderDelay(wE), "expPreRound", wE) << " <= expNewX - deltaExp; -- we may have a first overflow here" << endl;
+		vhdl << tab << declare("expSigPreRound", wE+wF) << " <= expPreRound & significandPreRound; " << endl;
 
-		vhdl << tab << declare(target->logicDelay(4), "addToRoundBit")<<" <= '1' when (grd='1' and ((rnd='1' or stk='1') or (rnd='0' and stk='0' and lsb='1'))) else '0';"<<endl;
-
-		vhdl << tab << declare(.0, "zeroadd", wE+wF+1) << " <=  " << zg(wE+wF+1,0) << ";" << endl;
-
+		addComment("Final rounding, with the mantissa overflowing in the exponent  ", tab);
+		
+		vhdl << tab << declare(target->logicDelay(3), "roundUpBit")<<" <= '1' when roundBit='1' and (stickyBit='1' or (stickyBit='0' and lsb='1')) else '0';"<<endl;
+		vhdl << tab << declare("zeroadd", wE+wF) << " <=  " << zg(wE+wF) << ";" << endl;
 		newInstance(
 				"IntAdder", 
 				"roundingAdder", 
-				"wIn=" + to_string(wE+wF+1), 
-				"X=>expSigResult,Cin=>addToRoundBit,Y=>zeroadd",
-				"R=>RoundedExpSigResult"
+				"wIn=" + to_string(wE+wF), 
+				"X=>expSigPreRound,Cin=>roundUpBit,Y=>zeroadd",
+				"R=>expSigR"
 			);
-		
-		//=========================================================================|
-		//                               Result                                    |
-		// ========================================================================|
-		vhdl << endl;
-		addComment("Result", tab);
 
-		/*Special case infinity*/
-		vhdl << tab << declare(target->adderDelay(wE) + target->logicDelay(4), "expSigResult2", wE+wF) << " <= " << og(wE, -1) << zg(wF, 1) << " when ((xIsInfinity='1' or yIsInfinity='1' or expSigResult" << range(wE+wF-1, wF) << "=" << og(wE) << ") and resultIsNaN='0') else RoundedExpSigResult" << range(wE+wF-1, 0) << ";" << endl;
+		addComment("Final packing", tab);
+		// What remains to do
+		// there could be an overflow either in the exponent addition or in the final rounding;
+		// In any case the exponent result is 111111 and we need to set the mantissa to zero.
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (fullCancellation='1' and expSigR" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNan='0' and (((xIsInfinity='1' and yIsInfinity='1'  and effSub='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
 		
-		/*Special case NaN*/
-		vhdl << tab << declare(target->logicDelay(5), "expSigResult3", wE+wF) << " <= " << og(wE+wF) << " when (xIsNaN='1' or yIsNaN='1' or (xIsInfinity='1' and yIsInfinity='1' and EffSub='1')) else expSigResult2;" << endl;		
-		
-		/*Computation of the sign.
-			"when the result is exactly zero, in RNE, it is +0, except x+x and x-(-x) when x is +0 or -0: it has the sign of x"
-		*/
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (resultFracIsZero='1' and expSigResult" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
+		vhdl<<tab<< declare("constInf",wE+wF) << " <= " << og(wE) << " & " << zg(wF) << ";"<<endl;
+		vhdl<<tab<< declare("constNaN",wE+wF) << " <= " << og(wE+wF) << ";"<<endl;
+		vhdl<<tab<< declare(target->logicDelay(2), "expSigR2",wE+wF) << " <= constInf when resultIsInf='1' else constNaN when resultIsNan='1' else expSigR;"<<endl;
+
 		vhdl << tab << declare(target->logicDelay(5), "signR") << " <= '0' when ("
 				 << "(resultIsNaN='1' "
 				 << " or (resultIsZero='1' and xIsInfinity='0' and yIsInfinity='0'))"
@@ -277,7 +312,8 @@ namespace flopoco{
 				 <<	" )  else signNewX;" << endl;
 
 		/*Result*/
-		vhdl<<tab<< declare(.0, "computedR",wE+wF+1) << " <= signR & expSigResult3;"<<endl;
+		vhdl<<tab<< declare("computedR",wE+wF+1) << " <= signR & expSigR2;"<<endl;
+		
 		vhdl << tab << "R <= computedR;"<<endl;
 	}
 
