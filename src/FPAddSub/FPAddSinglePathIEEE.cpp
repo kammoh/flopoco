@@ -299,7 +299,7 @@ namespace flopoco{
 		// there could be an overflow either in the exponent addition or in the final rounding;
 		// In any case the exponent result is 111111 and we need to set the mantissa to zero.
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (fullCancellation='1' and expSigR" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNan='0' and (((xIsInfinity='1' and yIsInfinity='1'  and effSub='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNan='0' and (((xIsInfinity='1' and yIsInfinity='1'  and effSub='0')  or (xIsInfinity='0' and yIsInfinity='1')  or (xIsInfinity='1' and yIsInfinity='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
 		
 		vhdl<<tab<< declare("constInf",wE+wF) << " <= " << og(wE) << " & " << zg(wF) << ";"<<endl;
 		vhdl<<tab<< declare("constNaN",wE+wF) << " <= " << og(wE+wF) << ";"<<endl;
