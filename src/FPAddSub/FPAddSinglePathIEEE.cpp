@@ -4,31 +4,13 @@
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
 
-  Authors: Valentin Huguet, Florent de Dinechin
+  Authors: Florent de Dinechin, Valentin Huguet
 
   Initial software.
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL, 2016-2019.
   All right reserved.
 
   */
-
-
-/* Bugs:
-211
-   1000000000000000 1000000000000000 
-   1000000000000000 got 0000000000000000
-
-
-301
-    1 00001 0000000000 1 00001 0000000000 
-    1 00010 0000000000 got 0 00010 0000000000  ???
-
-
-391
-   1 01111 0000000000 1 01111 0000000000   -1 + -1  -> -2, got 2
-   1100000000000000    got 0100000000000000
-
- */
 
 #include "FPAddSinglePathIEEE.hpp"
 
@@ -139,7 +121,7 @@ namespace flopoco{
 		vhdl << endl;
 		addComment("Significand alignment", tab);
 
-		vhdl << tab << declare(target->adderDelay(wE), "allShiftedOut") << " <= '1' when (expDiff >= "<<wF+2<<") else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(wE), "allShiftedOut") << " <= '1' when (expDiff >= "<<wF+3<<") else '0';"<<endl;
 		vhdl << tab << declare(target->logicDelay(1), "rightShiftValue",sizeRightShift) << " <= expDiff("<< sizeRightShift-1<<" downto 0) when allShiftedOut='0' else CONV_STD_LOGIC_VECTOR("<<wF+3<<","<<sizeRightShift<<") ;" << endl;
 		vhdl << tab << declare(target->logicDelay(2), "shiftCorrection") << " <= '1' when (yExpFieldZero='1' and xExpFieldZero='0') else '0'; -- only other cases are: both normal or both subnormal" << endl;
 		vhdl << tab << declare(target->adderDelay(sizeRightShift), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue - ("<<zg(sizeRightShift-1)<<" & shiftCorrection);" << endl;
@@ -225,12 +207,11 @@ namespace flopoco{
 		addComment("Cancellation detection, renormalization (see explanations in FPAddSinglePathIEEE.cpp) ", tab);
 
 		vhdl << tab << declare(target->logicDelay(2), "lzcZInput", wF+3) << " <= significandZ" << range(2*wF+3, wF+1) << ";"<<endl;
-		vhdl << tab << declare("whatToCount") << " <= '0';" << endl;
 		newInstance(
 				"LZOC", 
 				"LeadingZeroCounter", 
-				"wIn=" + to_string(wF+3), 
-				"I=>lzcZInput,OZB=>whatToCount",
+				"wIn=" + to_string(wF+3) + " whatToCount=0", 
+				"I=>lzcZInput",
 				"O=>lzc"
 			);
 		int lzcSize = getSignalByName("lzc")->width();
@@ -256,7 +237,7 @@ namespace flopoco{
 		
 		vhdl << tab << declare("deltaExp", wE)	 << " <=    -- value to subtract to exponent for normalization" << endl
 				 << tab << tab << zg(wE) << " when ( (z1='0' and z0='1' and xExpFieldZero='0')" << endl // 0: case B.2
-				 <<                         "  or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
+				 << tab << tab <<         "    or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
 				 << tab << tab << "else " << og(wE) << " when ( (z1='1')" // case A/
 				 <<                     "  or  (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
 				 << ")" << endl 
