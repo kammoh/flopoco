@@ -28,44 +28,67 @@ using namespace std;
 
 namespace flopoco{
 
-	LZOC::LZOC(OperatorPtr parentOp, Target* target, int wIn) :
-			Operator( parentOp, target), wIn_(wIn) {
+	LZOC::LZOC(OperatorPtr parentOp, Target* target, int wIn_, int whatToCount_) :
+		Operator( parentOp, target), wIn(wIn_), whatToCount(whatToCount_) {
 		ostringstream currLevel, currDigit, nextLevel;
 
 		srcFileName = "LZOC";
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2007)");
 
-		ostringstream name; 
-		name <<"LZOC_"<<wIn;
+		ostringstream name;
+		if(whatToCount==0)
+			name <<"LZC_"<<wIn;
+		else if(whatToCount==1)
+			name <<"LOC_"<<wIn;
+		else if(whatToCount==-1)
+			name <<"LZOC_"<<wIn;
+		else
+			THROWERROR("whatToCount should be 0, 1 or -1; got " << whatToCount);
+
 		setNameWithFreqAndUID(name.str());
 
 		// -------- Parameter set up -----------------
-		wOut_ = intlog2(wIn);
-		p2wOut_ = 1<<wOut_; // no need for GMP here
+		wOut = intlog2(wIn);
+		p2wOut = 1<<wOut; // no need for GMP here
 
 
-		addInput ("I", wIn_);
-		addInput ("OZB");
-		addOutput("O", wOut_);
+		addInput ("I", wIn);
+		if(whatToCount==-1)
+			addInput ("OZB");
+		addOutput("O", wOut);
 
-		vhdl << tab << declare("sozb") <<" <= OZB;" << endl;
-		currLevel << "level"<<wOut_;
+		if(whatToCount==-1)
+			vhdl << tab << declare("sozb") <<" <= OZB;" << endl;
+
+		currLevel << "level"<<wOut;
 		ostringstream padStr;
-		if (wIn_==intpow2(wOut_)) padStr<<"";
-		else padStr << "& ("<<intpow2(wOut_)-wIn_-1 << " downto 0 => not(sozb))";
+		if (wIn==intpow2(wOut)) padStr<<"";
+		else padStr << "& ("<<intpow2(wOut)-wIn-1 << " downto 0 => ";
+		if(whatToCount==0)
+			padStr <<"'1'";
+		else if(whatToCount==1)
+			name <<"'0'";
+		else if(whatToCount==-1)
+			padStr <<"not(sozb)";
+		padStr <<")";
 
-		vhdl << tab << declare(currLevel.str(),intpow2(wOut_)) << "<= I" << padStr.str() <<";"<<endl; //zero padding if necessary
-		//each operation is formed of a comparisson followed by a multiplexing
+		vhdl << tab << declare(currLevel.str(),intpow2(wOut)) << "<= I" << padStr.str() <<";"<<endl; //zero padding if necessary
+		//each operation is formed of a comparison followed by a multiplexing
 
-		for (int i=wOut_;i>=1;i--){
+		for (int i=wOut;i>=1;i--){
 			currDigit.str(""); currDigit << "digit" << i ;
 			currLevel.str(""); currLevel << "level" << i;
 			nextLevel.str(""); nextLevel << "level" << i-1;
 			double levelDelay = intlog(mpz_class(getTarget()->lutInputs()), intpow2(i-1)) * getTarget()->lutDelay();
 
-			vhdl << tab <<declare(levelDelay, currDigit.str()) << "<= '1' when " << currLevel.str() << "("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<") = "
-				  <<"("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<" => sozb)"
-				  << " else '0';"<<endl;
+			vhdl << tab <<declare(levelDelay, currDigit.str()) << "<= '1' when " << currLevel.str() << "("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<") = ";
+			if(whatToCount==0)
+				vhdl << zg(intpow2(i-1));
+			else if(whatToCount==1)
+				vhdl << og(intpow2(i-1));
+			else if(whatToCount==-1)
+				vhdl <<"("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<" => sozb)";
+			vhdl << " else '0';"<<endl;
 
 			if (i>1){
 				double levelDelay =  getTarget()->logicDelay(6);
@@ -73,10 +96,9 @@ namespace flopoco{
 					  <<"else "<<currLevel.str()<<"("<<intpow2(i)-1<<" downto "<<intpow2(i-1)<<");"<<endl;
 			}
 		}
-		//update output slack
 
 		vhdl << tab << "O <= ";
-		for (int i=wOut_;i>=1;i--){
+		for (int i=wOut;i>=1;i--){
 			currDigit.str(""); currDigit << "digit" << i ;
 			vhdl << currDigit.str();
 			if (i==1)
@@ -99,9 +121,9 @@ namespace flopoco{
 
 		int j;
 		int bit = (sozb == 0) ? 0 : 1;
-		for (j = 0; j < wIn_; j++)
+		for (j = 0; j < wIn; j++)
 			{
-				if (mpz_tstbit(si.get_mpz_t(), wIn_ - j - 1) != bit)
+				if (mpz_tstbit(si.get_mpz_t(), wIn - j - 1) != bit)
 					break;
 			}
 
@@ -111,19 +133,22 @@ namespace flopoco{
 
 
 	OperatorPtr LZOC::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
-		int wIn;
+		int wIn,whatToCount;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-		return new LZOC(parentOp, target, wIn);
+		UserInterface::parseInt(args, "whatToCount", &whatToCount);
+		return new LZOC(parentOp, target, wIn, whatToCount);
 	}
+
 
 
 	
 	void LZOC::registerFactory(){
 		UserInterface::add("LZOC", // name
-											 "A leading zero/one counter. One input specifies if 0s or 1s should be counted. The output size is computed.",
+											 "A leading zero or one counter. The output size is computed.",
 											 "ShiftersLZOCs", // category
 											 "",
-											 "wIn(int): input size in bits", // This string will be parsed
+											 "wIn(int): input size in bits;\
+                        whatToCount(int)=-1:  0 means count zeroes, 1 means count ones, -1 means add an input that defines what to count", // This string will be parsed
 											 "", // no particular extra doc needed
 											 LZOC::parseArguments
 											 ) ;

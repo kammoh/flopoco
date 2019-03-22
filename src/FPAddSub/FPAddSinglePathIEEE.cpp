@@ -207,12 +207,11 @@ namespace flopoco{
 		addComment("Cancellation detection, renormalization (see explanations in FPAddSinglePathIEEE.cpp) ", tab);
 
 		vhdl << tab << declare(target->logicDelay(2), "lzcZInput", wF+3) << " <= significandZ" << range(2*wF+3, wF+1) << ";"<<endl;
-		vhdl << tab << declare("whatToCount") << " <= '0';" << endl;
 		newInstance(
 				"LZOC", 
 				"LeadingZeroCounter", 
-				"wIn=" + to_string(wF+3), 
-				"I=>lzcZInput,OZB=>whatToCount",
+				"wIn=" + to_string(wF+3) + " whatToCount=0", 
+				"I=>lzcZInput",
 				"O=>lzc"
 			);
 		int lzcSize = getSignalByName("lzc")->width();

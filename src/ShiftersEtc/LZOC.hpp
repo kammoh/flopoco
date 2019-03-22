@@ -20,7 +20,7 @@ namespace flopoco{
 		 * @param[in] target the target device for this operator
 		 * @param[in] wIn the width of the input
 		 */
-		LZOC(OperatorPtr parentOp, Target* target, int wIn);
+		LZOC(OperatorPtr parentOp, Target* target, int wIn, int whatToCount=-1);
 	
 		/** The LZOC destructor	*/
 		~LZOC();
@@ -36,9 +36,10 @@ namespace flopoco{
 	
 	protected:
 
-		int wIn_;    /**< The width of the input */
-		int wOut_;   /**< The width of the output */
-		int p2wOut_; /**< The value of 2^wOut, which is computed as 1<<wOut */
+		int wIn;    /**< The width of the input */
+		int wOut;   /**< The width of the output */
+		int p2wOut; /**< The value of 2^wOut, which is computed as 1<<wOut */
+		int whatToCount;  /**< 0: count zeroes; 1: count 1s; -1: have an input that tells what to count */
 
 	public:
 		/** Factory method that parses arguments and calls the constructor */
