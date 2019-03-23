@@ -59,61 +59,84 @@ namespace flopoco{
 		if(countType==-1)
 			vhdl << tab << declare("sozb") <<" <= OZB;" << endl;
 
-		vhdl << tab << declare(join("level", wOut), wIn) << " <= I;"<<endl; 
+		addComment("pad input to the next power of two minus 1", tab);
+		vhdl << tab << declare(join("level", wOut), intpow2(wOut)-1) << " <= I";
+		if (intpow2(wOut)-1>wIn){
+			vhdl << " & ";
+			if(countType==0)
+				vhdl << og(intpow2(wOut)-1-wIn);
+			else if(countType==1)
+				vhdl << zg(intpow2(wOut)-1-wIn);
+			else if(countType==-1)
+				vhdl << rangeAssign(intpow2(wOut)-wIn-2, 0, "not sozb");
+		}
+		vhdl <<	";"<<endl;
 		//each operation is formed of a comparison followed by a multiplexing
 		
-		int currLevelSize=wIn, prevLevelSize=0;
-		string currDigit, prevLevel, currLevel;
+		addComment("Main iteration for large inputs", tab);
+		string currentDigitName, previousLevelName, nextLevelName;
 		int i=wOut-1;
-		while (i>=0){
-			//		while (currLevelSize > target->lutInputs+1){
-			prevLevelSize = currLevelSize;
-			currLevelSize = intpow2(i);
-			
-			currDigit = join("digit", i);
-			prevLevel = join("level", i+1);
-			currLevel = join("level", i);
+		/* Invariants: at iteration i,
+			 we define bit i of the output,
+			 we test the 2^i leading bits of the leveli vector,
+			 we build the next level's vector of size 2^i-1
+		 */
+		//while (i>=0){
+		while (intpow2(i+1) > target->lutInputs()+1){			
+			currentDigitName = join("digit", i);
+			previousLevelName = join("level", i+1);
+			nextLevelName = join("level", i);
 			//			double levelDelay = intlog(mpz_class(getTarget()->lutInputs()), intpow2(i-1)) * getTarget()->lutDelay();
-			//REPORT(0,currDigit);
-			vhdl << tab <<declare(currDigit) << "<= '1' when " << prevLevel << range(prevLevelSize-1, prevLevelSize-intpow2(i)) << " = ";
-			int bitsToCount=prevLevelSize-intpow2(i);
+			vhdl << tab <<declare(currentDigitName) << "<= '1' when " << previousLevelName << range(intpow2(i+1)-2, intpow2(i)-1) << " = ";
 			if(countType==0)
-				vhdl << zg(bitsToCount);
+				vhdl << zg(intpow2(i));
 			else if(countType==1)
-				vhdl << og(bitsToCount);
+				vhdl << og(intpow2(i));
 			else if(countType==-1)
-				vhdl <<"("<<prevLevelSize-1<<" downto " << prevLevelSize-intpow2(i) << " => sozb)";
+				vhdl << rangeAssign(intpow2(i)-1,0, "sozb") ;
 			vhdl << " else '0';"<<endl;
 
 			if (i>0){
-				double levelDelay =  getTarget()->logicDelay(6);
-				vhdl << tab << declare(currLevel, currLevelSize) << "<= "<<prevLevel << range(prevLevelSize-intpow2(i)-1,0) << " & ";
-				if(countType==0)
-					vhdl << og(currLevelSize-(prevLevelSize-intpow2(i)));
-				else if(countType==1)
-					vhdl << zg(currLevelSize-(prevLevelSize-intpow2(i)));
-				else if(countType==-1)
-					vhdl <<"("<<currLevelSize-1<<" downto " << prevLevelSize-intpow2(i) << " => not sozb)";
-				
-				vhdl << " when " << currDigit << "='1' "
-						 <<"else " << prevLevel << range(prevLevelSize-1, prevLevelSize-intpow2(i)) << ";"<<endl;
+				vhdl << tab << declare(nextLevelName, intpow2(i)-1) << "<= "
+						 << previousLevelName << range(intpow2(i)-2,0)  << " when " << currentDigitName << "='1' "
+						 <<"else " << previousLevelName << range(intpow2(i+1)-2, intpow2(i)) << ";"<<endl;
 			}
 			i--;
 		}
+ 
+		i++;
 
-		vhdl << tab << "O <= ";
-		for (int i=wOut-1;i>=0;i--){
-			currDigit = join( "digit", i) ;
-			vhdl << currDigit;
-			if (i==0)
-				vhdl << ";"<<endl;
-			else
-				vhdl << " & ";
+		addComment("Finish counting with one LUT", tab);
+
+		if(countType==-1) {
+			vhdl << tab << declare("z", intpow2(i)-1) << " <= " << nextLevelName << " when ozb='0' else (not "<< nextLevelName << ");" << endl;
+			nextLevelName="z";
+		}
+		if(countType==1) {
+			vhdl << tab << declare("z", intpow2(i)-1) << " <= not "<< nextLevelName << ";" << endl;
+			nextLevelName="z";
 		}
 
+		vhdl << tab << "with " << nextLevelName << " select " << declare("lowBits", i) << " <= " << endl;
+		for (int j=0; j<intpow2(i); j++) {
+			vhdl << tab << tab << "\"" << unsignedBinary(intpow2(i)-1-intlog2(j), i) <<"\" when \"" << unsignedBinary(j, intpow2(i)-1) << "\"," << endl;
+		}
+		vhdl << tab << tab << zg(i) << " when others;" << endl;
+		//		vhdl << tab << tab << rangeAssign(i,0,"'-'") << " when others;" << endl; // seems to slow everything down and consume space 
+
+		vhdl << tab << declare("outHighBits", wOut-i) << " <= ";
+		for (int j=wOut-1;j>=i;j--){
+			vhdl << join( "digit", j);
+			if (j>i)
+				vhdl << " & ";
+		}
+		vhdl << ";" <<endl;
+
+		vhdl << tab << "O <= outHighBits & lowBits ;" << endl;
 	}
 
 	LZOC::~LZOC() {}
+
 
 
 

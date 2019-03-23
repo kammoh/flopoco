@@ -11,7 +11,11 @@
 namespace flopoco{
 
 	/** The Leading zero/one counter class.  
-	 * Recursive structure with intlog2(wIn) stages.
+	 * Recursive structure with intlog2(wIn) stages: 
+	 if wIn=2^n then the output has n+1 bits 
+
+
+	 If wIn is a power of two, we may count up to 
 	 */
 	class LZOC : public Operator{
 
