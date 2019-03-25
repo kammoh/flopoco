@@ -152,7 +152,8 @@ namespace flopoco{
 		vhdl << tab << declare("stickyInBits", wF) << " <= shiftedSignificandY" << range(wF-1, 0) << ";"<<endl;
 		double stickyDelay = target->adderDelay(wF/(target->lutInputs())); // TODO a method for wide OR someday
 		vhdl << tab << declare(stickyDelay, "stickyLow") << " <= '0' when stickyInBits = "<< zg(wF) <<" else '1';" << endl;
-		vhdl << tab << declare("carryIn") << " <= effSub and not stickyLow;" << endl;
+		vhdl << tab << declare("carryIn") << " <= effSub and not stickyLow;" << endl; // TODO break this dependency, send the stickyLow to the final round adder
+		// like		vhdl << tab << declare("carryIn") << " <= '0';" << endl; and we win 3ns
 		
 		newInstance(
 				"IntAdder", 
@@ -292,9 +293,6 @@ namespace flopoco{
 			);
 
 		addComment("Final packing", tab);
-		// What remains to do
-		// there could be an overflow either in the exponent addition or in the final rounding;
-		// In any case the exponent result is 111111 and we need to set the mantissa to zero.
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (fullCancellation='1' and expSigR" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNan='0' and (((xIsInfinity='1' and yIsInfinity='1'  and effSub='0')  or (xIsInfinity='0' and yIsInfinity='1')  or (xIsInfinity='1' and yIsInfinity='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
 		
