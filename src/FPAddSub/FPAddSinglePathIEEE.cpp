@@ -206,47 +206,36 @@ namespace flopoco{
 		//						 TODO: all this assumes that wE>log2(wF+2), true for all the standard IEEE formats. We should test properly when it doesnt work anymore
 		addComment("Cancellation detection, renormalization (see explanations in FPAddSinglePathIEEE.cpp) ", tab);
 
+		vhdl << tab << declare("z1") << " <=  significandZ" << of(2*wF+3) << "; -- bit of weight 1" << endl;
+		vhdl << tab << declare("z0") << " <=  significandZ" << of(2*wF+2) << "; -- bit of weight 0" << endl;
+
+		// beware, on a lzcInput which is all 0, LZOC saturates to wF+3 while LZOCShifterSticky monte jusqu'à 15  
 		vhdl << tab << declare(target->logicDelay(2), "lzcZInput", wF+3) << " <= significandZ" << range(2*wF+3, wF+1) << ";"<<endl;
 		newInstance(
 				"LZOC", 
-				"LeadingZeroCounter", 
-				"wIn=" + to_string(wF+3) + " whatToCount=0", 
+				getName()+"LeadingZeroCounter", 
+				"wIn=" + to_string(wF+3) + " countType=0", 
 				"I=>lzcZInput",
 				"O=>lzc"
 			);
 		int lzcSize = getSignalByName("lzc")->width();
-
 		if(lzcSize>wE) {
 			THROWERROR("These values of parameters wE and wF are not supported (wE too small WRT wF) -- if you want this to work, contact us");
 		}
 
-		vhdl << tab << declare("z1") << " <=  significandZ" << of(2*wF+3) << "; -- bit of weight 1" << endl;
-		vhdl << tab << declare("z0") << " <=  significandZ" << of(2*wF+2) << "; -- bit of weight 0" << endl;
 		vhdl << tab << declare(target->adderDelay(lzcSize)+target->logicDelay(1), "leftShiftVal", lzcSize)	 << " <= " << endl
 				 << tab << tab << "lzc when ("
 				 << "(z1='1')" // case A/
 				 <<" or (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
 				 <<" or (z1='0' and z0='0' and xExpFieldZero='0' and lzc<=expNewX) " // case C.2.a
-				 <<" or (xExpFieldZero='0' and lzc=" << wF+3 <<") " // case C.2.c
+				 <<" or (xExpFieldZero='0' and lzc>=" << wF+3 <<") " // case C.2.c
 				 << ") " << endl
 				 << tab << tab << "else (expNewX"<< range(lzcSize-1,0) <<") when ("
-				 << "xExpFieldZero='0' and (lzc /= "<< unsignedBinary(mpz_class(wF+3), lzcSize) << ") and ((" << zg(wE-lzcSize) << "&lzc)>=expNewX)"  // case C.2.b 
+				 << "xExpFieldZero='0' and (lzc < "<< wF+3 << ") and ((" << zg(wE-lzcSize) << "&lzc)>=expNewX)"  // case C.2.b 
 				 << ") " << endl
 				 << tab << tab << " else " << zg(lzcSize-1) << "&'1'"  // case B.2 and C.1 
 				 <<";" << endl;
 		
-		vhdl << tab << declare("deltaExp", wE)	 << " <=    -- value to subtract to exponent for normalization" << endl
-				 << tab << tab << zg(wE) << " when ( (z1='0' and z0='1' and xExpFieldZero='0')" << endl // 0: case B.2
-				 << tab << tab <<         "    or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
-				 << tab << tab << "else " << og(wE) << " when ( (z1='1')" // case A/
-				 <<                     "  or  (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
-				 << ")" << endl 
-				 << tab << tab << "else (" << zg(wE-lzcSize) << " & lzc)-'1' when (z1='0' and z0='0' and xExpFieldZero='0' and lzc<=expNewX and lzc/=" << wF+3 << ")" // lzc: case C.2.a
-				 << tab << tab << "else expNewX" // case C2.2.=b and C.2.c
-				 <<";" << endl;
-				
-		vhdl << tab << declare(target->adderDelay(lzcSize/target->lutInputs()), "fullCancellation") << " <= '1' when (lzc="<< wF+3<<") else '0';"<<endl;
-		// Now do the shift and the exponent addition, done conservatively (it could probably be smaller)
 
 		newInstance(
 				"Shifter", 
@@ -260,6 +249,21 @@ namespace flopoco{
 		vhdl << tab << declare("lsb") << " <= normalizedSignificand" << of(wF+3) << ";" << endl;
 		vhdl << tab << declare("roundBit") << " <= normalizedSignificand" << of(wF+2) << ";" << endl;
 		vhdl << tab << declare(target->adderDelay((wF+2)/target->lutInputs()), "stickyBit") << " <= '0' when normalizedSignificand "<< range(wF+1, 0) << "=" << zg(wF+2) << " else '1';" << endl;		
+
+		vhdl << tab << declare("deltaExp", wE)	 << " <=    -- value to subtract to exponent for normalization" << endl
+				 << tab << tab << zg(wE) << " when ( (z1='0' and z0='1' and xExpFieldZero='0')" << endl // 0: case B.2
+				 << tab << tab <<         "    or  (z1='0' and z0='0' and xExpFieldZero='1') )" << endl // case C.1
+				 << tab << tab << "else " << og(wE) << " when ( (z1='1')" // case A/
+				 <<                     "  or  (z1='0' and z0='1' and xExpFieldZero='1')" // case B.1
+				 << ")" << endl 
+				 << tab << tab << "else (" << zg(wE-lzcSize) << " & lzc)-'1' when (z1='0' and z0='0' and xExpFieldZero='0' and lzc<=expNewX and lzc<" << wF+3 << ")" // lzc: case C.2.a
+				 << tab << tab << "else expNewX" // case C2.2.=b and C.2.c
+				 <<";" << endl;
+				
+		vhdl << tab << declare(target->adderDelay(lzcSize/target->lutInputs()), "fullCancellation") << " <= '1' when (lzc>="<< wF+3<<") else '0';"<<endl;
+		// Now do the shift and the exponent addition, done conservatively (it could probably be smaller)
+
+
 		vhdl << tab << declare(target->adderDelay(wE), "expPreRound", wE) << " <= expNewX - deltaExp; -- we may have a first overflow here" << endl;
 		vhdl << tab << declare("expSigPreRound", wE+wF) << " <= expPreRound & significandPreRound; " << endl;
 

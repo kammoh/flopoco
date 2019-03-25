@@ -11,7 +11,11 @@
 namespace flopoco{
 
 	/** The Leading zero/one counter class.  
-	 * Recursive structure with intlog2(wIn) stages.
+	 * Recursive structure with intlog2(wIn) stages: 
+	 if wIn=2^n then the output has n+1 bits 
+
+
+	 If wIn is a power of two, we may count up to 
 	 */
 	class LZOC : public Operator{
 
@@ -20,7 +24,7 @@ namespace flopoco{
 		 * @param[in] target the target device for this operator
 		 * @param[in] wIn the width of the input
 		 */
-		LZOC(OperatorPtr parentOp, Target* target, int wIn, int whatToCount=-1);
+		LZOC(OperatorPtr parentOp, Target* target, int wIn, int countType=-1);
 	
 		/** The LZOC destructor	*/
 		~LZOC();
@@ -39,7 +43,7 @@ namespace flopoco{
 		int wIn;    /**< The width of the input */
 		int wOut;   /**< The width of the output */
 		int p2wOut; /**< The value of 2^wOut, which is computed as 1<<wOut */
-		int whatToCount;  /**< 0: count zeroes; 1: count 1s; -1: have an input that tells what to count */
+		int countType;  /**< 0: count zeroes; 1: count 1s; -1: have an input that tells what to count */
 
 	public:
 		/** Factory method that parses arguments and calls the constructor */
