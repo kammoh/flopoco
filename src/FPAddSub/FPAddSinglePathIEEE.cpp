@@ -30,19 +30,18 @@
 
 using namespace std;
 
-//TODO +- inf for exponent => update exception
 
 namespace flopoco{
-
-
+	
+	
 #define DEBUGVHDL 0
-
-
+	
+	
 	FPAddSinglePathIEEE::FPAddSinglePathIEEE(OperatorPtr parentOp, Target* target,
 		int wE, int wF,
 		bool sub) :
-	Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
-
+		Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
+		
 		srcFileName="FPAddSinglePathIEEE";
 
 		ostringstream name;
@@ -134,6 +133,10 @@ namespace flopoco{
 				"R=>shiftedSignificandY"
 			);
 
+		vhdl << endl;
+
+
+
 
 		//=========================================================================|
 		//                              Addition                                   |
@@ -142,24 +145,32 @@ namespace flopoco{
 		addComment("Significand addition", tab);
 
 		//expSigShiftedNewY size = exponent size + RightShifter's wOut_ size
-		vhdl << tab << declare(target->logicDelay(1), "paddedSignificandX", 2*wF+4) << " <= '0' & significandNewX & "<< zg(wF+2) <<";" << endl;
-		vhdl << tab << declare(target->logicDelay(2), "negatedSignificandY", 2*wF+4) << " <= ('0' & shiftedSignificandY) xor (" << 2*wF+3 << " downto 0 => EffSub);"<<endl;
+		vhdl << tab << declare("summandX", wF+4) << " <= '0' & significandNewX & '0' & '0';" << endl;
 
+		vhdl << tab << declare(target->logicDelay(2), "summandY", wF+4) << " <= ('0' & shiftedSignificandY" << range(2*wF+2, wF) << ") xor " << rangeAssign(wF+3,0,"EffSub") << ";"<<endl;
+
+		vhdl << tab << declare("stickyInBits", wF) << " <= shiftedSignificandY" << range(wF-1, 0) << ";"<<endl;
+		double stickyDelay = target->adderDelay(wF/(target->lutInputs())); // TODO a method for wide OR someday
+		vhdl << tab << declare(stickyDelay, "stickyLow") << " <= '0' when stickyInBits = "<< zg(wF) <<" else '1';" << endl;
+		vhdl << tab << declare("carryIn") << " <= effSub and not stickyLow;" << endl; // TODO break this dependency, send the stickyLow to the final round adder
+		// like		vhdl << tab << declare("carryIn") << " <= '0';" << endl; and we win 3ns
+		
 		newInstance(
 				"IntAdder", 
 				"fracAdder", 
-				"wIn=" + to_string(2*wF+4),
-				"X=>paddedSignificandX,Y=>negatedSignificandY,Cin=>EffSub", 		/*This carry completes the subtraction*/
+				"wIn=" + to_string(wF+4),
+				"X=>summandX,Y=>summandY,Cin=>carryIn", 		/*This carry completes the subtraction*/
 				"R=>significandZ" 
 			);
 		vhdl << endl;
+
 
 
 		//=========================================================================|
 		//                             Renormalize                                 |
 		// ========================================================================|
 
-		/* Now we have a significandZ of size 2*wF+4 with the following alignment WRT the exponent expNewX: ab.xxxxxxxxxx (here 2*wF+2 'x')
+		/* Now we have a significandZ of size wF+4 with the following alignment WRT the exponent expNewX: ab.xxxxxxxxxx (here 2*wF+2 'x')
 			 We first normalize it, then round it.
 			 Let us define "normalize" as: shift significand in such a way that we can drop its MSB to get a fraction, and subtract deltaexp to the exponent 
 			 The various cases are:
@@ -206,11 +217,10 @@ namespace flopoco{
 		//						 TODO: all this assumes that wE>log2(wF+2), true for all the standard IEEE formats. We should test properly when it doesnt work anymore
 		addComment("Cancellation detection, renormalization (see explanations in FPAddSinglePathIEEE.cpp) ", tab);
 
-		vhdl << tab << declare("z1") << " <=  significandZ" << of(2*wF+3) << "; -- bit of weight 1" << endl;
-		vhdl << tab << declare("z0") << " <=  significandZ" << of(2*wF+2) << "; -- bit of weight 0" << endl;
+		vhdl << tab << declare("z1") << " <=  significandZ" << of(wF+3) << "; -- bit of weight 1" << endl;
+		vhdl << tab << declare("z0") << " <=  significandZ" << of(wF+2) << "; -- bit of weight 0" << endl;
 
-		// beware, on a lzcInput which is all 0, LZOC saturates to wF+3 while LZOCShifterSticky monte jusqu'à 15  
-		vhdl << tab << declare(target->logicDelay(2), "lzcZInput", wF+3) << " <= significandZ" << range(2*wF+3, wF+1) << ";"<<endl;
+		vhdl << tab << declare("lzcZInput", wF+3) << " <= significandZ" << range(wF+3,1) << ";"<<endl;
 		newInstance(
 				"LZOC", 
 				getName()+"LeadingZeroCounter", 
@@ -240,15 +250,15 @@ namespace flopoco{
 		newInstance(
 				"Shifter", 
 				"LeftShifterComponent", 
-				"wIn=" + to_string(2*wF+4) + " maxShift=" + to_string(wF+3) + " dir=0",
+				"wIn=" + to_string(wF+4) + " maxShift=" + to_string(wF+3) + " dir=0",
 				"X=>significandZ,S=>leftShiftVal",
-				"R=>normalizedSignificand" // output size will be 3*wF+7
+				"R=>normalizedSignificand" // output size will be 2*wF+6 TODO: not output unused bits
 								); 
 		
-		vhdl << tab << declare("significandPreRound", wF) << " <= normalizedSignificand" << range(2*wF+2, wF+3) << "; -- remove the implicit zero/one" << endl;
-		vhdl << tab << declare("lsb") << " <= normalizedSignificand" << of(wF+3) << ";" << endl;
-		vhdl << tab << declare("roundBit") << " <= normalizedSignificand" << of(wF+2) << ";" << endl;
-		vhdl << tab << declare(target->adderDelay((wF+2)/target->lutInputs()), "stickyBit") << " <= '0' when normalizedSignificand "<< range(wF+1, 0) << "=" << zg(wF+2) << " else '1';" << endl;		
+		vhdl << tab << declare("significandPreRound", wF) << " <= normalizedSignificand" << range(wF+2, 3) << "; -- remove the implicit zero/one" << endl;
+		vhdl << tab << declare("lsb") << " <= normalizedSignificand" << of(3) << ";" << endl;
+		vhdl << tab << declare("roundBit") << " <= normalizedSignificand" << of(2) << ";" << endl;
+		vhdl << tab << declare(target->adderDelay((wF+2)/target->lutInputs()), "stickyBit") << " <= stickyLow or  normalizedSignificand"<< of(1) << "or  normalizedSignificand"<< of(0) << ";" << endl;		
 
 		vhdl << tab << declare("deltaExp", wE)	 << " <=    -- value to subtract to exponent for normalization" << endl
 				 << tab << tab << zg(wE) << " when ( (z1='0' and z0='1' and xExpFieldZero='0')" << endl // 0: case B.2
@@ -267,6 +277,9 @@ namespace flopoco{
 		vhdl << tab << declare(target->adderDelay(wE), "expPreRound", wE) << " <= expNewX - deltaExp; -- we may have a first overflow here" << endl;
 		vhdl << tab << declare("expSigPreRound", wE+wF) << " <= expPreRound & significandPreRound; " << endl;
 
+
+
+		
 		addComment("Final rounding, with the mantissa overflowing in the exponent  ", tab);
 		
 		vhdl << tab << declare(target->logicDelay(3), "roundUpBit")<<" <= '1' when roundBit='1' and (stickyBit='1' or (stickyBit='0' and lsb='1')) else '0';"<<endl;
@@ -280,9 +293,6 @@ namespace flopoco{
 			);
 
 		addComment("Final packing", tab);
-		// What remains to do
-		// there could be an overflow either in the exponent addition or in the final rounding;
-		// In any case the exponent result is 111111 and we need to set the mantissa to zero.
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (fullCancellation='1' and expSigR" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNan='0' and (((xIsInfinity='1' and yIsInfinity='1'  and effSub='0')  or (xIsInfinity='0' and yIsInfinity='1')  or (xIsInfinity='1' and yIsInfinity='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
 		
