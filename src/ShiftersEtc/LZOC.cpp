@@ -86,8 +86,14 @@ namespace flopoco{
 			currentDigitName = join("digit", i);
 			previousLevelName = join("level", i+1);
 			nextLevelName = join("level", i);
+			double levelDelay;
+			if(countType==-1)
+				levelDelay = target->eqComparatorDelay(intpow2(i));
+			else
+				levelDelay = target->eqConstComparatorDelay(intpow2(i));
+				
 			//			double levelDelay = intlog(mpz_class(getTarget()->lutInputs()), intpow2(i-1)) * getTarget()->lutDelay();
-			vhdl << tab <<declare(currentDigitName) << "<= '1' when " << previousLevelName << range(intpow2(i+1)-2, intpow2(i)-1) << " = ";
+			vhdl << tab <<declare(levelDelay, currentDigitName) << "<= '1' when " << previousLevelName << range(intpow2(i+1)-2, intpow2(i)-1) << " = ";
 			if(countType==0)
 				vhdl << zg(intpow2(i));
 			else if(countType==1)
@@ -97,7 +103,7 @@ namespace flopoco{
 			vhdl << " else '0';"<<endl;
 
 			if (i>0){
-				vhdl << tab << declare(nextLevelName, intpow2(i)-1) << "<= "
+				vhdl << tab << declare(target->logicDelay(2),  nextLevelName, intpow2(i)-1) << "<= "
 						 << previousLevelName << range(intpow2(i)-2,0)  << " when " << currentDigitName << "='1' "
 						 <<"else " << previousLevelName << range(intpow2(i+1)-2, intpow2(i)) << ";"<<endl;
 			}
@@ -108,16 +114,21 @@ namespace flopoco{
 
 		addComment("Finish counting with one LUT", tab);
 
+		// In principle the two following equations are packed within the same LUT by logic tools, so we only add the delay to the first
+		// to avoid inserting a register level between them
+		double finalDelay=target->logicDelay(5);
 		if(countType==-1) {
-			vhdl << tab << declare("z", intpow2(i)-1) << " <= " << nextLevelName << " when ozb='0' else (not "<< nextLevelName << ");" << endl;
+			vhdl << tab << declare(finalDelay, "z", intpow2(i)-1) << " <= " << nextLevelName << " when ozb='0' else (not "<< nextLevelName << ");" << endl;
 			nextLevelName="z";
+			finalDelay=0.0;
 		}
 		if(countType==1) {
-			vhdl << tab << declare("z", intpow2(i)-1) << " <= not "<< nextLevelName << ";" << endl;
+			vhdl << tab << declare(finalDelay, "z", intpow2(i)-1) << " <= not "<< nextLevelName << ";" << endl;
 			nextLevelName="z";
+			finalDelay=0.0;
 		}
 
-		vhdl << tab << "with " << nextLevelName << " select " << declare("lowBits", i) << " <= " << endl;
+		vhdl << tab << "with " << nextLevelName << " select " << declare(finalDelay, "lowBits", i) << " <= " << endl;
 		for (int j=0; j<intpow2(i); j++) {
 			vhdl << tab << tab << "\"" << unsignedBinary(intpow2(i)-1-intlog2(j), i) <<"\" when \"" << unsignedBinary(j, intpow2(i)-1) << "\"," << endl;
 		}

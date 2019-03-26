@@ -150,8 +150,7 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "summandY", wF+4) << " <= ('0' & shiftedSignificandY" << range(2*wF+2, wF) << ") xor " << rangeAssign(wF+3,0,"EffSub") << ";"<<endl;
 
 		vhdl << tab << declare("stickyInBits", wF) << " <= shiftedSignificandY" << range(wF-1, 0) << ";"<<endl;
-		double stickyDelay = target->adderDelay(wF/(target->lutInputs())); // TODO a method for wide OR someday
-		vhdl << tab << declare(stickyDelay, "stickyLow") << " <= '0' when stickyInBits = "<< zg(wF) <<" else '1';" << endl;
+		vhdl << tab << declare(target->eqConstComparatorDelay(wF), "stickyLow") << " <= '0' when stickyInBits = "<< zg(wF) <<" else '1';" << endl;
 		vhdl << tab << declare("carryIn") << " <= effSub and not stickyLow;" << endl; // TODO break this dependency, send the stickyLow to the final round adder
 		// like		vhdl << tab << declare("carryIn") << " <= '0';" << endl; and we win 3ns
 		

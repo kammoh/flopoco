@@ -225,14 +225,14 @@ namespace flopoco{
 
 
 		/** Function which returns the delay for an n bit equality comparison
-		* @param n the number of bits of the comparisson
+		* @param n the number of bits of the comparison
 		* @return the delay of the comparisson between two vectors
 		*/
 		virtual double eqComparatorDelay(int n) =0;
 
 		/** Function which returns the delay for an n bit equality comparison with a
 		* constant
-		* @param n the number of bits of the comparisson
+		* @param n the number of bits of the comparison
 		* @return the delay of the comparisson between a vector and a constant
 		*/
 		virtual double eqConstComparatorDelay(int n) =0;
