@@ -125,6 +125,7 @@ namespace flopoco{
 		vhdl << tab << declare(target->logicDelay(2), "shiftCorrection") << " <= '1' when (yExpFieldZero='1' and xExpFieldZero='0') else '0'; -- only other cases are: both normal or both subnormal" << endl;
 		vhdl << tab << declare(target->adderDelay(sizeRightShift), "finalRightShiftValue", sizeRightShift) << " <= rightShiftValue - ("<<zg(sizeRightShift-1)<<" & shiftCorrection);" << endl;
 		
+#if 0 // shift, then sticky
 		newInstance(
 				"Shifter", 
 				"RightShifterComponent", 
@@ -133,10 +134,24 @@ namespace flopoco{
 				"R=>shiftedSignificandY"
 			);
 
+
+		vhdl << tab << declare("stickyInBits", wF) << " <= shiftedSignificandY" << range(wF-1, 0) << ";"<<endl;
+		vhdl << tab << declare(target->eqConstComparatorDelay(wF), "stickyLow") << " <= '0' when stickyInBits = "<< zg(wF) <<" else '1';" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "summandY", wF+4) << " <= ('0' & shiftedSignificandY" << range(2*wF+2, wF) << ") xor " << rangeAssign(wF+3,0,"EffSub") << ";"<<endl;
+
+#else
+		vhdl << tab << declare("significandY00", wF+3) << " <= significandNewY & "<<zg(2)<<";"<<endl;
+		newInstance(
+				"Shifter", 
+				"RightShifterComponent", 
+				"wIn=" + to_string(wF+3) + " maxShift=" + to_string(wF+2) + " dir=1 " + "wOut=" + to_string(wF+3) + " computeSticky=1", 
+				"X=>significandY00,S=>finalRightShiftValue",
+				"R=>shiftedSignificandY,Sticky=>stickyLow"
+			);
+		vhdl << tab << declare(target->logicDelay(2), "summandY", wF+4) << " <= ('0' & shiftedSignificandY) xor " << rangeAssign(wF+3,0,"EffSub") << ";"<<endl;
+#endif
+
 		vhdl << endl;
-
-
-
 
 		//=========================================================================|
 		//                              Addition                                   |
@@ -147,10 +162,7 @@ namespace flopoco{
 		//expSigShiftedNewY size = exponent size + RightShifter's wOut_ size
 		vhdl << tab << declare("summandX", wF+4) << " <= '0' & significandNewX & '0' & '0';" << endl;
 
-		vhdl << tab << declare(target->logicDelay(2), "summandY", wF+4) << " <= ('0' & shiftedSignificandY" << range(2*wF+2, wF) << ") xor " << rangeAssign(wF+3,0,"EffSub") << ";"<<endl;
 
-		vhdl << tab << declare("stickyInBits", wF) << " <= shiftedSignificandY" << range(wF-1, 0) << ";"<<endl;
-		vhdl << tab << declare(target->eqConstComparatorDelay(wF), "stickyLow") << " <= '0' when stickyInBits = "<< zg(wF) <<" else '1';" << endl;
 		vhdl << tab << declare("carryIn") << " <= effSub and not stickyLow;" << endl; // TODO break this dependency, send the stickyLow to the final round adder
 		// like		vhdl << tab << declare("carryIn") << " <= '0';" << endl; and we win 3ns
 		

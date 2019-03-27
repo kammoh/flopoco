@@ -30,8 +30,10 @@ namespace flopoco{
 		 * @param[in]		wIn			  the with of the input
 		 * @param[in]		maxShift	the maximum shift amount
 		 * @param[in]		direction	can be either Left of Right. Determines the shift direction
+		 * @param[in]		wOut	optional size of the shifted output (-1 means: computed) 
+		 * @param[in]		computeSticky optional computation of a sticky bit out of the possible discarded bits
 		 **/
-		Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection dir);
+		Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection dir, int wOut=-1, bool computeSticky=false);
 
 
 		/** Destructor */
@@ -49,7 +51,7 @@ namespace flopoco{
 		 *@return number of bits of the shift amount
 		 */
 		int getShiftInWidth(){
-			return wShiftIn_;
+			return wShiftIn;
 		}
 
 
@@ -60,13 +62,14 @@ namespace flopoco{
 		static void registerFactory();
 
 	protected:
-		int wIn_;          /**< the width of the input*/
-		int maxShift_;     /**< the maximum shift amount*/
-		int wOut_;         /**< the width of the output */
-		int wShiftIn_; 	 /**< the number of bits of the input which determines the shift amount*/
+		int wIn;          /**< the width of the input*/
+		int maxShift;     /**< the maximum shift amount*/
+		int wOut;         /**< the width of the output */
+		int wShiftIn; 	 /**< the number of bits of the input which determines the shift amount*/
 
 	private:
-		ShiftDirection direction_;  /**< determines the shift direction. can be Left or Right */
+		ShiftDirection direction;  /**< determines the shift direction. can be Left or Right */
+		bool computeSticky; /**< if true, computes the OR of all the shifted-out bits, and outputs it */
 
 	};
 

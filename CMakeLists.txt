@@ -178,7 +178,7 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
   ScaLP/Solver.h
-  HINTS "/usr/local/include/" "~/.local/include" "${SCALP_PREFIX_DIR}/include/" 
+  HINTS "/usr/local/include/" "~/.local/include/" "${SCALP_PREFIX_DIR}/include/" 
   DOC "Path of main header of scalp"
   )
 FIND_LIBRARY(SCALP_LIB
