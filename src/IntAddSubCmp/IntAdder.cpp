@@ -52,6 +52,7 @@ namespace flopoco {
 
 		double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
 		// What is the maximum lexicographic time of our inputs?
+		schedule();
 		int maxCycle = 0;
 		double maxCP = 0.0;
 		for(auto i: ioList_) {
