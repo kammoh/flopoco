@@ -4,7 +4,7 @@ TODO
 
 */
 
-#ifdef HAVE_SCALP
+#ifdef HAVE_PAGLIB
 
 #include<ScaLP/Solver.h>
 #include<ScaLP/Exception.h>
