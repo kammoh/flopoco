@@ -11,11 +11,11 @@ RUN apt-get update -y && apt-get install -y \
 	 && make -j8 && cd $BASEDIR \
   && svn checkout  https://digidev.digi.e-technik.uni-kassel.de/home/svn/pagsuite/ \
 	 && cd pagsuite/trunk/paglib && mkdir build && cd build && cmake .. && make -j5 && make install  &&  cd $BASEDIR \
-	 && git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git \
-	&& cd flopoco/ \
-	&& mkdir build && cd build && cmake .. -DSCALP_PREFIX_DIR="/scalp/trunk/build/" \
-	&& make -j8 && cd .. \
-	&& ./build/flopoco BuildHTMLDoc
+  && git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git \
+ 	 && cd flopoco/ \
+	 && mkdir build && cd build && cmake .. -DSCALP_PREFIX_DIR="/scalp/trunk/build" \
+	 && make -j8 && cd .. \
+	 && ./build/flopoco BuildHTMLDoc
 
 ENTRYPOINT ["/flopoco/build/flopoco"]
 
