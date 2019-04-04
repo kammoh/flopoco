@@ -10,7 +10,7 @@ TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMult
 
 void TilingStrategy::printSolution(ofstream &outstream)
 {
-    outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}\n";
+    outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";
     outstream << "\\draw[thick] (0, 0) rectangle (" << wX << ", " << wY << ");\n";
     for (size_t i = 0 ; i < static_cast<size_t>(wY) ; ++i) {
         outstream << "\\draw[dotted, very thin, gray] (0, " << i <<") -- (" << wX << ", " << i << ");\n";
