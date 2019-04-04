@@ -32,7 +32,7 @@ using namespace std;
 
 namespace flopoco {
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, bool texOutput):
         Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_)
 	{
         srcFileName="IntMultiplier";
@@ -92,6 +92,17 @@ namespace flopoco {
 		tilingStrategy.solve();
 
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
+        cerr << "TEST : " << solution.size() << endl;
+        if (texOutput) {
+            ofstream texfile;
+            texfile.open("multiplier.tex");
+            if((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier.tex file for output. Will not print tiling configuration." << endl;
+            } else {
+                tilingStrategy.printSolution(texfile);
+                texfile.close();
+            }
+        }
 
 		unsigned int posInList = 0;    //needed as id to differ between inputvectors
         unsigned int totalOffset = 0; //!!! multiplierSolutionParser->getOffset();
@@ -496,13 +507,14 @@ namespace flopoco {
 	
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut ;
-		bool signedIO,superTile;
+        bool signedIO,superTile,texOuput;
 		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
 		UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
 		UserInterface::parsePositiveInt(args, "wOut", &wOut);
 		UserInterface::parseBoolean(args, "signedIO", &signedIO);
 		UserInterface::parseBoolean(args, "superTile", &superTile);
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO);
+        UserInterface::parseBoolean(args, "texOutput", &texOuput);
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, texOuput);
 	}
 
 
@@ -515,7 +527,8 @@ namespace flopoco {
 											 "wX(int): size of input X; wY(int): size of input Y;\
                         wOut(int)=0: size of the output if you want a truncated multiplier. 0 for full multiplier;\
                         signedIO(bool)=false: inputs and outputs can be signed or unsigned;\
-                        superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.", // This string will be parsed
+                        superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
+                        texOutput(bool)=false: if true, generate a tex document with the tiling represented in it", // This string will be parsed
 											 "", // no particular extra doc needed
 											IntMultiplier::parseArguments,
 											IntMultiplier::unitTest

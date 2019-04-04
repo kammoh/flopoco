@@ -24,8 +24,9 @@ namespace flopoco {
          * @param[in] wY             Y multiplier size (including sign bit if any)
          * @param[in] wOut           wOut size for a truncated multiplier (0 means full multiplier)
          * @param[in] signedIO       false=unsigned, true=signed
+         * @param[in] texOutput      true=generate a tek file with the found tiling solution
          **/
-        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false);
+        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, bool texOutput = false);
 
 		/**
 		 * The emulate function.
