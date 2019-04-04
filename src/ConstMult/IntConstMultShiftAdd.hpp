@@ -3,7 +3,7 @@
 
 #include "Operator.hpp"
 
-#ifdef HAVE_PAGLIB
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include "utils.hpp"
 #include "pagsuite/adder_graph.h"
@@ -11,10 +11,8 @@
 
 using namespace std;
 
-#endif // HAVE_PAGLIB
 namespace flopoco {
     class IntConstMultShiftAdd : public Operator {
-#ifdef HAVE_PAGLIB
     public:
         static ostream nostream;
         int noOfPipelineStages;
@@ -44,9 +42,7 @@ namespace flopoco {
 
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
 		
-#endif // HAVE_PAGLIB
         static void registerFactory();
-#ifdef HAVE_PAGLIB
 
     protected:
         int wIn;
@@ -82,7 +78,16 @@ namespace flopoco {
         void identifyOutputConnections(PAGSuite::adder_graph_base_node_t* node, map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap);
         void printAdditionalNodeInfo(map<PAGSuite::adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE *> &infoMap );
 
-#endif // HAVE_PAGLIB
     };
 }//namespace
+
+#else
+namespace flopoco {
+    class IntConstMultShiftAdd : public Operator {
+    public:
+        static void registerFactory();
+		}
+}
+#endif // defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
+
 #endif

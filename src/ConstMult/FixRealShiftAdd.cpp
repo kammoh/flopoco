@@ -23,7 +23,7 @@ I don't really understand
 */
 #include "FixRealShiftAdd.hpp"
 
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 
 #include "pagsuite/types.h"
@@ -579,13 +579,7 @@ namespace flopoco{
 	}
 
 
-}//namespace
-#endif // defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
-
-namespace flopoco {
-	void flopoco::FixRealShiftAdd::registerFactory()
-	{
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+	void flopoco::FixRealShiftAdd::registerFactory()	{
 		UserInterface::add(
 				"FixRealShiftAdd",
 				"Table based real multiplier. Output size is computed",
@@ -601,9 +595,13 @@ namespace flopoco {
 				FixRealShiftAdd::parseArguments,
 				FixRealShiftAdd::unitTest
 		);
-#endif //#defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 	}
 }//namespace
+#else // we need the factory but we need it to be empty
+namespace flopoco{
+	void flopoco::FixRealShiftAdd::registerFactory()	{};
+}	
+#endif //#defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
 
 
