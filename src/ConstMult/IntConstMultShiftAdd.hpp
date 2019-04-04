@@ -86,7 +86,7 @@ namespace flopoco {
     class IntConstMultShiftAdd : public Operator {
     public:
         static void registerFactory();
-		}
+		};
 }
 #endif // defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
