@@ -93,7 +93,7 @@ namespace flopoco{
 	class FixRealShiftAdd	{
 	public:
 		static void registerFactory();
-	}:
+	};
 }
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
