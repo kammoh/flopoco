@@ -15,13 +15,13 @@ svn checkout  https://digidev.digi.e-technik.uni-kassel.de/home/svn/pagsuite/
 
 cd pagsuite/trunk/paglib && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
 
-cd pagsuite/trunk/rpag  && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
-
 cd pagsuite/trunk/oscm  && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
+
+cd pagsuite/trunk/rpag  && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
 
 #Finally FloPoCo itself, 
 git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git 
-cd flopoco && mkdir build && cd build && cmake -DSCALP_PREFIX_DIR="$BASEDIR/scalp/trunk/" .. && make &&  cd $BASEDIR
+cd flopoco && mkdir build && cd build && cmake -DSCALP_PREFIX_DIR="$BASEDIR/scalp/trunk/" .. && make-j2 &&  cd $BASEDIR
 
 # build the html documentation in doc/web. 
 cd flopoco/build
