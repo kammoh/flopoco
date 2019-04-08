@@ -11,7 +11,13 @@ git clone https://scm.gforge.inria.fr/anonscm/git/metalibm/wcpg.git && cd wcpg &
 svn checkout https://digidev.digi.e-technik.uni-kassel.de/home/svn/scalp/ && cd scalp/trunk && mkdir build && cd build && cmake -DUSE_LPSOLVE=ON -DLPSOLVE_LIBRARIES="/usr/lib/lp_solve/liblpsolve55.so" -DLPSOLVE_INCLUDE_DIRS="/usr/include/" .. && make && cd $BASEDIR
 
 # PAGSuite for advanced shift-and-add SCM and MCM operators
-svn checkout  https://digidev.digi.e-technik.uni-kassel.de/home/svn/pagsuite/ && cd pagsuite/trunk/paglib && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
+svn checkout  https://digidev.digi.e-technik.uni-kassel.de/home/svn/pagsuite/
+
+cd pagsuite/trunk/paglib && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
+
+cd pagsuite/trunk/rpag  && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
+
+cd pagsuite/trunk/oscm  && mkdir build && cd build && cmake .. && make -j2 && sudo make install  &&  cd $BASEDIR
 
 #Finally FloPoCo itself, 
 git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git 
