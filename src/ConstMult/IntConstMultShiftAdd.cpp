@@ -1,7 +1,6 @@
-// general c++ library for manipulating streams
 #include "IntConstMultShiftAdd.hpp"
 
-#ifdef HAVE_PAGLIB
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include <iostream>
 #include <sstream>
@@ -896,7 +895,7 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 namespace flopoco {
     void flopoco::IntConstMultShiftAdd::registerFactory()
     {
-#ifdef HAVE_PAGLIB
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
       UserInterface::add( "IntConstMultShiftAdd", // name
                           "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
                           "ConstMultDiv", // category, from the list defined in UserInterface.cpp
@@ -912,6 +911,6 @@ namespace flopoco {
                           "",
                           IntConstMultShiftAdd::parseArguments
       );
-#endif // HAVE_PAGLIB
+#endif // HAVE_SCALP and HAVE_PAGLIB
     }
 }//namespace

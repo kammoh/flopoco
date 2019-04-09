@@ -1,7 +1,7 @@
 #ifndef FIXREALSHIFTADD_HPP
 #define FIXREALSHIFTADD_HPP
 
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include "../Operator.hpp"
 #include "../Table.hpp"
@@ -11,7 +11,6 @@
 #include "pagsuite/adder_graph.h"
 
 namespace flopoco{
-#define NEWTABLEINTERFACE 1 // transitional, remove the old table interface at some point
 	class FixRealShiftAdd : public Operator
 	{
 	public:
@@ -86,15 +85,16 @@ namespace flopoco{
 
 	protected:
 		bool computeAdderGraph(PAGSuite::adder_graph_t &adderGraph, string &adderGraphStr, PAGSuite::int_t coefficient);
+	};
+}
 
 #else
-	namespace flopoco{
-	class FixRealShiftAdd
-	{
+namespace flopoco{
+	class FixRealShiftAdd	{
 	public:
 		static void registerFactory();
-#endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
-};
+	};
 }
+#endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
 #endif
