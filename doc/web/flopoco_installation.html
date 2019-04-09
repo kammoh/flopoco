@@ -71,12 +71,13 @@ You are therefore encouraged to download one of these, install it, then recompil
 
 <h4>Unstable git master version</h4>
 
-<p> See <a href="install_scripts/install-plain-gitmaster-on-bionic64.sh"> the install script </a>.
-	It was written for ubuntu 18.04 (bionic), and you can install it in a virtual machine using Vagrant as follows:
+<p> See <a href="install_scripts/install-plain-gitmaster-on-bionic64.sh"> the install script for the plain version</a>, or <a href="install_scripts/install-full-gitmaster-on-bionic64.sh"> the install script for the full version with all possible optional dependencies</a>.
+	These scripts are written for ubuntu 18.04 (bionic).
+	You can install it in a virtual machine using Vagrant as follows:
 </p>	
 
 <p><kbd>
-		vagrant init ubuntu/bionic64	&&	vagrant up
+		vagrant init ubuntu/bionic64	&&	vagrant up  
 <br>
   		vagrant ssh
 </kbd></p>
@@ -87,13 +88,13 @@ You are therefore encouraged to download one of these, install it, then recompil
 <br>
   	sh install-plain-gitmaster-on-bionic64.sh
 </kbd></p>
-To install the full thing with all the possible dependencies, replace the two last lines with
+To install all the possible dependencies, replace the two last lines with
 <p><kbd>
   		wget http://flopoco.gforge.inria.fr/install_scripts/install-full-gitmaster-on-bionic64.sh
 <br>
   	sh install-full-gitmaster-on-bionic64.sh
 </kbd></p>
-
+Your mileage may vary, but these scripts provide a good starting point.
 
 <h4>Version 4.1.2, the last one with the old pipelining framework</h4>
 
