@@ -10,6 +10,7 @@ TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMult
 
 void TilingStrategy::printSolution(ofstream &outstream)
 {
+    cerr << "Dulping multiplier schema in multiplier.tex\n";
     outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";
     outstream << "\\draw[thick] (0, 0) rectangle (" << wX << ", " << wY << ");\n";
     for (size_t i = 0 ; i < static_cast<size_t>(wY) ; ++i) {
@@ -25,8 +26,9 @@ void TilingStrategy::printSolution(ofstream &outstream)
         int ystart = coordinates.second;
         int xend = xstart + static_cast<int>(parametrization.getXWordSize());
         int yend = ystart + static_cast<int>(parametrization.getYWordSize());
-        outstream << "\\draw (" << xstart << ", " << ystart << ") rectangle (" <<
+        outstream << "\\draw[fill=gray, fill opacity=0.3] (" << xstart << ", " << ystart << ") rectangle (" <<
                      xend << ", " << yend << ");\n";
+        cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getXWordSize() << ", " << parametrization.getYWordSize() << ").\n";
     }
     outstream << "\\end{tikzpicture}\n\\end{document}\n";
 }
