@@ -91,7 +91,7 @@ namespace flopoco {
 										getTarget()->adderDelay(param0+1),  // contribution to the critical path of this VHDL operation
 										"T",                                // signal name (will be returned by declare() and placed in the vhdl stream)
 										param0+1)                           // signal size, in bits
-				 << " <= ('0' & X) + ('O' & Y);" << endl;
+				 << " <= ('0' & X) + ('0' & Y);" << endl;
 		vhdl << tab << declare(getTarget()->adderDelay(param0+2), "R",param0+2) << " <=  ('0' & T) + (\"00\" & Z);" << endl;
 
 		addComment("first put the most significant bit of the result into R"); // addComment for small left-aligned comment
