@@ -1,7 +1,7 @@
 #ifndef INTCONSTMULTOPT_HPP
 #define INTCONSTMULTOPT_HPP
 
-#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
+#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM) && defined(HAVE_SCALP)
 
 #include <vector>
 #include <sstream>
