@@ -853,10 +853,36 @@ namespace flopoco{
 
 
 
+	
 	OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int lsb;
 		UserInterface::parseInt(args, "lsb", &lsb); 
 		return new FixSinCos(parentOp, target, -lsb); // TODO we want to expose the constructor parameters in the new  interface, so this "-" is a bug
+	}
+
+
+	TestList FixSinCos::unitTest(int index)	{
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+
+			for(int w=5; w<24; w++) {
+				paramList.push_back(make_pair("lsb",to_string(-w)));
+				if(w<17)
+					paramList.push_back(make_pair("TestBench n=","-2"));			
+				testStateList.push_back(paramList);
+				paramList.clear();
+			}
+		}
+		else     
+		{
+				// finite number of random test computed out of index
+			// TODO
+		}	
+
+		return testStateList;
 	}
 
 	void FixSinCos::registerFactory(){
@@ -866,7 +892,8 @@ namespace flopoco{
 											 "", // seeAlso
 											 "lsb(int): weight of the LSB of the input and outputs",
 											 "For a fixed-point 2's complement input x in [-1,1[, calculates (1-2^(lsbIn))*{sin,cos}(pi*x) using a table- and multiplier-based technique. <br>For more details, see <a href=\"bib/flopoco.html#DinIstSer2013-HEART-SinCos\">this article</a>.",
-											 FixSinCos::parseArguments
+											 FixSinCos::parseArguments,
+											 FixSinCos::unitTest
 											 ) ;
 	
 	}

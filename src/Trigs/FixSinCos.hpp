@@ -45,6 +45,7 @@ namespace flopoco{
 		/** Factory register method */ 
 		static void registerFactory();
 	
+		static TestList unitTest(int index);
 
 	private:
 		int w;
