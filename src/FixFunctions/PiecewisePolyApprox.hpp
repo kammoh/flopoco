@@ -65,6 +65,26 @@ namespace flopoco{
 		 */
 		sollya_obj_t buildSubIntervalFunction(sollya_obj_t fS, int alpha, int i);
 
+		/**
+		 * a local function to open the cache file, and create it if necessary
+		 * @param cacheFileName the name of the cache file
+		 */
+		void openCacheFile(string cacheFileName);
+
+		/**
+		 * a local function to write the polynomials' parameters to the cache file
+		 * @param cacheFileName the name of the cache file
+		 */
+		void writeToCacheFile(string cacheFileName);
+
+		/**
+		 * a local function to read the polynomials' parameters from the cache file
+		 * @param cacheFileName the name of the cache file
+		 * @nbIntervals number of intervals, used in build() function
+		 */
+		void readFromCacheFile(string cacheFileName, int *nbIntervals);
+
+
 		FixFunction *f;                    /**< The function to be approximated */
 		double targetAccuracy;             /**< please build an approximation at least as accurate as that */
 
@@ -72,6 +92,7 @@ namespace flopoco{
 		string uniqueName_;                /**< useful only to enable same kind of reporting as for FloPoCo operators. */
 		bool needToFreeF;                  /**< in an ideal world, this should not be needed */
 
+		fstream cacheFile;                 /**< file storing the cached parameters for the polynomials */
 	};
 
 }

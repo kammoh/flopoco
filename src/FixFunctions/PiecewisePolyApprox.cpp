@@ -95,20 +95,10 @@ namespace flopoco{
 		ostringstream cacheFileName;
 		cacheFileName << "PiecewisePoly_"<<vhdlize(f->description) << "_" << degree << "_" << targetAccuracy << ".cache";
 
-		// cerr << cacheFileName.str() <<endl<<endl;
-		// Test existence of cache file
-		fstream file;
-		file.open(cacheFileName.str().c_str(), ios::in);
+		// Test existence of cache file, create it if necessary
+		openCacheFile(cacheFileName.str());
 
-		// check for bogus .cache file
-		if(file.is_open() && file.peek() == std::ifstream::traits_type::eof())
-		{
-			file.close();
-			std::remove(cacheFileName.str().c_str());
-			file.open(cacheFileName.str().c_str(), ios::in); // of course this one will fail
-		}
-
-		if(!file.is_open()){
+		if(!cacheFile.is_open()){
 			//********************** Do the work, then write the cache *********************
 			sollya_obj_t fS = f->fS; // no need to free this one
 			sollya_obj_t rangeS;
@@ -248,58 +238,15 @@ namespace flopoco{
 			// TODO? In the previous loop we could also check if one of the coeffs is always positive or negative, and optimize generated code accordingly
 
 			// Write the cache file
-			REPORT(INFO, "Writing to cache file: " << cacheFileName.str());
-			file.open(cacheFileName.str().c_str(), ios::out);
-			file << "Polynomial data cache for " << cacheFileName.str() << endl;
-			file << "Erasing this file is harmless, but do not try to edit it." <<endl;
-			file << degree <<endl;
-			file << alpha <<endl;
-			file << LSB <<endl;
-			for (int j=0; j<=degree; j++) {
-				file << MSB[j] << endl;
-			}
-			file << approxErrorBound << endl;
-			// now the coefficients themselves
-			for (int i=0; i<(1<<alpha); i++) {
-				//				file << poly[i] -> f -> sollyaString << endl;
-				for (int j=0; j<=degree; j++) {
-					file <<  poly[i] -> coeff[j] -> getBitVectorAsMPZ() << endl;
-				}
-			}
+			writeToCacheFile(cacheFileName.str());
+
 			sollya_lib_clear_obj(rangeS);
 		}
-
-		else {
+		else
+		{
 			REPORT(INFO, "Polynomial data cache found: " << cacheFileName.str());
 			//********************** Just read the cache *********************
-			string line;
-			getline(file, line); // ignore the first line which is a comment
-			getline(file, line); // ignore the second line which is a comment
-			file >> degree;
-			file >> alpha;
-			nbIntervals=1<<alpha;
-			file >> LSB;
-
-			for (int j=0; j<=degree; j++) {
-				int msb;
-				file >> msb;
-				MSB.push_back(msb);
-			}
-
-			file >> approxErrorBound;
-
-			for (int i=0; i<(1<<alpha); i++) {
-				//				file << sollyaString;
-				vector<mpz_class> coeff;
-				for (int j=0; j<=degree; j++) {
-					mpz_class c;
-					file >> c;
-					coeff.push_back(c);
-				}
-				BasicPolyApprox* p = new BasicPolyApprox(degree,MSB,LSB,coeff);
-				//				p->f = new FixFunction(sollyaString, true);
-				poly.push_back(p);
-			}
+			readFromCacheFile(cacheFileName.str(), &nbIntervals);
 		} // end if cache
 
 		// Check if all the coefficients of a given degree are of the same sign
@@ -339,6 +286,81 @@ namespace flopoco{
 		BasicPolyApprox* p = poly[i];
 		FixConstant* c = p->coeff[d];
 		return c->getBitVectorAsMPZ();
+	}
+
+
+	void PiecewisePolyApprox::openCacheFile(string cacheFileName)
+	{
+		cacheFile.open(cacheFileName.c_str(), ios::in);
+
+		// check for bogus .cache file
+		if(cacheFile.is_open() && cacheFile.peek() == std::ifstream::traits_type::eof())
+		{
+			cacheFile.close();
+			std::remove(cacheFileName.c_str());
+			cacheFile.open(cacheFileName.c_str(), ios::in); // of course this one will fail
+		}
+	}
+
+
+	void PiecewisePolyApprox::writeToCacheFile(string cacheFileName)
+	{
+		cacheFile.open(cacheFileName.c_str(), ios::out);
+
+		cacheFile << "Polynomial data cache for " << cacheFileName << endl;
+		cacheFile << "Erasing this file is harmless, but do not try to edit it." <<endl;
+
+		cacheFile << degree <<endl;
+		cacheFile << alpha <<endl;
+		cacheFile << LSB <<endl;
+
+		for (int j=0; j<=degree; j++) {
+			cacheFile << MSB[j] << endl;
+		}
+
+		cacheFile << approxErrorBound << endl;
+
+		// now write the coefficients themselves
+		for(int i=0; i<(1<<alpha); i++)
+		{
+			for (int j=0; j<=degree; j++)
+			{
+				cacheFile <<  poly[i] -> coeff[j] -> getBitVectorAsMPZ() << endl;
+			}
+		}
+	}
+
+
+	void PiecewisePolyApprox::readFromCacheFile(string cacheFileName, int *nbIntervals)
+	{
+		string line;
+
+		getline(cacheFile, line); // ignore the first line which is a comment
+		getline(cacheFile, line); // ignore the second line which is a comment
+
+		cacheFile >> degree;
+		cacheFile >> alpha;
+		*nbIntervals = 1<<alpha;
+		cacheFile >> LSB;
+
+		for (int j=0; j<=degree; j++) {
+			int msb;
+			cacheFile >> msb;
+			MSB.push_back(msb);
+		}
+
+		cacheFile >> approxErrorBound;
+
+		for (int i=0; i<(1<<alpha); i++) {
+			vector<mpz_class> coeff;
+			for (int j=0; j<=degree; j++) {
+				mpz_class c;
+				cacheFile >> c;
+				coeff.push_back(c);
+			}
+			BasicPolyApprox* p = new BasicPolyApprox(degree,MSB,LSB,coeff);
+			poly.push_back(p);
+		}
 	}
 
 
