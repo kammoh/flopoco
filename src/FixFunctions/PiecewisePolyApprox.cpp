@@ -75,29 +75,30 @@ namespace flopoco{
 	/** a local function to build g_i(x) = f(2^(-alpha-1)*x + i*2^(-alpha) + 2^(-alpha-1)) defined on [-1,1] */
 	sollya_obj_t PiecewisePolyApprox::buildSubIntervalFunction(sollya_obj_t fS, int alpha, int i){
 		stringstream s;
+
 		s << "(1b-" << alpha+1 << ")*x + ("<< i << "b-" << alpha << " + 1b-" << alpha+1 << ")";
 		string ss = s.str(); // do not use c_str directly on the stringstream, it is too transient (?)
 		sollya_obj_t newxS = sollya_lib_parse_string(ss.c_str());
 		sollya_obj_t giS = sollya_lib_substitute(fS,newxS);
+
 		sollya_lib_clear_obj(newxS);
+
 		return giS;
 	}
 #endif
 
 
-
-
 	// split into smaller and smaller intervals until the function can be approximated by a polynomial of degree given by degree.
-	void PiecewisePolyApprox::build() {
-		int nbIntervals;
-
+	void PiecewisePolyApprox::build()
+	{
 		ostringstream cacheFileName;
 		cacheFileName << "PiecewisePoly_"<<vhdlize(f->description) << "_" << degree << "_" << targetAccuracy << ".cache";
 
 		// Test existence of cache file, create it if necessary
 		openCacheFile(cacheFileName.str());
 
-		if(!cacheFile.is_open()){
+		if(!cacheFile.is_open())
+		{
 			//********************** Do the work, then write the cache *********************
 			sollya_obj_t fS = f->fS; // no need to free this one
 			sollya_obj_t rangeS;
@@ -110,9 +111,10 @@ namespace flopoco{
 			// Limit alpha to 24, because alpha will be the number of bits input to a table
 			// it will take too long before that anyway
 			bool alphaOK;
-			for (alpha=0; alpha<24; alpha++) {
-				nbIntervals=1<<alpha;
-				alphaOK=true;
+			for (alpha=0; alpha<24; alpha++)
+			{
+				nbIntervals = 1<<alpha;
+				alphaOK = true;
 				REPORT(DETAILED, " Testing alpha=" << alpha );
 				for (int i=0; i<nbIntervals; i++) {
 					// The worst case is typically on the left (i==0) or on the right (i==nbIntervals-1).
@@ -141,6 +143,7 @@ namespace flopoco{
 				if (alphaOK)
 					break;
 			} // end for loop on alpha
+
 			if (alphaOK)
 				REPORT(INFO, "Found alpha=" << alpha);
 
@@ -157,7 +160,6 @@ namespace flopoco{
 			int lsbAttemptsMax = intlog2(degree)+1;
 			int lsbAttempts=0; // a counter of attempts to move the LSB down, caped by lsbAttemptsMax
 			// bool a0Increased=false; // before adding LSB bits to everybody we try to add them to a0 only.
-
 
 			bool success=false;
 			while(!success) {
@@ -197,7 +199,6 @@ namespace flopoco{
 
 				} // end for loop on i
 
-
 				if (approxErrorBound < targetAccuracy) {
 					REPORT(INFO, " *** Success! Final approxErrorBound=" << approxErrorBound << "  is smaller than target accuracy: " << targetAccuracy  );
 					success=true;
@@ -225,8 +226,8 @@ namespace flopoco{
 				}
 			} // end while(!success)
 
-
 			// Now we need to resize all the coefficients of degree i to the largest one
+			// TODO? we could also check if one of the coeffs is always positive or negative, and optimize generated code accordingly
 			for (int i=0; i<nbIntervals; i++) {
 				for (int j=0; j<=degree; j++) {
 					// REPORT(DEBUG "Resizing MSB of coeff " << j << " of poly " << i << " : from " << poly[i] -> coeff[j] -> MSB << " to " <<  MSB[j]);
@@ -234,18 +235,18 @@ namespace flopoco{
 					// REPORT(DEBUG, "   Now  " << poly[i] -> coeff[j] -> MSB);
 				}
 			}
-			// TODO? In the previous loop we could also check if one of the coeffs is always positive or negative, and optimize generated code accordingly
 
 			// Write the cache file
 			writeToCacheFile(cacheFileName.str());
 
+			//cleanup the sollya objects
 			sollya_lib_clear_obj(rangeS);
 		}
 		else
 		{
 			REPORT(INFO, "Polynomial data cache found: " << cacheFileName.str());
 			//********************** Just read the cache *********************
-			readFromCacheFile(cacheFileName.str(), &nbIntervals);
+			readFromCacheFile(cacheFileName.str());
 		} // end if cache
 
 		// Check if all the coefficients of a given degree are of the same sign
@@ -258,7 +259,7 @@ namespace flopoco{
 #endif
 
 		// A bit of reporting
-		createPolynomialsReport(nbIntervals);
+		createPolynomialsReport();
 
 	}
 
@@ -312,7 +313,7 @@ namespace flopoco{
 	}
 
 
-	void PiecewisePolyApprox::readFromCacheFile(string cacheFileName, int *nbIntervals)
+	void PiecewisePolyApprox::readFromCacheFile(string cacheFileName)
 	{
 		string line;
 
@@ -321,7 +322,7 @@ namespace flopoco{
 
 		cacheFile >> degree;
 		cacheFile >> alpha;
-		*nbIntervals = 1<<alpha;
+		nbIntervals = 1<<alpha;
 		cacheFile >> LSB;
 
 		for (int j=0; j<=degree; j++) {
@@ -360,7 +361,7 @@ namespace flopoco{
 	}
 
 
-	void PiecewisePolyApprox::createPolynomialsReport(int nbIntervals)
+	void PiecewisePolyApprox::createPolynomialsReport()
 	{
 		int totalOutputSize;
 

@@ -82,7 +82,7 @@ namespace flopoco{
 		 * @param cacheFileName the number of intervals the domain is split into
 		 * @nbIntervals number of intervals, used in build() function
 		 */
-		void readFromCacheFile(string cacheFileName, int *nbIntervals);
+		void readFromCacheFile(string cacheFileName);
 
 		/**
 		 * check whether all the coefficients of a given degree are of the same sign
@@ -93,7 +93,7 @@ namespace flopoco{
 		 * a local function to report on the parameters of the polynomials
 		 * @param nbIntervals the number of intervals the domain is split into
 		 */
-		void createPolynomialsReport(int nbIntervals);
+		void createPolynomialsReport();
 
 
 		FixFunction *f;                    /**< The function to be approximated */
@@ -104,6 +104,7 @@ namespace flopoco{
 		bool needToFreeF;                  /**< in an ideal world, this should not be needed */
 
 		fstream cacheFile;                 /**< file storing the cached parameters for the polynomials */
+		int nbIntervals;                   /**< the total number of intervals the domain is split into */
 	};
 
 }
