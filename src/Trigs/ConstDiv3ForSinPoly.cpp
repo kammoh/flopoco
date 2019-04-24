@@ -30,81 +30,65 @@ using namespace std;
 
 namespace flopoco{
 
-	ConstDiv3ForSinPoly::EuclideanDiv3Table::EuclideanDiv3Table(Target* target, int d_, int alpha_, int gamma_, int delta_, bool lastTable_) :
+	vector<mpz_class> ConstDiv3ForSinPoly::buildEuclideanDiv3Table(int delta, bool lastTable)
 		/* input on alpha+gamma bits: alpha from the number, gamma from the pervious remainder */
 		/* computations on alpha+gamma+nbZeros bits */
 		/* output on alpha+2*gamma*/
 		/* maximum value in the table: 101 - 10 from the pervious remainder, 1 from the current digit being processed */
-		Table(target, alpha_+gamma_, (lastTable_ ? (alpha_-1) : alpha_)*(1+delta_)+gamma_+(lastTable_ ? 1 : 0), 0, ((d_-1)<<alpha_)+oneGenerator(alpha_), 1),
-				d(d_), alpha(alpha_), gamma(gamma_), delta(delta_), lastTable(lastTable_)
 	{
-		setCopyrightString("Florent de Dinechin, Matei Istoan (2013)");
-
-		ostringstream name;
-
-		srcFileName = "ConstDiv3ForSinPoly::EuclideanDiv3Table";
-		name << "EuclideanDiv3Table_" << d << "_" << alpha << "_" << delta << "zeros" << (lastTable ? "_lastTable" : "");
-		setNameWithFreqAndUID(name.str());
-	};
-
-
-	mpz_class ConstDiv3ForSinPoly::EuclideanDiv3Table::function(int x)
-	{
-		// machine integer arithmetic should be safe here
-		//	getting r_{1}r_{0}x_{k}x_{k-1}...x_{0} as input, actually will work with r_{1}r_{0}x_{k}00x_{k-1}...00x_{0} (delta zeros)
-		if((x < 0) || (x >= (1<<(alpha+gamma))))
-		{
-			ostringstream e;
-			e << "ERROR in ConstDiv3ForSinPoly::EuclideanDiv3Table::function, argument out of range" <<endl;
-			throw e.str();
-		}
-
-		// the vector containing the digits of the number (MSB of number is on position 0)
-		list<char> digitVector;
-		int copyX, digit, trueX;
-
-		copyX = x;
-		while(copyX > 0)
-		{
-			digit = copyX & 1;
-			digitVector.push_front(digit);
-			copyX  = (copyX >> 1);
-		}
-		for(int i=digitVector.size(); i<alpha+gamma; i++)
-			digitVector.push_front(0);
-
-		// get the actual output
-		//	first, the two remainder bits
-		trueX = 0;
-		if(!digitVector.empty())
-		{
-			trueX = digitVector.front();
-			digitVector.pop_front();
-		}
-		if(!digitVector.empty())
-		{
-			trueX = (trueX<<1) + digitVector.front();
-			digitVector.pop_front();
-		}
+		vector<mpz_class> result;
+		for(int x=0; x < (1<<(alpha+gamma)); x++) {
+			// machine integer arithmetic should be safe here
+			//	getting r_{1}r_{0}x_{k}x_{k-1}...x_{0} as input, actually will work with r_{1}r_{0}x_{k}00x_{k-1}...00x_{0} (delta zeros)
+			if((x < 0) || (x >= (1<<(alpha+gamma))))
+				{
+					ostringstream e;
+					e << "ERROR in ConstDiv3ForSinPoly::EuclideanDiv3Table::function, argument out of range" <<endl;
+					throw e.str();
+				}
+			
+			// the vector containing the digits of the number (MSB of number is on position 0)
+			list<char> digitVector;
+			int copyX, digit, trueX;
+			
+			copyX = x;
+			while(copyX > 0)
+				{
+					digit = copyX & 1;
+					digitVector.push_front(digit);
+					copyX  = (copyX >> 1);
+				}
+			for(int i=digitVector.size(); i<alpha+gamma; i++)
+				digitVector.push_front(0);
+			
+			// get the actual output
+			//	first, the two remainder bits
+			trueX = 0;
+			if(!digitVector.empty()) {
+					trueX = digitVector.front();
+					digitVector.pop_front();
+			}
+			if(!digitVector.empty()) {
+				trueX = (trueX<<1) + digitVector.front();
+				digitVector.pop_front();
+			}
 		//	now the rest of the digits
-		while(!digitVector.empty())
-		{
+		while(!digitVector.empty())	{
 			trueX = (trueX<<1) + digitVector.front();
 			if(!(lastTable && digitVector.size()==1))
 				trueX = (trueX << delta);
-
+			
 			digitVector.pop_front();
 		}
 
 		// perform the computations
 		int q = trueX / d;
 		int r = trueX - q*d;
-
-		int result = (q<<gamma) + r;
-
-		return mpz_class(result);
-	};
-
+				
+		result.push_back((q<<gamma) + r);
+		}
+		return result;
+	}
 
 
 	int ConstDiv3ForSinPoly::quotientSize()
@@ -119,7 +103,7 @@ namespace flopoco{
 
 
 
-	ConstDiv3ForSinPoly::ConstDiv3ForSinPoly(Target* target, int wIn_, int d_, int alpha_, int nbZeros_,  bool remainderOnly_, map<string, double> inputDelays)
+	ConstDiv3ForSinPoly::ConstDiv3ForSinPoly(Operator* parentOp, Target* target, int wIn_, int d_, int alpha_, int nbZeros_,  bool remainderOnly_)
 		: Operator(target), wIn(wIn_), d(d_), remainderOnly(remainderOnly_), alpha(alpha_), nbZeros(nbZeros_)
 	{
 		setCopyrightString("Florent de Dinechin, Matei Istoan (2013)");
@@ -158,8 +142,6 @@ namespace flopoco{
 		//set the quotient size
 		qSize = (1+nbZeros)*(wIn-1) + 1;
 
-		//manage the pipeline
-		setCriticalPath(getMaxInputDelays(inputDelays));
 
 		//create the input
 		addInput("X", wIn);
@@ -177,9 +159,9 @@ namespace flopoco{
 		REPORT(INFO, "Architecture consists of k=" << k  <<  " levels.");
 		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  k=" << k  <<  "  qSize=" << qSize);
 
-		EuclideanDiv3Table* table;
-		table = new EuclideanDiv3Table(target, d, alpha, gamma, nbZeros, false);
-		useSoftRAM(table);
+		// EuclideanDiv3Table* table;
+		// table = new EuclideanDiv3Table(target, d, alpha, gamma, nbZeros, false);
+		// useSoftRAM(table);
 		//double tableDelay = table->getOutputDelay("Y");
 
 		string ri, xi, ini, outi, qi;
@@ -190,9 +172,6 @@ namespace flopoco{
 		//all bits except the last
 		for (int i=k-1; i>0; i--)
 		{
-			//manageCriticalPath(tableDelay);
-			manageCriticalPath(getTarget()->lutDelay());
-
 			xi = join("x", i);
 			if(i==k-1 && rem!=0)
 				// at the MSB, pad with 0es
@@ -207,29 +186,24 @@ namespace flopoco{
 
 			outi = join("out", i);
 
-			inPortMap(table, "X", ini);
-			outPortMap(table, "Y", outi);
-			vhdl << instance(table, join("table",i));
-
-			syncCycleFromSignal(outi);
-
+			//inPortMap(table, "X", ini);
+			//outPortMap(table, "Y", outi);
+			//vhdl << instance(table, join("table",i));
+			vector<mpz_class> tableContent = buildEuclideanDiv3Table(nbZeros, false);
+			Table::newUniqueInstance(this, ini, outi, tableContent, join("table",i), alpha+gamma, alpha*(1+nbZeros) + gamma);
+			//useSoftRAM(table);
+			
 			ri = join("r", i);
 			qi = join("q", i);
 			vhdl << tab << declare(qi, alpha*(1+nbZeros), true) << " <= " << outi << range(alpha*(1+nbZeros)+gamma-1, gamma) << ";" << endl;
 			vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl << endl;
-
-			syncCycleFromSignal(qi);
-			syncCycleFromSignal(ri);
 		}
 
 		//handle the last bit
 		{
-			table = new EuclideanDiv3Table(target, d, alpha, gamma, nbZeros, true);
-			useSoftRAM(table);
+			vector<mpz_class> tableContent = buildEuclideanDiv3Table(nbZeros, true);
 			//tableDelay = table->getOutputDelay("Y");
 
-			//manageCriticalPath(tableDelay);
-			manageCriticalPath(getTarget()->lutDelay());
 
 			xi = join("x", 0);
 			vhdl << tab << declare(xi, alpha, true) << " <= X" << range(alpha-1, 0) << ";" << endl;
@@ -239,19 +213,14 @@ namespace flopoco{
 
 			outi = join("out", 0);
 
-			inPortMap(table, "X", ini);
-			outPortMap(table, "Y", outi);
-			vhdl << instance(table, join("table", 0));
-
-			syncCycleFromSignal(outi);
+			Table::newUniqueInstance(this, ini, outi, tableContent, join("table",0), alpha+gamma, (alpha-1)*(1+nbZeros)+1 + gamma);
+			//useSoftRAM(table);
 
 			ri = join("r", 0);
 			qi = join("q", 0);
 			vhdl << tab << declare(qi, (alpha-1)*(1+nbZeros)+1, true) << " <= " << outi << range((alpha-1)*(1+nbZeros)+1+gamma-1, gamma) << ";" << endl;
 			vhdl << tab << declare(ri, gamma) << " <= " << outi << range(gamma-1, 0) << ";" << endl << endl;
 
-			syncCycleFromSignal(qi);
-			syncCycleFromSignal(ri);
 		}
 
 		if(!remainderOnly)
@@ -263,17 +232,13 @@ namespace flopoco{
 				vhdl << "q" << i << " & ";
 			vhdl << "q0;" << endl;
 
-			syncCycleFromSignal("tempQ");
-
 			vhdl << tab << "Q <= tempQ" << range(qSize-1, 0)  << ";" << endl;
 
-			getOutDelayMap()["Q"] = getCriticalPath();
 		}
 
 		// This ri is r_0
 		vhdl << tab << "R <= " << ri << ";" << endl;
 
-		getOutDelayMap()["R"] = getCriticalPath();
 	}
 
 	ConstDiv3ForSinPoly::~ConstDiv3ForSinPoly()

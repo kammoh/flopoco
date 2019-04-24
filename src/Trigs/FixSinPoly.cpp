@@ -27,11 +27,10 @@ namespace flopoco{
 	//		and not from the parameters given to the constructor
 
 	//standalone operator
-	FixSinPoly::FixSinPoly(Target* target, int msbIn_, int lsbIn_, bool truncated_, int msbOut_, int lsbOut_, bool signedInput_, map<string, double> inputDelays) :
-		Operator(target, inputDelays), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_), signedInput(signedInput_)
+	FixSinPoly::FixSinPoly(OperatorPtr parentOp, Target* target, int msbIn_, int lsbIn_, bool truncated_, int msbOut_, int lsbOut_, bool signedInput_) :
+		Operator(parentOp, target), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_), signedInput(signedInput_)
 	{
 		int indexMin, indexMax, wOutFull;
-		double maxCriticalPath = 0;
 
 		srcFileName="FixSinPoly";
 
@@ -82,10 +81,6 @@ namespace flopoco{
 
 		REPORT(DEBUG, "Adding the bits for X");
 
-		//manage the pipeline
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(getTarget()->localWireDelay());
-
 		//add the bits corresponding to sum_{i=imin}^imax(2^i*x_i)
 		indexMin = (truncated ? (lsbOut-g>lsbIn ? lsbOut-g : lsbIn) : lsbIn);
 		indexMax = msbIn;
@@ -112,27 +107,19 @@ namespace flopoco{
 			}
 		}
 
-		if(getCriticalPath() > maxCriticalPath)
-			maxCriticalPath = getCriticalPath();
 
 		REPORT(DEBUG, "Adding the bits for the first sum");
-
-		//manage the pipeline
-		setCycleFromSignal("X");
-		setCriticalPath(getMaxInputDelays(inputDelays));
-
 		//add the terms corresponding to sum_{i=imin}^imax(2^(3i-1)*x_i)
 		//	negated
 		ConstDiv3ForSinPoly *divider;
-		divider = new ConstDiv3ForSinPoly(target, wIn, 3, -1, 2, false,  inDelayMap("X", getCriticalPath())) ;
-		addSubComponent(divider);
+		// A unique instance without exposing the interface
+		schedule();
 		inPortMap (divider , "X", "X");
 		outPortMap(divider , "Q", "XZeroIntDiv3");
+		divider = new ConstDiv3ForSinPoly(this, target, wIn, 3, -1, 2, false) ;
 		vhdl << instance(divider , "Divider");
 
 		//manage the pipeline
-		syncCycleFromSignal("XZeroIntDiv3");
-		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		indexMax = ((msbIn-lsbIn+1)*3-2)-1;
 		indexMin = (truncated ? wOutFull-1-(msbIn-lsbOut+g) : 0);
@@ -140,7 +127,7 @@ namespace flopoco{
 		{
 			stringstream s;
 
-			vhdl << tab << declare(join("XZeroIntDiv3_inverted_", i)) << " <= not XZeroIntDiv3" << of(i) << ";" << endl;
+			vhdl << tab << declare(getTarget()->logicDelay(), join("XZeroIntDiv3_inverted_", i)) << " <= not XZeroIntDiv3" << of(i) << ";" << endl;
 
 			s << "XZeroIntDiv3_inverted_" << i;
 
@@ -150,15 +137,7 @@ namespace flopoco{
 				bitHeap->addConstantOneBit(j);
 		}
 
-		if(getCriticalPath() > maxCriticalPath)
-			maxCriticalPath = getCriticalPath();
-
 		REPORT(DEBUG, "Adding the bits for the second sum");
-
-		//manage the pipeline
-		setCycleFromSignal("X");
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		//add the terms corresponding to sum_i_j_imin^imax(2^(i+2j-1)*x_i*x_j)
 		//	negated
@@ -174,7 +153,7 @@ namespace flopoco{
 
 				stringstream s;
 
-				vhdl << tab << declare(join("X_temp_", (lsbIn<0 ? i-lsbIn : i), "_", (lsbIn<0 ? j-lsbIn : j)))
+				vhdl << tab << declare(getTarget()->logicDelay(), join("X_temp_", (lsbIn<0 ? i-lsbIn : i), "_", (lsbIn<0 ? j-lsbIn : j)))
 					<< " <= not (X" << of(lsbIn<0 ? i-lsbIn : i) << " and X" << of(lsbIn<0 ? j-lsbIn : j) << ");" << endl;
 
 				s << "X_temp_" << (lsbIn<0 ? i-lsbIn : i) << "_" << (lsbIn<0 ? j-lsbIn : j);
@@ -185,15 +164,8 @@ namespace flopoco{
 					bitHeap->addConstantOneBit(k);
 			}
 
-		if(getCriticalPath() > maxCriticalPath)
-			maxCriticalPath = getCriticalPath();
-
 		REPORT(DEBUG, "Adding the bits for the third sum");
 
-		//manage the pipeline
-		setCycleFromSignal("X");
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 
 		//add the terms corresponding to sum_i_j_k_imin^imax(2^(i+j+k)*x_i*x_j*x_k)
 		//	negated
@@ -208,7 +180,7 @@ namespace flopoco{
 					//i < j < k
 					stringstream s;
 
-					vhdl << tab << declare(join("X_temp2_", (lsbIn<0 ? i-lsbIn : i), "_", (lsbIn<0 ? j-lsbIn : j), "_", (lsbIn<0 ? k-lsbIn : k)))
+					vhdl << tab << declare(getTarget()->logicDelay(), join("X_temp2_", (lsbIn<0 ? i-lsbIn : i), "_", (lsbIn<0 ? j-lsbIn : j), "_", (lsbIn<0 ? k-lsbIn : k)))
 						<< " <= not (X" << of(lsbIn<0 ? i-lsbIn : i) << " and X" << of(lsbIn<0 ? j-lsbIn : j) << " and X" << of(lsbIn<0 ? k-lsbIn : k) << ");" << endl;
 
 					s << "X_temp2_" << (lsbIn<0 ? i-lsbIn : i) << "_" << (lsbIn<0 ? j-lsbIn : j) << "_" << (lsbIn<0 ? k-lsbIn : k);
@@ -219,36 +191,25 @@ namespace flopoco{
 						bitHeap->addConstantOneBit(l);
 				}
 
-		if(getCriticalPath() > maxCriticalPath)
-			maxCriticalPath = getCriticalPath();
-
 		//if needed add a bit at position g-1, for rounding
 		if(truncated)
 			bitHeap->addConstantOneBit(g-1);
 
-		//manage the pipeline
-		setCriticalPath(maxCriticalPath);
-
 		//compress the bitheap
-		bitHeap -> generateCompressorVHDL();
-
-		//manage the pipeline
-		syncCycleFromSignal(bitHeap->getSumName());
+		bitHeap -> startCompression();
 
 		//generate the final result
 		if(truncated)
 			vhdl << tab << "R" << " <= " << bitHeap-> getSumName() << range(wOut+g-1, g) << ";" << endl;
 		else
 			vhdl << tab << "R" << " <= " << bitHeap-> getSumName() << range(wOut-1, 0) << ";" << endl;
-
-		getOutDelayMap()["R"] = getCriticalPath();
 	}
 
 
 	//operator incorporated into a global compression
 	//	for use as part of a bigger operator
-	FixSinPoly::FixSinPoly(Operator* parentOp_, Target* target, Signal* multiplicandX, int msbIn_, int lsbIn_, int truncated_, int msbOut_, int lsbOut_, BitHeap* bitHeap_, bool signedInput_, map<string, double> inputDelays) :
-		Operator(target, inputDelays), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_),
+	FixSinPoly::FixSinPoly(Operator* parentOp_, Target* target, Signal* multiplicandX, int msbIn_, int lsbIn_, int truncated_, int msbOut_, int lsbOut_, BitHeap* bitHeap_, bool signedInput_) :
+		Operator(parentOp_, target), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_),
 		wIn(msbIn_-lsbIn+1), wOut(msbOut_-lsbOut+1), signedInput(signedInput_), bitHeap(bitHeap_), parentOp(parentOp_)
 	{
 		srcFileName="FixSinPoly";

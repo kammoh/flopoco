@@ -24,8 +24,6 @@ FixFunctionByMultipartiteTable
 PiecewisePolyApprox
 FixRealKCM
 FixRealShiftAdd
-TestBench
-Wrapper
 FPAdd
 FPAddSinglePathIEEE
 FPDiv
@@ -34,12 +32,18 @@ FixFIR
 FixHalfSine
 FixIIR
 Posit2FP
+
+FixSinCos
+
 Xilinx_GenericAddSub
 Xilinx_Comparator
 Xilinx_TernaryAdd_2State
 XilinxGPC
 XilinxFourToTwoCompressor
 TutorialOperator
+
+TestBench
+Wrapper
 
 FixComplexKCM
 IntConstMultShiftAdd

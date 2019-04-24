@@ -93,6 +93,9 @@ FixFunctions/PiecewisePolyApprox
 FixFunctions/FixFunctionByPiecewisePoly
 FixFunctions/Multipartite
 FixFunctions/FixFunctionByMultipartiteTable
+Trigs/ConstDiv3ForSinPoly
+Trigs/FixSinPoly
+Trigs/FixSinCos
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive
