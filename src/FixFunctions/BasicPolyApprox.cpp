@@ -82,7 +82,7 @@ namespace flopoco{
 
 
 	void BasicPolyApprox::initialize() {
-		srcFileName="BasicPolyApprox"; // should be somehow static but this is too much to ask me
+		srcFileName="BasicPolyApprox"; // should be somehow static but this is too much to ask me -> Matei: typeid() should solve this; note: the name is mangled, so some compiler-specific function to demangle the name is needed
 		fixedS = sollya_lib_fixed();
 		absoluteS = sollya_lib_absolute();
 	}
@@ -92,14 +92,14 @@ namespace flopoco{
 	BasicPolyApprox::~BasicPolyApprox()
 	{
 		// clear the Sollya constants
-	  sollya_lib_clear_obj(fixedS);
-	  sollya_lib_clear_obj(absoluteS);
+		sollya_lib_clear_obj(fixedS);
+		sollya_lib_clear_obj(absoluteS);
 
 		// clear the FixedFunction, only if we created it here
 		if(needToFreeF)	free(f);
 
 		// clear other attributes
-	  sollya_lib_clear_obj(polynomialS);
+		sollya_lib_clear_obj(polynomialS);
 		//	  sollya_lib_clear_obj(S);
 		if(coeff.size()!=0){
 			for (unsigned int i=0; i<coeff.size(); i++)
@@ -120,18 +120,32 @@ namespace flopoco{
 		sollya_obj_t targetAccuracyS = sollya_lib_constant_from_double(targetAccuracy);
 
 		// initial evaluation of the required degree
-		//guessdegree(f,I,eps,w,bound ) : (function, range, constant, function, constant) → range
+		// guessdegree function prototype
+		// 	guessdegree(f,I,eps,w,bound ) : (function, range, constant, function, constant) → range
+		// guessdegree function parameters
+		// 	f is the function to be approximated.
+	    // 	I is the interval where the function must be approximated.
+	    // 	eps is the maximal acceptable error.
+	    // 	w (optional) is a weight function. Default is 1.
+	    // 	bound (optional) is a bound on the degree. Default is currently 128.
+		// guessdegree function reyurn value
+		// 	returns an interval: for common cases, this interval is reduced to a single number (i.e. the minimal degree).
+		// 	But in certain cases, guessdegree does not succeed in finding the minimal degree.
+		// 	In such cases the returned interval is of the form [n,p] such that:
 		sollya_obj_t degreeIntervalS = sollya_lib_guessdegree(fS, rangeS, targetAccuracyS, NULL);
+
 		sollya_obj_t degreeInfS = sollya_lib_inf(degreeIntervalS);
 		sollya_obj_t degreeSupS = sollya_lib_sup(degreeIntervalS);
 		sollya_lib_get_constant_as_int(degreeInfP, degreeInfS);
 		sollya_lib_get_constant_as_int(degreeSupP, degreeSupS);
+
 		if(DETAILED <= UserInterface::verbose)
 			sollya_lib_printf("> BasicPolyApprox::guessDegree(): degree of poly approx should be in %b\n", degreeIntervalS);
-	  sollya_lib_clear_obj(targetAccuracyS);
+
+		sollya_lib_clear_obj(targetAccuracyS);
 		sollya_lib_clear_obj(degreeIntervalS);
-	  sollya_lib_clear_obj(degreeInfS);
-	  sollya_lib_clear_obj(degreeSupS);
+		sollya_lib_clear_obj(degreeInfS);
+		sollya_lib_clear_obj(degreeSupS);
 	}
 
 	OperatorPtr BasicPolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
@@ -147,7 +161,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "g", &g);
 
 		BasicPolyApprox *bpa = new BasicPolyApprox(f, ta, g, signedIn);
-		cout << "Computed degree is " << bpa->degree <<endl; 
+		cout << "Computed degree is " << bpa->degree <<endl;
 		cout << "Accuracy is " << bpa->approxErrorBound << " ("<< log2(bpa->approxErrorBound) << " bits)";
 
 		return NULL;
@@ -190,15 +204,15 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 		double coeffAccuracy = targetAccuracy;
 
 		if (addGuardBits>0) {
-			// the caller provided the number of bits to add in addGuardBitss
+			// the caller provided the number of bits to add in addGuardBits
 			for (int i=0; i<addGuardBits; i++)
 				coeffAccuracy /= 2;
 		}
 		else { // Make life harder for fpminimax
-			// Rationale: we have degree monomials. Although each of them can not be much more accurate than targetAccuracy, they can compensate each other 
+			// Rationale: we have degree monomials. Although each of them can not be much more accurate than targetAccuracy, they can compensate each other
 			coeffAccuracy *=degree;
 		}
-		
+
 		int initialLSB = ceil(log2(coeffAccuracy));
 		REPORT(DETAILED, "Initial LSB is " << initialLSB);
 
@@ -208,13 +222,13 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 		// now launch fpminimax, measure the approx error, and iterate if it fails
 		bool success=false;
 		int tryReducingLSB=0;
-		int maxAttemptsReducingLSB = 1 + ceil(log2(degree)); 
+		int maxAttemptsReducingLSB = 1 + ceil(log2(degree));
 		LSB = initialLSB;
 		while(not success) {
 
 			buildApproxFromDegreeAndLSBs();
 
-			// did we success in getting an accurate enough polynomial?
+			// did we succeed in getting an accurate enough polynomial?
 			if(approxErrorBound < targetAccuracy) {
 				REPORT(DETAILED, "Polynomial is accurate enough");
 				success=true;
@@ -247,7 +261,7 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 		} // exit from the while loop... hopefully
 
 		// Please leave the memory in the state you would like to find it when entering
-	  sollya_lib_clear_obj(degreeS);
+		sollya_lib_clear_obj(degreeS);
 	}
 
 
@@ -261,7 +275,7 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 
 		REPORT(DETAILED, "Trying to build coefficients with LSB=" << LSB);
 		// Build the list of coefficient LSBs for fpminimax
-		// Sollya library is a bit painful, it is safer just build a big string and parse it.
+		// Sollya library is a bit painful, it is safer to just build a big string and parse it.
 		ostringstream s;
 		s << "[|";
 		for(int i=0; i<=degree ; i++) {
@@ -269,11 +283,13 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 			if(i<degree) s<< ",";
 		}
 		s << "|]";
+
 		sollya_obj_t coeffSizeListS = sollya_lib_parse_string(s.str().c_str());
 		if(DETAILED <= UserInterface::verbose) {
 			sollya_lib_printf("> BasicPolyApprox::buildApproxFromDegreeAndLSBs:    fpminimax(%b, %b, %b, %b, %b, %b);\n",
 												fS, degreeS, coeffSizeListS, rangeS, fixedS, absoluteS);
 		}
+
 		// Tadaaa! After all this we may launch fpminimax
 		polynomialS = sollya_lib_fpminimax(fS, degreeS, coeffSizeListS, rangeS, fixedS, absoluteS, NULL);
 		sollya_lib_clear_obj(coeffSizeListS);
@@ -314,12 +330,8 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 
 		REPORT(DETAILED, "Polynomial accuracy is " << approxErrorBound);
 		// Please leave the memory in the state you would like to find it when entering
-	  sollya_lib_clear_obj(degreeS);
+		sollya_lib_clear_obj(degreeS);
 	}
-
-
-
-
 
 
 
@@ -365,7 +377,7 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 
 			sollya_lib_clear_obj(coeffS);
 			mpfr_clear(mpcoeff);
-	}
+		}
 
 		// printing debug string out of the final vector
 		ostringstream debugstring;
@@ -381,9 +393,9 @@ g(int)=-1: the number of guardbits added. Using -1 gives sensible default",
 			int lsb= coeff[i]->LSB;
 			int msb= coeff[i]->MSB;
 			debugstring <<  endl << "> coeff" << right << setw(2) << i << ": "
-									<< " (" << setw(3)<< msb << ", " << setw(3)<< lsb << ")   "
-									<< setw(bitwidth + lsb0-lsb) << coeff[i]->getBitVector()
-									<< "  " << setw(10) << printMPFR(coeff[i]->fpValue) ;
+					<< " (" << setw(3)<< msb << ", " << setw(3)<< lsb << ")   "
+					<< setw(bitwidth + lsb0-lsb) << coeff[i]->getBitVector()
+					<< "  " << setw(10) << printMPFR(coeff[i]->fpValue) ;
 		}
 		REPORT(DETAILED, debugstring.str());
 	}
