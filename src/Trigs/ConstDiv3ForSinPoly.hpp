@@ -35,6 +35,8 @@ namespace flopoco{
 		 * Euclidean division by d: X=dQ+R, which it returns as the bit string 
 		 * Q & R
 		 */ 
+		vector<mpz_class> buildEuclideanDiv3Table(int delta_, bool lastTable_);
+#if 0
 		class EuclideanDiv3Table: public Table 
 		{
 		public:
@@ -43,10 +45,9 @@ namespace flopoco{
 			int gamma;
 			int delta;
 			bool lastTable;
-			EuclideanDiv3Table(Target* target, int d_, int alpha_, int gamma_, int delta_, bool lastTable_);
 			mpz_class function(int x);
 		};
-
+#endif
 
 
 
@@ -57,7 +58,7 @@ namespace flopoco{
 		 * @param alpha The size of the chunk, or, use radix 2^alpha
 		 */
 
-		ConstDiv3ForSinPoly(Target* target, int wIn, int d=3, int alpha=-1, int nbZeros=0, bool remainderOnly=false, map<string, double> inputDelays = emptyDelayMap);
+		ConstDiv3ForSinPoly(Operator* parentOp, Target* target, int wIn, int d=3, int alpha=-1, int nbZeros=0, bool remainderOnly=false);
 		~ConstDiv3ForSinPoly();
 		
 		// Overloading the virtual functions of Operator

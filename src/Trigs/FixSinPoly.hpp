@@ -23,11 +23,11 @@ namespace flopoco{
 	{
 	public:
 
-		FixSinPoly(Target* target, int msbIn_, int lsbIn_, bool truncated = false, int msbOut_ = 0, int lsbOut_ = 0, bool signedInput_ = false, map<string, double> inputDelays = emptyDelayMap);
+		FixSinPoly(OperatorPtr parentOp, Target* target, int msbIn_, int lsbIn_, bool truncated = false, int msbOut_ = 0, int lsbOut_ = 0, bool signedInput_ = false);
 		
 		FixSinPoly(Operator* parentOp, Target* target, Signal* multiplicandX, int msbIn_, int lsbIn_, int truncated, int msbOut_, int lsbOut_,
 							 BitHeap* bitheap,
-							 bool signedInput_ = false, map<string, double> inputDelays = emptyDelayMap);
+							 bool signedInput_ = false);
 		~FixSinPoly();
 
 		// Overloading the virtual functions of Operator

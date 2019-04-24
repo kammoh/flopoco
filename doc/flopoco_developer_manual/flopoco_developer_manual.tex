@@ -219,8 +219,13 @@ The preferred method to use in such case is the \emph{newInstance()} method of O
 See \texttt{FPAddSinglePath} for an example of a large component that instantiates many sub-components (several \texttt{IntAdder}, \texttt{Shifter}, etc).
 
 \texttt{newInstance()} uses the factory-based user interface.
+It is common to need a table of pre-computed values.
+To get a unique instance of such a table,  first build the table content as a \verb!vector<mpz_class>!, then call \texttt{Table::newUniqueInstance()}.
+See examples in \texttt{Trigs/FixSinCos.cpp}.
+
 
 If for some reason you want to use a unique instance but don't want/need to expose a user interface for it, you just have to follow the same sequence of calls as you may find in \texttt{Table::newUniqueInstance()}.
+
 Beware, the order is important for the operator scheduling to work properly, and it has changed since version 5.0.
 
 \subsection{Sub-components: shared instances}

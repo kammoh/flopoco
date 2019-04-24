@@ -155,6 +155,19 @@ enum BitType : unsigned;
 
 
 		/**
+		 * @brief generate the VHDL for the bit heap.
+		 * Uses the compression strategy set by the user, or the one created by default.
+		 * To be called last by operators using BitHeap.
+		 */
+		void startCompression();
+
+		/**
+		 * @brief return the name of the compressed sum
+		 */
+		string getSumName();
+
+		
+		/**
 		 * @brief remove a bit from the bitheap.
 		 * @param weight  the weight of the bit to be removed
 		 * @param direction if dir==0 the bit will be removed from the beginning of the list
@@ -271,17 +284,6 @@ enum BitType : unsigned;
 		void mergeBitheap(BitHeap* bitheap);
 
 
-		/**
-		 * @brief generate the VHDL for the bit heap.
-		 * Uses the compression strategy set by the user, or the one created by default.
-		 * To be called last by operators using BitHeap.
-		 */
-		void startCompression();
-
-		/**
-		 * @brief return the name of the compressed sum
-		 */
-		string getSumName();
 
 		/**
 		 * @brief returns the name of the compressed sum, with the range (msb, lsb)

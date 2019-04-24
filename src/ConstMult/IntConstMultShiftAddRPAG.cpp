@@ -11,7 +11,7 @@
   All rights reserved.
 
 */
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include <iostream>
 #include <sstream>

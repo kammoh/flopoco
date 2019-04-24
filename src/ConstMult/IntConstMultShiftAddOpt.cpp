@@ -11,7 +11,7 @@
   All rights reserved.
 
 */
-#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
+#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM) && defined(HAVE_SCALP)
 
 #include <iostream>
 #include <sstream>
