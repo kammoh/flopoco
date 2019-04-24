@@ -79,10 +79,16 @@ namespace flopoco{
 
 		/**
 		 * a local function to read the polynomials' parameters from the cache file
-		 * @param cacheFileName the name of the cache file
+		 * @param cacheFileName the number of intervals the domain is split into
 		 * @nbIntervals number of intervals, used in build() function
 		 */
 		void readFromCacheFile(string cacheFileName, int *nbIntervals);
+
+		/**
+		 * a local function to report on the parameters of the polynomials
+		 * @param nbIntervals the number of intervals the domain is split into
+		 */
+		void createPolynomialsReport(int nbIntervals);
 
 
 		FixFunction *f;                    /**< The function to be approximated */
