@@ -85,6 +85,11 @@ namespace flopoco{
 		void readFromCacheFile(string cacheFileName, int *nbIntervals);
 
 		/**
+		 * check whether all the coefficients of a given degree are of the same sign
+		 */
+		void checkCoefficientsSign();
+
+		/**
 		 * a local function to report on the parameters of the polynomials
 		 * @param nbIntervals the number of intervals the domain is split into
 		 */

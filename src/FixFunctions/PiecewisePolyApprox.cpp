@@ -89,7 +89,6 @@ namespace flopoco{
 
 	// split into smaller and smaller intervals until the function can be approximated by a polynomial of degree given by degree.
 	void PiecewisePolyApprox::build() {
-
 		int nbIntervals;
 
 		ostringstream cacheFileName;
@@ -105,7 +104,7 @@ namespace flopoco{
 
 			rangeS  = sollya_lib_parse_string("[-1;1]");
 			// TODO test with [-1,1] which is the whole point of current refactoring.
-			// There needs to be a bit of logic here because rangeS should be [-1,1] by default to exploit signed arith,
+			// There needs to be a bit of logic here because rangeS should be [-1,1] by default to exploit signed arithmetic,
 			// except in the case when alpha=0 because then rangeS should be f->rangeS (and should not be freed)
 
 			// Limit alpha to 24, because alpha will be the number of bits input to a table
@@ -250,16 +249,8 @@ namespace flopoco{
 		} // end if cache
 
 		// Check if all the coefficients of a given degree are of the same sign
-		for (int j=0; j<=degree; j++) {
-			mpz_class mpzsign = (poly[0]->coeff[j]->getBitVectorAsMPZ()) >> (MSB[j]-LSB);
-			coeffSigns.push_back((mpzsign==0?+1:-1));
-			for (int i=1; i<(1<<alpha); i++) {
-				mpzsign = (poly[i]->coeff[j]->getBitVectorAsMPZ()) >> (MSB[j]-LSB);
-				int sign = (mpzsign==0 ? 1 : -1);
-				if (sign != coeffSigns[j])
-					coeffSigns[j] = 0;
-			}
-		}
+		checkCoefficientsSign();
+
 #if 0 //experimental, WIP
 		cerr << "***************************************"<<endl;
 		computeSigmaMSBs();
@@ -267,17 +258,7 @@ namespace flopoco{
 #endif
 
 		// A bit of reporting
-		REPORT(INFO,"Parameters of the approximation polynomials: ");
-		REPORT(INFO,"  Degree=" << degree	<< "  alpha=" << alpha
-				<< "    maxApproxErrorBound=" << approxErrorBound  << "    common coeff LSB="  << LSB);
-		int totalOutputSize=0;
-		for (int j=0; j<=degree; j++) {
-			int size = MSB[j]-LSB + (coeffSigns[j]==0? 1 : 0);
-			totalOutputSize += size ;
-			REPORT(INFO,"      MSB["<<j<<"] = \t" << MSB[j] << "\t size=" << size
-					<< (coeffSigns[j]==0? "\t variable sign " : "\t constant sign ") << coeffSigns[j]);
-		}
-		REPORT(INFO, "  Total size of the table is " << nbIntervals << " x " << totalOutputSize << " bits");
+		createPolynomialsReport(nbIntervals);
 
 	}
 
@@ -360,6 +341,21 @@ namespace flopoco{
 			}
 			BasicPolyApprox* p = new BasicPolyApprox(degree,MSB,LSB,coeff);
 			poly.push_back(p);
+		}
+	}
+
+
+	void PiecewisePolyApprox::checkCoefficientsSign()
+	{
+		for (int j=0; j<=degree; j++) {
+			mpz_class mpzsign = (poly[0]->coeff[j]->getBitVectorAsMPZ()) >> (MSB[j]-LSB);
+			coeffSigns.push_back((mpzsign==0?+1:-1));
+			for (int i=1; i<(1<<alpha); i++) {
+				mpzsign = (poly[i]->coeff[j]->getBitVectorAsMPZ()) >> (MSB[j]-LSB);
+				int sign = (mpzsign==0 ? 1 : -1);
+				if (sign != coeffSigns[j])
+					coeffSigns[j] = 0;
+			}
 		}
 	}
 
