@@ -12,18 +12,19 @@
   2008-2010.
   All rights reserved.
 */
+#include "utils.hpp"
 
 #include <iostream>
 #include <sstream>
-#include "utils.hpp"
 #include <cstdlib>
 #include <iomanip>
-#include "math.h"
+#include <locale>         // std::locale, std::tolower
 #include <functional>
 #include <algorithm>
 #include <cctype>
 #include <gmp.h>
 #include <gmpxx.h>
+#include "math.h"
 using namespace std;
 
 
@@ -864,4 +865,12 @@ namespace flopoco{
     return string(pad1, padchar) + str + string(pad2, padchar);
 	}
 
+	string toLower(const string& str) {
+		ostringstream s;
+		std::locale loc; // direct from stack overflow
+		for(auto elem : str)
+		  s << std::tolower(elem,loc);
+		return s.str();
+	}
+	
 }

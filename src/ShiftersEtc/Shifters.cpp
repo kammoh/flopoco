@@ -113,7 +113,7 @@ namespace flopoco{
 						 << " level" << i+1 << " when  ps" << of(i) << "='0'   else " << zg(intpow2(i)) << " & level" << i+1 << range(wIn-1, intpow2(i)) << ";" << endl;
 			}
 		  vhdl << tab << "R <= level0;"<<endl;
-			vhdl << tab << "sticky <= stk0;"<<endl;
+			vhdl << tab << "Sticky <= stk0;"<<endl;
 		}
 
 		

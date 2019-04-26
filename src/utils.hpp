@@ -542,6 +542,8 @@ namespace flopoco{
 	/** A helper function when displaying comments: center str to a certain width */
 	string center(const string& str, char padchar=' ', int width=80);
 
+	/** A helper function that will convert a signal name into its lowercase version */
+	string toLower(const string& str);
 }
 
 

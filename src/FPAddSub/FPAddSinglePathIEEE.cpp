@@ -163,7 +163,7 @@ namespace flopoco{
 		vhdl << tab << declare("summandX", wF+4) << " <= '0' & significandNewX & '0' & '0';" << endl;
 
 
-		vhdl << tab << declare("carryIn") << " <= effSub and not stickyLow;" << endl; // TODO break this dependency, send the stickyLow to the final round adder
+		vhdl << tab << declare("carryIn") << " <= EffSub and not stickyLow;" << endl; // TODO break this dependency, send the stickyLow to the final round adder
 		// like		vhdl << tab << declare("carryIn") << " <= '0';" << endl; and we win 3ns
 		
 		newInstance(
@@ -305,11 +305,11 @@ namespace flopoco{
 
 		addComment("Final packing", tab);
 		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsZero") << " <= '1' when (fullCancellation='1' and expSigR" << range(wE+wF-1, wF) << "=" << zg(wE) << ") else '0';"<<endl;
-		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNan='0' and (((xIsInfinity='1' and yIsInfinity='1'  and effSub='0')  or (xIsInfinity='0' and yIsInfinity='1')  or (xIsInfinity='1' and yIsInfinity='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
+		vhdl << tab << declare(target->adderDelay(sizeLeftShift+1), "resultIsInf") << " <= '1' when resultIsNaN='0' and (((xIsInfinity='1' and yIsInfinity='1'  and EffSub='0')  or (xIsInfinity='0' and yIsInfinity='1')  or (xIsInfinity='1' and yIsInfinity='0')  or  (expSigR" << range(wE+wF-1, wF) << "=" << og(wE) << "))) else '0';"<<endl;
 		
 		vhdl<<tab<< declare("constInf",wE+wF) << " <= " << og(wE) << " & " << zg(wF) << ";"<<endl;
 		vhdl<<tab<< declare("constNaN",wE+wF) << " <= " << og(wE+wF) << ";"<<endl;
-		vhdl<<tab<< declare(target->logicDelay(2), "expSigR2",wE+wF) << " <= constInf when resultIsInf='1' else constNaN when resultIsNan='1' else expSigR;"<<endl;
+		vhdl<<tab<< declare(target->logicDelay(2), "expSigR2",wE+wF) << " <= constInf when resultIsInf='1' else constNaN when resultIsNaN='1' else expSigR;"<<endl;
 
 		vhdl << tab << declare(target->logicDelay(5), "signR") << " <= '0' when ("
 				 << "(resultIsNaN='1' "

@@ -1704,11 +1704,12 @@ namespace flopoco {
 	////////////////////////////Attributes
 	////////////BEWARE: don't add anything below without adding it to cloneOperator, too
 	// TODO Most of these should be protected
-	vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
-	vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
-	vector<Signal*>        ioList_;                 /**< The list of I/O signals of the operator */
+		vector<Operator*>      subComponentList_;				/**< The list of instantiated sub-components */
+		vector<Signal*>        signalList_;      				/**< The list of internal signals of the operator */
+		vector<Signal*>        ioList_;                 /**< The list of I/O signals of the operator */
+		set<string> allSignalsLowercased;        /**< a list of all lowercased signals, used for sanity checks */
 	FlopocoStream          vhdl;                    /**< The internal stream to which the constructor will build the VHDL code */
-
+		
 	std::ostringstream 	resourceEstimate;                   /**< The log of resource estimations made by the user */
 	std::ostringstream 	resourceEstimateReport;             /**< The final report of resource estimations made by the user */
 	ResourceEstimationHelper* reHelper;                     /**< Performs all the necessary operations for resource estimation */
