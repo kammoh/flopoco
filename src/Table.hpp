@@ -50,7 +50,7 @@ namespace flopoco{
 		 * @param[in] name      a new name for the VHDL entity
 		 * @param[in] wIn    		the with of the input in bits (optional, may be deduced from values)
 		 * @param[in] wOut   		the with of the output in bits  (optional, may be deduced from values)
-		 * @param[in] logicTable 1 if the table is intended to be implemented as logic; 
+		 * @param[in] logicTable 1 if the table is intended to be implemented as logic; It is then shared  
                             -1 if it is intended to be implemented as embedded RAM; 
 	                        	 0 (default): let the constructor decide, depending on the size and target
 		 * @param[in] minIn			minimal input value, to which value[0] will be mapped (default 0)

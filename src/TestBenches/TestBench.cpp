@@ -123,7 +123,7 @@ namespace flopoco{
 				inputSignalVector.push_back(s);
 		};
 
-		// declration of test time
+		// declaration of test time
 		int currentOutputTime = 0;
 
 		// In order to generate the file containing inputs and expected output in a correct order

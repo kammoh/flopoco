@@ -99,7 +99,7 @@ namespace flopoco{
 		
 
 	IntConstDiv::IntConstDiv(OperatorPtr parentOp, Target* target, int wIn_, vector<int> divisors, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
-		: Operator(target),  wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
+		: Operator(parentOp, target),  wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
 	{
 		setCopyrightString("F. de Dinechin (2016)");
 		srcFileName="IntConstDiv";
@@ -232,7 +232,7 @@ namespace flopoco{
 
 	
 	IntConstDiv::IntConstDiv(OperatorPtr parentOp, Target* target, int wIn_, int d_, int alpha_, int architecture_,  bool computeQuotient_, bool computeRemainder_)
-		: Operator(target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
+		: Operator(parentOp, target), d(d_), wIn(wIn_), alpha(alpha_), architecture(architecture_), computeQuotient(computeQuotient_),  computeRemainder(computeRemainder_)
 	{
 		setCopyrightString("F. de Dinechin (2011, 2016)");
 		srcFileName="IntConstDiv";
@@ -339,7 +339,7 @@ namespace flopoco{
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
 			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
-			Table* table = new Table(this, target, tableContent, "", alpha+rSize, alpha+rSize );
+			Table* table = new Table(this, target, tableContent, "", alpha+rSize, alpha+rSize , true);
 			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
 			table->setShared();
 			string ri, xi, ini, outi, qi;
@@ -396,7 +396,7 @@ namespace flopoco{
 
 			/// First level table
 			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, rSize);
-			Table* table = new Table(this, target, tableContent, "", alpha, rho+rSize);
+			Table* table = new Table(this, target, tableContent, "", alpha, rho+rSize, true);
 			table->setShared();
 			table->setNameWithFreqAndUID("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 			//			double tableDelay=table->getOutputDelay("Y");
@@ -407,7 +407,6 @@ namespace flopoco{
 				else // normal case
 					vhdl << tab << declare(xi, alpha, true) << " <= " << "X" << range((i+1)*alpha-1, i*alpha) << ";" << endl;
 				outi = join("out", i);
-
 				newSharedInstance(table, join("table",i), "X=>"+xi, "Y=>"+ outi);
 
 				ri = join("r_l0_", i);
@@ -444,7 +443,8 @@ namespace flopoco{
 				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, rSize, rho);
 				Table* table = new Table(this, target, tableContent, "",
 																 2*rSize, /* wIn*/
-																 (1<<(level-1))*alpha+rSize /*wOut*/  );
+																 (1<<(level-1))*alpha+rSize /*wOut*/,
+																 true /*logicTable so that it is shared */);
 				table->setShared();
 				table->setNameWithFreqAndUID("CBLKTable_l" + to_string(level) + "_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 				for(int i=0; i<rLevelSize; i++) {
@@ -657,6 +657,7 @@ namespace flopoco{
 										paramList.push_back(make_pair("wIn", to_string(wIn) ));	
 										paramList.push_back(make_pair("d", to_string(d) ));	
 										paramList.push_back(make_pair("arch", to_string(arch) ));
+										paramList.push_back(make_pair("frequency", to_string(100) )); // because the testbench currently doesn't support unsynchronized inputs 
 										testStateList.push_back(paramList);
 										paramList.clear();
 									}
