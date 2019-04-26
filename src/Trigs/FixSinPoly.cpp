@@ -1,6 +1,6 @@
 /*
- * Operator computing (X^3)/6, for X being a signed two's complement number
-
+ * Operator computing X- (X^3)/6, for X being a signed two's complement number, purely in logic (no mult)
+ This operator uses one single truncated bit heap
  Assumptions: 0<=X<1
 
  This file is part of the FloPoCo project developed by the Arenaire/ARIC
@@ -23,6 +23,10 @@ using namespace std;
 namespace flopoco{
 
 
+	/* This class was written at a time when the bit heap framework only supported integers, not general fix-point numbers.
+	 Therefore there are implicit scaling factors all over the place, and it is unreadable.
+	 It could be refactored to be quite simpler */
+	
 	//FIXME: for now, the output width (wOut) is computed inside the operator,
 	//		and not from the parameters given to the constructor
 
@@ -114,8 +118,8 @@ namespace flopoco{
 		ConstDiv3ForSinPoly *divider;
 		// A unique instance without exposing the interface
 		schedule();
-		inPortMap (divider , "X", "X");
-		outPortMap(divider , "Q", "XZeroIntDiv3");
+		inPortMap (nullptr, "X", "X");
+		outPortMap(nullptr, "Q", "XZeroIntDiv3");
 		divider = new ConstDiv3ForSinPoly(this, target, wIn, 3, -1, 2, false) ;
 		vhdl << instance(divider , "Divider");
 
@@ -230,9 +234,8 @@ namespace flopoco{
 		// TODO
 	}
 
-	/**
-	 * The emulate function actually computes X*2-X^3/3, in order to cover the whole range of bits
-	 */
+
+
 	void FixSinPoly::emulate(TestCase* tc)
 	{
 		// get I/O values
@@ -267,7 +270,7 @@ namespace flopoco{
 	}
 
 
-
+	// Computes the weighted sum of the discarded bits if the full bit heap is truncated at weight k.
 	int FixSinPoly::neededGuardBits(int k)
 	{
 		mpz_class sum, signBitSum, temp;

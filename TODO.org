@@ -157,13 +157,10 @@ functionalRegister("Q","D");
 *** IntAdder for explicit call to schedule(): DONE
 *** FPAdd for simple subcomponents : DONE
 *** FPDiv for low complexity shared subcomponents DONE
-*** FixRealKCM for simple bit heap DONE, one bug remaining
-a few test fail, e.g. 
-./flopoco FixRealKCM constant="log(2)" lsbIn=0 lsbOut=1 msbIn=11 signedInput=0 targetUlpError=1.0 TestBench n=1000
-./flopoco FixRealKCM constant="log(2)" lsbIn=0 lsbOut=1 msbIn=7 signedInput=1 targetUlpError=1.0 TestBench n=1000
-This seems worse than a last-bit error as I first thought.
+*** FixRealKCM for simple bit heap DONE, 
 *** FixSOPC DONE
-*** FixFIR and FixIIR for large bit heaps + functional delays
+*** FixFIR DONE
+*** FixIIR for large bit heaps + functional delays
 *** FixFunctionByTable (check that Table does the delay properly in the blockram case)
 *** ALAP rescheduling for constant signals
 *** IntMult... sigh, some day 
@@ -298,13 +295,15 @@ Benefit: it will remove rst from all the classical pipelined operators, and expl
 ** Xilinx series 7
 ** Altera 10
 * Continuous Test framework
-This is TODO from scratch.
 ** Plan
 a test programme iterates through the operators, testing them one by one for various values of the parameters. Forever.
 ** Implementation
+This should take place in the unitTest() methods, there is a TODO there...
 add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
-The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.  
+The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.
+
 * Janitoring
+*** replace in IntConstDiv all the instances of small tables by Table::newUniqueInstance
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
 *** build a SNAP package https://docs.snapcraft.io/build-snaps/   or a Docker instance or something 

@@ -176,9 +176,9 @@ namespace flopoco{
 
 
 		// order-1 architecture: sinZ \approx Z, cosZ \approx 1
-		int gOrder1Arch=3; 
+		int gOrder1Arch = w<16? 3 : 4; // exhaustive tests show that g=3 is enough for small sizes...
 		// order-2 architecture: sinZ \approx Z, cosZ \approx 1-Z^2/2
-		int gOrder2Arch=3; // TODO check
+		int gOrder2Arch = w<17? 3 : 4;  // exhaustive tests show that g=3 is enough for small sizes...
 		// generic case:
 		int gGeneric=4;
 
@@ -213,12 +213,12 @@ namespace flopoco{
 		g=0; 
 		int wA=0;
 		if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
-			REPORT(DEBUG, "Using order-1 arch");
+			REPORT(DETAILED, "Using order-1 arch");
 			g=gOrder1Arch;
 			wA = wAOrder1Arch;
 		}
 		else if(wSmallerThanBorderSecondOrderTaylor) {
-			REPORT(DEBUG, "Using order-2 arch");
+			REPORT(DETAILED, "Using order-2 arch");
 			g = gOrder2Arch;
 			wA = wAOrder2Arch;
 		}
@@ -338,23 +338,11 @@ namespace flopoco{
 		
 			int wZ=w-wA+g; // see alignment below. Actually w-2-wA+2  (-2 because Q&O bits, +2 because mult by Pi)
 
-#if 0
-			pi_mult = new FixRealKCM (target,
-																false,    // signedInput
-																-2-wA-1,  // msbIn
-																-w-g,     // lsbIn
-																-w-g ,    // lsbOut
-																"pi",     // constant
-																1.0);      // targetUlpError
-			addSubComponent (pi_mult);
-			inPortMap (pi_mult, "X", "Y_red");
-			outPortMap (pi_mult, "R", "Z");
-#else
 			newInstance("FixRealKCM", "MultByPi",
 									join("msbIn=", -2-wA-1) + join(" lsbIn=",-w-g) + join(" lsbOut=",-w-g)  + " constant=pi signedInput=0",
 									"X=>Y_red",
 									"R=>Z");
-#endif		
+
 			int wZz=getSignalByName("Z")->width();
 			REPORT(DEBUG, "wZ=" <<wZ<<";"<<" wZz="<<wZz<<";");
 
@@ -450,8 +438,9 @@ namespace flopoco{
 		
 			else	{
 				REPORT(DETAILED, "Using generic architecture with 3rd-order Taylor");
-
 #if 0
+				THROWERROR("not ported yet to the new pipeline framework: look up this message in Trigs/FixSinCos.cpp and FIXME");
+#else
 				/*********************************** THE SQUARER **************************************/
 			
 
@@ -468,19 +457,17 @@ namespace flopoco{
 					vhdl << declare ("Z2o2",wZ2o2) << " <= Z2o2_ext"
 					<< range (wZ-1,wZ-wZ2o2) << ";" << endl;*/
 				// so we use a truncated multiplier instead
-				IntMultiplier *sqr_z;
 				int wZ2o2 = 2*wZ - (w+g)-1;
 				if (wZ2o2 < 2)
 					wZ2o2 = 2; //for sanity
-				vhdl << tab << "-- First truncate the inputs of the multiplier to the precision of the output" << endl;
+				vhdl << tab << "-- truncate the inputs of the multiplier to the precision of the output" << endl;
 				vhdl << tab << declare("Z_truncToZ2", wZ2o2) << " <= Z" << range(wZ-1, wZ-wZ2o2) << ";" << endl;
-				sqr_z = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false,  sqr_z_inputDelays);
-				addSubComponent (sqr_z);
-				inPortMap (sqr_z, "Y", "Z_truncToZ2");
-				inPortMap (sqr_z, "X", "Z_truncToZ2");
-				outPortMap (sqr_z, "R", "Z2o2");
-				vhdl << instance (sqr_z, "sqr_z");
-			
+
+				newInstance("IntMultiplier", "sqr_z",
+										"wX=" + to_string(wZ2o2) + " wY=" + to_string(wZ2o2) + " wOut=" + to_string(wZ2o2) + " signedIO=false",
+										"X=>Z_truncToZ2,Y=>Z_truncToZ2",
+										"R=>Z2o2");
+
 			
 				/*********************************** Z-Z^3/6 **************************************/
 			
@@ -490,24 +477,23 @@ namespace flopoco{
 					wZ3o6 = 2; //using 1 will generate bad vhdl
 			
 				if(wZ3o6<=12) {
-					vhdl << tab << "-- First truncate Z" << endl;
+					REPORT(DETAILED, "Tabulating Z^3/6 as we need it only on " << wZ3o6 << " bits"); 
+					vhdl << tab << "-- First truncate Z to its few MSBs relevant to the computation of Z^3/6" << endl;
 					vhdl << tab << declare("Z_truncToZ3o6", wZ3o6) << " <= Z" << range(wZ-1, wZ-wZ3o6) << ";" << endl;
-					FixFunctionByTable *z3o6Table;
-					z3o6Table = new FixFunctionByTable (target, "x^3/6", 
-																							false, // signedIn
-																							-wZ3o6, // lsbIn
-																							-3,  //  msbOut
-																							-wZ3o6-2); // lsbOut
-					z3o6Table -> changeName(getName() + "_Z3o6Table");
-					addSubComponent (z3o6Table);
-					inPortMap (z3o6Table, "X", "Z_truncToZ3o6");
-					outPortMap (z3o6Table, "Y", "Z3o6");
-					vhdl << instance (z3o6Table, "z3o6Table");
-
+					newInstance("FixFunctionByTable",
+											"Z3o6Table",
+											"function=\"x^3/6\" signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
+											"X=>Z_truncToZ3o6",
+											"Y=>Z3o6");
+					
 					vhdl << tab << declare (getTarget()->adderDelay(wZ), "SinZ", wZ) << " <= Z - Z3o6;" << endl;				
 				}
 				else {
-					// TODO: replace all this with an ad-hoc unit
+					REPORT(DETAILED, "Using a bit-heap based computation of Z-Z^3/6,  we need it on " << wZ3o6 << " bits"); 
+					// This component is for internal use only, it has no user interface: using its constructor 
+					schedule();
+					inPortMap (nullptr, "X", "Z");
+					outPortMap(nullptr, "R", "SinZ");
 					FixSinPoly *fsp =new FixSinPoly(parentOp,
 																					target, 
 																					-wA-1, //msbin
@@ -516,11 +502,7 @@ namespace flopoco{
 																					-wA-1, // msbOut_ = 0,
 																					-w-g, // lsbout
 																					false);
-					addSubComponent (fsp);
-					inPortMap (fsp, "X", "Z");
-					outPortMap(fsp, "R", "SinZ");
 					vhdl << instance (fsp, "ZminusZ3o6");
-
 				}
 
 
@@ -534,9 +516,9 @@ namespace flopoco{
 			
 			
 
-				/*********************************** Reconstruction of cosine **************************************/
 
 
+				vhdl << tab << "-- ********************************** Reconstruction of cosine ************************************" << endl;
 
 		
 #if 1 		// No bit heap
@@ -545,38 +527,30 @@ namespace flopoco{
 			
 				vhdl << tab << "--  truncate the larger input of each multiplier to the precision of its output" << endl;
 				vhdl << tab << declare("CosPiA_truncToZ2o2", wZ2o2) << " <= CosPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
-				IntMultiplier *c_out_2;
-				c_out_2 = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false);
-				addSubComponent (c_out_2);
-				inPortMap (c_out_2, "X", "Z2o2");
-				inPortMap (c_out_2, "Y", "CosPiA_truncToZ2o2");
-				outPortMap (c_out_2, "R", "Z2o2CosPiA");
-				vhdl << instance (c_out_2, "c_out_2_compute");
+
+				newInstance("IntMultiplier", "c_out_2_compute",
+										"wX=" + to_string(wZ2o2) + " wY=" + to_string(wZ2o2) + " wOut=" + to_string(wZ2o2) + " signedIO=false",
+										"X=>Z2o2,Y=>CosPiA_truncToZ2o2",
+										"R=>Z2o2CosPiA");
+
 
 				vhdl << tab << "--  truncate the larger input of each multiplier to the precision of its output" << endl;
 				vhdl << tab << declare("SinPiA_truncToZ", wZ) << " <= SinPiA" << range(w+g-1, w+g-wZ) << ";" << endl;
 
 
 				// vhdl:mul (SinZ, SinPiA -> SinZSinPiA)
-				IntMultiplier *c_out_3;
-			
-				c_out_3 = new IntMultiplier (target, wZ, wZ, wZ, false);
-				addSubComponent (c_out_3);
-				inPortMap (c_out_3, "Y", "SinPiA_truncToZ");
-				inPortMap (c_out_3, "X", "SinZ");
-				outPortMap (c_out_3, "R", "SinZSinPiA");
-				vhdl << instance (c_out_3, "c_out_3_compute");
+				newInstance("IntMultiplier", "c_out_3_compute",
+										"wX=" + to_string(wZ) + " wY=" + to_string(wZ) + " wOut=" + to_string(wZ) + " signedIO=false",
+										"X=>SinZ,Y=>SinPiA_truncToZ",
+										"R=>SinZSinPiA");
 			
 				vhdl << tab << declare (getTarget()->adderDelay(w+g), "CosZCosPiA_plus_rnd", w+g)
 						 << " <= CosPiA - Z2o2CosPiA;" << endl;
-				manageCriticalPath(getTarget()->localWireDelay() + );
 				vhdl << tab << declare (getTarget()->adderDelay(w+g), "C_out_rnd_aux", w+g)
 						 << " <= CosZCosPiA_plus_rnd - SinZSinPiA;" << endl;
 
 				vhdl << tab << declare ("C_out", w)
 						 << " <= C_out_rnd_aux" << range (w+g-1, g) << ';' << endl;
-
-
 
 
 				// ---------------------------------------------
@@ -659,49 +633,37 @@ namespace flopoco{
 				bitHeapCos -> generateCompressorVHDL();	
 				vhdl << tab << declare ("C_out", w) << " <= " << bitHeapCos -> getSumName() << range (w+g+gMult-1, g+gMult) << ';' << endl;
 			
-#endif
+#endif  // closes the else Bit heap computing Cos Z  ~   CosPiA - Z2o2*cosPiA - sinZ*SinPiA
 
-				/*********************************** Reconstruction of sine **************************************/
+
+
 				//Bit heap computing   SinPiA - Z2o2*sinPiA + sinZ*CosPiA
-				// Sin Z:
-			
-
-				// // vhdl:id (SinPiA -> S_out_1)
-				// vhdl:mul (Z2o2, SinPiA -> Z2o2SinPiA)
-				vhdl << tab << "-- First truncate the larger input of the multiplier to the precision of the output" << endl;
+				vhdl << tab << "-- ********************************** Reconstruction of sine ************************************" << endl;
+				vhdl << tab << "-- truncate the larger input of the multiplier to the precision of the output" << endl;
 				vhdl << tab << declare("SinPiA_truncToZ2o2", wZ2o2) << " <= SinPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
-				IntMultiplier *s_out_2;
-				s_out_2 = new IntMultiplier (target, wZ2o2, wZ2o2, wZ2o2, false);
-				addSubComponent (s_out_2);
-				inPortMap (s_out_2, "X", "Z2o2");
-				inPortMap (s_out_2, "Y", "SinPiA_truncToZ2o2");
-				outPortMap (s_out_2, "R", "Z2o2SinPiA");
-				vhdl << instance (s_out_2, "s_out_2_compute");
-			
-				vhdl << tab << "-- First truncate the larger input of the multiplier to the precision of the output" << endl;
-				vhdl << tab << declare("CosPiA_truncToSinZ", wZ) << " <= CosPiA" << range(w+g-1, w+g-wZ) << ";" << endl;
-			
-				IntMultiplier *s_out_3;
-				s_out_3 = new IntMultiplier (target, wZ, wZ, wZ, false);
-				addSubComponent (s_out_3);
-				inPortMap (s_out_3, "X", "SinZ");
-				inPortMap (s_out_3, "Y", "CosPiA_truncToSinZ");
-				outPortMap (s_out_3, "R", "SinZCosPiA");
-				vhdl << instance (s_out_3, "s_out_3_compute");
 
-				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
-				vhdl << tab << declare ("CosZSinPiA_plus_rnd", w+g)
+				newInstance("IntMultiplier", "s_out_2_compute",
+										"wX=" + to_string(wZ2o2) + " wY=" + to_string(wZ2o2) + " wOut=" + to_string(wZ2o2) + " signedIO=false",
+										"X=>Z2o2,Y=>SinPiA_truncToZ2o2",
+										"R=>Z2o2SinPiA");
+			
+				vhdl << tab << "-- truncate the larger input of the multiplier to the precision of the output" << endl;
+				vhdl << tab << declare("CosPiA_truncToSinZ", wZ) << " <= CosPiA" << range(w+g-1, w+g-wZ) << ";" << endl;
+				newInstance("IntMultiplier", "s_out_3_compute",
+										"wX=" + to_string(wZ) + " wY=" + to_string(wZ) + " wOut=" + to_string(wZ) + " signedIO=false",
+										"X=>SinZ,Y=>CosPiA_truncToSinZ",
+										"R=>SinZCosPiA");
+
+				vhdl << tab << declare (getTarget()->adderDelay(w+g), "CosZSinPiA_plus_rnd", w+g)
 						 << " <= SinPiA - Z2o2SinPiA;" << endl;
-				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(w+g));
-				vhdl << tab << declare ("S_out_rnd_aux", w+g)
+				vhdl << tab << declare (getTarget()->adderDelay(w+g), "S_out_rnd_aux", w+g)
 						 << " <= CosZSinPiA_plus_rnd + SinZCosPiA;" << endl;
 
 
-				//Final synchronization
 				vhdl << tab << declare ("S_out", w)
 						 << " <= S_out_rnd_aux" << range (w+g-1, g) << ';' << endl;
 			
-				REPORT(INFO, " wA=" << wA <<" wZ=" << wZ <<" wZ2=" << wZ2o2 <<" wZ3o6=" << wZ3o6 );
+				REPORT(DETAILED, " wA=" << wA <<" wZ=" << wZ <<" wZ2=" << wZ2o2 <<" wZ3o6=" << wZ3o6 );
 
 				// For LateX in the paper
 				//	cout << "     " << w <<  "   &   "  << wA << "   &   " << wZ << "   &   " << wZ2o2 << "   &   " << wZ3o6 << "   \\\\ \n \\hline" <<  endl;
@@ -813,6 +775,7 @@ namespace flopoco{
 		mpz_class zz;
 		TestCase* tc;
 
+		// No regression tests below, just values used in the initial development.
 		mpfr_init2(z, 10*w);
 
 		//z=0
@@ -868,7 +831,7 @@ namespace flopoco{
 		if(index==-1) 
 		{ // The unit tests
 
-			for(int w=5; w<24; w++) {
+			for(int w=5; w<=32; w++) {
 				paramList.push_back(make_pair("lsb",to_string(-w)));
 				if(w<17)
 					paramList.push_back(make_pair("TestBench n=","-2"));			

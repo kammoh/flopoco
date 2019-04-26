@@ -1067,19 +1067,18 @@ namespace flopoco{
     }
 
 
+	
 	void Operator::inPortMap(Operator* op, string componentPortName, string actualSignalName){
-        if(op != nullptr)
-        {
+		if(op != nullptr) {
             REPORT(DEBUG, "InPortMap: " << op->getName() << " : " << componentPortName << " => "  << actualSignalName);
-        }
-        else
-        {
-            REPORT(DEBUG, "InPortMap: (null) : " << componentPortName << " => "  << actualSignalName);
-        }
-
-        //check if the signal already exists
+		}
+		else  {
+			REPORT(DEBUG, "InPortMap: (null) : " << componentPortName << " => "  << actualSignalName);
+		}
+		
+		//check if the signal already exists
 		try{
-            getSignalByName(actualSignalName);
+			getSignalByName(actualSignalName);
 		}
 		catch(string &e2) {
 			THROWERROR("In inPortMap(): " << e2);
@@ -1087,9 +1086,10 @@ namespace flopoco{
 
 		// add the mapping to the input mapping list of Op
         tmpInPortMap_[componentPortName] = actualSignalName;
-    }
+	}
 
-    void Operator::setGeneric( string name, string value, int width, bool isBus ) {
+
+	void Operator::setGeneric( string name, string value, int width, bool isBus ) {
         REPORT(DEBUG, "setGeneric: "<< getName() << " : " << name << " => "  << value);
 
         Signal *s = new Signal(this, name, Signal::constant, width, isBus);
