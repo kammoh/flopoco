@@ -161,7 +161,7 @@ namespace flopoco {
 			outportmap += join("Xd", i) + "=>" +  join("U", i) + (i<n-1?",":"") ;
 		}
 		newInstance("ShiftReg", "inputShiftReg",
-								join("w=",1-lsbIn) + join(" n=", n-1) + join(" reset=", 1), // the parameters
+								join("w=",1-lsbIn) + join(" n=", n-1) + " reset=1", // the parameters
 								"X=>X", outportmap);  // the in and out port maps
 
 
@@ -172,7 +172,7 @@ namespace flopoco {
 			outportmap += join("Xd", i) + "=>" + join("Y", i) + (i<m?",":"");
 		}
 		newInstance("ShiftReg", "outputShiftReg",
-								"w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m),
+								"w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m) + " reset=1",
 								"X=>Y0", outportmap);
 		
 		// Now building a single SOPC. For this we need the following info:
@@ -199,7 +199,7 @@ namespace flopoco {
 			inPortMap(join("X",i), join("U", i));
 		}
 		for (uint32_t i = 0; i<m; i++)	{
-			inPortMap(join("X",i+n), join("Y", i));
+			inPortMap(join("X",i+n), join("Y", i+1));
 		}
 		outPortMap( "R", "Yinternal");
 		FixSOPC* fixSOPC = new FixSOPC(this, getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
