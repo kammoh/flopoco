@@ -118,8 +118,8 @@ namespace flopoco{
 		ConstDiv3ForSinPoly *divider;
 		// A unique instance without exposing the interface
 		schedule();
-		inPortMap (nullptr, "X", "X");
-		outPortMap(nullptr, "Q", "XZeroIntDiv3");
+		inPortMap ("X", "X");
+		outPortMap("Q", "XZeroIntDiv3");
 		divider = new ConstDiv3ForSinPoly(this, target, wIn, 3, -1, 2, false) ;
 		vhdl << instance(divider , "Divider");
 

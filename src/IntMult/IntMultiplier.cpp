@@ -250,9 +250,9 @@ namespace flopoco {
         vhdl << ";" << endl;
 
         //real thing
-        inPortMap(op, "X", join(addUID("x",blockUid),"_",id));
-        inPortMap(op, "Y", join(addUID("y",blockUid),"_",id));
-        outPortMap(op, "R", join(addUID("r",blockUid),"_",id));
+        inPortMap("X", join(addUID("x",blockUid),"_",id));
+        inPortMap("Y", join(addUID("y",blockUid),"_",id));
+        outPortMap("R", join(addUID("r",blockUid),"_",id));
         vhdl << instance(op, join(addUID("Mult",blockUid),"_", id));
         useSoftRAM(op);
 

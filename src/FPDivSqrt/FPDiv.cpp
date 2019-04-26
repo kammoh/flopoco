@@ -191,8 +191,8 @@ namespace flopoco{
 				tInstance << "SelFunctionTable" << i;
 
 				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & prescaledfY"<< range(wF, wF-1) <<";" << endl;
-				inPortMap (selfunctiontable , "X", seli.str());
-				outPortMap(selfunctiontable , "Y", qi);
+				inPortMap ("X", seli.str());
+				outPortMap("Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str());
 				REPORT(DEBUG, "After table instance " << i);
 				
@@ -361,8 +361,8 @@ namespace flopoco{
 					vhdl << tab << declare(seli.str(),9) << " <= " << wi.str() << range( wF+2, wF-3) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					//vhdl << tab << declare(seli.str(),10) << " <= " << wi.str() << range( wF+2, wF-4) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					
-				inPortMap (selfunctiontable , "X", seli.str());
-				outPortMap(selfunctiontable , "Y", qi);
+				inPortMap ("X", seli.str());
+				outPortMap("Y", qi);
 				vhdl << instance(selfunctiontable , tInstance.str());
 				vhdl << endl;
 

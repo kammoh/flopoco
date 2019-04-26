@@ -357,9 +357,8 @@ namespace flopoco{
 				vhdl << tab << declare(ini, alpha+rSize) << " <= " << ri << " & " << xi << ";" << endl; // This ri is r_{i+1}
 				outi = join("out", i);
 
-				outPortMap(table, "Y", outi);
-				inPortMap(table, "X", ini);
-
+				outPortMap("Y", outi);
+				inPortMap("X", ini);
 				vhdl << instance(table, join("table",i));
 
 				ri = join("r", i);
@@ -411,8 +410,8 @@ namespace flopoco{
 					vhdl << tab << declare(xi, alpha, true) << " <= " << "X" << range((i+1)*alpha-1, i*alpha) << ";" << endl;
 				outi = join("out", i);
 
-				outPortMap(table, "Y", outi);
-				inPortMap(table, "X", xi);
+				outPortMap("Y", outi);
+				inPortMap("X", xi);
 				vhdl << instance(table, join("table",i));
 				ri = join("r_l0_", i);
 				qi = join("qs_l0_", i);
@@ -467,8 +466,8 @@ namespace flopoco{
 					else
 						vhdl << tab << declare(in, 2*rSize) << " <= " << "r_l" << level-1 << "_" << 2*i+1 << " & r_l" << level-1 << "_" << 2*i  << ";"  << endl;
 
-					outPortMap(table, "Y", out);
-					inPortMap(table, "X", in);
+					outPortMap( "Y", out);
+					inPortMap("X", in);
 					vhdl << instance(table, "table_"+ tableNumber);
 
 					/////////// The remainder

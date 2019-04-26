@@ -64,10 +64,10 @@ namespace flopoco{
 		
 			if(s->type() == Signal::in) {
 				declare(s->getName(), s->width(), s->isBus());
-				inPortMap (op, s->getName(), s->getName());
+				inPortMap (s->getName(), s->getName());
 			}
 			if(s->type() == Signal::out)
-				outPortMap (op, s->getName(), s->getName());
+				outPortMap (s->getName(), s->getName());
 		}
 
 		

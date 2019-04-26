@@ -249,8 +249,8 @@ string IntConstMultShiftAdd_DECODER::get_realisation(map<adder_graph_base_node_t
     string dec_name = outputSignalName+"r";
     GenericLut* dec = new GenericLut(base_op, node->target,dec_name,decoder_content,configurationSignalWordsize,decoder_size);
     base_op->addSubComponent(dec);
-    base_op->inPortMap(dec,"x_in_this_does_not_exist!!","config_no");
-    base_op->outPortMap(dec,"x_out",outputSignalName);
+    base_op->inPortMap("x_in_this_does_not_exist!!","config_no");
+    base_op->outPortMap("x_out",outputSignalName);
     base_op->vhdl << base_op->instance(dec,outputSignalName+"r_i") << endl;
 
     return "";
@@ -268,11 +268,11 @@ string IntConstMultShiftAdd_ADDSUB2_CONF::get_realisation(map<adder_graph_base_n
         base_op->declare(t_name,wordsize);
         base_op->vhdl << t_name << " <= std_logic_vector(" << getShiftAndResizeString( t_in,wordsize,t->input_shifts[i]) << ");" << endl;
 
-        base_op->inPortMap(addsub,addsub->getInputName(i),t_name);
+        base_op->inPortMap(addsub->getInputName(i),t_name);
     }
-    base_op->inPortMap(addsub,addsub->getInputName(1,true),decoder->outputSignalName + "(1)");
-    base_op->inPortMap(addsub,addsub->getInputName(0,true),decoder->outputSignalName + "(0)");
-    base_op->outPortMap(addsub,addsub->getOutputName(),outputSignalName);
+    base_op->inPortMap(addsub->getInputName(1,true),decoder->outputSignalName + "(1)");
+    base_op->inPortMap(addsub->getInputName(0,true),decoder->outputSignalName + "(0)");
+    base_op->outPortMap(addsub->getOutputName(),outputSignalName);
     base_op->vhdl << base_op->instance(addsub,outputSignalName+"_addsub") << endl;
     base_op->vhdl << getNegativeShiftString( outputSignalName,wordsize,t ) << endl;
     return "";
@@ -299,11 +299,11 @@ string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<adder_graph_base
         base_op->vhdl << base_op->declare( "add3_" + outputSignalName + "_z",wordsize   ) << " <= "
              << getShiftAndResizeString( InfoMap[ t->inputs[2] ] , wordsize, t->input_shifts[2],false) << ";";
 
-        base_op->inPortMap(add3,"x_i","add3_" + outputSignalName + "_x");
-        base_op->inPortMap(add3,"y_i","add3_" + outputSignalName + "_y");
-        base_op->inPortMap(add3,"z_i","add3_" + outputSignalName + "_z");
-        base_op->inPortMap(add3,"sel_i",decoder->outputSignalName + "(0)");
-        base_op->outPortMap(add3,"sum_o",outputSignalName);
+        base_op->inPortMap("x_i","add3_" + outputSignalName + "_x");
+        base_op->inPortMap("y_i","add3_" + outputSignalName + "_y");
+        base_op->inPortMap("z_i","add3_" + outputSignalName + "_z");
+        base_op->inPortMap("sel_i",decoder->outputSignalName + "(0)");
+        base_op->outPortMap("sum_o",outputSignalName);
         base_op->vhdl << base_op->instance(add3,"ternAdd_"+outputSignalName);
     }
     else
@@ -321,9 +321,14 @@ string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<adder_graph_base
     return "";
 }
 
+
+// This is pre-5.0 code. It doesn't work with the new pipeline framework because inPortMap and outPortMap just build a temporary map
+// F2D disabled it for now.
+// The fix is to separate the code for each GenericAddSub, grouping it with its portMaps
 string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
-    conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
+#if 0 // complain to F2D,  but it probably didn't work anyway
+	conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
     GenericAddSub* addsub = new GenericAddSub(base_op, target,wordsize);
     GenericAddSub* addsub2 = new GenericAddSub(base_op, target,wordsize);
@@ -353,6 +358,7 @@ string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<adder_graph_base_n
     base_op->vhdl << base_op->instance(addsub2,outputSignalName+"_addsub") << endl;
 
     base_op->vhdl << getNegativeShiftString( outputSignalName,wordsize,t ) << endl;
+#endif
     return "";
 }
 
@@ -387,9 +393,9 @@ string IntConstMultShiftAdd_MUX::get_realisation(map<adder_graph_base_node_t *, 
         if( iter->node == NULL )
         {
             if( iter->shift == -1 )
-                base_op->inPortMapCst(new_mux,new_mux->getInputName(i),"(others=>'-')");
+                base_op->inPortMapCst(new_mux->getInputName(i),"(others=>'-')");
             else
-                base_op->inPortMapCst(new_mux,new_mux->getInputName(i),"(others=>'0')");
+                base_op->inPortMapCst(new_mux->getInputName(i),"(others=>'0')");
         }
         else{
             IntConstMultShiftAdd_BASE* t_in=InfoMap[ iter->node ];
@@ -397,12 +403,12 @@ string IntConstMultShiftAdd_MUX::get_realisation(map<adder_graph_base_node_t *, 
             base_op->vhdl << base_op->declare(t_name,wordsize) << " <= " <<  getShiftAndResizeString(t_in
                                                     ,wordsize
                                                     ,iter->shift,false) << ";";
-            base_op->inPortMap(new_mux,new_mux->getInputName(i),t_name);
+            base_op->inPortMap(new_mux->getInputName(i),t_name);
         }
         i++;
     }
-    base_op->inPortMap(new_mux,new_mux->getSelectName(),decoder->outputSignalName);
-    base_op->outPortMap(new_mux,new_mux->getOutputName(),outputSignalName);
+    base_op->inPortMap(new_mux->getSelectName(),decoder->outputSignalName);
+    base_op->outPortMap(new_mux->getOutputName(),outputSignalName);
     base_op->vhdl << base_op->instance(new_mux,outputSignalName+"_mux");
 
 /*
@@ -736,9 +742,9 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 
     base_op->addSubComponent(add);
 	for (size_t i = 0 ; i < nb_inputs ; ++i) {
-		base_op->inPortMap(add, add->getInputName(i), operands[i]);
+		base_op->inPortMap(add->getInputName(i), operands[i]);
 	}
-	base_op->outPortMap(add, add->getOutputName(), msb_signame);
+	base_op->outPortMap(add->getOutputName(), msb_signame);
 
     base_op->vhdl << base_op->instance(add,"generic_add_sub_"+outputSignalName);
 	

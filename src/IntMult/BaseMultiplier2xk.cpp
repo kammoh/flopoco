@@ -87,24 +87,24 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
 		Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
         cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
-        inPortMap(cur_lut,"i0",in2 + of(1));
-        inPortMap(cur_lut,"i2",in2 + of(0));
+        inPortMap("i0",in2 + of(1));
+        inPortMap("i2",in2 + of(0));
 
         if(i==0)
-            inPortMapCst(cur_lut,"i1","'0'"); //connect 0 at LSB position
+            inPortMapCst("i1","'0'"); //connect 0 at LSB position
         else
-            inPortMap(cur_lut,"i1",in1 + of(i-1));
+            inPortMap("i1",in1 + of(i-1));
 
         if(i==needed_luts-1)
-            inPortMapCst(cur_lut,"i3","'0'"); //connect 0 at MSB position
+            inPortMapCst("i3","'0'"); //connect 0 at MSB position
         else
-            inPortMap(cur_lut,"i3",in1 + of(i));
+            inPortMap("i3",in1 + of(i));
 
-        inPortMapCst(cur_lut, "i4","'0'");
-        inPortMapCst(cur_lut, "i5","'1'");
+        inPortMapCst("i4","'0'");
+        inPortMapCst("i5","'1'");
 
-        outPortMap(cur_lut,"o5","cc_di" + of(i));
-        outPortMap(cur_lut,"o6","cc_s" + of(i));
+        outPortMap("o5","cc_di" + of(i));
+        outPortMap("o6","cc_s" + of(i));
 
         vhdl << cur_lut->primitiveInstance( join("lut",i)) << endl;
     }
@@ -113,16 +113,16 @@ BaseMultiplier2xkOp::BaseMultiplier2xkOp(Operator *parentOp, Target* target, boo
     for( int i = 0; i < needed_cc; i++ ) {
 		Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
 
-        inPortMapCst( cur_cc, "cyinit", "'0'" );
+        inPortMapCst("cyinit", "'0'" );
         if( i == 0 ) {
-            inPortMapCst( cur_cc, "ci", "'0'" ); //carry-in can not be used as AX input is blocked!!
+            inPortMapCst("ci", "'0'" ); //carry-in can not be used as AX input is blocked!!
         } else {
-            inPortMap( cur_cc, "ci", "cc_co" + of( i * 4 - 1 ) );
+            inPortMap("ci", "cc_co" + of( i * 4 - 1 ) );
         }
-        inPortMap( cur_cc, "di", "cc_di" + range( i * 4 + 3, i * 4 ) );
-        inPortMap( cur_cc, "s", "cc_s" + range( i * 4 + 3, i * 4 ) );
-        outPortMap( cur_cc, "co", "cc_co" + range( i * 4 + 3, i * 4 ));
-        outPortMap( cur_cc, "o", "cc_o" + range( i * 4 + 3, i * 4 ));
+        inPortMap("di", "cc_di" + range( i * 4 + 3, i * 4 ) );
+        inPortMap("s", "cc_s" + range( i * 4 + 3, i * 4 ) );
+        outPortMap("co", "cc_co" + range( i * 4 + 3, i * 4 ));
+        outPortMap("o", "cc_o" + range( i * 4 + 3, i * 4 ));
 
         stringstream cc_name;
         cc_name << "cc_" << i;

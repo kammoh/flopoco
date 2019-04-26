@@ -67,14 +67,14 @@ namespace flopoco {
                 else {
                     addLUT( 5, 1 );
 					Xilinx_LUT5 *luti = new Xilinx_LUT5( parentOp, target );
-                    inPortMap( luti, "i0", "x(0)" );
-                    inPortMap( luti, "i1", "x(1)" );
-                    inPortMap( luti, "i2", "x(2)" );
-                    inPortMap( luti, "i3", "x(3)" );
-                    inPortMap( luti, "i4", "x(4)" );
+                    inPortMap("i0", "x(0)" );
+										inPortMap("i1", "x(1)" );
+										inPortMap("i2", "x(2)" );
+										inPortMap("i3", "x(3)" );
+										inPortMap("i4", "x(4)" );
                     stringstream output;
                     output << "x_out(" << i << ")";
-                    outPortMap( luti, "o", output.str());
+                    outPortMap("o", output.str());
                     luti->setGeneric( "init", init.get_hex(), 64 );
                     stringstream lutname;
                     lutname << "bit_" << i;
@@ -88,15 +88,15 @@ namespace flopoco {
                 else {
                     addLUT( 6, 1 );
 					Xilinx_LUT6 *luti = new Xilinx_LUT6( parentOp, target );
-                    inPortMap( luti, "i0", "x(0)" );
-                    inPortMap( luti, "i1", "x(1)" );
-                    inPortMap( luti, "i2", "x(2)" );
-                    inPortMap( luti, "i3", "x(3)" );
-                    inPortMap( luti, "i4", "x(4)" );
-                    inPortMap( luti, "i5", "x(5)" );
+                    inPortMap("i0", "x(0)" );
+										inPortMap("i1", "x(1)" );
+										inPortMap("i2", "x(2)" );
+										inPortMap("i3", "x(3)" );
+										inPortMap("i4", "x(4)" );
+										inPortMap("i5", "x(5)" );
                     stringstream output;
                     output << "x_out(" << i << ")";
-                    outPortMap( luti, "o", output.str());
+                    outPortMap( "o", output.str());
                     luti->setGeneric( "init", init.get_hex(), 64 );
                     stringstream lutname;
                     lutname << "bit_" << i;

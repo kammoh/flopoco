@@ -492,8 +492,8 @@ namespace flopoco{
 					REPORT(DETAILED, "Using a bit-heap based computation of Z-Z^3/6,  we need it on " << wZ3o6 << " bits"); 
 					// This component is for internal use only, it has no user interface: using its constructor 
 					schedule();
-					inPortMap (nullptr, "X", "Z");
-					outPortMap(nullptr, "R", "SinZ");
+					inPortMap ("X", "Z");
+					outPortMap("R", "SinZ");
 					FixSinPoly *fsp =new FixSinPoly(parentOp,
 																					target, 
 																					-wA-1, //msbin

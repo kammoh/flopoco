@@ -106,14 +106,14 @@ namespace flopoco {
         for( int i = 0; i < needed_luts; i++ ) {
 			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
             cur_lut->setGeneric( "init", lut_content, 64 );
-            inPortMap( cur_lut , "i0", "a" + of( i * 2 ) );
-            inPortMap( cur_lut , "i1", "a" + of( i * 2 + 1 ) );
-            inPortMap( cur_lut , "i2", "b" + of( i * 2 ) );
-            inPortMap( cur_lut , "i3", "b" + of( i * 2 + 1 ) );
-            inPortMapCst( cur_lut, "i4", "'0'" );
-            inPortMapCst( cur_lut, "i5", "'1'" );
-            outPortMap( cur_lut, "o6", "cc_s" + of( i ));
-            outPortMap( cur_lut, "o5", "cc_di" + of( i ));
+            inPortMap("i0", "a" + of( i * 2 ) );
+						inPortMap("i1", "a" + of( i * 2 + 1 ) );
+						inPortMap("i2", "b" + of( i * 2 ) );
+						inPortMap("i3", "b" + of( i * 2 + 1 ) );
+            inPortMapCst("i4", "'0'" );
+						inPortMapCst("i5", "'1'" );
+            outPortMap("o6", "cc_s" + of( i ));
+						outPortMap("o5", "cc_di" + of( i ));
             stringstream lut_name;
             lut_name << "lut_" << i;
             vhdl << cur_lut->primitiveInstance( lut_name.str() ) << endl;
@@ -122,14 +122,14 @@ namespace flopoco {
         if( ws_remain ) {
 			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
             cur_lut->setGeneric( "init", lut_content, 64 );
-            inPortMap( cur_lut , "i0", "a" + of( needed_luts * 2 ) );
-            inPortMap( cur_lut , "i1", "a" + of( needed_luts * 2 ) );
-            inPortMap( cur_lut , "i2", "b" + of( needed_luts * 2 ) );
-            inPortMap( cur_lut , "i3", "b" + of( needed_luts * 2 ) );
-            inPortMapCst( cur_lut, "i4", "'0'" );
-            inPortMapCst( cur_lut, "i5", "'1'" );
-            outPortMap( cur_lut, "o6", "cc_s" + of( needed_luts ));
-            outPortMap( cur_lut, "o5", "cc_di" + of( needed_luts ));
+            inPortMap("i0", "a" + of( needed_luts * 2 ) );
+						inPortMap("i1", "a" + of( needed_luts * 2 ) );
+						inPortMap("i2", "b" + of( needed_luts * 2 ) );
+						inPortMap("i3", "b" + of( needed_luts * 2 ) );
+            inPortMapCst( "i4", "'0'" );
+            inPortMapCst( "i5", "'1'" );
+            outPortMap("o6", "cc_s" + of( needed_luts ));
+						outPortMap("o5", "cc_di" + of( needed_luts ));
             stringstream lut_name;
             lut_name << "hlut";
             vhdl << cur_lut->primitiveInstance( lut_name.str() ) << endl;
@@ -138,16 +138,16 @@ namespace flopoco {
         for( int i = 0; i < needed_cc; i++ ) {
 			Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
             if( i == 0 ) {
-                inPortMapCst( cur_cc, "cyinit", ( c_init ? "'1'" : "'0'" ) );
-                inPortMapCst( cur_cc, "ci", "'0'" );
+                inPortMapCst( "cyinit", ( c_init ? "'1'" : "'0'" ) );
+                inPortMapCst( "ci", "'0'" );
             } else {
-                inPortMapCst( cur_cc, "cyinit", "'0'" );
-                inPortMap( cur_cc, "ci", "cc_co" + of( i * 4 - 1 ) );
+                inPortMapCst( "cyinit", "'0'" );
+                inPortMap( "ci", "cc_co" + of( i * 4 - 1 ) );
             }
 
-            inPortMap( cur_cc, "di", "cc_di" + range( i * 4 + 3, i * 4 ) );
-            inPortMap( cur_cc, "s", "cc_s" + range( i * 4 + 3, i * 4 ) );
-            outPortMap( cur_cc, "co", "cc_co" + range( i * 4 + 3, i * 4 ));
+            inPortMap( "di", "cc_di" + range( i * 4 + 3, i * 4 ) );
+            inPortMap( "s", "cc_s" + range( i * 4 + 3, i * 4 ) );
+            outPortMap( "co", "cc_co" + range( i * 4 + 3, i * 4 ));
             stringstream cc_name;
             cc_name << "cc_" << i;
             vhdl << cur_cc->primitiveInstance( cc_name.str() );

@@ -221,8 +221,8 @@ namespace flopoco{
 																			 vector<mpz_class> values, string name,
 																			 int wIn, int wOut){
 		op->schedule();
-		op->inPortMap(nullptr, "X", actualInput);
-		op->outPortMap(nullptr, "Y", actualOutput);
+		op->inPortMap("X", actualInput);
+		op->outPortMap("Y", actualOutput);
 		Table* t = new Table(op, op->getTarget(), values, name, wIn, wOut); 
 		op->vhdl << op->instance(t, name, false);
 		return t;

@@ -139,8 +139,8 @@ namespace flopoco{
 #if 0
 			// This is the same order as newInstance() would do, but does not require to write a factory for this Operator
 			schedule();
-			inPortMap(nullptr, "X", "A");
-			outPortMap(nullptr, "Y", "Coeffs");
+			inPortMap("X", "A");
+			outPortMap("Y", "Coeffs");
 			Table* coeffTable = new Table(parentOp, target, coeffTableVector, "coeffTable", alpha, polyTableOutputSize); 
 			vhdl << instance(coeffTable, "coeffTable", false);
 #else
@@ -181,25 +181,23 @@ namespace flopoco{
 #else // This constructor uses the more accurate data computed out of the actual polynomials
 			FixHornerEvaluator* horner = new FixHornerEvaluator(target, lsbIn+alpha+1, msbOut, lsbOut, degree, polyApprox->MSB, polyApprox->LSB, sigmaSign, sigmaMSB, roundingErrorBudget);		
 #endif
-			addSubComponent(horner);
 
-			inPortMap(horner, "X", "Zs");
-			outPortMap(horner, "R", "Ys");
+			inPortMap("X", "Zs");
+			outPortMap("R", "Ys");
 			for(int i=0; i<=polyApprox->degree; i++) {
-				inPortMap(horner,  join("A",i),  join("A",i));
+				inPortMap(join("A",i),  join("A",i));
 			}
 			vhdl << instance(horner, "horner") << endl;
 #endif
 
 		// This is the same order as newwInstance() would do, but does not require to write a factory for this Operator
 		schedule();
-		OperatorPtr h = nullptr;
-		inPortMap(h, "X", "Zs");
+		inPortMap("X", "Zs");
 		for(int i=0; i<=polyApprox->degree; i++) {
-			inPortMap(h,  join("A",i),  join("A",i));
+			inPortMap(join("A",i),  join("A",i));
 		}
-		outPortMap(h, "R", "Ys");
-		h = new  FixHornerEvaluator(this, target, 
+		outPortMap("R", "Ys");
+		OperatorPtr h = new  FixHornerEvaluator(this, target, 
 																lsbIn+alpha+1,
 																msbOut,
 																lsbOut,

@@ -576,7 +576,7 @@ namespace flopoco{
 						<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
 				bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(compressorIONames.str(), compressor->heights[i])
 						<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
-				bitheap->getOp()->inPortMap(compressor, join("X",i), compressorIONames.str());
+				bitheap->getOp()->inPortMap(join("X",i), compressorIONames.str());
 			}
 		}
 
@@ -587,7 +587,7 @@ namespace flopoco{
 				<< bitheap->guid << "_uid" << instanceUID << "_Out";
 		// Following line commented by F2D: outPortMap does the declaration
         // bitheap->getOp()->declare(compressorIONames.str(), compressor->wOut, (compressor->wOut > 1));
-        bitheap->getOp()->outPortMap(compressor, "R", compressorIONames.str());
+        bitheap->getOp()->outPortMap("R", compressorIONames.str());
 
 		//create the compressor instance
         bitheap->getOp()->vhdl << bitheap->getOp()->instance(compressor, join(compressor->getName(), "_uid", instanceUID)) << endl;
@@ -653,7 +653,7 @@ namespace flopoco{
 						<< bitheap->guid << "_uid" << instanceUID << "_In" << i;
 				bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(vectorName.str(), compressor->heights[i])
 						<< " <= \"\" & " << compressorInputs[i] << ";" << endl;
-				bitheap->getOp()->inPortMap(compressor, join("X",i), vectorName.str());
+				bitheap->getOp()->inPortMap(join("X",i), vectorName.str());
 			}
 		}
 
@@ -690,13 +690,13 @@ namespace flopoco{
 				}
 			}
 			if(singleOutputVector == true){
-                bitheap->getOp()->outPortMap(compressor, "R", vectorName.str());
+                bitheap->getOp()->outPortMap("R", vectorName.str());
 			}
 			else{
 				ostringstream tempR;
 				tempR.str("");
 				tempR << "R" << (tempHeight - 1);
-                bitheap->getOp()->outPortMap(compressor, tempR.str(), vectorName.str());
+                bitheap->getOp()->outPortMap(tempR.str(), vectorName.str());
 			}
 
 			//create the compressor
@@ -811,10 +811,10 @@ namespace flopoco{
             adder = new IntAdder(bitheap->op, bitheap->getOp()->getTarget(), bitheap->msb-adderStartIndex+1+1);
 
 			//create the port maps for the adder
-            bitheap->getOp()->inPortMap(adder, "X", adderIn0Name.str());
-            bitheap->getOp()->inPortMap(adder, "Y", adderIn1Name.str());
-            bitheap->getOp()->inPortMap(adder, "Cin", adderCinName.str());
-            bitheap->getOp()->outPortMap(adder, "R", adderOutName.str());
+            bitheap->getOp()->inPortMap("X", adderIn0Name.str());
+            bitheap->getOp()->inPortMap("Y", adderIn1Name.str());
+            bitheap->getOp()->inPortMap("Cin", adderCinName.str());
+            bitheap->getOp()->outPortMap("R", adderOutName.str());
 
 
 			//create the instance of the adder

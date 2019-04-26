@@ -613,30 +613,35 @@ namespace flopoco {
 
 		/**
 		 * Declare an output mapping for an instance of a sub-component
-		 * Also declares the local signal implicitly, taking its width from the component
-		 * @param op is a pointer to the subcomponent
 		 * @param componentPortName is the name of the port on the component
 		 * @param actualSignalName is the name of the signal in This mapped to this port
 		 * @return name
 		 */
-		void outPortMap(Operator* op, string componentPortName, string actualSignalName);
+		void outPortMap(string componentPortName, string actualSignalName);
+
+		/** Obsolete method, because refactoring takes ages */
+		void outPortMap(OperatorPtr op, string componentPortName, string actualSignalName);
 
 
 		/**
 		 * Use a signal as input of a subcomponent
-		 * @param op is a pointer to the subcomponent
 		 * @param componentPortName is the name of the port on the component
 		 * @param actualSignalName is the name of the signal (of this) mapped to this port
 		 */
-		void inPortMap(Operator* op, string componentPortName, string actualSignalName);
+		void inPortMap(string componentPortName, string actualSignalName);
+
+		/** Obsolete method, because refactoring takes ages */
+		void inPortMap(OperatorPtr op, string componentPortName, string actualSignalName);
 
 		/**
 		 * Use a constant signal as input of a subcomponent.
 		 * @param componentPortName is the name of the port on the component
 		 * @param constantValue is the constant value to be mapped to this port
 		 */
-		void inPortMapCst(Operator* op, string componentPortName, string constantValue);
+		void inPortMapCst(string componentPortName, string constantValue);
 
+		/** Obsolete method, because refactoring takes ages */
+		void inPortMapCst(OperatorPtr op, string componentPortName, string constantValue);
 		/**
 		 * Returns the VHDL for an instance of a sub-component.
 		 * @param op represents the operator to be port mapped
@@ -671,7 +676,7 @@ namespace flopoco {
 		 * @portMappings a list of port-connected signal
 		 * @param portTypes the type of port being added (0=input, 1=constant inputs, 2=output)
 		 */
-		void parsePortMappings(OperatorPtr instance, string portMappings, int portTypes);
+		void parsePortMappings(string portMappings, int portTypes);
 
 	public:
 		/**

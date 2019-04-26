@@ -45,8 +45,8 @@ namespace flopoco{
 		Table* table = new Table(this, getTarget(), tableValues, "LUT_LZC", wIn_, wOut_);
 		table->setShared();
 
-		inPortMap(table, "X", "pretreated_input");
-		outPortMap(table, "Y", "O");
+		inPortMap("X", "pretreated_input");
+		outPortMap("Y", "O");
 
 		vhdl << instance(table, "LUT_Count");
 	}
@@ -220,8 +220,8 @@ namespace flopoco{
 			outputName.str("");
 			outputName << "sub_block_" << i;
 
-			inPortMap(table, "X", name.str());
-			outPortMap(table, "Y", outputName.str());
+			inPortMap("X", name.str());
+			outPortMap("Y", outputName.str());
 			
 			secondName.str("");
 			secondName << "table_encoding_" << i;
@@ -308,8 +308,8 @@ namespace flopoco{
 			secondOutputName.str("");
 			secondOutputName << "cleaned_low_bit_" << curBlock;
 
-			inPortMap(decoder, "X", name.str());
-			outPortMap(decoder, "Y", secondOutputName.str());
+			inPortMap("X", name.str());
+			outPortMap("Y", secondOutputName.str());
 
 			vhdl << instance(decoder, outputName.str()) << endl;
 			

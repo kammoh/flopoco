@@ -239,7 +239,7 @@ namespace flopoco{
 		{
 			THROWERROR("Sorry, plainVHDL doesn't work at the moment for FixSOPC. Somebody has to fix it and remove this message" );
 			// Technically if you comment the line above it generates non-correct VHDL
-
+#if 0 // FIXME port me to the new framework
 			// All the KCMs in parallel
 			for(int i=0; i< n; i++)	{
 				FixRealKCM* mult = new FixRealKCM(this,
@@ -275,8 +275,9 @@ namespace flopoco{
 														 "R_int", sumSize+1)
 					 << " <= " <<  join("S", n) << range(sumSize-1, sumSize-(msbOut-lsbOut+1)-1) << " + (" << zg(sumSize) << " & \'1\');" << endl;
 			vhdl << tab << "R <= " <<  "R_int" << range(sumSize, 1) << ";" << endl;
+#endif
 		} // end plain vhdl
-
+	 
 
 	};
 

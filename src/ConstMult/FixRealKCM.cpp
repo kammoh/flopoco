@@ -520,6 +520,9 @@ namespace flopoco{
 				else
 					tablename = join(thisOp->getName()+"_"+getName()+"_T",i);
 					
+				schedule();
+				thisOp->inPortMap ("X", sliceInName);
+				thisOp->outPortMap("Y", sliceOutName);
 				Table* t = new Table(thisOp->getParentOp(),
 														 thisOp->getTarget(),
 														 tableContent,
@@ -529,8 +532,6 @@ namespace flopoco{
 														 1 // logicTable
 														 );
 				
-				thisOp->inPortMap (t , "X", sliceInName);
-				thisOp->outPortMap(t , "Y", sliceOutName);
 				thisOp->vhdl << thisOp->instance(t , instanceName);
 
 				Signal* sliceOut = thisOp->getSignalByName(sliceOutName);

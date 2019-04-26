@@ -34,11 +34,11 @@ namespace flopoco {
 
     void GenericMux::buildXilinx(Operator* parentOp, Target* target, const uint32_t &wIn, const uint32_t &inputCount){
         Xilinx_GenericMux *mux = new Xilinx_GenericMux(parentOp, target,inputCount,wIn );
-        inPortMap(mux,"s_in",getSelectName());
+        inPortMap("s_in",getSelectName());
         for( uint i=0;i<inputCount;++i )
-            inPortMap(mux,join( "x", i, "_in" ), getInputName(i));
+            inPortMap(join( "x", i, "_in" ), getInputName(i));
 
-        outPortMap(mux,"x_out",getOutputName() );
+        outPortMap("x_out",getOutputName() );
     }
 
     void GenericMux::buildAltera(Operator* parentOp, Target *target, const uint32_t &wIn, const uint32_t &inputCount){

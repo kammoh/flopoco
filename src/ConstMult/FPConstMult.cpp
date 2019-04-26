@@ -33,6 +33,9 @@
 using namespace std;
 
 
+// FIXME the logic of instantiating icm, then doing the port maps is obsolete.
+
+
 namespace flopoco{
 
 	// The expert version // TODO define correctRounding
@@ -563,8 +566,8 @@ namespace flopoco{
 
 
 		else{ // normal case, mantissa is not one
-			inPortMap  (icm, "X", "x_sig");
-			outPortMap (icm, "R","sig_prod");
+			inPortMap  ("X", "x_sig");
+			outPortMap ("R","sig_prod");
 			vhdl << instance(icm, "sig_mult");
 			
 			// TODO setCycleFromSignal("sig_prod"); 

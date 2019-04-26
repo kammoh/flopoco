@@ -175,7 +175,6 @@ namespace flopoco{
 	void IntConstMult::build_pipeline(ShiftAddOp* sao) {
 		string iname, jname, isignal, jsignal;
 		bool use_pipelined_adder;
-		IntAdder* adder=0;
 		int size, isize, jsize, shift;
 
 		
@@ -242,11 +241,11 @@ namespace flopoco{
 						vhdl << jname << ";" << endl;
 
 						if(use_pipelined_adder) { // Need to use an IntAdder subcomponent
-							inPortMap  (adder, "X", isignal);
-							inPortMap  (adder, "Y", jsignal);
-							inPortMapCst  (adder, "Cin", "'0'");
-							outPortMap (adder, "R",sao->name);
-							vhdl << instance(adder, sao->name + "_adder");
+							newInstance("IntAdder", sao->name + "_adder",
+													join("wIn=", size),
+													"X=>"+isignal+",Y=>"+jsignal,
+													"R=>"+sao->name,
+													"Cin=>'0'");
 						}
 						else
 							vhdl << tab << declare(getTarget()->adderDelay(size), sao->name, size) << " <= " << isignal << " + " << jsignal << ";" << endl;
@@ -320,22 +319,24 @@ namespace flopoco{
 
 								// do the sum
 								if(use_pipelined_adder) {
-									inPortMap  (adder, "X", jsignal);
 									if(op==Add) {
-										inPortMap  (adder, "Y", isignal);
-										inPortMapCst  (adder, "Cin", "'0'");
+										newInstance("IntAdder", sao->name + "_adder",
+																join("wIn=", size-shift),
+																"X=>"+jsignal+",Y=>"+isignal,
+																"R=>"+sao->name+"_h",
+																"Cin=>'0'");
 									} 
 									else { // RSub
 										string isignalneg = isignal+"_neg"; 
 										vhdl << declare(isignalneg, size - shift) << " <= not " << isignal;
-										inPortMap  (adder, "Y", isignal);
-										inPortMapCst  (adder, "Cin", "'1'");
+										newInstance("IntAdder", sao->name + "_adder",
+															join("wIn=", size-shift),
+															"X=>"+jsignal+",Y=>"+isignalneg,
+															"R=>"+sao->name+"_h",
+															"Cin=>'1'");
 									}
-									string resname=sao->name+"_h";
-									outPortMap (adder, "R",resname);
-									vhdl << instance(adder, sao->name + "_adder");
 
-									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " << resname + ";" << endl;
+									vhdl << tab << declare(sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " << sao->name+"_h" + ";" << endl;
 								}
 								else{
 									vhdl << tab << declare(getTarget()->adderDelay(size), sao->name, sao->size) << "("<<size-1<<" downto " <<  shift << ") <= " // vz (size-1 downto s)
@@ -371,15 +372,11 @@ namespace flopoco{
 							if(use_pipelined_adder) {
 								string jsignalneg = jsignal+"_neg"; 
 								vhdl << declare(jsignalneg, size) << " <= not " << jsignal;
-								inPortMap  (adder, "X", isignal);
-								inPortMap  (adder, "Y", jsignalneg);
-								inPortMapCst  (adder, "Cin", "'1'");
-								string resname=sao->name+"_h";
-								outPortMap (adder, "R",resname);
-								vhdl << instance(adder, sao->name + "_adder");
-
-								vhdl << tab << declare(sao->name, size) << " <=  " << resname + ";" << endl;
-
+								newInstance("IntAdder", sao->name + "_adder",
+														join("wIn=", size),
+														"X=>"+isignal+",Y=>"+jsignalneg,
+														"R=>"+sao->name,
+														"Cin=>'1'");
 							}
 						}
 					}

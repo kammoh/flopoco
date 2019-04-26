@@ -29,7 +29,7 @@ namespace flopoco{
 	{
 		string idext;
 
-		setCopyrightString("Florent de Dinechin (2007)");
+		setCopyrightString("Florent de Dinechin (2007-2019)");
 		//the name of the Wrapped operator consists of the name of the operator to be
 		//	wrapped followd by _Wrapper
 		setNameWithFreqAndUID(op_->getName() + "_Wrapper");
@@ -53,13 +53,13 @@ namespace flopoco{
 				addRegisteredSignalCopy(idext, s->getName());
 #endif
 				//connect the port of the wrapped operator
-				inPortMap (op, s->getName(), idext);
+				inPortMap (s->getName(), idext);
 			}else if(s->type() == Signal::out){
 				//copy the output
 				addOutput(s->getName(), s->width(), s->isBus());
 				//connect the output
 				idext = "o_" + s->getName();
-				outPortMap (op, s->getName(), idext);
+				outPortMap (s->getName(), idext);
 			}
 			// Adding an attribute so that Vivado doesn't connect the IOs to IOBuff
 			// addAttribute("buffer_type",  "string",  s->getName(), "none", true );

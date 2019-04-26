@@ -121,21 +121,19 @@ namespace flopoco{
 		
 		// This is the same order as newwInstance() would do, but does not require to write a factory for this Operator
 		schedule();
-		OperatorPtr h = nullptr;
-		inPortMap(h, "X", "Xs");
+		inPortMap("X", "Xs");
 		for(int i=0; i<=degree; i++) {
-			inPortMap(h, join("A",i), join("A",i));
+			inPortMap(join("A",i), join("A",i));
 		}
-		outPortMap(h, "R", "Ys");
-		h = new  FixHornerEvaluator(this, target, 
-																lsbIn,
-																msbOut,
-																lsbOut,
-																degree, 
-																coeffMSB, 
-																poly->coeff[0]->LSB // it is the smaller LSB
-																);
-		//		addSubComponent(h); ????
+		outPortMap("R", "Ys");
+		OperatorPtr h = new  FixHornerEvaluator(this, target, 
+																						lsbIn,
+																						msbOut,
+																						lsbOut,
+																						degree, 
+																						coeffMSB, 
+																						poly->coeff[0]->LSB // it is the smaller LSB
+																						);
 		vhdl << instance(h, "horner", false);
 		
 		vhdl << tab << "Y <= " << "std_logic_vector(Ys);" << endl;
