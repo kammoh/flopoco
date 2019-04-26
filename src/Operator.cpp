@@ -2468,40 +2468,42 @@ namespace flopoco{
 	{
 		//try to parse the unknown dependences first (we have identified a dependency A->B but A or B has not yet been declared)
 		// unresolvedDependenceTable is a global variable that holds this information
-		for(vector<triplet<string, string, int>>::iterator it=unresolvedDependenceTable.begin(); it!=unresolvedDependenceTable.end(); it++)
+		vector<triplet<string, string, int>> newURDTable;
+		for(auto it: unresolvedDependenceTable)
 			{
 				Signal *lhs, *rhs;
 				int delay;
 				bool unknownLHSName = false, unknownRHSName = false;
 
 				try{
-					lhs = getSignalByName(it->first); // Was this signal declared since last time?
+					lhs = getSignalByName(it.first); // Was this signal declared since last time?
 				}catch(string &e){
-					// REPORT(DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it->first);
+					// REPORT(DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it.first);
 					unknownLHSName = true;
 				}
 
 				try{
-					rhs = getSignalByName(it->second); // or this one
+					rhs = getSignalByName(it.second); // or this one
 				}catch(string &e){
-					// REPORT(DEBUG, "Warning: signal name on the right-hand side of an assignment still unknown: " << it->second);
+					// REPORT(DEBUG, "Warning: signal name on the right-hand side of an assignment still unknown: " << it.second);
 					unknownRHSName = true;
 				}
 
-				delay = it->third;
+				delay = it.third;
 
 				// if both sides are now known, add the dependences to the signal graph:
 				//		erase the entry from unresolvedDependenceTable
 				//		add the signals to the list of signals to be scheduled
-				if(!unknownLHSName && !unknownRHSName)
-					{
+				if(!unknownLHSName && !unknownRHSName)	{
 						//add the dependences
 						lhs->addPredecessor(rhs, delay);
 						rhs->addSuccessor(lhs, delay);
-						unresolvedDependenceTable.erase(it);
 					}
+				else { // keep it for next time
+					newURDTable.push_back(it);
+				}
 			}
-
+		unresolvedDependenceTable = newURDTable;
 		// Now go through the dependence table built by the vhdl lexer, transfering the corresponding information into the Signal graph.
 		// dependenceTable is updated by the lexer between two VHDL statements / semicolons
 		for(vector<triplet<string, string, int>>::iterator it=vhdl.dependenceTable.begin(); it!=vhdl.dependenceTable.end(); it++)
@@ -2579,13 +2581,14 @@ namespace flopoco{
 
 	void Operator::schedule()
 	{
-		REPORT(DEBUG, "Entering schedule() with isOperatorScheduled_="<< isOperatorScheduled_); 
+		REPORT(DEBUG, "Entering schedule() of operator " << getName() << " with isOperatorScheduled_="<< isOperatorScheduled_); 
 		if(noParseNoSchedule_ || isOperatorScheduled_) // for TestBench and Wrapper
 			return;
 
-		REPORT(DEBUG, "schedule(): Entering schedule() of operator " << getName());
 		// move the dependences extracted by the lexer to the operator's internal signals
 		moveDependenciesToSignalGraph();
+
+		
 		// schedule from the root parent op
 		if(parentOp_ != nullptr && !isShared()) {
 			REPORT(DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
