@@ -203,7 +203,7 @@ namespace flopoco {
 		}
 		outPortMap( "R", "Yinternal");
 		FixSOPC* fixSOPC = new FixSOPC(this, getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
-		vhdl << instance(fixSOPC, "fixSOPC");
+		vhdl << instance(fixSOPC, "fixSOPC", false /*this suppresses the "obsolete" warning*/ );
 
 
 		//The final rounding must be computed with an addition, no escaping it
