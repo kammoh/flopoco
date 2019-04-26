@@ -224,6 +224,7 @@ namespace flopoco{
 
 			// actually generate the code
 			for(int i=0; i<n; i++)		{
+
 				kcm[i]->addToBitHeap(bitHeap, g);
 			}
 

@@ -43,8 +43,8 @@ using namespace std;
 
 namespace flopoco {
 
-	FixIIR::FixIIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_,  vector<string> coeffb_, vector<string> coeffa_, double H_, double Heps_) :
-		Operator(parentOp, target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeffb(coeffb_), coeffa(coeffa_), H(H_), Heps(Heps_)
+	FixIIR::FixIIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_,  vector<string> coeffb_, vector<string> coeffa_, double H_, double Heps_, bool buildWorstCaseTestBench_) :
+		Operator(parentOp, target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeffb(coeffb_), coeffa(coeffa_), H(H_), Heps(Heps_), buildWorstCaseTestBench(buildWorstCaseTestBench_)
 	{
 		srcFileName="FixIIR";
 		setCopyrightString ( "Florent de Dinechin, Louis Beseme, Matei Istoan (2014-2019)" );
@@ -155,10 +155,10 @@ namespace flopoco {
 		}
 
 		// The instance of the shift register for Xd1...Xdn-1
-		vhdl << tab << declare("Xd0", 1-lsbIn)  << " <= X;" << endl;
+		vhdl << tab << declare("U0", 1-lsbIn)  << " <= X;" << endl;
 		string outportmap="";
 		for(uint32_t i = 1; i<n; i++) {
-			outportmap += join("Xd", i) + "=>" +  join("Xd", i) + (i<n-1?",":"") ;
+			outportmap += join("Xd", i) + "=>" +  join("U", i) + (i<n-1?",":"") ;
 		}
 		newInstance("ShiftReg", "inputShiftReg",
 								join("w=",1-lsbIn) + join(" n=", n-1) + join(" reset=", 1), // the parameters
@@ -178,8 +178,8 @@ namespace flopoco {
 		// Now building a single SOPC. For this we need the following info:
 		//		FixSOPC(Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1);
 		// We will concatenate coeffb of size n then then coeffa of size m
-
-#if 0		
+		// not using the newInstance() interface here.
+		
 		vector<double> maxInSOPC;
 		vector<int> lsbInSOPC;
 		vector<string> coeffSOPC;
@@ -193,21 +193,18 @@ namespace flopoco {
 			lsbInSOPC.push_back(lsbExt); // for y
 			coeffSOPC.push_back("-("+coeffa[i]+")");
 		}
-		
-		FixSOPC* fixSOPC = new FixSOPC(getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
-		addSubComponent(fixSOPC);
+
+		schedule();
 		for (uint32_t i=0; i<n; i++) {
-			inPortMap(fixSOPC, join("X",i), join("U", i));
+			inPortMap(join("X",i), join("U", i));
 		}
 		for (uint32_t i = 0; i<m; i++)	{
-			inPortMap(fixSOPC, join("X",i+n), join("Y", i));
+			inPortMap(join("X",i+n), join("Y", i));
 		}
-		outPortMap(fixSOPC, "R", "Yinternal");
-
+		outPortMap( "R", "Yinternal");
+		FixSOPC* fixSOPC = new FixSOPC(this, getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
 		vhdl << instance(fixSOPC, "fixSOPC");
-#else
 
-#endif
 
 		//The final rounding must be computed with an addition, no escaping it
 		int sizeYinternal = msbOut - lsbExt + 1;
@@ -369,7 +366,7 @@ namespace flopoco {
 		// First fill with a few ones, then a few zeroes
 		TestCase *tc;
 
-#if 0 // Test on the impulse response, useful for debugging 
+#if 1 // Test on the impulse response, useful for debugging 
 		tc = new TestCase(this);
 		tc->addInput("X", (mpz_class(1)<<(-lsbIn))-1 ); // 1 (almost)
 		emulate(tc);
@@ -383,42 +380,40 @@ namespace flopoco {
 		}
 		
 #endif
-#if 1
-		// compute the impulse response
-		computeImpulseResponse();
-		// Now fill with a signal that follows the sign alternance of the impulse response: this builds a worst-case signal
-		miny=0; maxy=0;
-		int storageOffset=n+m;
-		uint32_t kmax = vanishingK-storageOffset;
-		for (uint32_t i =0; i<kmax; i++) {
-			mpz_class val;
+		if(buildWorstCaseTestBench) {
+			// compute the impulse response
+			computeImpulseResponse();
+			// Now fill with a signal that follows the sign alternance of the impulse response: this builds a worst-case signal
+			miny=0; maxy=0;
+			int storageOffset=n+m;
+			uint32_t kmax = vanishingK-storageOffset;
+			for (uint32_t i =0; i<kmax; i++) {
+				mpz_class val;
 #if 0
-			if(yi[kmax-i]<0) {
-				val = ((mpz_class(1)<<(-lsbIn)) -1) ; // 011111
-			}
-			else {
-				val = ((mpz_class(1)<<(-lsbIn)) +1); // 100001
-			}
+				if(yi[kmax-i]<0) {
+					val = ((mpz_class(1)<<(-lsbIn)) -1) ; // 011111
+				}
+				else {
+					val = ((mpz_class(1)<<(-lsbIn)) +1); // 100001
+				}
 #else // multiplying by 1 and -1 ensures no rounding error in the FIR part
 			// hence the following code
 			// But no observable difference... 
-			val = ((mpz_class(1)<<(-lsbIn)) -1) * 9 / 10; // 011111;  *9/10 to trigger rounding errors
-			if(yi[kmax-i]>=0) {
-				// two's complement
-				val = ((mpz_class(1)<<(-lsbIn+1)) -1) -val +1 ; // 111111 - val + 1
+				val = ((mpz_class(1)<<(-lsbIn)) -1) * 9 / 10; // 011111;  *9/10 to trigger rounding errors
+				if(yi[kmax-i]>=0) {
+					// two's complement
+					val = ((mpz_class(1)<<(-lsbIn+1)) -1) -val +1 ; // 111111 - val + 1
+				}
+#endif
+				tc = new TestCase(this);
+				tc->addInput("X", val); 
+				emulate(tc);
+				tcl->add(tc);
+			
 			}
 
-#endif
-			tc = new TestCase(this);
-			tc->addInput("X", val); 
-			emulate(tc);
-			tcl->add(tc);
-			
-		}
-
-		REPORT(0,"Filter output remains in [" << miny << ", " << maxy<<"]");
-#endif
-		
+			REPORT(0,"Filter output remains in [" << miny << ", " << maxy<<"]");
+		}		
 	};
 
 
@@ -435,6 +430,9 @@ namespace flopoco {
 		vector<string> inputa;
 		string in;
 		UserInterface::parseString(args, "coeffa", &in);
+		bool buildWorstCaseTestBench;
+		UserInterface::parseBoolean(args, "buildWorstCaseTestBench", &buildWorstCaseTestBench);
+		
 		// tokenize a string, thanks Stack Overflow
 		stringstream ss(in);
 		while( ss.good() )	{
@@ -452,7 +450,7 @@ namespace flopoco {
 				inputb.push_back( substr );
 			}
 		
-		return new FixIIR(parentOp, target, lsbIn, lsbOut, inputb, inputa, h, heps);
+		return new FixIIR(parentOp, target, lsbIn, lsbOut, inputb, inputa, h, heps, buildWorstCaseTestBench);
 	}
 
 
@@ -466,7 +464,8 @@ namespace flopoco {
                         H(real)=0: worst-case peak gain. if 0, it will be computed by the WCPG library;\
                         Heps(real)=0: worst-case peak gain of the feedback loop. if 0, it will be computed by the WCPG library;\
                         coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
-                        coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\"",
+                        coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\";\
+                        buildWorstCaseTestBench(bool)=false: if true, the TestBench for this IIR will begin with a stimulation by the worst-case input signal",
 											 "",
 											 FixIIR::parseArguments
 											 ) ;

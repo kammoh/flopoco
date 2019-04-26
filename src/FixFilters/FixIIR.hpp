@@ -11,7 +11,7 @@ namespace flopoco{
 
 	public:
 		/** @brief Constructor ; you must use bitheap in case of negative coefficient*/
-		FixIIR(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeffb, vector<string> coeffa, double H=0.0, double Heps=0.0);
+		FixIIR(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeffb, vector<string> coeffa, double H=0.0, double Heps=0.0, bool buildWorstCaseTestBench=false);
 
 		/** @brief Destructor */
 		~FixIIR();
@@ -43,6 +43,7 @@ namespace flopoco{
 		vector<string> coeffa;			/**< the a_i coefficients as strings */
 		double H;						/**< Worst case peak gain of this filter */
 		double Heps;						/**< Worst case peak gain of the error filter */
+		bool buildWorstCaseTestBench; /**< if true, build the worst-case test bench */
 		uint32_t n;							/**< number of taps on the numerator */
 		uint32_t m;							/**< number of taps on the denominator */
 		int g;							/**< number of guard bits used for the IIR -- more are used inside the SOPC */

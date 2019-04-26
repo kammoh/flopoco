@@ -416,7 +416,8 @@ namespace flopoco{
 		bitHeap=bitHeap_;
 		g=g_;
 
-		bool special=specialCasesForBitHeap();
+		bool special = specialCasesForBitHeap();
+
 		if(!special)
 			buildTablesForBitHeap();
 	}
@@ -520,9 +521,10 @@ namespace flopoco{
 				else
 					tablename = join(thisOp->getName()+"_"+getName()+"_T",i);
 					
-				schedule();
+				schedule(); // Here is the crash
 				thisOp->inPortMap ("X", sliceInName);
 				thisOp->outPortMap("Y", sliceOutName);
+
 				Table* t = new Table(thisOp->getParentOp(),
 														 thisOp->getTarget(),
 														 tableContent,
