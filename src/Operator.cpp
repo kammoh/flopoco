@@ -1392,6 +1392,17 @@ namespace flopoco{
 	}
 
 
+	void Operator::newSharedInstance(OperatorPtr op, string instanceName, string inPortMaps, string outPortMaps, string inPortMapsCst){
+		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
+		//parse the input port mappings
+		parsePortMappings(inPortMaps, 0);
+		//parse the constant input port mappings, if there are any
+		parsePortMappings(inPortMapsCst, 1);
+		//parse the input port mappings
+		parsePortMappings(outPortMaps, 2);
+		//create the instance
+		vhdl << this->instance(op, instanceName, false);
+	}
 
 	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)
 	{
@@ -1417,27 +1428,27 @@ namespace flopoco{
 			}
 		}
 
-        //parse the input port mappings
-        parsePortMappings(inPortMaps, 0);
-        //parse the constant input port mappings, if there are any
-				parsePortMappings(inPortMapsCst, 1);
-				//parse the input port mappings
-				parsePortMappings(outPortMaps, 2);
+		//parse the input port mappings
+		parsePortMappings(inPortMaps, 0);
+		//parse the constant input port mappings, if there are any
+		parsePortMappings(inPortMapsCst, 1);
+		//parse the input port mappings
+		parsePortMappings(outPortMaps, 2);
+		
+		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
+		for (auto i: parametersVector){
+			REPORT(DEBUG, i);
+		}
+		//create the operator
+		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
 
-        REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
-        for (auto i: parametersVector){
-            REPORT(DEBUG, i);
-        }
-        //create the operator
-        instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
-
-        REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
+		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 
 		//create the instance
 		vhdl << this->instance(instance, instanceName, false);
 		// false means: no warning. Eventually the code of instance() should be inlined here, this is a transitionnal measure to support legacy constructor code
 		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after instance()" );
-
+		
 		return instance;
 	}
 

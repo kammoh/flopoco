@@ -642,6 +642,8 @@ namespace flopoco {
 
 		/** Obsolete method, because refactoring takes ages */
 		void inPortMapCst(OperatorPtr op, string componentPortName, string constantValue);
+
+
 		/**
 		 * Returns the VHDL for an instance of a sub-component.
 		 * @param op represents the operator to be port mapped
@@ -652,7 +654,7 @@ namespace flopoco {
 		string instance(Operator* op, string instanceName, bool outputWarning=true);
 
 		/**
-		 * Create a new instance of an operator inside the current containing operator
+		 * Create a new instance of an operator inside the current operator
 		 * @param opName the type of operator being instantiated
 		 * @param instanceName the name of the instance being created (label compulsory in VHDL)
 		 * @param parameters the parameters given to the constructor of the instance's operator
@@ -666,6 +668,18 @@ namespace flopoco {
 		 */
 		OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
+		/**
+		 * Create a new instance of a shared operator that has been constructed beforehand.inside
+		 * @param op a pointer to the shared operator
+		 * @param instanceName the name of the instance being created (label compulsory in VHDL)
+		 * @param inPortMaps the port mappings for the inputs
+		 * 				specified as a string containing 'portName:signalName' separated by ',' (as on VHDL port maps)
+		 * @param outPortMaps the port mappings for the outputs
+		 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
+		 * @param inPortMapsCst the constant port mappings for the inputs, if there are any
+		 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
+		 */
+		void newSharedInstance(OperatorPtr op, string instanceName, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
 	private:	
 		/**

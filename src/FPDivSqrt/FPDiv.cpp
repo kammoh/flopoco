@@ -181,20 +181,19 @@ namespace flopoco{
 				// TODO: get rid of all the ostringstream on the model of qi
 				string qi =join("q", i);						//actual quotient digit, LUT's output
 
-				ostringstream wi, wim1, seli, wipad, wim1full, wim1fulla, tInstance;
+				ostringstream wi, wim1, seli, wipad, wim1full, wim1fulla;
 				wi << "w" << i;						//actual partial remainder
 				wim1 << "w" << i-1;					//partial remainder for the next iteration, = left shifted wim1full
 				seli << "sel" << i;					//constructed as the wi's first 4 digits and D's first, LUT's input
 				wipad << "w" << i << "pad";			//1-left-shifted wi
 				wim1full << "w" << i-1 << "full";	//partial remainder after this iteration, = wi+qi*D
 				wim1fulla << "w" << i-1 << "fulla";	//partial remainder after this iteration, = wi+qi*D
-				tInstance << "SelFunctionTable" << i;
+				string tInstance = "SelFunctionTable" + to_string(i);
 
 				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & prescaledfY"<< range(wF, wF-1) <<";" << endl;
-				inPortMap ("X", seli.str());
-				outPortMap("Y", qi);
-				vhdl << instance(selfunctiontable , tInstance.str());
-				REPORT(DEBUG, "After table instance " << i);
+
+				newSharedInstance(selfunctiontable , tInstance, "X=>"+seli.str(), "Y=>"+ qi);
+				// REPORT(DEBUG, "After table instance " << i);
 				
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
@@ -332,14 +331,14 @@ namespace flopoco{
 			for(i=nDigit-1; i>=1; i--) {
 
 				string qi =join( "q", i);						//actual quotient digit, LUT's output
-				ostringstream wi, wim1, seli, qiTimesD, wipad, wim1full, tInstance;
+				ostringstream wi, wim1, seli, qiTimesD, wipad, wim1full;
 				wi << "w" << i;						//actual partial remainder
 				wim1 << "w" << i-1;					//partial remainder for the next iteration, = left shifted wim1full
 				seli << "sel" << i;					//constructed as the wi's first 4 digits and D's first, LUT's input
 				qiTimesD << "q" << i << "D";		//qi*D
 				wipad << "w" << i << "pad";			//1-left-shifted wi
 				wim1full << "w" << i-1 << "full";	//partial remainder after this iteration, = wi+qi*D
-				tInstance << "SelFunctionTable" << i;
+				string tInstance = "SelFunctionTable" + to_string(i);
 
 				/*
 						Detailed algorithm for alpha=3 :
@@ -361,9 +360,7 @@ namespace flopoco{
 					vhdl << tab << declare(seli.str(),9) << " <= " << wi.str() << range( wF+2, wF-3) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					//vhdl << tab << declare(seli.str(),10) << " <= " << wi.str() << range( wF+2, wF-4) << " & fY" << range(wF-1,wF-3)  << ";" << endl;
 					
-				inPortMap ("X", seli.str());
-				outPortMap("Y", qi);
-				vhdl << instance(selfunctiontable , tInstance.str());
+				newSharedInstance(selfunctiontable , tInstance, "X=>"+seli.str(), "Y=>"+ qi);
 				vhdl << endl;
 
 				if(alpha==3) {

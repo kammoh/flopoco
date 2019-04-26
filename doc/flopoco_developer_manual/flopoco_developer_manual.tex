@@ -231,17 +231,19 @@ Beware, the order is important for the operator scheduling to work properly, and
 \subsection{Sub-components: shared instances}
 
 A component may also be shared (i.e. the same component is reused many times).
-An example is the small table in \texttt{IntConstDiv} \cite{dedinechin:2012:ensl-00642145:1}.
-In this case the typical code skeleton to use is the following:
+Simple examples are the tables in FPConstDiv, or in \texttt{IntConstDiv}.
+
+The preferred method to use in such case is the \emph{newSharedInstance()} method of Operator, as in the following:
 \begin{verbatim}
 Operator* op = new MySubComponent(...);
 op -> setShared();
 //now some loop that creates many instances
 for (....) {
-  inPortMap(op, ...);    // as many times as there are inputs
-  outPortMap(op, ...);   // as many times as there are outputs
-  vhdl << instance(op, "myInstanceName");
-
+  string myInstanceName = ...; 
+  string actualX = ...;
+  string actualR = ...;
+  vhdl << declare(actualX, ..) << " <= " << ...;   
+  newSharedInstance(op, myInstanceName, "X=>"+actualX, "R=>"+actualR);
 }
 \end{verbatim}
 
