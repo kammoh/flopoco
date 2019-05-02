@@ -684,23 +684,27 @@ namespace flopoco
 		if(index==-1) 
 		{ // The unit tests
 			vector<string> function;
+			vector<bool> signedIn;		  
 			vector<int> msbOut;
 			vector<bool> scaleOutput;			// multiply output by (1-2^lsbOut) to prevent it  reaching 2^(msbOut+1) due to faithful rounding  
-
 			function.push_back("2^x");			// input in [0,1) output in [1, 2) : need scaleOutput
+			signedIn.push_back(false);
 			msbOut.push_back(0);
 			scaleOutput.push_back(true);
 			
 			function.push_back("1/(x+1)");  // input in [0,1) output in [0.5,1] but we don't want scaleOutput
+			signedIn.push_back(false);
 			msbOut.push_back(0);
 			scaleOutput.push_back(false); 
 			msbOut.push_back(0);
 
 			function.push_back("sin(pi/4*x)"); 
+			signedIn.push_back(false);
 			msbOut.push_back(-1);
 			scaleOutput.push_back(false); 
 
 			function.push_back("sin(pi/2*x)"); 
+			signedIn.push_back(false);
 			msbOut.push_back(-1);
 			scaleOutput.push_back(true); 
 
@@ -714,6 +718,7 @@ namespace flopoco
 					}
 					f="\"" + f + "\"";
 					paramList.push_back(make_pair("f", f));
+					paramList.push_back(make_pair("signedIn", to_string(signedIn[i]) ) );
 					paramList.push_back(make_pair("lsbIn", to_string(lsbIn)));
 					paramList.push_back(make_pair("lsbOut", to_string(lsbOut)));
 					paramList.push_back(make_pair("msbOut", to_string(msbOut[i])));
