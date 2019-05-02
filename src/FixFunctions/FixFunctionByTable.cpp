@@ -75,7 +75,7 @@ namespace flopoco{
 											 "FunctionApproximation",
 											 "",
 											 "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-signedIn(bool): true if the function input is [-1,1), false if it is [0,1);\
+signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;",

@@ -3,7 +3,7 @@
 
 AutoTest
 Compressor
-BitheapTest
+# BitheapTest #  expose it in debug mode  
 Shifter
 LZOC
 LZOC3
@@ -18,9 +18,9 @@ IntConstDiv
 DSPBlock
 IntMultiplier
 FixFunctionByTable
+FixFunctionByMultipartiteTable
 FixFunctionBySimplePoly
 FixFunctionByPiecewisePoly
-FixFunctionByMultipartiteTable
 PiecewisePolyApprox
 FixRealKCM
 FixRealShiftAdd

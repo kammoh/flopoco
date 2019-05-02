@@ -339,7 +339,7 @@ namespace flopoco{
 			int wZ=w-wA+g; // see alignment below. Actually w-2-wA+2  (-2 because Q&O bits, +2 because mult by Pi)
 
 			newInstance("FixRealKCM", "MultByPi",
-									join("msbIn=", -2-wA-1) + join(" lsbIn=",-w-g) + join(" lsbOut=",-w-g)  + " constant=pi signedInput=0",
+									join("msbIn=", -2-wA-1) + join(" lsbIn=",-w-g) + join(" lsbOut=",-w-g)  + " constant=pi signedIn=0",
 									"X=>Y_red",
 									"R=>Z");
 

@@ -64,10 +64,10 @@ namespace flopoco{
 
 	
 	//standalone operator
-	FixRealKCM::FixRealKCM(OperatorPtr parentOp, Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
+	FixRealKCM::FixRealKCM(OperatorPtr parentOp, Target* target, bool signedIn_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
 		Operator(parentOp, target),
 		thisOp(this),
-		signedInput(signedInput_),
+		signedIn(signedIn_),
 		msbIn(msbIn_),
 		lsbIn(lsbIn_),
 		lsbOut(lsbOut_),
@@ -82,10 +82,10 @@ namespace flopoco{
 		computeGuardBits();
 		
 		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
-		REPORT(DETAILED, "FixRealKCM  signedInput=" << signedInput << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
+		REPORT(DETAILED, "FixRealKCM  signedIn=" << signedIn << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
 		
 		addInput("X",  msbIn-lsbIn+1);
-		//		addFixInput("X", signedInput,  msbIn, lsbIn); // The world is not ready yet
+		//		addFixInput("X", signedIn,  msbIn, lsbIn); // The world is not ready yet
 		inputSignalName = "X"; // for buildForBitHeap
 		addOutput("R", msbOut-lsbOut+1);
 
@@ -103,7 +103,7 @@ namespace flopoco{
 
 			if(negativeConstant) { // In this case msbOut was incremented in init()
 				vhdl << tab << "R" << " <= " << zg(msbOut-lsbOut+1) << " - ";
-				if(signedInput) {
+				if(signedIn) {
 					vhdl << "("
 							 <<  rTempName << of(rTempSize-1) << " & " // sign extension 
 							 <<  rTempName << range(rTempSize-1, g)
@@ -145,7 +145,7 @@ namespace flopoco{
 	FixRealKCM::FixRealKCM(
 												 Operator* thisOp_, 
 												 string multiplicandX,
-												 bool signedInput_,
+												 bool signedIn_,
 												 int msbIn_,
 												 int lsbIn_,
 												 int lsbOut_, 
@@ -155,7 +155,7 @@ namespace flopoco{
 												 ):
 		Operator(thisOp_->getParentOp(), thisOp_->getTarget()),
 		thisOp(thisOp_),
-		signedInput(signedInput_),
+		signedIn(signedIn_),
 		msbIn(msbIn_),
 		lsbIn(lsbIn_),
 		lsbOut(lsbOut_),
@@ -223,7 +223,7 @@ namespace flopoco{
 		//if negative constant, then set negativeConstant
 		negativeConstant = ( mpfr_cmp_si(mpC, 0) < 0 ? true: false );
 
-		signedOutput = negativeConstant || signedInput;
+		signedOutput = negativeConstant || signedIn;
 		mpfr_abs(absC, mpC, GMP_RNDN);
 
 		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
@@ -235,7 +235,7 @@ namespace flopoco{
 				 << "_"  << vhdlize(lsbIn)
 				 <<	"_" << vhdlize(lsbOut)
 				 << "_" << vhdlize(constant)
-				 << (signedInput  ?"_signed" : "_unsigned");
+				 << (signedIn  ?"_signed" : "_unsigned");
 #else
 		name <<"FixRealKCM";
 #endif
@@ -349,7 +349,7 @@ namespace flopoco{
 		// The chunk input to tables of index i>0 is always an unsigned number, so their output will be constant, fixed by the sign of 
 		for (int i=0; i<numberOfTables; i++) {
 			int s;
-			if (i==0 && signedInput) {
+			if (i==0 && signedIn) {
 				// This is the only case when we can have a variable sign
 					s=0;
 			}
@@ -489,7 +489,7 @@ namespace flopoco{
 		thisOp->vhdl <<  t.str();
 #endif
 		// copy the signedness into rtemp
-		thisOp->getSignalByName(rTempName)->setIsSigned(signedInput);
+		thisOp->getSignalByName(rTempName)->setIsSigned(signedIn);
 		return rTempName;
 	}
 
@@ -584,7 +584,7 @@ namespace flopoco{
 		int wOut=msbOut-lsbOut+1;
 		
 		// get rid of two's complement
-		if(signedInput)	{
+		if(signedIn)	{
 			if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )	 {
 				svX -= (mpz_class(1)<<wIn);
 				negativeInput = true;
@@ -671,13 +671,13 @@ namespace flopoco{
 					string msbInStr = to_string(lsbIn+wIn);
 					for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
 						string lsbOutStr = to_string(lsbOut);
-						for(int signedInput=0; signedInput<2; signedInput++) {
-							string signedInputStr = to_string(signedInput);
+						for(int signedIn=0; signedIn<2; signedIn++) {
+							string signedInStr = to_string(signedIn);
 							for(auto c:constantList) { // test various constants
 								paramList.push_back(make_pair("lsbIn",  lsbInStr));
 								paramList.push_back(make_pair("lsbOut", lsbOutStr));
 								paramList.push_back(make_pair("msbIn",  msbInStr));
-								paramList.push_back(make_pair("signedInput", signedInputStr));
+								paramList.push_back(make_pair("signedIn", signedInStr));
 								paramList.push_back(make_pair("constant", c));
 								testStateList.push_back(paramList);
 								paramList.clear();
@@ -698,19 +698,19 @@ namespace flopoco{
 	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
-		bool signedInput;
+		bool signedIn;
 		double targetUlpError;
 		string constant;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseString(args, "constant", &constant);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "msbIn", &msbIn);
-		UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealKCM(
 													parentOp,
 													target, 
-													signedInput,
+													signedIn,
 													msbIn,
 													lsbIn,
 													lsbOut,
@@ -726,7 +726,7 @@ namespace flopoco{
 				"Table based real multiplier. Output size is computed",
 				"ConstMultDiv",
 				"",
-				"signedInput(bool): 0=unsigned, 1=signed; \
+				"signedIn(bool): 0=unsigned, 1=signed; \
 				msbIn(int): weight associated to most significant bit (including sign bit);\
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \

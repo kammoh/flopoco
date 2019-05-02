@@ -19,7 +19,7 @@ namespace flopoco{
 								 Target* target, 
 								 unsigned int wIn,
 								 unsigned int n,
-								 bool signedInput,
+								 bool signedIn,
 								 unsigned int wOut=0
 								 );
 		
@@ -36,7 +36,7 @@ namespace flopoco{
 	private:
 		unsigned int wIn;
 		unsigned int n;
-		bool signedInput;
+		bool signedIn;
 		unsigned int wOut;
 	};
 

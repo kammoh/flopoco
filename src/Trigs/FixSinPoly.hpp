@@ -23,11 +23,11 @@ namespace flopoco{
 	{
 	public:
 
-		FixSinPoly(OperatorPtr parentOp, Target* target, int msbIn_, int lsbIn_, bool truncated = false, int msbOut_ = 0, int lsbOut_ = 0, bool signedInput_ = false);
+		FixSinPoly(OperatorPtr parentOp, Target* target, int msbIn_, int lsbIn_, bool truncated = false, int msbOut_ = 0, int lsbOut_ = 0, bool signedIn_ = false);
 		
 		FixSinPoly(Operator* parentOp, Target* target, Signal* multiplicandX, int msbIn_, int lsbIn_, int truncated, int msbOut_, int lsbOut_,
 							 BitHeap* bitheap,
-							 bool signedInput_ = false);
+							 bool signedIn_ = false);
 		~FixSinPoly();
 
 		// Overloading the virtual functions of Operator
@@ -50,7 +50,7 @@ namespace flopoco{
 
 		int		wIn;					/**< The input width */
 		int		wOut;					/**< The output width */
-		bool	signedInput;			/**< Signed or unsigned operator */		//For now, the input is always positive, so signedInput defaults FALSE
+		bool	signedIn;			/**< Signed or unsigned operator */		//For now, the input is always positive, so signedIn defaults FALSE
 		
 		int g;							/**< The number of guard bits used for the computations */
 		

@@ -25,16 +25,16 @@ namespace flopoco {
 			 * 				   input msb
 			 * @param lsb_in : the power of two of the weight associated to the
 			 * 				   input lsb
-			 * @param signedInput : whether the input is to be considered as
+			 * @param signedIn : whether the input is to be considered as
 			 * 					    signed.
 			 * 						The input width is always msb_in - lsb_in +1
-			 * 						even when signedInput is set;
+			 * 						even when signedIn is set;
 			 * @param lsb_out : the required precision
 			 * @param constant : constant by which the input is multiplied
 			 */
 			FixComplexKCM(
 					Target* target, 
-					bool signedInput,
+					bool signedIn,
 					int msb_in, 
 					int lsb_in, 
 					int lsb_out,
@@ -64,7 +64,7 @@ namespace flopoco {
 	private:
 			void init();
 
-			bool signedInput;
+			bool signedIn;
 			int msb_in;
 			int lsb_in;
 			int lsb_out;

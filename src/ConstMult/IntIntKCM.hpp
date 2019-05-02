@@ -44,7 +44,7 @@ namespace flopoco{
 		
 	protected:
 		int wIn_;							/**< the width for the input X*/
-		bool signedInput_;
+		bool signedIn_;
 		int chunkSize_;						/**< the size of the lut> **/
 		mpz_class C_;						/**< the constant to be used for the multiplication*/
 		int wOut_;

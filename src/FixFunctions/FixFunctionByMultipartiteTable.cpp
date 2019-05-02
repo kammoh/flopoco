@@ -753,11 +753,11 @@ namespace flopoco
 											 "FunctionApproximation", // category
 											 "",
 						   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
+signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
 nbTOi(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
-signedIn(bool)=false: defines the input range : [0,1) if false, and [-1,1) otherwise;\
 compressTIV(bool)=true: use Hsiao TIV compression, or not",
 
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",

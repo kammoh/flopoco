@@ -31,8 +31,8 @@ namespace flopoco{
 	//		and not from the parameters given to the constructor
 
 	//standalone operator
-	FixSinPoly::FixSinPoly(OperatorPtr parentOp, Target* target, int msbIn_, int lsbIn_, bool truncated_, int msbOut_, int lsbOut_, bool signedInput_) :
-		Operator(parentOp, target), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_), signedInput(signedInput_)
+	FixSinPoly::FixSinPoly(OperatorPtr parentOp, Target* target, int msbIn_, int lsbIn_, bool truncated_, int msbOut_, int lsbOut_, bool signedIn_) :
+		Operator(parentOp, target), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_), signedIn(signedIn_)
 	{
 		int indexMin, indexMax, wOutFull;
 
@@ -73,7 +73,7 @@ namespace flopoco{
 
 		// build the name
 		ostringstream name;
-		name << "FixSinPoly_" << vhdlize(wIn) << "_" << vhdlize(wOut) << (truncated ? "_truncated" : "") << (signedInput ? "_signed" : "_unsigned");
+		name << "FixSinPoly_" << vhdlize(wIn) << "_" << vhdlize(wOut) << (truncated ? "_truncated" : "") << (signedIn ? "_signed" : "_unsigned");
 		setNameWithFreqAndUID(name.str());
 
 		//create the input and the output
@@ -212,15 +212,15 @@ namespace flopoco{
 
 	//operator incorporated into a global compression
 	//	for use as part of a bigger operator
-	FixSinPoly::FixSinPoly(Operator* parentOp_, Target* target, Signal* multiplicandX, int msbIn_, int lsbIn_, int truncated_, int msbOut_, int lsbOut_, BitHeap* bitHeap_, bool signedInput_) :
+	FixSinPoly::FixSinPoly(Operator* parentOp_, Target* target, Signal* multiplicandX, int msbIn_, int lsbIn_, int truncated_, int msbOut_, int lsbOut_, BitHeap* bitHeap_, bool signedIn_) :
 		Operator(parentOp_, target), msbIn(msbIn_), lsbIn(lsbIn_), truncated(truncated_), msbOut(msbOut_), lsbOut(lsbOut_),
-		wIn(msbIn_-lsbIn+1), wOut(msbOut_-lsbOut+1), signedInput(signedInput_), bitHeap(bitHeap_), parentOp(parentOp_)
+		wIn(msbIn_-lsbIn+1), wOut(msbOut_-lsbOut+1), signedIn(signedIn_), bitHeap(bitHeap_), parentOp(parentOp_)
 	{
 		srcFileName="FixSinPoly";
 
 		// build the name
 		ostringstream name;
-		name <<"FixSinPoly_" << vhdlize(wIn) << "_" << vhdlize(wOut) << "_" << (signedInput?"_signed":"_unsigned");
+		name <<"FixSinPoly_" << vhdlize(wIn) << "_" << vhdlize(wOut) << "_" << (signedIn?"_signed":"_unsigned");
 		setNameWithFreqAndUID(name.str());
 
 

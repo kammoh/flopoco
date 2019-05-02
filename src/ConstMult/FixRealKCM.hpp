@@ -28,7 +28,7 @@ namespace flopoco{
 		/**
 		 * @brief Standalone version of KCM. Input size will be msbIn-lsbIn+1
 		 * @param target : target on which we want the KCM to run
-		 * @param signedInput : true if input are 2'complement fixed point numbers
+		 * @param signedIn : true if input are 2'complement fixed point numbers
 		 * @param msbin : power of two associated with input msb. For unsigned 
 		 * 				  input, msb weight will be 2^msb, for signed input, it
 		 * 				  will be -2^msb
@@ -46,7 +46,7 @@ namespace flopoco{
 		FixRealKCM(
 							 OperatorPtr thisOp,
 							 Target* target, 
-							 bool signedInput, 
+							 bool signedIn, 
 							 int msbIn, 
 							 int lsbIn, 
 							 int lsbOut, 
@@ -84,7 +84,7 @@ namespace flopoco{
 		FixRealKCM(
 							 Operator* parentOp, 
 							 string multiplicandX,
-							 bool signedInput,
+							 bool signedIn,
 							 int msbIn,
 							 int lsbIn,
 							 int lsbOut, 
@@ -123,7 +123,7 @@ namespace flopoco{
 		static void registerFactory();
 		
 		Operator*	thisOp; 		/**< The Operator for this constant multiplier: either "this" in the case of a standalone op, or the operator that instnaciated its bitHeap in the case of a virtual KCM */
-		bool signedInput;
+		bool signedIn;
 		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
 		int msbIn;
 		int lsbIn;

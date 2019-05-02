@@ -6,9 +6,9 @@
 #include "ConstMult/FixRealKCM.hpp"
 #include "FixComplexKCM.hpp"
 
-// TODO bug when signedInput=false, not sure it is in the operator or in emulate.
+// TODO bug when signedIn=false, not sure it is in the operator or in emulate.
 // Let's investigate only if there is a customer...
-// Meanwhile the option signedInput is forced to true
+// Meanwhile the option signedIn is forced to true
 
 using namespace std;
 namespace flopoco {
@@ -28,7 +28,7 @@ namespace flopoco {
 		ostringstream name;
 		name << "FixComplexKCM_" << vhdlize(msb_in) <<"_" << vhdlize(lsb_in) 
 			<< "_" << vhdlize(lsb_out) << "_" << vhdlize(constant_re) << "_" <<
-			vhdlize(constant_im) << "_" << ((signedInput) ? "" : "un") <<
+			vhdlize(constant_im) << "_" << ((signedIn) ? "" : "un") <<
 			"signed" ;
 
 		setNameWithFreqAndUID(name.str());
@@ -87,8 +87,8 @@ namespace flopoco {
 		int constantMaxMSB = max(constantReMsb, constantImMsb);	
 
 		//Do we need an extra sign bit ?
-		bool extraSignBitRe = !signedInput && (constantReNeg || !constantImNeg);
-		bool extraSignBitIm = !signedInput && (constantReNeg || constantImNeg);
+		bool extraSignBitRe = !signedIn && (constantReNeg || !constantImNeg);
+		bool extraSignBitIm = !signedIn && (constantReNeg || constantImNeg);
 
 		int msbout_re, msbout_im; 
 		msbout_re = msbout_im = msb_in + constantMaxMSB +1;
@@ -116,7 +116,7 @@ namespace flopoco {
 
 	FixComplexKCM::FixComplexKCM(
 			Target* target,
-			bool signedInput,
+			bool signedIn,
 			int msb_in, 
 			int lsb_in, 
 			int lsb_out,
@@ -124,7 +124,7 @@ namespace flopoco {
 			string constant_im
 		): 	
 			Operator(target),
-			signedInput(signedInput),
+			signedIn(signedIn),
 			msb_in(msb_in),
 			lsb_in(lsb_in),
 			lsb_out(lsb_out),
@@ -147,10 +147,10 @@ namespace flopoco {
 		else
 		{
 
-			FixRealKCM* kcmInReConstRe = new FixRealKCM( this, "ReIn", signedInput, msb_in, lsb_in, lsb_out, constant_re,true  );
-			FixRealKCM* kcmInReConstIm = new FixRealKCM( this, "ReIn", signedInput, msb_in, lsb_in, lsb_out, constant_im,false );
-			FixRealKCM* kcmInImConstRe = new FixRealKCM( this, "ImIn", signedInput, msb_in, lsb_in, lsb_out, constant_re,true  );
-			FixRealKCM* kcmInImConstIm = new FixRealKCM( this, "ImIn", signedInput, msb_in, lsb_in, lsb_out, "-("+constant_im+")", false );
+			FixRealKCM* kcmInReConstRe = new FixRealKCM( this, "ReIn", signedIn, msb_in, lsb_in, lsb_out, constant_re,true  );
+			FixRealKCM* kcmInReConstIm = new FixRealKCM( this, "ReIn", signedIn, msb_in, lsb_in, lsb_out, constant_im,false );
+			FixRealKCM* kcmInImConstRe = new FixRealKCM( this, "ImIn", signedIn, msb_in, lsb_in, lsb_out, constant_re,true  );
+			FixRealKCM* kcmInImConstIm = new FixRealKCM( this, "ImIn", signedIn, msb_in, lsb_in, lsb_out, "-("+constant_im+")", false );
 			
 			double errorInUlpsRe = kcmInReConstRe->getErrorInUlps() + kcmInImConstIm->getErrorInUlps();
 			double errorInUlpsIm = kcmInReConstIm->getErrorInUlps() + kcmInImConstRe->getErrorInUlps();
@@ -209,12 +209,12 @@ namespace flopoco {
 		/* Sign handling */
 		// Msb index counting from one
 		bool reInNeg = (
-				signedInput &&
+				signedIn &&
 				(mpz_tstbit(reIn.get_mpz_t(), input_width - 1) == 1)
 			);
 
 		bool imInNeg = (
-				signedInput && 
+				signedIn && 
 				(mpz_tstbit(imIn.get_mpz_t(), input_width - 1) == 1)
 			);
 
@@ -403,7 +403,7 @@ namespace flopoco {
 		emulate(tc);
 		tcl->add(tc);
 
-		if(signedInput)
+		if(signedIn)
 		{
 			tc = new TestCase(this);		
 			tc->addInput("ReIn", -1 * one);
@@ -423,17 +423,17 @@ namespace flopoco {
 	OperatorPtr FixComplexKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
-		//		bool signedInput;
+		//		bool signedIn;
 		string constantIm, constantRe;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseString(args, "constantIm", &constantIm);
 		UserInterface::parseString(args, "constantRe", &constantRe);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "msbIn", &msbIn);
-		// UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		// UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		return new FixComplexKCM(
 				target, 
-				true, //signedInput,
+				true, //signedIn,
 				msbIn,
 				lsbIn,
 				lsbOut,
@@ -449,7 +449,7 @@ namespace flopoco {
 				"Table-based complex multiplier. Inputs are two's complement. Output size is computed",
 				"ConstMultDiv",
 				"",
-				//				"signedInput(bool)=true: 0=unsigned, 1=signed;
+				//				"signedIn(bool)=true: 0=unsigned, 1=signed;
 				"msbIn(int): weight associated to most significant bit (including sign bit);\
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \

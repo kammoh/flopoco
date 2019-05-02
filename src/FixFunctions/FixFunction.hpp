@@ -30,7 +30,7 @@ namespace flopoco{
 			 @param[int]    lsbX    input LSB weight (-lsbX is the input size)
 			 @param[int]    msbOut  output MSB weight, used to determine wOut
 			 @param[int]    lsbOut  output LSB weight
-			 @param[bool]   signedInput: if true, input range is [0,1], else input range is [0,1]
+			 @param[bool]   signedIn: if true, input range is [0,1], else input range is [0,1]
 
 			 One could argue that MSB weight is redundant, as it can be deduced from an analysis of the function. 
 			 This would require quite a lot of work for non-trivial functions (isolating roots of the derivative etc).

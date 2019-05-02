@@ -35,16 +35,16 @@ namespace flopoco{
 
 	
 	//standalone operator
-	IntMultiAdder::IntMultiAdder(OperatorPtr parentOp, Target* target, unsigned int wIn_, unsigned int n_, bool signedInput_, unsigned int wOut_):
+	IntMultiAdder::IntMultiAdder(OperatorPtr parentOp, Target* target, unsigned int wIn_, unsigned int n_, bool signedIn_, unsigned int wOut_):
 		Operator(parentOp, target),
 		wIn(wIn_),
 		n(n_),
-		signedInput(signedInput_)
+		signedIn(signedIn_)
 	{
 		srcFileName="IntMultiAdder";
 		setCopyrightString ( "Florent de Dinechin (2008-2016)" );
 		ostringstream name;
-		name << "IntMultiAdder_"  << (signedInput?"S":"U") << wIn << "_" << n;
+		name << "IntMultiAdder_"  << (signedIn?"S":"U") << wIn << "_" << n;
 		setNameWithFreqAndUID(name.str());
 
 		BitHeap* bh;
@@ -54,7 +54,7 @@ namespace flopoco{
 		else{
 			wOut=wOut_;
 		}
-		if(wIn < 1+(signedInput?1:0)) {
+		if(wIn < 1+(signedIn?1:0)) {
 			THROWERROR("wIn too small");
 		}
 		if(wIn==1 && wOut==1) {
@@ -73,7 +73,7 @@ namespace flopoco{
 			string xi=join("X",i);
 			string ixi=join("iX",i);
 			addInput  (join("X",i)  , wIn, true);
-			vhdl << tab << declareFixPoint(ixi, signedInput, wIn-1, 0) << " <= " << (signedInput?"":"un")<< "signed(" << xi << ");" << endl; // simplest way to get signedness in the signal
+			vhdl << tab << declareFixPoint(ixi, signedIn, wIn-1, 0) << " <= " << (signedIn?"":"un")<< "signed(" << xi << ");" << endl; // simplest way to get signedness in the signal
 			bh->addSignal(ixi);
 		}
 
@@ -98,7 +98,7 @@ namespace flopoco{
 		mpz_class result=0;
 		for(unsigned int i=0; i<n; i++) {
 			mpz_class xi = tc->getInputValue ( join("X",i) );
-			if(signedInput && (xi>>(wIn-1)==1) ) {
+			if(signedIn && (xi>>(wIn-1)==1) ) {
 				xi -= mpz_class(1)<<wIn; // two's complement
 			}
 			result += xi;
@@ -126,7 +126,7 @@ namespace flopoco{
 					for(int wIn=1+(s?1:0); wIn<8; wIn++) { // 1+s because no 2's complement on 1 bit...
 						paramList.push_back(make_pair("wIn",to_string(wIn)));
 						paramList.push_back(make_pair("n",to_string(n)));
-						paramList.push_back(make_pair("signedInput",to_string(s)));
+						paramList.push_back(make_pair("signedIn",to_string(s)));
 						paramList.push_back(make_pair("TestBench n=",to_string(1000)));
 						testStateList.push_back(paramList);
 
@@ -147,12 +147,12 @@ namespace flopoco{
 	OperatorPtr IntMultiAdder::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int wIn, n, wOut;
-		bool signedInput;
+		bool signedIn;
 		UserInterface::parseInt(args, "wIn", &wIn);
 		UserInterface::parseInt(args, "n", &n);
-		UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		UserInterface::parseInt(args, "wOut", &wOut);
-		return new IntMultiAdder(parentOp, target, wIn, n, signedInput, wOut);
+		return new IntMultiAdder(parentOp, target, wIn, n, signedIn, wOut);
 	}
 
 	void IntMultiAdder::registerFactory()
@@ -162,7 +162,7 @@ namespace flopoco{
 				"A component adding n integers, bitheap based. If wIn=1 it is also a population count",
 				"BasicInteger",
 				"",
-				"signedInput(bool): 0=unsigned, 1=signed; \
+				"signedIn(bool): 0=unsigned, 1=signed; \
 			  n(int): number of inputs to add;\
 			  wIn(int): input size in bits;\
 			  wOut(int)=0: output size in bits -- if 0, wOut is computed to be large enough to represent the result;",

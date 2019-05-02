@@ -65,9 +65,9 @@ namespace flopoco{
 				@param addGuardBits:
 				if >=0, add this number of bits to the LSB of each coeff
 				if -1, add to each coeff a number of LSB bits that corresponds to the bits needed for a faithful Horner evaluation based on faithful (truncated) multipliers
-				@param signedInput:  if true, we consider an approximation on [-1,1]. If false, it will be on [0,1]
+				@param signedIn:  if true, we consider an approximation on [-1,1]. If false, it will be on [0,1]
 		 */
-		BasicPolyApprox(sollya_obj_t fS, double targetAccuracy, int addGuardBits=-1, bool signedInput =false);
+		BasicPolyApprox(sollya_obj_t fS, double targetAccuracy, int addGuardBits=-1, bool signedIn =false);
 
 
 		/** A minimal constructor that inputs a sollya_obj_t function, a degree and the weight of the LSBs.
@@ -75,10 +75,10 @@ namespace flopoco{
 				@param fS: defines the function, as a sollya_obj_t
 				@param degree: degree of the polynomial
 				@param LSB: weight of the coefficients
-				@param signedInput:  if true, we consider an approximation on [-1,1]. If false, it will be on [0,1]
+				@param signedIn:  if true, we consider an approximation on [-1,1]. If false, it will be on [0,1]
 
 		 */
-		BasicPolyApprox(sollya_obj_t fS, int degree, int LSB, bool signedInput =false);
+		BasicPolyApprox(sollya_obj_t fS, int degree, int LSB, bool signedIn =false);
 
 		/** A minimal constructor that parses a sollya string, inputting target accuracy
 				@param sollyaString: defines the function, as a sollya parsable string
@@ -86,9 +86,9 @@ namespace flopoco{
 				@param addGuardBits:
 				if >=0, add this number of bits to the LSB of each coeff
 				if -1, add to each coeff a number of LSB bits that corresponds to the bits needed for a faithful Horner evaluation based on faithful (truncated) multipliers
-				@param signedInput:  if true, we consider an approximation on [-1,1]. If false, it will be on [0,1]
+				@param signedIn:  if true, we consider an approximation on [-1,1]. If false, it will be on [0,1]
 		 */
-		BasicPolyApprox(string sollyaString, double targetAccuracy, int addGuardBits=-1, bool signedInput=false);
+		BasicPolyApprox(string sollyaString, double targetAccuracy, int addGuardBits=-1, bool signedIn=false);
 
 		/** A constructor for the case you already have the coefficients, e.g. you read them from a file. Beware, f is un-initialized in this case
 		 * 		@param degree: degree of the polynomial

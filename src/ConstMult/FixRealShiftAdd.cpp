@@ -16,7 +16,7 @@
 /*
 
 Remaining 1-ulp bug:
-flopoco verbose=3 FixRealShiftAdd lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedInput=true TestBench
+flopoco verbose=3 FixRealShiftAdd lsbIn=-8 msbIn=0 lsbOut=-7 constant="0.16" signedIn=true TestBench
 It is the limit case of removing one table altogether because it contributes nothng.
 I don't really understand
 
@@ -60,10 +60,10 @@ namespace flopoco{
 
 	
 	//standalone operator
-	FixRealShiftAdd::FixRealShiftAdd(OperatorPtr parentOp, Target* target, bool signedInput_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
+	FixRealShiftAdd::FixRealShiftAdd(OperatorPtr parentOp, Target* target, bool signedIn_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
 		Operator(parentOp, target),
 		thisOp(this),
-		signedInput(signedInput_),
+		signedIn(signedIn_),
 		msbIn(msbIn_),
 		lsbIn(lsbIn_),
 		lsbOut(lsbOut_),
@@ -97,7 +97,7 @@ namespace flopoco{
 		//if negative constant, then set negativeConstant
 		negativeConstant = (mpfr_cmp_si(mpC, 0) < 0 ? true : false);
 
-		signedOutput = negativeConstant || signedInput;
+		signedOutput = negativeConstant || signedIn;
 		mpfr_abs(absC, mpC, GMP_RNDN);
 
 		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
@@ -447,7 +447,7 @@ namespace flopoco{
 		int wOut=msbOut-lsbOut+1;
 		
 		// get rid of two's complement
-		if(signedInput)	{
+		if(signedIn)	{
 			if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )	 {
 				svX -= (mpz_class(1)<<wIn);
 				negativeInput = true;
@@ -530,13 +530,13 @@ namespace flopoco{
 					string msbInStr = to_string(lsbIn+wIn);
 					for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
 						string lsbOutStr = to_string(lsbOut);
-						for(int signedInput=0; signedInput<2; signedInput++) {
-							string signedInputStr = to_string(signedInput);
+						for(int signedIn=0; signedIn<2; signedIn++) {
+							string signedInStr = to_string(signedIn);
 							for(auto c:constantList) { // test various constants
 								paramList.push_back(make_pair("lsbIn",  lsbInStr));
 								paramList.push_back(make_pair("lsbOut", lsbOutStr));
 								paramList.push_back(make_pair("msbIn",  msbInStr));
-								paramList.push_back(make_pair("signedInput", signedInputStr));
+								paramList.push_back(make_pair("signedIn", signedInStr));
 								paramList.push_back(make_pair("constant", c));
 								testStateList.push_back(paramList);
 								paramList.clear();
@@ -557,19 +557,19 @@ namespace flopoco{
 	OperatorPtr FixRealShiftAdd::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
-		bool signedInput;
+		bool signedIn;
 		double targetUlpError;
 		string constant;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseString(args, "constant", &constant);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "msbIn", &msbIn);
-		UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealShiftAdd(
 													parentOp,
 													target, 
-													signedInput,
+													signedIn,
 													msbIn,
 													lsbIn,
 													lsbOut,
@@ -585,7 +585,7 @@ namespace flopoco{
 				"Table based real multiplier. Output size is computed",
 				"ConstMultDiv",
 				"",
-				"signedInput(bool): 0=unsigned, 1=signed; \
+				"signedIn(bool): 0=unsigned, 1=signed; \
 				msbIn(int): weight associated to most significant bit (including sign bit);\
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \

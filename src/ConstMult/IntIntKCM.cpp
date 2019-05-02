@@ -33,7 +33,7 @@ using namespace std;
 namespace flopoco{
 
 	IntIntKCM::IntIntKCM(OperatorPtr parentOp, Target* target, int wIn, mpz_class C, bool inputTwosComplement):
-		Operator(parentOp, target), wIn_(wIn), signedInput_(inputTwosComplement), C_(C)
+		Operator(parentOp, target), wIn_(wIn), signedIn_(inputTwosComplement), C_(C)
 	{
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2009,2010)");
 		srcFileName="IntIntKCM";
@@ -49,7 +49,7 @@ namespace flopoco{
 		addOutput("R" , wOut_);
 
 		ostringstream name;
-		name << "IntIntKCM_" << wIn_ << "_" << C << (signedInput_?"_signed":"_unsigned");
+		name << "IntIntKCM_" << wIn_ << "_" << C << (signedIn_?"_signed":"_unsigned");
 		setNameWithFreqAndUID(name.str());
 
 		int constantWidth = intlog2( C );
@@ -79,7 +79,7 @@ namespace flopoco{
 		if(nbOfTables==1)
 		{
 			KCMTable  *lastTable=0;
-			lastTable = new KCMTable(target, wIn_, constantWidth + wIn_, C, signedInput_);
+			lastTable = new KCMTable(target, wIn_, constantWidth + wIn_, C, signedIn_);
 			useSoftRAM(lastTable);
 
 			// pipeline depth of a Table, so far, is always 0, but the table is well behaved and updates the critical path.
@@ -101,7 +101,7 @@ namespace flopoco{
 			firstTable = new KCMTable(target, lutWidth, constantWidth + lutWidth, C, false);
 			useSoftRAM(firstTable);
 
-			lastTable = new KCMTable(target, lastLutWidth, constantWidth + lastLutWidth, C, signedInput_);
+			lastTable = new KCMTable(target, lastLutWidth, constantWidth + lastLutWidth, C, signedIn_);
 			useSoftRAM(lastTable);
 
 			// Critical path among the tables is through the last one, which may be larger
@@ -198,14 +198,14 @@ namespace flopoco{
 					{
 						stringstream s;
 
-						if((w == constantWidth+lastLutWidth-1) && signedInput_)
+						if((w == constantWidth+lastLutWidth-1) && signedIn_)
 							s << "not(pp" << nbOfTables-1 << of(w) << ")";
 						else
 							s << "pp" << nbOfTables-1 << of(w);
 
 						bitHeap->addBit(w+tableWeightShift, s.str());
 
-						if((w == constantWidth+lastLutWidth-1) && signedInput_)
+						if((w == constantWidth+lastLutWidth-1) && signedIn_)
 						{
 							for(int w2=w; w2<=wOut_; w2++)
 								bitHeap->addConstantOneBit(w2+tableWeightShift);
@@ -232,7 +232,7 @@ namespace flopoco{
 	//operator incorporated into a global compression
 	//	for use as part of a bigger operator
 	IntIntKCM::IntIntKCM(Operator* parentOp_, Target* target, Signal* multiplicandX, int wIn, mpz_class C, bool inputTwosComplement, BitHeap* bitHeap_):
-		Operator(target), wIn_(wIn), signedInput_(inputTwosComplement), C_(C),
+		Operator(target), wIn_(wIn), signedIn_(inputTwosComplement), C_(C),
 			bitHeap(bitHeap_), parentOp(parentOp_)
 	{
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin (2009,2010)");
@@ -244,7 +244,7 @@ namespace flopoco{
 		wOut_ = intlog2(C) + wIn_;
 
 		ostringstream name;
-		name << "IntIntKCM_" << wIn_ << "_" << C << (signedInput_ ? "_signed" : "_unsigned");
+		name << "IntIntKCM_" << wIn_ << "_" << C << (signedIn_ ? "_signed" : "_unsigned");
 		setNameWithFreqAndUID(name.str());
 
 		int constantWidth = intlog2(C);
@@ -274,7 +274,7 @@ namespace flopoco{
 		if(nbOfTables==1)
 		{
 			KCMTable *lastTable=0;
-			lastTable = new KCMTable(target, wIn_, constantWidth + wIn_, C, signedInput_);
+			lastTable = new KCMTable(target, wIn_, constantWidth + wIn_, C, signedIn_);
 			parentOp->addSubComponent(lastTable);
 			useSoftRAM(lastTable);
 
@@ -291,7 +291,7 @@ namespace flopoco{
 			{
 				stringstream s;
 
-				if((w == constantWidth+lastLutWidth-1) && signedInput_)
+				if((w == constantWidth+lastLutWidth-1) && signedIn_)
 					s << "not(Ri" << "_intKcmMult_" << getuid() << of(w) << ")";
 				else
 					s << "Ri" << "_intKcmMult_" << getuid() << of(w);
@@ -300,7 +300,7 @@ namespace flopoco{
 			}
 
 			//sign extend if necessary
-			if(signedInput_)
+			if(signedIn_)
 			{
 				for(int w=constantWidth+wIn_-1; w<=(int)bitHeap->getMaxWeight()-(int)bitHeap->getMinWeight(); w++)
 					bitHeap->addConstantOneBit(w);
@@ -316,7 +316,7 @@ namespace flopoco{
 			parentOp->addSubComponent(firstTable);
 			useSoftRAM(firstTable);
 
-			lastTable = new KCMTable(target, lastLutWidth, constantWidth + lastLutWidth, C, signedInput_);
+			lastTable = new KCMTable(target, lastLutWidth, constantWidth + lastLutWidth, C, signedIn_);
 			parentOp->addSubComponent(lastTable);
 			useSoftRAM(lastTable);
 
@@ -372,14 +372,14 @@ namespace flopoco{
 				{
 					stringstream s;
 
-					if((w == constantWidth+lastLutWidth-1) && signedInput_)
+					if((w == constantWidth+lastLutWidth-1) && signedIn_)
 						s << "not(pp" << nbOfTables-1 << "_intKcmMult_" << getuid() << of(w) << ")";
 					else
 						s << "pp" << nbOfTables-1 << "_intKcmMult_" << getuid() << of(w);
 
 					bitHeap->addBit(w+tableWeightShift, s.str());
 
-					if((w == constantWidth+lastLutWidth-1) && signedInput_)
+					if((w == constantWidth+lastLutWidth-1) && signedIn_)
 					{
 						for(int w2=w; w2<=(int)(bitHeap->getMaxWeight()-bitHeap->getMinWeight()); w2++)
 							bitHeap->addConstantOneBit(w2+tableWeightShift);
@@ -403,7 +403,7 @@ namespace flopoco{
 		// cout << "X="<<unsignedBinary(svX, wIn_);
 		// bool xneg = false;
 		//x is in 2's complement, so it's value is
-		if(signedInput_) {
+		if(signedIn_) {
 			if ( svX > ( (mpz_class(1)<<(wIn_-1))-1) ){
 				// cout << "X is negative" << endl;
 				// xneg = true;
@@ -444,19 +444,19 @@ namespace flopoco{
 	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
-		bool signedInput;
+		bool signedIn;
 		double targetUlpError;
 		string constant;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseString(args, "constant", &constant);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "msbIn", &msbIn);
-		UserInterface::parseBoolean(args, "signedInput", &signedInput);
+		UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealKCM(
 													parentOp,
 													target, 
-													signedInput,
+													signedIn,
 													msbIn,
 													lsbIn,
 													lsbOut,
@@ -472,7 +472,7 @@ namespace flopoco{
 				"Table based real multiplier. Output size is computed",
 				"ConstMultDiv",
 				"",
-				"signedInput(bool): 0=unsigned, 1=signed; \
+				"signedIn(bool): 0=unsigned, 1=signed; \
 				msbIn(int): weight associated to most significant bit (including sign bit);\
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \
