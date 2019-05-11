@@ -36,10 +36,10 @@ Operator* BaseMultiplierLUT::generateOperator(
 	return new IntMultiplierLUT(
 			parentOp,
 			target,
-			parameters.getXWordSize(),
-			parameters.getYWordSize(), 
-			parameters.isSignedX(), 
-			parameters.isSignedY()
+            parameters.getMultXWordSize(),
+            parameters.getMultYWordSize(),
+            parameters.isSignedMultX(),
+			parameters.isSignedMultY()
 		);
 }
 }   //end namespace flopoco

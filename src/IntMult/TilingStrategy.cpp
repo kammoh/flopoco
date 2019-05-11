@@ -24,11 +24,11 @@ void TilingStrategy::printSolution(ofstream &outstream)
         auto& coordinates = tile.second;
         int xstart = coordinates.first;
         int ystart = coordinates.second;
-        int xend = xstart + static_cast<int>(parametrization.getXWordSize());
-        int yend = ystart + static_cast<int>(parametrization.getYWordSize());
+        int xend = xstart + static_cast<int>(parametrization.getTileXWordSize());
+        int yend = ystart + static_cast<int>(parametrization.getTileYWordSize());
         outstream << "\\draw[fill=gray, fill opacity=0.3] (" << xstart << ", " << ystart << ") rectangle (" <<
                      xend << ", " << yend << ");\n";
-        cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getXWordSize() << ", " << parametrization.getYWordSize() << ").\n";
+        cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
     }
     outstream << "\\end{tikzpicture}\n\\end{document}\n";
 }

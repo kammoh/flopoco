@@ -48,12 +48,14 @@ namespace flopoco {
 						return bmCat_->generateOperator(parentOp, target, *this);
 					}
 
-					unsigned int getXWordSize() const {return wX_;}
-					unsigned int getYWordSize() const {return wY_;}
+                    unsigned int getMultXWordSize() const {return wX_;}
+                    unsigned int getMultYWordSize() const {return wY_;}
+                    unsigned int getTileXWordSize() const {return (isFlippedXY_) ? wY_ : wX_;}
+                    unsigned int getTileYWordSize() const {return (isFlippedXY_) ? wX_ : wY_;}
 					unsigned int getOutWordSize() const;
 					bool shapeValid(int x, int y) const;
-					bool isSignedX() const {return isSignedX_;}
-					bool isSignedY() const {return isSignedY_;}
+                    bool isSignedMultX() const {return isSignedX_;}
+                    bool isSignedMultY() const {return isSignedY_;}
 					bool isFlippedXY() const {return isFlippedXY_;}
 				private:
 					Parametrization(

@@ -122,8 +122,8 @@ namespace flopoco {
 			//Operator *op = baseMultiplier->getOperator();
             //lets assume, that baseMultiplier ix 3x3, Unsigned ...
 
-            unsigned int xInputLength = parameters.getXWordSize();
-            unsigned int yInputLength = parameters.getYWordSize();
+            unsigned int xInputLength = parameters.getTileXWordSize();
+            unsigned int yInputLength = parameters.getTileYWordSize();
             unsigned int outputLength = parameters.getOutWordSize();
 
             unsigned int lsbZerosInBM = getLSBZeros(parameters, xPos, yPos, totalOffset, 1);  //normally, starting position of output is computed by xPos + yPos. But if the output starts at an higher weight, lsbZeros counts the offset
@@ -317,8 +317,8 @@ namespace flopoco {
     flush(cout);
 */
 
-        for(unsigned int i = 0; i < parameter.getXWordSize(); i++){
-            for(unsigned int j = 0; j < parameter.getYWordSize(); j++){
+        for(unsigned int i = 0; i < parameter.getTileXWordSize(); i++){
+            for(unsigned int j = 0; j < parameter.getTileYWordSize(); j++){
                 if(i + xPos >= totalOffset && j + yPos >= totalOffset){
                     if(i + xPos < (wX + totalOffset) && j + yPos < (wY + totalOffset)){
                         if(parameter.shapeValid(i,j)){
@@ -365,7 +365,7 @@ namespace flopoco {
 		    int mode
 		){
         //cout << "mode is " << mode << endl;
-        unsigned int max = min(int(param.getXWordSize()), int(param.getYWordSize()));
+        unsigned int max = min(int(param.getMultXWordSize()), int(param.getMultYWordSize()));
         unsigned int zeros = 0;
         unsigned int mode2Zeros = 0;
         bool startCountingMode2 = false;

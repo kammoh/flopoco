@@ -71,8 +71,8 @@ namespace flopoco {
 
 bool BaseMultiplierCategory::shapeValid(Parametrization const& param, int x, int y) const
 {
-	auto xw = param.getXWordSize();
-	auto yw = param.getYWordSize();
+    auto xw = param.getTileXWordSize();
+    auto yw = param.getTileYWordSize();
 
 	return (x > 0 && x < xw && y > 0 && y < yw);
 }

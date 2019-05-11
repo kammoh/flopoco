@@ -15,8 +15,8 @@ Operator* BaseMultiplierDSP::generateOperator(
 	return new DSPBlock(
 			parentOp, 
 			target, 
-			parameters.getXWordSize(), 
-			parameters.getYWordSize()
+            parameters.getMultXWordSize(),
+            parameters.getMultYWordSize()
 			); 
 }
 

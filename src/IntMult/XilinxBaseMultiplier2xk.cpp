@@ -13,9 +13,9 @@ Operator* XilinxBaseMultiplier2xk::generateOperator(
 	return new XilinxBaseMultiplier2xkOp(
 			parentOp,
 			target,
-			parameters.isSignedX(), 
-			parameters.isSignedY(), 
-			parameters.getXWordSize(),
+            parameters.isSignedMultX(),
+			parameters.isSignedMultY(), 
+            parameters.getMultXWordSize(),
 			parameters.isFlippedXY()
 		);
 }
