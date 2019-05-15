@@ -53,8 +53,8 @@ namespace flopoco {
         bool signedIO;                   /**< true if the IOs are two's complement */
 		bool negate;                    /**< if true this multiplier computes -xy */
 	private:
-		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
-												this is a pointer to the Operator that will provide the actual vhdl stream etc. */
+//		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
+//												this is a pointer to the Operator that will provide the actual vhdl stream etc. */
         BitHeap* bitHeap;    			/**< The heap of weighted bits that will be used to do the additions */
 
         /** Places a single BaseMultiplier at a given position

@@ -176,11 +176,11 @@ namespace flopoco {
             //todo: signed case: see line 1110
             if(!isSigned){
 //                setCycleFromSignal(outputVectorName);	//we assume that the whole vector has the same cycle
-                for(unsigned int i = resultVectorOffset; i < outputLengthNonZeros - lsbZerosInBM; i++){
+				assert(resultVectorOffset < ((int) (outputLengthNonZeros - lsbZerosInBM)));
+                for(int i = resultVectorOffset; i < ((int) (outputLengthNonZeros - lsbZerosInBM)); i++){
                     ostringstream s;
                     s << outputVectorName << of(i);
                     bitHeap->addBit(startWeight + (i - resultVectorOffset), s.str());
-
                     //bitHeap->addBit(startWeight + (i - resultVectorOffset), s.str(), "", 1, getCycleFromSignal(outputVectorName));
                 }
             }
