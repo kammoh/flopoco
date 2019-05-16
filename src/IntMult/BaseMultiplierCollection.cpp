@@ -72,5 +72,20 @@ vector<BaseMultiplierCategory const *> const BaseMultiplierCollection::getView()
 	return ret;
 }
 
+void BaseMultiplierCollection::print()
+{
+	if (UserInterface::verbose >= DETAILED)
+	{
+		REPORT(DETAILED, "Available base multipliers:");
+		for(BaseMultiplierCategory *bmc : baseMultiplierCategories)
+		{
+			cerr << "  base multiplier " << bmc->getSmallWordMaxUnsignedWordSize() << "x" << bmc->getMaxUnsignedWordSize()
+				 << ", max. DSP cost: " << bmc->getDSPCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize())
+				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize()) << endl
+		}
+
+	}
+}
+
 }   //end namespace flopoco
 

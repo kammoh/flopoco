@@ -22,6 +22,7 @@ namespace flopoco {
 		
         string getName(){ return uniqueName_; }
 
+		void print();
     private:
         Target* target;
 

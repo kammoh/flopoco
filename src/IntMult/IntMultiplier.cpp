@@ -78,6 +78,8 @@ namespace flopoco {
 //		BaseMultiplierCollection baseMultiplierCollection(parentOp->getTarget(), wX, wY);
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 
+		baseMultiplierCollection.print();
+
 		REPORT(DEBUG, "Creating TilingStrategy");
 		TilingStrategyBasicTiling tilingStrategy(
 				wX, 
