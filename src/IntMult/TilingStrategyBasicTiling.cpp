@@ -87,7 +87,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		bool canOverflowBottom = false;
 		int xleft = curX + curDeltaX - 1;
 		int ybottom = curY + curDeltaY - 1;
-		int nbInputMult = bmc.getMaxUnsignedWordSize();
+		int nbInputMult = bmc.getMaxWordSizeLargeInputUnsigned();
 
 		int bestXMult = 1;
 		int bestYMult = 1;
@@ -214,7 +214,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 	void TilingStrategyBasicTiling::solve()
 	{
 		auto& bm = baseMultiplierCollection->getBaseMultiplier(prefered_multiplier_);	
-		int wXmultMax = bm.getMaxUnsignedWordSize();
+		int wXmultMax = bm.getMaxWordSizeLargeInputUnsigned();
 		//TODO Signed int deltaSignedUnsigned = bm.getDeltaWidthSigned();
 		int wXmult = 1;
 		int wYmult = 1;

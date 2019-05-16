@@ -79,9 +79,11 @@ void BaseMultiplierCollection::print()
 		REPORT(DETAILED, "Available base multipliers:");
 		for(BaseMultiplierCategory *bmc : baseMultiplierCategories)
 		{
-			cerr << "  base multiplier " << bmc->getSmallWordMaxUnsignedWordSize() << "x" << bmc->getMaxUnsignedWordSize()
-				 << ", max. DSP cost: " << bmc->getDSPCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize())
-				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize()) << endl;
+			cerr << "  base multiplier " << bmc->getMaxWordSizeSmallInputUnsigned() << "x" << bmc->getMaxWordSizeLargeInputUnsigned()
+				 << ", max. DSP cost: " << bmc->getDSPCost(bmc->getMaxWordSizeSmallInputUnsigned(),
+														   bmc->getMaxWordSizeLargeInputUnsigned())
+				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getMaxWordSizeSmallInputUnsigned(),
+														   bmc->getMaxWordSizeLargeInputUnsigned()) << endl;
 		}
 
 	}

@@ -24,7 +24,7 @@ namespace flopoco {
 		) const
 	{
 		int effectiveWY = (isSignedY) ? wY - deltaWidthUnsignedSigned_ : wY;
-		bool isFlippedXY = (effectiveWY > maxSmallWordSizeUnsigned_);
+		bool isFlippedXY = (effectiveWY > maxWordSizeSmallInputUnsigned_);
 		if (isFlippedXY) {
 			std::swap(wX, wY);
 			std::swap(isSignedX, isSignedY);
@@ -47,19 +47,19 @@ namespace flopoco {
 		int effectiveW1Size = firstW;
 		if (isW1Signed)
 		   effectiveW1Size -= deltaWidthUnsignedSigned_;
-		int maxLimit = (effectiveW1Size <= maxSmallWordSizeUnsigned_) ? maxWordSizeUnsigned_: maxSmallWordSizeUnsigned_;
+		int maxLimit = (effectiveW1Size <= maxWordSizeSmallInputUnsigned_) ? maxWordSizeLargeInputUnsigned_: maxWordSizeSmallInputUnsigned_;
 		if (isW2signed)
 			maxLimit += deltaWidthUnsignedSigned_;
 
-		bool isBiggerWord = (maxLimit == maxWordSizeUnsigned_);
+		bool isBiggerWord = (maxLimit == maxWordSizeLargeInputUnsigned_);
 		int curCoeff = (isBiggerWord) ? combinedXCoeff_ : combinedYCoeff_;
 		int otherCoeff = (isBiggerWord) ? combinedYCoeff_ : combinedXCoeff_;
 		
-		if (combinedBound_ == 0 || curCoeff == 0) {
+		if (maxSumOfInputWordSizes_ == 0 || curCoeff == 0) {
 			return maxLimit;
 		}
 
-		int res = (combinedBound_ - otherCoeff * effectiveW1Size) / curCoeff;
+		int res = (maxSumOfInputWordSizes_ - otherCoeff * effectiveW1Size) / curCoeff;
 		if (isW2signed) {
 			res += deltaWidthUnsignedSigned_;
 		}

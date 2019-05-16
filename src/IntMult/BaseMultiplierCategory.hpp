@@ -8,31 +8,31 @@ namespace flopoco {
 	class BaseMultiplierCategory {
 		public:
 			// Get the range from this category
-			int getMaxUnsignedWordSize() const {return maxWordSizeUnsigned_;}
-			int getSmallWordMaxUnsignedWordSize() const {return maxSmallWordSizeUnsigned_;}
+			int getMaxWordSizeLargeInputUnsigned() const {return maxWordSizeLargeInputUnsigned_;}
+			int getMaxWordSizeSmallInputUnsigned() const {return maxWordSizeSmallInputUnsigned_;}
 
-			int getMaxSecondWordSize (int firstW, bool isW1Signed, bool isW2signed) const; 
+			int getMaxSecondWordSize (int firstW, bool isW1Signed, bool isW2signed) const;
 
 			void getBoundCoeffs (int& xCoeff, int& yCoeff, uint64_t bound) const {
 				xCoeff = combinedXCoeff_;
 				yCoeff = combinedYCoeff_;
-				bound = combinedBound_;
+				bound = maxSumOfInputWordSizes_;
 			}
 
 			BaseMultiplierCategory(
-					int maxWordSizeUnsigned,
-					int maxSmallWordSizeUnsigned,
+					int maxWordSizeLargeInputUnsigned, //maxWordSizeLargeInputUnsigned
+					int maxWordSizeSmallInputUnsigned,
 					int deltaWidthUnsignedSigned,
 					int combinedXCoeff,
 					int combinedYCoeff,
-					int combinedBound,
+					int maxSumOfInputWordSizes,
 					string type="undefined!"
-				):maxWordSizeUnsigned_{maxWordSizeUnsigned},
-					maxSmallWordSizeUnsigned_{maxSmallWordSizeUnsigned},
+				):maxWordSizeLargeInputUnsigned_{maxWordSizeLargeInputUnsigned},
+					maxWordSizeSmallInputUnsigned_{maxWordSizeSmallInputUnsigned},
 					deltaWidthUnsignedSigned_{deltaWidthUnsignedSigned},
 					combinedXCoeff_{combinedXCoeff},
 					combinedYCoeff_{combinedYCoeff},
-					combinedBound_{combinedBound},
+					maxSumOfInputWordSizes_{maxSumOfInputWordSizes},
 				  	type_{type}
 				{}
 
@@ -101,12 +101,12 @@ namespace flopoco {
 		Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const; 
 
 		private:	
-			int maxWordSizeUnsigned_;
-			int maxSmallWordSizeUnsigned_;
+			int maxWordSizeLargeInputUnsigned_;
+			int maxWordSizeSmallInputUnsigned_;
 			int deltaWidthUnsignedSigned_;
-			int combinedXCoeff_;
-			int combinedYCoeff_;
-			int combinedBound_;
+			int combinedXCoeff_; //should be removed
+			int combinedYCoeff_; //should be removed
+			int maxSumOfInputWordSizes_;
 
 			string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
 	};
