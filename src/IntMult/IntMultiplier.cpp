@@ -181,11 +181,12 @@ namespace flopoco {
             if(!isSigned){
 //                setCycleFromSignal(outputVectorName);	//we assume that the whole vector has the same cycle
 				assert(resultVectorOffset < ((int) (outputLengthNonZeros - lsbZerosInBM)));
-                for(int i = resultVectorOffset; i < ((int) (outputLengthNonZeros - lsbZerosInBM)); i++){
+//				for(int i = resultVectorOffset; i < ((int) (outputLengthNonZeros - lsbZerosInBM)); i++){
+				for(int i = resultVectorOffset; i < ((int) (outputLengthNonZeros - lsbZerosInBM)+2); i++){ //+2 added and don't know why!!!
                     ostringstream s;
                     s << outputVectorName << of(i);
-                    bitHeap->addBit(startWeight + (i - resultVectorOffset), s.str());
-                    //bitHeap->addBit(startWeight + (i - resultVectorOffset), s.str(), "", 1, getCycleFromSignal(outputVectorName));
+//					bitHeap->addBit(startWeight + (i - resultVectorOffset), s.str());
+                    bitHeap->addBit(startWeight + (i - resultVectorOffset) - 2, s.str()); //-2 added and don't know why!!!
                 }
             }
 
