@@ -2,7 +2,7 @@
 
 namespace flopoco {
 
-DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsSigned, bool yIsSigned, bool isPipelined, int wZ, bool usePostAdder, bool usePreAdder, bool preAdderSubtracts) : Operator(parentOp,target)
+DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsSigned, bool yIsSigned, bool isPipelined, int wZ, bool usePostAdder, bool usePreAdder, bool preAdderSubtracts) : Operator(parentOp,target), xIsSigned_{xIsSigned}, yIsSigned_{yIsSigned}, wX_{wX}, wY_{wY}
 {
     useNumericStd();
 
@@ -73,6 +73,56 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	addOutput("R", wM);
 	vhdl << tab << "R <= Rtmp;" << endl;
 }
+
+/*
+ ToDo: extend this to the DSP functionality (inc. pre- and post-adders
+
+
+void DSPBlock::emulate (TestCase* tc)
+{
+	mpz_class svX = tc->getInputValue("X");
+	mpz_class svY = tc->getInputValue("Y");
+	mpz_class svR;
+
+	svY = svX * svY;
+	tc->addExpectedOutput("Y", svY);
+}
+
+
+void DSPBlock::buildStandardTestCases(TestCaseList* tcl)
+{
+	TestCase *tc;
+
+	mpz_class x, y;
+
+	// 1*1
+	x = mpz_class(1);
+	y = mpz_class(1);
+	tc = new TestCase(this);
+	tc->addInput("X", x);
+	tc->addInput("Y", y);
+	emulate(tc);
+	tcl->add(tc);
+
+	// -1 * -1
+	x = (mpz_class(1) << wX_) -1;
+	y = (mpz_class(1) << wY_) -1;
+	tc = new TestCase(this);
+	tc->addInput("X", x);
+	tc->addInput("Y", y);
+	emulate(tc);
+	tcl->add(tc);
+
+	// The product of the two max negative values overflows the signed multiplier
+	x = mpz_class(1) << (wX_ -1);
+	y = mpz_class(1) << (wY_ -1);
+	tc = new TestCase(this);
+	tc->addInput("X", x);
+	tc->addInput("Y", y);
+	emulate(tc);
+	tcl->add(tc);
+}
+*/
 
 OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {

@@ -16,7 +16,8 @@ public:
 	TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection* baseMultiplierCollection);
 
 	virtual void solve() = 0;
-    void printSolution (ofstream & outstream);
+	void printSolution();
+	void printSolutionTeX(ofstream &outstream);
 
 	list<mult_tile_t>& getSolution()
 	{

@@ -8,7 +8,19 @@ TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMult
 {
 }
 
-void TilingStrategy::printSolution(ofstream &outstream)
+void TilingStrategy::printSolution()
+{
+    for (auto& tile : solution)
+    {
+        BaseMultiplierCategory::Parametrization& parametrization = tile.first;
+        multiplier_coordinates_t& coordinates = tile.second;
+
+        cerr << "multiplier of type " << parametrization.getMultType() << " placed at (" << coordinates.first << "," << coordinates.second << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ")" << endl;
+    }
+
+}
+
+void TilingStrategy::printSolutionTeX(ofstream &outstream)
 {
     cerr << "Dumping multiplier schema in multiplier.tex\n";
     outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";

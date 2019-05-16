@@ -28,7 +28,8 @@ namespace flopoco {
 				deltaWidthSigned,
 				0,
 				0,
-				0
+				0,
+				"BaseMultiplierDSP"
 		}{}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 1;}

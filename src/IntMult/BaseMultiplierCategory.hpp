@@ -25,19 +25,23 @@ namespace flopoco {
 					int deltaWidthUnsignedSigned,
 					int combinedXCoeff,
 					int combinedYCoeff,
-					int combinedBound
+					int combinedBound,
+					string type="undefined!"
 				):maxWordSizeUnsigned_{maxWordSizeUnsigned},
 					maxSmallWordSizeUnsigned_{maxSmallWordSizeUnsigned},
 					deltaWidthUnsignedSigned_{deltaWidthUnsignedSigned},
 					combinedXCoeff_{combinedXCoeff},
 					combinedYCoeff_{combinedYCoeff},
-					combinedBound_{combinedBound}	
+					combinedBound_{combinedBound},
+				  	type_{type}
 				{}
 
 			int getDeltaWidthSigned() const { return deltaWidthUnsignedSigned_; }
 
 			virtual int getDSPCost(uint32_t wX, uint32_t wY) const = 0;
 			virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
+
+			string getType() const {return type_;}
 
 			class Parametrization{
 				public:
@@ -57,6 +61,9 @@ namespace flopoco {
                     bool isSignedMultX() const {return isSignedX_;}
                     bool isSignedMultY() const {return isSignedY_;}
 					bool isFlippedXY() const {return isFlippedXY_;}
+
+				string getMultType() const {return bmCat_->getType();}
+
 				private:
 					Parametrization(
 							unsigned int  wX, 
@@ -100,6 +107,8 @@ namespace flopoco {
 			int combinedXCoeff_;
 			int combinedYCoeff_;
 			int combinedBound_;
+
+			string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
 	};
 
 	typedef BaseMultiplierCategory::Parametrization BaseMultiplierParametrization;

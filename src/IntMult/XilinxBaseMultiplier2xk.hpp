@@ -16,7 +16,7 @@ namespace flopoco {
     {
 	public:
         XilinxBaseMultiplier2xk(int maxBigOperandWidth):
-			BaseMultiplierCategory{maxBigOperandWidth, 2, 0, 0, 0, 0}
+			BaseMultiplierCategory{maxBigOperandWidth, 2, 0, 0, 0, 0, "XilinxBaseMultiplier2xk"}
 		{}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}

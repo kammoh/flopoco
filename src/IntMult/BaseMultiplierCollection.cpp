@@ -81,7 +81,7 @@ void BaseMultiplierCollection::print()
 		{
 			cerr << "  base multiplier " << bmc->getSmallWordMaxUnsignedWordSize() << "x" << bmc->getMaxUnsignedWordSize()
 				 << ", max. DSP cost: " << bmc->getDSPCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize())
-				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize()) << endl
+				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getSmallWordMaxUnsignedWordSize(),bmc->getMaxUnsignedWordSize()) << endl;
 		}
 
 	}

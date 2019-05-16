@@ -10,7 +10,8 @@ BaseMultiplierLUT::BaseMultiplierLUT(int maxSize, double lutPerOutputBit):
 		0,
 		1,
 		1,
-		maxSize
+		maxSize,
+		"BaseMultiplierLUT"
 	}, lutPerOutputBit_{lutPerOutputBit}
 {}
 

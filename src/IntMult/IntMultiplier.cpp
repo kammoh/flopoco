@@ -93,6 +93,8 @@ namespace flopoco {
 		REPORT(DEBUG, "Solving tiling problem");
 		tilingStrategy.solve();
 
+		tilingStrategy.printSolution();
+
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
         cerr << "TEST : " << solution.size() << endl;
         if (texOutput) {
@@ -101,7 +103,7 @@ namespace flopoco {
             if((texfile.rdstate() & ofstream::failbit) != 0) {
                 cerr << "Error when opening multiplier.tex file for output. Will not print tiling configuration." << endl;
             } else {
-                tilingStrategy.printSolution(texfile);
+				tilingStrategy.printSolutionTeX(texfile);
                 texfile.close();
             }
         }
