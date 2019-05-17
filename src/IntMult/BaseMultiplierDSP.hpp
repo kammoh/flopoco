@@ -27,8 +27,6 @@ namespace flopoco {
 				maxWidthSmallestWord,
 				deltaWidthSigned,
 				0,
-				0,
-				0,
 				"BaseMultiplierDSP"
 		}{}
 

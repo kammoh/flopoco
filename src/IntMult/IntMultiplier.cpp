@@ -12,6 +12,7 @@
   All rights reserved.
 */
 
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>

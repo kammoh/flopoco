@@ -51,21 +51,13 @@ namespace flopoco {
 		if (isW2signed)
 			maxLimit += deltaWidthUnsignedSigned_;
 
-		bool isBiggerWord = (maxLimit == maxWordSizeLargeInputUnsigned_);
-		int curCoeff = (isBiggerWord) ? combinedXCoeff_ : combinedYCoeff_;
-		int otherCoeff = (isBiggerWord) ? combinedYCoeff_ : combinedXCoeff_;
-		
-		if (maxSumOfInputWordSizes_ == 0 || curCoeff == 0) {
-			return maxLimit;
-		}
+		int inputWidthSumBounds = maxSumOfInputWordSizes_ - effectiveW1Size;
+		if (isW2signed)
+			inputWidthSumBounds += deltaWidthUnsignedSigned_;
 
-		int res = (maxSumOfInputWordSizes_ - otherCoeff * effectiveW1Size) / curCoeff;
-		if (isW2signed) {
-			res += deltaWidthUnsignedSigned_;
-		}
-		res = (res <= maxLimit) ? res : maxLimit;
-		res = (res < 0) ? 0 : res;
-		return res;
+		int finalLimit = (inputWidthSumBounds <= maxLimit) ? inputWidthSumBounds : maxLimit;
+		finalLimit = (finalLimit < 0) ? 0 : finalLimit;
+		return finalLimit;
 	}
 }
 
