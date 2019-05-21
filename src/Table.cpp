@@ -55,7 +55,7 @@ namespace flopoco{
 		maxIn      = _maxIn;
 		//sanity checks: can't fill the table if there are no values to fill it with
 		if(values.size() == 0)
-			THROWERROR("Error in table: the set of values to be written in the table is empty" << endl);
+			THROWERROR("Error in Table::init(): the set of values to be written in the table is empty" << endl);
 
 		//set wIn
 		if(wIn < 0){
@@ -86,12 +86,16 @@ namespace flopoco{
 		if(wOut < 0){
 			//set the value of wOut
 			wOut = intlog2(maxValue);
-			REPORT(DEBUG, "WARNING: wOut value was not set, wOut=" << wOut << " was inferred from the vector of values");
+			REPORT(INFO, "WARNING: wOut value was not set, wOut=" << wOut << " was inferred from the vector of values");
 		}
 		else if(wOut < intlog2(maxValue))  {
-			REPORT(DEBUG, "WARNING: wOut value set to a value lower than the size of the values which are to be written in the table.");
+#if 0 // This behaviour is probably a timebomb
+			REPORT(INFO, "WARNING: wOut value was set too small. I'm fixing it up but, but I probably shouldn't");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
+#else
+			THROWERROR("In Table::init(), some values require " << intlog2(maxValue) << " bits to be stored, but wOut was set to "<< wOut);
+#endif
 		}
 
 		// if this is just a Table
