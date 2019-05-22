@@ -33,6 +33,10 @@ namespace flopoco{
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
 		wIn = f->wIn;
 		wOut = f->wOut;
+		if(wIn>30) {
+			THROWERROR("lsbIn limited to -30 (a table with 1O^9 entries should be enough for anybody). Do you really want me to write a source file of "
+								 << wOut * (mpz_class(1) << wIn) << " bytes?");
+		}
 		vector<mpz_class> v;
 		for(int i=0; i<(1<<wIn); i++) {
 			mpz_class rn, devnull;
