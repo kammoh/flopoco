@@ -194,14 +194,17 @@ namespace flopoco
 
 
 
-	// Global factory list
+	// Global objects: factory list
 	vector<pair<string,OperatorFactoryPtr>> UserInterface::factoryList;
 
 	vector<OperatorPtr>  UserInterface::globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 
 	vector<vector<OperatorPtr>>  UserInterface::globalOpListStack; 
 
+	int UserInterface::pipelineActive_;
 
+
+	
 	void UserInterface::pushAndClearGlobalOpList() {
 		globalOpListStack.push_back(globalOpList);
 		globalOpList.clear();
@@ -339,6 +342,7 @@ namespace flopoco
 		compression = "heuristicMaxEff";
 
 		depGraphDrawing = "full";
+		pipelineActive_ = true;
 
 	}
 

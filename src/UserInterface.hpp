@@ -143,6 +143,7 @@ namespace flopoco
 		static vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 		static vector<vector<OperatorPtr>>  globalOpListStack;  /**< a stack on which to save globalOpList when you don't want to mess with it */
 		static int    verbose;
+		static int pipelineActive_;
 	private:
 		static string outputFileName;
 		static string entityName;

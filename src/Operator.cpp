@@ -954,8 +954,12 @@ namespace flopoco{
 		//define its cycle, critical path and contribution to the critical path
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
-		s->setCriticalPathContribution(criticalPathContribution);
-
+		if(UserInterface::pipelineActive_) {
+			s->setCriticalPathContribution(criticalPathContribution);
+		}
+		else {
+			s->setCriticalPathContribution(0);
+		}
 		//whether this is an incomplete signal declaration
 		s->setIncompleteDeclaration(incompleteDeclaration);
 
@@ -1063,6 +1067,16 @@ namespace flopoco{
 		getSignalByName(copyName) -> setHasBeenScheduled(true); // so that the schedule can start from these signals -- lexicographic time is (0,0)
 	}
 
+
+
+
+	void Operator::disablePipelining(){
+		UserInterface::pipelineActive_=false;
+	}
+
+	void Operator::enablePipelining(){
+		UserInterface::pipelineActive_=true;
+	}
 
 
 	void Operator::outPortMap(OperatorPtr op, string componentPortName, string actualSignalName){

@@ -193,7 +193,6 @@ namespace flopoco {
 			lsbInSOPC.push_back(lsbExt); // for y
 			coeffSOPC.push_back("-("+coeffa[i]+")");
 		}
-
 		schedule();
 		for (uint32_t i=0; i<n; i++) {
 			inPortMap(join("X",i), join("U", i));
@@ -202,9 +201,13 @@ namespace flopoco {
 			inPortMap(join("X",i+n), join("Y", i+1));
 		}
 		outPortMap( "R", "Yinternal");
+
+		disablePipelining();
+
 		FixSOPC* fixSOPC = new FixSOPC(this, getTarget(), maxInSOPC, lsbInSOPC, msbOut, lsbExt, coeffSOPC, -1); // -1 means: faithful
 		vhdl << instance(fixSOPC, "fixSOPC", false /*this suppresses the "obsolete" warning*/ );
 
+		enablePipelining();
 
 		//The final rounding must be computed with an addition, no escaping it
 		int sizeYinternal = msbOut - lsbExt + 1;

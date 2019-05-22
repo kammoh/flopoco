@@ -593,6 +593,15 @@ namespace flopoco {
 		 */
 		void  addRegisteredSignalCopy(string registeredCopyName, string sourceName, Signal::ResetType regType=Signal::noReset);
 
+		/**
+		 * Disables pipeline locally. All the delays passed to declare() will be ignored until the next invokation of  enablePipelining();
+		 */
+		void disablePipelining();
+
+		/**
+		 * Enables pipeline locally. All the delays passed to declare() will be ignored until the next invokation of  enablePipelining();
+		 */
+		void enablePipelining();
 
 		// TODO: add methods that allow for signals with reset (when rewriting FPLargeAcc for the new framework)
 
@@ -1765,6 +1774,7 @@ private:
 	map<string, string>  tmpInPortMap_;                    /**< Input port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_. Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
 	map<string, string>  tmpOutPortMap_;                   /**< Output port map for the instance of this operator currently being built. Temporary variable, that will be pushed into portMaps_ Strings are used to allow to connect with ranges of a signal like, e.g., A => B(7) */
 	map<std::string, std::string> generics_;               /**< A map for generics, this is required to include library elements like primitives */
+
 
 };
 

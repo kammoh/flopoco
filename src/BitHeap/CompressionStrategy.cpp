@@ -30,7 +30,17 @@ namespace flopoco{
  		compressionDelay = bitheap->op->getTarget()->logicDelay(bitheap->op->getTarget()->lutInputs());
 #else
 		//set delay to one slice  TODO: set delay to lut + carrychain
+
+#ifdef HACKEDBYFLORENT
+		if(UserInterface::pipelineActive_) {
+			compressionDelay = bitheap->op->getTarget()->tableDelay(bitheap->op->getTarget()->lutInputs() + 2, 5, true);
+		}
+		else {
+			compressionDelay = 1e-200; // can't be zero, we divide by it on next line...
+		}
+#else
 		compressionDelay = bitheap->op->getTarget()->tableDelay(bitheap->op->getTarget()->lutInputs() + 2, 5, true);
+#endif // HACKEDBYFLORENT
 #endif
 		stagesPerCycle = (1.0/bitheap->op->getTarget()->frequency()) / compressionDelay;
 
@@ -64,11 +74,13 @@ namespace flopoco{
 		int maxCycle = -1;
 		Bit* minBit = nullptr;
 		Bit* maxBit = nullptr;
+
 		for(unsigned int i = 0; i < bitheap->bits.size(); i++)
 		{
 			for(unsigned int j = 0; j < bitheap->bits[i].size(); j++)
 			{
 				int currentCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
+
 				if(currentCycle > maxCycle){
 					maxCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					maxBit = bitheap->bits[i][j];
@@ -88,6 +100,7 @@ namespace flopoco{
 
 		REPORT(DEBUG, "objectiveDelay = " << objectiveDelay);
 		REPORT(DEBUG, "compressionDelay = " << compressionDelay);
+#if 0 // Removed by Florent, boundaries was unused in this method, please Martin check
 		vector<double> boundaries;
 		double remainingTime = objectiveDelay;
 		while(remainingTime >= compressionDelay){
@@ -97,7 +110,7 @@ namespace flopoco{
 		for(unsigned int i = 0; i < boundaries.size(); i++){
 			REPORT(DEBUG, "boundary number " << i << " is at " << boundaries[i]);
 		}
-
+#endif
 		//get the first and last stage, where bits arrive.
 
 		unsigned int maxStage;
@@ -370,9 +383,14 @@ namespace flopoco{
 
 
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
+#ifdef HACKEDBYFLORENT
+		if(!UserInterface::pipelineActive_) {
+			return 0;
+		}
+#endif
 		//for a bit to be in stage i, its criticalPath delay has to be smaller or equal to boundaries[i].
 		//(for the same cycle)
-        double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
+		double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
 		vector<double> boundaries;
 		double remainingTime = objectiveDelay;
 		while(remainingTime >= compressionDelay){
