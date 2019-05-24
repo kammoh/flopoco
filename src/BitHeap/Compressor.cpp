@@ -213,8 +213,15 @@ namespace flopoco{
 				xs << "& ";
 		}
 		//getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
-		double cpDelay = getTarget()->tableDelay(wIn, wOut, true);
-		vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
+		double cpDelay;
+
+		if(UserInterface::pipelineActive_) {
+			cpDelay = getTarget()->tableDelay(wIn, wOut, true);
+		} else {
+			cpDelay = 0; //set delay to zero to prevent from being pipelined
+		}
+
+				vhdl << tab << declare("X", wIn) << " <= " << xs.str() << ";" << endl << endl;
 		vhdl << tab << "with X select " << declare(cpDelay, "R0", wOut) << " <= " << endl;
 
 		vector<vector<mpz_class>> values(1<<wOut);

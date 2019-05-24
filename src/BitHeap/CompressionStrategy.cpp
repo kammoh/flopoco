@@ -23,30 +23,18 @@ namespace flopoco{
 		//no chunks already compressed
 		compressionDoneIndex = 0;
 
-		//the initial delay between the soonest bit and the rest of the bits
-		//	to be compressed is equal to the delay of a basic compressor
-
-#if 0
- 		compressionDelay = bitheap->op->getTarget()->logicDelay(bitheap->op->getTarget()->lutInputs());
-#else
-		//set delay to one slice  TODO: set delay to lut + carrychain
-
-#ifdef HACKEDBYFLORENT
 		if(UserInterface::pipelineActive_) {
+			//the initial delay between the soonest bit and the rest of the bits
+			//	to be compressed is equal to the delay of a basic compressor
 			compressionDelay = bitheap->op->getTarget()->tableDelay(bitheap->op->getTarget()->lutInputs() + 2, 5, true);
+			stagesPerCycle = (1.0/bitheap->op->getTarget()->frequency()) / compressionDelay;
 		}
 		else {
-			compressionDelay = 1e-200; // can't be zero, we divide by it on next line...
+			compressionDelay = 0;
+			stagesPerCycle = INT_MAX;
 		}
-#else
-		compressionDelay = bitheap->op->getTarget()->tableDelay(bitheap->op->getTarget()->lutInputs() + 2, 5, true);
-#endif // HACKEDBYFLORENT
-#endif
-		stagesPerCycle = (1.0/bitheap->op->getTarget()->frequency()) / compressionDelay;
-
 
 		REPORT(DEBUG, "compressionDelay is " << compressionDelay << " and stagesPerCycle is " << stagesPerCycle);
-
 
 		//generate all the compressors that can be used
 		generatePossibleCompressors();
@@ -68,6 +56,7 @@ namespace flopoco{
 		bitheap->sortBitsInColumns();
 
 		REPORT(DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
+		cout << "hier 1!" << endl; flush(cout);
 		printBitsInBitheap();
 		//first get the minimal cycle and maximum cycle
 		int minCycle = 1E6;
@@ -75,16 +64,21 @@ namespace flopoco{
 		Bit* minBit = nullptr;
 		Bit* maxBit = nullptr;
 
+		cout << "hier 2!" << endl; flush(cout);
 		for(unsigned int i = 0; i < bitheap->bits.size(); i++)
 		{
 			for(unsigned int j = 0; j < bitheap->bits[i].size(); j++)
 			{
+				cout << "hier 2a!" << endl; flush(cout);
 				int currentCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 
+				cout << "hier 2b!" << endl; flush(cout);
 				if(currentCycle > maxCycle){
 					maxCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					maxBit = bitheap->bits[i][j];
 				}
+
+				cout << "hier 2c!" << endl; flush(cout);
 				if(currentCycle < minCycle){
 					minCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					minBit = bitheap->bits[i][j];
@@ -92,6 +86,7 @@ namespace flopoco{
 				
 			}
 		}
+		cout << "hier 3!" << endl; flush(cout);
 		REPORT(DEBUG, "max is cycle " << maxCycle);
 		REPORT(DEBUG, "min is cycle " << minCycle);
 		assert(minBit != nullptr);
@@ -100,17 +95,6 @@ namespace flopoco{
 
 		REPORT(DEBUG, "objectiveDelay = " << objectiveDelay);
 		REPORT(DEBUG, "compressionDelay = " << compressionDelay);
-#if 0 // Removed by Florent, boundaries was unused in this method, please Martin check
-		vector<double> boundaries;
-		double remainingTime = objectiveDelay;
-		while(remainingTime >= compressionDelay){
-			remainingTime -= compressionDelay;
-			boundaries.insert(boundaries.begin(), remainingTime);
-		}
-		for(unsigned int i = 0; i < boundaries.size(); i++){
-			REPORT(DEBUG, "boundary number " << i << " is at " << boundaries[i]);
-		}
-#endif
 		//get the first and last stage, where bits arrive.
 
 		unsigned int maxStage;
@@ -243,7 +227,7 @@ namespace flopoco{
 
 		for(unsigned int s = 0; s < bitAmount.size(); s++){
 			ostringstream line;
-			line.str("");
+			line << "bitheap column height in stage " + to_string(s) << ": ";
 			unsigned int tempColumn = maxColumn;
 			while(tempColumn > 0){
 				tempColumn--;
@@ -263,7 +247,7 @@ namespace flopoco{
 					line << bitAmount[s][tempColumn] << " ";
 				}
 			}
-			cout << line.str() << endl;
+			cerr << line.str() << endl;
 		}
 	}
 
@@ -383,11 +367,9 @@ namespace flopoco{
 
 
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
-#ifdef HACKEDBYFLORENT
 		if(!UserInterface::pipelineActive_) {
 			return 0;
 		}
-#endif
 		//for a bit to be in stage i, its criticalPath delay has to be smaller or equal to boundaries[i].
 		//(for the same cycle)
 		double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
