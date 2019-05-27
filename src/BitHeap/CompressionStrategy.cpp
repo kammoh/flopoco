@@ -56,7 +56,6 @@ namespace flopoco{
 		bitheap->sortBitsInColumns();
 
 		REPORT(DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
-		cout << "hier 1!" << endl; flush(cout);
 		printBitsInBitheap();
 		//first get the minimal cycle and maximum cycle
 		int minCycle = 1E6;
@@ -64,21 +63,17 @@ namespace flopoco{
 		Bit* minBit = nullptr;
 		Bit* maxBit = nullptr;
 
-		cout << "hier 2!" << endl; flush(cout);
 		for(unsigned int i = 0; i < bitheap->bits.size(); i++)
 		{
 			for(unsigned int j = 0; j < bitheap->bits[i].size(); j++)
 			{
-				cout << "hier 2a!" << endl; flush(cout);
 				int currentCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 
-				cout << "hier 2b!" << endl; flush(cout);
 				if(currentCycle > maxCycle){
 					maxCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					maxBit = bitheap->bits[i][j];
 				}
 
-				cout << "hier 2c!" << endl; flush(cout);
 				if(currentCycle < minCycle){
 					minCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					minBit = bitheap->bits[i][j];
@@ -86,7 +81,6 @@ namespace flopoco{
 				
 			}
 		}
-		cout << "hier 3!" << endl; flush(cout);
 		REPORT(DEBUG, "max is cycle " << maxCycle);
 		REPORT(DEBUG, "min is cycle " << minCycle);
 		assert(minBit != nullptr);
