@@ -11,6 +11,7 @@
 
 #include "IntMult/MultiplierBlock.hpp"
 #include "IntMult/BaseMultiplierCategory.hpp"
+#include "TilingStrategy.hpp"
 
 namespace flopoco {
 	class IntMultiplier : public Operator {
@@ -54,26 +55,23 @@ namespace flopoco {
 		bool negate;                    /**< if true this multiplier computes -xy */
 	private:
 //		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
-//												this is a pointer to the Operator that will provide the actual vhdl stream etc. */
-        BitHeap* bitHeap;    			/**< The heap of weighted bits that will be used to do the additions */
-
-        /** Places a single BaseMultiplier at a given position
-         * xPos, yPos:                  Position of the lower right corner of the BaseMultiplier
-         * xInputLength, yInputLength:  width of the inputs x and y
-         * outputLength:                width of the output
-         * xInputNonZeros, yInputNonZeros:      how many consecutive bits of the inputs are not constantly zero (might not be needed)
-         * totalOffset:                 Multipliers start at position (totalOffset, totalOffset). This has the advantage that BaseMultipliers
-         *                              can protude the lower and right border as well. totalOffset is normally zero or twelve
-         * id:                          just an unique id to not declare signals twice
-         *
-         * returns the name of the output (might not be needed)
-         * */
-        string placeSingleMultiplier(Operator* op, unsigned int xPos, unsigned int yPos, unsigned int xInputLength, unsigned int yInputLength, unsigned int outputLength, unsigned int xInputNonZeros, unsigned int yInputNonZeros, unsigned int totalOffset, unsigned int id);
+		/**
+		 * Realise a tile by instantiating a multiplier, selecting the inputs and connecting the output to the bitheap
+		 *
+		 * @param tile: the tile to instentiate
+		 * @param idx: the tile identifier for unique name
+		 * @param output_name: the name to which the output of this tile should be mapped
+		 */
+		Operator* realiseTile(
+				TilingStrategy::mult_tile_t const & tile,
+				size_t idx,
+				string output_name
+			);
 
         /** returns the amount of consecutive bits, which are not constantly zero
-         * bm:                          current BaseMultiplier
-         * xPos, yPos:                  position of lower right corner of the BaseMultiplier
-         * totalOffset:                 see placeSingleMultiplier()
+		 * @param bm:                          current BaseMultiplier
+		 * @param xPos, yPos:                  position of lower right corner of the BaseMultiplier
+		 * @param totalOffset:                 see placeSingleMultiplier()
          * */
         unsigned int getOutputLengthNonZeros(
 				BaseMultiplierParametrization const & parameter,
@@ -90,12 +88,23 @@ namespace flopoco {
 				int mode
 			);
 
+		/**
+		 * @brief Compute the number of bits below the output msb that we need to keep in the summation
+		 * @param wX first input width
+		 * @param wY second input width
+		 * @param wOut number of bits kept in the output
+		 * @return the the number of bits below the output msb that we need to keep in the summation to ensure faithful rounding
+		 */
+		unsigned int computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut);
+
         /*!
          * add a unique identifier for the multiplier, and possibly for the block inside the multiplier
          */
         string addUID(string name, int blockUID=-1);
 
         int multiplierUid;
+
+		void branchToBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> const &solution , unsigned int bitheapLSBWeight);
 
 	};
 

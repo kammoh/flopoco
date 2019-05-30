@@ -41,7 +41,7 @@ namespace flopoco {
 					Operator *generateOperator(
 							Operator *parentOp,
 							Target *target
-						) {
+						) const {
 						return bmCat_->generateOperator(parentOp, target, *this);
 					}
 

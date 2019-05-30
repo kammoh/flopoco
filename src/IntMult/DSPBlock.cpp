@@ -70,8 +70,8 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
     {
 		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= M;" << endl;
     }
-	addOutput("R", wM);
-	vhdl << tab << "R <= Rtmp;" << endl;
+	addOutput("O", wM);
+	vhdl << tab << "O <= Rtmp;" << endl;
 }
 
 /*

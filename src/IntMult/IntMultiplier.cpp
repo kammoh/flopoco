@@ -33,15 +33,35 @@ using namespace std;
 
 namespace flopoco {
 
+	/**
+	 * @brief Compute the size required to store the untruncated product of inputs of a given width
+	 * @param wX size of the first input
+	 * @param wY size of the second input
+	 * @return the number of bits needed to store a product of I<wX> * I<WY>
+	 */
+	inline unsigned int prodsize(unsigned int wX, unsigned int wY)
+	{
+		if(wX == 0 || wY == 0)
+			return 0;
+		
+		if(wX == 1)
+			return wY;
+
+		if(wY == 1)
+			return wX;
+
+		return wX + wY;
+	}
+
     IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, bool texOutput):
-        Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_)
+		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_)
 	{
         srcFileName="IntMultiplier";
 		setCopyrightString ( "Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012" );
 
 		ostringstream name;
 		name <<"IntMultiplier";
-		setNameWithFreqAndUID ( name.str() );
+		setNameWithFreqAndUID (name.str());
 
         // the addition operators need the ieee_std_signed/unsigned libraries
         useNumericStd();
@@ -50,6 +70,16 @@ namespace flopoco {
 
 		if(wOut == 0)
 			wOut = wX+wY;
+
+		unsigned int guardBits = computeGuardBits(
+					static_cast<unsigned int>(wX),
+					static_cast<unsigned int>(wY),
+					static_cast<unsigned int>(wOut)
+				);
+
+		REPORT(INFO, "IntMultiplier(): Constructing a multiplier of size " <<
+					wX << "x" << wY << " faithfully rounded to bit " << wOut <<
+					". Will use " << guardBits << " guard bits.")
 
 		string xname="X";
 		string yname="Y";
@@ -72,16 +102,16 @@ namespace flopoco {
             return;
         }
 
-//		bitHeap = new BitHeap(this, wOut);
-		bitHeap = new BitHeap(this, wOut+10); //!!! just for test
+		BitHeap bitHeap(this, wOut + guardBits);
+//		bitHeap = new BitHeap(this, wOut+10); //!!! just for test
 
-		REPORT(DEBUG, "Creating BaseMultiplierCollection");
+		REPORT(INFO, "Creating BaseMultiplierCollection")
 //		BaseMultiplierCollection baseMultiplierCollection(parentOp->getTarget(), wX, wY);
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 
 		baseMultiplierCollection.print();
 
-		REPORT(DEBUG, "Creating TilingStrategy");
+		REPORT(INFO, "Creating TilingStrategy")
 		TilingStrategyBasicTiling tilingStrategy(
 				wX, 
 				wY, 
@@ -91,14 +121,13 @@ namespace flopoco {
 				baseMultiplierCollection.getPreferedMultiplier()
 			);
 
-		REPORT(DEBUG, "Solving tiling problem");
+		REPORT(DEBUG, "Solving tiling problem")
 		tilingStrategy.solve();
 
 		tilingStrategy.printSolution();
 
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
-        cerr << "TEST : " << solution.size() << endl;
-        if (texOutput) {
+		if (texOutput) {
             ofstream texfile;
             texfile.open("multiplier.tex");
             if((texfile.rdstate() & ofstream::failbit) != 0) {
@@ -109,186 +138,198 @@ namespace flopoco {
             }
         }
 
-		unsigned int posInList = 0;    //needed as id to differ between inputvectors
-        unsigned int totalOffset = 0; //!!! multiplierSolutionParser->getOffset();
+		schedule();
 
-        for(auto & tile : solution) {
-            //base_multiplier_id_t type = (*it).first;
-			auto& parameters = tile.first;
-			auto& anchor = tile.second;
-            unsigned int xPos = anchor.first;
-            unsigned int yPos = anchor.second;
+		branchToBitheap(&bitHeap, solution, prodsize(wX, wY) - (wOut + guardBits));
 
-            //BaseMultiplier &baseMultiplier = baseMultiplierCollection.getBaseMultiplier(type);
+		bitHeap.startCompression();
 
-            //cout << "found multiplier " << baseMultiplier.getName() << " (type " <<  type << ") at position (" << (int) (xPos-totalOffset) << "," << (int) (yPos-totalOffset) << ")" << endl;
-
-            //unsigned int outputLength = getOutputLength(baseMultiplier, xPos, yPos);
-			//Operator *op = baseMultiplier->getOperator();
-            //lets assume, that baseMultiplier ix 3x3, Unsigned ...
-
-            unsigned int xInputLength = parameters.getTileXWordSize();
-            unsigned int yInputLength = parameters.getTileYWordSize();
-            unsigned int outputLength = parameters.getOutWordSize();
-
-            unsigned int lsbZerosInBM = getLSBZeros(parameters, xPos, yPos, totalOffset, 1);  //normally, starting position of output is computed by xPos + yPos. But if the output starts at an higher weight, lsbZeros counts the offset
-
-            unsigned int completeOffset = getLSBZeros(parameters, xPos, yPos, totalOffset, 0);
-            unsigned int resultVectorOffset = completeOffset - lsbZerosInBM;
-            unsigned int xInputNonZeros = xInputLength;
-            unsigned int yInputNonZeros = yInputLength;
-            unsigned int realBitHeapPosOffset = getLSBZeros(parameters, xPos, yPos, totalOffset, 2);
-
-            unsigned int outputLengthNonZeros = xInputNonZeros + yInputNonZeros;
-
-            outputLengthNonZeros = getOutputLengthNonZeros(parameters, xPos, yPos, totalOffset);
-
-//            setCycle(0); //reset to cycle 0
-
-			Operator *op = parameters.generateOperator(parentOp, getTarget());
-//            nextCycle(); //add register after each multiplier
-
-			UserInterface::addToGlobalOpList(op);
-
-			string outputVectorName = placeSingleMultiplier(op, xPos, yPos, xInputLength, yInputLength, outputLength, xInputNonZeros, yInputNonZeros, totalOffset, posInList);
-
-//            syncCycleFromSignal(outputVectorName);
-
-            unsigned int startWeight = 0;
-            if(xPos + yPos > (2 * totalOffset)){
-                startWeight = xPos + yPos - (2 * totalOffset);
-            }
-            startWeight += realBitHeapPosOffset;
-
-            unsigned int outputVectorLSBZeros = 0;
-            /*
-            if(2 * totalOffset > xPos + yPos){
-                outputVectorLSBZeros = (2 * totalOffset) - (xPos + yPos);
-            }
-            */
-
-            //TODO: check cases, where the lsbZerosInBM != 0
-            //outputVectorLSBZeros are the amount of lsb Bits of the outputVector, which we have to discard in the vhdl-code.
-            outputVectorLSBZeros = getLSBZeros(parameters, xPos, yPos, totalOffset, 0) - getLSBZeros(parameters, xPos, yPos, totalOffset, 1);
-            cout << "for position " << xPos << "," << yPos << " we got outputVectorLSBZeros = " << outputVectorLSBZeros << endl;
-            cout << "outputLengthNonZeros = " << outputLengthNonZeros << endl;
-            cout << "startWeight is " << startWeight << endl;
-            cout << "complete offset is " << completeOffset << endl;
-            cout << "resultVectorOffset is " << resultVectorOffset << endl;
-            cout << "realBitHeapPosOffset is " << realBitHeapPosOffset << endl;
-
-            bool isSigned = false;
-            //todo: signed case: see line 1110
-            if(!isSigned){
-//                setCycleFromSignal(outputVectorName);	//we assume that the whole vector has the same cycle
-				assert(resultVectorOffset < ((int) (outputLengthNonZeros - lsbZerosInBM)));
-//				for(int i = resultVectorOffset; i < ((int) (outputLengthNonZeros - lsbZerosInBM)); i++){
-				for(int i = resultVectorOffset; i < ((int) (outputLengthNonZeros - lsbZerosInBM)+2); i++){ //+2 added and don't know why!!!
-                    ostringstream s;
-                    s << outputVectorName << of(i);
-//					bitHeap->addBit(startWeight + (i - resultVectorOffset), s.str());
-                    bitHeap->addBit(startWeight + (i - resultVectorOffset) - 2, s.str()); //-2 added and don't know why!!!
-                }
-            }
-
-            posInList++;
-        }
-
-		bitHeap->startCompression();
-
-		vhdl << tab << "R" << " <= " << bitHeap-> getSumName() << range(wOut-1, 0) << ";" << endl;
-
+		vhdl << tab << "R" << " <= " << bitHeap.getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
 	}
 
-    //totalOffset is normally zero or twelve. The whole big multiplier is moved by totalOffset-Bits in x and y direction to support hard multiplier which protude the right and lower borders.
-    string IntMultiplier::placeSingleMultiplier(Operator* op, unsigned int xPos, unsigned int yPos, unsigned int xInputLength, unsigned int yInputLength, unsigned int outputLength, unsigned int xInputNonZeros, unsigned int yInputNonZeros, unsigned int totalOffset, unsigned int id){
+	unsigned int IntMultiplier::computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut)
+	{
+		unsigned int minW = (wX < wY) ? wX : wY;
+		unsigned int maxW = (wX < wY) ? wY : wX;
 
-        //xPos, yPos is the lower right corner of the multiplier
-        //xInputLength and yInputLength is the width of the inputs
+		auto ps = prodsize(wX, wY);
+		auto nbDontCare = ps - wOut;
+
+		mpz_class errorBudget{1};
+		errorBudget <<= nbDontCare;
+		errorBudget -= 1;
+
+		unsigned int nbUnneeded;
+		for (nbUnneeded = 1 ; nbUnneeded < nbDontCare ; nbUnneeded += 1) {
+			unsigned int bitAtCurCol;
+			if (nbUnneeded < minW) {
+				bitAtCurCol = nbUnneeded;
+			} else if (nbUnneeded <= maxW) {
+				bitAtCurCol = minW;
+			} else {
+				bitAtCurCol = ps -nbUnneeded;
+			}
+			REPORT(DETAILED, "IntMultiplier::computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
+			mpz_class currbitErrorAmount{bitAtCurCol};
+			currbitErrorAmount <<= (nbUnneeded - 1);
+			errorBudget -= currbitErrorAmount;
+			if(errorBudget < 0)
+				break;
+		}
+		nbUnneeded -= 1;
+
+		return nbDontCare - nbUnneeded;
+	}
+
+	/**
+	 * @brief getZeroMSB if the tile goes out of the multiplier,
+	 *		  compute the number of extra zeros that should be inputed to the submultiplier as MSB
+	 * @param anchor lsb of the tile
+	 * @param tileWidth width of the tile
+	 * @param multiplierLimit msb of the overall multiplier
+	 * @return
+	 */
+	inline unsigned int getZeroMSB(int anchor, unsigned int tileWidth, int multiplierLimit)
+	{
+		unsigned int result = 0;
+		if (static_cast<int>(tileWidth) + anchor > multiplierLimit) {
+			result = static_cast<unsigned int>(
+						static_cast<int>(tileWidth) + anchor - multiplierLimit
+						);
+		}
+		return result;
+	}
+
+	/**
+	 * @brief getInputSignal Perform the selection of the useful bit and pad if necessary the input signal to fit a certain format
+	 * @param msbZeros number of zeros to add left of the selection
+	 * @param selectSize number of bits to get from the inputSignal
+	 * @param offset where to start taking bits from the input signal
+	 * @param lsbZeros number of zeros to append to the selection for right padding
+	 * @param signalName input signal name from which to select the bits
+	 * @return the string corresponding to the signal selection and padding
+	 */
+	inline string getInputSignal(unsigned int msbZeros, unsigned int selectSize, unsigned int offset, unsigned int lsbZeros, string const & signalName)
+	{
+		stringstream s;
+		if (msbZeros > 0)
+			s << zg(static_cast<int>(msbZeros)) << " & ";
+
+		s << signalName << range(
+				 static_cast<int>(selectSize - 1 + offset),
+				 static_cast<int>(offset)
+			);
+
+		if (lsbZeros > 0)
+			s << " & " << zg(static_cast<int>(lsbZeros));
+
+		return s.str();
+	}
+
+	void IntMultiplier::branchToBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> const &solution, unsigned int bitheapLSBWeight)
+	{
+		size_t i = 0;
+		stringstream oname, ofname;
+		for(auto & tile : solution) {
+			auto& parameters = tile.first;
+			auto& anchor = tile.second;
+
+			int xPos = anchor.first;
+			int yPos = anchor.second;
+
+			unsigned int xInputLength = parameters.getTileXWordSize();
+			unsigned int yInputLength = parameters.getTileYWordSize();
+			//unsigned int outputLength = parameters.getOutWordSize();
+
+			unsigned int lsbZerosXIn = (xPos < 0) ? static_cast<unsigned int>(-xPos) : 0;
+			unsigned int lsbZerosYIn = (yPos < 0) ? static_cast<unsigned int>(-yPos) : 0;
+
+			unsigned int msbZerosXIn = getZeroMSB(xPos, xInputLength, wX);
+			unsigned int msbZerosYIn = getZeroMSB(yPos, yInputLength, wY);
+
+			unsigned int selectSizeX = xInputLength - (msbZerosXIn + lsbZerosXIn);
+			unsigned int selectSizeY = yInputLength - (msbZerosYIn + lsbZerosYIn);
+
+			unsigned int effectiveAnchorX = (xPos < 0) ? 0 : static_cast<unsigned int>(xPos);
+			unsigned int effectiveAnchorY = (yPos < 0) ? 0 : static_cast<unsigned int>(yPos);
+
+			unsigned int outLSBWeight = effectiveAnchorX + effectiveAnchorY;
+			unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;
+			unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;
+
+			unsigned int toSkip = lsbZerosXIn + lsbZerosYIn + truncated;
+			unsigned int tokeep = prodsize(selectSizeX, selectSizeY) - toSkip;
+			assert(tokeep > 0); //A tiling should not give a useless tile
+
+			oname.str("");
+			oname << "tile_" << i << "_output";
+			realiseTile(tile, i, oname.str());
+
+			ofname.str("");
+			ofname << "tile_" << i << "filtered_output";
+
+			vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
+					range(toSkip + tokeep - 1, toSkip) << ";" << endl;
+
+			bitheap->addSignal(ofname.str(), bitHeapOffset);
+			i += 1;
+		}
+	}
 
 
-        cout << "(" << xPos << ";" << yPos << ") "; // << endl;
-        int blockUid = 876;
-        //declaring x-input:
-        unsigned int xStart = xPos;
-        unsigned int lowXZeros = 0;
-        if(xPos < totalOffset){
-            lowXZeros = totalOffset - xPos;
-            xStart = totalOffset;
-        }
-        unsigned int xEnd = (xPos + xInputLength) - 1;
-        unsigned int highXZeros = 0;
-        if(xPos + xInputLength > (wX + totalOffset)){
-            highXZeros = (xPos + xInputLength) - (wX + totalOffset);
-            xEnd = (wX + totalOffset) - 1;
-        }
-        //unsigned int xNonZeros = xInputLength - (lowXZeros + highXZeros);
 
-        vhdl << tab << declare(join(addUID("x",blockUid),"_",id),xInputLength) << " <= ";
-        if(highXZeros > 0){
-//			cout << "highXzeros: " << highXZeros << endl;
-            vhdl << zg((int)highXZeros,0) << " & ";
-        }
-        vhdl << addUID("XX") << range(xEnd - totalOffset, xStart - totalOffset);
-        if(lowXZeros > 0){
-//			cout << "lowXzeros: " << lowXZeros << endl;
-            vhdl << " & " << zg((int)lowXZeros,0);
-        }
-        vhdl << ";" << endl;
+	Operator* IntMultiplier::realiseTile(TilingStrategy::mult_tile_t const & tile, size_t idx, string output_name)
+	{
+		auto& parameters = tile.first;
+		auto& anchor = tile.second;
+		int xPos = anchor.first;
+		int yPos = anchor.second;
 
-        cout << "totalOffset=" << totalOffset << ", xStart=" << xStart << ", xEnd=" << xEnd << ", highXZeros=" << highXZeros << ", lowXZeros=" << lowXZeros << endl;
+		unsigned int xInputLength = parameters.getTileXWordSize();
+		unsigned int yInputLength = parameters.getTileYWordSize();
+		//unsigned int outputLength = parameters.getOutWordSize();
 
+		unsigned int lsbZerosXIn = (xPos < 0) ? static_cast<unsigned int>(-xPos) : 0;
+		unsigned int lsbZerosYIn = (yPos < 0) ? static_cast<unsigned int>(-yPos) : 0;
 
-        //declaring y-input:
-        unsigned int yStart = yPos;
-        unsigned int lowYZeros = 0;
-        if(yPos < totalOffset){
-            lowYZeros = totalOffset - yPos;
-            yStart = totalOffset;
-        }
-        unsigned int yEnd = (yPos + yInputLength) - 1;
-        unsigned int highYZeros = 0;
-        if(yPos + yInputLength + lowYZeros > (wY + totalOffset)){
-            highYZeros = (yPos + yInputLength) - (wY + totalOffset);
-            yEnd = (wY + totalOffset) - 1;
-        }
-        //unsigned int yNonZeros = yInputLength - (lowYZeros + highYZeros);
+		unsigned int msbZerosXIN = getZeroMSB(xPos, xInputLength, wX);
+		unsigned int msbZerosYIn = getZeroMSB(yPos, yInputLength, wY);
 
-        vhdl << tab << declare(join(addUID("y",blockUid),"_",id),yInputLength) << " <= ";
-        if(highYZeros > 0){
-//			cout << "highYzeros: " << highYZeros << endl;
-            vhdl << zg((int)highYZeros,0) << " & ";
-        }
-        vhdl << addUID("YY") << range(yEnd - totalOffset, yStart - totalOffset);
-        if(lowYZeros > 0){
-            cout << "lowYzeros: " << lowYZeros << endl;
-            vhdl << " & " << zg((int)lowYZeros,0);
-        }
-        vhdl << ";" << endl;
+		unsigned int selectSizeX = xInputLength - (msbZerosXIN + lsbZerosXIn);
+		unsigned int selectSizeY = yInputLength - (msbZerosYIn + lsbZerosYIn);
 
-        //realize it:
-        inPortMap(op, "X", join(addUID("x",blockUid),"_",id));
-        inPortMap(op, "Y", join(addUID("y",blockUid),"_",id));
-        outPortMap(op, "R", join(addUID("r",blockUid),"_",id));
-        vhdl << instance(op, join(addUID("Mult",blockUid),"_", id));
-        useSoftRAM(op);
+		unsigned int effectiveAnchorX = (xPos < 0) ? 0 : static_cast<unsigned int>(xPos);
+		unsigned int effectiveAnchorY = (yPos < 0) ? 0 : static_cast<unsigned int>(yPos);
 
-        cout << join(addUID("r",blockUid),"_",id) << ":" << getSignalByName(join(addUID("r",blockUid),"_",id))->width() << endl;
+		auto tileXSig = getInputSignal(msbZerosXIN, selectSizeX, effectiveAnchorX, lsbZerosXIn, "X");
+		auto tileYSig = getInputSignal(msbZerosYIn, selectSizeY, effectiveAnchorY, lsbZerosYIn, "Y");
 
-        return join(addUID("r",blockUid),"_",id);
+		stringstream nameX, nameY, nameOutput;
+		nameX << "tile_" << idx << "_X";
+		nameY << "tile_" << idx << "_Y";
 
-        /*
-        vhdl << tab << declare(join(addUID("input_x_y", blockUid), "_", id), xInputLength + yInputLength) << " <= ";
-        vhdl << join(addUID("y",blockUid),"_",id) << " & " << join(addUID("x",blockUid),"_",id) << ";" << endl;
+		nameOutput << "tile_" << idx << "_Out";
 
-        inPortMap(op, "X",join(addUID("input_x_y", blockUid), "_", id));
-        outPortMap(op, "Y", join(addUID("r",blockUid),"_",id));
-        vhdl << instance(op, join(addUID("Mult",blockUid),"_", id));
-        useSoftRAM(op);
+		vhdl << tab << declare(0., nameX.str(), xInputLength) << " <= " << tileXSig << ";" << endl;
+		vhdl << tab << declare(0., nameY.str(), yInputLength) << " <= " << tileYSig << ";" << endl;
 
-        return join(addUID("r",blockUid),"_",id);
-        */
-    }
+		string multIn1SigName = nameX.str();
+		string multIn2SigName = nameY.str();
+
+		if (parameters.isFlippedXY())
+			std::swap(multIn1SigName, multIn2SigName);
+
+		nameOutput.str("");
+		nameOutput << "tile_" << idx << "_mult";
+
+		inPortMap(nullptr, "X", multIn1SigName);
+		inPortMap(nullptr, "Y", multIn2SigName);
+		outPortMap(nullptr, "O", output_name);
+		auto mult = parameters.generateOperator(this, getTarget());
+
+		vhdl << instance(mult, nameOutput.str(), false) <<endl;
+		return mult;
+	}
 
     string IntMultiplier::addUID(string name, int blockUID)
     {
