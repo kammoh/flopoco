@@ -68,8 +68,8 @@ namespace flopoco {
 			int msb_in;
 			int lsb_in;
 			int lsb_out;
-			int msbre_out;
-			int msbim_out;
+//			int msbre_out; //not used!!
+//			int msbim_out; //not used!!
 			int input_width;
 			int outputre_width;
 			int outputim_width;

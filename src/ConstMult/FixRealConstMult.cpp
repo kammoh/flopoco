@@ -83,6 +83,40 @@ FixRealConstMult::FixRealConstMult(Operator* parentOp, Target* target) : Operato
 
 }
 
+void FixRealConstMult::constStringToSollya()
+{
+	// Convert the input string into a sollya evaluation tree
+	sollya_obj_t sollyiaObj;
+	sollyiaObj = sollya_lib_parse_string(constant.c_str());
+	/* If  parse error throw an exception */
+	if (sollya_lib_obj_is_error(sollyiaObj))
+	{
+		ostringstream error;
+		error << srcFileName << ": Unable to parse string " <<
+			  constant << " as a numeric constant" << endl;
+		throw error.str();
+	}
+
+	mpfr_init2(mpC, 10000);
+	mpfr_init2(absC, 10000);
+
+	sollya_lib_get_constant(mpC, sollyiaObj);
+
+	//if negative constant, then set negativeConstant
+	negativeConstant = (mpfr_cmp_si(mpC, 0) < 0 ? true : false);
+
+	signedOutput = negativeConstant || signedIn;
+	mpfr_abs(absC, mpC, GMP_RNDN);
+
+	REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
+
+	//compute the logarithm only of the constants
+	mpfr_t log2C;
+	mpfr_init2(log2C, 100); // should be enough for anybody
+	mpfr_log2(log2C, absC, GMP_RNDN);
+	msbC = mpfr_get_si(log2C, GMP_RNDU);
+	mpfr_clears(log2C, NULL);
+}
 
 TestList FixRealConstMult::unitTest(int index)
 {

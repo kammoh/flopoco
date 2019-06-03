@@ -118,17 +118,11 @@ namespace flopoco{
 
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
 
-		static TestList unitTest(int index);
-
 		static void registerFactory();
 		
-		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
 		bool addRoundBit; /**< If false, do not add the round bit to the bit heap: somebody else will */
-		mpfr_t mpC;
-		mpfr_t absC;
 		double errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
 		int g; /**< computed late, either by the parent operator, or out of errorInUlps */
-		bool negativeConstant;
 		bool constantIsExactlyZero; // it is surprising how many filters want to multiply by 0.
 		bool constantRoundsToZeroInTheStandaloneCase; // in the virtual case, it will depend on how many guard bits are added
 		bool constantIsPowerOfTwo;

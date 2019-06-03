@@ -51,14 +51,8 @@ namespace flopoco{
 
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
 
-		static TestList unitTest(int index);
-
 		static void registerFactory();
 		
-		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
-		mpfr_t mpC;
-		mpfr_t absC;
-		bool negativeConstant;
 
 
 		/** The heap of weighted bits that will be used to do the additions */

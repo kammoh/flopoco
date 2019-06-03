@@ -70,39 +70,8 @@ namespace flopoco{
 
 		useNumericStd();
 
-		// Convert the input string into a sollya evaluation tree
-		sollya_obj_t sollyiaObj;
-		sollyiaObj = sollya_lib_parse_string(constant.c_str());
-		/* If  parse error throw an exception */
-		if (sollya_lib_obj_is_error(sollyiaObj))
-		{
-			ostringstream error;
-			error << srcFileName << ": Unable to parse string " <<
-				  constant << " as a numeric constant" << endl;
-			throw error.str();
-		}
-
-		mpfr_init2(mpC, 10000);
-		mpfr_init2(absC, 10000);
-
-		sollya_lib_get_constant(mpC, sollyiaObj);
-
-		//if negative constant, then set negativeConstant
-		negativeConstant = (mpfr_cmp_si(mpC, 0) < 0 ? true : false);
-
-		signedOutput = negativeConstant || signedIn;
-		mpfr_abs(absC, mpC, GMP_RNDN);
-
-		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
-
-
-		//compute the logarithm only of the constants
-		mpfr_t log2C;
-		mpfr_init2(log2C, 100); // should be enough for anybody
-		mpfr_log2(log2C, absC, GMP_RNDN);
-		msbC = mpfr_get_si(log2C, GMP_RNDU);
-		mpfr_clears(log2C, NULL);
-
+		constStringToSollya();
+		
 		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
 		if (mpfr_zero_p(mpC) != 0)
 		{
@@ -492,60 +461,6 @@ namespace flopoco{
 		mpfr_clears(mpX, mpR, NULL);
 	}
 
-
-	TestList FixRealShiftAdd::unitTest(int index)
-	{
-		// the static list of mandatory tests
-		TestList testStateList;
-		vector<pair<string,string>> paramList;
-		
-		if(index==-1) 
-		{ // The unit tests
-
-			vector<string> constantList; // The list of constants we want to test
-			constantList.push_back("\"0\"");
-			constantList.push_back("\"0.125\"");
-			constantList.push_back("\"-0.125\"");
-			constantList.push_back("\"4\"");
-			constantList.push_back("\"-4\"");
-			constantList.push_back("\"log(2)\"");
-			constantList.push_back("-\"log(2)\"");
-			constantList.push_back("\"0.00001\"");
-			constantList.push_back("\"-0.00001\"");
-			constantList.push_back("\"0.0000001\"");
-			constantList.push_back("\"-0.0000001\"");
-			constantList.push_back("\"123456\"");
-			constantList.push_back("\"-123456\"");
-
-			for(int wIn=3; wIn<16; wIn+=4) { // test various input widths
-				for(int lsbIn=-1; lsbIn<2; lsbIn++) { // test various lsbIns
-					string lsbInStr = to_string(lsbIn);
-					string msbInStr = to_string(lsbIn+wIn);
-					for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
-						string lsbOutStr = to_string(lsbOut);
-						for(int signedIn=0; signedIn<2; signedIn++) {
-							string signedInStr = to_string(signedIn);
-							for(auto c:constantList) { // test various constants
-								paramList.push_back(make_pair("lsbIn",  lsbInStr));
-								paramList.push_back(make_pair("lsbOut", lsbOutStr));
-								paramList.push_back(make_pair("msbIn",  msbInStr));
-								paramList.push_back(make_pair("signedIn", signedInStr));
-								paramList.push_back(make_pair("constant", c));
-								testStateList.push_back(paramList);
-								paramList.clear();
-							}
-						}
-					}
-				}
-			}
-		}
-		else     
-		{
-				// finite number of random test computed out of index
-		}	
-
-		return testStateList;
-	}
 
 	OperatorPtr FixRealShiftAdd::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{

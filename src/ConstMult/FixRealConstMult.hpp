@@ -57,6 +57,12 @@ protected:
 
 	int msbC;
 
+	mpfr_t mpC;
+	mpfr_t absC;
+	bool negativeConstant;
+	bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
+
+	void constStringToSollya();
 };
 
 }
