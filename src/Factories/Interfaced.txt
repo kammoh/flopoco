@@ -24,6 +24,8 @@ FixFunctionByPiecewisePoly
 PiecewisePolyApprox
 FixRealKCM
 FixRealShiftAdd
+FixRealConstMult
+FixFixConstMult
 FPAdd
 FPAddSinglePathIEEE
 FPDiv

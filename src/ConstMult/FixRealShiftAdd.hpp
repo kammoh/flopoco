@@ -3,7 +3,7 @@
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
-#include "../Operator.hpp"
+#include "FixRealConstMult.hpp"
 #include "../Table.hpp"
 #include "../BitHeap/BitHeap.hpp"
 
@@ -11,7 +11,7 @@
 #include "pagsuite/adder_graph.h"
 
 namespace flopoco{
-	class FixRealShiftAdd : public Operator
+	class FixRealShiftAdd : public FixRealConstMult
 	{
 	public:
 
@@ -45,8 +45,6 @@ namespace flopoco{
 							 );
 
 
-
-
 		// Overloading the virtual functions of Operator
 
 		void emulate(TestCase* tc);
@@ -57,16 +55,7 @@ namespace flopoco{
 
 		static void registerFactory();
 		
-		Operator*	thisOp; 		/**< The Operator for this constant multiplier: either "this" in the case of a standalone op, or the operator that instnaciated its bitHeap in the case of a virtual KCM */
-		bool signedIn;
 		bool signedOutput; /**< computed: true if the constant is negative or the input is signed */
-		int msbIn;
-		int lsbIn;
-		int msbOut;
-		int lsbOut;
-		string constant;
-		int msbC;
-		float targetUlpError;
 		mpfr_t mpC;
 		mpfr_t absC;
 		bool negativeConstant;

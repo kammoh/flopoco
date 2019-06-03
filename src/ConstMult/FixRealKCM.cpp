@@ -60,19 +60,9 @@ using namespace std;
 namespace flopoco{
 
 
-
-
-	
 	//standalone operator
 	FixRealKCM::FixRealKCM(OperatorPtr parentOp, Target* target, bool signedIn_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_):
-		Operator(parentOp, target),
-		thisOp(this),
-		signedIn(signedIn_),
-		msbIn(msbIn_),
-		lsbIn(lsbIn_),
-		lsbOut(lsbOut_),
-		constant(constant_),
-		targetUlpError(targetUlpError_),
+		FixRealConstMult(parentOp, target, signedIn_, msbIn_, lsbIn_, lsbOut_, constant_, targetUlpError_),
 		addRoundBit(true)
 	{
 		vhdl << "-- This operator multiplies by "<<constant << endl;
@@ -153,19 +143,12 @@ namespace flopoco{
 												 bool addRoundBit_,
 												 double targetUlpError_
 												 ):
-		Operator(thisOp_->getParentOp(), thisOp_->getTarget()),
-		thisOp(thisOp_),
-		signedIn(signedIn_),
-		msbIn(msbIn_),
-		lsbIn(lsbIn_),
-		lsbOut(lsbOut_),
-		constant(constant_),
-		targetUlpError(targetUlpError_),
+		FixRealConstMult(thisOp_->getParentOp(), thisOp_->getTarget()),
 		addRoundBit(addRoundBit_), // will be set by buildForBitHeap()
 		bitHeap(NULL),
 		inputSignalName(multiplicandX)
 	{
-		
+
 		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is. 
 		
 	}
