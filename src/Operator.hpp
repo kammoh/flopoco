@@ -669,11 +669,11 @@ namespace flopoco {
 		 * @param parameters the parameters given to the constructor of the instance's operator
 		 * 				specified as a string containing 'paramName=paramValue' separated by spaces (as on the FloPoCo command line)
 		 * @param inPortMaps the port mappings for the inputs
-		 * 				specified as a string containing 'portName:signalName' separated by ',' (as on VHDL port maps)
+		 * 				specified as a string containing 'portName=>signalName' separated by ',' (as on VHDL port maps)
 		 * @param outPortMaps the port mappings for the outputs
-		 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
+		 * 				specified as a string containing 'portName=>signalName' separated by ','(as on VHDL port maps)
 		 * @param inPortMapsCst the constant port mappings for the inputs, if there are any
-		 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
+		 * 				specified as a string containing 'portName=>signalName' separated by ','(as on VHDL port maps)
 		 */
 		OperatorPtr newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
@@ -682,11 +682,11 @@ namespace flopoco {
 		 * @param op a pointer to the shared operator
 		 * @param instanceName the name of the instance being created (label compulsory in VHDL)
 		 * @param inPortMaps the port mappings for the inputs
-		 * 				specified as a string containing 'portName:signalName' separated by ',' (as on VHDL port maps)
+		 * 				specified as a string containing 'portName=>signalName' separated by ',' (as on VHDL port maps)
 		 * @param outPortMaps the port mappings for the outputs
-		 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
+		 * 				specified as a string containing 'portName=>signalName' separated by ','(as on VHDL port maps)
 		 * @param inPortMapsCst the constant port mappings for the inputs, if there are any
-		 * 				specified as a string containing 'portName:signalName' separated by ','(as on VHDL port maps)
+		 * 				specified as a string containing 'portName=>signalName' separated by ','(as on VHDL port maps)
 		 */
 		void newSharedInstance(OperatorPtr op, string instanceName, string inPortMaps, string outPortMaps, string inPortMapsCst = "");
 
