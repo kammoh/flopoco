@@ -27,6 +27,7 @@ FixRealShiftAdd
 FPAdd
 FPAddSinglePathIEEE
 FPDiv
+FPFMA
 FixSOPC
 FixFIR
 FixHalfSine

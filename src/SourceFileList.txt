@@ -81,6 +81,7 @@ FPAddSub/FPAddSinglePath
 FPAddSub/FPAddSinglePathIEEE
 FPDivSqrt/FPDiv
 FPDivSqrt/FPSqrt
+FPComposite/FPFMA
 Table
 DualTable
 FixConstant
