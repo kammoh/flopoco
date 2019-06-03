@@ -114,8 +114,6 @@ namespace flopoco{
 
 		// Overloading the virtual functions of Operator
 
-		void emulate(TestCase* tc);
-
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
 
 		static void registerFactory();

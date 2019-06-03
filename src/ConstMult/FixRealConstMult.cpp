@@ -29,20 +29,21 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 	{
 		//automatic selection is chosen, so select the algorithm
 		method_ = automatic; //dummy for a more clever selection
-
-
 	}
 
 	int msbOut = msbIn_ + msbC;
 	int wIn = msbIn_ - lsbIn_ + 1;
 	int wOut = msbOut - lsbOut_ + 1;
 
+	srcFileName = "FixRealConstMult";
+	setNameWithFreqAndUID("FixRealConstMult");
+
 	addInput("X", wIn);
 	addOutput("R", wOut);
 
-	const string parameters = "signedIn=" + to_string(signedIn_) + " msbIn=" + to_string(msbIn_) + " lsbIn=" + to_string(lsbIn_) + " lsbOut=" + to_string(lsbOut_) + " constant=" + constant_ + " targetUlpError" + to_string(targetUlpError_);
-	const string inPortMaps = "X:X";
-	const string outPortMaps = "R:R";
+	const string parameters = "signedIn=" + to_string(signedIn_) + " msbIn=" + to_string(msbIn_) + " lsbIn=" + to_string(lsbIn_) + " lsbOut=" + to_string(lsbOut_) + " constant=" + constant_ + " targetUlpError=" + to_string(targetUlpError_);
+	const string inPortMaps = "X=>X";
+	const string outPortMaps = "R=>R";
 
 	switch(method_)
 	{
@@ -170,6 +171,71 @@ TestList FixRealConstMult::unitTest(int index)
 	}
 
 	return testStateList;
+}
+
+// TODO manage correctly rounded cases, at least the powers of two
+// To have MPFR work in fix point, we perform the multiplication in very
+// large precision using RN, and the RU and RD are done only when converting
+// to an int at the end.
+void FixRealConstMult::emulate(TestCase* tc)
+{
+	// Get I/O values
+	mpz_class svX = tc->getInputValue("X");
+	bool negativeInput = false;
+	int wIn=msbIn-lsbIn+1;
+	int wOut=msbOut-lsbOut+1;
+
+	// get rid of two's complement
+	if(signedIn)	{
+		if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )	 {
+			svX -= (mpz_class(1)<<wIn);
+			negativeInput = true;
+		}
+	}
+
+	// Cast it to mpfr
+	mpfr_t mpX;
+	mpfr_init2(mpX, msbIn-lsbIn+2);
+	mpfr_set_z(mpX, svX.get_mpz_t(), GMP_RNDN); // should be exact
+
+	// scale appropriately: multiply by 2^lsbIn
+	mpfr_mul_2si(mpX, mpX, lsbIn, GMP_RNDN); //Exact
+
+	// prepare the result
+	mpfr_t mpR;
+	mpfr_init2(mpR, 10*wOut);
+
+	// do the multiplication
+	mpfr_mul(mpR, mpX, mpC, GMP_RNDN);
+
+	// scale back to an integer
+	mpfr_mul_2si(mpR, mpR, -lsbOut, GMP_RNDN); //Exact
+	mpz_class svRu, svRd;
+
+	mpfr_get_z(svRd.get_mpz_t(), mpR, GMP_RNDD);
+	mpfr_get_z(svRu.get_mpz_t(), mpR, GMP_RNDU);
+
+	//		cout << " emulate x="<< svX <<"  before=" << svRd;
+	if(negativeInput != negativeConstant)		{
+		svRd += (mpz_class(1) << wOut);
+		svRu += (mpz_class(1) << wOut);
+	}
+	//		cout << " emulate after=" << svRd << endl;
+
+	//Border cases
+	if(svRd > (mpz_class(1) << wOut) - 1 )		{
+		svRd = 0;
+	}
+
+	if(svRu > (mpz_class(1) << wOut) - 1 )		{
+		svRu = 0;
+	}
+
+	tc->addExpectedOutput("R", svRd);
+	tc->addExpectedOutput("R", svRu);
+
+	// clean up
+	mpfr_clears(mpX, mpR, NULL);
 }
 
 OperatorPtr FixRealConstMult::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)

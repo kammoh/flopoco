@@ -40,10 +40,10 @@ public:
 	FixRealConstMult(Operator* parentOp, Target* target);
 
 	static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
-
-	static TestList unitTest(int index);
-
 	static void registerFactory();
+
+	void emulate(TestCase* tc);
+	static TestList unitTest(int index);
 
 protected:
 	Operator*	thisOp; 		/**< The Operator for this constant multiplier: either "this" in the case of a standalone op, or the operator that instnaciated its bitHeap in the case of a virtual KCM */
