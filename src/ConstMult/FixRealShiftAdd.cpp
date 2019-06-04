@@ -301,7 +301,8 @@ namespace flopoco{
 		declare("constMultRes", wConstMultRes);
 
 		stringstream parameters;
-		parameters << "wIn=" << wIn << " graph=" << adderGraphStrBest << " truncations=" << trunactionStrBest;
+		parameters << "wIn=" << wIn << " graph=" << adderGraphStrBest;
+		parameters << " truncations=" << trunactionStrBest;
 		string inPortMaps = "x_in0=>X";
 		stringstream outPortMaps;
 		outPortMaps << "x_out0_c" << mpzCIntBest << "=>constMultRes";
@@ -310,8 +311,8 @@ namespace flopoco{
 		newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps,
 					outPortMaps.str());
 
-		bool doProperRouding=true;
-		if(doProperRouding)
+		bool doProperRounding=true;
+		if(doProperRounding)
 		{
 			stringstream one;
 			for (int i = 0; i < wOut; i++)
