@@ -187,9 +187,6 @@ void FixRealConstMult::emulate(TestCase* tc)
 	int wIn=msbIn-lsbIn+1;
 	int wOut=msbOut-lsbOut+1;
 
-	cout << "wIn=" << wIn << " ";
-	cout << "wOut=" << wOut << endl; flush(cout);
-
 	// get rid of two's complement
 	if(signedIn)	{
 		if ( svX > ( (mpz_class(1)<<(wIn-1))-1) )	 {
