@@ -50,14 +50,15 @@ namespace flopoco{
 		ostringstream name;
 
 		srcFileName="FPFMA";
-		name<<"FPFMA_"<<wE<<"_"<<wF; 
-		if(target->isPipelined()) 
-			name << "_piped" ;
-		else
-			name << "_comb";
-		setName(name.str()); 
 
-		setCopyrightString("Florent de Dinechin (2009)");		
+		name<<"FPFMA"; 
+		if(ieee_compliant) {
+			name<<"IEEE";
+		}
+		name<<"_"<<wE<<"_"<<wF; 
+		setNameWithFreqAndUID(name.str());
+
+		setCopyrightString("Florent de Dinechin (2009-2019)");		
 
 
 		if(ieee_compliant) {
@@ -297,7 +298,15 @@ namespace flopoco{
 
 			int LSize=intlog2(2*p+4);
 			vhdl << tab << declare("BigSumAbsLowerBits", 2*p+4) << " <= BigSumAbs" << range(2*p+3, 0) << ";" << endl;
-#if 0
+#if 1
+		newInstance(
+				"LZOC", 
+				getName()+"LeadingZeroCounter", 
+				"wIn=" + to_string(2*p+4) + " countType=0", 
+				"I=>BigSumAbsLowerBits",
+				"O=>L"
+			);
+#if 0 // To remove when debugging done
 			LZOC *lzc = new LZOC(target, 2*p+4);
 			oplist.push_back(lzc);
 
@@ -305,6 +314,7 @@ namespace flopoco{
 			inPortMapCst(lzc, "OZB", "'0'");
 			outPortMap (lzc, "O", "L"); 
 			vhdl << instance(lzc, "lzc");
+#endif
 #else
 			vhdl << tab <<"clz_p : process(BigSumAbsLowerBits)"<< endl;
 			vhdl << tab << tab << "begin"<< endl;
@@ -341,14 +351,23 @@ namespace flopoco{
 				  << tab << tab << "else ShiftValue; -- undo inital shift" << endl;
 
 
-#if 0
+#if 1
+#if 0 // To remove when debugging done
 			Shifter* normalizationShifter = new Shifter(target, 3*p+4, 3*p+3, Shifter::Left); 
 			oplist.push_back(normalizationShifter);
 
 			inPortMap  (normalizationShifter, "X", "BigSumAbs");
 			inPortMap  (normalizationShifter, "S", "normShiftValue");
 			outPortMap (normalizationShifter, "R", "BigSumNormd");
-			vhdl << endl << instance(normalizationShifter, "normalizationShifter");
+			vhdl << endl << instance(normalizationShifter, "NormalizationShifter");
+#endif
+		newInstance(
+				"Shifter", 
+				"NormalizationShifter", 
+				"wIn=" + to_string(3*p+4) + " maxShift=" + to_string(3*p+3) + " dir=0",
+				"X=>BigSumAbs,S=>normShiftValue",
+				"R=>BigSumNormd" // output size will be 2*wF+6 TODO: not output unused bits
+								); 
 #else
 			vhdl << tab << declare("preBigSumNormd", 6*p+7) << " <= " << rangeAssign(3*p+2, 0, "'0'") << " & BigSumAbs;" << endl;
 			vhdl << tab << declare("BigSumNormd", 6*p+7) << " <= std_logic_vector(SHL(unsigned(preBigSumNormd), unsigned(normShiftValue)));" << endl;
@@ -431,6 +450,10 @@ namespace flopoco{
 
 
 		}
+		else // not implemented yet
+			{
+				THROWERROR("Not implemented yet");
+			}
 	}
 
 	FPFMA::~FPFMA() {
@@ -490,13 +513,14 @@ namespace flopoco{
 			mpz_class svR = fpR.getSignalValue();
 			tc->addExpectedOutput("R", svR);
 
+#if 0
 			double da, db,dc,dr;
 			da=mpfr_get_d(a, GMP_RNDN);
 			db=mpfr_get_d(b, GMP_RNDN);
 			dc=mpfr_get_d(c, GMP_RNDN);
 			dr=mpfr_get_d(r, GMP_RNDN);
-			//			cout << "a=" << da << " b="<< db << " c=" << dc << "   r=" << dr << endl;
-
+			cout << "a=" << da << " b="<< db << " c=" << dc << "   r=" << dr << endl;
+#endif
 
 			// clean up
 			mpfr_clears(a,b,c,r, NULL);
@@ -1000,7 +1024,7 @@ namespace flopoco{
 			"", //seeAlso
 			"wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits; \
-			ieee(bool)=false: if true, implements an IEEE-compliant FMA, otherwise the FloPoCo format is used;",
+			ieee(bool)=true: if true, implements an IEEE-compliant FMA, otherwise the FloPoCo format is used;",
 			"",
 			FPFMA::parseArguments
 			) ;
