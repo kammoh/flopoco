@@ -31,9 +31,11 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 		method_ = automatic; //dummy for a more clever selection
 	}
 
-	int msbOut = msbIn_ + msbC;
+	msbOut = msbIn_ + msbC;
 	int wIn = msbIn_ - lsbIn_ + 1;
 	int wOut = msbOut - lsbOut_ + 1;
+
+	constStringToSollya(); //necessary to update variables for emulate
 
 	srcFileName = "FixRealConstMult";
 	setNameWithFreqAndUID("FixRealConstMult");
@@ -184,6 +186,9 @@ void FixRealConstMult::emulate(TestCase* tc)
 	bool negativeInput = false;
 	int wIn=msbIn-lsbIn+1;
 	int wOut=msbOut-lsbOut+1;
+
+	cout << "wIn=" << wIn << " ";
+	cout << "wOut=" << wOut << endl; flush(cout);
 
 	// get rid of two's complement
 	if(signedIn)	{
