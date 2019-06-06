@@ -44,6 +44,14 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 	addInput("X", wIn);
 	addOutput("R", wOut);
 
+	// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
+	if (mpfr_zero_p(mpC) != 0)
+	{
+		REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+		vhdl << tab << "R <= (others => '0');" << endl;
+		return;
+	}
+
 	const string parameters = "signedIn=" + to_string(signedIn_) + " msbIn=" + to_string(msbIn_) + " lsbIn=" + to_string(lsbIn_) + " lsbOut=" + to_string(lsbOut_) + " constant=" + constant_ + " targetUlpError=" + to_string(targetUlpError_);
 	const string inPortMaps = "X=>X";
 	const string outPortMaps = "R=>R";
