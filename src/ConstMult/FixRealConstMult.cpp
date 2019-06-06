@@ -25,17 +25,18 @@ namespace flopoco
 FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool signedIn_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_, FixRealConstMult::Method method_):
 		FixRealConstMult(parentOp, target, signedIn_, msbIn_, lsbIn_, lsbOut_, constant_, targetUlpError_)
 {
-	if(method_ == automatic)
-	{
-		//automatic selection is chosen, so select the algorithm
-		method_ = automatic; //dummy for a more clever selection
-	}
+	constStringToSollya(); //necessary to update variables for emulate and setting of msbC
 
 	msbOut = msbIn_ + msbC;
 	int wIn = msbIn_ - lsbIn_ + 1;
 	int wOut = msbOut - lsbOut_ + 1;
 
-	constStringToSollya(); //necessary to update variables for emulate
+	if(method_ == automatic)
+	{
+		//automatic selection is chosen, so select the algorithm
+		method_ = KCM; //dummy for a more clever selection
+	}
+
 
 	srcFileName = "FixRealConstMult";
 	setNameWithFreqAndUID("FixRealConstMult");
@@ -55,7 +56,7 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 			break;
 		case ShiftAdd:
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
-			THROWERROR("Error: Not implemented yet");
+			newInstance("FixRealShiftAdd", "FixRealShiftAddInst", parameters, inPortMaps, outPortMaps);
 #else
 			THROWERROR("Error: Method 'ShiftAdd' only available when FloPoCo is compiled against paglib, rpaglib and ScaLP libraries.");
 #endif
@@ -145,14 +146,14 @@ TestList FixRealConstMult::unitTest(int index)
 		constantList.push_back("\"123456\"");
 		constantList.push_back("\"-123456\"");
 
-		for(int wIn=3; wIn<16; wIn+=4) { // test various input widths
-			for(int lsbIn=-1; lsbIn<2; lsbIn++) { // test various lsbIns
-				string lsbInStr = to_string(lsbIn);
-				string msbInStr = to_string(lsbIn+wIn);
-				for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
-					string lsbOutStr = to_string(lsbOut);
-					for(int signedIn=0; signedIn<2; signedIn++) {
-						string signedInStr = to_string(signedIn);
+		for(int signedIn=1; signedIn>=0; signedIn--) {
+			string signedInStr = to_string(signedIn);
+			for(int wIn=3; wIn<16; wIn+=4) { // test various input widths
+				for(int lsbIn=-1; lsbIn<2; lsbIn++) { // test various lsbIns
+					string lsbInStr = to_string(lsbIn);
+					string msbInStr = to_string(lsbIn+wIn);
+					for(int lsbOut=-1; lsbOut<2; lsbOut++) { // test various lsbIns
+						string lsbOutStr = to_string(lsbOut);
 						for(auto c:constantList) { // test various constants
 							paramList.push_back(make_pair("lsbIn",  lsbInStr));
 							paramList.push_back(make_pair("lsbOut", lsbOutStr));
@@ -259,15 +260,16 @@ OperatorPtr FixRealConstMult::parseArguments(OperatorPtr parentOp, Target* targe
 
 	std::transform(methodStr.begin(), methodStr.end(), methodStr.begin(), ::tolower);
 
-	if(methodStr.compare("auto"))
+
+	if(methodStr.compare("auto") == 0)
 	{
 		method = FixRealConstMult::automatic;
 	}
-	else if(methodStr.compare("kcm"))
+	else if(methodStr.compare("kcm") == 0)
 	{
 		method = FixRealConstMult::KCM;
 	}
-	else if(methodStr.compare("shiftadd"))
+	else if(methodStr.compare("shiftadd") == 0)
 	{
 		method = FixRealConstMult::ShiftAdd;
 	}
