@@ -68,20 +68,23 @@ namespace flopoco{
 		srcFileName = "FixRealShiftAdd";
 		setNameWithFreqAndUID("FixRealShiftAdd");
 
-		useNumericStd();
 
 		constStringToSollya();
+
+		msbOut = msbIn + msbC;
+		int wIn = msbIn - lsbIn + 1;
+
+		useNumericStd();
+		addInput("X", wIn);
 
 		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
 		if (mpfr_zero_p(mpC) != 0)
 		{
-			msbOut = lsbOut; // let us return a result on one bit, why not.
 			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+			addOutput("R", wIn);
+			vhdl << tab << "R <= (others => '0');" << endl;
 			return;
 		}
-
-		msbOut = msbIn + msbC;
-		int wIn = msbIn - lsbIn + 1;
 
 		REPORT(INFO, "Output precisions: msbOut=" << msbOut << ", lsbOut=" << lsbOut);
 
@@ -294,7 +297,6 @@ namespace flopoco{
 
 		int wConstMultRes = wIn + wC;
 
-		addInput("X", wIn);
 		addOutput("R", wOut);
 
 		declare("tmp", wOut + 1);
