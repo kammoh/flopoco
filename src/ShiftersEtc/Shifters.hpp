@@ -33,7 +33,7 @@ namespace flopoco{
 		 * @param[in]		wOut	optional size of the shifted output (-1 means: computed) 
 		 * @param[in]		computeSticky optional computation of a sticky bit out of the possible discarded bits
 		 **/
-		Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection dir, int wOut=-1, bool computeSticky=false);
+		Shifter(OperatorPtr parentOp, Target* target, int wIn, int maxShift, ShiftDirection dir, int wOut=-1, bool computeSticky=false, bool padWithOnes=false);
 
 
 		/** Destructor */
@@ -70,7 +70,7 @@ namespace flopoco{
 	private:
 		ShiftDirection direction;  /**< determines the shift direction. can be Left or Right */
 		bool computeSticky; /**< if true, computes the OR of all the shifted-out bits, and outputs it */
-
+		bool inputPadBit; 		/**< if true, pad left with 0es, otherwise pad with ones  */
 	};
 
 

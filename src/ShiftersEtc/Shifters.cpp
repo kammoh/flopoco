@@ -33,8 +33,8 @@ using namespace std;
 namespace flopoco{
 
 
-	Shifter::Shifter(OperatorPtr parentOp, Target* target, int wIn_, int maxShift_, ShiftDirection direction_, int wOut_, bool computeSticky_) :
-		Operator(parentOp, target), wIn(wIn_), maxShift(maxShift_), direction(direction_), computeSticky(computeSticky_)
+	Shifter::Shifter(OperatorPtr parentOp, Target* target, int wIn_, int maxShift_, ShiftDirection direction_, int wOut_, bool computeSticky_, bool inputPadBit_) :
+		Operator(parentOp, target), wIn(wIn_), maxShift(maxShift_), direction(direction_), computeSticky(computeSticky_), inputPadBit(inputPadBit_)
 	{
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		srcFileName = "Shifters";
@@ -68,6 +68,8 @@ namespace flopoco{
 
 		addInput ("X", wIn);
 		addInput ("S", wShiftIn);
+		if(inputPadBit)
+					addInput("padBit");
 		addOutput("R", wOut);
 		if(computeSticky)
 					addOutput("Sticky");
@@ -110,7 +112,8 @@ namespace flopoco{
 				// then the shift
 				vhdl << tab << declare(levelDelay, 
 															 join("level", i), wIn) << " <= "
-						 << " level" << i+1 << " when  ps" << of(i) << "='0'   else " << zg(intpow2(i)) << " & level" << i+1 << range(wIn-1, intpow2(i)) << ";" << endl;
+						 << " level" << i+1 << " when  ps" << of(i) << "='0'"
+						 << "    else (" << intpow2(i)-1 << " downto 0 => " << (inputPadBit? "padBit" : "'0'") << ") & level" << i+1 << range(wIn-1, intpow2(i)) << ";" << endl;
 			}
 		  vhdl << tab << "R <= level0;"<<endl;
 			vhdl << tab << "Sticky <= stk0;"<<endl;
@@ -138,7 +141,7 @@ namespace flopoco{
 					if (direction==Right){
 						vhdl << tab << declare(levelDelay,
 																	 nextLevelName.str(),wIn+intpow2(currentLevel+1)-1 )
-								 <<"<=  ("<<intpow2(currentLevel)-1 <<" downto 0 => '0') & "<<currentLevelName.str()<<" when ps";
+								 <<" <=  ("<<intpow2(currentLevel)-1 <<" downto 0 => " << (inputPadBit? "padBit" : "'0'") << ") & "<<currentLevelName.str()<<" when ps";
 						if (wShiftIn > 1)
 							vhdl << "(" << currentLevel << ")";
 						vhdl << " = '1' else "
@@ -154,7 +157,7 @@ namespace flopoco{
 							if (wShiftIn>1)
 								vhdl << "(" << currentLevel<< ")";
 							vhdl << "= '1' else "
-									 << tab <<" ("<<intpow2(currentLevel)-1<<" downto 0 => '0') & "<< currentLevelName.str() <<";"<<endl;
+									 << tab <<" ("<<intpow2(currentLevel)-1<<" downto 0 => "  << (inputPadBit? "padBit" : "'0'") << ") & "<< currentLevelName.str() <<";"<<endl;
 						}
 					}
 					ostringstream lastLevelName;
@@ -208,14 +211,15 @@ namespace flopoco{
 
 	OperatorPtr Shifter::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wIn, wOut, maxShift;
-		bool dirArg, computeSticky;
+		bool dirArg, computeSticky, inputPadBit;
 		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
 		UserInterface::parseInt(args, "wOut", &wOut);
 		UserInterface::parseStrictlyPositiveInt(args, "maxShift", &maxShift);
 		UserInterface::parseBoolean(args, "dir", &dirArg);
 		UserInterface::parseBoolean(args, "computeSticky", &computeSticky);
+		UserInterface::parseBoolean(args, "inputPadBit", &inputPadBit);
 		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);
-		return new Shifter(parentOp, target, wIn, maxShift, dir, wOut, computeSticky);
+		return new Shifter(parentOp, target, wIn, maxShift, dir, wOut, computeSticky, inputPadBit);
 	}
 
 
@@ -229,7 +233,8 @@ namespace flopoco{
 											  maxShift(int): maximum shift distance in bits;\
 											  dir(bool): 0=left, 1=right;	\
 											  wOut(int)=-1: size of the shifted output , -1 means computed, will be equal to wIn+maxShift;\
-											  computeSticky(bool)=false: if true and wOut<wIn+maxShift, shifted-out bits are ORed into a sticky bit", // This string will be parsed
+											  computeSticky(bool)=false: if true and wOut<wIn+maxShift, shifted-out bits are ORed into a sticky bit;\
+											  inputPadBit(bool)=false: if true, add an input bit used for left-padding, as in sign extension",
 											 "", // no particular extra doc needed
 											 Shifter::parseArguments
 											 ) ;
