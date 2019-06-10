@@ -2865,7 +2865,7 @@ namespace flopoco{
 
 		for(auto i:ioList_)	{
 			if((i->type() == Signal::out) && (i->getCycle() != maxOutputCycle))
-				REPORT(INFO, "computePipelineDepths(): this operator's outputs are NOT SYNCHRONIZED!");
+				REPORT(DEBUG, "A warining from computePipelineDepths(): this operator's outputs are not synchronized!");
 		}
 
 		pipelineDepth_ = maxOutputCycle-maxInputCycle;
