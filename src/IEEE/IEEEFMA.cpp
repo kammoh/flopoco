@@ -926,8 +926,8 @@ namespace flopoco{
 
 				// Marche pas bien
 				tc->addComment("ea+eb close to ec");
-				ea = getLargeRandom(wE-1);
-				eb = getLargeRandom(wE-1);
+				ea = getLargeRandom(wE);
+				eb = getLargeRandom(wE);
 				d = getLargeRandom(3)-4;
 				ec = ea+eb+d - bias;
 				a = getLargeRandom(wF) + (ea << wF);
