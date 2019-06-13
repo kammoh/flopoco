@@ -1,5 +1,5 @@
-#ifndef FPFMA_HPP
-#define FPFMA_HPP
+#ifndef IEEEFMA_HPP
+#define IEEEFMA_HPP
 #include <vector>
 #include <sstream>
 #include <gmp.h>
@@ -16,23 +16,23 @@
 
 namespace flopoco{
 
-	/** The FPFMA class */
-	class FPFMA : public Operator
+	/** The IEEEFMA class */
+	class IEEEFMA : public Operator
 	{
 	public:
 		/**
-		 * The FPFMA constructor
+		 * The IEEEFMA constructor
 		 * @param[in]		target		    target device
 		 * @param[in]		wE			       the with of the exponent 
 		 * @param[in]		wF			       the with of the fraction 
 		 * @param[in]		ieee_compliant	 operate on IEEE numbers if true, on FloPoCo numbers if false 
 		 */
-		FPFMA(OperatorPtr parentOp, Target* target, int wE, int wF, bool ieee_compliant=true);
+		IEEEFMA(OperatorPtr parentOp, Target* target, int wE, int wF);
 
 		/**
-		 * FPFMA destructor
+		 * IEEEFMA destructor
 		 */
-		~FPFMA();
+		~IEEEFMA();
 
 
 		void emulate(TestCase * tc);

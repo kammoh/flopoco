@@ -484,7 +484,7 @@ namespace flopoco{
 	}
 
 	void Operator::addHeaderComment(std::string comment){
-		headerComment_ += comment;
+		headerComment_ += "-- " + comment + "\n";
 	}
 
 

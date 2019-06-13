@@ -16,22 +16,22 @@
 
 namespace flopoco{
 
-	/** The FPAddSinglePathIEEE class */
-	class FPAddSinglePathIEEE : public Operator
+	/** The IEEEAdd class */
+	class IEEEAdd : public Operator
 	{
 	public:
 		/**
-		 * The FPAddSinglePathIEEE constructor
+		 * The IEEEAdd constructor
 		 * @param[in]		target		the target device
 		 * @param[in]		wE			the the with of the exponent
 		 * @param[in]		wF			the the with of the fraction
 		 */
-		FPAddSinglePathIEEE(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
+		IEEEAdd(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
 		/**
-		 * FPAddSinglePathIEEE destructor
+		 * IEEEAdd destructor
 		 */
-		~FPAddSinglePathIEEE();
+		~IEEEAdd();
 
 
 		void emulate(TestCase * tc);

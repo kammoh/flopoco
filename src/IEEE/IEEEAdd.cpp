@@ -12,7 +12,7 @@
 
   */
 
-#include "FPAddSinglePathIEEE.hpp"
+#include "IEEEAdd.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -37,12 +37,12 @@ namespace flopoco{
 #define DEBUGVHDL 0
 	
 	
-	FPAddSinglePathIEEE::FPAddSinglePathIEEE(OperatorPtr parentOp, Target* target,
+	IEEEAdd::IEEEAdd(OperatorPtr parentOp, Target* target,
 		int wE, int wF,
 		bool sub) :
 		Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
 		
-		srcFileName="FPAddSinglePathIEEE";
+		srcFileName="IEEEAdd";
 
 		ostringstream name;
 		if(sub)
@@ -226,7 +226,7 @@ namespace flopoco{
 
 
 		//						 TODO: all this assumes that wE>log2(wF+2), true for all the standard IEEE formats. We should test properly when it doesnt work anymore
-		addComment("Cancellation detection, renormalization (see explanations in FPAddSinglePathIEEE.cpp) ", tab);
+		addComment("Cancellation detection, renormalization (see explanations in IEEEAdd.cpp) ", tab);
 
 		vhdl << tab << declare("z1") << " <=  significandZ" << of(wF+3) << "; -- bit of weight 1" << endl;
 		vhdl << tab << declare("z0") << " <=  significandZ" << of(wF+2) << "; -- bit of weight 0" << endl;
@@ -324,11 +324,11 @@ namespace flopoco{
 	}
 
 
-	FPAddSinglePathIEEE::~FPAddSinglePathIEEE() {
+	IEEEAdd::~IEEEAdd() {
 	}
 
 
-	void FPAddSinglePathIEEE::emulate(TestCase * tc)
+	void IEEEAdd::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
 			mpz_class svX = tc->getInputValue("X");
@@ -366,7 +366,7 @@ namespace flopoco{
 	}
 
 
-	void FPAddSinglePathIEEE::buildStandardTestCases(TestCaseList* tcl){
+	void IEEEAdd::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		vector<mpz_class> specialCaseList;
@@ -423,7 +423,7 @@ namespace flopoco{
 }
 
 
-	TestCase* FPAddSinglePathIEEE::buildRandomTestCase(int i){
+	TestCase* IEEEAdd::buildRandomTestCase(int i){
 
 		TestCase *tc;
 		mpz_class x,y;
@@ -489,7 +489,7 @@ namespace flopoco{
 	}
 
 
-	TestList FPAddSinglePathIEEE::unitTest(int index)
+	TestList IEEEAdd::unitTest(int index)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
@@ -530,24 +530,24 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr FPAddSinglePathIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IEEEAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		return new FPAddSinglePathIEEE(parentOp, target, wE, wF);
+		return new IEEEAdd(parentOp, target, wE, wF);
 	}
 
-	void FPAddSinglePathIEEE::registerFactory(){
-		UserInterface::add("FPAddSinglePathIEEE", // name
+	void IEEEAdd::registerFactory(){
+		UserInterface::add("IEEEAdd", // name
 											 "A floating-point adder with a new, more compact single-path architecture.",
 											 "BasicFloatingPoint", // categories
 											 "",
 											 "wE(int): exponent size in bits; \
 											 wF(int): mantissa size in bits;",
 											 "",
-											 FPAddSinglePathIEEE::parseArguments,
-											 FPAddSinglePathIEEE::unitTest
+											 IEEEAdd::parseArguments,
+											 IEEEAdd::unitTest
 											 ) ;
 	}
 }

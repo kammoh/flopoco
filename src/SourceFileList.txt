@@ -80,10 +80,10 @@ Conversions/Posit2FP
 FPAddSub/FPAdd
 FPAddSub/FPAddDualPath
 FPAddSub/FPAddSinglePath
-FPAddSub/FPAddSinglePathIEEE
 FPDivSqrt/FPDiv
 FPDivSqrt/FPSqrt
-FPComposite/FPFMA
+IEEE/IEEEFMA
+IEEE/IEEEAdd
 Table
 DualTable
 FixConstant
