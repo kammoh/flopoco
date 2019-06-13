@@ -221,6 +221,20 @@ namespace flopoco{
 	 */
 	string fp2bin(mpfr_t x, int wE, int wF);
 
+	/** Return the binary representation of a floating point number in the IEEE format
+	 * @param x the number to be represented
+	 * @param wE the width (in bits) of the result exponent
+	 * @param wF the width (in bits) of the result fraction
+	 */
+	string ieee2bin(mpfr_t x, int wE, int wF);
+
+	/** Return the binary representation of a floating point number in the IEEE format
+	 * @param x the number to be represented
+	 * @param wE the width (in bits) of the result exponent
+	 * @param wF the width (in bits) of the result fraction
+	 */
+	string bin2ieee(mpz_class x, int wE, int wF);
+
 	/** return the  bits ranging from msb to lsb of an MPFR, (total size msb-lsb+1)
 	 * @param x the number to be represented
 	 * @param msb the weight of the MSB.

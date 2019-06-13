@@ -421,13 +421,20 @@ TARGET_LINK_LIBRARIES(
 
 
 ADD_EXECUTABLE(fp2bin src/Tools/fp2bin  src/utils)
-TARGET_LINK_LIBRARIES(fp2bin ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
+TARGET_LINK_LIBRARIES(fp2bin ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 ADD_EXECUTABLE(bin2fp src/Tools/bin2fp  src/utils)
-TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
+TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
+
+ADD_EXECUTABLE(ieee2bin src/Tools/ieee2bin  src/utils)
+TARGET_LINK_LIBRARIES(ieee2bin ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib )  
+  
+
+ADD_EXECUTABLE(bin2ieee src/Tools/bin2ieee  src/utils)
+TARGET_LINK_LIBRARIES(bin2ieee ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 ADD_EXECUTABLE(longacc2fp src/Tools/longacc2fp  src/utils)
-TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB})
+TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 # To resurrect some day if we finish the work on FFT
 # ADD_EXECUTABLE(fftest src/Complex/fakemain)

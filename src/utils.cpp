@@ -25,24 +25,25 @@
 #include <gmp.h>
 #include <gmpxx.h>
 #include "math.h"
+#include "TestBenches/IEEENumber.hpp"
 using namespace std;
 
 
 namespace flopoco{
-        /** Initialization of FloPoCoRandomState state */
-        gmp_randstate_t FloPoCoRandomState::m_state;
-
-		bool FloPoCoRandomState::isInit_ = false;
-
-        void FloPoCoRandomState::init(int n, bool force) {
-			// if isInit_ is set, we do not initialize the random state again
+	/** Initialization of FloPoCoRandomState state */
+	gmp_randstate_t FloPoCoRandomState::m_state;
+	
+	bool FloPoCoRandomState::isInit_ = false;
+	
+	void FloPoCoRandomState::init(int n, bool force) {
+		// if isInit_ is set, we do not initialize the random state again
 			if (isInit_ && !force) return;
 			gmp_randinit_mt(m_state);
 			gmp_randseed_ui(m_state,n);
 			isInit_ = true;
-        };
-
-        //gmp_randstate_t* FloPoCoRandomState::getState() { return m_state;};
+	};
+	
+	//gmp_randstate_t* FloPoCoRandomState::getState() { return m_state;};
 
 	/** return a string representation of an mpz_class on a given number of bits */
 	string unsignedBinary(mpz_class x, int size){
@@ -71,8 +72,13 @@ namespace flopoco{
 		return s;
 	}
 
+
+
+
+
 	/** return the binary representation of a floating point number in the
 		 FPLibrary/FloPoCo format */
+	// TODO this code is probably redundant with code in FPNumber
 	string fp2bin(mpfr_t x, int wE, int wF){
 		mpfr_t mpx, one, two;
 		ostringstream s;
@@ -175,6 +181,15 @@ namespace flopoco{
 		mpfr_clear(one);
 		mpfr_clear(two);
 		return s.str();
+	}
+
+
+
+		/** return the binary representation of a floating point number in the IEEE format */
+	string ieee2bin(mpfr_t x, int wE, int wF){
+		IEEENumber mpfx(wE, wF, x);
+		mpz_class mpzx = mpfx.getSignalValue();
+		return unsignedBinary(mpzx, wE+wF+1);
 	}
 
 
