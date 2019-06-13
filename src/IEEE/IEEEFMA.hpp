@@ -54,8 +54,6 @@ namespace flopoco{
 		int wE; 
 		/** The width of the fraction */
 		int wF; 
-		/** if true, an IEEE-754-2008 operator; if false, use FloPoCo format */
-		bool ieee_compliant;
 	};
 
 }

@@ -466,57 +466,51 @@ namespace flopoco{
 		mpz_class svnegateAB = tc->getInputValue("negateAB");
 		mpz_class svnegateC = tc->getInputValue("negateC");
 		
-		if(ieee_compliant) {
-			/* Compute correct value */
-			IEEENumber fpA(wE, wF), fpB(wE, wF), fpC(wE, wF);
-			fpA = svA;
-			fpB = svB;
-			fpC = svC;
-			mpfr_t a, b, c, r;
-			mpfr_init2(a, 1+wF);
-			mpfr_init2(b, 1+wF);
-			mpfr_init2(c, 1+wF);
-			mpfr_init2(r, 1+wF); 
-			fpA.getMPFR(a);
-			fpB.getMPFR(b);
-			fpC.getMPFR(c);
+		IEEENumber fpA(wE, wF), fpB(wE, wF), fpC(wE, wF);
+		fpA = svA;
+		fpB = svB;
+		fpC = svC;
+		mpfr_t a, b, c, r;
+		mpfr_init2(a, 1+wF);
+		mpfr_init2(b, 1+wF);
+		mpfr_init2(c, 1+wF);
+		mpfr_init2(r, 1+wF); 
+		fpA.getMPFR(a);
+		fpB.getMPFR(b);
+		fpC.getMPFR(c);
 
-			mpfr_set_default_prec (wF+1);
-			mpfr_set_emin ( -(1<<(wE-1)) + 3 -wF); // in the MPFR doc, they suggest 1073 for double precision
-			// 1073=-1024+3-52
-			mpfr_set_emax (1<<(wE-1)); // in the MPFR doc, they suggest 1024 for double precision
+		mpfr_set_default_prec (wF+1);
+		mpfr_set_emin ( -(1<<(wE-1)) + 3 -wF); // in the MPFR doc, they suggest 1073 for double precision
+		// 1073=-1024+3-52
+		mpfr_set_emax (1<<(wE-1)); // in the MPFR doc, they suggest 1024 for double precision
 
 
-			if (1==svnegateAB) { 
-				mpfr_neg(a, a, GMP_RNDN);
-			}
-			if (1==svnegateC) { 
-				mpfr_neg(c, c, GMP_RNDN);
-			}
+		if (1==svnegateAB) { 
+			mpfr_neg(a, a, GMP_RNDN);
+		}
+		if (1==svnegateC) { 
+			mpfr_neg(c, c, GMP_RNDN);
+		}
 
-			int i = mpfr_fma(r, a, b, c, GMP_RNDN); // i remembers if the rounding was up, down or if the result was exact
-			mpfr_subnormalize (r, i, GMP_RNDN);
+		int i = mpfr_fma(r, a, b, c, GMP_RNDN); // i remembers if the rounding was up, down or if the result was exact
+		mpfr_subnormalize (r, i, GMP_RNDN);
 
-			// Set outputs 
-			IEEENumber  fpR(wE, wF, r);
-			mpz_class svR = fpR.getSignalValue();
-			tc->addExpectedOutput("R", svR);
+		// Set outputs 
+		IEEENumber  fpR(wE, wF, r);
+		mpz_class svR = fpR.getSignalValue();
+		tc->addExpectedOutput("R", svR);
 
 #if 0
-			double da, db,dc,dr;
-			da=mpfr_get_d(a, GMP_RNDN);
-			db=mpfr_get_d(b, GMP_RNDN);
-			dc=mpfr_get_d(c, GMP_RNDN);
-			dr=mpfr_get_d(r, GMP_RNDN);
-			cout << "a=" << da << " b="<< db << " c=" << dc << "   r=" << dr << endl;
+		double da, db,dc,dr;
+		da=mpfr_get_d(a, GMP_RNDN);
+		db=mpfr_get_d(b, GMP_RNDN);
+		dc=mpfr_get_d(c, GMP_RNDN);
+		dr=mpfr_get_d(r, GMP_RNDN);
+		cout << "a=" << da << " b="<< db << " c=" << dc << "   r=" << dr << endl;
 #endif
 
-			// clean up
-			mpfr_clears(a,b,c,r, NULL);
-		}
-		else {
-			throw std::string("IEEEFMA::emulate: Not yet implemented for FloPoCo numbers");
-		}
+		// clean up
+		mpfr_clears(a,b,c,r, NULL);
 	}
 	
 
@@ -525,394 +519,392 @@ namespace flopoco{
 	void IEEEFMA::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
-		if(ieee_compliant) {
-			// Tests with signed zeros
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		// Tests with signed zeros
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::minusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::minusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::minusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::minusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::minusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::minusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::minusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::minusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			// the same but with subtraction
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 1);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		// the same but with subtraction
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 1);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::minusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 1);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::minusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 1);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::minusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 1);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::minusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 1);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::minusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::minusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 1);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::minusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::minusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 1);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			// the same but with the other subtraction
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 1);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		// the same but with the other subtraction
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 1);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::minusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 1);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::minusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 1);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::minusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 1);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::minusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 1);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::minusZero);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::minusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 1);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::minusZero);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::minusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 1);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			// Tests with subnormals
+		// Tests with subnormals
 			
-			tc = new TestCase(this); 
-			tc->addInput("A", (mpz_class(1)<<wF) -1);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("largest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addInput("A", (mpz_class(1)<<wF) -1);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("largest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 			
-			tc = new TestCase(this); 
-			tc->addInput("A", (mpz_class(1)<<wF));
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("smallest normal + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addInput("A", (mpz_class(1)<<wF));
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("smallest normal + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 			
 			
-			tc = new TestCase(this); 
-			tc->addInput("A", mpz_class(1));
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("smallest subnormal  + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addInput("A", mpz_class(1));
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("smallest subnormal  + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addInput("A", mpz_class(1));
-			tc->addInput("B", mpz_class(1));
-			tc->addInput("C", mpz_class(1));
-			tc->addComment("smallest subnormal * smallest subnormal + smallest subnormal");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addInput("A", mpz_class(1));
+		tc->addInput("B", mpz_class(1));
+		tc->addInput("C", mpz_class(1));
+		tc->addComment("smallest subnormal * smallest subnormal + smallest subnormal");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addInput("A", mpz_class(1));
-			tc->addIEEEInput("B", 1.0);
-			tc->addInput("C", mpz_class(1));
-			tc->addComment("smallest subnormal * 1.0 + smallest subnormal");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addInput("A", mpz_class(1));
+		tc->addIEEEInput("B", 1.0);
+		tc->addInput("C", mpz_class(1));
+		tc->addComment("smallest subnormal * 1.0 + smallest subnormal");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addInput("A", mpz_class(1));
-			tc->addIEEEInput("B", -1.0);
-			tc->addInput("C", mpz_class(1));
-			tc->addComment("smallest subnormal * -1.0 + smallest subnormal");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-
-			// Stupid tests 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", IEEENumber::plusZero);
-			tc->addComment("1*1+0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", -2.0);
-			tc->addComment("1*1+ -2");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", -1024.0);
-			tc->addComment("1*1+ -1024");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", 1024.0);
-			tc->addComment("1*1+ 1024");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", - (8192.0*4096.0));
-			tc->addComment("1*1+ -2^25");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C",  (8192.0*4096.0));
-			tc->addComment("1*1+ 2^25");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusZero);
-			tc->addIEEEInput("B", -1.0);
-			tc->addIEEEInput("C", 1.0);
-			tc->addComment("+0*-1 + 1");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", 1.0);
-			tc->addComment("1*1+1");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", -1.0);
-			tc->addIEEEInput("C", 1.0);
-			tc->addComment("1*-1 + 1");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", -1.0);
-			tc->addComment("1*1 + -1");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			//A bit of sign arithmetic
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", -1.0);
-			tc->addIEEEInput("B", 1.0);
-			tc->addIEEEInput("C", 0.0);
-			tc->addComment("-1*1 + 0");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", -0.5);
-			tc->addIEEEInput("B", 82);
-			tc->addIEEEInput("C", 42.0);
-			tc->addComment("-0.5*82 + 42 -- a cancellation");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", 17.0);
-			tc->addIEEEInput("B", 42.0);
-			tc->addIEEEInput("C", -713.0);
-			tc->addComment("17*42 + -713 -- p cancellation");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
-
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", (double)((1<<wF)-1) / (double)(1<<wF));
-			tc->addIEEEInput("B", (double)((1<<wF)-1) / (double)(1<<wF));
-			tc->addIEEEInput("C", (double)((1<<wF)-1) / (double)(1<<wF));
-			tc->addComment("worst-case p overflow");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addInput("A", mpz_class(1));
+		tc->addIEEEInput("B", -1.0);
+		tc->addInput("C", mpz_class(1));
+		tc->addComment("smallest subnormal * -1.0 + smallest subnormal");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
 
+		// Stupid tests 
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", IEEENumber::plusZero);
+		tc->addComment("1*1+0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusInfty);
-			tc->addIEEEInput("B", IEEENumber::plusInfty);
-			tc->addIEEEInput("C", IEEENumber::plusInfty);
-			tc->addComment("+inf*+inf + +inf");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", -2.0);
+		tc->addComment("1*1+ -2");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
-			tc = new TestCase(this); 
-			tc->addIEEEInput("A", IEEENumber::plusInfty);
-			tc->addIEEEInput("B", IEEENumber::minusInfty);
-			tc->addIEEEInput("C", IEEENumber::plusInfty);
-			tc->addComment("+inf*-inf + +inf");
-			tc->addInput("negateAB", 0);
-			tc->addInput("negateC", 0);
-			tc->addInput("RndMode", 0);
-			emulate(tc);
-			tcl->add(tc);
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", -1024.0);
+		tc->addComment("1*1+ -1024");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", 1024.0);
+		tc->addComment("1*1+ 1024");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", - (8192.0*4096.0));
+		tc->addComment("1*1+ -2^25");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C",  (8192.0*4096.0));
+		tc->addComment("1*1+ 2^25");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusZero);
+		tc->addIEEEInput("B", -1.0);
+		tc->addIEEEInput("C", 1.0);
+		tc->addComment("+0*-1 + 1");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", 1.0);
+		tc->addComment("1*1+1");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", -1.0);
+		tc->addIEEEInput("C", 1.0);
+		tc->addComment("1*-1 + 1");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", -1.0);
+		tc->addComment("1*1 + -1");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		//A bit of sign arithmetic
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", -1.0);
+		tc->addIEEEInput("B", 1.0);
+		tc->addIEEEInput("C", 0.0);
+		tc->addComment("-1*1 + 0");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", -0.5);
+		tc->addIEEEInput("B", 82);
+		tc->addIEEEInput("C", 42.0);
+		tc->addComment("-0.5*82 + 42 -- a cancellation");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", 17.0);
+		tc->addIEEEInput("B", 42.0);
+		tc->addIEEEInput("C", -713.0);
+		tc->addComment("17*42 + -713 -- p cancellation");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", (double)((1<<wF)-1) / (double)(1<<wF));
+		tc->addIEEEInput("B", (double)((1<<wF)-1) / (double)(1<<wF));
+		tc->addIEEEInput("C", (double)((1<<wF)-1) / (double)(1<<wF));
+		tc->addComment("worst-case p overflow");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
 
 
-		}
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusInfty);
+		tc->addIEEEInput("B", IEEENumber::plusInfty);
+		tc->addIEEEInput("C", IEEENumber::plusInfty);
+		tc->addComment("+inf*+inf + +inf");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this); 
+		tc->addIEEEInput("A", IEEENumber::plusInfty);
+		tc->addIEEEInput("B", IEEENumber::minusInfty);
+		tc->addIEEEInput("C", IEEENumber::plusInfty);
+		tc->addComment("+inf*-inf + +inf");
+		tc->addInput("negateAB", 0);
+		tc->addInput("negateC", 0);
+		tc->addInput("RndMode", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+
 	}
 
 
@@ -929,7 +921,7 @@ namespace flopoco{
 			tc = new TestCase(this); 
 
 			/* Fill inputs */
-			switch(i&15) {
+			switch(i&2) {
 			case 0: 
 
 				// Marche pas bien
