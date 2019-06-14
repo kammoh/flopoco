@@ -224,13 +224,22 @@ namespace flopoco{
 				 << tab << tab << "else \""<< unsignedBinary(mpz_class(0), shiftValWidth) << "\" ;" << endl;
 
 
-#if 0
+#if 1
+#if 0 // to remove when it works
 		Shifter* addendShifter = new Shifter(target, p, 3*p+4, Shifter::Right);
 		oplist.push_back(addendShifter);
 		inPortMap  (addendShifter, "X", "Csig");
 		inPortMap  (addendShifter, "S", "ShiftValue");
 		outPortMap (addendShifter, "R","CsigShifted");
 		vhdl << instance(addendShifter, "addendShifter");
+#endif
+		newInstance(
+								"Shifter", 
+								"RightShifterComponent", 
+								"wIn=" + to_string(p) + " maxShift=" + to_string(3*p+4) + " dir=1 " + "wOut=" + to_string(4*p+4) + " computeSticky=0", 
+								"X=>Csig,S=>ShiftValue",
+								"R=>CsigShifted");
+
 #else
 		vhdl << tab << declare("preCsigShifted", 4*p+4) << " <=  Csig & " << rangeAssign(4*p+3, p, "'0'") << ";" << endl;
 		vhdl << tab << declare("CsigShifted", 4*p+4) << " <= std_logic_vector(SHR(unsigned(preCsigShifted), unsigned(ShiftValue)));" << endl;
