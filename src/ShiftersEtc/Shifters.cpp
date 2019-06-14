@@ -34,13 +34,17 @@ namespace flopoco{
 
 
 	Shifter::Shifter(OperatorPtr parentOp, Target* target, int wIn_, int maxShift_, ShiftDirection direction_, int wOut_, bool computeSticky_, bool inputPadBit_) :
-		Operator(parentOp, target), wIn(wIn_), maxShift(maxShift_), direction(direction_), computeSticky(computeSticky_), inputPadBit(inputPadBit_)
+		Operator(parentOp, target), wIn(wIn_), maxShift(maxShift_), direction(direction_), wOut(wOut_), computeSticky(computeSticky_), inputPadBit(inputPadBit_)
 	{
 		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
 		srcFileName = "Shifters";
 
+		cout << endl << "!!! Shifter::Shifter, wout=" << wOut << endl << endl;
+
 		if(wOut==-1)
 			wOut=wIn+maxShift;
+
+		cout << endl << "!!! Shifter::Shifter, wout=" << wOut << endl << endl;
 
 		//Sanity check -- there should probably be more
 		if(wOut>wIn+maxShift)
@@ -219,6 +223,7 @@ namespace flopoco{
 		UserInterface::parseBoolean(args, "computeSticky", &computeSticky);
 		UserInterface::parseBoolean(args, "inputPadBit", &inputPadBit);
 		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);
+		cout << endl << "!!! Shifter::parseArguments, wout=" << wOut << endl << endl;
 		return new Shifter(parentOp, target, wIn, maxShift, dir, wOut, computeSticky, inputPadBit);
 	}
 
