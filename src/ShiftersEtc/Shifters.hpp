@@ -64,11 +64,11 @@ namespace flopoco{
 	protected:
 		int wIn;          /**< the width of the input*/
 		int maxShift;     /**< the maximum shift amount*/
+		ShiftDirection direction;  /**< determines the shift direction. can be Left or Right */
 		int wOut;         /**< the width of the output */
 		int wShiftIn; 	 /**< the number of bits of the input which determines the shift amount*/
 
 	private:
-		ShiftDirection direction;  /**< determines the shift direction. can be Left or Right */
 		bool computeSticky; /**< if true, computes the OR of all the shifted-out bits, and outputs it */
 		bool inputPadBit; 		/**< if true, pad left with 0es, otherwise pad with ones  */
 	};

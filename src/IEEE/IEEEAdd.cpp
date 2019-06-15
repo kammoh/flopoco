@@ -46,9 +46,9 @@ namespace flopoco{
 
 		ostringstream name;
 		if(sub)
-			name<<"FPSub_";
+			name<<"IEEESub_";
 		else
-			name<<"FPAdd_";
+			name<<"IEEEAdd_";
 
 		name <<wE<<"_"<<wF;
 		setNameWithFreqAndUID(name.str());
