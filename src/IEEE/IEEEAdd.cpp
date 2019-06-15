@@ -369,6 +369,31 @@ namespace flopoco{
 	void IEEEAdd::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", -1.0);
+		tc->addIEEEInput("Y", 1.25);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", 1.0);
+		tc->addIEEEInput("Y", -1.25);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", -1.25);
+		tc->addIEEEInput("Y", 1.0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", 1.25);
+		tc->addIEEEInput("Y", -1.0);
+		emulate(tc);
+		tcl->add(tc);
+
+
 		vector<mpz_class> specialCaseList;
 		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::plusZero).getSignalValue());
 		specialCaseList.push_back(IEEENumber(wE, wF, IEEENumber::smallestSubNormal).getSignalValue());
@@ -420,6 +445,8 @@ namespace flopoco{
 		tc->addIEEEInput("Y", 4.5e-44);
 		emulate(tc);
 		tcl->add(tc);
+
+		
 }
 
 
