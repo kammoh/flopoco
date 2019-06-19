@@ -40,8 +40,8 @@ namespace flopoco{
 
 
   FPAddSinglePath::FPAddSinglePath(OperatorPtr parentOp, Target* target,
-				   int wE, int wF,
-				   bool sub) :
+																	 int wE, int wF,
+																	 bool sub) :
 		Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
 
 		srcFileName="FPAddSinglePath";

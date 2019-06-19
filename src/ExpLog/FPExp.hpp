@@ -34,22 +34,12 @@ namespace flopoco{
 			   |.....e^A....||...expZpart.....|
 			   <--sizeExpA--><--sizeExpZPart-->
 		*/
-		class magicTable: public DualTable {
-		public:
-			magicTable(Target* target, int sizeExpA_, int sizeExpZPart_, bool storeExpZmZm1_);
-			mpz_class function(int x);
-			int sizeExpA;
-			int sizeExpZPart; /** sometimes e^Z-1, sometimes e^Z-Z-1*/
-			bool storeExpZmZm1;
-		};
+		vector<mpz_class>	magicTable(int sizeExpA, int sizeExpZPart, bool storeExpZmZm1);
 
+		/** The table that holds the exponential of the high bits of the input */
+		vector<mpz_class> ExpYTable(int wIn, int wOut);
 
-		class ExpYTable: public Table {
-		public:
-			ExpYTable(Target* target, int wIn, int wOut);
-			mpz_class function(int x);
-		};
-
+		
 		/** @brief The constructor with manual control of all options
 		* @param wE exponent size
 		* @param wF fraction size
@@ -63,15 +53,14 @@ namespace flopoco{
 		*                  for FPPow)
 		*/
 		FPExp(
-				Target* target, 
-				int wE,
-				int wF,
-				int k,
-				int d,
-				int guardBits=-1,
-				bool fullInput=false,
-				map<string, double> inputDelays = emptyDelayMap
-			);
+					OperatorPtr parentOp, 
+					Target* target, 
+					int wE,
+					int wF,
+					int k,
+					int d,
+					int guardBits=-1,
+					bool fullInput=false);
 
 		~FPExp();
 

@@ -27,9 +27,11 @@ FixRealShiftAdd
 FixRealConstMult
 FixFixConstMult
 FPAdd
+FPDiv
+FPSqrt
+FPExp
 IEEEAdd
 IEEEFMA
-FPDiv
 FixSOPC
 FixFIR
 FixHalfSine

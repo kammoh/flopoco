@@ -82,6 +82,7 @@ FPAddSub/FPAddDualPath
 FPAddSub/FPAddSinglePath
 FPDivSqrt/FPDiv
 FPDivSqrt/FPSqrt
+ExpLog/FPExp
 IEEE/IEEEFMA
 IEEE/IEEEAdd
 Table
