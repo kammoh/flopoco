@@ -37,8 +37,8 @@ namespace flopoco{
 #define DEBUGVHDL 0
 	//#define LESS_DSPS
 
-	FPSqrt::FPSqrt(Target* target, int wE, int wF) :
-		Operator(target), wE(wE), wF(wF) {
+	FPSqrt::FPSqrt(OperatorPtr parentOp, Target* target, int wE, int wF) :
+		Operator(parentOp,target), wE(wE), wF(wF) {
 
 		ostringstream name;
 
@@ -202,7 +202,7 @@ namespace flopoco{
 			UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 			int wF;
 			UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-			return new FPSqrt(target, wE, wF);
+			return new FPSqrt(parentOp, target, wE, wF);
 		}
 
 		void FPSqrt::registerFactory(){
