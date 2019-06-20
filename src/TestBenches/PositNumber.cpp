@@ -255,7 +255,7 @@ namespace flopoco{
 
 		// all the other values are signed
 		sign_ = mpfr_signbit(mp) == 0 ? 0 : 1;
-		DEBUG_OUT("PositNumber::operator=(mpfr_t): sign_=" << sign_);
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): sign_=" << sign_)
 
 		mpfr_abs(mp, mp, GMP_RNDN);
 
@@ -264,18 +264,18 @@ namespace flopoco{
 		  but we use [1,2). Hence the -1.
 		  */
 		mp_exp_t exp = mpfr_get_exp(mp)-1;
-		DEBUG_OUT("PositNumber::operator=(mpfr_t): exp=" << exp);
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): exp=" << exp)
 
 		// Compute the number of bits used to store this exponent
 		int64_t useedPower = 1 << eS_;
-		DEBUG_OUT("PositNumber::operator=(mpfr_t): useedPower=" << useedPower);
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): useedPower=" << useedPower)
 
 		//handle overflow
 		mpfr_set_exp(minpos, (1 - width_) * useedPower);
 		mpfr_set_exp(maxpos, (width_ - 1) * useedPower);
 
 		if (mpfr_cmp(mp, maxpos) >= 0) {
-			DEBUG_OUT("PositNumber::operator=(mpfr_t): positive exponent saturation");
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): positive exponent saturation")
 			mantissa_ = 1;
 			rangeRL_ = width_ - 1;
 			exponentShift_ = 0;
