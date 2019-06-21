@@ -36,7 +36,7 @@ namespace flopoco{
 	Shifter::Shifter(OperatorPtr parentOp, Target* target, int wIn_, int maxShift_, ShiftDirection direction_, int wOut_, bool computeSticky_, bool inputPadBit_) :
 		Operator(parentOp, target), wIn(wIn_), maxShift(maxShift_), direction(direction_), wOut(wOut_), computeSticky(computeSticky_), inputPadBit(inputPadBit_)
 	{
-		setCopyrightString ( "Bogdan Pasca, Florent de Dinechin (2008-2016)" );
+		setCopyrightString ( "Bogdan Pasca (2008-2011), Florent de Dinechin (2008-2019)" );
 		srcFileName = "Shifters";
 
 		//cout << endl << "! Shifter::Shifter, wout=" << wOut << endl << endl;
@@ -117,7 +117,10 @@ namespace flopoco{
 				vhdl << tab << declare(levelDelay, 
 															 join("level", i), wIn) << " <= "
 						 << " level" << i+1 << " when  ps" << of(i) << "='0'"
-						 << "    else (" << intpow2(i)-1 << " downto 0 => " << (inputPadBit? "padBit" : "'0'") << ") & level" << i+1 << range(wIn-1, intpow2(i)) << ";" << endl;
+						 << "    else (" << intpow2(i)-1 << " downto 0 => " << (inputPadBit? "padBit" : "'0'") << ") ";
+				if(wIn-1>= intpow2(i)) // because when wIn is a power of two, that's all folks 
+					vhdl << "& level" << i+1 << range(wIn-1, intpow2(i));
+				vhdl << ";" << endl;
 			}
 		  vhdl << tab << "R <= level0;"<<endl;
 			vhdl << tab << "Sticky <= stk0;"<<endl;
