@@ -14,7 +14,7 @@ All rights reserved.
 #include <cassert>
 #include "PositNumber.hpp"
 
-#ifndef DEBUGPOSIT 
+#ifdef DEBUGPOSIT
 #define DEBUG_OUT(status) {}
 #else
 #include <iostream>
@@ -305,7 +305,7 @@ namespace flopoco{
 
 		if (exp < 0 && expShift != 0) {
 			normalRangeRL -= 1;	
-			expShift = useedPower + exponentShift_;
+			expShift = useedPower + expShift;
 		}
 
 		if (normalRangeRL >= 0) {
@@ -318,19 +318,25 @@ namespace flopoco{
 		mpfr_mul_2si(mp, mp, precision - exp, GMP_RNDN);
 		mpfr_get_z(mantissa_.get_mpz_t(), mp,  GMP_RNDN);
 		DEBUG_OUT("PositNumber::operator=(mpfr_t): mantissa="<< mantissa_ <<
-				" encoding : " << mantissa_.get_str(2));
-		//Cleaning mantissa for encoding
-		mantissa_ &= (mpz_class(1) << precision) - 1;
+				" encoding : " << mantissa_.get_str(2))
+		//Cleaning mantissa for encoding (removing leading One)
+		mantissa_ &= (mpz_class(1) << (precision)) - 1;
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared mantissa=" << mantissa_)
 		mpfr_clear(mp);
 
 		mpz_class exactCoding = constructRange(normalRangeRL) << (eS_);
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared rangecoding=" << exactCoding.get_str(2));
 		exactCoding |= expShift;
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared rangecoding|expshift=" << exactCoding.get_str(2));
 		exactCoding <<= precision;
 		exactCoding |= mantissa_;
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): exactCoding=" << exactCoding.get_str(2));
 
 		// We have already filtered the extreme range so we know we need an
 		// extra bit to store the range boundary inside the encoding
 		int totalWidth = precision + 2 + eS_ + abs(normalRangeRL);
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): totalWidth=" << totalWidth)
+
 		if (normalRangeRL == width_ - 1) {
 			totalWidth -= 1;
 		}
@@ -338,18 +344,27 @@ namespace flopoco{
 			size_t padding = width_ - totalWidth;
 			exactCoding <<= padding;
 		} else if (totalWidth > width_) {
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): Too much information, some will be truncated")
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): mantissa_=" << mantissa_.get_str(2))
+
 			size_t extrabits = totalWidth - width_;
-			auto truncatedCoding = exactCoding >> extrabits;
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): extrabits=" << extrabits)
+			mpz_class truncatedCoding = exactCoding >> extrabits;
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): truncatedCoding=" << truncatedCoding.get_str(2))
 			auto isPair = (truncatedCoding & 1) == 0;
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): isPair=" << isPair)
 			mpz_class guardMask = mpz_class(1) << (extrabits - 1);
 			auto setGuardBit = (exactCoding & guardMask) > 0;
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): RoundBit=" << setGuardBit)
 			auto setStickyBit = (exactCoding & (guardMask - 1)) > 0;
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): RoundBit=" << setGuardBit)
 			auto roundUp = setGuardBit and ((not isPair) or setStickyBit);
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): RoundUp=" << roundUp)
 			exactCoding = truncatedCoding + ((roundUp) ? 1 : 0);
 		}
 
 		if (sign_ == 1) {
-			DEBUG_OUT("PositNumber::operator=(mpfr_t): encoding value");
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): encoding value")
 			exactCoding = twoComplement(exactCoding);
 			exactCoding |= mpz_class(1) << (width_ - 1);
 		}
