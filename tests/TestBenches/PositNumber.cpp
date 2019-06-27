@@ -61,7 +61,6 @@ BOOST_AUTO_TEST_CASE(TEST_POSIT_8_Addition)
 								  mpfr_get_d(addres, MPFR_RNDN) << "\n" << mpfr_get_d(mpfrstore0, MPFR_RNDN) << "\n" <<
 								  mpfr_get_d(mpfrstore1, MPFR_RNDN) << "\nSPRes : " << spresmpz.get_str(2) <<
 								  "\npnres : " << pnres.get_str(2));
-
 			enc1 += 1;
 		} while(enc1 != 0);
 		enc0 += 1;
@@ -76,9 +75,10 @@ void checkOreganeValues(string str1, string str2, string expres)
 	PositNumber p1{32, 2, input1};
 	PositNumber p2{32, 2, input2};
 
-	mpfr_t mpstore1, mpstore2;
+	mpfr_t mpstore1, mpstore2, mpres;
 	mpfr_init2(mpstore1, 512);
 	mpfr_init2(mpstore2, 512);
+	mpfr_init2(mpres, 1024);
 
 	uint32_t i1 = static_cast<uint32_t>(input1.get_ui());
 	uint32_t i2 = static_cast<uint32_t>(input2.get_ui());
@@ -97,9 +97,9 @@ void checkOreganeValues(string str1, string str2, string expres)
 
 	BOOST_REQUIRE_MESSAGE(spconv == pnconv, "Wrong value decoded for input2");
 
-	mpfr_add(mpstore1, mpstore1, mpstore2, MPFR_RNDN);
+	mpfr_add(mpres, mpstore1, mpstore2, MPFR_RNDN);
 
-	p1 = mpstore1;
+	p1 = mpres;
 	mpz_class pnres = p1.getSignalValue();
 	posit32_t spaddres = p32_add(sp1, sp2);
 	uint32_t spaddval = castUI(spaddres);

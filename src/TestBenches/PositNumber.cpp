@@ -229,7 +229,7 @@ namespace flopoco{
 
 		/* NaR */
 		if (mpfr_nan_p(mp) || mpfr_inf_p(mp)) {
-			DEBUG_OUT("PositNumber::operator=(mpfr_t): NaR");
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): NaR")
 			sign_ = 1;
 			exponentShift_ = 0;
 			mantissa_ = 0;
@@ -242,7 +242,7 @@ namespace flopoco{
 
 		/*Zero*/
 		if (mpfr_zero_p(mp)) {
-			DEBUG_OUT("PositNumber::operator=(mpfr_t): Zero");
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): Zero")
 			sign_ = 0;
 			rangeRL_ = 1  - width_;
 			mantissa_ = 0;
@@ -286,7 +286,7 @@ namespace flopoco{
 		}
 
 		if (mpfr_cmp(mp, minpos) <= 0) {
-			DEBUG_OUT("PositNumber::operator=(mpfr_t): negative exponent saturation");
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): negative exponent saturation")
 			mantissa_ = 1;
 			rangeRL_ = 1 - width_;
 			exponentShift_ = 0;
@@ -321,7 +321,7 @@ namespace flopoco{
 				" encoding : " << mantissa_.get_str(2))
 		//Cleaning mantissa for encoding (removing leading One)
 		mantissa_ &= (mpz_class(1) << (precision)) - 1;
-		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared mantissa=" << mantissa_)
+		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared mantissa=" << mantissa_ << " encoding : " << mantissa_.get_str(2))
 		mpfr_clear(mp);
 
 		mpz_class exactCoding = constructRange(normalRangeRL) << (eS_);
@@ -343,6 +343,7 @@ namespace flopoco{
 		if (totalWidth < width_) {
 			size_t padding = width_ - totalWidth;
 			exactCoding <<= padding;
+			DEBUG_OUT("PositNumber::operator=(mpfr_t): padding with "<< padding << "zeros. Complete encoding is " << exactCoding.get_str(2))
 		} else if (totalWidth > width_) {
 			DEBUG_OUT("PositNumber::operator=(mpfr_t): Too much information, some will be truncated")
 			DEBUG_OUT("PositNumber::operator=(mpfr_t): mantissa_=" << mantissa_.get_str(2))
