@@ -271,7 +271,7 @@ namespace flopoco{
 		DEBUG_OUT("PositNumber::operator=(mpfr_t): useedPower=" << useedPower)
 
 		//handle overflow
-		mpfr_set_exp(minpos, (1 - width_) * useedPower);
+		mpfr_set_exp(minpos, (2 - width_) * useedPower);
 		mpfr_set_exp(maxpos, (width_ - 1) * useedPower);
 
 		if (mpfr_cmp(mp, maxpos) >= 0) {
