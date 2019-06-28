@@ -14,7 +14,7 @@ All rights reserved.
 #include <cassert>
 #include "PositNumber.hpp"
 
-#ifdef DEBUGPOSIT
+#ifndef DEBUGPOSIT
 #define DEBUG_OUT(status) {}
 #else
 #include <iostream>
