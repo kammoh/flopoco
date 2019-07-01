@@ -38,7 +38,7 @@ FixHalfSine
 FixIIR
 Posit2FP
 PositAdd
-
+PositExp
 FixSinCos
 
 Xilinx_GenericAddSub

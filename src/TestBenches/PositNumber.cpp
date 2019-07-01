@@ -288,7 +288,7 @@ namespace flopoco{
 		if (mpfr_cmp(mp, minpos) <= 0) {
 			DEBUG_OUT("PositNumber::operator=(mpfr_t): negative exponent saturation")
 			mantissa_ = 1;
-			rangeRL_ = 1 - width_;
+			rangeRL_ = 2 - width_;
 			exponentShift_ = 0;
 			mpfr_clear(mp);
 			mpfr_clear(minpos);

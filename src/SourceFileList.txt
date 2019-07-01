@@ -102,6 +102,7 @@ Trigs/FixSinPoly
 Trigs/FixSinCos
 Posit/Add/PIFAdd
 Posit/Add/PositAdd
+Posit/Exp/PositExp
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive
