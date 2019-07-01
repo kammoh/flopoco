@@ -299,7 +299,7 @@ namespace flopoco{
 		mpfr_clear(maxpos);
 
 		int64_t normalRangeRL = exp / useedPower;
-		int32_t expShift = exp % useedPower;
+		int64_t expShift = exp % useedPower;
 
 		auto precision = mpfr_get_prec(mp);
 

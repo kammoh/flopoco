@@ -37,6 +37,7 @@ FixFIR
 FixHalfSine
 FixIIR
 Posit2FP
+PositAdd
 
 FixSinCos
 
