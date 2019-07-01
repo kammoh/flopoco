@@ -100,9 +100,6 @@ FixFunctions/FixFunctionByMultipartiteTable
 Trigs/ConstDiv3ForSinPoly
 Trigs/FixSinPoly
 Trigs/FixSinCos
-Posit/Add/PIFAdd
-Posit/Add/PositAdd
-Posit/Exp/PositExp
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive
@@ -131,3 +128,12 @@ Tools/Point
 TutorialOperator
 
 Complex/FixFFT
+
+Conversions/PIF2Posit
+Conversions/Posit2PIF
+Posit/Add/PIFAdd
+Posit/Add/PositAdd
+Posit/Exp/PIF2Fix
+Posit/Exp/PositExp
+Posit/Fun/PositFunction
+Posit/Fun/PositFunctionByTable

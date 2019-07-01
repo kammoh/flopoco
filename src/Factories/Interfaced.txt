@@ -37,8 +37,7 @@ FixFIR
 FixHalfSine
 FixIIR
 Posit2FP
-PositAdd
-PositExp
+
 FixSinCos
 
 Xilinx_GenericAddSub
@@ -55,3 +54,11 @@ FixComplexKCM
 IntConstMultShiftAdd
 IntConstMultShiftAddOpt
 IntConstMultShiftAddRPAG
+
+PIF2Posit
+Posit2PIF
+PIFAdd
+PositAdd
+PIF2Fix
+PositExp
+PositFunctionByTable
