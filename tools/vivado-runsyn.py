@@ -16,7 +16,6 @@ import argparse
 def report(text):
     print("vivado_runsyn: ", text)
 
-    
 def get_compile_info(filename):
     try:
         vhdl=open(filename).read()
@@ -38,6 +37,16 @@ def get_compile_info(filename):
             i=i+1
         target_name_end = i
         targetname=vhdl[target_name_start:target_name_end]
+
+        #Input signal 
+        insig_regex = r"^-- Input signals:([ a-zA-Z0-9_]+)$"
+        insig_list  = re.findall(insig_regex, vhdl, re.MULTILINE)[-1]
+        insig_data = insig_list.strip().split(" ") 
+
+        #Output signal
+        outsig_regex = r"^-- Output signals:([ a-zA-Z0-9_]+)$"
+        outsig_list  = re.findall(outsig_regex, vhdl, re.MULTILINE)[-1]
+        outsig_data = outsig_list.strip().split(" ") 
     
         # the frequency follows but we don't need to read it so far
         frequency_start=target_name_end+3 #  skip " @ "
@@ -46,17 +55,14 @@ def get_compile_info(filename):
             i=i+1
         frequency_end = i
         frequency = vhdl[frequency_start:frequency_end]
-        return (entityname, targetname, frequency)
+        return (entityname, targetname, frequency, insig_data, outsig_data)
 
-    except Exception:
-        return ("", "","")
-
-
+    except Exception as e:
+        print(e)
+        return ("", "", "", [], [])
 
 #/* main */
 if __name__ == '__main__':
-
-
     parser = argparse.ArgumentParser(description='This is an helper script for FloPoCo that launches Xilinx Vivado and extracts resource consumption and critical path information')
     parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
     parser.add_argument('-v', '--vhdl', help='VHDL file name (default flopoco.vhdl)')
@@ -80,7 +86,7 @@ if __name__ == '__main__':
 
     # Read from the vhdl file the entity name and target hardware and freqyency
     report("Reading file " + filename)
-    (entity_in_file, target_in_file, frequency_in_file) =  get_compile_info(filename)
+    (entity_in_file, target_in_file, frequency_in_file, in_sig, out_sig) =  get_compile_info(filename)
 
     if (options.entity==None):
         entity = entity_in_file
@@ -98,9 +104,11 @@ if __name__ == '__main__':
         frequency = options.frequency
 
 
-    report("   entity:     " +  entity)
-    report("   target:     " +  target)
-    report("   frequency:  " +  frequency + " MHz")
+    report("   entity:        " +  entity)
+    report("   target:        " +  target)
+    report("   frequency:     " +  frequency + " MHz")
+    report("   input signal:  " + " ".join(in_sig)) 
+    report("   output signal: " + " ".join(out_sig)) 
 
     if target.lower()=="kintex7":
         #part="xc7k70tfbv484-3"
@@ -122,22 +130,19 @@ if __name__ == '__main__':
     os.system("cp flopoco.vhdl "+workdir)
     os.chdir(workdir)
     
-
     # Create the clock.xdc file. For this we use the previous frequency,
     # but since I am too lazy to parse the VHDL to find inouts and output names, I copy the set_input_delay etc from the FloPoCo generated file
     # This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp.
     xdc_file_name = workdir+"/clock.xdc" 
     report("writing "+xdc_file_name)
-    tmp_clock_file = open("/tmp/clock.xdc","r") # this is the one created by FloPoCo
     clock_file = open(xdc_file_name,"w")
     period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
     clock_file.write("create_clock -name clk -period " + str(period) + " \n")
-    tmp_clock_file.readline() # skip the two first lines
-    tmp_clock_file.readline()
-    for line in tmp_clock_file:
-        clock_file.write(line)
+    for sig in in_sig:
+        clock_file.write("set_input_delay -clock clk 0 [get_ports {}]".format(sig))
+    for sig in out_sig:
+        clock_file.write("set_output_delay -clock clk 0 [get_ports {}]".format(sig))
     clock_file.close()
-    tmp_clock_file.close()
 
     project_name = "test_" + entity
     tcl_script_name = os.path.join(workdir, project_name+".tcl")

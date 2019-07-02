@@ -266,7 +266,6 @@ namespace flopoco
 				cerr << "Exception while generating '" << i->getName() << "': " << s << endl;
 			}
 		}
-		oplist.back()->outputClock_xdc();
 	}
 
 
@@ -299,7 +298,6 @@ namespace flopoco
 			cerr <<  "nvc  -a " << outputFileName << " --relax=prefer-explicit  -e " <<  op->getName() << "  -r --exit-severity=failure " << "--wave=" << op->getName() << ".fst --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			cerr <<  "gtkwave " << op->getName() << ".fst" << endl;
 		}
-
 	}
 
 

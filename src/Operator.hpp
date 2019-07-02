@@ -871,12 +871,6 @@ namespace flopoco {
 		 */
 		bool isSequential();
 
-
-		/** writes a clock.xdc file in /tmp, to be used by vivado_runsyn */
-		void outputClock_xdc();
-
-	
-
 		/**
 		 * Set the operator to sequential.
 		 * You shouldn't need to use this method for standard operators
@@ -1002,6 +996,7 @@ namespace flopoco {
 
 		void pipelineInfo(std::ostream& o, std::string authorsYears);
 
+		void signalSignature(std::ostream& o);
 
 		void pipelineInfo(std::ostream& o);
 

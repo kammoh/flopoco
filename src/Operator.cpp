@@ -715,12 +715,13 @@ namespace flopoco{
 
 	void Operator::pipelineInfo(std::ostream& o){
 		if(isSequential())
-			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl <<endl;
+			o<<"-- Pipeline depth: " << getPipelineDepth() << " cycles"  <<endl;
 		else
-			o << "-- combinatorial"  <<endl <<endl;
+			o << "-- combinatorial"  <<endl;
 
+		o << "-- Clock period (ns): " << (1.0e9/target_->frequency()) << endl;
+		o << "-- Target frequency (MHz): " << target_->frequencyMHz() << endl;
 	}
-
 
 	void Operator::stdLibs(std::ostream& o){
 		o << "library ieee;"<<endl
@@ -1806,34 +1807,19 @@ namespace flopoco{
 	}
 
 
-	void Operator::outputClock_xdc(){
-		ofstream file;
+	void Operator::signalSignature(std::ostream &o)
+	{
+		stringstream inlist;
+		stringstream outlist;
 
-		// For Vivado
-		file.open("/tmp/clock.xdc", ios::out);
-		file << "# This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp." << endl;
-		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency())
-			// << "  [get_ports clk]"
-				 << endl;
-		for(auto i: ioList_) {
-			if(i->type()==Signal::in)
-				file << "set_input_delay ";
-			else // should be output
-				file << "set_output_delay ";
-			file <<	"-clock clk 0 [get_ports " << i->getName() << "]" << endl;
+		for (auto i: ioList_) {
+			stringstream & curlist = (i->type() == Signal::in) ? inlist : outlist;
+			curlist << " " << i->getName();
 		}
-		file.close();
 
-#if 0
-		// For quartus prime	-- no longer needed as quartus_runsyn reads the frequency from the comments in the VHDL and create this file.
-		file.open("/tmp/"+getName()+".sdc", ios::out);
-		file << "# This file was created by FloPoCo to be used by the quartus_runsyn utility. Sorry to clutter your tmp." << endl;
-		file << "create_clock -name clk -period "  << (1.0e9/target_->frequency()) << "  [get_ports clk]"
-				 << endl;
-		file.close();
-#endif
+		o << "-- Input signals:" << inlist.str() << endl;
+		o << "-- Output signals:" << outlist.str() << endl;
 	}
-
 
 	void Operator::buildStandardTestCases(TestCaseList* tcl) {
 		// Each operator should overload this method. If not, it is mostly harmless but deserves a warning.
@@ -1980,6 +1966,8 @@ namespace flopoco{
 		if (! vhdl.isEmpty() ){
 			licence(o);
 			pipelineInfo(o);
+			signalSignature(o);
+			o << endl;
 			additionalHeader(o);
 			stdLibs(o);
 			outputVHDLEntity(o);
