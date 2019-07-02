@@ -139,9 +139,9 @@ if __name__ == '__main__':
     period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
     clock_file.write("create_clock -name clk -period " + str(period) + " \n")
     for sig in in_sig:
-        clock_file.write("set_input_delay -clock clk 0 [get_ports {}]".format(sig))
+        clock_file.write("set_input_delay -clock clk 0 [get_ports {}]\n".format(sig))
     for sig in out_sig:
-        clock_file.write("set_output_delay -clock clk 0 [get_ports {}]".format(sig))
+        clock_file.write("set_output_delay -clock clk 0 [get_ports {}]\n".format(sig))
     clock_file.close()
 
     project_name = "test_" + entity
