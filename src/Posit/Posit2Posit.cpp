@@ -5,8 +5,8 @@
 #include "mpfr.h"
 
 #include "Posit2Posit.hpp"
-#include "Posit2PIF.hpp"
-#include "PIF2Posit.hpp"
+#include "../Conversions/Posit2PIF.hpp"
+#include "../Conversions/PIF2Posit.hpp"
 
 using namespace std;
 namespace flopoco {

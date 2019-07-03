@@ -82,13 +82,15 @@ namespace flopoco {
 		
 		vhdl << declare(.0, "fraction", wF_ + 1) << "<= I" << range(wF_+1, 1) << 
 			";" << endl;
+
+		vhdl << declare(target->logicDelay(widthI),"is_zero", 1, false) << "<= '1' when I" << range(widthI-1, 0) << " = \"" << string(widthI,'0') << "\" else '0';" << endl;
 		
 		// on s'occupe de la partie exposant
-		vhdl << declare(0., "exponent", wE_) << "<= biased_exponent - " << (((widthO - 2)<< wES) + 1) << ";" << endl;
+		vhdl << declare(target->adderDelay(wE_), "exponent", wE_) << "<= biased_exponent - " << (((widthO - 2)<< wES) + 1) << ";" << endl;
 
 		vhdl << declare(0., "partial_exponent", wES) << "<= exponent" << range(wES-1, 0) << ";" << endl;
 
-		vhdl << "with s select " << declare(0., "partial_exponent_us", wES) << " <= " << endl <<
+		vhdl << "with s select " << declare(target->logicDelay(wES), "partial_exponent_us", wES) << " <= " << endl <<
 		  tab << "partial_exponent when '0'," << endl <<
 		  tab << "not partial_exponent when '1'," << endl <<
 		  tab << "\"" << string(wES, '-') << "\" when others;" << endl;
@@ -99,15 +101,15 @@ namespace flopoco {
 		vhdl << declare(0., "bin_regime", wCount) << "<= exponent" << range(wE_ -2, wES) << ";" << endl;
 		vhdl << declare(.0, "first_regime", 1, false) << "<= exponent" << of(wE_-1) << ";" << endl;
 
-		vhdl << "with first_regime select " << declare(0., "regime", wCount) << " <= "  << endl <<
+		vhdl << "with first_regime select " << declare(target->logicDelay(wCount), "regime", wCount) << " <= "  << endl <<
 		  tab << "bin_regime when '0', " << endl <<
 		  tab << "not bin_regime when '1', "<< endl <<
 		  tab << "\"" << string(wCount, '-') << "\" when others;" << endl; 
 
 		//par quoi on commence (exp négatif ou positif)
-		vhdl << declare(0., "pad", 1, false) << "<= not(first_regime xor s);" << endl;
+		vhdl << declare(target->logicDelay(2), "pad", 1, false) << "<= not(first_regime xor s);" << endl;
 
-	       	vhdl << "with pad select " << declare(0., "start_regime", 2) << " <= "  << endl <<
+	       	vhdl << "with pad select " << declare(target->logicDelay(1), "start_regime", 2) << " <= "  << endl <<
 		  tab << "\"01\" when '0', " << endl <<
 		  tab << "\"10\" when '1', "<< endl <<
 		  tab << "\"--\" when others;" << endl;
@@ -137,15 +139,14 @@ namespace flopoco {
 		vhdl << declare(0., "lsb", 1, false) << "<= extended_posit" << of(1) << ";" << endl;
 		vhdl << declare(0., "guard", 1, false) << "<= extended_posit" << of(0) << ";" << endl;
 		vhdl << declare(0., "sticky", 1, false) << "<= I" << of(0) << " or pre_sticky;" << endl;
-	        
-		vhdl << declare(0., "if_zero", 1, false) << "<= lsb and guard and (not sticky);" << endl;
-		vhdl << declare(0., "if_not_zero", 1, false) << "<= guard and sticky;" << endl;
-		vhdl << declare(0., "round_bit", 1, false) << "<= if_zero or if_not_zero;" << endl;
-	        
-		vhdl << declare(0., "rounded_reg_exp_frac", widthO-1) << "<= truncated_posit + round_bit;" << endl;
+
+		vhdl << declare(target->logicDelay(3),"round_bit", 1, false) << "<= guard and (sticky or lsb);" << endl;
+		
+		vhdl << declare(target->adderDelay(widthO-1), "rounded_reg_exp_frac", widthO-1) << "<= truncated_posit + round_bit;" << endl;
 		vhdl << declare(0., "rounded_posit", widthO) << "<= s & rounded_reg_exp_frac;" << endl;
 
-		vhdl << "O <= rounded_posit when is_NAR = '0' else \"1" << string(widthO-1, '0') << "\";" << endl;
+		vhdl << declare(target->logicDelay(1), "rounded_posit_zero", widthO) << "<= rounded_posit when is_zero= '0' else \"" << string(widthO, '0') << "\";" << endl;
+		vhdl << "O <= rounded_posit_zero when is_NAR = '0' else \"1" << string(widthO-1, '0') << "\";" << endl;
 
 		addFullComment("End of vhdl generation"); // this will be a large, centered comment in the VHDL
 	};

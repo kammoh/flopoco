@@ -89,18 +89,18 @@ namespace flopoco {
 		vhdl << declare(.0, "remainder", widthI - 2) << "<= I" << range(widthI - 3, 0) << 
 			";" << endl;
 
-		vhdl << declare(.0, "not_s", 1, false) << "<= not s;" << endl;
+		vhdl << declare(target->logicDelay(1), "not_s", 1, false) << "<= not s;" << endl;
 
-		vhdl << declare(.0, "zero_NAR", 1, false) << " <= " <<
+		vhdl << declare(target->adderDelay(widthI-2), "zero_NAR", 1, false) << " <= " <<
 		  "not count_type when remainder=\"" << string(widthI -2, '0') << "\" else '0';" << endl;
 		
-		vhdl << declare(.0, "is_NAR", 1, false) << "<= zero_NAR and s;" << endl;
+		vhdl << declare(target->logicDelay(2), "is_NAR", 1, false) << "<= zero_NAR and s;" << endl;
 
-		vhdl << declare(.0, "is_not_zero", 1, false) << "<= not(zero_NAR and not_s);" << endl;
+		vhdl << declare(target->logicDelay(2), "is_not_zero", 1, false) << "<= not(zero_NAR and not_s);" << endl;
 
-		vhdl << declare(.0, "implicit_bit", 1, false) << "<= is_not_zero and not_s;" << endl;
+		vhdl << declare(target->logicDelay(2), "implicit_bit", 1, false) << "<= is_not_zero and not_s;" << endl;
 
-		vhdl << declare(.0, "neg_count", 1, false) << "<= not (s xor count_type);" << endl;
+		vhdl << declare(target->logicDelay(2), "neg_count", 1, false) << "<= not (s xor count_type);" << endl;
 
 		ostringstream param, inmap, outmap;
 		int wCount = intlog2(widthI) - 1; //comme ça le shifter ne pense pas qu'il peut shifter un nombre absurde de bits
@@ -115,34 +115,34 @@ namespace flopoco {
 
 		newInstance("LZOCShifterSticky", "lzoc", param.str(), inmap.str(), outmap.str());
 
-		vhdl << "with neg_count select " << declare(.0, "extended_neg_count", wCount+2) << " <= "  << endl <<
+		vhdl << "with neg_count select " << declare(0., "extended_neg_count", wCount+2) << " <= "  << endl <<
 		  tab << "\"" << string(wCount+2, '0') << "\" when '0', " << endl <<
 		  tab << "\"" << string(wCount+2, '1') << "\" when '1', "<< endl <<
 		  tab << "\"" << string(wCount+2, '-') << "\" when others;" << endl; 
 
 		
-		vhdl << declare(0., "comp2_range_count", wCount+2) << "<= extended_neg_count xor (\"00\" & lzCount);" << endl;
+		vhdl << declare(target->logicDelay(wCount+2), "comp2_range_count", wCount+2) << "<= extended_neg_count xor (\"00\" & lzCount);" << endl;
 
 		vhdl << declare(0., "fraction", wF_) << "<= usefulBits" << range( wF_ - 1, 0) <<";" << endl;
 
 		vhdl << declare(0., "partialExponent", wES) << "<= usefulBits" << range( widthI - 4, wF_) << ";" << endl;
 
-		vhdl << "with s select " << declare(0., "us_partialExponent", wES) << "<= " << endl <<
+		vhdl << "with s select " << declare(target->logicDelay(wES), "us_partialExponent", wES) << "<= " << endl <<
 		  tab << "partialExponent when '0'," << endl <<
 		  tab << "not partialExponent when '1'," << endl <<
 		  tab << "\"" << string(wES, '-') << "\" when others;" << endl; 
 
 		vhdl << declare(0., "exponent", wE_) << "<= comp2_range_count & us_partialExponent;" << endl;
 
-		vhdl << declare(.0, "biased_exponent", wE_) << "<= exponent + " << (((widthI - 2)<< wES) + 1) << ";" << endl;
+		vhdl << declare(target->adderDelay(wE_), "biased_exponent", wE_) << "<= exponent + " << (((widthI - 2)<< wES) + 1) << ";" << endl;
 
-		vhdl << "with is_not_zero select  " << declare(target->logicDelay(wE_), "extended_is_not_zero", wE_) << " <= " << endl <<
+		vhdl << "with is_not_zero select  " << declare(target->logicDelay(1), "extended_is_not_zero", wE_) << " <= " << endl <<
 		  tab << "\"" << string(wE_, '0') << "\" when '0', " << endl <<
 		  tab << "\"" << string(wE_, '1') << "\" when '1', "<< endl <<
 		  tab << "\"" << string(wE_, '-') << "\" when others;" << endl; 
 
 
-		vhdl << declare(0., "final_biased_exponent", wE_) << "<= extended_is_not_zero and biased_exponent;" << endl;
+		vhdl << declare(target->logicDelay(wE_), "final_biased_exponent", wE_) << "<= extended_is_not_zero and biased_exponent;" << endl;
 
 		vhdl << declare(0., "round", 1, false) << "<= '0';"<<endl;
 		vhdl << declare(0., "sticky", 1, false) << "<= '0';"<<endl;
