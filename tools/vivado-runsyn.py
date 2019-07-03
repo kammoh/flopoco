@@ -160,6 +160,7 @@ if __name__ == '__main__':
     tclscriptfile.write("read_xdc " + xdc_file_name + "\n")
     tclscriptfile.write("update_compile_order -fileset sources_1\n")
     tclscriptfile.write("update_compile_order -fileset sim_1\n")
+    tclscriptfile.write("synth_design -mode out_of_context\n")
 
     # Reporting files
     utilization_report_file = workdir + "/"  + entity + "_utilization_"
@@ -171,7 +172,7 @@ if __name__ == '__main__':
     if synthesis_only:
         result_name = "synth_1"
         # The following command is great because it remove the OBUFs but where to get the area?
-        tclscriptfile.write("synth_design  -mode out_of_context \n")
+        # tclscriptfile.write("synth_design  -mode out_of_context \n")
     else:
         result_name = "impl_1"
         tclscriptfile.write("launch_runs " + result_name + "\n")
