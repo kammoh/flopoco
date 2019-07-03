@@ -88,12 +88,14 @@ namespace flopoco {
 		// on s'occupe de la partie exposant
 		vhdl << declare(target->adderDelay(wE_), "exponent", wE_) << "<= biased_exponent - " << (((widthO - 2)<< wES) + 1) << ";" << endl;
 
-		vhdl << declare(0., "partial_exponent", wES) << "<= exponent" << range(wES-1, 0) << ";" << endl;
+		if (wES >0) {
+		  vhdl << declare(0., "partial_exponent", wES) << "<= exponent" << range(wES-1, 0) << ";" << endl;
 
-		vhdl << "with s select " << declare(target->logicDelay(wES), "partial_exponent_us", wES) << " <= " << endl <<
-		  tab << "partial_exponent when '0'," << endl <<
-		  tab << "not partial_exponent when '1'," << endl <<
-		  tab << "\"" << string(wES, '-') << "\" when others;" << endl;
+		  vhdl << "with s select " << declare(target->logicDelay(wES), "partial_exponent_us", wES) << " <= " << endl <<
+		    tab << "partial_exponent when '0'," << endl <<
+		    tab << "not partial_exponent when '1'," << endl <<
+		    tab << "\"" << string(wES, '-') << "\" when others;" << endl;
+		}
 		
 		// on s'occupe de la partie regime
 		//de combien il faut décaler
@@ -113,8 +115,13 @@ namespace flopoco {
 		  tab << "\"01\" when '0', " << endl <<
 		  tab << "\"10\" when '1', "<< endl <<
 		  tab << "\"--\" when others;" << endl;
-		
-		vhdl << declare(0., "input_shifter", widthO) << "<= start_regime & partial_exponent_us & fraction;" << endl;
+
+		if (wES>0) {
+		  vhdl << declare(0., "input_shifter", widthO) << "<= start_regime & partial_exponent_us & fraction;" << endl;
+		}
+		else {
+		   vhdl << declare(0., "input_shifter", widthO) << "<= start_regime & fraction;" << endl;
+		}
 		
 		ostringstream param, inmap, outmap;
 		param << "wIn=" << widthO;

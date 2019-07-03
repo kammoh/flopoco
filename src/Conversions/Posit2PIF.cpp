@@ -125,14 +125,19 @@ namespace flopoco {
 
 		vhdl << declare(0., "fraction", wF_) << "<= usefulBits" << range( wF_ - 1, 0) <<";" << endl;
 
-		vhdl << declare(0., "partialExponent", wES) << "<= usefulBits" << range( widthI - 4, wF_) << ";" << endl;
+		if (wES>0) {
+		  vhdl << declare(0., "partialExponent", wES) << "<= usefulBits" << range( widthI - 4, wF_) << ";" << endl;
 
-		vhdl << "with s select " << declare(target->logicDelay(wES), "us_partialExponent", wES) << "<= " << endl <<
-		  tab << "partialExponent when '0'," << endl <<
-		  tab << "not partialExponent when '1'," << endl <<
-		  tab << "\"" << string(wES, '-') << "\" when others;" << endl; 
+		  vhdl << "with s select " << declare(target->logicDelay(wES), "us_partialExponent", wES) << "<= " << endl <<
+		    tab << "partialExponent when '0'," << endl <<
+		    tab << "not partialExponent when '1'," << endl <<
+		    tab << "\"" << string(wES, '-') << "\" when others;" << endl; 
 
-		vhdl << declare(0., "exponent", wE_) << "<= comp2_range_count & us_partialExponent;" << endl;
+		  vhdl << declare(0., "exponent", wE_) << "<= comp2_range_count & us_partialExponent;" << endl;
+		}
+		else {
+		  vhdl << declare(0., "exponent", wE_) << "<= comp2_range_count;" << endl;
+		}
 
 		vhdl << declare(target->adderDelay(wE_), "biased_exponent", wE_) << "<= exponent + " << (((widthI - 2)<< wES) + 1) << ";" << endl;
 
