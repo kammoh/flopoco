@@ -43,6 +43,14 @@ namespace flopoco {
 		/** Factory register method */ 
 		static void registerFactory();
 
+		/**
+		 * @brief Compute the size required to store the untruncated product of inputs of a given width
+		 * @param wX size of the first input
+		 * @param wY size of the second input
+		 * @return the number of bits needed to store a product of I<wX> * I<WY>
+		 */
+		static inline unsigned int prodsize(unsigned int wX, unsigned int wY);
+
 		static TestList unitTest(int index);
 
 	protected:

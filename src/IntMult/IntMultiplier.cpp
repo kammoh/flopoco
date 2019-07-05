@@ -39,7 +39,7 @@ namespace flopoco {
 	 * @param wY size of the second input
 	 * @return the number of bits needed to store a product of I<wX> * I<WY>
 	 */
-	inline unsigned int prodsize(unsigned int wX, unsigned int wY)
+	inline unsigned int IntMultiplier::prodsize(unsigned int wX, unsigned int wY)
 	{
 		if(wX == 0 || wY == 0)
 			return 0;
@@ -115,7 +115,7 @@ namespace flopoco {
 		TilingStrategyBasicTiling tilingStrategy(
 				wX, 
 				wY, 
-				wOut,
+				wOut + guardBits,
 				signedIO, 
 				&baseMultiplierCollection,
 				baseMultiplierCollection.getPreferedMultiplier()
