@@ -193,8 +193,12 @@ namespace flopoco
 				
 				vhdl << tab << declare("inDiffTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
 				vector<mpz_class> mpzDiffTIV;
-				for (auto i : bestMP->diffTIV)
+				//cerr << " Starting enum"  << endl;
+				for (auto i : bestMP->diffTIV) {
 					mpzDiffTIV.push_back(mpz_class((long) i));
+					//cerr  << " " <<mpz_class((long) i) << endl;
+				}
+				//cerr << "bestMP->outputSizeDiffTIV=" <<bestMP->outputSizeDiffTIV << endl;
 				Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
 																 mpzDiffTIV, "DiffTIV", bestMP->alpha, bestMP->outputSizeDiffTIV );
 				// TODO need to sign-extend for 1/(1+x), but it makes an error for sin(x)
