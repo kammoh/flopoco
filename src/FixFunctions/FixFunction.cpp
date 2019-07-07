@@ -100,7 +100,7 @@ namespace flopoco{
 
 	void FixFunction::eval(mpz_class x, mpz_class &rNorD, mpz_class &ru, bool correctlyRounded) const
 	{
-		int precision=10*(wIn+wOut);
+		int precision=100*(wIn+wOut);
 		sollya_lib_set_prec(sollya_lib_constant_from_int(precision));
 
 		mpfr_t mpX, mpR;
