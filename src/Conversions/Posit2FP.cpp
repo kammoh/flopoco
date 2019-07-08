@@ -14,8 +14,7 @@ namespace flopoco{
 		*wF = widthI - (eS + 3);
 	}
 
-	Posit2FP::Posit2FP(Target* target, 
-			Operator* parentOp, 
+	Posit2FP::Posit2FP(Operator* parentOp, Target* target, 
 			int widthI, 
 			int esI):Operator(parentOp, target), widthI_(widthI), esI_(esI)
 	{
@@ -114,7 +113,7 @@ namespace flopoco{
 		int width, es;
 		UserInterface::parseStrictlyPositiveInt(args, "width", &width);
 		UserInterface::parsePositiveInt(args, "es", &es);
-		return new Posit2FP(target, parentOp, width, es);
+		return new Posit2FP(parentOp, target, width, es);
 	}
 	
 	void Posit2FP::registerFactory()
