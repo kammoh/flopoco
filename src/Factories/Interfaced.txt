@@ -26,10 +26,13 @@ FixRealKCM
 FixRealShiftAdd
 FixRealConstMult
 FixFixConstMult
+
 FPAdd
 FPDiv
 FPSqrt
 FPExp
+FP2Fix
+
 IEEEAdd
 IEEEFMA
 FixSOPC
