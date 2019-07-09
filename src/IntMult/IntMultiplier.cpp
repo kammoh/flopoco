@@ -67,9 +67,10 @@ namespace flopoco {
         useNumericStd();
 
         multiplierUid=parentOp->getNewUId();
+		wFullP = prodsize(wX, wY);
 
 		if(wOut == 0)
-			wOut = wX+wY;
+			wOut = prodsize(wX, wY);
 
 		unsigned int guardBits = computeGuardBits(
 					static_cast<unsigned int>(wX),
@@ -127,6 +128,8 @@ namespace flopoco {
 		tilingStrategy.printSolution();
 
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
+		auto solLen = solution.size();
+		REPORT(DETAILED, "Found solution has " << solLen << " tiles")
 		if (texOutput) {
             ofstream texfile;
             texfile.open("multiplier.tex");
@@ -266,12 +269,32 @@ namespace flopoco {
 			realiseTile(tile, i, oname.str());
 
 			ofname.str("");
-			ofname << "tile_" << i << "filtered_output";
+			ofname << "tile_" << i << "_filtered_output";
+
+			bool signedCase = (parameters.isSignedMultX() || parameters.isSignedMultY());
 
 			vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
 					range(toSkip + tokeep - 1, toSkip) << ";" << endl;
 
-			bitheap->addSignal(ofname.str(), bitHeapOffset);
+			if (signedCase and tokeep >= 2) {
+				oname.str("");
+				oname << ofname.str() <<  "_low";
+				vhdl << declare(.0, oname.str(), tokeep - 1) << " <= " << ofname.str() <<
+						range(tokeep - 2, 0) << ";" << endl;
+				bitheap->addSignal(oname.str(), bitHeapOffset);
+
+				oname.str("");
+				oname << ofname.str() <<  "_sign";
+				vhdl << declare(.0, oname.str(), 1) << " <= " << ofname.str() << range(tokeep - 1, tokeep-1) << ";" << endl;
+
+				bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
+			} else {
+				if(signedCase) {
+					bitheap->subtractSignal(ofname.str(), bitHeapOffset);
+				} else {
+					bitheap->addSignal(ofname.str(), bitHeapOffset);
+				}
+			}
 			i += 1;
 		}
 	}
@@ -473,43 +496,55 @@ namespace flopoco {
         mpz_class svY = tc->getInputValue("Y");
         mpz_class svR;
 
-        if(!signedIO)
-        {
-            svR = svX * svY;
-        }
-        else
+		cerr << "X : " << svX.get_str(10) << " (" << svX.get_str(2) << ")" << endl;
+		cerr << "Y : " << svY.get_str(10) << " (" << svY.get_str(2) << ")" << endl;
+
+
+		if(signedIO)
         {
             // Manage signed digits
-            mpz_class big1 = (mpz_class(1) << (wX));
-            mpz_class big1P = (mpz_class(1) << (wX-1));
-            mpz_class big2 = (mpz_class(1) << (wY));
-            mpz_class big2P = (mpz_class(1) << (wY-1));
+			mpz_class big1 = (mpz_class{1} << (wX));
+			mpz_class big1P = (mpz_class{1} << (wX-1));
+			mpz_class big2 = (mpz_class{1} << (wY));
+			mpz_class big2P = (mpz_class{1} << (wY-1));
 
-            if(svX >= big1P)
+			if(svX >= big1P) {
                 svX -= big1;
+				//cerr << "X is neg. Interpreted value : " << svX.get_str(10) << endl;
+			}
 
-            if(svY >= big2P)
+			if(svY >= big2P) {
                 svY -= big2;
-
-            svR = svX * svY;
+				//cerr << "Y is neg. Interpreted value : " << svY.get_str(10) << endl;
+			}
         }
+		svR = svX * svY;
+		//cerr << "Computed product : " << svR.get_str() << endl;
 
 		if(negate)
 			svR = -svR;
 
         // manage two's complement at output
-        if(svR < 0)
-            svR += (mpz_class(1) << wFullP);
+		if(svR < 0) {
+			svR += (mpz_class(1) << wFullP);
+			//cerr << "Prod is neg : encoded value : " << svR.get_str(2) << endl;
+		}
 
-        if(wOut>=wFullP)
+		if(wOut>=wFullP) {
             tc->addExpectedOutput("R", svR);
-        else	{
-            // there is truncation, so this mult should be faithful
-            svR = svR >> (wFullP-wOut);
-            tc->addExpectedOutput("R", svR);
-            svR++;
-            svR &= (mpz_class(1) << (wOut)) -1;
-            tc->addExpectedOutput("R", svR);
+			//cerr << "Exact result is required" << endl;
+		}
+		else {
+			// there is truncation, so this mult should be faithful
+			// TODO : this is not faithful but almost faithful :
+			// currently only test if error <= ulp, faithful is < ulp
+			mpz_class svRtrunc = (svR >> (wFullP-wOut));
+			tc->addExpectedOutput("R", svRtrunc);
+			if ((svRtrunc << (wFullP - wOut)) != svR) {
+				svRtrunc++;
+				svRtrunc &= (mpz_class(1) << (wOut)) -1;
+				tc->addExpectedOutput("R", svRtrunc);
+			}
         }
     }
 

@@ -16,7 +16,9 @@ Operator* BaseMultiplierDSP::generateOperator(
 			parentOp, 
 			target, 
             parameters.getMultXWordSize(),
-            parameters.getMultYWordSize()
+			parameters.getMultYWordSize(),
+			parameters.isSignedMultX(),
+			parameters.isSignedMultY()
 			); 
 }
 

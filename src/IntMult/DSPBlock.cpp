@@ -20,6 +20,12 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	double stageDelay;
 	if(isPipelined) stageDelay = 0.9 * maxTargetCriticalPath;
 
+	bool signedMultOutput = xIsSigned or yIsSigned;
+	bool oneOnlySigned = xIsSigned xor yIsSigned;
+	int onlyOneDelta = (oneOnlySigned) ? 1 : 0;
+
+	bool shouldPadX = oneOnlySigned and yIsSigned;
+	bool shouldPadY = oneOnlySigned and xIsSigned;
 
 	if(usePreAdder)
 	{
@@ -40,34 +46,34 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
         //implement pre-adder:
 		if(!isPipelined) stageDelay = getTarget()->DSPAdderDelay();
 		vhdl << tab << declare(stageDelay,"X",wX) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(X1) ";
-        if(preAdderSubtracts)
-        {
+		if(preAdderSubtracts) {
             vhdl << "-";
-        }
-        else
-        {
+		} else {
             vhdl << "+";
         }
 		vhdl << " " << (xIsSigned ? "signed" : "unsigned") << "(X2)); -- pre-adder" << endl;
     }
+
+	int wIntermMult = wX + wY + onlyOneDelta;
 	wM = wX + wY;
 
 //	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();
-	vhdl << tab << declare(stageDelay,"M",wM) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(X) * " << (yIsSigned ? "signed" : "unsigned") << "(Y)); -- multiplier" << endl;
+	vhdl << tab << declare(stageDelay,"Mint",wIntermMult) << " <= std_logic_vector(" << (signedMultOutput ? "signed" : "unsigned") << "("<<
+		 (shouldPadX ? "'0' & " : "") <<"X) * " << (signedMultOutput ? "signed" : "unsigned") << "(" <<
+		 (shouldPadY ? "'0' & " : "")<< "Y)); -- multiplier" << endl;
 
-	if(usePostAdder)
-    {
+	vhdl << tab << declare(.0, "M", wM) << " <= Mint" << range(wM - 1, 0) << ";" << endl;
+
+	if(usePostAdder) {
 		if(wZ > wM) THROWERROR("word size for input Z (which is " << wZ << " ) must be less or equal to word size of multiplier result (which is " << wM << " ).");
 		addInput("Z", wZ);
 		if(!isPipelined) stageDelay = getTarget()->DSPAdderDelay();
 		vhdl << tab << declare(stageDelay,"A",wM) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(M) + " << (xIsSigned ? "signed" : "unsigned") << "(Z)); -- post-adder" << endl;
 		if(!isPipelined) stageDelay = 0;
 		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= A;" << endl;
-	}
-    else
-    {
+	} else {
 		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= M;" << endl;
     }
 	addOutput("O", wM);

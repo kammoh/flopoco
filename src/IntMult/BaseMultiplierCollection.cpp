@@ -23,7 +23,7 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
 	//DSP based multiplier
 	int wX, wY, wXSigned, wYSigned;
 	target->getMaxDSPWidths(wX, wY);
-	target->getMaxDSPWidths(wXSigned, wYSigned);
+	target->getMaxDSPWidths(wXSigned, wYSigned, true);
 	int deltaSigned = wXSigned - wX;
 	
 	int maxW = max(wX, wY);

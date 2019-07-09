@@ -1,26 +1,27 @@
 #include <algorithm>
 
 #include "TilingStrategyBasicTiling.hpp"
+#include "IntMultiplier.hpp"
 
 using namespace std;
 namespace flopoco {
 TilingStrategyBasicTiling::TilingStrategyBasicTiling(
-		int wX,
-		int wY,
-		int wOut,
-		bool signedIO,
+		int wX_,
+		int wY_,
+		int wOut_,
+		bool signedIO_,
 		BaseMultiplierCollection* bmc,
 		base_multiplier_id_t prefered_multiplier):TilingStrategy(
-			wX,
-			wY,
-			wOut,
-			signedIO,
+			wX_,
+			wY_,
+			wOut_,
+			signedIO_,
 			bmc),
 		prefered_multiplier_(prefered_multiplier),
 		small_tile_mult_(1), //Most compact LUT-Based multiplier
 		numUsedMults_(0)
 	{
-		truncated = (wOut < (wY + wX));
+		truncated = (wOut < IntMultiplier::prodsize(wY, wX));
 	}
 
 	int TilingStrategyBasicTiling::shrinkBox(
@@ -81,13 +82,24 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		) 
 	{
 		auto& bmc = baseMultiplierCollection->getBaseMultiplier(small_tile_mult_);
-		bool canOverflowLeft = not truncated;
+		bool canOverflowLeft = not truncated and not signedIO;
 		bool canOverflowRight = false;
 		bool canOverflowTop = (curY == 0);
 		bool canOverflowBottom = false;
+
+		bool leftmostIsSignBit = (curX + curDeltaX >= wX) and signedIO ;
+		bool bottomMostIsSignBit = (curY + curDeltaY >= wY) and signedIO;
+
 		int xleft = curX + curDeltaX - 1;
 		int ybottom = curY + curDeltaY - 1;
 		int nbInputMult = bmc.getMaxWordSizeLargeInputUnsigned();
+		int deltaWidthSign = bmc.getDeltaWidthSigned();
+		if (leftmostIsSignBit) {
+			nbInputMult += deltaWidthSign;
+		}
+		if(bottomMostIsSignBit) {
+			nbInputMult += deltaWidthSign;
+		}
 
 		int bestXMult = 1;
 		int bestYMult = 1;
@@ -100,6 +112,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int xanchor, yanchor, xendmultbox, yendmultbox;
 			for (xMult = nbInputMult - 1 ; xMult > 0 ; --xMult) {
 				yMult = i - xMult;
+
 				if (truncated) {
 				xanchor = xleft - xMult + 1;
 				yanchor = ybottom - yMult + 1;
@@ -109,6 +122,15 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 				}
 				xendmultbox = xanchor + xMult - 1;
 				yendmultbox = yanchor + yMult - 1;
+
+				// Check that the considered configuration is valid
+				bool signedX = (xendmultbox >= wX - 1) and signedIO;
+				bool signedY = (yendmultbox >= wY - 1) and signedIO;
+
+				int maxY = bmc.getMaxSecondWordSize(xMult, signedX, signedY);
+				if (yMult > maxY) {
+					continue;
+				}
 
 				// Test if multiplier does not overflow on already handled data
 				if (((yanchor < curY) && !canOverflowTop) ||
@@ -142,6 +164,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 		int xendmultbox = bestXAnchor + bestXMult - 1;
 		int yendmultbox = bestYAnchor + bestYMult - 1;
+
+		bool signedX = (xendmultbox >= wX - 1) and signedIO;
+		bool signedY = (yendmultbox >= wY - 1) and signedIO;
 		
 		if (bestYMult < curDeltaY) {
 			//We need to tile a subbox above or below the current multiplier
@@ -206,7 +231,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			}
 		}
 		//Add the current multiplier
-		auto param = bmc.parametrize(bestXMult, bestYMult, false, false);
+		auto param = bmc.parametrize(bestXMult, bestYMult, signedX, signedY);
 		auto coord = make_pair(bestXAnchor, bestYAnchor);
 		solution.push_back(make_pair(param, coord));
 	}
@@ -229,7 +254,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			}
 		}
 
-		double multArea = double(intMultArea);
+		int deltaWidthSigned = bm.getDeltaWidthSigned();
+
+		float multArea = float(intMultArea);
 
 		if (truncated) {
 			//Perform tiling from left to right to increase the number of full
@@ -253,7 +280,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						break;
 					} 
 
-					double occupationRatio = ((double) (area)) /  multArea;
+					float occupationRatio = (float (area)) /  multArea;
 					if (occupationRatio >= occupation_threshold) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
@@ -281,25 +308,40 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int curY = 0;
 
 			while (curY < wY) {
-				curX = 0;		
+				curX = 0;
+				int untilEndCol = wY - (wYmult + curY);
 				while(curX < wX) {
 					int rightX = curX;
 					int topY = curY;
 					int curDeltaX = wXmult;
 					int curDeltaY = wYmult;
+
+					int untilEndRow = wX - (curDeltaX + rightX);
+
+					if((untilEndRow <= deltaWidthSigned) and signedIO) {
+						curDeltaX += untilEndRow;
+					}
+
+					if ((untilEndCol <= deltaWidthSigned) and signedIO) {
+						curDeltaY += untilEndCol;
+					}
+
 					int area = shrinkBox(rightX, topY, curDeltaX, curDeltaY, 0);
 					if (area == 0) { // All the box is below the line cut
 						break;
 					} 
 
-					double occupationRatio = double(area) /  multArea;
+					bool isSignedX = (rightX + curDeltaX >= wX) and signedIO;
+					bool isSignedY = (topY + curDeltaY >= wY) and signedIO;
+
+					float occupationRatio = float(area) /  multArea;
 					if (occupationRatio >= occupation_threshold) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
 								curDeltaX,
 								curDeltaY,
-								false,
-								false
+								isSignedX,
+								isSignedY
 							);
 						auto coord = make_pair(rightX, topY);
 						solution.push_back(make_pair(param, coord));
@@ -309,8 +351,14 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						tileBox(rightX, topY, curDeltaX, curDeltaY, 0, area);
 					}
 					curX += wXmult;
+					if ((untilEndRow <= deltaWidthSigned) and signedIO) {
+						curX += untilEndRow;
+					}
 				}
 				curY += wYmult;
+				if ((untilEndCol <= deltaWidthSigned) and signedIO) {
+					curY += untilEndCol;
+				}
 			}
 		}
 	}

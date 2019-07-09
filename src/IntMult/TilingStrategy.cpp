@@ -39,7 +39,8 @@ void TilingStrategy::printSolutionTeX(ofstream &outstream)
         int xend = xstart + static_cast<int>(parametrization.getTileXWordSize());
         int yend = ystart + static_cast<int>(parametrization.getTileYWordSize());
 		int deltaY = static_cast<int>(parametrization.getTileYWordSize());
-		outstream << "\\draw[fill=gray, fill opacity=0.3] (" << xstart << ", " << ystart << ") -- (" <<
+		string color = (parametrization.isSignedMultX() || parametrization.isSignedMultY()) ? "red" : "blue";
+		outstream << "\\draw[fill="<< color <<", fill opacity=0.3] (" << xstart << ", " << ystart << ") -- (" <<
 					 xend << ", " << ystart << ") -- ("<< xend + deltaY <<", "<< yend<<") -- ("<< xstart + deltaY <<", "<< yend <<")--cycle;\n";
         cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
     }

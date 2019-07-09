@@ -11,6 +11,13 @@ namespace flopoco {
 			int getMaxWordSizeLargeInputUnsigned() const {return maxWordSizeLargeInputUnsigned_;}
 			int getMaxWordSizeSmallInputUnsigned() const {return maxWordSizeSmallInputUnsigned_;}
 
+			/**
+			 * @brief Compute the maximum size of the second input for a given configuration
+			 * @param The first input size
+			 * @param Is the first input signed ?
+			 * @param Is the second input signed
+			 * @return The maximum size for the second input, 0 if the configuration is not realisable
+			 */
 			int getMaxSecondWordSize (int firstW, bool isW1Signed, bool isW2signed) const;
 
 			BaseMultiplierCategory(
@@ -83,7 +90,6 @@ namespace flopoco {
 			};
 
 			virtual bool shapeValid(Parametrization const & param, int x, int y) const;
-
 
 			virtual Operator* generateOperator(
 					Operator *parentOp, 

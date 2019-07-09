@@ -719,8 +719,6 @@ namespace flopoco{
 			}
 		}
 		compressor->markUsed();
-
-
 	}
 
 
