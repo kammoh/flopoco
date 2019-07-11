@@ -624,20 +624,23 @@ namespace flopoco {
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		//ToDo: Add further tests:
 		list<pair<int,int>> wordSizes = {{1,1},{2,2},{3,3},{4,4},{8,8},{16,8},{8,16},{13,17},{24,24},{27,41},{53,53},{64,64},{10,99},{99,10},{100,100}};
-		for(auto wordSizePair : wordSizes)
+
+		for(int sign=0; sign < 2; sign++)
 		{
-			int wX=wordSizePair.first;
-			int wY=wordSizePair.second;
+			for (auto wordSizePair : wordSizes)
 			{
-				paramList.push_back(make_pair("wX", to_string(wX)));
-				paramList.push_back(make_pair("wY", to_string(wY)));
-				testStateList.push_back(paramList);
-				paramList.clear();
+				int wX = wordSizePair.first;
+				int wY = wordSizePair.second;
+				{
+					paramList.push_back(make_pair("wX", to_string(wX)));
+					paramList.push_back(make_pair("wY", to_string(wY)));
+					paramList.push_back(make_pair("signed", sign ? "true" : "false"));
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
 			}
 		}
-
 		return testStateList;
 	}
 

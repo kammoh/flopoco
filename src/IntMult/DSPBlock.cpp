@@ -55,8 +55,9 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
     }
 
 	int wIntermMult = wX + wY + onlyOneDelta;
-	wM = wX + wY;
-
+	wM = (wX > 1 ? wX : 0) + (wY > 1 ? wY : 0) + (wX==1 && wY==1 ? 1 : 0); //consider special cases with wX or wY (or both) equals one
+//	wM = wX + wY;
+	cout << "wM=" << wM << endl;
 //	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();

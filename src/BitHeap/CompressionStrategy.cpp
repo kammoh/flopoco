@@ -728,7 +728,7 @@ namespace flopoco{
 		if(bitheap->getMaxHeight() < 2)
 		{
 			//an adder isn't necessary; concatenateLSBColumns should do the rest
-			concatenateLSBColumns();
+			//concatenateLSBColumns(); //it is already called in
 		}else{
 			ostringstream adderIn0, adderIn0Name, adderIn1, adderIn1Name, adderOutName, adderCin, adderCinName;
 			int adderStartIndex = compressionDoneIndex + 1;
@@ -1137,9 +1137,9 @@ namespace flopoco{
 				//the bitheap is compressed, all that is left
 				//	is to add the lsb bit to the result
                 bitheap->getOp()->vhdl << tab
-                        << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count));
+                        << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),1,true);
 				if(bitheap->bits[count].size() > 0)
-                    bitheap->getOp()->vhdl << " <= " << bitheap->bits[count][0]->getName() << ";" << endl;
+                    bitheap->getOp()->vhdl << "(0) <= " << bitheap->bits[count][0]->getName() << ";" << endl;
 				else
                     bitheap->getOp()->vhdl << " <= \'0\';" << endl;
 
@@ -1153,12 +1153,16 @@ namespace flopoco{
 
 			//create the signals for a new chunk
 			if(count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0) > 1)
+			{
                 bitheap->getOp()->vhdl << tab
                     << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count),
 							count-compressionDoneIndex+(compressionDoneIndex == 0 ? 1 : 0), true) << " <= " ;
+			}
 			else
+			{
                 bitheap->getOp()->vhdl << tab
                     << bitheap->getOp()->declare(join("tmp_bitheapResult_bh", bitheap->guid, "_", count)) << " <= " ;
+			}
 
 			//add the bits to the chunk
 			//	add the first bit
