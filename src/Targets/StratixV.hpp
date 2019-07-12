@@ -46,6 +46,9 @@ namespace flopoco{
 		double RAMDelay() { return RAMDelay_; }
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
+
+		int maxLutInputs() {return 6;}
+		double lutConsumption(int lutInputSize);
 		
 		void   getAdderParameters(double &k1, double &k2, int size);
 		double fanoutDelay(int fanout = 1);

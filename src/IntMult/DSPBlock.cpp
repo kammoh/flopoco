@@ -2,7 +2,7 @@
 
 namespace flopoco {
 
-DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsSigned, bool yIsSigned, bool isPipelined, int wZ, bool usePostAdder, bool usePreAdder, bool preAdderSubtracts) : Operator(parentOp,target)
+DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsSigned, bool yIsSigned, bool isPipelined, int wZ, bool usePostAdder, bool usePreAdder, bool preAdderSubtracts) : Operator(parentOp,target), xIsSigned_{xIsSigned}, yIsSigned_{yIsSigned}, wX_{wX}, wY_{wY}
 {
     useNumericStd();
 
@@ -20,6 +20,12 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	double stageDelay;
 	if(isPipelined) stageDelay = 0.9 * maxTargetCriticalPath;
 
+	bool signedMultOutput = xIsSigned or yIsSigned;
+	bool oneOnlySigned = xIsSigned xor yIsSigned;
+	int onlyOneDelta = (oneOnlySigned) ? 1 : 0;
+
+	bool shouldPadX = oneOnlySigned and yIsSigned;
+	bool shouldPadY = oneOnlySigned and xIsSigned;
 
 	if(usePreAdder)
 	{
@@ -40,39 +46,90 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
         //implement pre-adder:
 		if(!isPipelined) stageDelay = getTarget()->DSPAdderDelay();
 		vhdl << tab << declare(stageDelay,"X",wX) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(X1) ";
-        if(preAdderSubtracts)
-        {
+		if(preAdderSubtracts) {
             vhdl << "-";
-        }
-        else
-        {
+		} else {
             vhdl << "+";
         }
 		vhdl << " " << (xIsSigned ? "signed" : "unsigned") << "(X2)); -- pre-adder" << endl;
     }
-	wM = wX + wY;
 
+	int wIntermMult = wX + wY + onlyOneDelta;
+	wM = (wX > 1 ? wX : 0) + (wY > 1 ? wY : 0) + (wX==1 && wY==1 ? 1 : 0); //consider special cases with wX or wY (or both) equals one
+//	wM = wX + wY;
+	cout << "wM=" << wM << endl;
 //	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();
-	vhdl << tab << declare(stageDelay,"M",wM) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(X) * " << (yIsSigned ? "signed" : "unsigned") << "(Y)); -- multiplier" << endl;
+	vhdl << tab << declare(stageDelay,"Mint",wIntermMult) << " <= std_logic_vector(" << (signedMultOutput ? "signed" : "unsigned") << "("<<
+		 (shouldPadX ? "'0' & " : "") <<"X) * " << (signedMultOutput ? "signed" : "unsigned") << "(" <<
+		 (shouldPadY ? "'0' & " : "")<< "Y)); -- multiplier" << endl;
 
-	if(usePostAdder)
-    {
+	vhdl << tab << declare(.0, "M", wM) << " <= Mint" << range(wM - 1, 0) << ";" << endl;
+
+	if(usePostAdder) {
 		if(wZ > wM) THROWERROR("word size for input Z (which is " << wZ << " ) must be less or equal to word size of multiplier result (which is " << wM << " ).");
 		addInput("Z", wZ);
 		if(!isPipelined) stageDelay = getTarget()->DSPAdderDelay();
 		vhdl << tab << declare(stageDelay,"A",wM) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(M) + " << (xIsSigned ? "signed" : "unsigned") << "(Z)); -- post-adder" << endl;
 		if(!isPipelined) stageDelay = 0;
 		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= A;" << endl;
-	}
-    else
-    {
+	} else {
 		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= M;" << endl;
     }
-	addOutput("R", wM);
-	vhdl << tab << "R <= Rtmp;" << endl;
+	addOutput("O", wM);
+	vhdl << tab << "O <= Rtmp;" << endl;
 }
+
+/*
+ ToDo: extend this to the DSP functionality (inc. pre- and post-adders
+
+
+void DSPBlock::emulate (TestCase* tc)
+{
+	mpz_class svX = tc->getInputValue("X");
+	mpz_class svY = tc->getInputValue("Y");
+	mpz_class svR;
+
+	svY = svX * svY;
+	tc->addExpectedOutput("Y", svY);
+}
+
+
+void DSPBlock::buildStandardTestCases(TestCaseList* tcl)
+{
+	TestCase *tc;
+
+	mpz_class x, y;
+
+	// 1*1
+	x = mpz_class(1);
+	y = mpz_class(1);
+	tc = new TestCase(this);
+	tc->addInput("X", x);
+	tc->addInput("Y", y);
+	emulate(tc);
+	tcl->add(tc);
+
+	// -1 * -1
+	x = (mpz_class(1) << wX_) -1;
+	y = (mpz_class(1) << wY_) -1;
+	tc = new TestCase(this);
+	tc->addInput("X", x);
+	tc->addInput("Y", y);
+	emulate(tc);
+	tcl->add(tc);
+
+	// The product of the two max negative values overflows the signed multiplier
+	x = mpz_class(1) << (wX_ -1);
+	y = mpz_class(1) << (wY_ -1);
+	tc = new TestCase(this);
+	tc->addInput("X", x);
+	tc->addInput("Y", y);
+	emulate(tc);
+	tcl->add(tc);
+}
+*/
 
 OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {

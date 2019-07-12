@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseMultiplierCollection.hpp"
+#include "BaseMultiplierCategory.hpp"
 
 namespace flopoco {
 
@@ -11,10 +12,12 @@ class TilingStrategy {
 
 public:
 	typedef pair<int, int> multiplier_coordinates_t;
-	typedef pair<base_multiplier_id_t, multiplier_coordinates_t> mult_tile_t;
+	typedef pair<BaseMultiplierCategory::Parametrization, multiplier_coordinates_t> mult_tile_t;
 	TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection* baseMultiplierCollection);
 
 	virtual void solve() = 0;
+	void printSolution();
+	void printSolutionTeX(ofstream &outstream);
 
 	list<mult_tile_t>& getSolution()
 	{

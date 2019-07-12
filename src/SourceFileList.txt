@@ -69,12 +69,15 @@ IntMult/TilingStrategyBasicTiling
 IntMult/MultiplierBlock
 IntMult/DSPBlock
 IntMult/BaseMultiplier
-IntMult/BaseMultiplier2xk
+IntMult/BaseMultiplierCategory
 IntMult/BaseMultiplierCollection
 IntMult/BaseMultiplierDSP
 IntMult/BaseMultiplierDSPSuperTilesXilinx
 IntMult/BaseMultiplierLUT
 IntMult/IntKaratsubaRectangular
+IntMult/IntMultiplierLUT
+IntMult/TargetBaseMultSpecialisation
+IntMult/XilinxBaseMultiplier2xk
 Complex/FixComplexKCM
 Conversions/Posit2FP
 Conversions/FP2Fix

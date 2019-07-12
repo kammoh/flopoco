@@ -78,6 +78,7 @@
 
 /* Integer and fixed-point multipliers ------------------------ */
 #include "IntMult/IntMultiplier.hpp"
+#include "IntMult/IntMultiplierLUT.hpp"
 // #include "IntMult/FixMultAdd.hpp"
 // #include "IntMult/IntKaratsuba.hpp"
 // #include "IntMult/IntSquarer.hpp"

@@ -46,13 +46,19 @@ public:
      */
 	DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsSigned=false, bool yIsSigned=false, bool isPipelined=false, int wZ=0, bool usePostAdder=false, bool usePreAdder=false, bool preAdderSubtracts=false);
 
+//	void emulate (TestCase* tc);
+//	void buildStandardTestCases(TestCaseList* tcl);
+
     /** Factory method */
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
     /** Register the factory */
     static void registerFactory();
 
 private:
+	bool xIsSigned_;
+	bool yIsSigned_;
+	int wX_;
+	int wY_;
 };
-
 }
 

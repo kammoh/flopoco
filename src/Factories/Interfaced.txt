@@ -17,6 +17,7 @@ FPConstMult
 IntConstDiv
 DSPBlock
 IntMultiplier
+IntMultiplierLUT
 FixFunctionByTable
 FixFunctionByMultipartiteTable
 FixFunctionBySimplePoly

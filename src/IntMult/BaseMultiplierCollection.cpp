@@ -1,119 +1,93 @@
+#include <algorithm>
 #include <numeric>
 
 #include "BaseMultiplierCollection.hpp"
 #include "BaseMultiplierLUT.hpp"
-#include "BaseMultiplier2xk.hpp"
+#include "XilinxBaseMultiplier2xk.hpp"
 #include "BaseMultiplierDSP.hpp"
 #include "BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "TargetBaseMultSpecialisation.hpp"
+
+using namespace std;
 
 namespace flopoco {
-	vector<base_multiplier_id_t> BaseMultiplierCollection::getMultipliersIDByArea(bool desc) {
-		vector<base_multiplier_id_t> result(baseMultipliers.size());	
-		std::iota(result.begin(), result.end(), 0);
-		std::sort(result.begin(), result.end(), [this, desc](
-					const base_multiplier_id_t& first, 
-					const base_multiplier_id_t& second)->bool{
-					auto const & bm1 = *getBaseMultiplier(first);
-					auto const & bm2 = *getBaseMultiplier(second);
-					int area1 = bm1.getXWordSize() * bm1.getYWordSize();
-					int area2 = bm2.getXWordSize() * bm2.getYWordSize();
-					if (desc) {
-						return (area2 < area1);
-					} else {
-						return (area1 < area2);
-					}
-				});
-		return result;
-	}
-
 base_multiplier_id_t BaseMultiplierCollection::getPreferedMultiplier()
 {
-	//TODO replace 
 	return 0;
 }
 
-BaseMultiplierCollection::BaseMultiplierCollection(Target* target, unsigned int wX, unsigned int wY, bool pipelineDSPs){
+BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
     srcFileName = "BaseMultiplierCollection";
     uniqueName_ = "BaseMultiplierCollection";
 	
-    this->target = target;
-    this->wX = wX;
-    this->wY = wY;
-
-    //create DSP-based multipliers:
-	baseMultipliers.push_back(new BaseMultiplierDSP(false, false, 17, 24, pipelineDSPs));
-    baseMultipliers.push_back(new BaseMultiplierDSP(false, false, 24, 17, pipelineDSPs));
-
-    //create DSP-based super tiles: TODO make correct ordering
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_I, pipelineDSPs)); //_2 = I
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_G, pipelineDSPs)); //_3 = G
-
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_K, pipelineDSPs)); //_4 = K
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_E, pipelineDSPs)); //_5 = E
-
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_H, pipelineDSPs)); //_6 = H
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_J, pipelineDSPs)); //_7 = J
-
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_A, pipelineDSPs)); //_8 = A
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_D, pipelineDSPs)); //_9 = D
-
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_C, pipelineDSPs)); //_10 = C
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_B, pipelineDSPs)); //_11 = B
-
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_L, pipelineDSPs)); //_12 = L
-    baseMultipliers.push_back(new BaseMultiplierDSPSuperTilesXilinx(false, false, BaseMultiplierDSPSuperTilesXilinx::SHAPE_F, pipelineDSPs)); //_13 = F
-
-    for(unsigned int width = 4; width <= 17; width++){
-        baseMultipliers.push_back(new BaseMultiplierDSP(false, false, width, width, pipelineDSPs));
-    }
-
-    //create logic-based multipliers:
-    //baseMultipliers.push_back(new BaseMultiplierLUT(false,false,3,3)); //3x3 LUT-based multiplier (six LUT6)
-    //in old solution files the 3x3 is missing. In problemfiles from thursday 3x3 should be there
-
-    baseMultipliers.push_back(new BaseMultiplierLUT(false,false,2,3)); //2x3 LUT-based multiplier (three LUT6)
-    baseMultipliers.push_back(new BaseMultiplierLUT(false,false,3,2)); //3x2 LUT-based multiplier (three LUT6)
-    baseMultipliers.push_back(new BaseMultiplierLUT(false,false,1,2)); //1x2 LUT-based multiplier (two AND gates)
-    baseMultipliers.push_back(new BaseMultiplierLUT(false,false,2,1)); //2x1 LUT-based multiplier (two AND gates)
-    baseMultipliers.push_back(new BaseMultiplierLUT(false,false,2,2)); //2x2 LUT-based multiplier (two LUT6) not in new versions
-    baseMultipliers.push_back(new BaseMultiplierLUT(false,false,1,1)); //1x1 LUT-based multiplier (an AND gate)
-
-
-    unsigned int maxWidth = (wX > wY ? wX : wY);
-    for(int k=4; k <= maxWidth; k++) //ToDo: adjust limits
-    {
-        baseMultipliers.push_back(new BaseMultiplier2xk(false, false, k, false)); //2xk LUT/carry-chain-based multiplier
-        baseMultipliers.push_back(new BaseMultiplier2xk(false, false, k, true));  //kx2 LUT/carry-chain-based multiplier
-    }
-
-
-
-
-    int i=0;
-    cout << "The following multiplier shapes were generated:" << endl;
-
-    for(BaseMultiplier* bm : baseMultipliers)
-    {
-        cout << "shape " << i++ << ": " << bm->getXWordSize() << "x" << bm->getYWordSize() << " of type " << bm->getName() << endl;
-    }
-}
-
-BaseMultiplier* BaseMultiplierCollection::getBaseMultiplier(base_multiplier_id_t multRef)
-{
-    if(multRef < baseMultipliers.size())
-        return baseMultipliers[multRef];
-    else
-        return nullptr;
-}
-
-BaseMultiplierCollection::~BaseMultiplierCollection()
-{
-    for(BaseMultiplier* bm : baseMultipliers)
-    {
-        delete bm;
-    }
-}
-
+	//DSP based multiplier
+	int wX, wY, wXSigned, wYSigned;
+	target->getMaxDSPWidths(wX, wY);
+	target->getMaxDSPWidths(wXSigned, wYSigned, true);
+	int deltaSigned = wXSigned - wX;
 	
+	int maxW = max(wX, wY);
+	int minW = min(wX, wY);
+
+	baseMultiplierCategories.push_back(
+			new BaseMultiplierDSP(maxW, minW, deltaSigned)
+		);
+
+	//LUT based multipliers
+	double score = target->lutConsumption(1);
+	for (int i = 1 ; i <= target->maxLutInputs(); i++) {
+		double newScore = target->lutConsumption(i+1);
+		if (newScore != score) {
+			baseMultiplierCategories.push_back(new BaseMultiplierLUT(i, score));
+			score = newScore;
+		}
+	}
+
+	for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
+		baseMultiplierCategories.push_back(t);
+	}
+}
+
+BaseMultiplierCategory& BaseMultiplierCollection::getBaseMultiplier(
+		base_multiplier_id_t multRef
+	)
+{
+    if(multRef < baseMultiplierCategories.size())
+	{
+        return *(baseMultiplierCategories[multRef]);
+	}
+	else {
+		throw string("BaseMultiplierCollection::getBaseMultiplier: Invalid base multiplier index");
+	}
+}
+
+vector<BaseMultiplierCategory const *> const BaseMultiplierCollection::getView() const
+{
+	vector<BaseMultiplierCategory const *> ret;
+	copy(
+			baseMultiplierCategories.begin(), 
+			baseMultiplierCategories.end(), 
+			ret.begin()
+		);
+	return ret;
+}
+
+void BaseMultiplierCollection::print()
+{
+	if (UserInterface::verbose >= DETAILED)
+	{
+		REPORT(DETAILED, "Available base multipliers:");
+		for(BaseMultiplierCategory *bmc : baseMultiplierCategories)
+		{
+			cerr << "  base multiplier " << bmc->getMaxWordSizeSmallInputUnsigned() << "x" << bmc->getMaxWordSizeLargeInputUnsigned()
+				 << ", max. DSP cost: " << bmc->getDSPCost(bmc->getMaxWordSizeSmallInputUnsigned(),
+														   bmc->getMaxWordSizeLargeInputUnsigned())
+				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getMaxWordSizeSmallInputUnsigned(),
+														   bmc->getMaxWordSizeLargeInputUnsigned()) << endl;
+		}
+
+	}
+}
+
 }   //end namespace flopoco
 

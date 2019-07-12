@@ -507,5 +507,16 @@ namespace flopoco{
 		cpDelay = totalPeriod-targetPeriod*cycleDelay;
 	}
 	
+	double StratixV::lutConsumption(int lutInputSize){
+		if (lutInputSize <= 5) {
+			return .5;
+		}
+		if (lutInputSize <= 6) {
+			// Not exactly true as it's possible to pack some 6bits -> 2bits
+			// functions in one lut, but keep a conservative behavior
+			return 1.;
+		}
+		return -1;
+	}
 	
 }
