@@ -196,7 +196,18 @@ namespace flopoco{
 						if (  (!p->coeff[j]->isZero())  &&  (p->coeff[j]->MSB > MSB[j])  )
 							MSB[j] = p->coeff[j]->MSB;
 					}
-
+					
+					// Now set the MSB and LSB of the zero coefficients, for consistency
+					// This prevents a future crash in this case
+					for (int j=0; j<=degree; j++) {
+						// if the coeff is zero, we can set its MSB to anything, so we exclude this case
+						if (p->coeff[j]->isZero()) {
+							p->coeff[j]->MSB = MSB[j]; // before that it was set arbitrary to 1
+							p->coeff[j]->LSB = LSB; // before that it was set arbitrary to 0
+							p->coeff[j]->width = MSB[j]-LSB+1;
+						}
+					}
+					
 				} // end for loop on i
 
 				if (approxErrorBound < targetAccuracy) {

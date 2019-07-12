@@ -10,7 +10,8 @@
 #include "BitHeap/BitHeap.hpp"
 
 #include "IntMult/MultiplierBlock.hpp"
-#include "IntMult/BaseMultiplier.hpp"
+#include "IntMult/BaseMultiplierCategory.hpp"
+#include "TilingStrategy.hpp"
 
 namespace flopoco {
 	class IntMultiplier : public Operator {
@@ -24,8 +25,9 @@ namespace flopoco {
          * @param[in] wY             Y multiplier size (including sign bit if any)
          * @param[in] wOut           wOut size for a truncated multiplier (0 means full multiplier)
          * @param[in] signedIO       false=unsigned, true=signed
+         * @param[in] texOutput      true=generate a tek file with the found tiling solution
          **/
-        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false);
+        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, bool texOutput = false);
 
 		/**
 		 * The emulate function.
@@ -41,6 +43,14 @@ namespace flopoco {
 		/** Factory register method */ 
 		static void registerFactory();
 
+		/**
+		 * @brief Compute the size required to store the untruncated product of inputs of a given width
+		 * @param wX size of the first input
+		 * @param wY size of the second input
+		 * @return the number of bits needed to store a product of I<wX> * I<WY>
+		 */
+		static inline unsigned int prodsize(unsigned int wX, unsigned int wY);
+
 		static TestList unitTest(int index);
 
 	protected:
@@ -52,31 +62,48 @@ namespace flopoco {
         bool signedIO;                   /**< true if the IOs are two's complement */
 		bool negate;                    /**< if true this multiplier computes -xy */
 	private:
-		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
-												this is a pointer to the Operator that will provide the actual vhdl stream etc. */
-        BitHeap* bitHeap;    			/**< The heap of weighted bits that will be used to do the additions */
-
-        /** Places a single BaseMultiplier at a given position
-         * xPos, yPos:                  Position of the lower right corner of the BaseMultiplier
-         * xInputLength, yInputLength:  width of the inputs x and y
-         * outputLength:                width of the output
-         * xInputNonZeros, yInputNonZeros:      how many consecutive bits of the inputs are not constantly zero (might not be needed)
-         * totalOffset:                 Multipliers start at position (totalOffset, totalOffset). This has the advantage that BaseMultipliers
-         *                              can protude the lower and right border as well. totalOffset is normally zero or twelve
-         * id:                          just an unique id to not declare signals twice
-         *
-         * returns the name of the output (might not be needed)
-         * */
-        string placeSingleMultiplier(Operator* op, unsigned int xPos, unsigned int yPos, unsigned int xInputLength, unsigned int yInputLength, unsigned int outputLength, unsigned int xInputNonZeros, unsigned int yInputNonZeros, unsigned int totalOffset, unsigned int id);
+//		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
+		/**
+		 * Realise a tile by instantiating a multiplier, selecting the inputs and connecting the output to the bitheap
+		 *
+		 * @param tile: the tile to instentiate
+		 * @param idx: the tile identifier for unique name
+		 * @param output_name: the name to which the output of this tile should be mapped
+		 */
+		Operator* realiseTile(
+				TilingStrategy::mult_tile_t const & tile,
+				size_t idx,
+				string output_name
+			);
 
         /** returns the amount of consecutive bits, which are not constantly zero
-         * bm:                          current BaseMultiplier
-         * xPos, yPos:                  position of lower right corner of the BaseMultiplier
-         * totalOffset:                 see placeSingleMultiplier()
+		 * @param bm:                          current BaseMultiplier
+		 * @param xPos, yPos:                  position of lower right corner of the BaseMultiplier
+		 * @param totalOffset:                 see placeSingleMultiplier()
          * */
-        unsigned int getOutputLengthNonZeros(BaseMultiplier* bm, unsigned int xPos, unsigned int yPos, unsigned int totalOffset);
+        unsigned int getOutputLengthNonZeros(
+				BaseMultiplierParametrization const & parameter,
+				unsigned int xPos,
+				unsigned int yPos,
+				unsigned int totalOffset
+			);
 
-        unsigned int getLSBZeros(BaseMultiplier* bm, unsigned int xPos, unsigned int yPos, unsigned int totalOffset, int mode);
+        unsigned int getLSBZeros(
+				BaseMultiplierParametrization const & parameter,
+				unsigned int xPos,
+				unsigned int yPos,
+				unsigned int totalOffset,
+				int mode
+			);
+
+		/**
+		 * @brief Compute the number of bits below the output msb that we need to keep in the summation
+		 * @param wX first input width
+		 * @param wY second input width
+		 * @param wOut number of bits kept in the output
+		 * @return the the number of bits below the output msb that we need to keep in the summation to ensure faithful rounding
+		 */
+		unsigned int computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut);
 
         /*!
          * add a unique identifier for the multiplier, and possibly for the block inside the multiplier
@@ -84,6 +111,8 @@ namespace flopoco {
         string addUID(string name, int blockUID=-1);
 
         int multiplierUid;
+
+		void branchToBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> const &solution , unsigned int bitheapLSBWeight);
 
 	};
 

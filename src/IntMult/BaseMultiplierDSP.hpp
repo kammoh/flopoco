@@ -9,18 +9,35 @@
 #include "Target.hpp"
 #include "Operator.hpp"
 #include "Table.hpp"
-#include "BaseMultiplier.hpp"
+#include "BaseMultiplierCategory.hpp"
 
 namespace flopoco {
 
 
-    class BaseMultiplierDSP : public BaseMultiplier
+    class BaseMultiplierDSP : public BaseMultiplierCategory
     {
 
 	public:
-		BaseMultiplierDSP(bool isSignedX, bool isSignedY, int wX, int wY, bool flipXY=false);
+		BaseMultiplierDSP(
+				int maxWidthBiggestWord,
+				int maxWidthSmallestWord,
+				int deltaWidthSigned
+			) : BaseMultiplierCategory{
+				maxWidthBiggestWord,
+				maxWidthSmallestWord,
+				deltaWidthSigned,
+				0,
+				"BaseMultiplierDSP"
+		}{}
 
-		virtual Operator *generateOperator(Operator *parentOp, Target *target);
+		int getDSPCost(uint32_t, uint32_t) const final {return 1;}
+		double getLUTCost(uint32_t, uint32_t) const final {return 0.;}
+
+		Operator *generateOperator(
+				Operator *parentOp,
+				Target *target,
+				Parametrization const & params
+			) const final;
 
     private:
         bool flipXY;

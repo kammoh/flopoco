@@ -89,7 +89,7 @@ namespace flopoco{
 			REPORT(INFO, "WARNING: wOut value was not set, wOut=" << wOut << " was inferred from the vector of values");
 		}
 		else if(wOut < intlog2(maxValue))  {
-#if 0 // This behaviour is probably a timebomb
+#if 0 // This behaviour is probably a timebomb. Turns out it was fixing FixFunctionByMultipartiteTable
 			REPORT(INFO, "WARNING: wOut value was set too small. I'm fixing it up but, but I probably shouldn't");
 			//set the value of wOut
 			wOut = intlog2(maxValue);

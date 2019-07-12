@@ -25,7 +25,7 @@ namespace flopoco{
 		 * @param[in]		wFI			the with of the fraction in input
 		 * @param[in]		trunc_p			the output is not rounded when trunc_p is true
 		 */
-		 FP2Fix(Target* target, bool SignedO, int MSBO, int LSBO,  int wEI, int wFI, bool trunc_p);
+		 FP2Fix(Operator* parentOp, Target* target, bool SignedO, int MSBO, int LSBO,  int wEI, int wFI, bool trunc_p);
 
 		/**
 		 * @brief destructor

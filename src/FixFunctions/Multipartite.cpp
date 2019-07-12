@@ -112,6 +112,10 @@ namespace flopoco
 	}
 
 
+	int64_t min(int64_t x, int64_t y) { // ?? it doesn't seem to exist
+		return (x>y? y:x);
+	}
+	
 	int64_t max(int64_t x, int64_t y) { // ?? it doesn't seem to exist
 		return (x>y? x:y);
 	}
@@ -120,14 +124,15 @@ namespace flopoco
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
 
 		REPORT(FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV); 
-		int64_t bestS;
+		int64_t bestS,bestSizeTIV;
 		// compression using only positive numbers
 		bestS = 0; 
+		bestSizeTIV=sizeTIV;
 		for(int s = 1; s < alpha-1; s++) {
 			// Under convexity hypothesis, the maximum slack is either left or right of the interval
-			// (I think we assume here convexity of the first derivative, too)
-			int64_t  yLL, yLR, yRL, yRR, deltaLeft, deltaRight, deltaMax, deltaBits, slackMax, saved_LSBs_in_ATIV, tempRho, tempSizeATIV, tempSizeDiffTIV, tempCompressedSize;
-			int i = 0; // compute extremal yues on the left of the interval
+			// (maybe we assume here convexity of the first derivative, too)
+			int64_t  yLL, yLR, yRL, yRR, deltaLeft, deltaRight, deltaMax, deltaBits, slack, saved_LSBs_in_ATIV, tempRho, tempSizeATIV, tempSizeDiffTIV, tempCompressedSize;
+			int i = 0; // compute extremal values on the left of the interval
 			yLL	 = TIVFunction( i<<s );
 			yLR = TIVFunction( ((i+1)<<s)-1 );
 			deltaLeft = abs(yLL-yLR);
@@ -136,10 +141,15 @@ namespace flopoco
 			yRR = TIVFunction( ((i+1)<<s)-1 );
 
 			deltaRight = abs(yRL-yRR);
-			deltaMax = max(deltaLeft,deltaRight);
-			deltaBits = intlog2(deltaMax);
-			slackMax = (1<<deltaBits)-1 - deltaMax;			
-			saved_LSBs_in_ATIV = intlog2(slackMax);
+			deltaMax = max(deltaLeft,deltaRight);   // for instance s=1 and we find deltaMax=21
+			deltaBits = intlog2(deltaMax);          // 21 fits on 5 bits. The deltaTIV will have 5 output bits.
+			REPORT(FULL, "trying s=" << s << " deltaleft deltaright = "<< deltaLeft << " " << deltaRight << "  \tdeltaBits="<<deltaBits);
+			// Now how many bits can we shave from the ATIV?
+			slack = (1<<deltaBits)-1 - deltaMax; // so the deltaTIV may represent values between 0 and 31, therefore we have a slack of 31-21=10
+			saved_LSBs_in_ATIV = intlog2(slack)-1; // for instance if slack=10 we may save 3 bits, because it will offset the TIV at most by 7 which is smaller than 10
+			// This is the number of bits we are sure we can shave, but this is only a worst-case analysis:  we could be more lucky
+			// However it will save very little: TODO is somebody wants to try
+
 			tempRho = alpha - s;
 			tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
 			tempSizeDiffTIV = deltaBits<<alpha;
@@ -147,9 +157,10 @@ namespace flopoco
 			REPORT(DETAILED, "computeTIVCompressionParameters, unsigned: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize
 						 << " =" << outputSize+guardBits-saved_LSBs_in_ATIV << ".2^" << tempRho
 						 << " + " << deltaBits << ".2^" << alpha
-						 << "  ( slack=" << slackMax <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV <<" )"); 
+						 << "  ( slack=" << slack <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV <<" )"); 
 			
-			if (tempCompressedSize < sizeTIV) {
+			if (tempCompressedSize < bestSizeTIV) {
+				bestSizeTIV = tempCompressedSize;
 				bestS = s;
 				// tentatively set the attributes of the Multipartite class
 				rho = alpha - s;
@@ -164,8 +175,9 @@ namespace flopoco
 				nbZeroLSBsInATIV = saved_LSBs_in_ATIV; 
 				outputSizeATIV = outputSize+guardBits-nbZeroLSBsInATIV;				
 				outputSizeDiffTIV = deltaBits;
-			}				
+			}
 		}
+		REPORT(DETAILED, "computeTIVCompressionParameters, bestS=" << bestS); 
 
 #if 0 // Unplugged for now because it actually increases size for 16-bit operands
 		// compression using symmetry and a second-order term: will require one more table and a row of xors on the output
@@ -173,7 +185,7 @@ namespace flopoco
 		for(int s = 1; s < alpha-1; s++) {
 			// Under convexity hypothesis, the maximum slack is either left or right of the interval
 			// (I think we assume here convexity of the first derivative, too)
-			int64_t  yLL, yLR, yRL, yRR, deltaLeft, deltaRight, deltaMax, deltaBits, slackMax, saved_LSBs_in_ATIV, tempRho, tempSizeATIV, tempSizeDiffTIV, tempCompressedSize;
+			int64_t  yLL, yLR, yRL, yRR, deltaLeft, deltaRight, deltaMax, deltaBits, slack, saved_LSBs_in_ATIV, tempRho, tempSizeATIV, tempSizeDiffTIV, tempCompressedSize;
 			int i = 0; // compute extremal yues on the left of the interval
 			yLL	 = TIVFunction( i<<s );
 			yLR = TIVFunction( ((i+1)<<s)-1 );
@@ -189,8 +201,8 @@ namespace flopoco
 			deltaRight = max( abs(yRL-centerR), abs(yRR-centerR));
 			deltaMax = max(deltaLeft,deltaRight);
 			deltaBits = intlog2(deltaMax);
-			slackMax = (1<<deltaBits)-1 - deltaMax;			
-			saved_LSBs_in_ATIV = intlog2(slackMax);
+			slack = (1<<deltaBits)-1 - deltaMax;			
+			saved_LSBs_in_ATIV = intlog2(slack);
 			tempRho = alpha - s;
 			tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
 			tempSizeDiffTIV = deltaBits<<alpha;
@@ -198,7 +210,7 @@ namespace flopoco
 			REPORT(DETAILED, "computeTIVCompressionParameters,   signed: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize
 						 << " =" << outputSize+guardBits-saved_LSBs_in_ATIV << ".2^" << tempRho
 						 << " + " << deltaBits << ".2^" << alpha
-						 << "  ( slack=" << slackMax <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV <<" )"); 
+						 << "  ( slack=" << slack <<"  saved_LSBs_in_ATIV=" << saved_LSBs_in_ATIV <<" )"); 
 			
 			if (tempCompressedSize < sizeTIV) {
 				bestS = s;
@@ -317,9 +329,11 @@ namespace flopoco
 				//			int64_t mask = ((1<<outputSize)-1) - ((1<<nbZeroLSBsInATIV)-1);
 				refVal = refVal >> nbZeroLSBsInATIV ;
 				aTIV.push_back(refVal);
+				//cerr << " i=" << i << "  ATIV=" << refVal << "<<" << nbZeroLSBsInATIV << endl;
 				for(int j = 0; j < (1<<s); j++)		{
 					int64_t diff = tiv[ (i<<s) + j] - (refVal << nbZeroLSBsInATIV);
 					diffTIV.push_back(diff);
+					//cerr << "    j=" <<j  << " diffTIV=" << diff << endl;
 				}	
 			}
 		}

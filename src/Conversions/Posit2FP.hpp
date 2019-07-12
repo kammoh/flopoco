@@ -13,7 +13,7 @@ namespace flopoco {
 		 * @param[in]	widthI	the total width of the input posit
 		 * @param[in]	esI		the exponent field size of the input prosit
 		 */
-		Posit2FP(Target* target, Operator* parentOp, int widthI, int esI);
+		Posit2FP(Operator* parentOp, Target* target, int widthI, int esI);
 
 		void emulate(TestCase* tc);
 		static void computeFloatWidths(int const widthI, int const eS, int* wE, int* wF);

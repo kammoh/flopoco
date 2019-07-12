@@ -39,13 +39,11 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-   FP2Fix::FP2Fix(Target* target, bool _Signed, int _MSBO, int _LSBO, int _wEI, int _wFI, bool _trunc_p) :
-         Operator(target), wEI(_wEI), wFI(_wFI), Signed(_Signed), MSBO(_MSBO), LSBO(_LSBO),  trunc_p(_trunc_p) {
+   FP2Fix::FP2Fix(Operator* parentOp, Target* target, bool _Signed, int _MSBO, int _LSBO, int _wEI, int _wFI, bool _trunc_p) :
+         Operator(parentOp, target), wEI(_wEI), wFI(_wFI), Signed(_Signed), MSBO(_MSBO), LSBO(_LSBO),  trunc_p(_trunc_p) {
 
       int MSB=MSBO;
       int LSB=LSBO;
-      Shifter*FXP_shifter;
-      IntAdder* Exponent_difference;
 
       ostringstream name;
 
@@ -90,8 +88,8 @@ namespace flopoco{
       vhdl << tab << declare("fA0",wFI+1) << " <= \"1\" & I" << range(wFI-1, 0)<<";"<<endl;
       mpz_class bias;
       bias = eMax - 1;
+#if 0 // was overkill
       vhdl << tab << declare("bias",wEI) << " <= not conv_std_logic_vector(" << bias << ", "<< wEI<<");"<<endl;
-
       Exponent_difference = new IntAdder(this, target, wEI);
       Exponent_difference->changeName(getName()+"Exponent_difference");
       inPortMap  (Exponent_difference, "X", "bias");
@@ -99,29 +97,24 @@ namespace flopoco{
       inPortMapCst(Exponent_difference, "Cin", "'1'");
       outPortMap (Exponent_difference, "R","eA1");
       vhdl << instance(Exponent_difference, "Exponent_difference");
+#else
+      vhdl << tab << declare(getTarget()->adderDelay(wEI), "eA1", wEI) << " <= eA0 - conv_std_logic_vector(" << bias << ", "<< wEI<<");"<<endl;
+#endif
+			
       
-      setCycleFromSignal("eA1");
-      setCriticalPath(Exponent_difference->getOutputDelay("R"));
-
-      
-      manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
       int wShiftIn = intlog2(wFO0+2);
       if(wShiftIn < wEI)
         vhdl << tab << declare("shiftedby", wShiftIn) <<  " <= eA1" << range(wShiftIn-1, 0)                 << " when eA1" << of(wEI-1) << " = '0' else " << rangeAssign(wShiftIn-1,0,"'0'") << ";"<<endl;
       else
         vhdl << tab << declare("shiftedby", wShiftIn) <<  " <= " << rangeAssign(wShiftIn-wEI,0,"'0'") << " & eA1 when eA1" << of(wEI-1) << " = '0' else " << rangeAssign(wShiftIn-1,0,"'0'") << ";"<<endl;
 
-      //FXP shifter mappings
-      FXP_shifter = new Shifter(this, target, wFI+1, wFO0+2, Shifter::Left);
-
-      inPortMap (FXP_shifter, "X", "fA0");
-      inPortMap (FXP_shifter, "S", "shiftedby");
-      outPortMap (FXP_shifter, "R", "fA1");
-      vhdl << instance(FXP_shifter, "FXP_shifter");
-
-      syncCycleFromSignal("fA1");
-      setCriticalPath(FXP_shifter->getOutputDelay("R"));
-
+      //FXP shifter
+			newInstance("Shifter",
+									"FXP_shifter",
+									"wIn=" + to_string(wFI+1) + " maxShift=" + to_string(wFO0+2) + " dir=0",
+									"X=>fA0,S=>shiftedby",
+									"R=>fA1");
+			
       if(trunc_p)
       {
          if(!Signed)
@@ -131,46 +124,33 @@ namespace flopoco{
          else
          {
             vhdl << tab << declare("fA2",wFO) <<  "<= fA1" << range(wFO0+wFI+LSB, wFI+1+LSB)<< ";"<<endl;
-            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wFO));
-            vhdl << tab << declare("fA4",wFO) <<  "<= fA2 when I" << of(wEI+wFI) <<" = '0' else -signed(fA2);" <<endl;
+            vhdl << tab << declare(getTarget()->adderDelay(wFO),  "fA4",wFO) <<  "<= fA2 when I" << of(wEI+wFI) <<" = '0' else -signed(fA2);" <<endl;
          }
       }
       else
       {
          vhdl << tab << declare("fA2a",wFO+1) <<  "<= '0' & fA1" << range(wFO0+wFI+LSB, wFI+1+LSB)<< ";"<<endl;
-         IntAdder* MantSum;
          if(!Signed)
          {
-            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-            vhdl << tab << declare("notallzero") << " <= '0' when fA1" << range(wFI+LSB-1, 0) << " = " << rangeAssign(wFI+LSB-1, 0,"'0'") << " else '1';"<<endl;
-            vhdl << tab << declare("round") << " <= fA1" << of(wFI+LSB) << " and notallzero ;"<<endl;
+            vhdl << tab << declare(getTarget()->logicDelay(), "notallzero") << " <= '0' when fA1" << range(wFI+LSB-1, 0) << " = " << rangeAssign(wFI+LSB-1, 0,"'0'") << " else '1';"<<endl;
+            vhdl << tab << declare(getTarget()->logicDelay(), "round") << " <= fA1" << of(wFI+LSB) << " and notallzero ;"<<endl;
          }
          else
          {
-            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-            vhdl << tab << declare("notallzero") << " <= '0' when fA1" << range(wFI+LSB-1, 0) << " = " << rangeAssign(wFI+LSB-1, 0,"'0'") << " else '1';"<<endl;
+            vhdl << tab << declare(getTarget()->logicDelay(), "notallzero") << " <= '0' when fA1" << range(wFI+LSB-1, 0) << " = " << rangeAssign(wFI+LSB-1, 0,"'0'") << " else '1';"<<endl;
             vhdl << tab << declare("round") << " <= (fA1" << of(wFI+LSB) << " and I" << of(wEI+wFI) << ") or (fA1" << of(wFI+LSB) << " and notallzero and not I" << of(wEI+wFI) << ");"<<endl;
          }   
          vhdl << tab << declare("fA2b",wFO+1) <<  "<= '0' & " << rangeAssign(wFO-1,1,"'0'") << " & round;"<<endl;
-         MantSum = new IntAdder(this, target, wFO+1);
-         MantSum->changeName(getName()+"MantSum");
-         inPortMap  (MantSum, "X", "fA2a");
-         inPortMap  (MantSum, "Y", "fA2b");
-         inPortMapCst(MantSum, "Cin", "'0'");
-         outPortMap (MantSum, "R","fA3");
-         vhdl << instance(MantSum, "MantSum");
-         setCycleFromSignal("fA3");
-         setCriticalPath(MantSum->getOutputDelay("R"));
-         if(!Signed)
+				 newInstance("IntAdder", "fracAdder", "wIn="+to_string(wFO+1), "X=>fA2a,Y=>fA2b", "R=fA3>", "Cin=>'1'");
+
+				 if(!Signed)
          {
             vhdl << tab << declare("fA4",wFO) <<  "<= fA3" << range(wFO-1, 0)<< ";"<<endl;
          }
          else
          {
-            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wFO+1));
-            vhdl << tab << declare("fA3b",wFO+1) <<  "<= -signed(fA3);" <<endl;
-            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-            vhdl << tab << declare("fA4",wFO) <<  "<= fA3" << range(wFO-1, 0) << " when I" << of(wEI+wFI) <<" = '0' else fA3b" << range(wFO-1, 0) << ";" <<endl;
+            vhdl << tab << declare(getTarget()->adderDelay(wFO+1), "fA3b",wFO+1) <<  "<= -signed(fA3);" <<endl;
+            vhdl << tab << declare(getTarget()->logicDelay(),  "fA4",wFO) <<  "<= fA3" << range(wFO-1, 0) << " when I" << of(wEI+wFI) <<" = '0' else fA3b" << range(wFO-1, 0) << ";" <<endl;
          }
       }
       if (eMax > MSB)
@@ -188,9 +168,8 @@ namespace flopoco{
             vhdl << tab << declare("overFl1") << " <= fA1" << of(wFO0+wFI+1+LSB) << ";"<<endl;
          else
          {
-            manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-            vhdl << tab << declare("notZeroTest") << " <= '1' when fA4 /= conv_std_logic_vector(0," << wFO <<")"<< " else '0';"<<endl;
-            vhdl << tab << declare("overFl1") << " <= (fA4" << of(wFO-1) << " xor I" << of(wEI+wFI) << ") and notZeroTest;"<<endl;
+					 vhdl << tab << declare(getTarget()->logicDelay(), "notZeroTest") << " <= '1' when fA4 /= conv_std_logic_vector(0," << wFO <<")"<< " else '0';"<<endl;
+					 vhdl << tab << declare(getTarget()->logicDelay(), "overFl1") << " <= (fA4" << of(wFO-1) << " xor I" << of(wEI+wFI) << ") and notZeroTest;"<<endl;
         }
       }
       else
@@ -198,10 +177,8 @@ namespace flopoco{
          vhdl << tab << declare("overFl1") << " <= fA3" << of(wFO) << ";"<<endl;
       }
 
-      manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-      vhdl << tab << declare("eTest") << " <= (overFl0 or overFl1);" << endl;
+      vhdl << tab << declare(getTarget()->logicDelay(), "eTest") << " <= (overFl0 or overFl1);" << endl;
 
-      manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
       vhdl << tab << "O <= fA4 when eTest = '0' else" << endl;
       vhdl << tab << tab << "I" << of(wEI+wFI) << " & (" << wFO-2 << " downto 0 => not I" << of(wEI+wFI) << ");"<<endl;
    }
@@ -283,7 +260,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "MSB", &MSB); 
 		UserInterface::parseInt(args, "LSB", &LSB); 
 		UserInterface::parseBoolean(args, "trunc", &trunc);
-		return new FP2Fix(target,  signedO, MSB, LSB, wE, wF, trunc);
+		return new FP2Fix(parentOp, target,  signedO, MSB, LSB, wE, wF, trunc);
 	}
 
 	void FP2Fix::registerFactory(){

@@ -382,49 +382,54 @@ namespace flopoco{
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
+		vector<string> functionList;
+		vector<int> msbOutList;
+		functionList.push_back("sin(x)");
+		msbOutList.push_back(1); 
+		functionList.push_back("exp(x)");
+		msbOutList.push_back(3);
+		functionList.push_back("log(x+1)");
+		msbOutList.push_back(2);
+		functionList.push_back("tanh(4*x)");
+		msbOutList.push_back(1);
+
 		vector<pair<string,string>> paramList;
-		
 		if(index==-1) 
-		{ // The unit tests
-			// A few regression tests, first deg2, exhaustive on 15 bits, then deg 3 for 24 bits 
-			paramList.push_back(make_pair("f","\"sin(x)\""));
-			paramList.push_back(make_pair("plainVHDL","true"));
-			paramList.push_back(make_pair("lsbIn","-15"));
-			paramList.push_back(make_pair("msbOut","4"));
-			paramList.push_back(make_pair("lsbOut","-15"));
-			paramList.push_back(make_pair("d","3"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
+			{ // The unit tests
+				for (size_t i=0; i<functionList.size(); i++) {
+					// first deg 2 and 3, 15 bits, exhaustive test, then deg 5 for 25 bits 
+					string f = functionList[i];
+					int msbOut = msbOutList[i];
+					paramList.push_back(make_pair("f","\"" + f + "\""));
+					paramList.push_back(make_pair("plainVHDL","true"));
+					paramList.push_back(make_pair("msbOut",to_string(msbOut)));
+					paramList.push_back(make_pair("lsbOut","-15"));
+					paramList.push_back(make_pair("lsbIn","-15"));
+					paramList.push_back(make_pair("d","2"));
+					paramList.push_back(make_pair("TestBench n=","-2"));
+					testStateList.push_back(paramList);
+					paramList.clear();
 
-			paramList.push_back(make_pair("f","\"sin(x)\""));
-			paramList.push_back(make_pair("plainVHDL","true"));
-			paramList.push_back(make_pair("lsbIn","-25"));
-			paramList.push_back(make_pair("msbOut","4"));
-			paramList.push_back(make_pair("lsbOut","-25"));
-			paramList.push_back(make_pair("d","5"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-			
-			paramList.push_back(make_pair("f","\"exp(x)\""));
-			paramList.push_back(make_pair("plainVHDL","true"));
-			paramList.push_back(make_pair("lsbIn","-16"));
-			paramList.push_back(make_pair("lsbOut","-16"));
-			paramList.push_back(make_pair("msbOut","4"));
-			paramList.push_back(make_pair("d","2"));
-			paramList.push_back(make_pair("TestBench n=","-2"));
-			testStateList.push_back(paramList);
-			paramList.clear();
-		 
-			paramList.push_back(make_pair("f","\"exp(x)\""));
-			paramList.push_back(make_pair("plainVHDL","true"));
-			paramList.push_back(make_pair("lsbIn","-26"));
-			paramList.push_back(make_pair("lsbOut","-26"));
-			paramList.push_back(make_pair("msbOut","4"));
-			paramList.push_back(make_pair("d","4"));
-			testStateList.push_back(paramList);
+					paramList.push_back(make_pair("f","\"" + f + "\""));
+					paramList.push_back(make_pair("plainVHDL","true"));
+					paramList.push_back(make_pair("msbOut",to_string(msbOut)));
+					paramList.push_back(make_pair("lsbOut","-15"));
+					paramList.push_back(make_pair("lsbIn","-15"));
+					paramList.push_back(make_pair("d","2"));
+					paramList.push_back(make_pair("TestBench n=","-2"));
+					testStateList.push_back(paramList);
+					paramList.clear();
 
-		}
+					paramList.push_back(make_pair("f","\"" + f + "\""));
+					paramList.push_back(make_pair("plainVHDL","true"));
+					paramList.push_back(make_pair("msbOut",to_string(msbOut)));
+					paramList.push_back(make_pair("lsbOut","-25"));
+					paramList.push_back(make_pair("lsbIn","-25"));
+					paramList.push_back(make_pair("d","5"));
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
+			}
 		else     
 		{
 				// finite number of random test computed out of index
