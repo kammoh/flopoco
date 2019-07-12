@@ -64,12 +64,12 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			return (verticeLen * (verticeLen + 1)) >> 1;
 		} else if (curOffset > xdim - 1) {
 			// Skip uneeded empty rows
-			int deltaY = curOffset - xdim;
+			int deltaY = curOffset - (xdim - 1);
 			ytop += deltaY;
 			ydim -= deltaY;
 		} else if (curOffset > ydim - 1) {
 			// Skip uneeded empty cols
-			int deltaX = curOffset - ydim;
+			int deltaX = curOffset - (ydim- 1);
 			xright += deltaX;
 			xdim -= deltaX;
 		}
