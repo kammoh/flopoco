@@ -62,3 +62,6 @@ PositAdd
 PIF2Fix
 PositExp
 PositFunctionByTable
+Posit2Posit
+
+FixFunctionByVaryingPiecewisePoly

@@ -137,3 +137,7 @@ Posit/Exp/PIF2Fix
 Posit/Exp/PositExp
 Posit/Fun/PositFunction
 Posit/Fun/PositFunctionByTable
+Posit/Posit2Posit
+
+FixFunctions/VaryingPiecewisePolyApprox
+FixFunctions/FixFunctionByVaryingPiecewisePoly
