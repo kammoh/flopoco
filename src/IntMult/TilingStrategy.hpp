@@ -13,7 +13,7 @@ class TilingStrategy {
 public:
 	typedef pair<int, int> multiplier_coordinates_t;
 	typedef pair<BaseMultiplierCategory::Parametrization, multiplier_coordinates_t> mult_tile_t;
-	TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection* baseMultiplierCollection);
+	TilingStrategy(unsigned int wX, unsigned int wY, unsigned int wOut, bool signedIO, BaseMultiplierCollection* baseMultiplierCollection);
 
 	virtual void solve() = 0;
 	void printSolution();
@@ -35,9 +35,9 @@ protected:
 	 */
 	list<mult_tile_t> solution;
 
-	int wX;                         /**< the width for X after possible swap such that wX>wY */
-	int wY;                         /**< the width for Y after possible swap such that wX>wY */
-	int wOut;                       /**< size of the output, to be used only in the standalone constructor and emulate.  */
+	unsigned int wX;                         /**< the width for X after possible swap such that wX>wY */
+	unsigned int wY;                         /**< the width for Y after possible swap such that wX>wY */
+	unsigned int wOut;                       /**< size of the output, to be used only in the standalone constructor and emulate.  */
 	bool signedIO;                   /**< true if the IOs are two's complement */
 
 	BaseMultiplierCollection* baseMultiplierCollection;

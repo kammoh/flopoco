@@ -8,9 +8,9 @@ namespace flopoco {
 class TilingStrategyBasicTiling : public TilingStrategy {
 	public:
 		TilingStrategyBasicTiling(
-				int wX,
-				int wY,
-				int wOut,
+				unsigned int wX,
+				unsigned int wY,
+				unsigned int wOut,
 				bool signedIO,
 				BaseMultiplierCollection* bmc,
 				base_multiplier_id_t prefered_multiplier);
@@ -29,7 +29,8 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		int shrinkBox(int& xright, int& ytop, int& xdim, int& ydim, int offset);
 
 
-		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, int offset, int curArea);
+		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, int offset);
+
 		base_multiplier_id_t prefered_multiplier_;
 		base_multiplier_id_t small_tile_mult_;
 		size_t numUsedMults_;

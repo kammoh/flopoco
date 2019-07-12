@@ -4,7 +4,7 @@
 namespace flopoco {
 
 
-TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection *baseMultiplierCollection) :
+TilingStrategy::TilingStrategy(unsigned wX, unsigned int wY, unsigned int wOut, bool signedIO, BaseMultiplierCollection *baseMultiplierCollection) :
 	wX(wX), wY(wY), wOut(wOut), signedIO(signedIO), baseMultiplierCollection(baseMultiplierCollection)
 {
 }

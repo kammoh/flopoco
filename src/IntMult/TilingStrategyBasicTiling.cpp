@@ -6,9 +6,9 @@
 using namespace std;
 namespace flopoco {
 TilingStrategyBasicTiling::TilingStrategyBasicTiling(
-		int wX_,
-		int wY_,
-		int wOut_,
+		unsigned int wX_,
+		unsigned int wY_,
+		unsigned int wOut_,
 		bool signedIO_,
 		BaseMultiplierCollection* bmc,
 		base_multiplier_id_t prefered_multiplier):TilingStrategy(
@@ -84,8 +84,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int curY,
 			int curDeltaX,
 			int curDeltaY,
-			int offset,
-			int curArea
+			int offset
 		) 
 	{
 		auto& bmc = baseMultiplierCollection->getBaseMultiplier(small_tile_mult_);
@@ -201,8 +200,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						yStartUpDownbox, 
 						deltaXUpDownbox, 
 						deltaYUpDownbox,
-						offset,
-						subboxArea
+						offset
 					);
 			}
 		}
@@ -232,8 +230,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						yStartUpDownbox, 
 						deltaXUpDownbox, 
 						deltaYUpDownbox,
-						offset,
-						subboxArea
+						offset
 					);
 			}
 		}
@@ -277,11 +274,20 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 			while (curY < wY) {
 				curX = wX - 1;
+				bool isYSigned = ((static_cast<unsigned int>(curY + wYmult)) >= wY) and signedIO;
 				while(curX >= 0) {
-					int rightX = curX - wXmult + 1;
-					int topY = curY;
 					int curDeltaX = wXmult;
 					int curDeltaY = wYmult;
+					bool isXSigned = ((static_cast<unsigned int>(curX + wXmult)) >= wX) and signedIO;
+
+					if (isYSigned)
+						curDeltaY += deltaWidthSigned;
+					if (isXSigned)
+						curDeltaX += deltaWidthSigned;
+
+					int rightX = curX - curDeltaX + 1;
+					int topY = curY;
+
 					int area = shrinkBox(rightX, topY, curDeltaX, curDeltaY, offset);
 					if (area == 0) { // All the box is below the line cut
 						break;
@@ -293,19 +299,23 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						auto param = bm.parametrize(
 								curDeltaX, 
 								curDeltaY, 
-								false,
-								false										
+								isXSigned,
+								isYSigned
 							);
 						auto coords = make_pair(rightX, topY);
 						solution.push_back(make_pair(param, coords));
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
-						tileBox(rightX, topY, curDeltaX, curDeltaY, offset, area);
+						tileBox(rightX, topY, curDeltaX, curDeltaY, offset);
 					}
 					curX -= wXmult;
+					if (isXSigned)
+						curX -= deltaWidthSigned;
 				}
 				curY += wYmult;
+				if (isYSigned)
+					curY += deltaWidthSigned;
 			}
 
 		} else {
@@ -355,7 +365,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
-						tileBox(rightX, topY, curDeltaX, curDeltaY, 0, area);
+						tileBox(rightX, topY, curDeltaX, curDeltaY, 0);
 					}
 					curX += wXmult;
 					if ((untilEndRow <= deltaWidthSigned) and signedIO) {

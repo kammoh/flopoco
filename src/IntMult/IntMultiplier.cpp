@@ -39,7 +39,7 @@ namespace flopoco {
 	 * @param wY size of the second input
 	 * @return the number of bits needed to store a product of I<wX> * I<WY>
 	 */
-	inline unsigned int IntMultiplier::prodsize(unsigned int wX, unsigned int wY)
+	unsigned int IntMultiplier::prodsize(unsigned int wX, unsigned int wY)
 	{
 		if(wX == 0 || wY == 0)
 			return 0;
@@ -144,6 +144,10 @@ namespace flopoco {
 		schedule();
 
 		branchToBitheap(&bitHeap, solution, prodsize(wX, wY) - (wOut + guardBits));
+
+		if (guardBits > 0) {
+			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
+		}
 
 		bitHeap.startCompression();
 
