@@ -48,20 +48,27 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		}
 
 		int curOffset = offset - xright - ytop;
-		if (curOffset > xdim && curOffset > ydim) {
+
+		// If we are completely in the truncated part
+		if (curOffset >= (xdim + ydim - 2)) {
 			xright = ytop = -1;
 			xdim = ydim = 0;
 			return 0;
 		}
-
-		// Skip uneeded empty rows and columns
-		if (curOffset > xdim) {
+		// Case where both the dimension have to be shrinked
+		if (curOffset > xdim - 1 && curOffset > ydim - 1) {
+			int verticeLen = (xdim + ydim) - curOffset;
+			xright = xright + xdim - verticeLen;
+			ytop = ytop + ydim - verticeLen;
+			xdim = ydim = verticeLen;
+			return (verticeLen * (verticeLen + 1)) >> 1;
+		} else if (curOffset > xdim - 1) {
+			// Skip uneeded empty rows
 			int deltaY = curOffset - xdim;
 			ytop += deltaY;
 			ydim -= deltaY;
-		}
-
-		if (curOffset > ydim) {
+		} else if (curOffset > ydim - 1) {
+			// Skip uneeded empty cols
 			int deltaX = curOffset - ydim;
 			xright += deltaX;
 			xdim -= deltaX;
@@ -261,7 +268,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		if (truncated) {
 			//Perform tiling from left to right to increase the number of full
 			//multipliers	
-			int offset = wX + wY - wOut;
+			int offset = IntMultiplier::prodsize(wX, wY) - wOut;
 			int curX = wX - 1;
 			int curY = 0;
 			if (curX < offset) {
@@ -269,9 +276,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			}
 
 			while (curY < wY) {
-				curX = wX - 1;	
+				curX = wX - 1;
 				while(curX >= 0) {
-					int rightX = curX - wXmult;
+					int rightX = curX - wXmult + 1;
 					int topY = curY;
 					int curDeltaX = wXmult;
 					int curDeltaY = wYmult;

@@ -1,4 +1,5 @@
 #include "IntMult/TilingStrategy.hpp"
+#include "IntMultiplier.hpp"
 
 namespace flopoco {
 
@@ -36,14 +37,30 @@ void TilingStrategy::printSolutionTeX(ofstream &outstream)
         auto& coordinates = tile.second;
 		int xstart = coordinates.first + coordinates.second;
         int ystart = coordinates.second;
-        int xend = xstart + static_cast<int>(parametrization.getTileXWordSize());
-        int yend = ystart + static_cast<int>(parametrization.getTileYWordSize());
+		int xend = xstart + static_cast<int>(parametrization.getTileXWordSize());
+		int yend = ystart + static_cast<int>(parametrization.getTileYWordSize());
 		int deltaY = static_cast<int>(parametrization.getTileYWordSize());
 		string color = (parametrization.isSignedMultX() || parametrization.isSignedMultY()) ? "red" : "blue";
 		outstream << "\\draw[fill="<< color <<", fill opacity=0.3] (" << xstart << ", " << ystart << ") -- (" <<
 					 xend << ", " << ystart << ") -- ("<< xend + deltaY <<", "<< yend<<") -- ("<< xstart + deltaY <<", "<< yend <<")--cycle;\n";
-        cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
+		cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
     }
+
+	int offset = IntMultiplier::prodsize(wX, wY) - wOut;
+
+	if (wOut < IntMultiplier::prodsize(wX, wY)) {
+		float startY = (wX < offset) ? (offset - wX) + 0.5  : 0;
+		float endY =  (offset > wY) ? wY : offset + 0.5;
+		outstream << "\\draw[ultra thick, green] (" << offset << ".5, " << startY << ") -- (" << offset << ".5, " << endY << ");" << endl;
+	}
+
+	for (size_t i = 0 ; i < static_cast<size_t>(wX) ; ++i) {
+		for (size_t j = 0 ; j < static_cast<size_t>(wY) ; ++j) {
+		string color = (j+i >= offset) ? "black" : "purple";
+		outstream << "\\fill["<< color <<"] ("<<(j+i + 1)<<", " << j <<".5) circle (0.125);\n";
+		}
+	}
+
 	outstream << "\\draw[red, thick] (0, 0) -- ("<< wX << ", 0) -- ("<<(wX+wY) <<", " << wY<<") -- ("<< wY << ", " << wY <<") -- cycle;\n";
     outstream << "\\end{tikzpicture}\n\\end{document}\n";
 }

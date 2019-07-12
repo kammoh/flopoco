@@ -26,7 +26,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 
 	addInput("X", wX);
 	addInput("Y", wY);
-	addInput("R", wR);
+	addInput("O", wR);
 
 	vector<mpz_class> val;
 	for (int yx=0; yx < 1<<(wX+wY); yx++)
@@ -40,7 +40,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	vhdl << declare(0.0,"Xtable",wX+wY) << " <= X & Y;" << endl;
 
 	inPortMap(op, "X", "Xtable");
-	outPortMap(op, "Y", "R");
+	outPortMap(op, "Y", "O");
 	vhdl << instance(op, "TableMult");
 }
 
@@ -108,7 +108,7 @@ void IntMultiplierLUT::emulate(TestCase* tc)
 	mpz_class svX = tc->getInputValue("X");
 	mpz_class svY = tc->getInputValue("Y");
 	mpz_class svR = svX * svY;
-	tc->addExpectedOutput("R", svR);
+	tc->addExpectedOutput("O", svR);
 }
 
 TestList IntMultiplierLUT::unitTest(int index)

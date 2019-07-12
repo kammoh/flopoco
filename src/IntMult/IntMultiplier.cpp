@@ -163,7 +163,7 @@ namespace flopoco {
 		errorBudget -= 1;
 
 		unsigned int nbUnneeded;
-		for (nbUnneeded = 1 ; nbUnneeded < nbDontCare ; nbUnneeded += 1) {
+		for (nbUnneeded = 1 ; nbUnneeded <= nbDontCare ; nbUnneeded += 1) {
 			unsigned int bitAtCurCol;
 			if (nbUnneeded < minW) {
 				bitAtCurCol = nbUnneeded;
