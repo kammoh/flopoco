@@ -125,7 +125,7 @@ namespace flopoco{
 		}
 		else{
 			// TODO: check that the number fits its new size, and bork otherwise.
-			throw(string("FixConstant::changeMSB: sorry Dave, can't do that, it reduces the size thus changing the constant"));
+			throw(string("FixConstant::changeMSB: sorry Dave, can't do that, it reduces the size thus changing the constant.\n  Debug info: constant before changeMSB is "+report() + "     newMSB=" +to_string(newMSB) ));
 		}
 	}
 
