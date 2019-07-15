@@ -118,7 +118,7 @@ namespace flopoco{
 
 	
 	void FixConstant::changeMSB(int newMSB){
-		if(newMSB>=MSB){
+		if(isZeroP || newMSB>=MSB){
 			MSB = newMSB;
 			width = (MSB-LSB+1);
 			// Nothing else to do! the new size includes the old one
@@ -132,7 +132,7 @@ namespace flopoco{
 	
 	void FixConstant::changeLSB(int newLSB){
 		//throw("FixConstant::changeLSB: TODO");
-		if(newLSB<=LSB){
+		if(isZeroP || newLSB<=LSB){ // if it is zero, it may have any MSB
 			LSB = newLSB;
 			width = (MSB-LSB+1);
 			// Otherwise nothing to do! the new size includes the old one
