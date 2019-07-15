@@ -299,7 +299,7 @@ namespace flopoco{
 		mpfr_clear(maxpos);
 
 		int64_t normalRangeRL = exp / useedPower;
-		int64_t expShift = exp % useedPower;
+		int32_t expShift = exp % useedPower;
 
 		auto precision = mpfr_get_prec(mp);
 
@@ -326,12 +326,11 @@ namespace flopoco{
 
 		mpz_class exactCoding = constructRange(normalRangeRL) << (eS_);
 		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared rangecoding=" << exactCoding.get_str(2));
-		exactCoding |= expShift;
+		exactCoding |= mpz_class(expShift);
 		DEBUG_OUT("PositNumber::operator=(mpfr_t): cleared rangecoding|expshift=" << exactCoding.get_str(2));
 		exactCoding <<= precision;
 		exactCoding |= mantissa_;
 		DEBUG_OUT("PositNumber::operator=(mpfr_t): exactCoding=" << exactCoding.get_str(2));
-
 		// We have already filtered the extreme range so we know we need an
 		// extra bit to store the range boundary inside the encoding
 		int totalWidth = precision + 2 + eS_ + abs(normalRangeRL);
