@@ -34,7 +34,7 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		base_multiplier_id_t prefered_multiplier_;
 		base_multiplier_id_t small_tile_mult_;
 		size_t numUsedMults_;
-		float occupation_threshold=0.; //TODO replace by flopoco command line option value
+		float occupation_threshold=0.9; //TODO replace by flopoco command line option value
 		bool truncated;
 };
 

@@ -276,24 +276,43 @@ namespace flopoco {
 			ofname << "tile_" << i << "_filtered_output";
 
 			bool signedCase = (parameters.isSignedMultX() || parameters.isSignedMultY());
+			bool onlyOneSigned = parameters.isSignedMultX() xor parameters.isSignedMultY();
+			bool isOneByOne = (parameters.getMultXWordSize() == 1) and (parameters.getMultYWordSize() == 1);
 
 			vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
 					range(toSkip + tokeep - 1, toSkip) << ";" << endl;
 
-			if (signedCase and tokeep >= 2) {
+			bool isXSizeOneAndSigned = (parameters.getMultXWordSize() == 1) and parameters.isSignedMultX();
+			bool isYSizeOneAndSigned = (parameters.getMultYWordSize() == 1) and parameters.isSignedMultY();
+
+			bool subtractAll = (isXSizeOneAndSigned and not parameters.isSignedMultY()) or
+								(isYSizeOneAndSigned and not parameters.isSignedMultX());
+
+			bool subtractPart = (isXSizeOneAndSigned or isYSizeOneAndSigned) and not subtractAll;
+
+			bool split = tokeep >= 2 and (subtractPart or (not subtractAll and signedCase));
+
+			if (split) {
 				oname.str("");
 				oname << ofname.str() <<  "_low";
 				vhdl << declare(.0, oname.str(), tokeep - 1) << " <= " << ofname.str() <<
 						range(tokeep - 2, 0) << ";" << endl;
-				bitheap->addSignal(oname.str(), bitHeapOffset);
+				if (subtractPart) {
+					bitheap->subtractSignal(oname.str(), bitHeapOffset);
+				} else {
+					bitheap->addSignal(oname.str(), bitHeapOffset);
+				}
 
 				oname.str("");
 				oname << ofname.str() <<  "_sign";
 				vhdl << declare(.0, oname.str(), 1) << " <= " << ofname.str() << range(tokeep - 1, tokeep-1) << ";" << endl;
-
-				bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
+				if (subtractPart) {
+					bitheap->addSignal(oname.str(), bitHeapOffset + tokeep - 1);
+				} else {
+					bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
+				}
 			} else {
-				if(signedCase) {
+				if(onlyOneSigned or subtractAll) {
 					bitheap->subtractSignal(ofname.str(), bitHeapOffset);
 				} else {
 					bitheap->addSignal(ofname.str(), bitHeapOffset);

@@ -47,6 +47,46 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			ytop = 0;
 		}
 
+		// If all the the bits in the box are kept
+		if (xright + ytop >= offset) {
+			return xdim * ydim;
+		}
+
+		// If there is only truncated out bits in the box
+		if (xright + xdim + ytop + ydim - 2 < offset) {
+			xright = ytop = -1;
+			xdim = ydim = 0;
+			return 0;
+		}
+
+		int xinterLowRight = xright;
+		int yinterLowRight = offset - xright;
+
+		int yinterUpLeft = ytop;
+		int xinterUpLeft = offset - ytop;
+
+		if (yinterLowRight > ytop + ydim - 1) {
+			xinterLowRight += yinterLowRight - (ytop + ydim - 1);
+			yinterLowRight = ytop + ydim - 1;
+		}
+
+		if (xinterUpLeft > xright + xdim - 1) {
+			yinterUpLeft += xinterUpLeft - (xright + xdim - 1);
+			xinterUpLeft = xright + xdim - 1;
+		}
+
+		xdim -= (xinterLowRight - xright);
+		ydim -= (yinterUpLeft - ytop);
+		xright = xinterLowRight;
+		ytop = yinterUpLeft;
+
+		int untruncatedAreaFromTop = (xright + xdim - 1 - xinterUpLeft) * ydim;
+		int untruncatedAreaLowRight = (xinterUpLeft + 1 - xright) * (ytop + ydim - 1 - yinterLowRight);
+		int truncationTriangleDiag = (xinterUpLeft + 1 - xright);
+		int truncatedArea = (truncationTriangleDiag * (truncationTriangleDiag + 1)) / 2;
+
+		return truncatedArea + untruncatedAreaFromTop + untruncatedAreaLowRight;
+
 		int curOffset = offset - xright - ytop;
 
 		// If we are completely in the truncated part
