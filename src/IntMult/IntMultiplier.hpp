@@ -105,7 +105,7 @@ namespace flopoco {
 		 */
 		unsigned int computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut);
 
-        /*!
+		/**
          * add a unique identifier for the multiplier, and possibly for the block inside the multiplier
          */
         string addUID(string name, int blockUID=-1);

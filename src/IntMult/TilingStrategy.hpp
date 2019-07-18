@@ -17,7 +17,7 @@ public:
 
 	virtual void solve() = 0;
 	void printSolution();
-	void printSolutionTeX(ofstream &outstream);
+	void printSolutionTeX(ofstream &outstream, int wTrunc = 0);
 
 	list<mult_tile_t>& getSolution()
 	{

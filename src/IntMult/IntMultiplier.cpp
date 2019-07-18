@@ -68,6 +68,7 @@ namespace flopoco {
 
         multiplierUid=parentOp->getNewUId();
 		wFullP = prodsize(wX, wY);
+		bool needCentering;
 
 		if(wOut == 0)
 			wOut = prodsize(wX, wY);
@@ -136,7 +137,7 @@ namespace flopoco {
             if((texfile.rdstate() & ofstream::failbit) != 0) {
                 cerr << "Error when opening multiplier.tex file for output. Will not print tiling configuration." << endl;
             } else {
-				tilingStrategy.printSolutionTeX(texfile);
+				tilingStrategy.printSolutionTeX(texfile, wOut);
                 texfile.close();
             }
         }
@@ -163,7 +164,7 @@ namespace flopoco {
 		auto nbDontCare = ps - wOut;
 
 		mpz_class errorBudget{1};
-		errorBudget <<= nbDontCare;
+		errorBudget <<= (nbDontCare >= 1) ? nbDontCare - 1 : 0;
 		errorBudget -= 1;
 
 		REPORT(DEBUG, "computeGuardBits: error budget is " << errorBudget.get_str())
@@ -186,8 +187,9 @@ namespace flopoco {
 
 			errorBudget -= currbitErrorAmount;
 			REPORT(DETAILED, "computeGuardBits: New error budget: " << errorBudget.get_str())
-			if(errorBudget < 0)
+			if(errorBudget < 0) {
 				break;
+			}
 		}
 		nbUnneeded -= 1;
 

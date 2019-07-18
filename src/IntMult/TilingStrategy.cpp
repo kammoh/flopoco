@@ -21,7 +21,7 @@ void TilingStrategy::printSolution()
 
 }
 
-void TilingStrategy::printSolutionTeX(ofstream &outstream)
+void TilingStrategy::printSolutionTeX(ofstream &outstream, int wTrunc)
 {
     cerr << "Dumping multiplier schema in multiplier.tex\n";
     outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";
@@ -48,10 +48,17 @@ void TilingStrategy::printSolutionTeX(ofstream &outstream)
 
 	int offset = IntMultiplier::prodsize(wX, wY) - wOut;
 
-	if (wOut < IntMultiplier::prodsize(wX, wY)) {
-		float startY = (wX < offset) ? (offset - wX) + 0.5  : 0;
-		float endY =  (offset > wY) ? wY : offset + 0.5;
+	if (offset > 0) {
+		float startY = (wX <= offset) ? (offset - wX) + 0.5  : 0;
+		float endY =  (offset >= wY) ? wY : offset + 0.5;
 		outstream << "\\draw[ultra thick, green] (" << offset << ".5, " << startY << ") -- (" << offset << ".5, " << endY << ");" << endl;
+	}
+
+	if (wTrunc > offset) {
+		int truncOffset = IntMultiplier::prodsize(wX, wY) - wTrunc;
+		float startY = (wX <= truncOffset) ? (truncOffset - wX) + 0.5  : 0;
+		float endY =  (truncOffset >= wY) ? wY : truncOffset + 0.5;
+		outstream << "\\draw[ultra thick, brown] (" << truncOffset << ".5, " << startY << ") -- (" << truncOffset << ".5, " << endY << ");" << endl;
 	}
 
 	for (size_t i = 0 ; i < static_cast<size_t>(wX) ; ++i) {
