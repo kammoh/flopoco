@@ -128,7 +128,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		) 
 	{
 		auto& bmc = baseMultiplierCollection->getBaseMultiplier(small_tile_mult_);
-		bool canOverflowLeft = not truncated and not signedIO;
+		bool canOverflowLeft = not truncated and not signedIO and (curX + curDeltaX) >= wX;
 		bool canOverflowRight = false;
 		bool canOverflowTop = (curY == 0);
 		bool canOverflowBottom = false;

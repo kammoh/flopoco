@@ -166,6 +166,8 @@ namespace flopoco {
 		errorBudget <<= nbDontCare;
 		errorBudget -= 1;
 
+		REPORT(DEBUG, "computeGuardBits: error budget is " << errorBudget.get_str())
+
 		unsigned int nbUnneeded;
 		for (nbUnneeded = 1 ; nbUnneeded <= nbDontCare ; nbUnneeded += 1) {
 			unsigned int bitAtCurCol;
@@ -176,10 +178,14 @@ namespace flopoco {
 			} else {
 				bitAtCurCol = ps -nbUnneeded;
 			}
-			REPORT(DETAILED, "IntMultiplier::computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
+			REPORT(DETAILED, "computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
 			mpz_class currbitErrorAmount{bitAtCurCol};
 			currbitErrorAmount <<= (nbUnneeded - 1);
+
+			REPORT(DETAILED, "computeGuardBits: Local error for column " << nbUnneeded << " : " << currbitErrorAmount.get_str())
+
 			errorBudget -= currbitErrorAmount;
+			REPORT(DETAILED, "computeGuardBits: New error budget: " << errorBudget.get_str())
 			if(errorBudget < 0)
 				break;
 		}
