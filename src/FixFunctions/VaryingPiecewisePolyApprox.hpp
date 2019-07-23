@@ -28,12 +28,12 @@ namespace flopoco{
 		/**
 		 * A minimal constructor
 		 */
-	  VaryingPiecewisePolyApprox(FixFunction* f, double targetAccuracy, int lsbIn);
+	  VaryingPiecewisePolyApprox(FixFunction* f, double targetAccuracy, int lsbIn, int msbOut, int lsbOut);
 
 		/**
 		 * A minimal constructor that parses a sollya string
 		 */
-	  VaryingPiecewisePolyApprox(string sollyaString, double targetAccuracy, int lsbIn);
+	  VaryingPiecewisePolyApprox(string sollyaString, double targetAccuracy, int lsbIn, int msbOut, int lsbOut);
 
 		virtual ~VaryingPiecewisePolyApprox();
 
@@ -51,7 +51,6 @@ namespace flopoco{
 		 */
 		void build();
 
-	        int lsbIn;
 	        bool tabulateRest; 
 	        int nbInterval;                   /**< the total number of intervals the domain is split into */
 		int degree;                        /**< degree of the polynomial approximations */
@@ -99,7 +98,9 @@ namespace flopoco{
 		 */
 		void createPolynomialsReport();
 
-
+	        int lsbIn;
+	        int msbOut;
+	        int lsbOut;
 		FixFunction *f;                    /**< The function to be approximated */
 		double targetAccuracy;             /**< please build an approximation at least as accurate as that */
 

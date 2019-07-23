@@ -70,6 +70,10 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 			THROWERROR("FinalRounding=false not implemented yet" );
 		}
 
+		if(lsbIn>=-7){
+			THROWERROR("Just tabulate it, x is small enough" );
+		}
+
 		f=new FixFunction(func, false, lsbIn, msbOut, lsbOut); // this will provide emulate etc.
 		
 		srcFileName="FixFunctionByVaryingPiecewisePoly";
@@ -93,16 +97,12 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		// Build the polynomial approximation
 		double targetAcc= approxErrorBudget*pow(2, lsbOut);
 		REPORT(INFO, "Computing polynomial approximation for target accuracy "<< targetAcc);
-		polyApprox = new VaryingPiecewisePolyApprox(func, targetAcc, lsbIn);
+		polyApprox = new VaryingPiecewisePolyApprox(func, targetAcc, lsbIn, msbOut, lsbOut);
 		bool tabulateRest = polyApprox->tabulateRest;
 		degree = polyApprox->degree;
 		nbIntervals = polyApprox-> nbInterval;
 		alpha = intlog2(nbIntervals); // coeff table input size
-		
-		if (tabulateRest==true) {
-		  nbIntervals++; //parce que dans l'autre truc on avait fait en sorte que ce soit la taille de la table qui compte
-		}
-			
+	      			
 		// Resize its MSB to the one input by the user. 
 		for (int i=0; i<nbIntervals; i++) {
 		  polyApprox -> poly[i] -> coeff[0] -> changeMSB(msbOut);
@@ -117,6 +117,9 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		REPORT(INFO, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << polyApprox->approxErrorBound
 		       << " hence rounding error budget = "<< roundingErrorBudget );
 
+		if (tabulateRest==true) {
+		  nbIntervals++; //parce que dans l'autre truc on avait fait en sorte que ce soit la taille de la table qui compte
+		}
 		
 		// The VHDL that splits the input into A and Z
 		// here is the difference between Varying and not varying, the address comes out of LZC
@@ -159,8 +162,9 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		vhdl << tab << declare("Zs", wX-1)  << " <= (not Z" << of(wX-2) << ") & Z" << range(wX-3, 0) << "; -- centering the interval" << endl;
 
 		if (tabulateRest==true) {
+		  vhdl << declare("Zs_tab", 6)  << " <= Zs" << range(wX-2, wX-7) << ";" << endl;
 		  vector<mpz_class> TableContent = polyApprox->table;
-		  Table::newUniqueInstance(this, "Zs", "R_t",
+		  Table::newUniqueInstance(this, "Zs_tab", "R_t",
 					   TableContent,
 					   "LastIntervalTable",
 					   6, outputSize);
@@ -188,14 +192,12 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		  vhdl << "Coeffs" << range(currentShift + actualSize-1, currentShift) << ";" << endl;
 		  currentShift += actualSize;
 		}
-
 			
 		// What follows is related to Horner evaluator
 		// Here I wish I could plug other (more parallel) evaluators. 
 
 		//  compute the size of the intermediate terms sigma_i  (Horner-specific)  
 		computeSigmaSignsAndMSBs(); // TODO make it a method of FixHornerEvaluator?
-
 		// the previous has computed the min value of msbOut.
 		if(msbOut<sigmaMSB[0])
 		  REPORT(0, "WARNING: msbOut is set to " << msbOut << " but I compute that it should be " << sigmaMSB[0]);
@@ -297,7 +299,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 			coeffTableVector.push_back(z);
 		  }
 		  else {
-		    coeffTableVector.push_back(coeffTableVector.back());
+		    coeffTableVector.push_back(coeffTableVector.back()); //string(polyTableOutputSize,'-')
 		  }
 		}
 
@@ -323,7 +325,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 			sigmaSign.push_back(17); // 17 meaning "not initialized yet"
 		}
 		alpha = intlog2(polyApprox -> nbInterval);
-		for (int i=0; i<nbIntervals; i++){
+		for (int i=0; i< polyApprox -> nbInterval; i++){
 			// initialize the vectors with sigma_d = a_d
 			FixConstant* sigma = polyApprox -> poly[i] -> coeff[degree];
 			sollya_obj_t sigmaS = sollya_lib_constant(sigma -> fpValue);

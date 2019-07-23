@@ -20,7 +20,7 @@
 /*
 	 The function is assumed to have inputs in [0,1]
 
-	 Stylistic remark: use index i for the subintervals, and j for the degree -> j'ai fait n'importe quoi
+	 Stylistic remark: use index i for the subintervals, and j for the degree
 
 */
 #include "VaryingPiecewisePolyApprox.hpp"
@@ -30,8 +30,8 @@
 
 namespace flopoco {
 
-  VaryingPiecewisePolyApprox::VaryingPiecewisePolyApprox(FixFunction *f_, double targetAccuracy_, int lsbIn_):
-                f(f_), targetAccuracy(targetAccuracy_), lsbIn(lsbIn_)
+  VaryingPiecewisePolyApprox::VaryingPiecewisePolyApprox(FixFunction *f_, double targetAccuracy_, int lsbIn_, int msbOut_, int lsbOut_):
+                f(f_), targetAccuracy(targetAccuracy_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_)
 	{
 	        degree = 0;
 		needToFreeF = false;
@@ -40,8 +40,8 @@ namespace flopoco {
 	}
 
 
-  VaryingPiecewisePolyApprox::VaryingPiecewisePolyApprox(string sollyaString_, double targetAccuracy_, int lsbIn_):
-	        lsbIn(lsbIn_), targetAccuracy(targetAccuracy_)
+  VaryingPiecewisePolyApprox::VaryingPiecewisePolyApprox(string sollyaString_, double targetAccuracy_, int lsbIn_, int msbOut_, int lsbOut_):
+                lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_), targetAccuracy(targetAccuracy_)
 	{
 	        degree = 0;
 		//  parsing delegated to FixFunction
@@ -198,6 +198,8 @@ namespace flopoco {
 						if (  (!p->coeff[j]->isZero())  &&  (p->coeff[j]->MSB > MSB[j])  )
 							MSB[j] = p->coeff[j]->MSB;
 					}
+					sollya_lib_clear_obj(giS);
+					
 
 				} // end for loop on j
 
@@ -244,12 +246,21 @@ namespace flopoco {
 			if (tabulateRest==true) {
 			  REPORT(INFO, "Tabulating the values for the last interval");
 			  sollya_obj_t giS = buildFinalSubIntervalFunction(fS, nbInterval-1);
-			  FixFunction* g = new FixFunction(giS, true);
+			  char *buf;
+			  size_t sz;
+			  sz = sollya_lib_snprintf(NULL, 0, "%b", giS);
+			  if (sz==NULL)
+			    REPORT(INFO, "No function, oupsie");
+			  buf = (char *)malloc(sz + 1);
+			  sollya_lib_snprintf(buf, sz+1,"%b", giS);
+			  FixFunction* g = new FixFunction(buf, true, -5, msbOut, lsbOut);
 			  for (int i=0; i<(1<<6);i++) {
 			    mpz_class rNorD, ru;
 			    g->eval(mpz_class(i), rNorD, ru, true);
 			    table.push_back(rNorD);
 			  }
+			  sollya_lib_clear_obj(giS);
+			  free(buf);
 			  free(g);
 			}
 				    
@@ -396,7 +407,7 @@ namespace flopoco {
 		int totalOutputSize;
 
 		REPORT(INFO,"Parameters of the approximation polynomials: ");
-		REPORT(INFO,"  Degree=" << degree	<< "  nbInterval=" << intlog2(nbInterval)
+		REPORT(INFO,"  Degree=" << degree	<< "  TableSize=" << intlog2(nbInterval)
 				<< "    maxApproxErrorBound=" << approxErrorBound  << "    common coeff LSB="  << LSB);
 
 		totalOutputSize=0;
@@ -407,7 +418,7 @@ namespace flopoco {
 					<< (coeffSigns[j]==0? "\t variable sign " : "\t constant sign ") << coeffSigns[j]);
 		}
 
-		REPORT(INFO, "  Total size of the table is " << nbInterval << " x " << totalOutputSize << " bits");
+		REPORT(INFO, "  Total size of the coeff table is " << nbInterval << " x " << totalOutputSize << " bits");
 	}
 
 
@@ -416,12 +427,16 @@ namespace flopoco {
 		string f;
 		double ta;
 		int lsIn;
+		int msOut;
+		int lsOut;
 
 		UserInterface::parseString(args, "f", &f);
 		UserInterface::parseFloat(args, "targetAcc", &ta);
 		UserInterface::parseInt(args, "lsbIn", &lsIn);
+		UserInterface::parseInt(args, "msbOut", &msOut);
+		UserInterface::parseInt(args, "lsbOut", &lsOut);
 
-		VaryingPiecewisePolyApprox *ppa = new VaryingPiecewisePolyApprox(f, ta, lsIn);
+		VaryingPiecewisePolyApprox *ppa = new VaryingPiecewisePolyApprox(f, ta, lsIn, msOut, lsOut);
 		cout << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
 
 		return NULL;
@@ -438,7 +453,9 @@ namespace flopoco {
 				   "\
 f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\"; \
 targetAcc(real): the target approximation errror of the polynomial WRT the function;\
-lsbIn(int): input of x",
+lsbIn(int): input of x;\
+msbOut(int): output of f(x);\
+lsbOut(int): output of f(x)",
 				   "",
 				   VaryingPiecewisePolyApprox::parseArguments
 				   ) ;
