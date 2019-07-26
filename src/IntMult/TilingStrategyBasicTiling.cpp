@@ -11,15 +11,19 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		unsigned int wOut_,
 		bool signedIO_,
 		BaseMultiplierCollection* bmc,
-		base_multiplier_id_t prefered_multiplier):TilingStrategy(
+		base_multiplier_id_t prefered_multiplier,
+		float areaThreshold,
+		size_t maxPrefMult):TilingStrategy(
 			wX_,
 			wY_,
 			wOut_,
 			signedIO_,
 			bmc),
-		prefered_multiplier_(prefered_multiplier),
-		small_tile_mult_(1), //Most compact LUT-Based multiplier
-		numUsedMults_(0)
+		prefered_multiplier_{prefered_multiplier},
+		small_tile_mult_{1}, //Most compact LUT-Based multiplier
+		numUsedMults_{0},
+		occupation_threshold_{areaThreshold},
+		max_pref_mult_{maxPrefMult}
 	{
 		truncated = (wOut < IntMultiplier::prodsize(wY, wX));
 	}
@@ -334,7 +338,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					} 
 
 					float occupationRatio = (float (area)) /  multArea;
-					if (occupationRatio >= occupation_threshold) {
+					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
+					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
 								curDeltaX, 
@@ -392,7 +398,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					bool isSignedY = (topY + curDeltaY >= wY) and signedIO;
 
 					float occupationRatio = float(area) /  multArea;
-					if (occupationRatio >= occupation_threshold) {
+					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
+					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
 								curDeltaX,

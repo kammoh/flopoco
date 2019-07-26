@@ -13,7 +13,9 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 				unsigned int wOut,
 				bool signedIO,
 				BaseMultiplierCollection* bmc,
-				base_multiplier_id_t prefered_multiplier);
+				base_multiplier_id_t prefered_multiplier,
+				float areaThreshold=0.75,
+				size_t maxPrefMult=0);
 		void solve();
 
 	private:
@@ -34,7 +36,8 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		base_multiplier_id_t prefered_multiplier_;
 		base_multiplier_id_t small_tile_mult_;
 		size_t numUsedMults_;
-		float occupation_threshold=0.9; //TODO replace by flopoco command line option value
+		float occupation_threshold_; //TODO Add to constructor
+		size_t max_pref_mult_;
 		bool truncated;
 };
 
