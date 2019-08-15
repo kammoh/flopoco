@@ -84,6 +84,7 @@ Conversions/FP2Fix
 FPAddSub/FPAdd
 FPAddSub/FPAddDualPath
 FPAddSub/FPAddSinglePath
+FPMultSquare/FPMult
 FPDivSqrt/FPDiv
 FPDivSqrt/FPSqrt
 ExpLog/FPExp
