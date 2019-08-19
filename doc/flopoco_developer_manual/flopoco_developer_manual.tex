@@ -70,7 +70,7 @@ There should be a Doxygen documentation of FloPoCo.
 The core of FloPoCo is the \texttt{Operator} class. 
 Operator is a virtual class from which all FloPoCo operators inherit. 
 
-The FloPoCo source includes a dummy operator, \texttt{UserDefinedOperator}, for you to play with. 
+The FloPoCo source includes a dummy operator, \texttt{TutorialOperator}, for you to play with. 
 Feel free to experiment within this one. 
 By default it is compiled but unplugged. To plug it back, just comment the corresponding line in main.cpp.
 
@@ -99,7 +99,7 @@ Again, we hope that you can design the interface to your operator by imitation o
 \subsection{Adding a new operator to FloPoCo}
 To add a new operator to FloPoCo, you need to 
 \begin{itemize}
-\item write its \texttt{.cpp} and \texttt{.hpp} (we suggest you start with a copy of  \texttt{UserDefinedOperator}, which is an almost empty skeleton);
+\item write its \texttt{.cpp} and \texttt{.hpp} (we suggest you start with a copy of  \texttt{TutorialOperator}, which is an almost empty skeleton);
 \item add it to \texttt{src/SourceFileList.txt} so that it gets compiled;
 \item add it to \texttt{src/Factories/Interfaced.txt} if you want it to appear in the command-line interface.
 \end{itemize}
@@ -440,7 +440,7 @@ To see examples of \texttt{emulate()} functions, see
   For these, the GNU Multiple Precision library is your friend.
 \item \texttt{FixRealKCM} for an operator with fixed-point inputs and outputs;
 \item \texttt{FPAdd}  for an operator with floating-point inputs and outputs;
-  For these, your friend is the GNU MPFR library, and FloPoCo provides all the needed helper functions to convert between bit vetors and MPFR numbers.
+  For these, your friend is the GNU MPFR library, and FloPoCo provides all the needed helper functions to convert between bit vectors and MPFR numbers.
 \end{itemize}
 
 
