@@ -34,22 +34,64 @@ namespace flopoco{
 		mpfr_clears(x, y, r, NULL);
 	}
 
-	void FPAdd::buildStandardTestCases(Operator* op, int wE, int wF, TestCaseList* tcl){
+	void FPAdd::buildStandardTestCases(Operator* op, int wE, int wF, TestCaseList* tcl, bool onlyPositiveIO){
 		// Although standard test cases may be architecture-specific, it can't hurt to factor them here.
 		TestCase *tc;
 
-		// Regression tests
-		tc = new TestCase(op);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		op->emulate(tc);
-		tcl->add(tc);
+		if(!onlyPositiveIO)
+		{
+			// Regression tests
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1.0);
+			tc->addFPInput("Y", -1.0);
+			op->emulate(tc);
+			tcl->add(tc);
 
-		tc = new TestCase(op);
-		tc->addFPInput("X", 2.0);
-		tc->addFPInput("Y", -2.0);
-		op->emulate(tc);
-		tcl->add(tc);
+			tc = new TestCase(op);
+			tc->addFPInput("X", 2.0);
+			tc->addFPInput("Y", -2.0);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1.0);
+			tc->addFPInput("Y", FPNumber::minusDirtyZero);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", FPNumber::plusInfty);
+			tc->addFPInput("Y", FPNumber::minusInfty);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", FPNumber::minusInfty);
+			tc->addFPInput("Y", FPNumber::minusInfty);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", -4.375e1);
+			tc->addFPInput("Y", 4.375e1);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			// A regression test that breaks (6,10)
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1.0081e6);
+			tc->addFPInput("Y", -2.1475e9);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			// A generalization of this regression test.
+			// This bug has been here since the beginning.
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1);
+			tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
+			op->emulate(tc);
+			tcl->add(tc);
+		}
 
 		tc = new TestCase(op);
 		tc->addFPInput("X", 1.0);
@@ -58,60 +100,25 @@ namespace flopoco{
 		tcl->add(tc);
 
 		tc = new TestCase(op);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(op);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(op);
 		tc->addFPInput("X", FPNumber::plusInfty);
 		tc->addFPInput("Y", FPNumber::plusInfty);
 		op->emulate(tc);
 		tcl->add(tc);
-
-		tc = new TestCase(op);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(op);
-		tc->addFPInput("X", -4.375e1);
-		tc->addFPInput("Y", 4.375e1);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		// A regression test that breaks (6,10)
-		tc = new TestCase(op);
-		tc->addFPInput("X", 1.0081e6);
-		tc->addFPInput("Y", -2.1475e9);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		// A generalization of this regression test.
-		// This bug has been here since the beginning.
-		tc = new TestCase(op);
-		tc->addFPInput("X", 1);
-		tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
-		op->emulate(tc);
-		tcl->add(tc);
-
 	}
 
 
 
 
-	TestCase* FPAdd::buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract){
+	TestCase* FPAdd::buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract, bool onlyPositiveIO){
 		TestCase *tc;
 		mpz_class x,y;
 		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
 		mpz_class negative  = mpz_class(1)<<(wE+wF);
+
+		if(onlyPositiveIO)
+		{
+			negative  = mpz_class(0);
+		}
 
 		tc = new TestCase(op);
 		/* Fill inputs */
@@ -151,8 +158,16 @@ namespace flopoco{
 			y  = getLargeRandom(wF) + (e << wF) + normalExn;
 		}
 		else{ //fully random
-			x = getLargeRandom(wE+wF+3);
-			y = getLargeRandom(wE+wF+3);
+			if(onlyPositiveIO)
+			{
+				//produce positive inputs
+				x = getLargeRandom(wE+wF) + normalExn;
+				y = getLargeRandom(wE+wF) + normalExn;
+			} else {
+				//now, really fully random positive and negative and non-normal numbers
+				x = getLargeRandom(wE+wF+3);
+				y = getLargeRandom(wE+wF+3);
+			}
 		}
 		// Random swap
 		mpz_class swap = getLargeRandom(1);

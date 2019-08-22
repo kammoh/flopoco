@@ -49,6 +49,10 @@ namespace flopoco{
 		int wF;
 		/** do you want an adder or a subtractor? */
 		bool sub;
+
+		/** selects special case for only positive float input and output numbers */
+		bool onlyPositiveIO;
+
 		/** The combined leading zero counter and shifter for the close path */
 		LZOCShifterSticky* lzocs;
 		/** The integer adder object for subtraction in the close path */
@@ -61,7 +65,6 @@ namespace flopoco{
 		IntAdder *finalRoundAdd;
 		/** The right shifter for the far path */
 		Shifter* rightShifter;
-
 
 		int sizeRightShift;
 

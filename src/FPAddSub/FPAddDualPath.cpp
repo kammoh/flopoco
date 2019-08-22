@@ -39,7 +39,7 @@ namespace flopoco{
 
 
 	FPAddDualPath::FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub, bool onlyPositiveIO) :
-		Operator(parentOp, target), wE(wE), wF(wF),  sub(sub){
+		Operator(parentOp, target), wE(wE), wF(wF),  sub(sub), onlyPositiveIO(onlyPositiveIO){
 
 		ostringstream name, synch, synch2;
 
@@ -440,14 +440,14 @@ namespace flopoco{
 
 	void FPAddDualPath::buildStandardTestCases(TestCaseList* tcl){
 		// use the generic one defined in FPAdd
-		FPAdd::buildStandardTestCases(this, wE, wF, tcl);
+		FPAdd::buildStandardTestCases(this, wE, wF, tcl, onlyPositiveIO);
 	}
 
  
 
 	TestCase* FPAddDualPath::buildRandomTestCase(int i){
 		// use the generic one defined in FPAdd
-		return FPAdd::buildRandomTestCase(this, i, wE, wF, sub);
+		return FPAdd::buildRandomTestCase(this, i, wE, wF, sub, onlyPositiveIO);
 	}
 
 
