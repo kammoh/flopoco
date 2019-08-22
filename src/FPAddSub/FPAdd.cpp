@@ -5,7 +5,6 @@
 using namespace std;
 namespace flopoco{
 
-
 	void FPAdd::emulate(TestCase * tc, int wE, int wF, bool subtract)
 	{
 		/* Get I/O values */
@@ -174,13 +173,20 @@ namespace flopoco{
 	
 	OperatorPtr FPAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, wF;
-		bool sub, dualPath;
+		bool sub, dualPath, onlyPositiveIO;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		UserInterface::parseBoolean(args, "sub", &sub);
 		UserInterface::parseBoolean(args, "dualPath", &dualPath);
+		UserInterface::parseBoolean(args, "onlyPositiveIO", &onlyPositiveIO);
+
+		if(onlyPositiveIO && !dualPath)
+		{
+			throw string("Sorry, onlyPositiveIO is only possible for the dualPath algorithm");
+		}
+
 		if(dualPath)
-			return new FPAddDualPath(parentOp, target, wE, wF, sub);
+			return new FPAddDualPath(parentOp, target, wE, wF, sub, onlyPositiveIO);
 		else
 			return new FPAddSinglePath(parentOp, target, wE, wF, sub);
 	}
@@ -229,10 +235,13 @@ namespace flopoco{
 			"wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits; \
 			sub(bool)=false: implement a floating-point subtractor instead of an adder;\
-			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;",
+			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;\
+			onlyPositiveIO(bool)=false: optimize for only positive input and output numbers;",
 			"Single-path is lower hardware, longer latency than dual-path.<br> The difference between single-path and dual-path is well explained in textbooks such as Ercegovac and Lang's <em>Digital Arithmetic</em>, or Muller et al's <em>Handbook of floating-point arithmetic.</em>",
 			FPAdd::parseArguments,
 			FPAdd::unitTest
 			) ;
 	}
+
+
 }

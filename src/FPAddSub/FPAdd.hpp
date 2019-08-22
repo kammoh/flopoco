@@ -6,7 +6,7 @@
 
 
 namespace flopoco{
-	class FPAdd {
+	class FPAdd{
 	public:
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
@@ -25,6 +25,7 @@ namespace flopoco{
 
 		/** Regression tests */
 		static void buildStandardTestCases(Operator* op, int wE, int wF, TestCaseList* tcl);
+
 	};
 }
 #endif

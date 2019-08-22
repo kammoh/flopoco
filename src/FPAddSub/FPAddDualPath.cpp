@@ -38,7 +38,7 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	FPAddDualPath::FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub) :
+	FPAddDualPath::FPAddDualPath(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub, bool onlyPositiveIO) :
 		Operator(parentOp, target), wE(wE), wF(wF),  sub(sub){
 
 		ostringstream name, synch, synch2;
@@ -113,7 +113,7 @@ namespace flopoco{
 			vhdl<<";"<<endl;
 		}
 		else
-					vhdl<<tab<<declare("shiftedOut") << " <= '0';"<<endl;
+			vhdl<<tab<<declare("shiftedOut") << " <= '0';"<<endl;
 
 		//shiftVal=the number of positions that fracY must be shifted to the right
 		vhdl<<tab<<declare("shiftVal",sizeRightShift) << " <= " ;
@@ -136,7 +136,14 @@ namespace flopoco{
 
 		// compute the close/far path selection signal at cycle1
 		// the close path is considered only when (signA!=signB) and |exponentDifference|<=1
-		vhdl<<tab<<declare("selectClosePath") << " <= EffSub when exponentDifference("<<wE-1<<" downto "<<1<<") = ("<<wE-1<<" downto "<<1<<" => '0') else '0';"<<endl;
+		if(onlyPositiveIO)
+		{
+			vhdl<<tab<<declare("selectClosePath") << " <= '0';"<<endl;
+		}
+		else
+		{
+			vhdl<<tab<<declare("selectClosePath") << " <= EffSub when exponentDifference("<<wE-1<<" downto "<<1<<") = ("<<wE-1<<" downto "<<1<<" => '0') else '0';"<<endl;
+		}
 
 
 		// sdExnXY is a concatenation of the exception bits of X and Y, after swap, so exnX > exnY
