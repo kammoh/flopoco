@@ -745,15 +745,15 @@ namespace flopoco
 	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		string f;
 		bool signedIn, compressTIV;
-		int lsbIn, lsbOut, msbOut, nbTOi;
+		int lsbIn, lsbOut, msbOut, nbTO;
 		UserInterface::parseString(args, "f", &f);
-		UserInterface::parsePositiveInt(args, "nbTOi", &nbTOi);
+		UserInterface::parsePositiveInt(args, "nbTO", &nbTO);
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseInt(args, "msbOut", &msbOut);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		UserInterface::parseBoolean(args, "compressTIV", &compressTIV);
-		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTOi, signedIn, lsbIn, msbOut, lsbOut, compressTIV);
+		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTO, signedIn, lsbIn, msbOut, lsbOut, compressTIV);
 	}
 
 	void FixFunctionByMultipartiteTable::registerFactory(){
@@ -766,7 +766,7 @@ signedIn(bool): if true the function input range is [-1,1), if false it is [0,1)
 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 msbOut(int): weight of output MSB;\
 lsbOut(int): weight of output LSB;\
-nbTOi(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
+nbTO(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose ;\
 compressTIV(bool)=true: use Hsiao TIV compression, or not",
 
 											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
