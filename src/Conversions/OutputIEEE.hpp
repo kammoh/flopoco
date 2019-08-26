@@ -37,7 +37,7 @@ namespace flopoco{
 		 * @param[in]		wFO			the the with of the fraction for the output floating point number encoded according IEEE format
 		 * @param[in]		onlyPositiveZeroes      when true normalize +0 and -0 to +0
 		 */
-		OutputIEEE(Target* target, int wEI, int wFI, int wEO, int wFO, bool onlyPositiveZeroes=false);
+		OutputIEEE(OperatorPtr parentOp, Target* target, int wEI, int wFI, int wEO, int wFO, bool onlyPositiveZeroes=false);
 
 		/**
 		 * @brief OutputIEEE destructor
