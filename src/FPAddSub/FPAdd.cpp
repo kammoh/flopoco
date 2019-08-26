@@ -115,11 +115,6 @@ namespace flopoco{
 		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
 		mpz_class negative  = mpz_class(1)<<(wE+wF);
 
-		if(onlyPositiveIO)
-		{
-			negative  = mpz_class(0);
-		}
-
 		tc = new TestCase(op);
 		/* Fill inputs */
 		if ((i & 7) == 0) {// cancellation, same exponent
@@ -158,17 +153,29 @@ namespace flopoco{
 			y  = getLargeRandom(wF) + (e << wF) + normalExn;
 		}
 		else{ //fully random
-			if(onlyPositiveIO)
-			{
-				//produce positive inputs
-				x = getLargeRandom(wE+wF) + normalExn;
-				y = getLargeRandom(wE+wF) + normalExn;
-			} else {
-				//now, really fully random positive and negative and non-normal numbers
-				x = getLargeRandom(wE+wF+3);
-				y = getLargeRandom(wE+wF+3);
-			}
+			//now, really fully random positive and negative and non-normal numbers
+			x = getLargeRandom(wE+wF+3);
+			y = getLargeRandom(wE+wF+3);
 		}
+
+		if(onlyPositiveIO)
+		{
+			x = x & ~negative;
+			y = y & ~negative;
+		}
+
+		cerr << "X=" << x << ", Y=" << y << endl;
+
+//		negative  = mpz_class(1)<<(wE+wF);
+		if(((mpz_class) (x & negative)))
+		{
+			throw string("Error: Input X is negative!");
+		}
+		if(((mpz_class) (y & negative)))
+		{
+			throw string("Error: Input Y is negative!");
+		}
+
 		// Random swap
 		mpz_class swap = getLargeRandom(1);
 		if (swap == mpz_class(0)) {
@@ -179,6 +186,7 @@ namespace flopoco{
 			tc->addInput("X", y);
 			tc->addInput("Y", x);
 		}
+
 		/* Get correct outputs */
 		emulate(tc,wE, wF, subtract);
 		return tc;
