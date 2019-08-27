@@ -52,28 +52,22 @@ namespace flopoco{
 			addOutput("ResultSign"       );
 		}
 
-//!		setCriticalPath(getMaxInputDelays(inputDelays));
-
 		/* Sign Handling -- no need to count it in the critical path */
-		vhdl << tab << declare("sign") << " <= X" << of(wEX_+wFX) << " xor Y" << of(wEY_+wFY) << ";" << endl;
+		vhdl << tab << declare(getTarget()->lutDelay(), "sign") << " <= X" << of(wEX_+wFX) << " xor Y" << of(wEY_+wFY) << ";" << endl;
 
 		/* Exponent Handling */
 		vhdl << tab << declare("expX", wEX_) << " <= X"<< range(wEX_ + wFX_ -1, wFX_) << ";" << endl;
 		vhdl << tab << declare("expY", wEY_) << " <= Y"<< range(wEY_ + wFY_ -1, wFY_) << ";" << endl;
 
 		//Add exponents and substract bias
-//!		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
-		vhdl << tab << declare("expSumPreSub", wEX_+2) << " <= (\"00\" & expX) + (\"00\" & expY);" << endl;
+		vhdl << tab << declare(getTarget()->adderDelay(wEX_+2), "expSumPreSub", wEX_+2) << " <= (\"00\" & expX) + (\"00\" & expY);" << endl;
 		vhdl << tab << declare("bias", wEX_+2) << " <= CONV_STD_LOGIC_VECTOR(" << intpow2(wER-1)-1 << ","<<wEX_+2<<");"<< endl;
 
-//!		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
-		vhdl << tab << declare("expSum",wEX+2) << " <= expSumPreSub - bias;" << endl;
+		vhdl << tab << declare(getTarget()->adderDelay(wEX_+2), "expSum",wEX+2) << " <= expSumPreSub - bias;" << endl;
 		double exponentCriticalPath=0; //!getCriticalPath();
 
 
 		/* Significand Handling */
-//!		setCycle(0);
-//!		setCriticalPath(0.0);
 		vhdl << tab << declare("sigX",1 + wFX_) << " <= \"1\" & X" << range(wFX_-1,0) << ";" << endl;
 		vhdl << tab << declare("sigY",1 + wFY_) << " <= \"1\" & Y" << range(wFY_-1,0) << ";" << endl;
 
@@ -112,20 +106,13 @@ namespace flopoco{
 
 
 		/* Exception Handling, assumed to be faster than both exponent and significand computations */
-//!		setCycle(0);
 		vhdl << tab << declare("excSel",4) <<" <= X"<<range(wEX_ + wFX_ +2, wEX_ + wFX_ + 1) << " & Y"<<range(wEY_ + wFY_ +2, wEY_ + wFY_ +1) << ";" << endl;
 
 		vhdl << tab << "with excSel select " << endl;
-		vhdl << tab << declare("exc",2) << " <= \"00\" when  \"0000\" | \"0001\" | \"0100\", " << endl;
+		vhdl << tab << declare(getTarget()->lutDelay(), "exc",2) << " <= \"00\" when  \"0000\" | \"0001\" | \"0100\", " << endl;
 		vhdl << tab << "       \"01\" when \"0101\","<<endl;
 		vhdl << tab << "       \"10\" when \"0110\" | \"1001\" | \"1010\" ,"<<endl;
 		vhdl << tab << "       \"11\" when others;"<<endl;
-
-		//synchronization
-
-//!		syncCycleFromSignal("expSum", exponentCriticalPath,false);
-//!		syncCycleFromSignal("sigProd", significandCriticalPath,true);
-
 
 		if (normalized_){
 		/******************************************************************/
@@ -163,23 +150,17 @@ namespace flopoco{
 			}
 			else{
 				vhdl << tab<< "-- significand normalization shift"<<endl;
-//!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-				vhdl << tab << declare("sigProdExt", sigProdSize) << " <= sigProd" << range(sigProdSize-2, 0) << " & " << zg(1,0) <<" when norm='1' else"<<endl;
+				vhdl << tab << declare(getTarget()->lutDelay(), "sigProdExt", sigProdSize) << " <= sigProd" << range(sigProdSize-2, 0) << " & " << zg(1,0) <<" when norm='1' else"<<endl;
 				vhdl << tab << "                      sigProd" << range(sigProdSize-3, 0) << " & " << zg(2,0) << ";"<<endl;
 
-
-//!				syncCycleFromSignal("expPostNorm", expPostNormCriticalPath, true);
 				vhdl << tab << declare("expSig", 2 + wER_ + wFR_) << " <= expPostNorm & sigProdExt" << range(sigProdSize-1,  sigProdSize-wFR_) << ";" << endl;
 
 				if(correctlyRounded_) {
 					vhdl << tab << declare("sticky") << " <= sigProdExt" << of(wFX_+wFY + 1 - wFR) << ";" << endl;
 
-//!					if(wFX_+wFY + 1 - wFR>0) // otherwise the user has been stupid anyway
-//!						manageCriticalPath(getTarget()->localWireDelay() + getTarget()->eqConstComparatorDelay(sigProdSize-1 - wFR));
-					vhdl << tab << declare("guard") << " <= '0' when sigProdExt" << range(wFX_+wFY + 1 - wFR - 1,0) << "=" << zg(wFX_+wFY + 1 - wFR - 1 +1,0) <<" else '1';" << endl;
+					vhdl << tab << declare(getTarget()->eqConstComparatorDelay(sigProdSize-1 - wFR), "guard") << " <= '0' when sigProdExt" << range(wFX_+wFY + 1 - wFR - 1,0) << "=" << zg(wFX_+wFY + 1 - wFR - 1 +1,0) <<" else '1';" << endl;
 
-//!					manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-					vhdl << tab << declare("round") << " <= sticky and ( (guard and not(sigProdExt" << of(wFX_+wFY + 1 - wFR+1) <<")) or ("
+					vhdl << tab << declare(getTarget()->lutDelay(), "round") << " <= sticky and ( (guard and not(sigProdExt" << of(wFX_+wFY + 1 - wFR+1) <<")) or ("
 					     << "sigProdExt" << of(wFX_+wFY + 1 - wFR+1) << " ))  ;" << endl;
 				}
 				else{
@@ -195,8 +176,6 @@ namespace flopoco{
 				outPortMap   (intadd_, "R", "expSigPostRound");
 
 				vhdl << tab << instance( intadd_, "RoundingAdder");
-//!				syncCycleFromSignal("expSigPostRound");
-//!				setCriticalPath(intadd_->getOutputDelay("R"));
 #endif
 				newInstance("IntAdder", "RoundingAdder", "wIn="+to_string(2 + wER_ + wFR_),"X=>expSig,Cin=>round", "R=>expSigPostRound", "Y=>" + zg(2 + wER_ + wFR_,0));
 

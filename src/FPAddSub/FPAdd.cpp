@@ -164,9 +164,6 @@ namespace flopoco{
 			y = y & ~negative;
 		}
 
-		cerr << "X=" << x << ", Y=" << y << endl;
-
-//		negative  = mpz_class(1)<<(wE+wF);
 		if(((mpz_class) (x & negative)))
 		{
 			throw string("Error: Input X is negative!");
