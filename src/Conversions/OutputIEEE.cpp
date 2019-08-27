@@ -53,18 +53,16 @@ namespace flopoco{
 		vhdl << tab << declare("fracX", wFI) << "  <= X" << range(wFI-1, 0) << ";" << endl;
 		vhdl << tab << declare("exnX",2) << "  <= X" << range(wEI+wFI+2, wEI+wFI+1) << ";" << endl;
 		if(onlyPositiveZeroes)
-		        vhdl << tab << declare("sX") << "  <= X(" << wEI+wFI << ") when (exnX = \"01\" or exnX = \"10\") else '0';" << endl;
+		        vhdl << tab << declare(getTarget()->lutDelay(), "sX") << "  <= X(" << wEI+wFI << ") when (exnX = \"01\" or exnX = \"10\") else '0';" << endl;
 		else
-		        vhdl << tab << declare("sX") << "  <= X(" << wEI+wFI << ") when (exnX = \"01\" or exnX = \"10\" or exnX = \"00\") else '0';" << endl;
-//!!		manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-		vhdl << tab << declare("expZero") << "  <= '1' when expX = " << rangeAssign(wEI-1,0, "'0'") << " else '0';" << endl;
+		        vhdl << tab << declare(getTarget()->lutDelay(), "sX") << "  <= X(" << wEI+wFI << ") when (exnX = \"01\" or exnX = \"10\" or exnX = \"00\") else '0';" << endl;
+		vhdl << tab << declare(getTarget()->lutDelay(), "expZero") << "  <= '1' when expX = " << rangeAssign(wEI-1,0, "'0'") << " else '0';" << endl;
 		if(wEI==wEO){ 
 			vhdl << tab << "-- since we have one more exponent value than IEEE (field 0...0, value emin-1)," << endl 
 				  << tab << "-- we can represent subnormal numbers whose mantissa field begins with a 1" << endl;
 
 			if(wFO>=wFI){
-//!!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-				vhdl << tab << declare("sfracX",wFI) << " <= " << endl
+				vhdl << tab << declare(getTarget()->lutDelay(), "sfracX",wFI) << " <= " << endl
 						<< tab << tab << rangeAssign(wFI-1,0, "'0'") << " when (exnX = \"00\") else" << endl //zero
 						<< tab << tab << "'1' & fracX" << range(wFI-1,1) << " when (expZero = '1' and exnX = \"01\") else" << endl  //subnormal, no rounding is performed here
 						<< tab << tab << "fracX when (exnX = \"01\") else " << endl //normal number
@@ -74,41 +72,36 @@ namespace flopoco{
 					vhdl << " & CONV_STD_LOGIC_VECTOR(0," << wFO-wFI <<");" << endl;
 				else 
 					vhdl << ";" << endl;
-				vhdl << tab << declare("expR",wEO) << " <=  " << endl
+				vhdl << tab << declare(getTarget()->lutDelay(), "expR",wEO) << " <=  " << endl
 						<< tab << tab << rangeAssign(wEO-1,0, "'0'") << " when (exnX = \"00\") else" << endl
 						<< tab << tab << "expX when (exnX = \"01\") else " << endl
 						<< tab << tab << rangeAssign(wEO-1,0, "'1'") << ";" << endl;
 
 			}
 			else { // wFI > wFO, wEI==wEO
-//!!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-				vhdl << tab << declare("sfracX",wFI) << " <= '1' & fracX" << range(wFI-1,1) << " when (expZero = '1' and exnX = \"01\") else fracX;" << endl;
+				vhdl << tab << declare(getTarget()->lutDelay(), "sfracX",wFI) << " <= '1' & fracX" << range(wFI-1,1) << " when (expZero = '1' and exnX = \"01\") else fracX;" << endl;
 				vhdl << tab << "-- wFO < wFI, need to round fraction" << endl;
 				vhdl << tab << declare("resultLSB") << " <= sfracX("<< wFI-wFO <<");" << endl;
 				vhdl << tab << declare("roundBit") << " <= sfracX("<< wFI-wFO-1 <<");" << endl;
 				// need to define a sticky bit
-				vhdl << tab << declare("sticky") << " <= ";
+				vhdl << tab << declare(getTarget()->lutDelay(), "sticky") << " <= ";
 				if(wFI-wFO>1){
-//!!					manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 					vhdl<< " '0' when sfracX" << range(wFI-wFO-2, 0) <<" = CONV_STD_LOGIC_VECTOR(0," << wFI-wFO-2 <<") else '1';"<<endl;
 				}
 				else {
 					vhdl << "'0';" << endl; 
 				} // end of sticky computation
-//!!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-				vhdl << tab << declare("round") << " <= roundBit and (sticky or resultLSB);"<<endl;
+				vhdl << tab << declare(getTarget()->lutDelay(), "round") << " <= roundBit and (sticky or resultLSB);"<<endl;
 
 				vhdl << tab << "-- The following addition will not overflow since FloPoCo format has one more exponent value" <<endl;
-//!!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEO+wFO));
-				vhdl << tab << declare("expfracR0", wEO+wFO) << " <= (expX & sfracX" << range(wFI-1, wFI-wFO) << ")  +  (CONV_STD_LOGIC_VECTOR(0," << wEO+wFO-1 <<") & round);"<<endl;
+				vhdl << tab << declare(getTarget()->adderDelay(wEO+wFO), "expfracR0", wEO+wFO) << " <= (expX & sfracX" << range(wFI-1, wFI-wFO) << ")  +  (CONV_STD_LOGIC_VECTOR(0," << wEO+wFO-1 <<") & round);"<<endl;
 
-//!!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
-				vhdl << tab << declare("fracR",wFO) << " <= " << endl
+				vhdl << tab << declare(getTarget()->lutDelay(), "fracR",wFO) << " <= " << endl
 						<< tab << tab << rangeAssign(wFO-1,0, "'0'") << " when (exnX = \"00\") else" << endl
 						<< tab << tab << "expfracR0" << range(wFO-1, 0) << " when (exnX = \"01\") else " << endl
 						<< tab << tab << rangeAssign(wFO-1,1, "'0'") << " & exnX(0);" << endl;
 
-				vhdl << tab << declare("expR",wEO) << " <=  " << endl
+				vhdl << tab << declare(getTarget()->lutDelay(), "expR",wEO) << " <=  " << endl
 						<< tab << tab << rangeAssign(wEO-1,0, "'0'") << " when (exnX = \"00\") else" << endl
 						<< tab << tab << "expfracR0" << range(wFO+wEO-1, wFO) << " when (exnX = \"01\") else " << endl
 						<< tab << tab << rangeAssign(wEO-1,0, "'1'") << ";" << endl;
