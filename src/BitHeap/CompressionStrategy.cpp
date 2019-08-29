@@ -187,7 +187,7 @@ namespace flopoco{
 	}
 
 	void CompressionStrategy::printBitAmounts(){
-		if(UserInterface::verbose < DEBUG){
+		if(UserInterface::verbose < DETAILED){
 			return;
 		}
 		//first find max value length and maxcolumn
@@ -414,7 +414,7 @@ namespace flopoco{
 			}
 			rightOrder.push_back(possibleCompressors[pos]);
 			alreadyChosen[pos] = true;
-			REPORT(DEBUG, "found compressor " << possibleCompressors[pos]->getStringOfIO() << " with compressionRatio of " << currentMaxRatio << ". Original compressor position is " << pos);
+			REPORT(DETAILED, "found compressor " << possibleCompressors[pos]->getStringOfIO() << " with compressionRatio of " << currentMaxRatio << ". Original compressor position is " << pos);
 		}
 		possibleCompressors = rightOrder;
 	}
