@@ -34,10 +34,10 @@ namespace flopoco {
 
 		// Below all the functions needed to test the operator
 		/* the emulate function is used to simulate in software the operator
-		   in order to compare this result with those outputed by the vhdl opertator */
+		   in order to compare this result with those outputted by the vhdl operator */
 		void emulate(TestCase * tc);
 
-		/* function used to create Standard testCase defined by the developper */
+		/* function used to create Standard testCase defined by the developer */
 		void buildStandardTestCases(TestCaseList* tcl);
 
 
