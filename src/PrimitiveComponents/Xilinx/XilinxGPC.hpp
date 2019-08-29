@@ -21,6 +21,7 @@ namespace flopoco
 		static void registerFactory();
 
 	public:
+        void emulate(TestCase *tc, vector<int> heights);
 
 	private:
 	};
@@ -31,5 +32,7 @@ namespace flopoco
 		BasicXilinxGPC(Operator* parentOp_, Target * target, vector<int> heights);
 
 		virtual Compressor* getCompressor();
+
+
 	};
 }
