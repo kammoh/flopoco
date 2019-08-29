@@ -95,7 +95,7 @@
 // #include "FPAddSub/FPAddSub.hpp"
 
 /* Floating-point multiplier variants-------------------------- */
-//#include "FPMultSquare/FPMult.hpp"
+#include "FPMultSquare/FPMult.hpp"
 //#include "FPMultKaratsuba.hpp" // Resurrect some day?
 //#include "FPMultSquare/FPSquare.hpp"
 

@@ -5,7 +5,6 @@
 using namespace std;
 namespace flopoco{
 
-
 	void FPAdd::emulate(TestCase * tc, int wE, int wF, bool subtract)
 	{
 		/* Get I/O values */
@@ -35,22 +34,64 @@ namespace flopoco{
 		mpfr_clears(x, y, r, NULL);
 	}
 
-	void FPAdd::buildStandardTestCases(Operator* op, int wE, int wF, TestCaseList* tcl){
+	void FPAdd::buildStandardTestCases(Operator* op, int wE, int wF, TestCaseList* tcl, bool onlyPositiveIO){
 		// Although standard test cases may be architecture-specific, it can't hurt to factor them here.
 		TestCase *tc;
 
-		// Regression tests
-		tc = new TestCase(op);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", -1.0);
-		op->emulate(tc);
-		tcl->add(tc);
+		if(!onlyPositiveIO)
+		{
+			// Regression tests
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1.0);
+			tc->addFPInput("Y", -1.0);
+			op->emulate(tc);
+			tcl->add(tc);
 
-		tc = new TestCase(op);
-		tc->addFPInput("X", 2.0);
-		tc->addFPInput("Y", -2.0);
-		op->emulate(tc);
-		tcl->add(tc);
+			tc = new TestCase(op);
+			tc->addFPInput("X", 2.0);
+			tc->addFPInput("Y", -2.0);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1.0);
+			tc->addFPInput("Y", FPNumber::minusDirtyZero);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", FPNumber::plusInfty);
+			tc->addFPInput("Y", FPNumber::minusInfty);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", FPNumber::minusInfty);
+			tc->addFPInput("Y", FPNumber::minusInfty);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			tc = new TestCase(op);
+			tc->addFPInput("X", -4.375e1);
+			tc->addFPInput("Y", 4.375e1);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			// A regression test that breaks (6,10)
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1.0081e6);
+			tc->addFPInput("Y", -2.1475e9);
+			op->emulate(tc);
+			tcl->add(tc);
+
+			// A generalization of this regression test.
+			// This bug has been here since the beginning.
+			tc = new TestCase(op);
+			tc->addFPInput("X", 1);
+			tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
+			op->emulate(tc);
+			tcl->add(tc);
+		}
 
 		tc = new TestCase(op);
 		tc->addFPInput("X", 1.0);
@@ -59,56 +100,16 @@ namespace flopoco{
 		tcl->add(tc);
 
 		tc = new TestCase(op);
-		tc->addFPInput("X", 1.0);
-		tc->addFPInput("Y", FPNumber::minusDirtyZero);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(op);
-		tc->addFPInput("X", FPNumber::plusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(op);
 		tc->addFPInput("X", FPNumber::plusInfty);
 		tc->addFPInput("Y", FPNumber::plusInfty);
 		op->emulate(tc);
 		tcl->add(tc);
-
-		tc = new TestCase(op);
-		tc->addFPInput("X", FPNumber::minusInfty);
-		tc->addFPInput("Y", FPNumber::minusInfty);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(op);
-		tc->addFPInput("X", -4.375e1);
-		tc->addFPInput("Y", 4.375e1);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		// A regression test that breaks (6,10)
-		tc = new TestCase(op);
-		tc->addFPInput("X", 1.0081e6);
-		tc->addFPInput("Y", -2.1475e9);
-		op->emulate(tc);
-		tcl->add(tc);
-
-		// A generalization of this regression test.
-		// This bug has been here since the beginning.
-		tc = new TestCase(op);
-		tc->addFPInput("X", 1);
-		tc->addFPInput("Y", -exp2(-wF-2)-exp2(-wF-3));
-		op->emulate(tc);
-		tcl->add(tc);
-
 	}
 
 
 
 
-	TestCase* FPAdd::buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract){
+	TestCase* FPAdd::buildRandomTestCase(Operator* op, int i, int wE, int wF, bool subtract, bool onlyPositiveIO){
 		TestCase *tc;
 		mpz_class x,y;
 		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
@@ -152,9 +153,26 @@ namespace flopoco{
 			y  = getLargeRandom(wF) + (e << wF) + normalExn;
 		}
 		else{ //fully random
+			//now, really fully random positive and negative and non-normal numbers
 			x = getLargeRandom(wE+wF+3);
 			y = getLargeRandom(wE+wF+3);
 		}
+
+		if(onlyPositiveIO)
+		{
+			x = x & ~negative;
+			y = y & ~negative;
+		}
+
+		if(((mpz_class) (x & negative)))
+		{
+			throw string("Error: Input X is negative!");
+		}
+		if(((mpz_class) (y & negative)))
+		{
+			throw string("Error: Input Y is negative!");
+		}
+
 		// Random swap
 		mpz_class swap = getLargeRandom(1);
 		if (swap == mpz_class(0)) {
@@ -165,6 +183,7 @@ namespace flopoco{
 			tc->addInput("X", y);
 			tc->addInput("Y", x);
 		}
+
 		/* Get correct outputs */
 		emulate(tc,wE, wF, subtract);
 		return tc;
@@ -174,13 +193,20 @@ namespace flopoco{
 	
 	OperatorPtr FPAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
 		int wE, wF;
-		bool sub, dualPath;
+		bool sub, dualPath, onlyPositiveIO;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
 		UserInterface::parseBoolean(args, "sub", &sub);
 		UserInterface::parseBoolean(args, "dualPath", &dualPath);
+		UserInterface::parseBoolean(args, "onlyPositiveIO", &onlyPositiveIO);
+
+		if(onlyPositiveIO && !dualPath)
+		{
+			throw string("Sorry, onlyPositiveIO is only possible for the dualPath algorithm");
+		}
+
 		if(dualPath)
-			return new FPAddDualPath(parentOp, target, wE, wF, sub);
+			return new FPAddDualPath(parentOp, target, wE, wF, sub, onlyPositiveIO);
 		else
 			return new FPAddSinglePath(parentOp, target, wE, wF, sub);
 	}
@@ -229,10 +255,13 @@ namespace flopoco{
 			"wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits; \
 			sub(bool)=false: implement a floating-point subtractor instead of an adder;\
-			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;",
+			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;\
+			onlyPositiveIO(bool)=false: optimize for only positive input and output numbers;",
 			"Single-path is lower hardware, longer latency than dual-path.<br> The difference between single-path and dual-path is well explained in textbooks such as Ercegovac and Lang's <em>Digital Arithmetic</em>, or Muller et al's <em>Handbook of floating-point arithmetic.</em>",
 			FPAdd::parseArguments,
 			FPAdd::unitTest
 			) ;
 	}
+
+
 }

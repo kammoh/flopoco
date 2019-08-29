@@ -27,7 +27,7 @@ namespace flopoco{
 		 * @param[in]		wER			the the with of the exponent for the multiplication result
 		 * @param[in]		wFR			the the with of the fraction for the multiplication result
 		 **/
-		FPMult(Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
+		FPMult(OperatorPtr parentOp, Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
 		             bool norm = true, bool correctlyRounded=true, double ratio=1, map<string, double> inputDelays = emptyDelayMap);
 
 		/**

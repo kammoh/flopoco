@@ -33,6 +33,8 @@ FPDiv
 FPSqrt
 FPExp
 FP2Fix
+FPMult
+OutputIEEE
 
 IEEEAdd
 IEEEFMA

@@ -1,6 +1,6 @@
 
 #include "CompressionStrategy.hpp"
-#include <limits>
+#include <climits>
 #include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 #include "assert.h"
 

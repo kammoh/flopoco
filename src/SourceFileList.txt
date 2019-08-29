@@ -81,9 +81,11 @@ IntMult/XilinxBaseMultiplier2xk
 Complex/FixComplexKCM
 Conversions/Posit2FP
 Conversions/FP2Fix
+Conversions/OutputIEEE
 FPAddSub/FPAdd
 FPAddSub/FPAddDualPath
 FPAddSub/FPAddSinglePath
+FPMultSquare/FPMult
 FPDivSqrt/FPDiv
 FPDivSqrt/FPSqrt
 ExpLog/FPExp
