@@ -102,7 +102,7 @@ namespace flopoco{
 		double significandCriticalPath=0; //!getCriticalPath();
 
 //		declare("sigProd", -1);
-		newInstance("IntMultiplier", "SignificandMultiplication", "wX="+to_string(wFX_+1)+" wY="+to_string(wFY_+1),"X=>sigX,Y=>sigY", "R=>sigProd");
+		newInstance("IntMultiplier", "SignificandMultiplication", "wX="+to_string(wFX_+1)+" wY="+to_string(wFY_+1)+" wOut="+to_string(sigProdSize),"X=>sigX,Y=>sigY", "R=>sigProd");
 
 
 		/* Exception Handling, assumed to be faster than both exponent and significand computations */
@@ -259,23 +259,26 @@ namespace flopoco{
 
 	OperatorPtr FPMult::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args){
 		int wE, wF;
+		bool correctlyRounded;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		UserInterface::parseBoolean(args, "correctlyRounded", &correctlyRounded);
 
-		return new FPMult(parentOp, target, wE, wF, wE, wF, wE, wF); //currently, user interface only supports same data formats for all inputs and output
+		return new FPMult(parentOp, target, wE, wF, wE, wF, wE, wF, true, correctlyRounded); //currently, user interface only supports same data formats for all inputs and output
 	}
 
 	void FPMult::registerFactory(){
 		UserInterface::add("FPMult", // name
-											 "A floating-point multiplier. The actual FloPoCo component supports different input and output sizes, but this is not available from the command line.",
-											 "BasicFloatingPoint", // categories
-											 "",
-											 "wE(int): exponent size in bits; \
-                        wF(int): input's mantissa size in bits;  \
-                        wFout(int)=0: output's mantissa size in bits (if 0 or ommitted, will be equal to wFIn)",
-											 "",
-											 FPMult::parseArguments
-											 ) ;
+                           "A floating-point multiplier. The actual FloPoCo component supports different input and output sizes, but this is not available from the command line.",
+                           "BasicFloatingPoint", // categories
+                           "",
+                           "wE(int): exponent size in bits; \
+                           wF(int): input's mantissa size in bits;  \
+                           wFout(int)=0: output's mantissa size in bits (if 0 or ommitted, will be equal to wFIn); \
+						   correctlyRounded(bool)=true: Use correct rounding, if false use faithful rounding",
+                           "",
+                           FPMult::parseArguments
+                           ) ;
 
 	}
 }
