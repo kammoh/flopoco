@@ -102,8 +102,8 @@ namespace flopoco{
 					}
 				}
 				if(found){
-					REPORT(DEBUG, "placed compressor " << compressor->getStringOfIO() << " in stage " << s << " and column " << column);
-					REPORT(DEBUG, "efficiency is " << achievedEfficiencyBest);
+					REPORT(DETAILED, "placed compressor " << compressor->getStringOfIO() << " in stage " << s << " and column " << column);
+					REPORT(DETAILED, "efficiency is " << achievedEfficiencyBest);
 					placeCompressor(s, column, compressor);
 				}
 			}

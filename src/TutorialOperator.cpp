@@ -3,7 +3,7 @@
 #include <sstream>
 
 /* header of libraries to manipulate multiprecision numbers
-   There will be used in the emulate function to manipulate arbitraly large
+   There will be used in the emulate function to manipulate arbitrary large
    entries */
 #include "gmp.h"
 #include "mpfr.h"
@@ -19,15 +19,15 @@ namespace flopoco {
 
 	TutorialOperator::TutorialOperator(Target* target, int param0_, int param1_) : Operator(target), param0(param0_), param1(param1_) {
 		/* constructor of the TutorialOperator
-		   Target is the targeted FPGA : Stratix, Virtex ... (see Target.hpp for more informations)
-		   param0 and param1 are some parameters declared by this Operator developpers, 
+		   Target is the targeted FPGA : Stratix, Virtex ... (see Target.hpp for more information)
+		   param0 and param1 are some parameters declared by this Operator developers,
 		   any number can be declared, you will have to modify 
 		   -> this function,  
 		   -> the prototype of this function (available in TutorialOperator.hpp)
 		   ->  main.cpp to uncomment the RegisterFactory line
 		*/
 		/* In this constructor we are going to generate an operator that 
-			 - takes as input three bit vectors X,Y,Z of lenght param0, 
+			 - takes as input three bit vectors X,Y,Z of length param0,
 			 - treats them as unsigned integers, 
 			 - sums them 
 			 - and finally outputs the concatenation of the the most significant bit of the sum and its last param1 bits.
@@ -76,7 +76,7 @@ namespace flopoco {
 		// more detailed message
 		REPORT(DETAILED, "this operator has received two parameters " << param0 << " and " << param1);
   
-		// debug message for developper
+		// debug message for developer
 		REPORT(DEBUG,"debug of TutorialOperator");
 
 
@@ -85,7 +85,7 @@ namespace flopoco {
 		   -> when first using a variable (Eg: T), declare("T",64) will create a vhdl
 		   definition of the variable : signal T and includes it it the header of the architecture definition of the operator
 
-		   Each code transmited to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
+		   Each code transmitted to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
 		*/
 		vhdl <<tab<< declare(
 										getTarget()->adderDelay(param0+1),  // contribution to the critical path of this VHDL operation

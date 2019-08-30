@@ -38,7 +38,7 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 	declare("cc_s",4);
 
 	vector<string> lutOp(4);
-	vector<vector<string> > lutInputMappings(4,vector<string>(4));
+	vector<vector<string> > lutInputMappings(4,vector<string>(6));
 	vector<string> ccDInputMappings(4);
 	string carryInMapping;
 
@@ -51,23 +51,43 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 	const string LUTConfigJ = "69966996C33CC33C";
 	const string LUTConfigK = "9996966666666666";
 	const string LUTConfigL = "78878778F00F0FF0";
+    const string LUTConfigM = "E8818117177E7EE8";
+    const string LUTConfigN = "177F7FFFE8808000";
 
 	if(heights.size() == 3)
 	{
-		if((heights[2] == 6) && (heights[1] == 0) && (heights[0] == 6))
-		{
-			//(6,0,6;5) GPC:
-			lutOp = {LUTConfigH, LUTConfigI, LUTConfigH, LUTConfigI};
 
-			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};
-			lutInputMappings[1] = {"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5),"'1'"};
-			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
-			lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
+        if((heights[2] == 6) && (heights[1] == 0) && (heights[0] == 6))
+        {
+            //(6,0,6;5) GPC:
+            lutOp = {LUTConfigH, LUTConfigI, LUTConfigH, LUTConfigI};
 
-			ccDInputMappings = {"X0" + of(0),"O5","X2" + of(0),"O5"};
+            lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};
+            lutInputMappings[1] = {"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5),"'1'"};
+            lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
+            lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
 
-			carryInMapping="'0'";
-		}
+            ccDInputMappings = {"X0" + of(0),"O5","X2" + of(0),"O5"};
+
+            carryInMapping="'0'";
+        }
+
+
+        else if((heights[2] == 6) && (heights[1] == 0) && (heights[0] == 7))
+        {
+            //(6,0,7;5) GPC:
+                        lutOp = {LUTConfigH, LUTConfigI, LUTConfigH, LUTConfigI};
+
+            lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};
+            lutInputMappings[1] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"'1'"};
+            lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5)};
+            lutInputMappings[3] = {"X2" + of(1),"X2" + of(2),"X2" + of(3),"X2" + of(4),"X2" + of(5),"'1'"};
+
+            ccDInputMappings = {"O5","O5","X2" + of(0),"O5"};
+
+            carryInMapping="X0" + of(6);
+        }
+
 		else if((heights[2] == 6) && (heights[1] == 1) && (heights[0] == 5))
 		{
 			//(6,1,5;5) GPC:
@@ -82,6 +102,7 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 
 			carryInMapping="X0" + of(4);
 		}
+
 		else if((heights[2] == 6) && (heights[1] == 2) && (heights[0] == 3))
 		{
 			//(6,2,3;5) GPC:
@@ -129,10 +150,10 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 			//(1,4,1,5;5) GPC:
 			lutOp = {LUTConfigA, LUTConfigB, LUTConfigA, LUTConfigB};
 
-			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
-			lutInputMappings[1] = {"X1" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"};
-			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
-			lutInputMappings[3] = {"X3" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+			lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"}; //Only uses Configs 15-0 (AAAA) and 47-32 (6996) of LUTA
+			lutInputMappings[1] = {"X1" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"'0'","'1'"}; //Only uses Configs 15-0 (AAAA) and 47-32 (566A) of LUTB
+			lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"}; //Only uses Configs 15-0 (AAAA) and 47-32 (6996) of LUTA
+			lutInputMappings[3] = {"X3" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"}; //Only uses Configs 15-0 (AAAA) and 47-32 (566A) of LUTB
 
 			ccDInputMappings = {"O5","O5","O5","O5"};
 
@@ -154,6 +175,38 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 			carryInMapping="X0" + of(5);
 
 		}
+
+        else if((heights[3] == 1) && (heights[2] == 4) && (heights[1] == 0) && (heights[0] == 7))
+        {
+            //(1,4,0,7;5) GPC:
+            lutOp = {LUTConfigH, LUTConfigI, LUTConfigA, LUTConfigB};
+
+            lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};
+            lutInputMappings[1] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"'1'"};
+            lutInputMappings[2] = {"X2" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+            lutInputMappings[3] = {"X3" + of(0),"X2" + of(1),"X2" + of(2),"X2" + of(3),"'0'","'1'"};
+
+            ccDInputMappings = {"O5","O5","O5","O5"};
+
+            carryInMapping="X0" + of(6);
+
+        }
+
+		else if((heights[3] == 2) && (heights[2] == 1) && (heights[1] == 1) && (heights[0] == 7))
+        {
+            //(2,1,1,7;5) GPC:
+            lutOp = {LUTConfigH, LUTConfigM, LUTConfigN, LUTConfigA};
+
+            lutInputMappings[0] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X0" + of(5)};  //done
+            lutInputMappings[1] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X1" + of(0)};  //done
+            lutInputMappings[2] = {"X0" + of(0),"X0" + of(1),"X0" + of(2),"X0" + of(3),"X0" + of(4),"X2" + of(0)};  //done
+            lutInputMappings[3] = {"X3" + of(0),"X3" + of(1),"'0'","'0'","'0'","'1'"};                              //done
+
+            ccDInputMappings = {"O5","X1" + of(0),"X2" + of(0),"X3" + of(1)};
+
+            carryInMapping="X0" + of(6);
+
+        }
 		else
 		{
 			stringstream s;
@@ -253,11 +306,76 @@ OperatorPtr XilinxGPC::parseArguments(OperatorPtr parentOp, Target *target, vect
     return new XilinxGPC(parentOp,target,heights);
 }
 
+void XilinxGPC::emulate(TestCase *tc, vector<int> heights) {
+
+    this -> heights=heights;
+    vector<mpz_class> sX (heights.size());
+
+    mpz_class s=0;
+
+    int maxheight = 0;
+
+    for ( int i=0; i<heights.size(); i++){
+        if (heights[i]>maxheight)
+            maxheight=heights[i];
+    }
+    int maxsum = 0;
+    for ( int i=0; i<heights.size(); i++){
+        maxsum+=heights[i]*pow(2,i);
+    }
+
+    int maxbits=0;
+    for(;maxsum!=0;maxsum=maxsum/2){
+        maxbits++;
+    }
+
+    mpz_t int1;
+    mpz_t int2;
+    mpz_t curnbr;
+    mpz_t add;
+    mpz_t quotient;
+    mpz_t sum;
+    mpz_init2(int2,1);
+    mpz_init2(int1,1);
+    mpz_init2(curnbr, maxheight);
+    mpz_init2(add, maxheight);
+    mpz_init2(quotient, maxheight);
+    mpz_init2(sum, maxbits);
+
+    mpz_set_ui(int1,1);
+    mpz_set_ui(int2,2);
+
+    for ( int i=0; i <= sX.size(); i++) {
+        if (heights[i] != 0) {
+            sX[i] = tc->getInputValue(join("X", i));
+        }
+    }
+
+    for ( int i=0; i < sX.size();i++){
+        mpz_set_ui(curnbr,mpz_get_ui(sX[i].get_mpz_t()));
+        for (int j=heights[i];j>=0;j--){
+            mpz_fdiv_q_2exp(quotient, curnbr, j);
+            if(mpz_cmp(quotient,int1)==0 ){
+                sX[i]-= pow(2,j);
+                mpz_pow_ui(add, int2, i);
+                mpz_add(sum, sum, add);
+            }
+        }
+    }
+    s=(mpz_get_ui(sum));
+
+
+    tc->addExpectedOutput("R", s);
+
+}
+
+
 void XilinxGPC::registerFactory(){
     UserInterface::add("XilinxGPC", // name
-                       "Implements Xilinx optimized GPCs\\ \
+                       "Implements Xilinx optimized GPCs \
                        Available GPC sizes are: \
-                       (6,0,6;5)",
+                       (6,0,6;5), (6,0,7;5), (6,1,5;5), (6,2,3;5) \
+                       (1,3,2,5;5), (1,4,1,5;5), (1,4,0,6;5), (1,4,0,7;5), (2,1,1,7;5)",
                        "Primitives", // categories
                        "",
                        "columnHeights(string): comma separated list of heights for the columns of the compressor, \
