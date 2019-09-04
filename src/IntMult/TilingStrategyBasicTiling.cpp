@@ -11,7 +11,8 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		int wOut_,
 		bool signedIO_,
 		BaseMultiplierCollection* bmc,
-		base_multiplier_id_t prefered_multiplier):TilingStrategy(
+		base_multiplier_id_t prefered_multiplier,
+		float occupation_threshold):TilingStrategy(
 			wX_,
 			wY_,
 			wOut_,
@@ -19,6 +20,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			bmc),
 		prefered_multiplier_(prefered_multiplier),
 		small_tile_mult_(1), //Most compact LUT-Based multiplier
+		occupation_threshold(occupation_threshold),
 		numUsedMults_(0)
 	{
 		truncated = (wOut < IntMultiplier::prodsize(wY, wX));

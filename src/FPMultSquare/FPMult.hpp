@@ -28,7 +28,7 @@ namespace flopoco{
 		 * @param[in]		wFR			the the with of the fraction for the multiplication result
 		 **/
 		FPMult(OperatorPtr parentOp, Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
-		             bool norm = true, bool correctlyRounded=true, double ratio=1, map<string, double> inputDelays = emptyDelayMap);
+		             bool norm = true, bool correctlyRounded=true, float dspOccupationThreshold = 0.0);
 
 		/**
 		 * FPMult destructor
@@ -57,7 +57,7 @@ namespace flopoco{
 		int  wFR_;                  /**< The width of the fraction for the output R */
 		bool normalized_;	          /**< Signal if the output of the operator is to be or not normalized*/
 		bool correctlyRounded_;	    /**< true: operator computes correct rounding; false: operator computes faithful rounding */
-
+		float dspOccupationThreshold; /**< threshold of relative occupation ratio of a DSP multiplier to be used or not */
 
 	};
 }

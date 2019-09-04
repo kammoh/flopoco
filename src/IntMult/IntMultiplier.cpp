@@ -53,8 +53,8 @@ namespace flopoco {
 		return wX + wY;
 	}
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, bool texOutput):
-		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_)
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, bool texOutput, float dspOccupationThreshold):
+		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold)
 	{
         srcFileName="IntMultiplier";
 		setCopyrightString ( "Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012" );
@@ -80,7 +80,7 @@ namespace flopoco {
 
 		REPORT(INFO, "IntMultiplier(): Constructing a multiplier of size " <<
 					wX << "x" << wY << " faithfully rounded to bit " << wOut <<
-					". Will use " << guardBits << " guard bits.")
+					". Will use " << guardBits << " guard bits and DSP threshhold of " << dspOccupationThreshold)
 
 		string xname="X";
 		string yname="Y";
@@ -119,7 +119,8 @@ namespace flopoco {
 				wOut + guardBits,
 				signedIO, 
 				&baseMultiplierCollection,
-				baseMultiplierCollection.getPreferedMultiplier()
+				baseMultiplierCollection.getPreferedMultiplier(),
+				dspOccupationThreshold
 			);
 
 		REPORT(DEBUG, "Solving tiling problem")
@@ -590,13 +591,17 @@ namespace flopoco {
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut ;
         bool signedIO,superTile,texOuput;
+        double dspOccupationThreshold=0.0;
+
 		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
 		UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
 		UserInterface::parsePositiveInt(args, "wOut", &wOut);
 		UserInterface::parseBoolean(args, "signedIO", &signedIO);
 		UserInterface::parseBoolean(args, "superTile", &superTile);
-        UserInterface::parseBoolean(args, "texOutput", &texOuput);
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, texOuput);
+		UserInterface::parseBoolean(args, "texOutput", &texOuput);
+		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
+
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, texOuput, dspOccupationThreshold);
 	}
 
 
@@ -610,7 +615,8 @@ namespace flopoco {
                         wOut(int)=0: size of the output if you want a truncated multiplier. 0 for full multiplier;\
                         signedIO(bool)=false: inputs and outputs can be signed or unsigned;\
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
-                        texOutput(bool)=false: if true, generate a tex document with the tiling represented in it", // This string will be parsed
+                        texOutput(bool)=false: if true, generate a tex document with the tiling represented in it;\
+                        dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
 											 "", // no particular extra doc needed
 											IntMultiplier::parseArguments,
 											IntMultiplier::unitTest

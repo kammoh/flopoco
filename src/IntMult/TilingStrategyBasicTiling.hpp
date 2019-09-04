@@ -13,7 +13,8 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 				int wOut,
 				bool signedIO,
 				BaseMultiplierCollection* bmc,
-				base_multiplier_id_t prefered_multiplier);
+				base_multiplier_id_t prefered_multiplier,
+				float occupation_threshold);
 		void solve();
 
 	private:
