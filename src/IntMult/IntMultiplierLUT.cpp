@@ -26,7 +26,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 
 	addInput("X", wX);
 	addInput("Y", wY);
-	addOutput("O", wR);
+	addInput("O", wR);
 
 	vector<mpz_class> val;
 	for (int yx=0; yx < 1<<(wX+wY); yx++)
@@ -37,13 +37,11 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 
-	vhdl << declare(0.0,"Xtable",wX+wY) << " <= Y & X;" << endl;
+	vhdl << declare(0.0,"Xtable",wX+wY) << " <= X & Y;" << endl;
 
 	inPortMap(op, "X", "Xtable");
 	outPortMap(op, "Y", "O");
-
 	vhdl << instance(op, "TableMult");
-
 }
 
 mpz_class IntMultiplierLUT::function(int yx)

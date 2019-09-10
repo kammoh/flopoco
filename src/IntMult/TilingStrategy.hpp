@@ -17,7 +17,7 @@ public:
 
 	virtual void solve() = 0;
 	void printSolution();
-	void printSolutionTeX(ofstream &outstream, bool triangularStyle=false);
+	void printSolutionTeX(ofstream &outstream);
 
 	list<mult_tile_t>& getSolution()
 	{

@@ -1086,7 +1086,6 @@ namespace flopoco{
 	}
 	
 	void Operator::outPortMap(string componentPortName, string actualSignalName){
-		REPORT(DEBUG, "outPortMap : " << componentPortName << " => "  << actualSignalName);
 
 		//declare the signal only if not existing (existing signals may happen when port maps to different ranges are performed, hence we cannot treat this as an error)
 		if(!isSignalDeclared(actualSignalName))

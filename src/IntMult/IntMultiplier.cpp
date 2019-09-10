@@ -106,7 +106,7 @@ namespace flopoco {
 		BitHeap bitHeap(this, wOut + guardBits);
 //		bitHeap = new BitHeap(this, wOut+10); //!!! just for test
 
-		REPORT(DETAILED, "Creating BaseMultiplierCollection")
+		REPORT(INFO, "Creating BaseMultiplierCollection")
 //		BaseMultiplierCollection baseMultiplierCollection(parentOp->getTarget(), wX, wY);
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 
@@ -267,7 +267,6 @@ namespace flopoco {
 
 			oname.str("");
 			oname << "tile_" << i << "_output";
-
 			realiseTile(tile, i, oname.str());
 
 			ofname.str("");
@@ -347,14 +346,12 @@ namespace flopoco {
 		nameOutput.str("");
 		nameOutput << "tile_" << idx << "_mult";
 
-		inPortMap("X", multIn1SigName);
-		inPortMap("Y", multIn2SigName);
-		outPortMap("O", output_name);
-
+		inPortMap(nullptr, "X", multIn1SigName);
+		inPortMap(nullptr, "Y", multIn2SigName);
+		outPortMap(nullptr, "O", output_name);
 		auto mult = parameters.generateOperator(this, getTarget());
 
 		vhdl << instance(mult, nameOutput.str(), false) <<endl;
-
 		return mult;
 	}
 
@@ -500,8 +497,8 @@ namespace flopoco {
         mpz_class svY = tc->getInputValue("Y");
         mpz_class svR;
 
-		//cerr << "X : " << svX.get_str(10) << " (" << svX.get_str(2) << ")" << endl;
-		//cerr << "Y : " << svY.get_str(10) << " (" << svY.get_str(2) << ")" << endl;
+		cerr << "X : " << svX.get_str(10) << " (" << svX.get_str(2) << ")" << endl;
+		cerr << "Y : " << svY.get_str(10) << " (" << svY.get_str(2) << ")" << endl;
 
 
 		if(signedIO)

@@ -35,7 +35,6 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
 
 	//LUT based multipliers
 	double score = target->lutConsumption(1);
-/*
 	for (int i = 1 ; i <= target->maxLutInputs(); i++) {
 		double newScore = target->lutConsumption(i+1);
 		if (newScore != score) {
@@ -43,14 +42,9 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
 			score = newScore;
 		}
 	}
-*/
-	baseMultiplierCategories.push_back(new BaseMultiplierLUT(6, score)); //!!!
 
-	if(target->useTargetOptimizations())
-	{
-		for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
-			baseMultiplierCategories.push_back(t);
-		}
+	for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
+		baseMultiplierCategories.push_back(t);
 	}
 }
 
