@@ -83,7 +83,6 @@ namespace flopoco{
 
 		newInstance("IntMultiplier", "SignificandMultiplication", "wX="+to_string(wFX_+1)+" wY="+to_string(wFY_+1)+" wOut="+to_string(sigProdSize)+ " dspThreshold="+to_string(dspOccupationThreshold),"X=>sigX,Y=>sigY", "R=>sigProd");
 
-
 		/* Exception Handling, assumed to be faster than both exponent and significand computations */
 		vhdl << tab << declare("excSel",4) <<" <= X"<<range(wEX_ + wFX_ +2, wEX_ + wFX_ + 1) << " & Y"<<range(wEY_ + wFY_ +2, wEY_ + wFY_ +1) << ";" << endl;
 
@@ -98,7 +97,6 @@ namespace flopoco{
 
 			vhdl << tab<< declare("norm") << " <= sigProd" << of(sigProdSize -1) << ";"<<endl;
 
-			double expPostNormCriticalPath=0; //!getCriticalPath();
 			vhdl << tab<< "-- exponent update"<<endl;
 			vhdl << tab<< declare("expPostNorm", wEX_+2) << " <= expSum + (" << zg(wEX_+1,0) << " & norm);"<<endl;
 
