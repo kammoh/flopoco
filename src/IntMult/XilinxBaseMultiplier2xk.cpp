@@ -57,7 +57,7 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
     addInput("Y", wY, true);
 
 
-    addOutput("R", width+2, 1, true);
+    addOutput("O", width+2, 1, true);
 
     if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by XilinxBaseMultiplier2xkOp, sorry");
 
@@ -123,7 +123,7 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
     }
     vhdl << endl;
 
-    vhdl << tab << "R <= cc_co(" << width << ") & cc_o(" << width << " downto 0);" << endl;
+    vhdl << tab << "O <= cc_co(" << width << ") & cc_o(" << width << " downto 0);" << endl;
 }
 
 }   //end namespace flopoco
