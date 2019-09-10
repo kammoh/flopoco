@@ -27,7 +27,7 @@ namespace flopoco {
          * @param[in] signedIO       false=unsigned, true=signed
          * @param[in] texOutput      true=generate a tek file with the found tiling solution
          **/
-        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, bool texOutput = false, float dspOccupationThreshold=0.0);
+        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0);
 
 		/**
 		 * The emulate function.

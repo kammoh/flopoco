@@ -53,7 +53,7 @@ namespace flopoco {
 		return wX + wY;
 	}
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, bool texOutput, float dspOccupationThreshold):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold)
 	{
         srcFileName="IntMultiplier";
@@ -131,15 +131,23 @@ namespace flopoco {
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
 		auto solLen = solution.size();
 		REPORT(DETAILED, "Found solution has " << solLen << " tiles")
-		if (texOutput) {
+		if (target_->generateFigures()) {
             ofstream texfile;
-            texfile.open("multiplier.tex");
-            if((texfile.rdstate() & ofstream::failbit) != 0) {
-                cerr << "Error when opening multiplier.tex file for output. Will not print tiling configuration." << endl;
-            } else {
-				tilingStrategy.printSolutionTeX(texfile);
-                texfile.close();
-            }
+			texfile.open("multiplier_tiling.tex");
+			if((texfile.rdstate() & ofstream::failbit) != 0) {
+				cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration." << endl;
+			} else {
+				tilingStrategy.printSolutionTeX(texfile,false);
+				texfile.close();
+			}
+
+			texfile.open("multiplier_shape.tex");
+			if((texfile.rdstate() & ofstream::failbit) != 0) {
+				cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration." << endl;
+			} else {
+				tilingStrategy.printSolutionTeX(texfile,true);
+				texfile.close();
+			}
         }
 
 		schedule();
@@ -590,7 +598,7 @@ namespace flopoco {
 	
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut ;
-        bool signedIO,superTile,texOuput;
+        bool signedIO,superTile;
         double dspOccupationThreshold=0.0;
 
 		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
@@ -598,10 +606,9 @@ namespace flopoco {
 		UserInterface::parsePositiveInt(args, "wOut", &wOut);
 		UserInterface::parseBoolean(args, "signedIO", &signedIO);
 		UserInterface::parseBoolean(args, "superTile", &superTile);
-		UserInterface::parseBoolean(args, "texOutput", &texOuput);
 		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, texOuput, dspOccupationThreshold);
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold);
 	}
 
 
@@ -615,7 +622,6 @@ namespace flopoco {
                         wOut(int)=0: size of the output if you want a truncated multiplier. 0 for full multiplier;\
                         signedIO(bool)=false: inputs and outputs can be signed or unsigned;\
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
-                        texOutput(bool)=false: if true, generate a tex document with the tiling represented in it;\
                         dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
 											 "", // no particular extra doc needed
 											IntMultiplier::parseArguments,
