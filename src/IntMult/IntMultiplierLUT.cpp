@@ -26,7 +26,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 
 	addInput("X", wX);
 	addInput("Y", wY);
-	addInput("O", wR);
+	addOutput("O", wR);
 
 	vector<mpz_class> val;
 	for (int yx=0; yx < 1<<(wX+wY); yx++)
