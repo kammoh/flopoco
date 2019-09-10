@@ -37,7 +37,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 
-	vhdl << declare(0.0,"Xtable",wX+wY) << " <= X & Y;" << endl;
+	vhdl << declare(0.0,"Xtable",wX+wY) << " <= Y & X;" << endl;
 
 	inPortMap(op, "X", "Xtable");
 	outPortMap(op, "Y", "O");
