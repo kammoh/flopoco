@@ -39,7 +39,7 @@ namespace flopoco {
 	 * @param wY size of the second input
 	 * @return the number of bits needed to store a product of I<wX> * I<WY>
 	 */
-	inline unsigned int IntMultiplier::prodsize(unsigned int wX, unsigned int wY)
+	unsigned int IntMultiplier::prodsize(unsigned int wX, unsigned int wY)
 	{
 		if(wX == 0 || wY == 0)
 			return 0;
@@ -68,6 +68,7 @@ namespace flopoco {
 
         multiplierUid=parentOp->getNewUId();
 		wFullP = prodsize(wX, wY);
+		bool needCentering;
 
 		if(wOut == 0)
 			wOut = prodsize(wX, wY);
@@ -137,7 +138,7 @@ namespace flopoco {
 			if((texfile.rdstate() & ofstream::failbit) != 0) {
 				cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration." << endl;
 			} else {
-				tilingStrategy.printSolutionTeX(texfile,false);
+				tilingStrategy.printSolutionTeX(texfile, wOut, false);
 				texfile.close();
 			}
 
@@ -145,7 +146,7 @@ namespace flopoco {
 			if((texfile.rdstate() & ofstream::failbit) != 0) {
 				cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration." << endl;
 			} else {
-				tilingStrategy.printSolutionTeX(texfile,true);
+				tilingStrategy.printSolutionTeX(texfile, wOut, true);
 				texfile.close();
 			}
         }
@@ -153,6 +154,10 @@ namespace flopoco {
 		schedule();
 
 		branchToBitheap(&bitHeap, solution, prodsize(wX, wY) - (wOut + guardBits));
+
+		if (guardBits > 0) {
+			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
+		}
 
 		bitHeap.startCompression();
 
@@ -168,8 +173,10 @@ namespace flopoco {
 		auto nbDontCare = ps - wOut;
 
 		mpz_class errorBudget{1};
-		errorBudget <<= nbDontCare;
+		errorBudget <<= (nbDontCare >= 1) ? nbDontCare - 1 : 0;
 		errorBudget -= 1;
+
+		REPORT(DEBUG, "computeGuardBits: error budget is " << errorBudget.get_str())
 
 		unsigned int nbUnneeded;
 		for (nbUnneeded = 1 ; nbUnneeded <= nbDontCare ; nbUnneeded += 1) {
@@ -181,12 +188,17 @@ namespace flopoco {
 			} else {
 				bitAtCurCol = ps -nbUnneeded;
 			}
-			REPORT(DETAILED, "IntMultiplier::computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
+			REPORT(DETAILED, "computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
 			mpz_class currbitErrorAmount{bitAtCurCol};
 			currbitErrorAmount <<= (nbUnneeded - 1);
+
+			REPORT(DETAILED, "computeGuardBits: Local error for column " << nbUnneeded << " : " << currbitErrorAmount.get_str())
+
 			errorBudget -= currbitErrorAmount;
-			if(errorBudget < 0)
+			REPORT(DETAILED, "computeGuardBits: New error budget: " << errorBudget.get_str())
+			if(errorBudget < 0) {
 				break;
+			}
 		}
 		nbUnneeded -= 1;
 
@@ -281,24 +293,43 @@ namespace flopoco {
 			ofname << "tile_" << i << "_filtered_output";
 
 			bool signedCase = (parameters.isSignedMultX() || parameters.isSignedMultY());
+			bool onlyOneSigned = parameters.isSignedMultX() xor parameters.isSignedMultY();
+			bool isOneByOne = (parameters.getMultXWordSize() == 1) and (parameters.getMultYWordSize() == 1);
 
 			vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
 					range(toSkip + tokeep - 1, toSkip) << ";" << endl;
 
-			if (signedCase and tokeep >= 2) {
+			bool isXSizeOneAndSigned = (parameters.getMultXWordSize() == 1) and parameters.isSignedMultX();
+			bool isYSizeOneAndSigned = (parameters.getMultYWordSize() == 1) and parameters.isSignedMultY();
+
+			bool subtractAll = (isXSizeOneAndSigned and not parameters.isSignedMultY()) or
+								(isYSizeOneAndSigned and not parameters.isSignedMultX());
+
+			bool subtractPart = (isXSizeOneAndSigned or isYSizeOneAndSigned) and not subtractAll;
+
+			bool split = tokeep >= 2 and (subtractPart or (not subtractAll and signedCase));
+
+			if (split) {
 				oname.str("");
 				oname << ofname.str() <<  "_low";
 				vhdl << declare(.0, oname.str(), tokeep - 1) << " <= " << ofname.str() <<
 						range(tokeep - 2, 0) << ";" << endl;
-				bitheap->addSignal(oname.str(), bitHeapOffset);
+				if (subtractPart) {
+					bitheap->subtractSignal(oname.str(), bitHeapOffset);
+				} else {
+					bitheap->addSignal(oname.str(), bitHeapOffset);
+				}
 
 				oname.str("");
 				oname << ofname.str() <<  "_sign";
 				vhdl << declare(.0, oname.str(), 1) << " <= " << ofname.str() << range(tokeep - 1, tokeep-1) << ";" << endl;
-
-				bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
+				if (subtractPart) {
+					bitheap->addSignal(oname.str(), bitHeapOffset + tokeep - 1);
+				} else {
+					bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
+				}
 			} else {
-				if(signedCase) {
+				if(onlyOneSigned or subtractAll) {
 					bitheap->subtractSignal(ofname.str(), bitHeapOffset);
 				} else {
 					bitheap->addSignal(ofname.str(), bitHeapOffset);
