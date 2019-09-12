@@ -79,7 +79,6 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 
 FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool signedIn_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_) :
 		Operator(parentOp, target),
-		thisOp(this),
 		signedIn(signedIn_),
 		msbIn(msbIn_),
 		lsbIn(lsbIn_),
@@ -313,7 +312,7 @@ void flopoco::FixRealConstMult::registerFactory()	{
 			constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
 			targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1; \
 			method(string)=auto: desired method. Can be 'KCM', 'ShiftAdd' or 'auto' (let FloPoCo decide which operator performs best)",
-			"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
+			"The KCM variant is described in <a href=\"bib/flopoco.html#volkova:hal-01561052\">this article</a>. The Shift-and-Add variant is described  in <a href=\"bib/flopoco.html#deDinechinEtAl2019-Arith-KCMvsSA\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
 			FixRealConstMult::parseArguments,
 			FixRealConstMult::unitTest
 	);

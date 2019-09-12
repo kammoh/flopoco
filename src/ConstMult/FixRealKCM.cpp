@@ -133,7 +133,7 @@ namespace flopoco{
 	
 	//Constructor for the virtual KCM.
 	FixRealKCM::FixRealKCM(
-												 Operator* thisOp_, 
+												 Operator* thisOp_, // the operator this virtual op belongs to 
 												 string multiplicandX,
 												 bool signedIn_,
 												 int msbIn_,
@@ -143,9 +143,10 @@ namespace flopoco{
 												 bool addRoundBit_,
 												 double targetUlpError_
 												 ):
-		FixRealConstMult(thisOp_->getParentOp(), thisOp_->getTarget()),
-		addRoundBit(addRoundBit_), // will be set by buildForBitHeap()
-		bitHeap(NULL),
+		FixRealConstMult(thisOp_->getParentOp(), thisOp_->getTarget(), signedIn_, msbIn_, lsbIn_, lsbOut_, constant_, targetUlpError_),
+		addRoundBit(addRoundBit_), 
+		thisOp(thisOp_),
+		bitHeap(NULL), // will be set by buildForBitHeap()
 		inputSignalName(multiplicandX)
 	{
 
@@ -176,7 +177,7 @@ namespace flopoco{
 		sollya_lib_set_roundingwarnings(sollya_lib_parse_string("off"));
 
 		if(lsbIn>msbIn) 
-			throw string("FixRealKCM: Error, lsbIn>msbIn");
+			THROWERROR("FixRealKCM: Error, lsbIn=" << lsbIn<< " > msbIn="<<msbIn);
     
 		if(targetUlpError > 1.0)
 			THROWERROR("FixRealKCM: Error, targetUlpError="<<
@@ -523,6 +524,9 @@ namespace flopoco{
 	}			
 
 
+	// TODO: get rid of this in favor of FixRealConstMult, but requires a bit of refactoring first:
+	// it is used at least in FixSOPC and FPExp
+	
 	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
 	{
 		int lsbIn, lsbOut, msbIn;
@@ -560,7 +564,7 @@ namespace flopoco{
 				lsbOut(int): weight associated to output least significant bit; \
 				constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
 				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
-				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
+				"This variant of Ken Chapman's Multiplier is briefly described in <a href=\"bib/flopoco.html#volkova:hal-01561052\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
 				FixRealKCM::parseArguments,
 				FixRealKCM::unitTest
 		);
@@ -568,7 +572,6 @@ namespace flopoco{
 
 	
 	/************************** The FixRealKCMTable class ********************/
-#if NEWTABLEINTERFACE
 
 	
 	vector<mpz_class> FixRealKCM::kcmTableContent(int i) {
@@ -650,103 +653,6 @@ namespace flopoco{
 	}
 
 
-
-#else
-
-	FixRealKCMTable::FixRealKCMTable(Target* target, FixRealKCM* mother, int i):
-			Table(target,
-						mother->m[i] - mother->l[i]+1, // wIn
-						mother->m[i] + mother->msbC  - mother->lsbOut + mother->g +1, //wOut TODO: the +1 could sometimes be removed
-						0, // minIn
-						-1, // maxIn
-						1), // logicTable 
-			mother(mother), 
-			index(i),
-			lsbInWeight(mother->l[i])
-	{
-		ostringstream name; 
-		srcFileName="FixRealKCM";
-		name << mother->getName() << "_Table_" << index;
-		setName(name.str()); // This one not a setNameWithFreqAndUIDWithFreqAndUID
-		setCopyrightString("Florent de Dinechin (2007-2011-?), 3IF Dev Team");
-		
-	}
-  
-
-
-
-	mpz_class FixRealKCMTable::function(int x0)
-	{
-		// This function returns a value that is signed.
-		int x;
-		
-		// get rid of two's complement
-		x = x0;
-		//Only the MSB "digit" has a negative weight
-		if(mother->tableOutputSign[index]==0)	{ // only in this case interpret input as two's complement
-			if ( x0 > ((1<<(wIn-1))-1) )	{
-				x -= (1<<wIn);
-			}
-		} // Now x is a signed number only if it was chunk 0 and its sign bit was set
-
-		//cout << "index=" << index << " x0=" << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   "  <<"  wout="<<wOut<< "   " ;
-
-		mpz_class result;
-		mpfr_t mpR, mpX;
-
-		mpfr_init2(mpR, 10*wOut);
-		mpfr_init2(mpX, 2*wIn); //To avoid mpfr bug if wIn = 1
-		                       
-		mpfr_set_si(mpX, x, GMP_RNDN); // should be exact
-		// Scaling so that the input has its actual weight
-		mpfr_mul_2si(mpX, mpX, lsbInWeight, GMP_RNDN); //Exact
-
-		//						double dx = mpfr_get_d(mpX, GMP_RNDN);
-		//			cout << "input as double=" <<dx << "  lsbInWeight="  << lsbInWeight << "    ";
-			
-		// do the mult in large precision
-		if(mother->tableOutputSign[index]==0)	
-			mpfr_mul(mpR, mpX, mother->mpC, GMP_RNDN);
-		else // multiply by the absolute value of the constant, the bitheap logic does the rest
-			mpfr_mul(mpR, mpX, mother->absC, GMP_RNDN);
-			
-		// Result is integer*mpC, which is more or less what we need: just scale it to an integer.
-		mpfr_mul_2si( mpR, 
-									mpR,
-									-mother->lsbOut + mother->g,	
-									GMP_RNDN	); //Exact
-
-		//			double dr=mpfr_get_d(mpR, GMP_RNDN);
-		//			cout << "  dr=" << dr << "  ";
-			
-		// Here is when we do the rounding
-		mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
-
-		//cout << mother->tableOutputSign[index] << "  result0=" << result << "  ";
-
-		// sign management
-		if(mother->tableOutputSign[index]==0) {
-			// this is a two's complement number with a non-constant sign bit
-			// so we encode it as two's complement
-			if(result<0)
-				result +=(mpz_class(1) << wOut);				
-		}
-		
-		//cout  << result << "  " <<endl;
-
-		// Add the rounding bit to the table 0 if there are guard bits,
-		if(mother->addRoundBit && (index==0) && (mother->g>0)) {
-			int roundBit=1<<(mother->g-1);
-			// but beware: the table output may be subtracted (see buildTablesForBitHeap() )
-			if(mother-> tableOutputSign[0] >= 0) // This table will be added
-				result += roundBit;
-			else // This table will be subtracted
-				result -= roundBit;
-		}
-		return result;
-	}
-
-#endif
 	
 }
 

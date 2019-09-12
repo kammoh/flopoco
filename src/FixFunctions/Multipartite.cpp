@@ -148,7 +148,7 @@ namespace flopoco
 			slack = (1<<deltaBits)-1 - deltaMax; // so the deltaTIV may represent values between 0 and 31, therefore we have a slack of 31-21=10
 			saved_LSBs_in_ATIV = intlog2(slack)-1; // for instance if slack=10 we may save 3 bits, because it will offset the TIV at most by 7 which is smaller than 10
 			// This is the number of bits we are sure we can shave, but this is only a worst-case analysis:  we could be more lucky
-			// However it will save very little: TODO is somebody wants to try
+			// However it will save very little: TODO if somebody wants to try
 
 			tempRho = alpha - s;
 			tempSizeATIV = (outputSize+guardBits-saved_LSBs_in_ATIV)<<tempRho;
