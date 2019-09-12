@@ -64,8 +64,6 @@ namespace flopoco{
 		vhdl << tab << declare("bias", wEX_+2) << " <= CONV_STD_LOGIC_VECTOR(" << intpow2(wER-1)-1 << ","<<wEX_+2<<");"<< endl;
 
 		vhdl << tab << declare(getTarget()->adderDelay(wEX_+2), "expSum",wEX+2) << " <= expSumPreSub - bias;" << endl;
-		double exponentCriticalPath=0; //!getCriticalPath();
-
 
 		/* Significand Handling */
 		vhdl << tab << declare("sigX",1 + wFX_) << " <= \"1\" & X" << range(wFX_-1,0) << ";" << endl;
