@@ -1,3 +1,5 @@
+
+#if 0
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -161,3 +163,4 @@ BasicCompressor::BasicCompressor(Target * target, vector<int> h)
 
 
 
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef BasicCompressor_HPP
 #define BasicCompressor_HPP
 
@@ -51,4 +52,5 @@ namespace flopoco
 	};
 }
 
+#endif
 #endif

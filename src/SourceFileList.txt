@@ -43,7 +43,7 @@ FixFilters/FixHalfSine
 FixFilters/FixIIR
 IntAddSubCmp/IntAdder
 IntAddSubCmp/IntDualAddSub
-IntAddSubCmp/BasicCompressor
+#IntAddSubCmp/BasicCompressor
 IntAddSubCmp/IntMultiAdder
 ConstMult/ShiftAddOp
 ConstMult/ShiftAddDag
