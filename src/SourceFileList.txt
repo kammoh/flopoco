@@ -25,7 +25,7 @@ BitHeap/Compressor
 BitHeap/BitHeap
 BitHeap/CompressionStrategy
 BitHeap/BitHeapPlotter
-BitHeap/Solution
+BitHeap/BitHeapSolution
 BitHeap/BitHeapTest
 BitHeap/FirstFittingCompressionStrategy
 BitHeap/ParandehAfsharCompressionStrategy

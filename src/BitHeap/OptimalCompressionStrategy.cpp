@@ -37,7 +37,7 @@ namespace flopoco{
 		printBitAmounts();
 
 		//new solution
-		solution = Solution();
+		solution = BitHeapSolution();
 		solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
 		//generates the compressor tree but only works one the bitAmount datastructure. Fills the solution. No VHDL-Code is written here.
