@@ -7,7 +7,6 @@
 
 
 namespace flopoco{
-#define NEWTABLEINTERFACE 1 // transitional, remove the old table interface at some point
 
 	// Here is the principle for a bit-heap version.
 	// The parent first calls the constructor, which predicts the architecture (shift or tables, how many tables) and deduces errorInUlps.
@@ -44,7 +43,7 @@ namespace flopoco{
 		 * 							truncate the result
 		 */
 		FixRealKCM(
-							 OperatorPtr thisOp,
+							 Operator* parentOp, 
 							 Target* target, 
 							 bool signedIn, 
 							 int msbIn, 
@@ -82,7 +81,7 @@ namespace flopoco{
 
 		 */
 		FixRealKCM(
-							 Operator* parentOp, 
+							 OperatorPtr thisOp,
 							 string multiplicandX,
 							 bool signedIn,
 							 int msbIn,
@@ -143,32 +142,12 @@ namespace flopoco{
 		void computeGuardBits();
 
 	private:
+		Operator*	thisOp; 		/**< The Operator for this constant multiplier: either "this" in the case of a standalone op, or the operator that instanciated its bitHeap in the case of a virtual KCM */
 		bool specialCasesForBitHeap();
 		void buildTablesForBitHeap();
 		string createShiftedPowerOfTwo(string resultSignalName);
-
-		
-#if NEWTABLEINTERFACE
 		vector<mpz_class> kcmTableContent(int i);
 
-#else
-		class FixRealKCMTable : public Table
-	{
-		public:
-			FixRealKCMTable(
-					Target* target, 
-					FixRealKCM* mother, 
-					int i
-					);
-
-			mpz_class function(int x);
-			FixRealKCM* mother;
-			int index;
-			//Weight of input lsb
-			int lsbInWeight;
-			bool negativeSubproduct;
-	};
-#endif
 
 	};
 

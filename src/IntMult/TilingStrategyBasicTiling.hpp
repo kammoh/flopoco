@@ -8,12 +8,14 @@ namespace flopoco {
 class TilingStrategyBasicTiling : public TilingStrategy {
 	public:
 		TilingStrategyBasicTiling(
-				int wX,
-				int wY,
-				int wOut,
+				unsigned int wX,
+				unsigned int wY,
+				unsigned int wOut,
 				bool signedIO,
 				BaseMultiplierCollection* bmc,
-				base_multiplier_id_t prefered_multiplier);
+				base_multiplier_id_t prefered_multiplier,
+				float occupation_threshold,
+				size_t maxPrefMult=0);
 		void solve();
 
 	private:
@@ -29,11 +31,13 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		int shrinkBox(int& xright, int& ytop, int& xdim, int& ydim, int offset);
 
 
-		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, int offset, int curArea);
+		void tileBox(int curX, int curY, int curDeltaX, int curDeltaY, int offset);
+
 		base_multiplier_id_t prefered_multiplier_;
 		base_multiplier_id_t small_tile_mult_;
 		size_t numUsedMults_;
-		float occupation_threshold=0.; //TODO replace by flopoco command line option value
+		float occupation_threshold_; //TODO Add to constructor
+		size_t max_pref_mult_;
 		bool truncated;
 };
 

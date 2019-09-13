@@ -1,14 +1,15 @@
 #include "IntMultiplierLUT.hpp"
 #include "Table.hpp"
+#include "IntMultiplier.hpp"
 
 namespace flopoco
 {
 
 IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, int wY, bool isSignedX, bool isSignedY, bool flipXY) : Operator (parentOp, target), wX(wX), wY(wY), isSignedX(isSignedX), isSignedY(isSignedY)
 {
-	if(isSignedX || isSignedY)
+	/*if(isSignedX || isSignedY)
 		THROWERROR("signed input currently not supported by IntMultiplierLUT, sorry");
-
+	*/
 	if(flipXY)
 	{
 		//swapp x and y:
@@ -17,7 +18,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 		wY = tmp;
 	}
 
-	int wR = wX + wY; //!!! check for signed case!
+	int wR = static_cast<int>(IntMultiplier::prodsize(wX, wY)); //!!! check for signed case!
 
 	ostringstream name;
 	name << "IntMultiplierLUT_" << wX << (isSignedX==1 ? "_signed" : "") << "x" << wY  << (isSignedY==1 ? "_signed" : "");
@@ -26,9 +27,22 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 
 	addInput("X", wX);
 	addInput("Y", wY);
-	addInput("O", wR);
+	addOutput("O", wR);
+
+	if (wX == 1 and not isSignedX) {
+		vhdl << tab << declare(0.0, "replicated", wY) << " <= (" << (wY - 1) << " downto 0 => X(0));" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "prod", wY) << " <= Y and replicated;" << endl;
+		vhdl << tab << "O <= prod;" << endl;
+		return;
+	} else if (wY == 1 and not isSignedY) {
+		vhdl << tab << declare(0.0, "replicated", wX) << " <= (" << (wX - 1) << " downto 0 => Y(0));" << endl;
+		vhdl << tab << declare(target->logicDelay(2), "prod", wX) << " <= X and replicated;" << endl;
+		vhdl << tab << "O <= prod;" << endl;
+		return;
+	}
 
 	vector<mpz_class> val;
+	REPORT(DEBUG, "Filling table for a LUT multiplier of size " << wX << "x" << wY << " (out put size is " << wR << ")")
 	for (int yx=0; yx < 1<<(wX+wY); yx++)
 	{
 		val.push_back(function(yx));
@@ -37,7 +51,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 
-	vhdl << declare(0.0,"Xtable",wX+wY) << " <= X & Y;" << endl;
+	vhdl << declare(0.0,"Xtable",wX+wY) << " <= Y & X;" << endl;
 
 	inPortMap(op, "X", "Xtable");
 	outPortMap(op, "Y", "O");
@@ -49,7 +63,7 @@ mpz_class IntMultiplierLUT::function(int yx)
 	mpz_class r;
 	int y = yx>>wX;
 	int x = yx -(y<<wX);
-	int wF=wX+wY;
+	int wF = IntMultiplier::prodsize(wX, wY);
 
 	if(isSignedX){
 		if ( x >= (1 << (wX-1)))
@@ -66,15 +80,17 @@ mpz_class IntMultiplierLUT::function(int yx)
 	//if(negate && isSignedX && isSignedY) cerr << "  -r=" << r;
 	if ( r < 0)
 		r += mpz_class(1) << wF;
+
+	REPORT(DEBUG, "Value for x=" << x << ", y=" << y << " : " << r.get_str(2))
 	//if(!negate && isSignedX && isSignedY) cerr << "  r2C=" << r;
 
-	if(wX+wY<wF){ // wOut is that of Table
+	/*if(wX+wY < wF){ // wOut is that of Table
 		// round to nearest, but not to nearest even
 		int tr=wF-wX-wY; // number of truncated bits
 		// adding the round bit at half-ulp position
 		r += (mpz_class(1) << (tr-1));
 		r = r >> tr;
-	}
+	}*/
 	//if(!negate && isSignedX && isSignedY) cerr << "  rfinal=" << r << endl;
 
 	return r;

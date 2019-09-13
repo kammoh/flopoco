@@ -31,8 +31,8 @@ using namespace std;
 namespace flopoco{
 
 	FPMult::FPMult(OperatorPtr parentOp, Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
-	                           bool norm, bool correctlyRounded, double ratio, map<string, double> inputDelays) :
-		Operator(parentOp, target), wEX_(wEX), wFX_(wFX), wEY_(wEY), wFY_(wFY), wER_(wER), wFR_(wFR), normalized_(norm), correctlyRounded_(correctlyRounded)  {
+	                           bool norm, bool correctlyRounded, float dspOccupationThreshold) :
+		Operator(parentOp, target), wEX_(wEX), wFX_(wFX), wEY_(wEY), wFY_(wFY), wER_(wER), wFR_(wFR), normalized_(norm), correctlyRounded_(correctlyRounded), dspOccupationThreshold(dspOccupationThreshold)  {
 
 		ostringstream name;
 		name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_<<"_uid"<<getNewUId();
@@ -64,8 +64,6 @@ namespace flopoco{
 		vhdl << tab << declare("bias", wEX_+2) << " <= CONV_STD_LOGIC_VECTOR(" << intpow2(wER-1)-1 << ","<<wEX_+2<<");"<< endl;
 
 		vhdl << tab << declare(getTarget()->adderDelay(wEX_+2), "expSum",wEX+2) << " <= expSumPreSub - bias;" << endl;
-		double exponentCriticalPath=0; //!getCriticalPath();
-
 
 		/* Significand Handling */
 		vhdl << tab << declare("sigX",1 + wFX_) << " <= \"1\" & X" << range(wFX_-1,0) << ";" << endl;
@@ -80,30 +78,8 @@ namespace flopoco{
 			// faithful rounding will be computed by IntTruncMultiplier
 			// but we still  have to re-round behind
 			sigProdSize = wFR_+g;
-#if 0
-#if 1
-		IntMultiplier* intmult_ = new IntMultiplier(this, target, wFX_+1, wFY_+1, sigProdSize, false /*signedIO*/);
-#else
-		int useLimits=1; // TODO WTF is it?
-		IntTruncMultiplier* intmult_ = new IntTruncMultiplier(target, wFX_+1, wFY_+1, sigProdSize, ratio, useLimits, maxTimeInMinutes,
-		                                                     false, /* interactive */
-		                                                     false, /* signed */
-		                                                     false  /* roundCompensate*/);
-#endif
 
-
-		inPortMap( intmult_, "X", "sigX");
-		inPortMap( intmult_, "Y", "sigY");
-		outPortMap(intmult_, "R", "sigProd");
-		vhdl << instance(intmult_, "SignificandMultiplication");
-//!		syncCycleFromSignal("sigProd");
-//!		setCriticalPath( intmult_->getOutputDelay("R"));
-#endif
-		double significandCriticalPath=0; //!getCriticalPath();
-
-//		declare("sigProd", -1);
-		newInstance("IntMultiplier", "SignificandMultiplication", "wX="+to_string(wFX_+1)+" wY="+to_string(wFY_+1),"X=>sigX,Y=>sigY", "R=>sigProd");
-
+		newInstance("IntMultiplier", "SignificandMultiplication", "wX="+to_string(wFX_+1)+" wY="+to_string(wFY_+1)+" wOut="+to_string(sigProdSize)+ " dspThreshold="+to_string(dspOccupationThreshold),"X=>sigX,Y=>sigY", "R=>sigProd");
 
 		/* Exception Handling, assumed to be faster than both exponent and significand computations */
 		vhdl << tab << declare("excSel",4) <<" <= X"<<range(wEX_ + wFX_ +2, wEX_ + wFX_ + 1) << " & Y"<<range(wEY_ + wFY_ +2, wEY_ + wFY_ +1) << ";" << endl;
@@ -119,23 +95,18 @@ namespace flopoco{
 
 			vhdl << tab<< declare("norm") << " <= sigProd" << of(sigProdSize -1) << ";"<<endl;
 
-//!			manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wEX+2));
-			double expPostNormCriticalPath=0; //!getCriticalPath();
 			vhdl << tab<< "-- exponent update"<<endl;
 			vhdl << tab<< declare("expPostNorm", wEX_+2) << " <= expSum + (" << zg(wEX_+1,0) << " & norm);"<<endl;
 
 			//  exponent update is in parallel to the mantissa shift, so get back there
-//!			setCycleFromSignal("expSum", exponentCriticalPath, false);
-//!			syncCycleFromSignal("sigProd", significandCriticalPath, true);
 
 			//check is rounding is needed
 			if (1+wFR_ >= wFX_+wFY_+2) {
 				/* => no rounding needed - possible padding;
 				   in this case correctlyRounded_ is irrelevant: result is exact  */
-				vhdl << tab << declare("resSig", wFR_) << " <= sigProd" << range(wFX_+wFY_,0) << " & " <<   zg(1+wFR_ - (wFX_+wFY_+2) , 0)<<" when norm='1' else"<<endl;
+				vhdl << tab << declare(getTarget()->lutDelay(), "resSig", wFR_) << " <= sigProd" << range(wFX_+wFY_,0) << " & " <<   zg(1+wFR_ - (wFX_+wFY_+2) , 0)<<" when norm='1' else"<<endl;
 				vhdl << tab <<"                      sigProd" << range(wFX_+wFY_-1,0) << " & " << zg(1+wFR_ - (wFX_+wFY_+2) + 1 , 0) << ";"<<endl;
 
-//!				manageCriticalPath(getTarget()->localWireDelay() + getTarget()->lutDelay());
 				vhdl << tab <<"with expPostNorm" << range(wER_+1, wER_) << " select"<<endl;
 				vhdl << tab << declare("excPostNorm",2) << " <=  \"01\"  when  \"00\","<<endl;
 				vhdl << tab <<"                            \"10\"             when \"01\", "<<endl;
@@ -167,16 +138,6 @@ namespace flopoco{
 					vhdl << tab << declare("round") << " <= '1' ;" << endl;
 				}
 
-#if 0
-				IntAdder* intadd_ = new IntAdder(this, target, 2 + wER_ + wFR_);
-
-				inPortMap    (intadd_, "X",   "expSig");
-				inPortMapCst (intadd_, "Y",   zg(2 + wER_ + wFR_,0));
-				inPortMap    (intadd_, "Cin", "round");
-				outPortMap   (intadd_, "R", "expSigPostRound");
-
-				vhdl << tab << instance( intadd_, "RoundingAdder");
-#endif
 				newInstance("IntAdder", "RoundingAdder", "wIn="+to_string(2 + wER_ + wFR_),"X=>expSig,Cin=>round", "R=>expSigPostRound", "Y=>" + zg(2 + wER_ + wFR_,0));
 
 
@@ -259,23 +220,30 @@ namespace flopoco{
 
 	OperatorPtr FPMult::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args){
 		int wE, wF;
+		bool correctlyRounded;
+		double dspOccupationThreshold=0.0;
+
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		UserInterface::parseBoolean(args, "correctlyRounded", &correctlyRounded);
+		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 
-		return new FPMult(parentOp, target, wE, wF, wE, wF, wE, wF); //currently, user interface only supports same data formats for all inputs and output
+		return new FPMult(parentOp, target, wE, wF, wE, wF, wE, wF, true, correctlyRounded, dspOccupationThreshold); //currently, user interface only supports same data formats for all inputs and output
 	}
 
 	void FPMult::registerFactory(){
 		UserInterface::add("FPMult", // name
-											 "A floating-point multiplier. The actual FloPoCo component supports different input and output sizes, but this is not available from the command line.",
-											 "BasicFloatingPoint", // categories
-											 "",
-											 "wE(int): exponent size in bits; \
-                        wF(int): input's mantissa size in bits;  \
-                        wFout(int)=0: output's mantissa size in bits (if 0 or ommitted, will be equal to wFIn)",
-											 "",
-											 FPMult::parseArguments
-											 ) ;
+                           "A floating-point multiplier. The actual FloPoCo component supports different input and output sizes, but this is not available from the command line.",
+                           "BasicFloatingPoint", // categories
+                           "",
+                           "wE(int): exponent size in bits; \
+                           wF(int): input's mantissa size in bits;  \
+                           wFout(int)=0: output's mantissa size in bits (if 0 or ommitted, will be equal to wFIn); \
+						   correctlyRounded(bool)=true: Use correct rounding, if false use faithful rounding;\
+						   dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
+                           "",
+                           FPMult::parseArguments
+                           ) ;
 
 	}
 }
