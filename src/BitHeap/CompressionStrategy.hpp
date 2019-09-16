@@ -11,7 +11,7 @@
 #include "BitHeap/Compressor.hpp"
 #include "BitHeap/BitHeap.hpp"
 #include "BitHeap/BitHeapPlotter.hpp"
-#include "BitHeap/Solution.hpp"
+#include "BitHeap/BitHeapSolution.hpp"
 
 #include "IntAddSubCmp/IntAdder.hpp"
 
@@ -241,7 +241,7 @@ class BitheapPlotter;
 
 		vector<vector<int> > bitAmount; 			/**< Amount of bits in each stage and column. The compressionstrategyies (currently FirstFitting does not) work on this bitAmount, and if a solution is finished, the compressors will be used. */
 
-		Solution solution;
+		BitHeapSolution solution;
 
 		BitHeap *bitheap;                        /**< The bitheap this compression strategy belongs to */
 		BitheapPlotter *bitheapPlotter;             /**< The bitheap plotter for this bitheap compression */
