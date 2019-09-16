@@ -181,7 +181,10 @@ namespace flopoco {
 
 		vhdl << tab << "R" << " <= " << bitHeap.getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
 
+		cerr << "hier! 1" << endl;
+//		delete ((TilingStrategyBasicTiling*) tilingStrategy);
 		delete tilingStrategy;
+		cerr << "hier! 2" << endl;
 	}
 
 	unsigned int IntMultiplier::computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut)
