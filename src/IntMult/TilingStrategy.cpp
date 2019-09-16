@@ -7,6 +7,7 @@ namespace flopoco {
 	TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection *baseMultiplierCollection) :
 			wX(wX), wY(wY), wOut(wOut), signedIO(signedIO), baseMultiplierCollection(baseMultiplierCollection)
 	{
+
 	}
 
 	void TilingStrategy::printSolution()

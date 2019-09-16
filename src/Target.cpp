@@ -143,6 +143,18 @@ namespace flopoco{
 		return compression_;
 	}
 
+	void Target::setTilingMethod(string method)
+	{
+		tiling_ = method;
+	}
+
+	string Target::getTilingMethod()
+	{
+		return tiling_;
+	}
+
+
+
     bool Target::hasHardMultipliers(){
 		return hasHardMultipliers_ ;
 	}

@@ -113,23 +113,41 @@ namespace flopoco {
 
 		baseMultiplierCollection.print();
 
-		REPORT(INFO, "Creating TilingStrategy")
-		TilingStrategyBasicTiling tilingStrategy(
-				wX, 
-				wY, 
-				wOut + guardBits,
-				signedIO, 
-				&baseMultiplierCollection,
-				baseMultiplierCollection.getPreferedMultiplier(),
-				dspOccupationThreshold
+		string tilingMethod = getTarget()->getTilingMethod();
+
+		REPORT(INFO, "Creating TilingStrategy using tiling method " << tilingMethod)
+
+		TilingStrategy* tilingStrategy;
+		if(tilingMethod.compare("heuristicBasicTiling") == 0)
+		{
+			tilingStrategy = new TilingStrategyBasicTiling(
+					wX,
+					wY,
+					wOut + guardBits,
+					signedIO,
+					&baseMultiplierCollection,
+					baseMultiplierCollection.getPreferedMultiplier(),
+					dspOccupationThreshold
+			);
+		} else if(tilingMethod.compare("optimal") == 0){
+			tilingStrategy = new TilingStrategyOptimalILP(
+					wX,
+					wY,
+					wOut + guardBits,
+					signedIO,
+					&baseMultiplierCollection
 			);
 
+		} else {
+			THROWERROR("Tiling strategy " << tilingMethod << " unknown");
+		}
+
 		REPORT(DEBUG, "Solving tiling problem")
-		tilingStrategy.solve();
+		tilingStrategy->solve();
 
-		tilingStrategy.printSolution();
+		tilingStrategy->printSolution();
 
-		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy.getSolution();
+		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy->getSolution();
 		auto solLen = solution.size();
 		REPORT(DETAILED, "Found solution has " << solLen << " tiles")
 		if (target_->generateFigures()) {
@@ -138,7 +156,7 @@ namespace flopoco {
 			if((texfile.rdstate() & ofstream::failbit) != 0) {
 				cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration." << endl;
 			} else {
-				tilingStrategy.printSolutionTeX(texfile, wOut, false);
+				tilingStrategy->printSolutionTeX(texfile, wOut, false);
 				texfile.close();
 			}
 
@@ -146,7 +164,7 @@ namespace flopoco {
 			if((texfile.rdstate() & ofstream::failbit) != 0) {
 				cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration." << endl;
 			} else {
-				tilingStrategy.printSolutionTeX(texfile, wOut, true);
+				tilingStrategy->printSolutionTeX(texfile, wOut, true);
 				texfile.close();
 			}
         }
@@ -162,6 +180,8 @@ namespace flopoco {
 		bitHeap.startCompression();
 
 		vhdl << tab << "R" << " <= " << bitHeap.getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
+
+		delete tilingStrategy;
 	}
 
 	unsigned int IntMultiplier::computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut)
