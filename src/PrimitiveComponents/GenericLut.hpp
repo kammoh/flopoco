@@ -27,6 +27,9 @@ namespace flopoco {
 		// destructor
         ~GenericLut() {};
 
+			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
+
+			static void registerFactory();
 	};
 
 
