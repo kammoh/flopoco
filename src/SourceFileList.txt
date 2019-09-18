@@ -25,7 +25,7 @@ BitHeap/Compressor
 BitHeap/BitHeap
 BitHeap/CompressionStrategy
 BitHeap/BitHeapPlotter
-BitHeap/Solution
+BitHeap/BitHeapSolution
 BitHeap/BitHeapTest
 BitHeap/FirstFittingCompressionStrategy
 BitHeap/ParandehAfsharCompressionStrategy
@@ -43,7 +43,7 @@ FixFilters/FixHalfSine
 FixFilters/FixIIR
 IntAddSubCmp/IntAdder
 IntAddSubCmp/IntDualAddSub
-IntAddSubCmp/BasicCompressor
+#IntAddSubCmp/BasicCompressor
 IntAddSubCmp/IntMultiAdder
 ConstMult/ShiftAddOp
 ConstMult/ShiftAddDag

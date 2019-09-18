@@ -33,7 +33,7 @@ namespace flopoco{
 		printBitAmounts();
 
 		//new solution
-		solution = Solution();
+		solution = BitHeapSolution();
 		solution.setSolutionStatus(BitheapSolutionStatus::HEURISTIC_PARTIAL);
 
 		//parandehAfshar generates the compressor tree but only works on the bitAmount datastructure and fills the solution. No VHDL-Code is written here.

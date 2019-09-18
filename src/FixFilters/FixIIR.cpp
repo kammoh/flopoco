@@ -456,7 +456,42 @@ namespace flopoco {
 		return new FixIIR(parentOp, target, lsbIn, lsbOut, inputb, inputa, h, heps, buildWorstCaseTestBench);
 	}
 
+	TestList FixIIR::unitTest(int index)
+	{
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+	if(index==-1)
+		{ // The unit tests
+			// No parameter sweep here, just a few representative examples
 
+			// A Butterworth
+			paramList.push_back(make_pair("lsbIn",  "-12"));
+			paramList.push_back(make_pair("lsbOut", "-12"));
+			paramList.push_back(make_pair("coeffb",  "\"0x1.7bdf4656ab602p-9:0x1.1ce774c100882p-7:0x1.1ce774c100882p-7:0x1.7bdf4656ab602p-9\""));
+			paramList.push_back(make_pair("coeffa",  "\"-0x1.2fe25628eb285p+1:0x1.edea40cd1955ep+0:-0x1.106c2ec3d0af8p-1\""));
+			testStateList.push_back(paramList);
+			paramList.clear();
+
+			// The example with poles close to 0
+			paramList.push_back(make_pair("lsbIn",  "-12"));
+			paramList.push_back(make_pair("lsbOut", "-12"));
+			paramList.push_back(make_pair("coeffb",  "\"0x1.89ff611d6f472p-13:-0x1.2778afe6e1ac0p-11:0x1.89f1af73859fap-12:0x1.89f1af73859fap-12:-0x1.2778afe6e1ac0p-11:0x1.89ff611d6f472p-13\""));
+			paramList.push_back(make_pair("coeffa",  "\"-0x1.3f4f52485fe49p+2:0x1.3e9f8e35c8ca8p+3:-0x1.3df0b27610157p+3:0x1.3d42bdb9d2329p+2:-0x1.fa89178710a2bp-1\""));
+			testStateList.push_back(paramList);
+			paramList.clear();
+
+		}
+	else
+		{
+			// finite number of random test computed out of index
+		}
+
+	return testStateList;
+	}
+
+
+	
 	void FixIIR::registerFactory(){
 		UserInterface::add("FixIIR", // name
 											 "A fix-point Infinite Impulse Response filter generator.",
@@ -470,7 +505,8 @@ namespace flopoco {
                         coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\";\
                         buildWorstCaseTestBench(bool)=false: if true, the TestBench for this IIR will begin with a stimulation by the worst-case input signal",
 											 "",
-											 FixIIR::parseArguments
+											 FixIIR::parseArguments,
+											 FixIIR::unitTest
 											 ) ;
 	}
 

@@ -261,7 +261,7 @@ namespace flopoco{
 				tempVector = solution.getCompressorsAtPosition(s, c);
 				REPORT(DEBUG, "at stage " << s << " and column " << c << " there are " << tempVector.size() << " compressors");
 				for(unsigned int j = 0; j < tempVector.size(); j++){
-					REPORT(DEBUG, "applying compressor " << tempVector[j].first->getStringOfIO());
+					REPORT(DETAILED, "applying compressor " << tempVector[j].first->getStringOfIO());
 					//applyCompressor
 					Compressor* realCompressor = tempVector[j].first->getCompressor(); 	//TODO: consider middleLength
 					//unsigned int middleLength = tempVector[j].second;
@@ -1100,12 +1100,16 @@ namespace flopoco{
 		if(bitheap->getOp()->getTarget()->useTargetOptimizations() && (bitheap->getOp()->getTarget()->getVendor() == "Xilinx"))
 		{
 			REPORT(DEBUG,"Adding target optimized GPCs for Xilinx FPGAs");
-			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,6}));
+
+//			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,6})); //outdated since (6,0,7;5) GPC
+            possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {7,0,6}));
 			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {5,1,6}));
 			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {3,2,6}));
 			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {5,2,3,1}));
 			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {5,1,4,1}));
-			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,4,1}));
+//            possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,4,1})); //outdated since (1,4,0,7;5) GPC
+            possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {7,0,4,1}));
+            possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {7,1,1,2}));
 		}
 	}
 

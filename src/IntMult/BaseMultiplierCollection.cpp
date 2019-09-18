@@ -43,8 +43,11 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
 		}
 	}
 
-	for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
-		baseMultiplierCategories.push_back(t);
+	if(target->useTargetOptimizations())
+	{
+		for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
+			baseMultiplierCategories.push_back(t);
+		}
 	}
 }
 

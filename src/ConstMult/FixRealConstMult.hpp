@@ -46,7 +46,6 @@ public:
 	static TestList unitTest(int index);
 
 protected:
-	Operator*	thisOp; 		/**< The Operator for this constant multiplier: either "this" in the case of a standalone op, or the operator that instnaciated its bitHeap in the case of a virtual KCM */
 	bool signedIn;
 	int msbIn;
 	int lsbIn;

@@ -187,8 +187,8 @@ namespace flopoco{
 		vector<FixRealKCM*> kcm;
 		double targetUlpError = 1.0;
 		double maxAbsError=0;
-
 		for(int i=0; i<n; i++)		{
+			REPORT(0, "i=" << i << "  msbIn[i]=" << msbIn[i] << "  lsbIn[i]=" << lsbIn[i]);
 			// instantiating a KCM object. This call does not build any VHDL but computes errorInUlps out of the tentative architecture for g=0.
 			FixRealKCM* m = new FixRealKCM(
 																		 this,                         // the enveloping operator
@@ -202,6 +202,7 @@ namespace flopoco{
 																		 targetUlpError
 																		 );
 			kcm.push_back(m);
+			REPORT(0, "KCM creation OK");
 			double errorInUlps=m->getErrorInUlps();
 			maxAbsError += errorInUlps;
 			REPORT(DETAILED,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps << " ulp(s)")

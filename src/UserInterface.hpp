@@ -157,6 +157,7 @@ namespace flopoco
 		static double unusedHardMultThreshold;
         static bool   useTargetOptimizations;
 		static string compression;
+		static string tiling;
 		static int    resourceEstimation;
 		static bool   floorplanning;
 		static bool   reDebug;
