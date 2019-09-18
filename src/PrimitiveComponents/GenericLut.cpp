@@ -326,13 +326,13 @@ namespace flopoco {
     }
 
 	OperatorPtr GenericLut::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-    std::string name;
+    std::string entityName;
     std::vector<int> inputValues,outputValues;
     std::map<unsigned int, unsigned int> valueMap;
     int wIn, wOut;
     UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-    UserInterface::parseStrictlyPositiveInt(args, "wOut", &wIn);
-    UserInterface::parseString(args, "name", &name);
+    UserInterface::parseStrictlyPositiveInt(args, "wOut", &wOut);
+    UserInterface::parseString(args, "entityName", &entityName);
     UserInterface::parseColonSeparatedIntList(args, "inputValues", &inputValues);
     UserInterface::parseColonSeparatedIntList(args, "outputValues", &outputValues);
     if(inputValues.size() == outputValues.size()) {
@@ -340,7 +340,7 @@ namespace flopoco {
             valueMap[(unsigned int)inputValues[i]] = (unsigned int)outputValues[i];
         }
     }
-		return new GenericLut(parentOp,target,name,valueMap,(unsigned int)wIn,(unsigned int)wOut);
+		return new GenericLut(parentOp,target,entityName,valueMap,(unsigned int)wIn,(unsigned int)wOut);
 	}
 
 	void GenericLut::registerFactory() {
@@ -350,9 +350,9 @@ namespace flopoco {
                          "", // see also
                          "wIn(int): input word size;\
                         wOut(int): output word size;\
-                        name(string): unique name for the LUT;\
+                        entityName(string): unique name for the LUT;\
                         inputValues(string): colon seperated list of (unsigned) ints specifying the inputs for the LUT;\
-                        inputValues(string): colon seperated list of (unsigned) ints specifying the corrisponding outputs",
+                        outputValues(string): colon seperated list of (unsigned) ints specifying the corrisponding outputs",
                          "", // no particular extra doc needed
                          GenericLut::parseArguments,
                          nullptr
