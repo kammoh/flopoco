@@ -49,16 +49,16 @@ namespace flopoco {
 		 * @param wY size of the second input
 		 * @return the number of bits needed to store a product of I<wX> * I<WY>
 		 */
-		static inline unsigned int prodsize(unsigned int wX, unsigned int wY);
+		static unsigned int prodsize(unsigned int wX, unsigned int wY);
 
 		static TestList unitTest(int index);
 
 	protected:
 
-		int wX;                         /**< the width for X after possible swap such that wX>wY */
-		int wY;                         /**< the width for Y after possible swap such that wX>wY */
-        int wFullP;                     /**< size of the full product: wX+wY  */
-        int wOut;                       /**< size of the output, to be used only in the standalone constructor and emulate.  */
+		unsigned int wX;                         /**< the width for X after possible swap such that wX>wY */
+		unsigned int wY;                         /**< the width for Y after possible swap such that wX>wY */
+		unsigned int wFullP;                     /**< size of the full product: wX+wY  */
+		unsigned int wOut;                       /**< size of the output, to be used only in the standalone constructor and emulate.  */
         bool signedIO;                   /**< true if the IOs are two's complement */
 		bool negate;                    /**< if true this multiplier computes -xy */
 		float dspOccupationThreshold;   /**< threshold of relative occupation ratio of a DSP multiplier to be used or not */
@@ -106,7 +106,7 @@ namespace flopoco {
 		 */
 		unsigned int computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut);
 
-        /*!
+		/**
          * add a unique identifier for the multiplier, and possibly for the block inside the multiplier
          */
         string addUID(string name, int blockUID=-1);

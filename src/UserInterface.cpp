@@ -39,6 +39,7 @@ namespace flopoco
 	double UserInterface::unusedHardMultThreshold;
 	bool   UserInterface::useTargetOptimizations;
 	string   UserInterface::compression;
+	string   UserInterface::tiling;
 	int    UserInterface::resourceEstimation;
 	bool   UserInterface::floorplanning;
 	bool   UserInterface::reDebug;
@@ -112,6 +113,7 @@ namespace flopoco
 				v.push_back(option_t("useHardMults", values));
 				v.push_back(option_t("useTargetOptimizations", values));
 				v.push_back(option_t("compression", values));
+				v.push_back(option_t("tiling", values));
 
 				//free options, using an empty vector of values
 				values.clear();
@@ -186,6 +188,7 @@ namespace flopoco
 		parseBoolean(args, "generateFigures", &generateFigures, true);
 		parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
 		parseString(args, "compression", &compression, true);
+		parseString(args, "tiling", &tiling, true);
 		parseBoolean(args, "floorplanning", &floorplanning, true);
 		//		parseBoolean(args, "reDebug", &reDebug, true );
 		parseString(args, "dependencyGraph", &depGraphDrawing, true);
@@ -338,6 +341,7 @@ namespace flopoco
 		useHardMult=true;
 		unusedHardMultThreshold=0.7;
 		compression = "heuristicMaxEff";
+		tiling = "heuristicBasicTiling";
 
 		depGraphDrawing = "full";
 		pipelineActive_ = true;
@@ -441,6 +445,7 @@ namespace flopoco
 				target->setGenerateFigures(generateFigures);
 				target->setUseTargetOptimizations(useTargetOptimizations);
 				target->setCompressionMethod(compression);
+				target->setTilingMethod(tiling);
 				// Now build the operator
 				OperatorFactoryPtr fp = getFactoryByName(opName);
 				if (fp==NULL){
@@ -757,6 +762,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>:    use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "compression" << COLOR_NORMAL << "=<heuristicMaxEff,heuristicPA,heuristicFirstFit,optimal,optimalMinStages>:        compression method (default=heuristicMaxEff)" << COLOR_RED_NORMAL << "(sticky option?)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "tiling" << COLOR_NORMAL << "=<heuristicBasicTiling,optimal>:        tiling method (default=heuristicBasicTiling)" << COLOR_RED_NORMAL << "(sticky option?)" << COLOR_NORMAL<<endl;
         s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;

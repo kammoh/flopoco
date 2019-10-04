@@ -17,14 +17,14 @@ namespace flopoco
 		MIXED_COMPLETE
 	};
 
-	class Solution
+	class BitHeapSolution
 	{
 	public:
 
 		/**
 		 * A basic constructor for a solution
 		 */
-		Solution();
+		BitHeapSolution();
 
 		/**
 		 *	@brief adds a compressor at a given stage and column

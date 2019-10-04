@@ -7,6 +7,7 @@ namespace flopoco {
 	TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection *baseMultiplierCollection) :
 			wX(wX), wY(wY), wOut(wOut), signedIO(signedIO), baseMultiplierCollection(baseMultiplierCollection)
 	{
+
 	}
 
 	void TilingStrategy::printSolution()
@@ -21,7 +22,7 @@ namespace flopoco {
 
 	}
 
-	void TilingStrategy::printSolutionTeX(ofstream &outstream, bool triangularStyle)
+	void TilingStrategy::printSolutionTeX(ofstream &outstream, int wTrunc, bool triangularStyle)
 	{
 		cerr << "Dumping multiplier schema in multiplier.tex\n";
 		outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";
@@ -44,16 +45,23 @@ namespace flopoco {
 				int deltaY = static_cast<int>(parametrization.getTileYWordSize());
 				string color = (parametrization.isSignedMultX() || parametrization.isSignedMultY()) ? "red" : "blue";
 				outstream << "\\draw[fill="<< color <<", fill opacity=0.3] (" << xstart << ", " << ystart << ") -- (" <<
-						  xend << ", " << ystart << ") -- ("<< xend + deltaY <<", "<< yend<<") -- ("<< xstart + deltaY <<", "<< yend <<")--cycle;\n";
+					xend << ", " << ystart << ") -- ("<< xend + deltaY <<", "<< yend<<") -- ("<< xstart + deltaY <<", "<< yend <<")--cycle;\n";
 				cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
 			}
 
 			int offset = IntMultiplier::prodsize(wX, wY) - wOut;
 
-			if (wOut < IntMultiplier::prodsize(wX, wY)) {
-				float startY = (wX < offset) ? (offset - wX) + 0.5  : 0;
-				float endY =  (offset > wY) ? wY : offset + 0.5;
+			if (offset > 0) {
+				float startY = (wX <= offset) ? (offset - wX) + 0.5  : 0;
+				float endY =  (offset >= wY) ? wY : offset + 0.5;
 				outstream << "\\draw[ultra thick, green] (" << offset << ".5, " << startY << ") -- (" << offset << ".5, " << endY << ");" << endl;
+			}
+
+			if (wTrunc > offset) {
+				int truncOffset = IntMultiplier::prodsize(wX, wY) - wTrunc;
+				float startY = (wX <= truncOffset) ? (truncOffset - wX) + 0.5  : 0;
+				float endY =  (truncOffset >= wY) ? wY : truncOffset + 0.5;
+				outstream << "\\draw[ultra thick, brown] (" << truncOffset << ".5, " << startY << ") -- (" << truncOffset << ".5, " << endY << ");" << endl;
 			}
 
 			for (size_t i = 0 ; i < static_cast<size_t>(wX) ; ++i) {
@@ -80,12 +88,10 @@ namespace flopoco {
 				int xend = xstart + static_cast<int>(parametrization.getTileXWordSize());
 				int yend = ystart + static_cast<int>(parametrization.getTileYWordSize());
 				outstream << "\\draw[fill=gray, fill opacity=0.3] (" << xstart << ", " << ystart << ") rectangle (" <<
-						  xend << ", " << yend << ");\n";
+					xend << ", " << yend << ");\n";
 				cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
 			}
 		}
 		outstream << "\\end{tikzpicture}\n\\end{document}\n";
 	}
-
-
 }   //end namespace flopoco

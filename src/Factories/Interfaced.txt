@@ -27,6 +27,8 @@ FixRealKCM
 FixRealShiftAdd
 FixRealConstMult
 FixFixConstMult
+GenericMux
+GenericLut
 
 FPAdd
 FPDiv

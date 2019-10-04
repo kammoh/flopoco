@@ -1,5 +1,5 @@
 
-#include "Solution.hpp"
+#include "BitHeapSolution.hpp"
 
 
 using namespace std;
@@ -7,12 +7,12 @@ using namespace std;
 namespace flopoco{
 
 
-	Solution::Solution()
+	BitHeapSolution::BitHeapSolution()
 	{
 		status = BitheapSolutionStatus::EMPTY;
 	}
 
-	void Solution::addCompressor(unsigned int stage, unsigned int column, BasicCompressor* compressor, int middleLength){
+	void BitHeapSolution::addCompressor(unsigned int stage, unsigned int column, BasicCompressor* compressor, int middleLength){
 
 		//make sure that the position (stage and column) exist
 		if(stage >= comps.size()){
@@ -45,7 +45,7 @@ namespace flopoco{
 
 
 
-	vector<pair<BasicCompressor*, unsigned int> > Solution::getCompressorsAtPosition(unsigned int stage, unsigned int column){
+	vector<pair<BasicCompressor*, unsigned int> > BitHeapSolution::getCompressorsAtPosition(unsigned int stage, unsigned int column){
 
 		if(comps.size() > stage && comps[stage].size() > column){
 			vector<pair<BasicCompressor*, unsigned int> > returnList;
@@ -66,17 +66,17 @@ namespace flopoco{
 		}
 	}
 
-	int Solution::getNumberOfStages(){
+	int BitHeapSolution::getNumberOfStages(){
 		return comps.size();
 	}
-	int Solution::getNumberOfColumnsAtStage(unsigned int stage){
+	int BitHeapSolution::getNumberOfColumnsAtStage(unsigned int stage){
 		if(comps.size() >= stage){
 			return -1;
 		}
 		return comps[stage].size();
 	}
 
-	vector<unsigned int> Solution::getEmptyInputsByStage(unsigned int stage){
+	vector<unsigned int> BitHeapSolution::getEmptyInputsByStage(unsigned int stage){
 		if(stage > emptyInputs.size()){
 			vector<unsigned int> emptyVector;
 			return emptyVector;
@@ -86,7 +86,7 @@ namespace flopoco{
 		}
 	}
 
-	void Solution::setEmptyInputsByRemainingBits(unsigned int stage, vector<int> remainingBits){
+	void BitHeapSolution::setEmptyInputsByRemainingBits(unsigned int stage, vector<int> remainingBits){
 		if(emptyInputs.size() <= stage){
 			emptyInputs.resize(stage + 1);
 		}
@@ -103,15 +103,15 @@ namespace flopoco{
 		emptyInputs[stage] = tempVector;
 	}
 
-	BitheapSolutionStatus Solution::getSolutionStatus(){
+	BitheapSolutionStatus BitHeapSolution::getSolutionStatus(){
 		return status;
 	}
 
-	void Solution::setSolutionStatus(BitheapSolutionStatus stat){
+	void BitHeapSolution::setSolutionStatus(BitheapSolutionStatus stat){
 		status = stat;
 	}
 
-	void Solution::markSolutionAsComplete(){
+	void BitHeapSolution::markSolutionAsComplete(){
 		if(status == BitheapSolutionStatus::MIXED_PARTIAL){
 			status = BitheapSolutionStatus::MIXED_COMPLETE;
 		}

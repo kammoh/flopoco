@@ -46,7 +46,7 @@ namespace flopoco {
 		void emulate(TestCase * tc);
 		void buildStandardTestCases(TestCaseList* tcl);
 
-		static OperatorPtr parseArguments(Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
 		static void registerFactory();
     private:

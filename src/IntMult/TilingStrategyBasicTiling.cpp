@@ -6,22 +6,24 @@
 using namespace std;
 namespace flopoco {
 TilingStrategyBasicTiling::TilingStrategyBasicTiling(
-		int wX_,
-		int wY_,
-		int wOut_,
+		unsigned int wX_,
+		unsigned int wY_,
+		unsigned int wOut_,
 		bool signedIO_,
 		BaseMultiplierCollection* bmc,
 		base_multiplier_id_t prefered_multiplier,
-		float occupation_threshold):TilingStrategy(
+		float occupation_threshold,
+		size_t maxPrefMult):TilingStrategy(
 			wX_,
 			wY_,
 			wOut_,
 			signedIO_,
 			bmc),
-		prefered_multiplier_(prefered_multiplier),
-		small_tile_mult_(1), //Most compact LUT-Based multiplier
-		occupation_threshold(occupation_threshold),
-		numUsedMults_(0)
+		prefered_multiplier_{prefered_multiplier},
+		small_tile_mult_{1}, //Most compact LUT-Based multiplier
+		numUsedMults_{0},
+		occupation_threshold_{occupation_threshold},
+		max_pref_mult_{maxPrefMult}
 	{
 		truncated = (wOut < IntMultiplier::prodsize(wY, wX));
 	}
@@ -49,6 +51,46 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			ytop = 0;
 		}
 
+		// If all the the bits in the box are kept
+		if (xright + ytop >= offset) {
+			return xdim * ydim;
+		}
+
+		// If there is only truncated out bits in the box
+		if (xright + xdim + ytop + ydim - 2 < offset) {
+			xright = ytop = -1;
+			xdim = ydim = 0;
+			return 0;
+		}
+
+		int xinterLowRight = xright;
+		int yinterLowRight = offset - xright;
+
+		int yinterUpLeft = ytop;
+		int xinterUpLeft = offset - ytop;
+
+		if (yinterLowRight > ytop + ydim - 1) {
+			xinterLowRight += yinterLowRight - (ytop + ydim - 1);
+			yinterLowRight = ytop + ydim - 1;
+		}
+
+		if (xinterUpLeft > xright + xdim - 1) {
+			yinterUpLeft += xinterUpLeft - (xright + xdim - 1);
+			xinterUpLeft = xright + xdim - 1;
+		}
+
+		xdim -= (xinterLowRight - xright);
+		ydim -= (yinterUpLeft - ytop);
+		xright = xinterLowRight;
+		ytop = yinterUpLeft;
+
+		int untruncatedAreaFromTop = (xright + xdim - 1 - xinterUpLeft) * ydim;
+		int untruncatedAreaLowRight = (xinterUpLeft + 1 - xright) * (ytop + ydim - 1 - yinterLowRight);
+		int truncationTriangleDiag = (xinterUpLeft + 1 - xright);
+		int truncatedArea = (truncationTriangleDiag * (truncationTriangleDiag + 1)) / 2;
+
+		return truncatedArea + untruncatedAreaFromTop + untruncatedAreaLowRight;
+
 		int curOffset = offset - xright - ytop;
 
 		// If we are completely in the truncated part
@@ -66,12 +108,12 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			return (verticeLen * (verticeLen + 1)) >> 1;
 		} else if (curOffset > xdim - 1) {
 			// Skip uneeded empty rows
-			int deltaY = curOffset - xdim;
+			int deltaY = curOffset - (xdim - 1);
 			ytop += deltaY;
 			ydim -= deltaY;
 		} else if (curOffset > ydim - 1) {
 			// Skip uneeded empty cols
-			int deltaX = curOffset - ydim;
+			int deltaX = curOffset - (ydim- 1);
 			xright += deltaX;
 			xdim -= deltaX;
 		}
@@ -86,12 +128,11 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			int curY,
 			int curDeltaX,
 			int curDeltaY,
-			int offset,
-			int curArea
+			int offset
 		) 
 	{
 		auto& bmc = baseMultiplierCollection->getBaseMultiplier(small_tile_mult_);
-		bool canOverflowLeft = not truncated and not signedIO;
+		bool canOverflowLeft = not truncated and not signedIO and (curX + curDeltaX) >= wX;
 		bool canOverflowRight = false;
 		bool canOverflowTop = (curY == 0);
 		bool canOverflowBottom = false;
@@ -203,8 +244,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						yStartUpDownbox, 
 						deltaXUpDownbox, 
 						deltaYUpDownbox,
-						offset,
-						subboxArea
+						offset
 					);
 			}
 		}
@@ -234,8 +274,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						yStartUpDownbox, 
 						deltaXUpDownbox, 
 						deltaYUpDownbox,
-						offset,
-						subboxArea
+						offset
 					);
 			}
 		}
@@ -279,35 +318,50 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 			while (curY < wY) {
 				curX = wX - 1;
+				bool isYSigned = ((static_cast<unsigned int>(curY + wYmult)) >= wY) and signedIO;
 				while(curX >= 0) {
-					int rightX = curX - wXmult + 1;
-					int topY = curY;
 					int curDeltaX = wXmult;
 					int curDeltaY = wYmult;
+					bool isXSigned = ((static_cast<unsigned int>(curX + wXmult)) >= wX) and signedIO;
+
+					if (isYSigned)
+						curDeltaY += deltaWidthSigned;
+					if (isXSigned)
+						curDeltaX += deltaWidthSigned;
+
+					int rightX = curX - curDeltaX + 1;
+					int topY = curY;
+
 					int area = shrinkBox(rightX, topY, curDeltaX, curDeltaY, offset);
 					if (area == 0) { // All the box is below the line cut
 						break;
 					} 
 
 					float occupationRatio = (float (area)) /  multArea;
-					if (occupationRatio >= occupation_threshold) {
+					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
+					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
 								curDeltaX, 
 								curDeltaY, 
-								false,
-								false										
+								isXSigned,
+								isYSigned
 							);
 						auto coords = make_pair(rightX, topY);
 						solution.push_back(make_pair(param, coords));
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
-						tileBox(rightX, topY, curDeltaX, curDeltaY, offset, area);
+						tileBox(rightX, topY, curDeltaX, curDeltaY, offset);
 					}
 					curX -= wXmult;
+					if (isXSigned)
+						curX -= deltaWidthSigned;
 				}
 				curY += wYmult;
+				if (isYSigned)
+					curY += deltaWidthSigned;
 			}
 
 		} else {
@@ -344,7 +398,9 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					bool isSignedY = (topY + curDeltaY >= wY) and signedIO;
 
 					float occupationRatio = float(area) /  multArea;
-					if (occupationRatio >= occupation_threshold) {
+					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
+					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
 								curDeltaX,
@@ -357,7 +413,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
-						tileBox(rightX, topY, curDeltaX, curDeltaY, 0, area);
+						tileBox(rightX, topY, curDeltaX, curDeltaY, 0);
 					}
 					curX += wXmult;
 					if ((untilEndRow <= deltaWidthSigned) and signedIO) {

@@ -149,11 +149,17 @@ namespace flopoco{
 		/** should target specific optimizations be performed */
 		void  setUseTargetOptimizations(bool b);
 
-		/** should target specific optimizations be performed */
+		/** returns the compression method used for the BitHeap */
 		string  getCompressionMethod();
 
-		/** should target specific optimizations be performed */
+		/** sets the compression method used for the BitHeap */
 		void  setCompressionMethod(string compression);
+
+		/** returns the compression method used for multiplier tiling */
+		string  getTilingMethod();
+
+		/** sets the compression method used for multiplier tiling */
+		void  setTilingMethod(string method);
 
 		/** On LUT-based FPGAs, number of inputs of the basic architectural LUT.
 		  * Look-up tables with lutInput() input bits can be used independently
@@ -744,6 +750,7 @@ namespace flopoco{
         bool   useTargetOptimizations_; /**< If true, target specific optimizations using primitives are performed. Vendor specific libraries are necessary for simulation. */
 
 		string compression_; /**< Defines the BitHeap compression method*/
+		string tiling_; /**< Defines the multiplier tiling method*/
 	};
 
 }

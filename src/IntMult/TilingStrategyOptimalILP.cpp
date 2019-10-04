@@ -9,8 +9,9 @@ void TilingStrategyOptimalILP::solve()
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
 #else
      solver = new ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
+	constructProblem();
 
-	 throw std::string("Not implemented yet !");
+	throw std::string("Not implemented yet !");
 #endif
 }
 
