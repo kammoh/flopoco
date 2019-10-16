@@ -19,13 +19,13 @@ base_multiplier_id_t BaseMultiplierCollection::getPreferedMultiplier()
 BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
     srcFileName = "BaseMultiplierCollection";
     uniqueName_ = "BaseMultiplierCollection";
-	
+
 	//DSP based multiplier
 	int wX, wY, wXSigned, wYSigned;
 	target->getMaxDSPWidths(wX, wY);
 	target->getMaxDSPWidths(wXSigned, wYSigned, true);
 	int deltaSigned = wXSigned - wX;
-	
+
 	int maxW = max(wX, wY);
 	int minW = min(wX, wY);
 
@@ -64,16 +64,18 @@ BaseMultiplierCategory& BaseMultiplierCollection::getBaseMultiplier(
 	}
 }
 
+/*
 vector<BaseMultiplierCategory const *> const BaseMultiplierCollection::getView() const
 {
 	vector<BaseMultiplierCategory const *> ret;
 	copy(
-			baseMultiplierCategories.begin(), 
-			baseMultiplierCategories.end(), 
+			baseMultiplierCategories.begin(),
+			baseMultiplierCategories.end(),
 			ret.begin()
 		);
 	return ret;
 }
+*/
 
 void BaseMultiplierCollection::print()
 {

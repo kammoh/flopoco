@@ -66,10 +66,10 @@ namespace flopoco {
 
 				private:
 					Parametrization(
-							unsigned int  wX, 
-							unsigned int  wY, 
+							unsigned int  wX,
+							unsigned int  wY,
 							BaseMultiplierCategory const * multCategory,
-							bool isSignedX=false, 
+							bool isSignedX=false,
 							bool isSignedY=false,
 							bool isFlippedXY=false
 						):wX_{wX},
@@ -89,17 +89,17 @@ namespace flopoco {
 				friend BaseMultiplierCategory;
 			};
 
-			virtual bool shapeValid(Parametrization const & param, int x, int y) const;
+			virtual bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
 
 			virtual Operator* generateOperator(
-					Operator *parentOp, 
-					Target* target, 
+					Operator *parentOp,
+					Target* target,
 					Parametrization const &parameters
 				) const = 0;
 
-		Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const; 
+		Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
 
-		private:	
+		private:
 			int maxWordSizeLargeInputUnsigned_;
 			int maxWordSizeSmallInputUnsigned_;
 			int deltaWidthUnsignedSigned_;

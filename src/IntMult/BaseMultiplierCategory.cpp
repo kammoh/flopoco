@@ -32,15 +32,16 @@ namespace flopoco {
 
 		int maxSizeY = getMaxSecondWordSize(wX, isSignedX, isSignedY);
 		if (maxSizeY < wY) {
-			throw std::string("BaseMultiplierCategory::parametrize: error, reqauired multiplier area is too big");
+            //cerr << "maxSizeY=" << maxWordSizeLargeInputUnsigned_ << " wY=" << wY << "maxSizeX=" << maxWordSizeSmallInputUnsigned_ << " wX=" << wX << endl;
+			throw std::string("BaseMultiplierCategory::parametrize: error, required multiplier area is too big");
 		}
 
 		return Parametrization(wX, wY, this, isSignedX, isSignedY, isFlippedXY);
 	}
 
 	int BaseMultiplierCategory::getMaxSecondWordSize(
-			int firstW, 
-			bool isW1Signed, 
+			int firstW,
+			bool isW1Signed,
 			bool isW2signed
 		) const
 	{
@@ -63,10 +64,10 @@ namespace flopoco {
 	}
 }
 
-bool BaseMultiplierCategory::shapeValid(Parametrization const& param, int x, int y) const
+bool BaseMultiplierCategory::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
 {
     auto xw = param.getTileXWordSize();
     auto yw = param.getTileYWordSize();
 
-	return (x > 0 && x < xw && y > 0 && y < yw);
+	return (x >= 0 && x < xw && y >= 0 && y < yw);
 }
