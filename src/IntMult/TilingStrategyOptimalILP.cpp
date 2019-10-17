@@ -122,9 +122,7 @@ void TilingStrategyOptimalILP::constructProblem()
                 nvarName << " d" << setfill('0') << setw(dpS) << s << setfill('0') << setw(dpX) << x << setfill('0') << setw(dpY) << y;
                 ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                 solve_Vars[s][x][y] = tempV;
-                //obj += ScaLP::Term(tempV, (double)shape_cost(s));
-                obj += ScaLP::Term(tempV, (double)my_tiles[s].cost);    //append variable to cost function
-                //cerr << std::setfill('0') << std::setw(2) << x;
+                obj.add(tempV, (double)my_tiles[s].cost);    //append variable to cost function
             }
         }
     }
@@ -141,10 +139,8 @@ void TilingStrategyOptimalILP::constructProblem()
                         int sign_x = (signedIO && wX-(int)my_tiles[s].wX-1 == xs && s == 0)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
                         int sign_y = (signedIO && wY-(int)my_tiles[s].wY-1 == ys && s == 0)?1:0;
                         if(( 0 <= x-xs && x-xs < (int)my_tiles[s].wX+sign_x && 0 <= y-ys && y-ys < (int)my_tiles[s].wY+sign_y ) == true){
-                            pxyTerm = pxyTerm + solve_Vars[s][xs][ys];
-//                            pxyTerm += solve_Vars[s][xs][ys]; //better
-//                            pxyTerm.add(solve_Vars[s][xs][ys]); //even better
-//                            pxyTerm.addNonExistingVar(solve_Vars[s][xs][ys]); //best
+                            pxyTerm.add(solve_Vars[s][xs][ys], 1); //even better
+
                         }
                     }
                 }
@@ -162,7 +158,7 @@ void TilingStrategyOptimalILP::constructProblem()
     ScaLP::Term pxyTerm;
     for(int y = 0; y < wY; y++){
         for(int x = 0; x < wX; x++){
-            pxyTerm = pxyTerm + solve_Vars[sn][x][y];
+            pxyTerm.add(solve_Vars[sn][x][y], 1);
         }
     }
     ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.
