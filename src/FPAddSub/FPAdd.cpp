@@ -162,15 +162,15 @@ namespace flopoco{
 		{
 			x = x & ~negative;
 			y = y & ~negative;
-		}
 
-		if(((mpz_class) (x & negative)))
-		{
-			throw string("Error: Input X is negative!");
-		}
-		if(((mpz_class) (y & negative)))
-		{
-			throw string("Error: Input Y is negative!");
+			if(((mpz_class) (x & negative)))
+				{
+					throw string("Error: Input X is negative!");
+				}
+			if(((mpz_class) (y & negative)))
+				{
+					throw string("Error: Input Y is negative!");
+				}
 		}
 
 		// Random swap
