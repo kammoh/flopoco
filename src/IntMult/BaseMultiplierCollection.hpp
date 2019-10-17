@@ -17,7 +17,7 @@ namespace flopoco {
 		BaseMultiplierCollection(Target *target);
 
         BaseMultiplierCategory& getBaseMultiplier(base_multiplier_id_t multRef);
-		base_multiplier_id_t getPreferedMultiplier();
+		base_multiplier_id_t getPreferedMultiplier(); //remove ?
 		vector<BaseMultiplierCategory const*> const getView() const;
 		
         string getName(){ return uniqueName_; }

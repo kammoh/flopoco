@@ -75,7 +75,7 @@ namespace flopoco{
 		if(correctlyRounded_)
 			sigProdSize = wFX_+1 + wFY_+1;
 		else
-			// faithful rounding will be computed by IntTruncMultiplier
+			// faithful rounding will be computed by IntMultiplier
 			// but we still  have to re-round behind
 			sigProdSize = wFR_+g;
 
