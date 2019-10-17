@@ -11,7 +11,7 @@ wget https://gforge.inria.fr/frs/download.php/28571/sollya-3.0.tar.gz && tar xzf
 
 
 #Finally FloPoCo itself, 
-wget https://gforge.inria.fr/frs/download.php/file/35206/flopoco-2.3.2.tgz && tar xzf flopoco-2.3.2.tgz && cd flopoco-2.3.2/ && cmake . && make -j2
+wget https://gforge.inria.fr/frs/download.php/file/35206/flopoco-2.3.2.tgz && tar xzf flopoco-2.3.2.tgz && cd flopoco-2.3.2/ && cmake . && make
 
-# Now show the list of operators
-./flopoco  
+# Now show the list of operators -- disabled because it doesn't return 0, hence breaks docker install
+#./flopoco  

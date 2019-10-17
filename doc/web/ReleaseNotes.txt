@@ -30,6 +30,7 @@ A lot of janitoring.
 Version 3.0 will never get out of beta
 Shifts to Sollya 4.0 library. Polynomial evaluator rewritten in the process.
 Reorganisation of the source code, better naming consistency.
+A lot of operators disabled in the process, in particular LNS ones.
 plainVHDL and unusedHardMultThreshold become framework-wide target options.
 More fixed-point filters.
 Added FixAtan2
@@ -69,6 +70,7 @@ This is a bugfix release, mostly fixing a few multiplier bugs.
 Version 2.3.0
 This version adds
 - Proper librarization, and an example on how to use FloPoCoLib
+- LNS operators
 - FPPowr and FPPow functions from C99
 - FunctionTable (as the name suggests)
 - FPConstMultRational, correctly rounded multiplication by small rational constants

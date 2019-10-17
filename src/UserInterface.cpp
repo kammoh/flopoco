@@ -53,10 +53,11 @@ namespace flopoco
 		v.push_back(make_pair("ShiftersLZOCs", "Shifters, Leading Zero Counters, etc"));
 		v.push_back(make_pair("BasicInteger", "Basic integer operators (pipelined)"));
 		//		v.push_back(make_pair("BasicFixPoint", "Basic fixed-point Operators"));
-		v.push_back(make_pair("BasicFloatingPoint", "Basic floating-point Operators"));
+		v.push_back(make_pair("BasicFloatingPoint", "Basic floating-point operators"));
+		v.push_back(make_pair("Posit", "Posit operators"));
 		v.push_back(make_pair("ConstMultDiv", "Multipliers and dividers by constants"));
-		v.push_back(make_pair("CompositeFloatingPoint", "Composite floating-point operators"));
-		v.push_back(make_pair("CompositeFixPoint", "Composite fixed-point operators"));
+		//		v.push_back(make_pair("CompositeFloatingPoint", "Composite floating-point operators"));
+		//		v.push_back(make_pair("CompositeFixPoint", "Composite fixed-point operators"));
 		v.push_back(make_pair("ElementaryFunctions", "Elementary functions in fixed- or floating-Point"));
 		v.push_back(make_pair("FunctionApproximation", "Arbitrary function approximators"));
 		//		v.push_back(make_pair("ComplexFixPoint", "Complex arithmetic in fixed point" ));
