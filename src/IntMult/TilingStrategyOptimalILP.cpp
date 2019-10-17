@@ -142,6 +142,9 @@ void TilingStrategyOptimalILP::constructProblem()
                         int sign_y = (signedIO && wY-(int)my_tiles[s].wY-1 == ys && s == 0)?1:0;
                         if(( 0 <= x-xs && x-xs < (int)my_tiles[s].wX+sign_x && 0 <= y-ys && y-ys < (int)my_tiles[s].wY+sign_y ) == true){
                             pxyTerm = pxyTerm + solve_Vars[s][xs][ys];
+//                            pxyTerm += solve_Vars[s][xs][ys]; //better
+//                            pxyTerm.add(solve_Vars[s][xs][ys]); //even better
+//                            pxyTerm.addNonExistingVar(solve_Vars[s][xs][ys]); //best
                         }
                     }
                 }
