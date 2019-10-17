@@ -165,11 +165,11 @@ namespace flopoco{
 
 			if(((mpz_class) (x & negative)))
 				{
-					throw string("Error: Input X is negative!");
+					throw string("Input X is negative!");
 				}
 			if(((mpz_class) (y & negative)))
 				{
-					throw string("Error: Input Y is negative!");
+					throw string("Input Y is negative!");
 				}
 		}
 
