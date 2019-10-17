@@ -34,7 +34,7 @@ namespace flopoco {
 		setNameWithFreqAndUID(name.str());
 		
 		// Copyright 
-		setCopyrightString("3IF 2015 dev team (2015)");
+		setCopyrightString("3IF 2015 dev team (2015-2019)");
 
 		input_width = 1 + msb_in - lsb_in;
 		
@@ -115,6 +115,7 @@ namespace flopoco {
 
 
 	FixComplexKCM::FixComplexKCM(
+			OperatorPtr parentOp, 
 			Target* target,
 			bool signedIn,
 			int msb_in, 
@@ -432,6 +433,7 @@ namespace flopoco {
 		UserInterface::parseInt(args, "msbIn", &msbIn);
 		// UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		return new FixComplexKCM(
+														 parentOp,
 				target, 
 				true, //signedIn,
 				msbIn,

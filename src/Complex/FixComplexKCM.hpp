@@ -33,6 +33,7 @@ namespace flopoco {
 			 * @param constant : constant by which the input is multiplied
 			 */
 			FixComplexKCM(
+										OperatorPtr parentOp, 
 					Target* target, 
 					bool signedIn,
 					int msb_in, 

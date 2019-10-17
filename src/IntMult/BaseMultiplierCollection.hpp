@@ -18,9 +18,11 @@ namespace flopoco {
 
         BaseMultiplierCategory& getBaseMultiplier(base_multiplier_id_t multRef);
 		base_multiplier_id_t getPreferedMultiplier(); //remove ?
-		vector<BaseMultiplierCategory const*> const getView() const;
-		
+//		vector<BaseMultiplierCategory const*> const getView() const;
+
         string getName(){ return uniqueName_; }
+
+        unsigned size() { return baseMultiplierCategories.size(); }
 
 		void print();
     private:
@@ -29,7 +31,7 @@ namespace flopoco {
         string srcFileName; //for debug outputs
         string uniqueName_; /**< useful only to enable same kind of reporting as for FloPoCo operators. */
 
-        vector<BaseMultiplierCategory*> baseMultiplierCategories; 
+        vector<BaseMultiplierCategory*> baseMultiplierCategories;
 	};
 }
 #endif

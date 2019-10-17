@@ -36,7 +36,7 @@ namespace flopoco{
 			throw std::string(s);
 		}
 		if (!inst)
-			throw std::string("HOTBM cound not be generated.");
+			throw std::string("HOTBM could not be generated.");
 
 		{
 			std::ostringstream o;

@@ -163,7 +163,7 @@ namespace flopoco{
 	void PositExp::registerFactory(){
 		UserInterface::add("PositExp", // name
 			"A faithful posit exponential function.",
-			"ElementaryFunctions",
+			"Posit",
 			"", // seeAlso
 			"width(int): Posit size in bits; \
 			wES(int): exponent size in bits;  \

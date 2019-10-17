@@ -117,7 +117,7 @@ namespace flopoco{
   void PositAdd::registerFactory(){
     UserInterface::add("PositAdd", // name
 		       "A correctly rounded posit adder.",
-		       "BasicPosit",
+		       "Posit",
 		       "", //seeAlso
 		       "width(int): posit size in bits; \
                          wES(int): exponent size in bits;",

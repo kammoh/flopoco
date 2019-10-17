@@ -76,7 +76,7 @@ namespace flopoco{
 	{
 		UserInterface::add("PositFunctionByTable", // name
 				   "Evaluator of function f using a table.",
-				   "FunctionApproximation",
+				   "Posit",
 				   "",
 				   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
                                     width(int): size of the Posit;	\
