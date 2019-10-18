@@ -10,7 +10,10 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 		unsigned int wY_,
 		unsigned int wOut_,
 		bool signedIO_,
-		BaseMultiplierCollection* bmc):TilingStrategy(
+		BaseMultiplierCollection* bmc,
+		base_multiplier_id_t prefered_multiplier,
+		float occupation_threshold,
+		size_t maxPrefMult):TilingStrategy(
 			wX_,
 			wY_,
 			wOut_,
@@ -18,7 +21,7 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 			bmc),
 		small_tile_mult_{1}, //Most compact LUT-Based multiplier
 		numUsedMults_{0},
-		max_pref_mult_ {1}
+		max_pref_mult_ {maxPrefMult}
 	{
 
 	}
