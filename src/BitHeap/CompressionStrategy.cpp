@@ -69,6 +69,9 @@ namespace flopoco{
 			{
 				int currentCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 
+				REPORT(DEBUG, "bit at column " << i << " and j " << j << " is called " << bitheap->bits[i][j]->signal->getName() << ". cycle is " << bitheap->bits[i][j]->signal->getCycle() << " and critical path is " << bitheap->bits[i][j]->signal->getCriticalPath() << " currentCycle=" << currentCycle);
+
+
 				if(currentCycle > maxCycle){
 					maxCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 					maxBit = bitheap->bits[i][j];
@@ -361,13 +364,14 @@ namespace flopoco{
 
 
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
+		return 0; //!!! This is a workaround. BitHeap compression currently does not work when bits are distributed to different stages. TODO: fix
 		if(!UserInterface::pipelineActive_) {
 			return 0;
 		}
 		//for a bit to be in stage i, its criticalPath delay has to be smaller or equal to boundaries[i].
 		//(for the same cycle)
 		double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
-		vector<double> boundaries;
+		vector<double> boundaries;    //TODO: Instead of creating this array, a simple division of compressionDelay / objectiveDelay (+/- 1) should do!
 		double remainingTime = objectiveDelay;
 		while(remainingTime >= compressionDelay){
 			remainingTime -= compressionDelay;
@@ -377,7 +381,7 @@ namespace flopoco{
 		unsigned int stage = bit->signal->getCycle() * stagesPerCycle;	//maxStage = number of stages - 1
 		double tempCriticalPath = bit->signal->getCriticalPath();
 		if(tempCriticalPath > boundaries[stagesPerCycle - 1]){
-			//bit is in next cylce
+			//bit is in next cycle
 			stage += stagesPerCycle;
 		}
 		else{			
@@ -387,6 +391,7 @@ namespace flopoco{
 				}
 			}
 		}
+//		cerr << "objectiveDelay=" << objectiveDelay << ", compressionDelay=" << compressionDelay << ", bit->signal->getCycle()=" << bit->signal->getCycle() << ", stagesPerCycle=" << stagesPerCycle << ", stage=" << stage << endl;
 		return stage;
 	}
 

@@ -77,6 +77,7 @@ namespace flopoco{
 		isTopLevelDotDrawn_ 		= false;
 		isLibraryComponent_         = false;
 		noParseNoSchedule_          = false;
+		isOperatorScheduled_        = false;
 
  		parentOp_                   = parentOp;
 		isOperatorApplyScheduleDone_= false;
