@@ -24,7 +24,10 @@ public:
         unsigned int wY,
         unsigned int wOut,
         bool signedIO,
-        BaseMultiplierCollection* bmc);
+        BaseMultiplierCollection* bmc,
+		base_multiplier_id_t prefered_multiplier,
+		float occupation_threshold,
+		size_t maxPrefMult=0);
 
     virtual void solve();
 

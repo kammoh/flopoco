@@ -43,7 +43,7 @@ namespace flopoco {
 	{
 		if(wX == 0 || wY == 0)
 			return 0;
-		
+
 		if(wX == 1)
 			return wY;
 
@@ -53,7 +53,7 @@ namespace flopoco {
 		return wX + wY;
 	}
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold)
 	{
         srcFileName="IntMultiplier";
@@ -135,7 +135,10 @@ namespace flopoco {
 					wY,
 					wOut + guardBits,
 					signedIO,
-					&baseMultiplierCollection
+					&baseMultiplierCollection,
+					baseMultiplierCollection.getPreferedMultiplier(),
+					dspOccupationThreshold,
+					maxDSP
 			);
 
 		} else {
@@ -425,9 +428,9 @@ namespace flopoco {
     }
 
     unsigned int IntMultiplier::getOutputLengthNonZeros(
-			BaseMultiplierParametrization const & parameter, 
+			BaseMultiplierParametrization const & parameter,
 			unsigned int xPos,
-			unsigned int yPos, 
+			unsigned int yPos,
 			unsigned int totalOffset
 		)
     {
@@ -646,9 +649,9 @@ namespace flopoco {
 
 
 
-	
+
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
-		int wX,wY, wOut ;
+		int wX,wY, wOut, maxDSP;
         bool signedIO,superTile;
         double dspOccupationThreshold=0.0;
 
@@ -658,12 +661,13 @@ namespace flopoco {
 		UserInterface::parseBoolean(args, "signedIO", &signedIO);
 		UserInterface::parseBoolean(args, "superTile", &superTile);
 		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
+		UserInterface::parsePositiveInt(args, "maxDSP", &maxDSP);
 
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold);
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP);
 	}
 
 
-	
+
 	void IntMultiplier::registerFactory(){
 		UserInterface::add("IntMultiplier", // name
 											 "A pipelined integer multiplier.",
@@ -672,6 +676,7 @@ namespace flopoco {
 											 "wX(int): size of input X; wY(int): size of input Y;\
                         wOut(int)=0: size of the output if you want a truncated multiplier. 0 for full multiplier;\
                         signedIO(bool)=false: inputs and outputs can be signed or unsigned;\
+                        maxDSP(int)=8: limits the number of DSP-Tiles used in Multiplier;\
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
                         dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
 											 "", // no particular extra doc needed

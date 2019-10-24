@@ -27,7 +27,7 @@ namespace flopoco {
          * @param[in] signedIO       false=unsigned, true=signed
          * @param[in] texOutput      true=generate a tek file with the found tiling solution
          **/
-        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0);
+        IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0, unsigned int maxDSP=0);
 
 		/**
 		 * The emulate function.
@@ -36,11 +36,11 @@ namespace flopoco {
 		void emulate ( TestCase* tc );
 
 		void buildStandardTestCases(TestCaseList* tcl);
-		
+
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
 
-		/** Factory register method */ 
+		/** Factory register method */
 		static void registerFactory();
 
 		/**
@@ -62,6 +62,7 @@ namespace flopoco {
         bool signedIO;                   /**< true if the IOs are two's complement */
 		bool negate;                    /**< if true this multiplier computes -xy */
 		float dspOccupationThreshold;   /**< threshold of relative occupation ratio of a DSP multiplier to be used or not */
+        unsigned int maxDSP;            /**< limit the number of DSP-Blocks used in multiplier */
 	private:
 //		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
 		/**

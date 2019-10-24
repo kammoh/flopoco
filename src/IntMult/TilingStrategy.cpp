@@ -66,7 +66,7 @@ namespace flopoco {
 
 			for (size_t i = 0 ; i < static_cast<size_t>(wX) ; ++i) {
 				for (size_t j = 0 ; j < static_cast<size_t>(wY) ; ++j) {
-					string color = (j+i >= offset) ? "black" : "purple";
+					string color = (j+i >= (size_t)offset) ? "black" : "purple";
 					outstream << "\\fill["<< color <<"] ("<<(j+i + 1)<<", " << j <<".5) circle (0.125);\n";
 				}
 			}
@@ -87,9 +87,25 @@ namespace flopoco {
 				int ystart = coordinates.second;
 				int xend = xstart + static_cast<int>(parametrization.getTileXWordSize());
 				int yend = ystart + static_cast<int>(parametrization.getTileYWordSize());
-				outstream << "\\draw[fill=gray, fill opacity=0.3] (" << xstart << ", " << ystart << ") rectangle (" <<
+				for (int y = ystart; y < yend; y++){        // for not rectangular tiles, every field in its maximum outline has to be checked if it is covered
+                    for (int x = xstart; x < xend; x++){
+                        if(parametrization.shapeValid(x-xstart,y-ystart)){
+                            outstream << "\\fill[fill=gray, fill opacity=0.3] (" << x << ", " << y << ") rectangle (" <<
+                                      x+1 << ", " << y+1 << ");\n";
+                            if((parametrization.shapeValid(x-xstart,y-ystart) && x-xstart == 0) || (x-xstart > 0 && !parametrization.shapeValid(x-xstart-1,y-ystart)))      //draw outline of individual tile, if neighbouring tile is not covered by it
+                                outstream << "\\draw (" << x << "," << y << ") -- (" << x << "," << y+1 <<");\n";
+                            if((parametrization.shapeValid(x-xstart,y-ystart) && y-ystart == 0) || (y-ystart > 0 && !parametrization.shapeValid(x-xstart,y-ystart-1)))
+                                outstream << "\\draw (" << x << "," << y << ") -- (" << x+1 << "," << y <<");\n";
+                            if(!parametrization.shapeValid(x-xstart+1,y-ystart))
+                                outstream << "\\draw (" << x+1 << "," << y << ") -- (" << x+1 << "," << y+1 <<");\n";
+                            if(!parametrization.shapeValid(x-xstart,y-ystart+1))
+                                outstream << "\\draw (" << x << "," << y+1 << ") -- (" << x+1 << "," << y+1 <<");\n";
+                        }
+                    }
+                }
+/*				outstream << "\\draw[fill=gray, fill opacity=0.3] (" << xstart << ", " << ystart << ") rectangle (" <<
 					xend << ", " << yend << ");\n";
-				cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
+*/				cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
 			}
 		}
 		outstream << "\\end{tikzpicture}\n\\end{document}\n";
