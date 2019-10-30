@@ -21,14 +21,15 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 			bmc),
 		small_tile_mult_{1}, //Most compact LUT-Based multiplier
 		numUsedMults_{0},
-		max_pref_mult_ {maxPrefMult}
+		max_pref_mult_ {maxPrefMult},
+		occupation_threshold_{occupation_threshold}
 	{
 
 	}
 
 void TilingStrategyOptimalILP::solve()
 {
-#define HAVE_SCALP
+
 #ifndef HAVE_SCALP
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
 #else
@@ -139,11 +140,10 @@ void TilingStrategyOptimalILP::constructProblem()
             for(int s = 0; s < wS; s++){					//for every available tile...
                 for(int ys = 0; ys <= y; ys++){					//...check if the position x,y gets covered by tile s located at position (xs, ys) = (0..x, 0..y)
                     for(int xs = 0; xs <= x; xs++){
-                        int sign_x = (signedIO && wX-(int)my_tiles[s].wX-1 == xs && s == 0)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
-                        int sign_y = (signedIO && wY-(int)my_tiles[s].wY-1 == ys && s == 0)?1:0;
-                        if(( 0 <= x-xs && x-xs < (int)my_tiles[s].wX+sign_x && 0 <= y-ys && y-ys < (int)my_tiles[s].wY+sign_y ) == true){
-                            pxyTerm.add(solve_Vars[s][xs][ys], 1); //even better
-
+                        if(shape_contribution(x, y, xs, ys, s) == true){
+                            if((0 < s && s < 7) || (shape_occupation(xs, ys, s) >=  occupation_threshold_) ){
+                                pxyTerm.add(solve_Vars[s][xs][ys], 1);
+                            }
                         }
                     }
                 }
@@ -179,18 +179,43 @@ void TilingStrategyOptimalILP::constructProblem()
 #endif
 
 
-// determines if a position is coverd by a tile, relative to the tiles origin (0,0)
-bool TilingStrategyOptimalILP::shape_contribution(int x, int y, int s){
-    auto& bm = baseMultiplierCollection->getBaseMultiplier(s);
-    cerr << "shape=" << s << " wX=" << bm.getMaxWordSizeSmallInputUnsigned() << " wY=" << bm.getMaxWordSizeLargeInputUnsigned() << endl;
-    return bm.shapeValid(bm.parametrize(bm.getMaxWordSizeSmallInputUnsigned()-1, bm.getMaxWordSizeLargeInputUnsigned()-1, false, false),x,y);
+// determines if a position (x,y) is coverd by a tile (s), relative to the tiles origin position(shape_x,shape_y)
+inline bool TilingStrategyOptimalILP::shape_contribution(int x, int y, int shape_x, int shape_y, int s){
+    //cerr << "tile=" << s << " xs=" << shape_x << " ys=" << shape_y << " x=" << x << " y=" << y << endl;
+    if(s <=6){
+        int sign_x = (signedIO && wX-(int)my_tiles[s].wX-1 == shape_x && s == 0)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
+        int sign_y = (signedIO && wY-(int)my_tiles[s].wY-1 == shape_y && s == 0)?1:0;
+        return ( 0 <= x-shape_x && x-shape_x < (int)my_tiles[s].wX+sign_x && 0 <= y-shape_y && y-shape_y < (int)my_tiles[s].wY+sign_y );
+    } else if (6 < s && s <= 18){                                                            //Handle Xilinx Super Tiles
+        //cout << x << "," << y << " " << shape_x << "," << shape_y << ":" << availSuperTiles[s-7].shapeValid(x-shape_x, y-shape_y) << endl;
+        return false;//availSuperTiles[s-7].shapeValid(x-shape_x, y-shape_y);
+    } else {
+        return false;
+    }
+
 }
 
 //returns cost of a particular tile
-float TilingStrategyOptimalILP::shape_cost(int s){
+inline float TilingStrategyOptimalILP::shape_cost(int s){
     auto& bm = baseMultiplierCollection->getBaseMultiplier(s);
     //int dspCost = bm.getDSPCost(bm.getMaxWordSizeSmallInputUnsigned(), bm.getMaxWordSizeLargeInputUnsigned());
     return (float)bm.getLUTCost(bm.getMaxWordSizeSmallInputUnsigned(), bm.getMaxWordSizeLargeInputUnsigned());
+}
+
+//determine the occupation ratio of a given multiplier tile range [0..1],
+inline float TilingStrategyOptimalILP::shape_occupation(int shape_x, int shape_y, int s){
+    unsigned covered_positions = 0, utilized_positions = 0;
+    for(int y = shape_y; y < shape_y + (int)my_tiles[s].wY; y++){
+        for(int x = shape_x; x < shape_x + (int)my_tiles[s].wX; x++){
+            if(shape_contribution(x, y, shape_x, shape_y, s)){
+                covered_positions++;
+                if(x < wX && y < wY){
+                    utilized_positions++;
+                }
+            }
+        }
+    }
+    return (float)utilized_positions/(float)covered_positions;
 }
 
 

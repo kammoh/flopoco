@@ -36,8 +36,10 @@ private:
     size_t numUsedMults_;
     size_t max_pref_mult_;
     BaseMultiplierCollection* bmc;
-    bool shape_contribution(int x, int y, int s);
-    float shape_cost(int s);
+    float occupation_threshold_;
+    inline bool shape_contribution(int x, int y, int shape_x, int shape_y, int s);
+    inline float shape_cost(int s);
+    inline float shape_occupation(int shape_x, int shape_y, int s);
     int dpX, dpY, dpS, wS;
     struct tiledef {                                //Struct to hold information about tiles
         unsigned wX;

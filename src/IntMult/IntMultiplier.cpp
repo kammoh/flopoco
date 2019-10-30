@@ -127,7 +127,8 @@ namespace flopoco {
 					signedIO,
 					&baseMultiplierCollection,
 					baseMultiplierCollection.getPreferedMultiplier(),
-					dspOccupationThreshold
+					dspOccupationThreshold,
+					maxDSP
 			);
 		} else if(tilingMethod.compare("optimal") == 0){
 			tilingStrategy = new TilingStrategyOptimalILP(
@@ -692,7 +693,7 @@ namespace flopoco {
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		list<pair<int,int>> wordSizes = {{1,1},{2,2},{3,3},{4,4},{8,8},{16,8},{8,16},{13,17},{24,24},{27,41},{53,53},{64,64},{10,99},{99,10},{100,100}};
+		list<pair<int,int>> wordSizes = {{1,1},{2,2},{3,3},{4,4},{8,8},{16,8},{8,16},{13,17},{24,24},{27,41},{35,35},{53,53},{64,64},{10,99},{99,10},{100,100}};
 
 		for(int sign=0; sign < 2; sign++)
 		{
@@ -704,6 +705,9 @@ namespace flopoco {
 					paramList.push_back(make_pair("wX", to_string(wX)));
 					paramList.push_back(make_pair("wY", to_string(wY)));
 					paramList.push_back(make_pair("signed", sign ? "true" : "false"));
+					paramList.push_back(make_pair("dspThreshold", to_string(1.0)));
+					paramList.push_back(make_pair("maxDSP", to_string(0)));
+					//paramList.push_back(make_pair("tiling", "optimal"));
 					testStateList.push_back(paramList);
 					paramList.clear();
 				}
