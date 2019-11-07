@@ -14,6 +14,10 @@
  * All rights reserved.
  */
 /*
+% TODO: implement the following (from the Good Book)
+    \item if $C_i$ is an integer multiple of $2^{\ell_R-\ell_i}$, as $Xi_i$ is either $0$, or an integer multiple of  $2^{\ell_i}$ then for $X_i>0$, $|C_iX_i|>2^{\ell_R}$:
+      in other words the multiplication produces no bit to the right of $2^{\ell_R}$.
+      Therefore,  whatever $g\ge 0$, no rounding will be needed, hence  $\bound{\abserr^{\text{(ulp)}}_i}=0$ (since the case $X_i=0$, of course, also entails $\abserr^{\text{(ulp)}}_i=0$).
 
 TODO: IntIntKCM is a special case of FixReal.
 This is the good way of getting rid of IntIntKCM.
