@@ -369,6 +369,7 @@ Testbench
 ** BoxMuller
 
 * Improvements to do, operator by operator
+** generic Hsiao compression could improve most table-based algorithms 
 ** Collision
 *** manage infinities etc
 *** decompose into FPSumOf3Squares and Collision
