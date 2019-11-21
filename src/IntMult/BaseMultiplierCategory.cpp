@@ -16,11 +16,22 @@ namespace flopoco {
 		return bmCat_->shapeValid(*this, x, y);
 	}
 
+    int BaseMultiplierCategory::Parametrization::getRelativeResultLSBWeight() const
+    {
+        return bmCat_->getRelativeResultLSBWeight(*this);
+    }
+
+    int BaseMultiplierCategory::Parametrization::getRelativeResultMSBWeight() const
+    {
+        return bmCat_->getRelativeResultMSBWeight(*this);
+    }
+
 	BaseMultiplierCategory::Parametrization BaseMultiplierCategory::parametrize(
 			int wX,
 			int wY,
 			bool isSignedX,
-			bool isSignedY
+			bool isSignedY,
+			int shape_para
 		) const
 	{
 		int effectiveWY = (isSignedY) ? wY - deltaWidthUnsignedSigned_ : wY;
@@ -36,7 +47,7 @@ namespace flopoco {
 			throw std::string("BaseMultiplierCategory::parametrize: error, required multiplier area is too big");
 		}
 
-		return Parametrization(wX, wY, this, isSignedX, isSignedY, isFlippedXY);
+		return Parametrization(wX, wY, this, isSignedX, isSignedY, isFlippedXY, shape_para);
 	}
 
 	int BaseMultiplierCategory::getMaxSecondWordSize(
@@ -70,4 +81,20 @@ bool BaseMultiplierCategory::shapeValid(Parametrization const& param, unsigned x
     auto yw = param.getTileYWordSize();
 
 	return (x >= 0 && x < xw && y >= 0 && y < yw);
+}
+
+int BaseMultiplierCategory::getRelativeResultLSBWeight(Parametrization const & param) const
+{
+    return 0;
+}
+
+int BaseMultiplierCategory::getRelativeResultMSBWeight(Parametrization const & param) const
+{
+    if(param.getTileXWordSize() == 0 || param.getTileYWordSize() == 0)
+        return 0;
+    if(param.getTileXWordSize() == 1)
+        return param.getTileYWordSize();
+    if(param.getTileYWordSize() == 1)
+        return param.getTileXWordSize();
+    return param.getTileXWordSize() + param.getTileYWordSize();
 }

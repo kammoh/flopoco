@@ -58,11 +58,14 @@ namespace flopoco {
                     unsigned int getTileYWordSize() const {return (isFlippedXY_) ? wX_ : wY_;}
 					unsigned int getOutWordSize() const;
 					bool shapeValid(int x, int y) const;
+                    int getRelativeResultLSBWeight() const;
+                    int getRelativeResultMSBWeight() const;
                     bool isSignedMultX() const {return isSignedX_;}
                     bool isSignedMultY() const {return isSignedY_;}
 					bool isFlippedXY() const {return isFlippedXY_;}
+					int getShapePara() const {return shape_para_;}
 
-				string getMultType() const {return bmCat_->getType();}
+				    string getMultType() const {return bmCat_->getType();}
 
 				private:
 					Parametrization(
@@ -71,12 +74,14 @@ namespace flopoco {
 							BaseMultiplierCategory const * multCategory,
 							bool isSignedX=false,
 							bool isSignedY=false,
-							bool isFlippedXY=false
+							bool isFlippedXY=false,
+							int shape_para=-1
 						):wX_{wX},
 						wY_{wY},
 						isSignedX_{isSignedX},
 						isSignedY_{isSignedY},
 						isFlippedXY_{isFlippedXY},
+						shape_para_{shape_para},
 						bmCat_{multCategory}{}
 
 					unsigned int wX_;
@@ -84,6 +89,7 @@ namespace flopoco {
 					bool isSignedX_;
 					bool isSignedY_;
 					bool isFlippedXY_;
+					int shape_para_;
 					BaseMultiplierCategory const * bmCat_;
 
 				friend BaseMultiplierCategory;
@@ -91,13 +97,17 @@ namespace flopoco {
 
 			virtual bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
 
+            virtual int getRelativeResultLSBWeight(Parametrization const & param) const;
+            virtual int getRelativeResultMSBWeight(Parametrization const & param) const;
+
 			virtual Operator* generateOperator(
 					Operator *parentOp,
 					Target* target,
 					Parametrization const &parameters
 				) const = 0;
 
-		Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
+		//Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
+		Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
 
 		private:
 			int maxWordSizeLargeInputUnsigned_;
