@@ -289,24 +289,24 @@ namespace flopoco {
 			unsigned int yInputLength = parameters.getTileYWordSize();
 			//unsigned int outputLength = parameters.getOutWordSize();
 
-			unsigned int lsbZerosXIn = (xPos < 0) ? static_cast<unsigned int>(-xPos) : 0;
+			unsigned int lsbZerosXIn = (xPos < 0) ? static_cast<unsigned int>(-xPos) : 0;                               // zero padding for the input LSBs of Multiplier tile, that are outside of the area to be tiled
 			unsigned int lsbZerosYIn = (yPos < 0) ? static_cast<unsigned int>(-yPos) : 0;
 
-			unsigned int msbZerosXIn = getZeroMSB(xPos, xInputLength, wX);
+			unsigned int msbZerosXIn = getZeroMSB(xPos, xInputLength, wX);                                 // zero padding for the input MSBs of Multiplier tile, that are outside of the area to be tiled
 			unsigned int msbZerosYIn = getZeroMSB(yPos, yInputLength, wY);
 
-			unsigned int selectSizeX = xInputLength - (msbZerosXIn + lsbZerosXIn);
+			unsigned int selectSizeX = xInputLength - (msbZerosXIn + lsbZerosXIn);                                      // used size of the multiplier
 			unsigned int selectSizeY = yInputLength - (msbZerosYIn + lsbZerosYIn);
 
-			unsigned int effectiveAnchorX = (xPos < 0) ? 0 : static_cast<unsigned int>(xPos);
+			unsigned int effectiveAnchorX = (xPos < 0) ? 0 : static_cast<unsigned int>(xPos);                           // limit tile positions to > 0
 			unsigned int effectiveAnchorY = (yPos < 0) ? 0 : static_cast<unsigned int>(yPos);
 
-			unsigned int outLSBWeight = effectiveAnchorX + effectiveAnchorY;
-			unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;
-			unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;
+			unsigned int outLSBWeight = effectiveAnchorX + effectiveAnchorY + parameters.getRelativeResultLSBWeight();  // calc result LSB weight corresponding to tile position
+			unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;           // calc result LSBs to be ignored
+			unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;       // calc bits between the tiles output LSB and the bitheaps LSB
 
-			unsigned int toSkip = lsbZerosXIn + lsbZerosYIn + truncated;
-			unsigned int tokeep = prodsize(selectSizeX, selectSizeY) - toSkip;
+			unsigned int toSkip = lsbZerosXIn + lsbZerosYIn + truncated;                                                // calc LSB bits to be ignored in the tiles output
+			unsigned int tokeep = parameters.getRelativeResultMSBWeight() - parameters.getRelativeResultLSBWeight() - toSkip;                                     // the tiles MSBs that are actually used
 			assert(tokeep > 0); //A tiling should not give a useless tile
 
 			oname.str("");
@@ -409,9 +409,9 @@ namespace flopoco {
 		nameOutput.str("");
 		nameOutput << "tile_" << idx << "_mult";
 
-		inPortMap(nullptr, "X", multIn1SigName);
-		inPortMap(nullptr, "Y", multIn2SigName);
-		outPortMap(nullptr, "O", output_name);
+		inPortMap("X", multIn1SigName);
+		inPortMap("Y", multIn2SigName);
+		outPortMap("O", output_name);
 		auto mult = parameters.generateOperator(this, getTarget());
 
 		vhdl << instance(mult, nameOutput.str(), false) <<endl;
@@ -560,8 +560,8 @@ namespace flopoco {
         mpz_class svY = tc->getInputValue("Y");
         mpz_class svR;
 
-		cerr << "X : " << svX.get_str(10) << " (" << svX.get_str(2) << ")" << endl;
-		cerr << "Y : " << svY.get_str(10) << " (" << svY.get_str(2) << ")" << endl;
+//		cerr << "X : " << svX.get_str(10) << " (" << svX.get_str(2) << ")" << endl;
+//		cerr << "Y : " << svY.get_str(10) << " (" << svY.get_str(2) << ")" << endl;
 
 
 		if(signedIO)
