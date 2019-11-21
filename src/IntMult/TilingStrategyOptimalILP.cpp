@@ -34,10 +34,20 @@ void TilingStrategyOptimalILP::solve()
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
 #else
 
+    if(baseMultiplierCollection->size() > 6){
+        for(int i = 1; i <= 12; i++){
+            availSuperTiles.push_back(BaseMultiplierDSPSuperTilesXilinx( (BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE)i) );
+        }
+        for(int i = 1; i <= 8; i++){
+            availNonRectTiles.push_back(BaseMultiplierIrregularLUTXilinx( (BaseMultiplierIrregularLUTXilinx::TILE_SHAPE)i) );
+        }
+    }
+
     solver = new ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
 	constructProblem();
 
     // Try to solve
+    cout << "starting solver, this might take a while..." << endl;
     ScaLP::status stat = solver->solve();
 
     // print results
@@ -57,14 +67,15 @@ void TilingStrategyOptimalILP::solve()
             unsigned m_width = my_tiles[mult_id].wX;
             unsigned m_height = my_tiles[mult_id].wY;
 
-            if(mult_id == 0){
-                if((unsigned)this->wX-m_x_pos < m_width){           //limit size of DSP Multiplier, to do not protrude form the tiled area
+            if(mult_id <= 1 || mult_id > 7){
+                if((unsigned)this->wX-m_x_pos < m_width){           //limit size of DSP Multiplier, to do not protrude from the tiled are
                     m_width = this->wX-m_x_pos;
                 }
                 if((unsigned)this->wY-m_y_pos < m_height){
                     m_height = this->wY-m_y_pos;
                 }
-
+            }
+            if(mult_id <= 1){
                 if(signedIO && (unsigned)this->wX-m_x_pos-(int)my_tiles[mult_id].wX== 1){           //enlarge the Xilinx DSP Multiplier by one bit, if the inputs are signed and placed to process the MSBs
                     m_width++;
                 }
@@ -81,14 +92,26 @@ void TilingStrategyOptimalILP::solve()
                 y_signed_bit = true;
             }
 
-            auto& bm = baseMultiplierCollection->getBaseMultiplier(my_tiles[mult_id].base_index);
-            auto param = bm.parametrize( m_width, m_height, x_signed_bit, y_signed_bit);
-            auto coord = make_pair(m_x_pos, m_y_pos);
-            solution.push_back(make_pair(param, coord));
+            if(mult_id < 8){
+                auto& bm = baseMultiplierCollection->getBaseMultiplier(my_tiles[mult_id].base_index);
+                auto param = bm.parametrize( m_width, m_height, x_signed_bit, y_signed_bit);
+                auto coord = make_pair(m_x_pos, m_y_pos);
+                solution.push_back(make_pair(param, coord));
 
-            float tile_cost = ( ((my_tiles[mult_id].base_index)? ceil(bm.getLUTCost(m_width, m_height)) :0 ) + 0.65 * (m_width + m_height) );
-            total_cost += tile_cost;
-            cout << "Mult. id:" << mult_id << " wX:" << m_x_pos << " xY:" << m_y_pos << " m_width:" << m_width << " m_height:" << m_height << "tile_cost:" << tile_cost <<std::endl;
+                float tile_cost = ((1 < mult_id && mult_id <= 7)? my_tiles[mult_id].cost : 0.65 * (m_width + m_height) )  ;
+                cout << "cost: " << tile_cost << endl;
+                total_cost += tile_cost;
+            } else {
+                auto& bm = baseMultiplierCollection->getBaseMultiplier(baseMultiplierCollection->size()-((mult_id <= 19)?2:1));
+                auto param = bm.parametrize( m_width, m_height, false, false, (mult_id > 19)?mult_id-19:mult_id-7);
+                auto coord = make_pair(m_x_pos, m_y_pos);
+                solution.push_back(make_pair(param, coord));
+
+                float tile_cost = ( ((mult_id > 19)? my_tiles[mult_id].cost :0.65 * (m_width + m_height) )  );
+                cout << "cost: " << tile_cost << endl;
+                total_cost += tile_cost;
+            }
+
         }
     }
     cout << "Total cost:" << total_cost <<std::endl;
@@ -99,17 +122,27 @@ void TilingStrategyOptimalILP::solve()
 #ifdef HAVE_SCALP
 void TilingStrategyOptimalILP::constructProblem()
 {
-
+    cout << "constructing problem formulation..." << endl;
     my_tiles.push_back ({24, 17, 0.00, 0});     // {width, height, total cost (LUT+Compressor), base multiplier id} of tile
+    my_tiles.push_back ({17, 24, 0.00, 0});
     my_tiles.push_back ({ 3,  3, 9.90, 2});
     my_tiles.push_back ({ 2,  3, 6.25, 1});
     my_tiles.push_back ({ 3,  2, 6.25, 1});
     my_tiles.push_back ({ 1,  2, 2.30, 1});
     my_tiles.push_back ({ 2,  1, 2.30, 1});
     my_tiles.push_back ({ 1,  1, 1.65, 1});
+
+    for(int i = 0; i < (int)availSuperTiles.size(); i++){
+        my_tiles.push_back ({(unsigned)availSuperTiles[i].getMaxWordSizeLargeInputUnsigned(), (unsigned)availSuperTiles[i].getMaxWordSizeSmallInputUnsigned(), 0.00, 8 + (unsigned)i});
+    }
+    for(int i = 0; i < (int)availNonRectTiles.size(); i++){
+        my_tiles.push_back ({(unsigned)availNonRectTiles[i].getMaxWordSizeLargeInputUnsigned(), (unsigned)availNonRectTiles[i].getMaxWordSizeSmallInputUnsigned(), (float)(availNonRectTiles[i].getLUTCost(0,0)), 18 + (unsigned)i});
+    }
+
     wS = my_tiles.size();          //Number of available tiles
 
     //Assemble cost function, declare problem variables
+    cout << "   assembling cost function, declaring problem variables..." << endl;
     ScaLP::Term obj;
     int nx = wX-1, ny = wY-1, ns = wS-1; dpX = 1; dpY = 1; dpS = 1; //calc number of decimal places, for var names
     while (nx /= 10)
@@ -132,6 +165,7 @@ void TilingStrategyOptimalILP::constructProblem()
     }
 
     // add the Constraints
+    cout << "   adding the constraints to problem formulation..." << endl;
     for(int y = 0; y < wY; y++){
         for(int x = 0; x < wX; x++){
             stringstream consName;
@@ -141,7 +175,7 @@ void TilingStrategyOptimalILP::constructProblem()
                 for(int ys = 0; ys <= y; ys++){					//...check if the position x,y gets covered by tile s located at position (xs, ys) = (0..x, 0..y)
                     for(int xs = 0; xs <= x; xs++){
                         if(shape_contribution(x, y, xs, ys, s) == true){
-                            if((0 < s && s < 7) || (shape_occupation(xs, ys, s) >=  occupation_threshold_) ){
+                            if((1 < s && s < 8) || (shape_occupation(xs, ys, s) >=  occupation_threshold_) ){
                                 pxyTerm.add(solve_Vars[s][xs][ys], 1);
                             }
                         }
@@ -154,14 +188,16 @@ void TilingStrategyOptimalILP::constructProblem()
         }
     }
 
-   //limit use of shape n
+    //limit use of shape n
+    cout << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ <<" instances..." << endl;
     int sn = 0;
     stringstream consName;
     consName << "lims" << sn << ": ";
     ScaLP::Term pxyTerm;
     for(int y = 0; y < wY; y++){
         for(int x = 0; x < wX; x++){
-            pxyTerm.add(solve_Vars[sn][x][y], 1);
+            pxyTerm.add(solve_Vars[0][x][y], 1);
+            pxyTerm.add(solve_Vars[1][x][y], 1);
         }
     }
     ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.
@@ -169,9 +205,11 @@ void TilingStrategyOptimalILP::constructProblem()
     solver->addConstraint(c1Constraint);
 
     // Set the Objective
+    cout << "   setting objective (minimize cost function)..." << endl;
     solver->setObjective(ScaLP::minimize(obj));
 
     // Write Linear Program to file for debug purposes
+    cout << "   writing LP-file for debuging..." << endl;
     solver->writeLP("tile.lp");
 }
 
@@ -182,13 +220,16 @@ void TilingStrategyOptimalILP::constructProblem()
 // determines if a position (x,y) is coverd by a tile (s), relative to the tiles origin position(shape_x,shape_y)
 inline bool TilingStrategyOptimalILP::shape_contribution(int x, int y, int shape_x, int shape_y, int s){
     //cerr << "tile=" << s << " xs=" << shape_x << " ys=" << shape_y << " x=" << x << " y=" << y << endl;
-    if(s <=6){
-        int sign_x = (signedIO && wX-(int)my_tiles[s].wX-1 == shape_x && s == 0)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
-        int sign_y = (signedIO && wY-(int)my_tiles[s].wY-1 == shape_y && s == 0)?1:0;
+    if(s <=7){
+        int sign_x = (signedIO && wX-(int)my_tiles[s].wX-1 == shape_x && s <= 1)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
+        int sign_y = (signedIO && wY-(int)my_tiles[s].wY-1 == shape_y && s <= 1)?1:0;
         return ( 0 <= x-shape_x && x-shape_x < (int)my_tiles[s].wX+sign_x && 0 <= y-shape_y && y-shape_y < (int)my_tiles[s].wY+sign_y );
-    } else if (6 < s && s <= 18){                                                            //Handle Xilinx Super Tiles
+    } else if (7 < s && s <= 19){                                                            //Handle Xilinx Super Tiles
         //cout << x << "," << y << " " << shape_x << "," << shape_y << ":" << availSuperTiles[s-7].shapeValid(x-shape_x, y-shape_y) << endl;
-        return false;//availSuperTiles[s-7].shapeValid(x-shape_x, y-shape_y);
+        return availSuperTiles[s-8].shapeValid(x-shape_x, y-shape_y);
+    } else if (19 < s && s <= 27){                                                            //Handle Xilinx Iregular Tiles
+        //cout << x << "," << y << " " << shape_x << "," << shape_y << ":" << availSuperTiles[s-7].shapeValid(x-shape_x, y-shape_y) << endl;
+        return availNonRectTiles[s-20].shapeValid(x-shape_x, y-shape_y);
     } else {
         return false;
     }

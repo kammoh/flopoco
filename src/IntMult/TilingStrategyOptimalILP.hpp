@@ -8,6 +8,9 @@
 #include <ScaLP/SolverDynamic.h> // ScaLP::newSolverDynamic
 #endif //HAVE_SCALP
 #include <iomanip>
+#include "BaseMultiplier.hpp"
+#include "BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "BaseMultiplierIrregularLUTXilinx.hpp"
 
 namespace flopoco {
 
@@ -48,6 +51,8 @@ private:
         unsigned base_index;
     };
     vector<tiledef> my_tiles;                       //Tiles used for Tiling
+    vector<BaseMultiplierDSPSuperTilesXilinx> availSuperTiles;
+    vector<BaseMultiplierIrregularLUTXilinx> availNonRectTiles;
 #ifdef HAVE_SCALP
     void constructProblem();
 
