@@ -56,6 +56,7 @@ XilinxFourToTwoCompressor
 TutorialOperator
 
 XilinxBaseMultiplier2xk
+BaseMultiplierIrregularLUTXilinx
 
 TestBench
 Wrapper
