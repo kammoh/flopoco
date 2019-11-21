@@ -6,7 +6,7 @@
 namespace flopoco {
 
 Operator* XilinxBaseMultiplier2xk::generateOperator(
-		Operator *parentOp, 
+		Operator *parentOp,
 		Target* target,
 		Parametrization const & parameters) const
 {
@@ -14,7 +14,7 @@ Operator* XilinxBaseMultiplier2xk::generateOperator(
 			parentOp,
 			target,
             parameters.isSignedMultX(),
-			parameters.isSignedMultY(), 
+			parameters.isSignedMultY(),
             parameters.getMultXWordSize(),
 			parameters.isFlippedXY()
 		);
@@ -27,7 +27,58 @@ double XilinxBaseMultiplier2xk::getLUTCost(uint32_t wX, uint32_t wY) const
 	else
 		return double(wX + 1);
 }
-	
+
+OperatorPtr XilinxBaseMultiplier2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+{
+    int wY;
+	bool xIsSigned,yIsSigned;
+    UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
+	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
+	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
+
+	return new XilinxBaseMultiplier2xkOp(parentOp,target,xIsSigned,yIsSigned,wY, false);
+}
+
+void XilinxBaseMultiplier2xk::registerFactory()
+{
+    UserInterface::add( "XilinxBaseMultiplier2xk", // name
+                        "Implements a 2xY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs",
+                        "BasicInteger", // categories
+                        "",
+                        "wY(int): size of input Y;\
+						xIsSigned(bool)=0: input X is signed;\
+						yIsSigned(bool)=0: input Y is signed;",
+                       "",
+                       XilinxBaseMultiplier2xk::parseArguments,
+                       XilinxBaseMultiplier2xk::unitTest
+    ) ;
+}
+
+void XilinxBaseMultiplier2xk::emulate(TestCase* tc)
+{
+    mpz_class svX = tc->getInputValue("X");
+    mpz_class svY = tc->getInputValue("Y");
+    mpz_class svR = svX * svY;
+    tc->addExpectedOutput("O", svR);
+}
+
+TestList XilinxBaseMultiplier2xk::unitTest(int index)
+{
+    // the static list of mandatory tests
+    TestList testStateList;
+    vector<pair<string,string>> paramList;
+
+    //test square multiplications:
+    for(int w=1; w <= 6; w++)
+    {
+        paramList.push_back(make_pair("wX", to_string(w)));
+        paramList.push_back(make_pair("wY", to_string(w)));
+        testStateList.push_back(paramList);
+        paramList.clear();
+    }
+
+    return testStateList;
+}
 
 XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
 {
@@ -84,21 +135,21 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
         inPortMap("i2",in2 + of(0));
 
         if(i==0)
-            inPortMapCst("i1","'0'"); //connect 0 at LSB position
+            //inPortMapCst("i1","'0'"); //connect 0 at LSB position
+            inPortMapCst("i1","0"); //connect 0 at LSB position
         else
             inPortMap("i1",in1 + of(i-1));
 
         if(i==needed_luts-1)
-            inPortMapCst("i3","'0'"); //connect 0 at MSB position
+            inPortMapCst("i3","0"); //connect 0 at MSB position
         else
             inPortMap("i3",in1 + of(i));
 
-        inPortMapCst("i4","'0'");
-        inPortMapCst("i5","'1'");
+        inPortMapCst("i4","0");
+        inPortMapCst("i5","1");
 
         outPortMap("o5","cc_di" + of(i));
         outPortMap("o6","cc_s" + of(i));
-
         vhdl << cur_lut->primitiveInstance( join("lut",i)) << endl;
     }
 
@@ -106,9 +157,9 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
     for( int i = 0; i < needed_cc; i++ ) {
 		Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
 
-        inPortMapCst("cyinit", "'0'" );
+        inPortMapCst("cyinit", "0" );
         if( i == 0 ) {
-            inPortMapCst("ci", "'0'" ); //carry-in can not be used as AX input is blocked!!
+            inPortMapCst("ci", "0" ); //carry-in can not be used as AX input is blocked!!
         } else {
             inPortMap("ci", "cc_co" + of( i * 4 - 1 ) );
         }

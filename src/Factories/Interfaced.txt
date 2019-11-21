@@ -55,6 +55,8 @@ XilinxGPC
 XilinxFourToTwoCompressor
 TutorialOperator
 
+XilinxBaseMultiplier2xk
+
 TestBench
 Wrapper
 

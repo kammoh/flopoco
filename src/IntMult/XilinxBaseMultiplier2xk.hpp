@@ -22,8 +22,16 @@ namespace flopoco {
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}
 		double getLUTCost(uint32_t wX, uint32_t wY) const final;
 
+		/** Factory method */
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+        /** Register the factory */
+        static void registerFactory();
+
+        void emulate(TestCase* tc);
+        static TestList unitTest(int index);
+
 		Operator *generateOperator(
-				Operator *parentOp, 
+				Operator *parentOp,
 				Target *target,
 				Parametrization const & parameters
 			) const override;
