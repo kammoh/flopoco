@@ -77,10 +77,6 @@ namespace flopoco {
 
 		}
 
-/*-------------------proposal to handle the case when no addition is possible in current cycle and an additonal pipeline stage is needed due to the critical path length of incomming signals-----------------------
-			//, because the time left in the cycle is unsufficient for the adder-delay of a 1-bit wide addition. 
-			//This proposal fixes the problems i experienced with signals being routed to the wrong pipeline stage during my work on IntMultiplier, but seems to have side effects that break at least FPAdd.
-
 		else		{
             //cout << "----------totalPeriod" << totalPeriod << " targetPeriod " << targetPeriod << endl;
 			// Here we split into chunks.
@@ -140,74 +136,12 @@ namespace flopoco {
 
 
 	int IntAdder::getMaxAdderSizeForPeriod(Target* target, double targetPeriod) {
-		int count = 1; // You have to add something eventually
+		int count = 1;                                                                                                  // Start checking the addition width that can be performed int the remaining time in the current cycle at 1-bit
         while(target->adderDelay(count) < targetPeriod){
             count++;
 		}
-
-
 		return count-1;
 	}
-----------------------------------------------------------------------------------------------------------------------------*/
-
-
-
-		else		{
-			
-			// Here we split into chunks.
-			double remainingSlack = targetPeriod-maxCP;
-			int firstSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), remainingSlack) - 2;
-			int maxSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), targetPeriod) - 2;
-
-			bool loop=true;
-			int subAdderSize=firstSubAdderSize;
-			int previousSubAdderSize;
-			int subAdderFirstBit = 0;
-			int i=0; 
-			while(loop) {
-				REPORT(DETAILED, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
-				// Cin
-				if(subAdderFirstBit == 0)	{
-					vhdl << tab << declare("Cin_0") << " <= Cin;" << endl;
-				}else	 {
-					vhdl << tab << declare(join("Cin_", i)) << " <= " << join("S_", i-1) <<	of(previousSubAdderSize) << ";" << endl;
-				}
-				// operands
-				vhdl << tab << declare(join("X_", i), subAdderSize+1) << " <= '0' & X"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
-				vhdl << tab << declare(join("Y_", i), subAdderSize+1) << " <= '0' & Y"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
-				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1), join("S_", i), subAdderSize+1)
-						 << " <= X_" << i	<<	" + Y_" << i << " + Cin_" << i << ";" << endl;
-				vhdl << tab << declare(join("R_", i), subAdderSize) << " <= S_" << i	<<	range(subAdderSize-1,0) << ";" << endl;
-				// prepare next iteration
-				i++;
-				subAdderFirstBit += subAdderSize;
-				previousSubAdderSize = subAdderSize;
-				if (subAdderFirstBit==wIn)
-					loop=false;
-				else
-					subAdderSize = min(wIn-subAdderFirstBit, maxSubAdderSize);
-			}
-
-			vhdl << tab << "R <= ";
-			while(i>0)		{
-				i--;
-				vhdl <<  "R_" << i << (i==0?" ":" & ");
-			}
-			vhdl << ";" << endl;
-		}
-		//REPORT(DEBUG, "Exiting");
-
-	}
-
-
-	int IntAdder::getMaxAdderSizeForPeriod(Target* target, double targetPeriod) {
-		int count = 10; // You have to add something eventually
-		while(target->adderDelay(count) < targetPeriod)
-			count++;
-		return count-1;
-	}
-
-
 
 	/*************************************************************************/
 	IntAdder::~IntAdder() {
