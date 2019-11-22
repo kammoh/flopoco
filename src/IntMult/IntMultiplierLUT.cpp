@@ -53,8 +53,9 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 
 	vhdl << declare(0.0,"Xtable",wX+wY) << " <= Y & X;" << endl;
 
-	inPortMap(op, "X", "Xtable");
-	outPortMap(op, "Y", "O");
+    inPortMap("X", "Xtable");
+    outPortMap("Y", "Y1");
+    vhdl << tab << "O <= Y1;" << endl;
 	vhdl << instance(op, "TableMult");
 }
 
