@@ -41,6 +41,11 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 		return;
 	}
 
+    vhdl << declare(0.0,"Xtable",wX+wY) << " <= Y & X;" << endl;
+    // if Table is not shared, the names of the IO-Signals have to be known in advance, so connectIOFromPortMap knows where to connect to
+    inPortMap("X", "Xtable");
+    outPortMap("Y", "Y1");
+
 	vector<mpz_class> val;
 	REPORT(DEBUG, "Filling table for a LUT multiplier of size " << wX << "x" << wY << " (out put size is " << wR << ")")
 	for (int yx=0; yx < 1<<(wX+wY); yx++)
@@ -51,10 +56,6 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 
-	vhdl << declare(0.0,"Xtable",wX+wY) << " <= Y & X;" << endl;
-
-    inPortMap("X", "Xtable");
-    outPortMap("Y", "Y1");
     vhdl << tab << "O <= Y1;" << endl;
 	vhdl << instance(op, "TableMult");
 }
