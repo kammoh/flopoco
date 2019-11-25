@@ -26,8 +26,12 @@
 #include "IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "BaseMultiplierCollection.hpp"
+
 #include "TilingStrategyOptimalILP.hpp"
 #include "TilingStrategyBasicTiling.hpp"
+#include "TilingStrategyGreedy.hpp"
+#include "TilingStrategyXGreedy.hpp"
+#include "TilingStrategyBeamSearch.hpp"
 
 using namespace std;
 
@@ -118,18 +122,53 @@ namespace flopoco {
 		REPORT(INFO, "Creating TilingStrategy using tiling method " << tilingMethod)
 
 		TilingStrategy* tilingStrategy;
-		if(tilingMethod.compare("heuristicBasicTiling") == 0)
-		{
-			tilingStrategy = new TilingStrategyBasicTiling(
-					wX,
-					wY,
-					wOut + guardBits,
-					signedIO,
-					&baseMultiplierCollection,
-					baseMultiplierCollection.getPreferedMultiplier(),
-					dspOccupationThreshold,
-					maxDSP
-			);
+		if(tilingMethod.compare("heuristicBasicTiling") == 0) {
+            tilingStrategy = new TilingStrategyBasicTiling(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP
+            );
+        }
+        else if(tilingMethod.compare("heuristicGreedyTiling") == 0) {
+            tilingStrategy = new TilingStrategyGreedy(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP
+            );
+        }
+        else if(tilingMethod.compare("heuristic4xGreedyTiling") == 0) {
+            tilingStrategy = new TilingStrategyXGreedy(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP
+            );
+        }
+        else if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
+            tilingStrategy = new TilingStrategyBeamSearch(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP
+            );
 		} else if(tilingMethod.compare("optimal") == 0){
 			tilingStrategy = new TilingStrategyOptimalILP(
 					wX,

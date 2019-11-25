@@ -66,6 +66,9 @@ IntMult/FixMultAdd
 IntMult/TilingStrategy
 IntMult/TilingStrategyOptimalILP
 IntMult/TilingStrategyBasicTiling
+IntMult/TilingStrategyGreedy
+IntMult/TilingStrategyBeamSearch
+IntMult/Field
 IntMult/MultiplierBlock
 IntMult/DSPBlock
 IntMult/BaseMultiplier
