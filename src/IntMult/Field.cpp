@@ -74,6 +74,42 @@ namespace flopoco {
         return covered;
     }
 
+    pair<unsigned int, unsigned int> Field::checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& dsp) {
+        unsigned int endX = coord.first + dsp.getTileXWordSize();
+        unsigned int endY = coord.second + dsp.getTileYWordSize();
+        unsigned int maxX = endX > wX ? wX : endX;
+        unsigned int maxY = endY > wY ? wY : endY;
+
+        pair<unsigned int, unsigned int> size(dsp.getTileXWordSize(), 0);
+
+        for(unsigned int i = coord.second; i < maxY; i++) {
+            unsigned int currentSize = 0;
+            for(unsigned int j = coord.first; j < maxX; j++) {
+                if(field[i][j]) {
+                    break;
+                }
+
+                currentSize++;
+            }
+
+            //seems like it is not possible to use this line
+            if(currentSize == 0) {
+                break;
+            }
+
+            if(size.first > currentSize) {
+                size.first = currentSize;
+            }
+
+            size.second++;
+        }
+
+        cout << "Trying to place DSPBlock with size " << dsp.getTileXWordSize() << " " << dsp.getTileYWordSize() << " at position " << coord.first << " " << coord.second << endl;
+        cout << "Size would be " << size.first << " " << size.second << endl;
+
+        return size;
+    }
+
     pair<unsigned int, unsigned int> Field::placeTileInField(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& tile) {
         unsigned int endX = coord.first + tile.getTileXWordSize();
         unsigned int endY = coord.second + tile.getTileYWordSize();

@@ -35,7 +35,7 @@ namespace flopoco {
     void TilingStrategyGreedy::solve() {
         Field field(wX, wY);
         float cost = createSolution(field, solution, FLT_MAX);
-        cout << "Selected cost " << cost << endl;
+        cout << "Total cost: " << cost << endl;
     }
 
 
@@ -88,14 +88,14 @@ namespace flopoco {
                         }
 
                         if(signedIO) {
-                            if ((unsigned int) wX - (next.first + width) == 1) {
+                            if (neededX == 25 && (unsigned int) wX - (next.first + width) == 1) {
                                 width++;
                                 cout << "Extended X" << endl;
                                 signedX = true;
                                 selectedSize = extendedSize;
                             }
 
-                            if ((unsigned int) wY - (next.second + height) == 1) {
+                            if (neededY == 18 && (unsigned int) wY - (next.second + height) == 1) {
                                 height++;
                                 cout << "Extended Y" << endl;
                                 signedY = true;
@@ -170,7 +170,7 @@ namespace flopoco {
                 //TODO: handle supertiles?
             }
 
-            totalcost += (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * (tile.getTileXWordSize() + tile.getTileYWordSize());
+            totalcost += (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * tile.getOutWordSize();
 
             if(totalcost > cmpcost) {
                 return FLT_MAX;
@@ -184,8 +184,6 @@ namespace flopoco {
             next = coord;
         }
         field.printField();
-
-        cout << "total cost " << totalcost << endl;
 
         return totalcost;
     }

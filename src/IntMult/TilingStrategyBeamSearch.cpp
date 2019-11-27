@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "TilingStrategyBeamSearch.hpp"
 
 namespace flopoco {
@@ -88,8 +90,8 @@ namespace flopoco {
 
                         bestEdge = i;
 
-                        //TODO: use move here?
-                        path = tempPath;
+
+                        path = move(tempPath);
                     }
                 }
             }
@@ -97,6 +99,8 @@ namespace flopoco {
             //place single tile
             float singleCost = 0;
             placeSingleTile(baseField, usedDSPBlocks, solution, neededX, neededY, bestEdge, singleCost);
+            cout << "COST TEST " << singleCost << " " << bestEdge << endl;
+
             cost += singleCost;
             
             if(path.size() > 0) {
@@ -114,7 +118,7 @@ namespace flopoco {
             baseField.printField();
         }
 
-        cout << "Selected cost " << cost << endl;
+        cout << "Total cost: " << cost << endl;
     }
 
     //TODO: bundle greedy logic into one class
@@ -169,14 +173,14 @@ namespace flopoco {
                         }
 
                         if(signedIO) {
-                            if ((unsigned int) wX - (next.first + width) == 1) {
+                            if (neededX == 25 && (unsigned int) wX - (next.first + width) == 1) {
                                 width++;
                                 cout << "Extended X" << endl;
                                 signedX = true;
                                 selectedSize = extendedSize;
                             }
 
-                            if ((unsigned int) wY - (next.second + height) == 1) {
+                            if (neededY == 18 && (unsigned int) wY - (next.second + height) == 1) {
                                 height++;
                                 cout << "Extended Y" << endl;
                                 signedY = true;
@@ -195,14 +199,14 @@ namespace flopoco {
                     BaseMultiplierCategory& bm = baseMultiplierCollection->getBaseMultiplier(t.base_index);
                     BaseMultiplierParametrization param =  bm.parametrize( width, height, signedX, signedY);
 
-                    unsigned int tiles = field.checkTilePlacement(next, param);
-                    if(tiles == 0) {
-                        continue;
-                    }
-
-                    cout << t.wX << " " << t.wY << " Covered " << tiles << endl;
+                    unsigned int tiles = 0;
 
                     if(t.base_index == 0) {
+                        pair<unsigned int, unsigned int> size = field.checkDSPPlacement(next, param);
+                        tiles = size.first * size.second;
+
+                        // unsigned int tiles = field.checkTilePlacement(next, param);
+
                         float usage = tiles / selectedSize;
                         //check threshold
                         if(usage < occupation_threshold_) {
@@ -215,6 +219,11 @@ namespace flopoco {
                         // > will prefer horizontal tiles
                         if(tiles > efficiency) {
                             efficiency = tiles;
+
+                            //check if the tile needs to be "updated"
+                            if(size.first != param.getTileXWordSize() || size.second != param.getTileYWordSize()) {
+                                param = baseMultiplier.parametrize( size.first, size.second, signedX, signedY);
+                            }
                         }
                         else {
                             //no need to check anything else ... dspBlock wasn't enough
@@ -222,6 +231,13 @@ namespace flopoco {
                         }
                     }
                     else {
+                        tiles = field.checkTilePlacement(next, param);
+                        if(tiles == 0) {
+                            continue;
+                        }
+
+                        cout << t.wX << " " << t.wY << " Covered " << tiles << endl;
+
                         float newefficiency = tiles / t.cost;
                         cout << newefficiency << endl;
                         //TODO: test if this makes a difference
@@ -255,8 +271,7 @@ namespace flopoco {
                 //TODO: handle supertiles?
             }
 
-            float cost = (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * (tile.getTileXWordSize() + tile.getTileYWordSize());
-            cout << "SINGLE COST " << cost << endl;
+            float cost = (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * tile.getOutWordSize();
             totalcost += cost;
 
             if(totalcost > cmpcost) {
@@ -316,14 +331,14 @@ namespace flopoco {
             }
 
             if(signedIO) {
-                if ((unsigned int) wX - (next.first + width) == 1) {
+                if (neededX == 25 && (unsigned int) wX - (next.first + width) == 1) {
                     width++;
                     cout << "Extended X" << endl;
                     signedX = true;
                     selectedSize = extendedSize;
                 }
 
-                if ((unsigned int) wY - (next.second + height) == 1) {
+                if (neededY == 18 && (unsigned int) wY - (next.second + height) == 1) {
                     height++;
                     cout << "Extended Y" << endl;
                     signedY = true;
@@ -342,12 +357,13 @@ namespace flopoco {
         BaseMultiplierCategory& baseMultiplier = baseMultiplierCollection->getBaseMultiplier(t.base_index);
         BaseMultiplierParametrization tile =  baseMultiplier.parametrize( width, height, signedX, signedY);
 
-        unsigned int tiles = field.checkTilePlacement(next, tile);
-        if(tiles == 0) {
-            return false;
-        }
-
         if(t.base_index == 0) {
+            pair<unsigned int, unsigned int> size = field.checkDSPPlacement(next, tile);
+            unsigned int tiles = size.first * size.second;
+            if(tiles == 0) {
+                return false;
+            }
+
             float usage = tiles / selectedSize;
             //check threshold
             if(usage < occupation_threshold_) {
@@ -355,11 +371,21 @@ namespace flopoco {
                 cout << tiles << " VS " << dspSize << endl;
                 return false;
             }
+
+            if(size.first != tile.getTileXWordSize() || size.second != tile.getTileYWordSize()) {
+                tile = baseMultiplier.parametrize( size.first, size.second, signedX, signedY);
+            }
+        }
+        else {
+            unsigned int tiles = field.checkTilePlacement(next, tile);
+            if(tiles == 0) {
+                return false;
+            }
         }
 
         auto coord (field.placeTileInField(next, tile));
 
-        cost += (t.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * (tile.getTileXWordSize() + tile.getTileYWordSize());
+        cost += (t.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * (tile.getOutWordSize());
 
         solution.push_back(make_pair(tile, next));
 

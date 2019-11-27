@@ -65,7 +65,7 @@ namespace flopoco {
             best = &solution4;
         }
 
-        cout << "Selected cost " << bestCost << endl;
+        cout << "Total cost: " << bestCost << endl;
 
         solution = *best;
     }

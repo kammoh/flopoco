@@ -18,6 +18,7 @@ namespace flopoco {
         void printField();
         pair<unsigned int, unsigned int> placeTileInField(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& tile);
         unsigned int checkTilePlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& tile);
+        pair<unsigned int, unsigned int> checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& dsp);
         bool isFull();
         unsigned int getMissing();
         unsigned int getMissingLine();
@@ -33,6 +34,8 @@ namespace flopoco {
         unsigned int wX;
         unsigned int wY;
         unsigned int missing;
+        unsigned int completedLine;
+        unsigned int highestLine;
     };
 }
 
