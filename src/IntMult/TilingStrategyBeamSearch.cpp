@@ -49,6 +49,8 @@ namespace flopoco {
 
         baseField.reset();
 
+        Field tempField(baseField);
+
         while(baseField.getMissing() > 0) {
             unsigned int minIndex = max(0, next - range);
             unsigned int maxIndex = min((int) baseTiles.size(), next + range);
@@ -68,7 +70,7 @@ namespace flopoco {
                     continue;
                 }
 
-                Field tempField(baseField);
+                tempField.reset(baseField);
                 queue<unsigned int> tempPath;
                 list<mult_tile_t> tempSolution;
                 unsigned int tempUsedDSPBlocks = usedDSPBlocks;

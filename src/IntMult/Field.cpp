@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace flopoco {
-    Field::Field(unsigned int wX_, unsigned int wY_) : wX(wX_), wY(wY_), missing(wX_ * wY_) {
+    Field::Field(unsigned int wX_, unsigned int wY_) : wX(wX_), wY(wY_), missing(wX_ * wY_), highestLine(0) {
         field.resize(wY);
         for(unsigned int i = 0; i < wY; i++) {
             field[i].resize(wX);
@@ -27,6 +27,8 @@ namespace flopoco {
                 field[i][j] = copy.field[i][j];
             }
         }
+
+        highestLine = copy.highestLine;
     }
 
     Field::~Field() {
@@ -42,6 +44,35 @@ namespace flopoco {
 
         setCursor(0, 0);
         missing = wX * wY;
+
+        highestLine = 0;
+    }
+
+    void Field::reset(Field& target) {
+        if(target.wX != wX || target.wY != wY) {
+            return;
+        }
+
+        cout << "Before reset" << endl;
+        target.printField();
+        cout << "State" << endl;
+        printField();
+
+        cout << highestLine << endl;
+
+        missing = target.missing;
+        setCursor(target.cursor);
+
+        for(unsigned int i = max(target.cursor.second - 1, 0); i < highestLine; i++) {
+            for(unsigned int j = 0; j < wX; j++) {
+                field[i][j] = target.field[i][j];
+            }
+        }
+
+        highestLine = target.highestLine;
+
+        cout << "After reset" << endl;
+        printField();
     }
 
     unsigned int Field::checkTilePlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& tile) {
@@ -126,6 +157,10 @@ namespace flopoco {
             }
         }
 
+        if(maxY > highestLine) {
+            highestLine = maxY;
+        }
+
 
         //printField();
         updatePosition();
@@ -202,6 +237,10 @@ namespace flopoco {
 
         cursor.first = x;
         cursor.second = y;
+    }
+
+    void Field::setCursor(pair<unsigned int, unsigned int> target) {
+        setCursor(target.first, target.second);
     }
 
     void Field::printField() {

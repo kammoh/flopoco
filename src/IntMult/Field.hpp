@@ -25,7 +25,9 @@ namespace flopoco {
         unsigned int getMissingHeight();
         pair<unsigned int, unsigned int> getCursor();
         void setCursor(unsigned int x, unsigned int y);
+        void setCursor(pair<unsigned int, unsigned int> target);
         void reset();
+        void reset(Field& target);
 
     private:
         void updatePosition();
@@ -34,7 +36,6 @@ namespace flopoco {
         unsigned int wX;
         unsigned int wY;
         unsigned int missing;
-        unsigned int completedLine;
         unsigned int highestLine;
     };
 }
