@@ -20,7 +20,8 @@ namespace flopoco {
                 BaseMultiplierCollection* bmc,
                 base_multiplier_id_t prefered_multiplier,
                 float occupation_threshold,
-                size_t maxPrefMult=0);
+                size_t maxPrefMult=0,
+                unsigned int beamRange=0);
         void solve();
 
     private:
@@ -43,6 +44,7 @@ namespace flopoco {
         base_multiplier_id_t prefered_multiplier_;
         float occupation_threshold_;
         size_t max_pref_mult_;
+        unsigned int beamRange_;
 
         vector<tiledef> baseTiles;
         vector<supertiledef> superTiles;

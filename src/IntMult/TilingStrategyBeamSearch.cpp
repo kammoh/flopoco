@@ -11,10 +11,12 @@ namespace flopoco {
             BaseMultiplierCollection* bmc,
             base_multiplier_id_t prefered_multiplier,
             float occupation_threshold,
-            size_t maxPrefMult):TilingStrategy(wX_, wY_, wOut_, signedIO_, bmc),
+            size_t maxPrefMult,
+            unsigned int beamRange):TilingStrategy(wX_, wY_, wOut_, signedIO_, bmc),
                                 prefered_multiplier_{prefered_multiplier},
                                 occupation_threshold_{occupation_threshold},
-                                max_pref_mult_{maxPrefMult}
+                                max_pref_mult_{maxPrefMult},
+                                beamRange_{beamRange}
     {
         // {width, height, total cost (LUT+Compressor), base multiplier id} of tile
         //TODO: support 2k and k2 tiles
@@ -32,7 +34,7 @@ namespace flopoco {
     };
 
     void TilingStrategyBeamSearch::solve() {
-        unsigned int range = 3;
+        unsigned int range = beamRange_;
         unsigned int usedDSPBlocks = 0;
         Field baseField(wX, wY);
         float cost = 0.0f;

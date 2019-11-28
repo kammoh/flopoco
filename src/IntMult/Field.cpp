@@ -61,15 +61,28 @@ namespace flopoco {
         cout << highestLine << endl;
 
         missing = target.missing;
-        setCursor(target.cursor);
 
-        for(unsigned int i = max(target.cursor.second - 1, 0); i < highestLine; i++) {
-            for(unsigned int j = 0; j < wX; j++) {
-                field[i][j] = target.field[i][j];
+        //fill up needed space
+        if(cursor.second < target.cursor.second) {
+            for(unsigned int i = cursor.second; i < target.cursor.second; i++) {
+                field[i] = target.field[i];
             }
         }
 
+        //empty upper part
+        if(highestLine > target.highestLine) {
+            for(unsigned int i = target.highestLine; i < highestLine; i++) {
+                field[i] = target.field[i];
+            }
+        }
+
+        //copy half filled area
+        for(unsigned int i = max(target.cursor.second - 1, 0); i < target.highestLine; i++) {
+            field[i] = target.field[i];
+        }
+
         highestLine = target.highestLine;
+        setCursor(target.cursor);
 
         cout << "After reset" << endl;
         printField();
