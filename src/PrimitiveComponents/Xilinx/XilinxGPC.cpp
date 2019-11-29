@@ -237,49 +237,49 @@ XilinxGPC::XilinxGPC(Operator* parentOp, Target * target, vector<int> heights) :
 			if(lutInputMappings[i][j].find("'") == string::npos)
 			{
 				//input is a dynamic signal
-				inPortMap(cur_lut,"i" + to_string(j),lutInputMappings[i][j]);
+				inPortMap("i" + to_string(j),lutInputMappings[i][j]);
 			}
 			else
 			{
 				//input is a constant
-				inPortMapCst(cur_lut,"i" + to_string(j),lutInputMappings[i][j]);
+				inPortMapCst("i" + to_string(j),lutInputMappings[i][j]);
 			}
 
 		}
 
 		if(ccDInputMappings[i] == "O5")
 		{
-			outPortMap(cur_lut,"o5","cc_di" + of(i));
+			outPortMap("o5","cc_di" + of(i));
 		}
 		else
 		{
-			outPortMap(cur_lut,"o5","open");
+			outPortMap("o5","open");
 			vhdl << tab << "cc_di(" << i << ") <= " << ccDInputMappings[i] << ";" << endl;
 		}
-        outPortMap(cur_lut,"o6","cc_s" + of(i));
+        outPortMap("o6","cc_s" + of(i));
 
         vhdl << cur_lut->primitiveInstance(join("lut",i)) << endl;
     }
 
     Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4(this,target);
 
-	inPortMapCst( cur_cc, "ci", "'0'" );
+	inPortMapCst("ci", "'0'" );
 
 	if(carryInMapping.find("'") == string::npos)
 	{
 		//input is a dynamic signal
-		inPortMap( cur_cc, "cyinit", carryInMapping);
+		inPortMap("cyinit", carryInMapping);
 	}
 	else
 	{
 		//input is a constant
-		inPortMapCst( cur_cc, "cyinit", carryInMapping);
+		inPortMapCst("cyinit", carryInMapping);
 	}
 
-    inPortMap( cur_cc, "di", "cc_di");
-    inPortMap( cur_cc, "s", "cc_s");
-    outPortMap( cur_cc, "co", "cc_co");
-    outPortMap( cur_cc, "o", "cc_o");
+    inPortMap( "di", "cc_di");
+    inPortMap( "s", "cc_s");
+    outPortMap( "co", "cc_co");
+    outPortMap( "o", "cc_o");
 
     vhdl << cur_cc->primitiveInstance("cc") << endl;
 
