@@ -1,6 +1,7 @@
 #include "MultiplierTileCollection.hpp"
 #include "BaseMultiplierDSP.hpp"
 #include "BaseMultiplierLUT.hpp"
+#include "BaseMultiplierXilinx2xk.hpp"
 #include "BaseMultiplierIrregularLUTXilinx.hpp"
 #include "BaseMultiplierDSPSuperTilesXilinx.hpp"
 

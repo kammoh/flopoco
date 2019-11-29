@@ -315,12 +315,12 @@ void XilinxGPC::emulate(TestCase *tc, vector<int> heights) {
 
     int maxheight = 0;
 
-    for ( int i=0; i<heights.size(); i++){
+    for ( int i=0; i<(int)heights.size(); i++){
         if (heights[i]>maxheight)
             maxheight=heights[i];
     }
     int maxsum = 0;
-    for ( int i=0; i<heights.size(); i++){
+    for ( int i=0; i<(int)heights.size(); i++){
         maxsum+=heights[i]*pow(2,i);
     }
 
@@ -345,13 +345,13 @@ void XilinxGPC::emulate(TestCase *tc, vector<int> heights) {
     mpz_set_ui(int1,1);
     mpz_set_ui(int2,2);
 
-    for ( int i=0; i <= sX.size(); i++) {
+    for ( int i=0; i <= (int)sX.size(); i++) {
         if (heights[i] != 0) {
             sX[i] = tc->getInputValue(join("X", i));
         }
     }
 
-    for ( int i=0; i < sX.size();i++){
+    for ( int i=0; i < (int)sX.size();i++){
         mpz_set_ui(curnbr,mpz_get_ui(sX[i].get_mpz_t()));
         for (int j=heights[i];j>=0;j--){
             mpz_fdiv_q_2exp(quotient, curnbr, j);

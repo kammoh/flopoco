@@ -1,16 +1,16 @@
-#include "XilinxBaseMultiplier2xk.hpp"
+#include "BaseMultiplierXilinx2xk.hpp"
 #include "../PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
 #include "../PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
 #include "../PrimitiveComponents/Xilinx/Xilinx_LUT_compute.h"
 
 namespace flopoco {
 
-Operator* XilinxBaseMultiplier2xk::generateOperator(
+Operator* BaseMultiplierXilinx2xk::generateOperator(
 		Operator *parentOp,
 		Target* target,
 		Parametrization const & parameters) const
 {
-	return new XilinxBaseMultiplier2xkOp(
+	return new BaseMultiplierXilinx2xkOp(
 			parentOp,
 			target,
             parameters.isSignedMultX(),
@@ -20,7 +20,7 @@ Operator* XilinxBaseMultiplier2xk::generateOperator(
 		);
 }
 
-double XilinxBaseMultiplier2xk::getLUTCost(uint32_t wX, uint32_t wY) const
+double BaseMultiplierXilinx2xk::getLUTCost(uint32_t wX, uint32_t wY) const
 {
 	if (wX <= 2)
 		return double(wY + 1);
@@ -28,7 +28,7 @@ double XilinxBaseMultiplier2xk::getLUTCost(uint32_t wX, uint32_t wY) const
 		return double(wX + 1);
 }
 
-OperatorPtr XilinxBaseMultiplier2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
     int wY;
 	bool xIsSigned,yIsSigned;
@@ -36,25 +36,25 @@ OperatorPtr XilinxBaseMultiplier2xk::parseArguments(OperatorPtr parentOp, Target
 	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
 	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
 
-	return new XilinxBaseMultiplier2xkOp(parentOp,target,xIsSigned,yIsSigned,wY, false);
+	return new BaseMultiplierXilinx2xkOp(parentOp,target,xIsSigned,yIsSigned,wY, false);
 }
 
-void XilinxBaseMultiplier2xk::registerFactory()
+void BaseMultiplierXilinx2xk::registerFactory()
 {
-    UserInterface::add( "XilinxBaseMultiplier2xk", // name
+    UserInterface::add("BaseMultiplierXilinx2xk", // name
                         "Implements a 2xY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs",
-                        "BasicInteger", // categories
+                       "BasicInteger", // categories
                         "",
-                        "wY(int): size of input Y;\
+                       "wY(int): size of input Y;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
                        "",
-                       XilinxBaseMultiplier2xk::parseArguments,
-                       XilinxBaseMultiplier2xk::unitTest
+                       BaseMultiplierXilinx2xk::parseArguments,
+                       BaseMultiplierXilinx2xk::unitTest
     ) ;
 }
 
-void XilinxBaseMultiplier2xk::emulate(TestCase* tc)
+void BaseMultiplierXilinx2xk::emulate(TestCase* tc)
 {
     mpz_class svX = tc->getInputValue("X");
     mpz_class svY = tc->getInputValue("Y");
@@ -62,7 +62,7 @@ void XilinxBaseMultiplier2xk::emulate(TestCase* tc)
     tc->addExpectedOutput("O", svR);
 }
 
-TestList XilinxBaseMultiplier2xk::unitTest(int index)
+TestList BaseMultiplierXilinx2xk::unitTest(int index)
 {
     // the static list of mandatory tests
     TestList testStateList;
@@ -80,7 +80,7 @@ TestList XilinxBaseMultiplier2xk::unitTest(int index)
     return testStateList;
 }
 
-XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
+BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
 {
     ostringstream name;
 
@@ -92,7 +92,7 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
         wY = width;
         in1 = "Y";
         in2 = "X";
-        name << "XilinxBaseMultiplier2x" << width;
+        name << "BaseMultiplierXilinx2x" << width;
     }
     else
     {
@@ -110,7 +110,7 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
 
     addOutput("R", width+2, 1, true);
 
-    if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by XilinxBaseMultiplier2xkOp, sorry");
+    if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by BaseMultiplierXilinx2xkOp, sorry");
 
     int needed_luts = width+1;//no. of required LUTs
     int needed_cc = ( needed_luts / 4 ) + ( needed_luts % 4 > 0 ? 1 : 0 ); //no. of required carry chains
@@ -128,7 +128,7 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
         lut_op lutop_o5 = lut_in(0) & lut_in(1); //and of first partial product
         lut_init lutop( lutop_o5, lutop_o6 );
 
-		Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
+		Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( this,target );
         cur_lut->setGeneric( "init", lutop.get_hex(), 64 );
 
         inPortMap("i0",in2 + of(1));
@@ -136,17 +136,17 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
 
         if(i==0)
             //inPortMapCst("i1","'0'"); //connect 0 at LSB position
-            inPortMapCst("i1","0"); //connect 0 at LSB position
+            inPortMapCst("i1","'0'"); //connect 0 at LSB position
         else
             inPortMap("i1",in1 + of(i-1));
 
         if(i==needed_luts-1)
-            inPortMapCst("i3","0"); //connect 0 at MSB position
+            inPortMapCst("i3","'0'"); //connect 0 at MSB position
         else
             inPortMap("i3",in1 + of(i));
 
-        inPortMapCst("i4","0");
-        inPortMapCst("i5","1");
+        inPortMapCst("i4","'0'");
+        inPortMapCst("i5","'1'");
 
         outPortMap("o5","cc_di" + of(i));
         outPortMap("o6","cc_s" + of(i));
@@ -155,11 +155,11 @@ XilinxBaseMultiplier2xkOp::XilinxBaseMultiplier2xkOp(Operator *parentOp, Target*
 
     //create the carry chain:
     for( int i = 0; i < needed_cc; i++ ) {
-		Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( parentOp,target );
+		Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4( this,target );
 
-        inPortMapCst("cyinit", "0" );
+        inPortMapCst("cyinit", "'0'" );
         if( i == 0 ) {
-            inPortMapCst("ci", "0" ); //carry-in can not be used as AX input is blocked!!
+            inPortMapCst("ci", "'0'" ); //carry-in can not be used as AX input is blocked!!
         } else {
             inPortMap("ci", "cc_co" + of( i * 4 - 1 ) );
         }

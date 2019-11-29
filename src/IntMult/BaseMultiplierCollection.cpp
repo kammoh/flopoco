@@ -3,7 +3,7 @@
 
 #include "BaseMultiplierCollection.hpp"
 #include "BaseMultiplierLUT.hpp"
-#include "XilinxBaseMultiplier2xk.hpp"
+#include "BaseMultiplierXilinx2xk.hpp"
 #include "BaseMultiplierDSP.hpp"
 #include "BaseMultiplierDSPSuperTilesXilinx.hpp"
 #include "TargetBaseMultSpecialisation.hpp"
