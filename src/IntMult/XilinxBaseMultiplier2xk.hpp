@@ -16,8 +16,14 @@ namespace flopoco {
     {
 	public:
         XilinxBaseMultiplier2xk(int maxBigOperandWidth):
-			BaseMultiplierCategory{maxBigOperandWidth, 2, 0, 0, "XilinxBaseMultiplier2xk"}
-		{}
+			BaseMultiplierCategory{
+            maxBigOperandWidth,
+            2,
+            false,
+            false,
+            -1,
+            "XilinxBaseMultiplier2xk"}
+		{lut_cost = 2*maxBigOperandWidth/(1.65*maxBigOperandWidth+2.3);}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}
 		double getLUTCost(uint32_t wX, uint32_t wY) const final;
@@ -34,7 +40,7 @@ namespace flopoco {
 				Operator *parentOp,
 				Target *target,
 				Parametrization const & parameters
-			) const override;
+			) const final;
 	};
 
     class XilinxBaseMultiplier2xkOp : public Operator

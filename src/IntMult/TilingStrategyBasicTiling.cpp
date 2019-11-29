@@ -25,7 +25,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		occupation_threshold_{occupation_threshold},
 		max_pref_mult_{maxPrefMult}
 	{
-		truncated = (wOut < IntMultiplier::prodsize(wY, wX));
+		truncated = ((unsigned)wOut < IntMultiplier::prodsize(wY, wX));
 	}
 
 	int TilingStrategyBasicTiling::shrinkBox(
@@ -318,11 +318,11 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 			while (curY < wY) {
 				curX = wX - 1;
-				bool isYSigned = ((static_cast<unsigned int>(curY + wYmult)) >= wY) and signedIO;
+				bool isYSigned = ((static_cast<unsigned int>(curY + wYmult)) >= (unsigned)wY) and signedIO;
 				while(curX >= 0) {
 					int curDeltaX = wXmult;
 					int curDeltaY = wYmult;
-					bool isXSigned = ((static_cast<unsigned int>(curX + wXmult)) >= wX) and signedIO;
+					bool isXSigned = ((static_cast<unsigned int>(curX + wXmult)) >= (unsigned)wX) and signedIO;
 
 					if (isYSigned)
 						curDeltaY += deltaWidthSigned;

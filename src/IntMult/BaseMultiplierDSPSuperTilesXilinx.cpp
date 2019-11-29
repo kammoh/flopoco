@@ -162,6 +162,46 @@ bool BaseMultiplierDSPSuperTilesXilinx::shapeValid(int x, int y)
     return true;
 }
 
+/**
+* \brief determine the occupation ratio of a given shape in range [0..1]
+*   the calculation is done geometrically, by determining the area of the two rectangles of the DSP-Blocks,
+*   that are enclosed by the box around the area to be tiled for the generation of the main multiplier
+**/
+    float BaseMultiplierDSPSuperTilesXilinx::shape_utilisation(int shape_x, int shape_y, int mult_wX, int mult_wY, bool signedIO){
+        if(0 <= shape_x && (shape_x + wX) < mult_wX && 0 <= shape_y && (shape_y + wY) < mult_wY ){
+            return 1.0;
+        } else if(((shape_x-wX) < 0 || mult_wX <= shape_x) && ((shape_y+wY)  < 0 || mult_wY <= shape_y )){
+            return 0.0;
+        } else {
+            int wXrel = mult_wX - shape_x;
+            int wYrel = mult_wY - shape_y;
+            int oXrel = 0 - shape_x;
+            int oYrel = 0 - shape_y;
+            int ya1 = mult_bounds[(int)shape-1].dsp1_ry;
+            int ya2 = mult_bounds[(int)shape-1].dsp1_ly+1;
+            int yau = ( (ya1 <= oYrel)?((oYrel < ya2)?oYrel:ya2):ya1 );     //upper boundary of the area in rectangle a
+            int yad = ( (ya1 <= wYrel)?((wYrel < ya2)?wYrel:ya2):ya1 );     //downward boundary of the area in rectangle a
+            int xa1 = mult_bounds[(int)shape-1].dsp1_rx;
+            int xa2 = mult_bounds[(int)shape-1].dsp1_lx+1;
+            int xar = ( (xa1 <= oXrel)?((oXrel < xa2)?oXrel:xa2):xa1 );     //right boundary in rectangle a
+            int xal = ( (xa1 <= wXrel)?((wXrel < xa2)?wXrel:xa2):xa1 );     //left boundary in rectangle a
+            int yb1 = mult_bounds[(int)shape-1].dsp2_ry;
+            int yb2 = mult_bounds[(int)shape-1].dsp2_ly+1;
+            int ybu = ( (yb1 <= oYrel)?((oYrel < yb2)?oYrel:yb2):yb1 );
+            int ybd = ( (yb1 <= wYrel)?((wYrel < yb2)?wYrel:yb2):yb1 );
+            int xb1 = mult_bounds[(int)shape-1].dsp2_rx;
+            int xb2 = mult_bounds[(int)shape-1].dsp2_lx+1;
+            int xbr = ( (xb1 <= oXrel)?((oXrel < xb2)?oXrel:xb2):xb1 );
+            int xbl = ( (xb1 <= wXrel)?((wXrel < xb2)?wXrel:xb2):xb1 );
+            int a = (xal - xar)*(yad - yau);
+            int b = (xbl - xbr)*(ybd - ybu);
+            int used = ((0 <= a)?a:-a) + ((0 <= b)?b:-b);
+            int total = (xa2-xa1)*(ya2-ya1) + (xb2-xb1)*(yb2-yb1);
+            //cout << a << " " << b << " " << (float)used/total << endl;
+            return (float)used/total;
+        }
+    }
+
 BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs) : Operator(parentOp,target)
 {
     useNumericStd();

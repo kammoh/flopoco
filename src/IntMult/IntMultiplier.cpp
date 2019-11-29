@@ -68,7 +68,7 @@ namespace flopoco {
 
         multiplierUid=parentOp->getNewUId();
 		wFullP = prodsize(wX, wY);
-		bool needCentering;
+		//bool needCentering;                                   //unused
 
 		if(wOut == 0)
 			wOut = prodsize(wX, wY);
@@ -113,6 +113,10 @@ namespace flopoco {
 
 		baseMultiplierCollection.print();
 
+
+        MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection);
+
+
 		string tilingMethod = getTarget()->getTilingMethod();
 
 		REPORT(INFO, "Creating TilingStrategy using tiling method " << tilingMethod)
@@ -139,7 +143,8 @@ namespace flopoco {
 					&baseMultiplierCollection,
 					baseMultiplierCollection.getPreferedMultiplier(),
 					dspOccupationThreshold,
-					maxDSP
+					maxDSP,
+                    multiplierTileCollection
 			);
 
 		} else {
@@ -285,18 +290,18 @@ namespace flopoco {
 			int xPos = anchor.first;
 			int yPos = anchor.second;
 
-			unsigned int xInputLength = parameters.getTileXWordSize();
-			unsigned int yInputLength = parameters.getTileYWordSize();
+			//unsigned int xInputLength = parameters.getTileXWordSize();
+			//unsigned int yInputLength = parameters.getTileYWordSize();
 			//unsigned int outputLength = parameters.getOutWordSize();
 
 			unsigned int lsbZerosXIn = (xPos < 0) ? static_cast<unsigned int>(-xPos) : 0;                               // zero padding for the input LSBs of Multiplier tile, that are outside of the area to be tiled
 			unsigned int lsbZerosYIn = (yPos < 0) ? static_cast<unsigned int>(-yPos) : 0;
 
-			unsigned int msbZerosXIn = getZeroMSB(xPos, xInputLength, wX);                                 // zero padding for the input MSBs of Multiplier tile, that are outside of the area to be tiled
-			unsigned int msbZerosYIn = getZeroMSB(yPos, yInputLength, wY);
+			//unsigned int msbZerosXIn = getZeroMSB(xPos, xInputLength, wX);                                            // zero padding for the input MSBs of Multiplier tile, that are outside of the area to be tiled
+			//unsigned int msbZerosYIn = getZeroMSB(yPos, yInputLength, wY);
 
-			unsigned int selectSizeX = xInputLength - (msbZerosXIn + lsbZerosXIn);                                      // used size of the multiplier
-			unsigned int selectSizeY = yInputLength - (msbZerosYIn + lsbZerosYIn);
+			//unsigned int selectSizeX = xInputLength - (msbZerosXIn + lsbZerosXIn);                                    // used size of the multiplier
+			//unsigned int selectSizeY = yInputLength - (msbZerosYIn + lsbZerosYIn);
 
 			unsigned int effectiveAnchorX = (xPos < 0) ? 0 : static_cast<unsigned int>(xPos);                           // limit tile positions to > 0
 			unsigned int effectiveAnchorY = (yPos < 0) ? 0 : static_cast<unsigned int>(yPos);
@@ -318,7 +323,7 @@ namespace flopoco {
 
 			bool signedCase = (parameters.isSignedMultX() || parameters.isSignedMultY());
 			bool onlyOneSigned = parameters.isSignedMultX() xor parameters.isSignedMultY();
-			bool isOneByOne = (parameters.getMultXWordSize() == 1) and (parameters.getMultYWordSize() == 1);
+			//bool isOneByOne = (parameters.getMultXWordSize() == 1) and (parameters.getMultYWordSize() == 1);
 
 			vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
 					range(toSkip + tokeep - 1, toSkip) << ";" << endl;

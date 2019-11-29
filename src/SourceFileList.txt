@@ -79,6 +79,7 @@ IntMult/IntMultiplierLUT
 IntMult/TargetBaseMultSpecialisation
 IntMult/XilinxBaseMultiplier2xk
 IntMult/BaseMultiplierIrregularLUTXilinx
+IntMult/MultiplierTileCollection
 Complex/FixComplexKCM
 Conversions/Posit2FP
 Conversions/FP2Fix

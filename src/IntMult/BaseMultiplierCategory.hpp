@@ -21,26 +21,24 @@ namespace flopoco {
 			int getMaxSecondWordSize (int firstW, bool isW1Signed, bool isW2signed) const;
 
 			BaseMultiplierCategory(
-					int maxWordSizeLargeInputUnsigned, //maxWordSizeLargeInputUnsigned
-					int maxWordSizeSmallInputUnsigned,
-					int deltaWidthUnsignedSigned,
-					int maxSumOfInputWordSizes = 0,
-					string type="undefined!"
-				):maxWordSizeLargeInputUnsigned_{maxWordSizeLargeInputUnsigned},
-					maxWordSizeSmallInputUnsigned_{maxWordSizeSmallInputUnsigned},
-					deltaWidthUnsignedSigned_{deltaWidthUnsignedSigned},
+                    int wX,
+                    int wY,
+                    bool isSignedX=false,
+                    bool isSignedY=false,
+                    int shape_para=-1,
+					string type="undefined!",
+					bool rectangular=true
+				):  tile_param{parametrize(wX, wY, isSignedX, isSignedY, shape_para)},
+				    maxWordSizeLargeInputUnsigned_{wX},
+					maxWordSizeSmallInputUnsigned_{wY},
+					deltaWidthUnsignedSigned_{0},
+                    rectangular{rectangular},
 				  	type_{type}
 				{
-					maxSumOfInputWordSizes_ = (maxSumOfInputWordSizes > 0) ?
-								(maxSumOfInputWordSizes) :
-								maxWordSizeLargeInputUnsigned + maxWordSizeSmallInputUnsigned;
+					maxSumOfInputWordSizes_ = wX + wY;
 				}
 
 			int getDeltaWidthSigned() const { return deltaWidthUnsignedSigned_; }
-
-			virtual int getDSPCost(uint32_t wX, uint32_t wY) const = 0;
-			virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
-
 			string getType() const {return type_;}
 
 			class Parametrization{
@@ -64,8 +62,8 @@ namespace flopoco {
                     bool isSignedMultY() const {return isSignedY_;}
 					bool isFlippedXY() const {return isFlippedXY_;}
 					int getShapePara() const {return shape_para_;}
-
 				    string getMultType() const {return bmCat_->getType();}
+                    Parametrization tryDSPExpand(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
 
 				private:
 					Parametrization(
@@ -95,7 +93,15 @@ namespace flopoco {
 				friend BaseMultiplierCategory;
 			};
 
+            virtual int getDSPCost(uint32_t wX, uint32_t wY) const = 0;
+            virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
+            virtual float getLUTCost() {return (tile_param.wX_+tile_param.wY_)*0.65;}
+            float cost() {return lut_cost;}
+
 			virtual bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
+            virtual bool shapeValid(int x, int y);
+            bool shape_contribution(int x, int y, int shape_x, int shape_y, int wX, int wY, bool signedIO);
+            virtual float shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO);
 
             virtual int getRelativeResultLSBWeight(Parametrization const & param) const;
             virtual int getRelativeResultMSBWeight(Parametrization const & param) const;
@@ -106,17 +112,22 @@ namespace flopoco {
 					Parametrization const &parameters
 				) const = 0;
 
-		//Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
-		Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
+            //Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
+            Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
+            Parametrization getParametrisation(void) {return tile_param;}
 
 		private:
+            BaseMultiplierCategory::Parametrization tile_param;
+
 			int maxWordSizeLargeInputUnsigned_;
 			int maxWordSizeSmallInputUnsigned_;
 			int deltaWidthUnsignedSigned_;
 			int maxSumOfInputWordSizes_;
-
-			string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
-	};
+            const bool rectangular;
+            string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
+        protected:
+            float lut_cost;
+    };
 
 	typedef BaseMultiplierCategory::Parametrization BaseMultiplierParametrization;
 }

@@ -323,7 +323,7 @@ execute_process(
 ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS}
         ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
-        )
+        src/IntMult/MultiplierTileCollection.cpp src/IntMult/MultiplierTileCollection.hpp)
 
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
