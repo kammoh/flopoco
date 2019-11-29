@@ -32,8 +32,6 @@ namespace flopoco {
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
         /** Register the factory */
         static void registerFactory();
-
-        void emulate(TestCase* tc);
         static TestList unitTest(int index);
 
 		Operator *generateOperator(
@@ -47,6 +45,8 @@ namespace flopoco {
     {
     public:
 		BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY=false);
+
+        void emulate(TestCase* tc);
     private:
         int wX, wY;
     };

@@ -54,12 +54,12 @@ void BaseMultiplierXilinx2xk::registerFactory()
     ) ;
 }
 
-void BaseMultiplierXilinx2xk::emulate(TestCase* tc)
+void BaseMultiplierXilinx2xkOp::emulate(TestCase* tc)
 {
     mpz_class svX = tc->getInputValue("X");
     mpz_class svY = tc->getInputValue("Y");
     mpz_class svR = svX * svY;
-    tc->addExpectedOutput("O", svR);
+    tc->addExpectedOutput("R", svR);
 }
 
 TestList BaseMultiplierXilinx2xk::unitTest(int index)
@@ -71,7 +71,6 @@ TestList BaseMultiplierXilinx2xk::unitTest(int index)
     //test square multiplications:
     for(int w=1; w <= 6; w++)
     {
-        paramList.push_back(make_pair("wX", to_string(w)));
         paramList.push_back(make_pair("wY", to_string(w)));
         testStateList.push_back(paramList);
         paramList.clear();
