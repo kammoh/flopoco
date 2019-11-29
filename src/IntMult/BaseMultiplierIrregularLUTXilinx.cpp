@@ -136,7 +136,7 @@ void BaseMultiplierIrregularLUTXilinx::registerFactory(){
 	UserInterface::add("BaseMultiplierIrregularLUTXilinx", // name
 					   "Implements a non rectangular LUT multiplier from a set that yields a relatively high efficiency compared to recangular LUT multipliers \n"
         "  _ _     _        _ _       _     _ _ _    _ _      _ _     _\n"
-        " |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|\n"
+        " |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|_\n"
         " |_|_|_| |_|_|_     |_|_|   |_|_|   |_|_|  |_|_|_|  |_|_|   |_|_|\n"
         " |_|_|_|   |_|_|              |_|                     |_|   |_|_|\n"
         " shape 1  shape 2 shape 3 shape 4 shape 5  shape 6 shape 7  shape 8\n"

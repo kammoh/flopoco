@@ -15,7 +15,32 @@ namespace flopoco {
     {
 
 	public:
-			BaseMultiplierLUT(int maxLutSize, double lutPerOutputBit);
+        BaseMultiplierLUT(int maxSize, double lutPerOutputBit):
+                BaseMultiplierCategory{
+                        maxSize,
+                        1,
+                        false,
+                        false,
+                        -1,
+                        "BaseMultiplierLUT"
+                }, lutPerOutputBit_{lutPerOutputBit}
+        {}
+
+        BaseMultiplierLUT(
+                int wX,
+                int wY
+        ) : BaseMultiplierCategory{
+                    wX,
+                    wY,
+                    false,
+                    false,
+                    -1,
+                    "BaseMultiplierLUT_" + string(1,((char) wX) + '0') + "x" + string(1,((char) wY) + '0')
+        }{
+            int ws = ((wX+wY) <= 3)?wX+wY-1:wX+wY;
+            lut_cost = ((ws <= 5)?ws/2+ws%2:ws) + 0.65*ws;
+        }
+
 			double getLUTCost(uint32_t wX, uint32_t wY) const override;
 			int getDSPCost(uint32_t wX, uint32_t wY) const override { return 0; }
 
@@ -23,7 +48,7 @@ namespace flopoco {
 					Operator *parentOp,
 					Target *target,
 					Parametrization const & parameters
-				) const override;
+				) const final;
 	private:
 			double lutPerOutputBit_;
 	};

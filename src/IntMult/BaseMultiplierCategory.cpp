@@ -26,7 +26,7 @@ namespace flopoco {
         return bmCat_->getRelativeResultMSBWeight(*this);
     }
 
-	BaseMultiplierCategory::Parametrization BaseMultiplierCategory::parametrize(
+    BaseMultiplierCategory::Parametrization BaseMultiplierCategory::parametrize(
 			int wX,
 			int wY,
 			bool isSignedX,
@@ -34,7 +34,7 @@ namespace flopoco {
 			int shape_para
 		) const
 	{
-		int effectiveWY = (isSignedY) ? wY - deltaWidthUnsignedSigned_ : wY;
+/*		int effectiveWY = (isSignedY) ? wY - deltaWidthUnsignedSigned_ : wY;
 		bool isFlippedXY = (effectiveWY > maxWordSizeSmallInputUnsigned_);
 		if (isFlippedXY) {
 			std::swap(wX, wY);
@@ -46,8 +46,8 @@ namespace flopoco {
             //cerr << "maxSizeY=" << maxWordSizeLargeInputUnsigned_ << " wY=" << wY << "maxSizeX=" << maxWordSizeSmallInputUnsigned_ << " wX=" << wX << endl;
 			throw std::string("BaseMultiplierCategory::parametrize: error, required multiplier area is too big");
 		}
-
-		return Parametrization(wX, wY, this, isSignedX, isSignedY, isFlippedXY, shape_para);
+*/
+		return Parametrization(wX, wY, this, isSignedX, isSignedY, false, shape_para);
 	}
 
 	int BaseMultiplierCategory::getMaxSecondWordSize(
@@ -73,7 +73,7 @@ namespace flopoco {
 		finalLimit = (finalLimit < 0) ? 0 : finalLimit;
 		return finalLimit;
 	}
-}
+
 
 bool BaseMultiplierCategory::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
 {
@@ -81,6 +81,12 @@ bool BaseMultiplierCategory::shapeValid(Parametrization const& param, unsigned x
     auto yw = param.getTileYWordSize();
 
 	return (x >= 0 && x < xw && y >= 0 && y < yw);
+}
+
+bool BaseMultiplierCategory::shapeValid(int x, int y) {
+    int xw = tile_param.wX_;
+    int yw = tile_param.wY_;
+    return (x >= 0 && x < xw && y >= 0 && y < yw);
 }
 
 int BaseMultiplierCategory::getRelativeResultLSBWeight(Parametrization const & param) const
@@ -97,4 +103,63 @@ int BaseMultiplierCategory::getRelativeResultMSBWeight(Parametrization const & p
     if(param.getTileYWordSize() == 1)
         return param.getTileXWordSize();
     return param.getTileXWordSize() + param.getTileYWordSize();
+}
+
+// determines if a position (x,y) is coverd by a tile (s), relative to the tiles origin position(shape_x,shape_y)
+bool BaseMultiplierCategory::shape_contribution(int x, int y, int shape_x, int shape_y, int wX, int wY, bool signedIO){
+    if(getDSPCost(1,1) == 1){
+        int sign_x = (signedIO && wX-(int)tile_param.wX_-1 == shape_x)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
+        int sign_y = (signedIO && wY-(int)tile_param.wY_-1 == shape_y)?1:0;
+        return ( 0 <= x-shape_x && x-shape_x < (int)tile_param.wX_+sign_x && 0 <= y-shape_y && y-shape_y < (int)tile_param.wY_+sign_y );
+    } else {
+        return shapeValid(x-shape_x, y-shape_y);
+    }
+}
+
+//determine the occupation ratio of a given multiplier tile range [0..1],
+float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO){
+    if(0 <= shape_x && (shape_x + (int)tile_param.wX_) < wX && 0 <= shape_y && (shape_y + (int)tile_param.wY_) < wY ){
+        return 1.0;
+    } else if((shape_x < 0 || wX <= shape_x) && (shape_y  < 0 || wY <= shape_y )){
+        return 0.0;
+    } else {
+        if(rectangular){
+            return (float)((wX-((0 < shape_x)?shape_x:-shape_x))*(wY-((0 < shape_y)?shape_y:-shape_y))/(tile_param.wX_*tile_param.wY_));
+        } else {
+            unsigned covered_positions = 0, utilized_positions = 0;
+            for(int y = shape_y; y < shape_y + (int)tile_param.wY_; y++){
+                for(int x = shape_x; x < shape_x + (int)tile_param.wX_; x++){
+                    if(shape_contribution(x, y, shape_x, shape_y, wX, wY, signedIO)){
+                        covered_positions++;
+                        if(0 <= x && 0 <= y && x < wX && y < wY){
+                            utilized_positions++;
+                        }
+                    }
+                }
+            }
+            return (float)utilized_positions/(float)covered_positions;
+        }
+    }
+}
+
+BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization::tryDSPExpand(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {
+    bool isSignedX = false, isSignedY = false;
+    int tile_width = wX_, tile_height = wY_;
+    if(bmCat_->getDSPCost(1,1)){
+        if(signedIO && (wX-m_x_pos-(int)wX_)== 1){           //enlarge the Xilinx DSP Multiplier by one bit, if the inputs are signed and placed to process the MSBs
+            tile_width++;
+        }
+        if(signedIO && (wY-m_y_pos-(int)wY_)== 1){
+            tile_height++;
+        }
+    }
+    if(signedIO && (wX-m_x_pos-tile_width)== 0){           //if the inputs are signed, the MSBs of individual tiles at MSB edge the tiled area |_ have to be signed
+        isSignedX = true;
+    }
+    if(signedIO && (wY-m_y_pos-tile_height)== 0){
+        isSignedY = true;
+    }
+    return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_);
+}
+
 }

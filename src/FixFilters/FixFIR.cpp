@@ -220,6 +220,7 @@ namespace flopoco {
 
 		if(symmetry!=0){
 			// For the emulate() computation we need to build the standard SOPC that doesn't exploit symmetry
+			// TODO get rid of its svg output...
 			UserInterface::pushAndClearGlobalOpList();
 			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, msbOut, lsbOut, coeff);
 			REPORT(INFO, "Created reference SOPC called " << refFixSOPC->getName() );

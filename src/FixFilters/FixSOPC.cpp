@@ -119,7 +119,6 @@ namespace flopoco{
 	
 		setCopyrightString("Matei Istoan, Louis Besème, Florent de Dinechin (2013-2015)");
 
-
 		//reporting on the command line
 		REPORT(DETAILED, "FixSOPC  lsbOut=" << lsbOut << "   g=" << g) ;
 		for (int i=0; i< n; i++)

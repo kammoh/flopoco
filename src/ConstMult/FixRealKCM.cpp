@@ -69,6 +69,7 @@ namespace flopoco{
 		FixRealConstMult(parentOp, target, signedIn_, msbIn_, lsbIn_, lsbOut_, constant_, targetUlpError_),
 		addRoundBit(true)
 	{
+		thisOp=this;
 		vhdl << "-- This operator multiplies by "<<constant << endl;
 		init();		 // check special cases, computes number of tables and errorInUlps.
 
@@ -119,7 +120,7 @@ namespace flopoco{
 		//		int bitheaplsb = lsbOut - g;
 		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
 		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
-
+		
 		buildTablesForBitHeap(); // does everything up to bit heap compression
 
 		//compress the bitheap and produce the result
@@ -149,9 +150,9 @@ namespace flopoco{
 												 ):
 		FixRealConstMult(thisOp_->getParentOp(), thisOp_->getTarget(), signedIn_, msbIn_, lsbIn_, lsbOut_, constant_, targetUlpError_),
 		addRoundBit(addRoundBit_), 
-		thisOp(thisOp_),
 		bitHeap(NULL), // will be set by buildForBitHeap()
-		inputSignalName(multiplicandX)
+		inputSignalName(multiplicandX),
+		thisOp(thisOp_)
 	{
 
 		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is. 
@@ -474,13 +475,15 @@ namespace flopoco{
 											 << endl;
 
 				vector<mpz_class> tableContent = kcmTableContent(i);
+
 				string tablename;
 				if(thisOp==this) // non-virtual
 					tablename = join(getName()+"_T",i);
 				else
 					tablename = join(thisOp->getName()+"_"+getName()+"_T",i);
 					
-				schedule(); // Here is the crash
+				schedule();
+
 				thisOp->inPortMap ("X", sliceInName);
 				thisOp->outPortMap("Y", sliceOutName);
 

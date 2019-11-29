@@ -28,17 +28,30 @@ namespace flopoco
         };
 
         BaseMultiplierIrregularLUTXilinx(
+        ) : BaseMultiplierCategory{
+                -1,
+                -1,
+                false,
+                false,
+                -1,
+                "BaseMultiplierIrregularLUTXilinx"
+        }{}
+
+        BaseMultiplierIrregularLUTXilinx(
                 TILE_SHAPE shape
         ) : BaseMultiplierCategory{
                 get_wX(shape),
                 get_wY(shape),
-                0,
-                0,
-                "BaseMultiplierIrregularLUTXilinx"
+                false,
+                false,
+                shape,
+                "BaseMultiplierIrregularLUTXilinx_" + string(1,((char) shape) + '1' - 1),
+                false
         }{
             this->shape = shape;
             this->wX = get_wX(shape);
             this->wY = get_wY(shape);
+            lut_cost = getLUTCost(wX, wY);
         }
 
         int getDSPCost(uint32_t, uint32_t) const final {return 0;}

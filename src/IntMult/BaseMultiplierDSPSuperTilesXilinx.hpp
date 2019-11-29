@@ -40,18 +40,31 @@ namespace flopoco {
         };
 
         BaseMultiplierDSPSuperTilesXilinx(
+        ) : BaseMultiplierCategory{
+                -1,
+                -1,
+                false,
+                false,
+                -1,
+                "BaseMultiplierDSPSuperTilesXilinx"
+        }{}
+
+        BaseMultiplierDSPSuperTilesXilinx(
 				TILE_SHAPE shape
 			) : BaseMultiplierCategory{
 				get_wX(shape),
 				get_wY(shape),
-				0,
-				0,
-				"BaseMultiplierDSPSuperTilesXilinx"
+				false,
+				false,
+				shape,
+				"BaseMultiplierDSPSuperTilesXilinx_" + string(1,((char) shape) + 'A' - 1),
+				false
 		}{
 		    this->shape = shape;
             this->wX = get_wX(shape);
             this->wY = get_wY(shape);
             this->wR = get_wR(shape);
+            lut_cost = get_wR(this->shape)*0.65;
 		}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 2;}
@@ -65,6 +78,7 @@ namespace flopoco {
         int getRelativeResultMSBWeight(Parametrization const& param) const;
 		bool shapeValid(int x, int y);
         bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
+        float shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO) override;
 
 		Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
@@ -80,19 +94,7 @@ namespace flopoco {
         bool xIsSigned_;
         bool yIsSigned_;
         static const int shape_size[12][5];
-	};
 
-    class BaseMultiplierDSPSuperTilesXilinxOp : public Operator
-    {
-    public:
-
-        BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape;
-        bool pipelineDSPs;
-		BaseMultiplierDSPSuperTilesXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs);
-		void emulate(TestCase * tc);
-
-    private:
-        //BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape;
         struct tile_coords{
             int dsp1_rx;
             int dsp1_ry;
@@ -112,11 +114,24 @@ namespace flopoco {
                                        {0,  7, 23, 23, 24,  0, 47, 16},     //F
                                        {7,  0, 23, 23,  0, 24, 23, 40},     //G
                                        {0,  0, 16, 23, 17,  0, 40, 16},     //H
-                                       {0,  7, 23, 33, 24,  0, 40, 23},     //I
+                                       {0,  7, 23, 23, 24,  0, 40, 23},     //I
                                        {0,  0, 23, 16,  0, 17, 16, 40},     //J
                                        {0,  0, 16, 23, 17,  0, 33, 23},     //K
                                        {7,  0, 23, 23,  0, 24, 16, 47}};    //L
-    };
 
+	};
+
+    class BaseMultiplierDSPSuperTilesXilinxOp : public Operator
+    {
+    public:
+
+        BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape;
+        bool pipelineDSPs;
+		BaseMultiplierDSPSuperTilesXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape, bool pipelineDSPs);
+		void emulate(TestCase * tc);
+
+    private:
+        //BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape;
+    };
 }
 #endif
