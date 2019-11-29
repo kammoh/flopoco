@@ -49,8 +49,8 @@ namespace flopoco {
         vector<tiledef> baseTiles;
         vector<supertiledef> superTiles;
 
-        float greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const float cmpcost);
-        bool placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>& solution, const int neededX, const int neededY, const int tile, float& cost);
+        double greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const double cmpcost);
+        bool placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>& solution, const int neededX, const int neededY, const int tile, double& cost);
 
         pair<bool, bool> checkSignedTile(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
     };

@@ -142,7 +142,7 @@ namespace flopoco {
                     else {
                         float newefficiency = tiles / t.cost;
                         cout << newefficiency << endl;
-                        if (!(newefficiency > efficiency)) {
+                        if (newefficiency < efficiency) {
                             if(tiles == t.totalsize) {
                                 //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
                                 break;

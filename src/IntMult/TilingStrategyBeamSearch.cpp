@@ -37,11 +37,11 @@ namespace flopoco {
         unsigned int range = beamRange_;
         unsigned int usedDSPBlocks = 0;
         Field baseField(wX, wY);
-        float cost = 0.0f;
+        double cost = 0.0;
 
         queue<unsigned int> path;
 
-        float cmpCost = greedySolution(baseField, path, 0, FLT_MAX);
+        double cmpCost = greedySolution(baseField, path, 0, FLT_MAX);
         unsigned int next = path.front();
         unsigned int lastPath = next;
 
@@ -55,7 +55,7 @@ namespace flopoco {
 
         while(baseField.getMissing() > 0) {
             unsigned int minIndex = max(0, next - range);
-            unsigned int maxIndex = min((int) baseTiles.size(), next + range);
+            unsigned int maxIndex = min((int) baseTiles.size() - 1, next + range);
 
             unsigned int neededX = baseField.getMissingLine();
             unsigned int neededY = baseField.getMissingHeight();
@@ -63,7 +63,7 @@ namespace flopoco {
             unsigned int bestEdge = next;
             lastPath = next;
 
-            for (unsigned int i = minIndex; i < maxIndex; i++) {
+            for (unsigned int i = minIndex; i <= maxIndex; i++) {
                 cout << "TESTING WITH TILE " << i << endl;
 
                 //check if we got the already calculated greedy path
@@ -76,7 +76,7 @@ namespace flopoco {
                 queue<unsigned int> tempPath;
                 list<mult_tile_t> tempSolution;
                 unsigned int tempUsedDSPBlocks = usedDSPBlocks;
-                float currentCost = 0;
+                double currentCost = 0;
 
                 //check if placing the tile even makes sense
                 if (placeSingleTile(tempField, tempUsedDSPBlocks, tempSolution, neededX, neededY, i, currentCost)) {
@@ -101,7 +101,7 @@ namespace flopoco {
             }
 
             //place single tile
-            float singleCost = 0;
+            double singleCost = 0;
             placeSingleTile(baseField, usedDSPBlocks, solution, neededX, neededY, bestEdge, singleCost);
             cout << "COST TEST " << singleCost << " " << bestEdge << endl;
 
@@ -126,14 +126,14 @@ namespace flopoco {
     }
 
     //TODO: bundle greedy logic into one class
-    float TilingStrategyBeamSearch::greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const float cmpcost) {
+    double TilingStrategyBeamSearch::greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const double cmpcost) {
         auto next (field.getCursor());
 
-        float dspSize = (float) (baseTiles[0].totalsize);
-        float extendedSize = (float) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
-        float selectedSize = dspSize;
+        double dspSize = (double) (baseTiles[0].totalsize);
+        double extendedSize = (double) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
+        double selectedSize = dspSize;
 
-        float totalcost = 0.0f;
+        double totalcost = 0.0f;
 
         while(field.getMissing() > 0) {
             //find a tile that would fit (start with smallest tile)
@@ -142,7 +142,7 @@ namespace flopoco {
             BaseMultiplierCategory& baseMultiplier = baseMultiplierCollection->getBaseMultiplier(basetile.base_index);
             BaseMultiplierParametrization tile =  baseMultiplier.parametrize( basetile.wX, basetile.wY, false, false);
 
-            float efficiency = -1.0f;
+            double efficiency = -1.0f;
             unsigned int neededX = field.getMissingLine();
             unsigned int neededY = field.getMissingHeight();
 
@@ -211,7 +211,7 @@ namespace flopoco {
 
                         // unsigned int tiles = field.checkTilePlacement(next, param);
 
-                        float usage = tiles / selectedSize;
+                        double usage = tiles / selectedSize;
                         //check threshold
                         if(usage < occupation_threshold_) {
                             cout << "Couldn't place dspblock " << width << " " << height << " because threshold is " << occupation_threshold_ << " and usage is " << usage << endl;
@@ -242,11 +242,10 @@ namespace flopoco {
 
                         cout << t.wX << " " << t.wY << " Covered " << tiles << endl;
 
-                        float newefficiency = tiles / t.cost;
+                        double newefficiency = tiles / t.cost;
                         cout << newefficiency << endl;
-                        //TODO: test if this makes a difference
-                        // <= will prefer vertical tiles
-                        if (!(newefficiency > efficiency)) {
+                        // <= will prefer vertical tiles, < prefers horizontal tiles (for the current list)
+                        if (newefficiency < efficiency) {
                             if(tiles == t.totalsize) {
                                 //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
                                 break;
@@ -264,9 +263,9 @@ namespace flopoco {
                     baseMultiplier = bm;
 
                     //no need to check the others, because of the sorting they won't be able to beat this tile
-                    if(tiles == t.totalsize) {
-                        break;
-                    }
+                    //if(tiles == t.totalsize) {
+                    //    break;
+                    //}
                 }
             }
 
@@ -275,11 +274,11 @@ namespace flopoco {
                 //TODO: handle supertiles?
             }
 
-            float cost = (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * tile.getOutWordSize();
+            double cost = (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * tile.getOutWordSize();
             totalcost += cost;
 
             if(totalcost > cmpcost) {
-                return FLT_MAX;
+                return DBL_MAX;
             }
 
             cout << "COST " << totalcost << endl;
@@ -297,7 +296,7 @@ namespace flopoco {
         return totalcost;
     }
 
-    bool TilingStrategyBeamSearch::placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>& solution, const int neededX, const int neededY, const int i, float& cost) {
+    bool TilingStrategyBeamSearch::placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>& solution, const int neededX, const int neededY, const int i, double& cost) {
         tiledef t = baseTiles[i];
 
         //max dsp block check
@@ -310,9 +309,9 @@ namespace flopoco {
             return false;
         }
 
-        float dspSize = (float) (baseTiles[0].totalsize);
-        float extendedSize = (float) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
-        float selectedSize = dspSize;
+        double dspSize = (double) (baseTiles[0].totalsize);
+        double extendedSize = (double) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
+        double selectedSize = dspSize;
 
         auto next (field.getCursor());
         unsigned int width = t.wX;
@@ -368,7 +367,7 @@ namespace flopoco {
                 return false;
             }
 
-            float usage = tiles / selectedSize;
+            double usage = tiles / selectedSize;
             //check threshold
             if(usage < occupation_threshold_) {
                 cout << "Couldn't place dspblock " << width << " " << height << " because threshold is " << occupation_threshold_ << " and usage is " << usage << endl;
