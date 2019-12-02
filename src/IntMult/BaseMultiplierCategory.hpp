@@ -115,6 +115,10 @@ namespace flopoco {
             //Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
             Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
             Parametrization getParametrisation(void) {return tile_param;}
+            int wX(void) {return tile_param.wX_;}
+            int wY(void) {return tile_param.wY_;}
+            int wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
+            int wY_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
 
 		private:
             BaseMultiplierCategory::Parametrization tile_param;
