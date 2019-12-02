@@ -24,7 +24,7 @@ namespace flopoco {
 
 
 	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, int symmetry_, bool rescale_) :
-		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), symmetry(symmetry_), rescale(rescale_)
+		Operator(parentOp, target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), symmetry(symmetry_), rescale(rescale_)
 	{
 			initFilter();
 			buildVHDL();
