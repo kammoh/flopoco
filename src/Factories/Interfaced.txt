@@ -55,7 +55,7 @@ XilinxGPC
 XilinxFourToTwoCompressor
 TutorialOperator
 BaseMultiplierDSPSuperTilesXilinx
-XilinxBaseMultiplier2xk
+BaseMultiplierXilinx2xk
 BaseMultiplierIrregularLUTXilinx
 
 TestBench

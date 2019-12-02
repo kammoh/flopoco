@@ -12,17 +12,17 @@
 #include "BaseMultiplierCategory.hpp"
 
 namespace flopoco {
-    class XilinxBaseMultiplier2xk : public BaseMultiplierCategory
+    class BaseMultiplierXilinx2xk : public BaseMultiplierCategory
     {
 	public:
-        XilinxBaseMultiplier2xk(int maxBigOperandWidth):
+        BaseMultiplierXilinx2xk(int maxBigOperandWidth):
 			BaseMultiplierCategory{
             maxBigOperandWidth,
             2,
             false,
             false,
             -1,
-            "XilinxBaseMultiplier2xk"}
+            "BaseMultiplierXilinx2xk"}
 		{lut_cost = 2*maxBigOperandWidth/(1.65*maxBigOperandWidth+2.3);}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}
@@ -32,8 +32,6 @@ namespace flopoco {
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
         /** Register the factory */
         static void registerFactory();
-
-        void emulate(TestCase* tc);
         static TestList unitTest(int index);
 
 		Operator *generateOperator(
@@ -43,10 +41,12 @@ namespace flopoco {
 			) const final;
 	};
 
-    class XilinxBaseMultiplier2xkOp : public Operator
+    class BaseMultiplierXilinx2xkOp : public Operator
     {
     public:
-		XilinxBaseMultiplier2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY=false);
+		BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY=false);
+
+        void emulate(TestCase* tc);
     private:
         int wX, wY;
     };

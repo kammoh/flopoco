@@ -80,7 +80,7 @@ IntMult/BaseMultiplierLUT
 IntMult/IntKaratsubaRectangular
 IntMult/IntMultiplierLUT
 IntMult/TargetBaseMultSpecialisation
-IntMult/XilinxBaseMultiplier2xk
+IntMult/BaseMultiplierXilinx2xk
 IntMult/BaseMultiplierIrregularLUTXilinx
 IntMult/MultiplierTileCollection
 Complex/FixComplexKCM
