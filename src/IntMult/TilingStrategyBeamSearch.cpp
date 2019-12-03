@@ -36,7 +36,7 @@ namespace flopoco {
     void TilingStrategyBeamSearch::solve() {
         unsigned int range = beamRange_;
         unsigned int usedDSPBlocks = 0;
-        Field baseField(wX, wY);
+        Field baseField(wX, wY, signedIO);
         double cost = 0.0;
 
         queue<unsigned int> path;
@@ -127,7 +127,7 @@ namespace flopoco {
 
     //TODO: bundle greedy logic into one class
     double TilingStrategyBeamSearch::greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const double cmpcost) {
-        auto next (field.getCursor());
+        /*auto next (field.getCursor());
 
         double dspSize = (double) (baseTiles[0].totalsize);
         double extendedSize = (double) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
@@ -294,10 +294,12 @@ namespace flopoco {
         cout << "total cost " << totalcost << endl;
 
         return totalcost;
+         */
+        return 0.0;
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>& solution, const int neededX, const int neededY, const int i, double& cost) {
-        tiledef t = baseTiles[i];
+        /*tiledef t = baseTiles[i];
 
         //max dsp block check
         if(t.base_index == 0) {
@@ -397,6 +399,7 @@ namespace flopoco {
         }
 
         return true;
+         */
     }
 
     pair<bool, bool> TilingStrategyBeamSearch::checkSignedTile(unsigned int x, unsigned int y, unsigned int width, unsigned int height) {

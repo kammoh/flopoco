@@ -10,15 +10,16 @@ using namespace std;
 namespace flopoco {
     class Field {
     public:
-        Field(unsigned int wX, unsigned int wY);
+        Field(unsigned int wX, unsigned int wY, bool signedIO);
         Field(const Field &copy);
 
         ~Field();
 
         void printField();
-        pair<unsigned int, unsigned int> placeTileInField(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& tile);
-        unsigned int checkTilePlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& tile);
-        pair<unsigned int, unsigned int> checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& dsp);
+        //TODO: pass down "updateCursor" as function pointer / virtual function
+        pair<unsigned int, unsigned int> placeTileInField(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile);
+        unsigned int checkTilePlacement(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile);
+        pair<unsigned int, unsigned int> checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& param);
         bool isFull();
         unsigned int getMissing();
         unsigned int getMissingLine();
@@ -30,11 +31,12 @@ namespace flopoco {
         void reset(Field& target);
 
     private:
-        void updatePosition();
+        void updateCursor();
         vector<vector<bool>> field;
         pair<unsigned int, unsigned int> cursor;
         unsigned int wX;
         unsigned int wY;
+        bool signedIO;
         unsigned int missing;
         unsigned int highestLine;
     };

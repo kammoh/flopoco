@@ -14,12 +14,11 @@ namespace flopoco {
                 BaseMultiplierCollection* bmc,
                 base_multiplier_id_t prefered_multiplier,
                 float occupation_threshold,
-                size_t maxPrefMult=0);
+                size_t maxPrefMult,
+                MultiplierTileCollection tiles);
         virtual void solve();
 
     private:
-        void swapBaseTiles(const unsigned int i, const unsigned int j);
-        float compareSolution(list<mult_tile_t>** oldSolution, float oldCost, list<mult_tile_t>* newSolution, float newCost);
 
     };
 }

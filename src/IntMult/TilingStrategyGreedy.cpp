@@ -12,180 +12,197 @@ namespace flopoco {
             BaseMultiplierCollection* bmc,
             base_multiplier_id_t prefered_multiplier,
             float occupation_threshold,
-            size_t maxPrefMult):TilingStrategy(wX_, wY_, wOut_, signedIO_, bmc),
+            size_t maxPrefMult,
+            MultiplierTileCollection tiles):TilingStrategy(wX_, wY_, wOut_, signedIO_, bmc),
                                 prefered_multiplier_{prefered_multiplier},
                                 occupation_threshold_{occupation_threshold},
                                 max_pref_mult_{maxPrefMult}
     {
-        // {width, height, total cost (LUT+Compressor), base multiplier id} of tile
-        //TODO: support 2k and k2 tiles
-        baseTiles.push_back ({24, 17, 24 * 17,  41.65, 15.3, 0});
-        baseTiles.push_back ({17, 24, 24 * 17, 41.65, 15.3, 0});
-        baseTiles.push_back ({2, 3, 2 * 3,6.25, 0.96, 1});
-        baseTiles.push_back ({3, 2, 2 * 3, 6.25, 0.96, 1});
-        baseTiles.push_back ({3, 3, 3 * 3, 9.90, 0.91, 2});
-        baseTiles.push_back ({1, 2, 1 * 2, 2.30, 0.87, 1});
-        baseTiles.push_back ({2, 1, 2 * 1, 2.30, 0.87, 1});
-        baseTiles.push_back ({1, 1, 1 * 1,1.65, 0.625, 1});
+        //copy vector
+        tiles_ = tiles.MultTileCollection;
 
-        //type g supertile
-        superTiles.push_back ({1, 0, 0, 17});
+        cout << tiles_.size() << endl;
+
+        //build supertile collection
+        for(unsigned int i = 0; i < tiles_.size(); i++) {
+            BaseMultiplierCategory* t = tiles_[i];
+            if(t->getDSPCost() == 2) {
+                superTiles_.push_back(t);
+            }
+        }
+
+        //remove supertiles from tiles vector
+        tiles_.erase(remove_if(tiles_.begin(), tiles_.end(), []( BaseMultiplierCategory* t) { return t->getDSPCost() == 2; }),tiles_.end());
+
+        //sort remaining tiles
+        sort(tiles_.begin(), tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->efficiency() > b->efficiency(); });
     };
 
     void TilingStrategyGreedy::solve() {
-        Field field(wX, wY);
+        Field field(wX, wY, signedIO);
         float cost = createSolution(field, solution, FLT_MAX);
         cout << "Total cost: " << cost << endl;
     }
 
 
-    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>& solution, const float cmpcost) {
+    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>& solution, const float cmpCost) {
         auto next (field.getCursor());
         unsigned int usedDSPBlocks = 0;
-
-        float dspSize = (float) (baseTiles[0].totalsize);
-        float extendedSize = (float) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
-        float selectedSize = dspSize;
-
-        float totalcost = 0.0f;
+        float totalCost = 0.0f;
+        //TODO: change this
+        vector<mult_tile_t> dspBlocks;
+        float dspCost = 0.0f;
 
         while(field.getMissing() > 0) {
-            //find a tile that would fit (start with smallest tile)
-            tiledef basetile = baseTiles[baseTiles.size() - 1];
-            BaseMultiplierCategory& baseMultiplier = baseMultiplierCollection->getBaseMultiplier(basetile.base_index);
-            BaseMultiplierParametrization tile =  baseMultiplier.parametrize( basetile.wX, basetile.wY, false, false);
-
-            float efficiency = -1.0f;
             unsigned int neededX = field.getMissingLine();
             unsigned int neededY = field.getMissingHeight();
 
-            for(tiledef& t: baseTiles) {
+            BaseMultiplierCategory* bm = tiles_[tiles_.size()-1];
+            BaseMultiplierParametrization tile = bm->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
+            float efficiency = -1.0f;
+
+            for(BaseMultiplierCategory* t: tiles_) {
+                cout << "Checking " << t->getType() << endl;
                 //dsp block
-                if(t.base_index == 0) {
+                if(t->getDSPCost()) {
                     if(usedDSPBlocks == max_pref_mult_) {
                         continue;
                     }
                 }
 
-                if((t.wX <= neededX && t.wY <= neededY) || t.base_index == 0) {
-                    unsigned int width = t.wX;
-                    unsigned int height = t.wY;
-                    bool signedX = false;
-                    bool signedY = false;
+                BaseMultiplierParametrization param = t->getParametrisation();
+                //no need to check normal tiles that won't fit anyway
+                if(t->getDSPCost() == 0 && (param.getTileXWordSize() > neededX || param.getTileYWordSize() > neededY)) {
+                    cout << "Not enough space anyway" << endl;
+                    cout << neededX << " " << neededY << endl;
+                    cout << param.getTileXWordSize() << " " << param.getTileYWordSize() << endl;
+                    continue;
+                }
 
-                    //signedIO for DSP blocks
-                    if(t.base_index == 0){
-                        selectedSize = dspSize;
-                        //limit size of DSP Multiplier, to do not protrude the multiplier
-                        unsigned int newWidth = (unsigned int) wX - next.first;
-                        if(newWidth < width) {
-                            width = newWidth;
-                        }
+                unsigned int tiles = field.checkTilePlacement(next, t);
+                if(tiles == 0) {
+                    continue;
+                }
 
-                        unsigned int newHeight = (unsigned int) wY - next.second;
-                        if(newHeight < height) {
-                            height = newHeight;
-                        }
-
-                        if(signedIO) {
-                            if (neededX == 25 && (unsigned int) wX - (next.first + width) == 1) {
-                                width++;
-                                cout << "Extended X" << endl;
-                                signedX = true;
-                                selectedSize = extendedSize;
-                            }
-
-                            if (neededY == 18 && (unsigned int) wY - (next.second + height) == 1) {
-                                height++;
-                                cout << "Extended Y" << endl;
-                                signedY = true;
-                                selectedSize = extendedSize;
-                            }
-                        }
-                    }
-
-                    //signedIO for base tiles
-                    if(signedIO && !signedX && !signedY) {
-                        pair<bool, bool> signs = checkSignedTile(next.first, next.second, width, height);
-                        signedX = signs.first;
-                        signedY = signs.second;
-                    }
-
-                    BaseMultiplierCategory& bm = baseMultiplierCollection->getBaseMultiplier(t.base_index);
-                    BaseMultiplierParametrization param =  bm.parametrize( width, height, signedX, signedY);
-
-                    unsigned int tiles = field.checkTilePlacement(next, param);
-                    if(tiles == 0) {
+                if(t->getDSPCost()) {
+                    float usage = tiles / (float)t->getArea();
+                    //check threshold
+                    if(usage < occupation_threshold_) {
                         continue;
                     }
 
-                    cout << t.wX << " " << t.wY << " Covered " << tiles << endl;
-
-                    if(t.base_index == 0) {
-                        float usage = tiles / selectedSize;
-                        //check threshold
-                        if(usage < occupation_threshold_) {
-                            cout << "Couldn't place dspblock " << width << " " << height << " because threshold is " << occupation_threshold_ << " and usage is " << usage << endl;
-                            cout << tiles << " VS " << dspSize << endl;
-                            continue;
-                        }
-
-                        //TODO: find a better way for this, think about the effect of > vs >= here 
-                        if(tiles > efficiency) {
-                            efficiency = tiles;
-                        }
-                        else {
-                            //no need to check anything else ... dspBlock wasn't enough
-                            break;
-                        }
+                    //TODO: find a better way for this, think about the effect of > vs >= here
+                    if(tiles > efficiency) {
+                        efficiency = tiles;
                     }
                     else {
-                        float newefficiency = tiles / t.cost;
-                        cout << newefficiency << endl;
-                        if (newefficiency < efficiency) {
-                            if(tiles == t.totalsize) {
-                                //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
-                                break;
-                            }
-                            
-                            continue;
-                        }
-
-                        efficiency = newefficiency;
-                    }
-
-                    tile = param;
-                    basetile = t;
-                    baseMultiplier = bm;
-
-                    //no need to check the others, because of the sorting they won't be able to beat this tile
-                    if(tiles == t.totalsize) {
+                        //no need to check anything else ... dspBlock wasn't enough
                         break;
                     }
                 }
+                else {
+                    float newefficiency = tiles / t->cost();
+                    cout << newefficiency << endl;
+                    cout << t->cost() << endl;
+                    if (newefficiency < efficiency) {
+                        if(tiles == t->getArea()) {
+                            //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    efficiency = newefficiency;
+                }
+
+                tile = t->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);;
+                bm = t;
+
+                //no need to check the others, because of the sorting they won't be able to beat this tile
+                if(tiles == t->getArea()) {
+                    break;
+                }
             }
 
-            if(basetile.base_index == 0) {
-                usedDSPBlocks++;
-                //TODO: handle supertiles?
-            }
-
-            totalcost += (basetile.base_index == 0 ? 0 : ceil(baseMultiplier.getLUTCost(tile.getTileXWordSize(), tile.getTileYWordSize()))) + 0.65 * tile.getOutWordSize();
-
-            if(totalcost > cmpcost) {
+            //TODO: cmpCost needs to contain pre SuperTile costs in some way
+            /*if(totalCost > cmpCost) {
                 return FLT_MAX;
+            }*/
+
+            totalCost += bm->cost();
+
+            cout << "COST " << totalCost << endl;
+
+            auto coord (field.placeTileInField(next, bm));
+            if(bm->getDSPCost()) {
+                usedDSPBlocks++;
+                if(superTiles_.size() > 0) {
+                    dspBlocks.push_back(make_pair(tile, next));
+                    dspCost = bm->cost();
+                    next = coord;
+                    continue;
+                }
             }
 
-            cout << "COST " << totalcost << endl;
-
-            auto coord (field.placeTileInField(next, tile));
             solution.push_back(make_pair(tile, next));
-
             next = coord;
         }
-        field.printField();
 
-        return totalcost;
+        field.printField();
+        cout << superTiles_.size() << endl;
+
+        //check each dspblock with another
+        if(dspBlocks.size() > 0) {
+            for(unsigned int i = 0; i < dspBlocks.size(); i++) {
+                cout << "Testing tile " << i << endl;
+                bool found = false;
+                auto& dspBlock1 = dspBlocks[i];
+                for(unsigned int j = i + 1; j < dspBlocks.size(); j++) {
+                    auto& dspBlock2 = dspBlocks[j];
+                    cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
+                    cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
+
+                    pair<unsigned int, unsigned int> baseCoord;
+                    baseCoord.first = min(dspBlock1.second.first, dspBlock2.second.first);
+                    baseCoord.second = min(dspBlock1.second.second, dspBlock2.second.second);
+
+                    int rx1 = dspBlock1.second.first - baseCoord.first;
+                    int ry1 = dspBlock1.second.second - baseCoord.second;
+                    int lx1 = dspBlock1.second.first + dspBlock1.first.getTileXWordSize() - baseCoord.first - 1;
+                    int ly1 = dspBlock1.second.second + dspBlock1.first.getTileYWordSize() - baseCoord.second - 1;
+
+                    int rx2 = dspBlock2.second.first - baseCoord.first;
+                    int ry2 = dspBlock2.second.second - baseCoord.second;
+                    int lx2 = dspBlock2.second.first + dspBlock2.first.getTileXWordSize() - baseCoord.first - 1;
+                    int ly2 = dspBlock2.second.second + dspBlock2.first.getTileYWordSize() - baseCoord.second - 1;
+
+                    BaseMultiplierCategory* tile = MultiplierTileCollection::superTileSubtitution(superTiles_, rx1, ry1, lx1, ly1, rx2, ry2, lx2, ly2);
+                    if(tile == nullptr) {
+                        continue;
+                    }
+
+                    cout << "Found Supertile of type " << tile->getType() << endl;
+                    solution.push_back(make_pair(tile->getParametrisation(), baseCoord));
+                    totalCost -= dspCost;
+                    totalCost -= dspCost;
+                    totalCost += tile->cost();
+
+                    dspBlocks.erase(dspBlocks.begin() + j);
+                    found = true;
+                    break;
+                }
+
+                if (!found) {
+                    solution.push_back(dspBlock1);
+
+                }
+            }
+        }
+
+        cout << dspBlocks.size() << endl;
+
+        return totalCost;
     }
 
     pair<bool, bool> TilingStrategyGreedy::checkSignedTile(const unsigned int x, const unsigned int y, const unsigned int width, const unsigned int height) {
