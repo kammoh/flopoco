@@ -50,9 +50,11 @@ int BaseMultiplierDSPSuperTilesXilinx::getRelativeResultMSBWeight(Parametrizatio
 
 int BaseMultiplierDSPSuperTilesXilinx::isSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2){
     for(int i = 1; i <= 12; i++)
-        if(mult_bounds[i].dsp1_rx == rx1 && mult_bounds[i].dsp1_ry == ry1 && mult_bounds[i].dsp1_lx == lx1 && mult_bounds[i].dsp1_ly == ly1)
-            if(mult_bounds[i].dsp2_rx == rx2 && mult_bounds[i].dsp2_ry == ry2 && mult_bounds[i].dsp2_lx == lx2 && mult_bounds[i].dsp2_ly == ly2)
-                return i;
+        if((mult_bounds[i].dsp1_rx == rx1 && mult_bounds[i].dsp1_ry == ry1 && mult_bounds[i].dsp1_lx == lx1 && mult_bounds[i].dsp1_ly == ly1
+         && mult_bounds[i].dsp2_rx == rx2 && mult_bounds[i].dsp2_ry == ry2 && mult_bounds[i].dsp2_lx == lx2 && mult_bounds[i].dsp2_ly == ly2)
+         ||(mult_bounds[i].dsp1_rx == rx2 && mult_bounds[i].dsp1_ry == ry2 && mult_bounds[i].dsp1_lx == lx2 && mult_bounds[i].dsp1_ly == ly2
+         && mult_bounds[i].dsp2_rx == rx1 && mult_bounds[i].dsp2_ry == ry1 && mult_bounds[i].dsp2_lx == lx1 && mult_bounds[i].dsp2_ly == ly1))
+            return i;
     return 0;
 }
 
