@@ -69,6 +69,9 @@ namespace flopoco {
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 2;}
 		double getLUTCost(uint32_t, uint32_t) const final {return get_wR(this->shape)*0.65;}
+        double getLUTCost() const { return this->lut_cost;};
+        int getDSPCost() const override { return 2; }
+        int getArea() {return 2*24*17;}
         static int get_wX(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][0];}
         static int get_wY(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][1];}
         static int get_wR(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][2];}
@@ -79,6 +82,7 @@ namespace flopoco {
 		bool shapeValid(int x, int y);
         bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
         float shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO) override;
+        int isSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2);
 
 		Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
@@ -119,7 +123,7 @@ namespace flopoco {
                                        {0,  0, 16, 23, 17,  0, 33, 23},     //K
                                        {7,  0, 23, 23,  0, 24, 16, 47}};    //L
 
-	};
+    };
 
     class BaseMultiplierDSPSuperTilesXilinxOp : public Operator
     {

@@ -32,6 +32,18 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 
 void TilingStrategyOptimalILP::solve()
 {
+/*
+    BaseMultiplierCategory* value = MultiplierTileCollection::superTileSubtitution(tiles, 7,  0, 23, 23,  0, 24, 16, 47);
+    if(value != nullptr)
+        cout << value->getType() << endl;
+    cout << value->getParametrisation().getMultType() << endl;
+    cout << value->efficiency() << endl;
+    cout << value->getArea() << endl;
+
+    exit(1);
+
+*/
+
 
 #ifndef HAVE_SCALP
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";

@@ -27,6 +27,8 @@ namespace flopoco {
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}
 		double getLUTCost(uint32_t wX, uint32_t wY) const final;
+        double getLUTCost() const { return this->lut_cost;};
+        int getDSPCost() const override { return 0; }
 
 		/** Factory method */
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);

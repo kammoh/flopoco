@@ -47,6 +47,8 @@ namespace flopoco {
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 1;}
 		double getLUTCost(uint32_t, uint32_t) const final {return 0.;}
+        int getDSPCost() const final {return 1;}
+        double getLUTCost() const {return 0.;}
 
 		Operator* generateOperator(
 				Operator *parentOp,

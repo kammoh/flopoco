@@ -51,11 +51,13 @@ namespace flopoco
             this->shape = shape;
             this->wX = get_wX(shape);
             this->wY = get_wY(shape);
-            lut_cost = getLUTCost(wX, wY);
+            lut_cost = getLUTCost();
         }
 
         int getDSPCost(uint32_t, uint32_t) const final {return 0;}
-        double getLUTCost(uint32_t, uint32_t) const final
+        double getLUTCost(uint32_t, uint32_t) const {return getLUTCost();}
+        int getDSPCost() const final {return 0;}
+        double getLUTCost() const
         {
             int word_size = getRelativeResultMSBWeight(this->shape) - getRelativeResultLSBWeight(this->shape) + 1;
             int lut_required = (this->wX+this->wY <= 5)?word_size/2+word_size%2:word_size;
@@ -66,6 +68,7 @@ namespace flopoco
         static int get_wR(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][2];}
         static int getRelativeResultMSBWeight(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][3];}
         static int getRelativeResultLSBWeight(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][4];}
+        static int getArea(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][5];}
         int getRelativeResultLSBWeight(Parametrization const& param) const;
         int getRelativeResultMSBWeight(Parametrization const& param) const;
         bool shapeValid(int x, int y);
@@ -83,7 +86,7 @@ namespace flopoco
         int wX, wY, wR;
         bool xIsSigned_;
         bool yIsSigned_;
-        static const int shape_size[8][5];
+        static const int shape_size[8][6];
     };
 
     class BaseMultiplierIrregularLUTXilinxOp : public Operator {
