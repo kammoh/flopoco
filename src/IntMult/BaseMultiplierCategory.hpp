@@ -95,7 +95,10 @@ namespace flopoco {
 
             virtual int getDSPCost(uint32_t wX, uint32_t wY) const = 0;
             virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
-            virtual float getLUTCost() {return (tile_param.wX_+tile_param.wY_)*0.65;}
+            virtual int getDSPCost() const = 0;
+            virtual float getLUTCost() {return lut_cost;}
+            virtual int getArea() {return tile_param.wX_*tile_param.wY_;}
+            float efficiency() {return getArea()/cost();}
             float cost() {return lut_cost;}
 
 			virtual bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
@@ -119,6 +122,8 @@ namespace flopoco {
             int wY(void) {return tile_param.wY_;}
             int wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
             int wY_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
+            virtual int isSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2) {return 0;}
+            //Parametrization getSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2);
 
 		private:
             BaseMultiplierCategory::Parametrization tile_param;

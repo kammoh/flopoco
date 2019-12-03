@@ -21,10 +21,10 @@ Operator* BaseMultiplierDSPSuperTilesXilinx::generateOperator(
 		);
 }
 
-const int BaseMultiplierDSPSuperTilesXilinx::shape_size[12][5] =    {{41, 34, 41, 58, 17},  // A (x,y,r,MSB,LSB)
-                                                                     {41, 41, 41, 58, 17},  // B
-                                                                     {41, 41, 41, 65, 24},  // C
-                                                                     {34, 41, 41, 58, 17},  // D
+const int BaseMultiplierDSPSuperTilesXilinx::shape_size[12][5] =    {{41, 34, 41+1, 58+1, 17},  // A (x,y,r,MSB,LSB)
+                                                                     {41, 41, 41+1, 58+1, 17},  // B
+                                                                     {41, 41, 41+1, 65+1, 24},  // C
+                                                                     {34, 41, 41+1, 58+1, 17},  // D
                                                                      {24, 34, 58, 58,  0},  // E
                                                                      {48, 24, 58, 65,  7},  // F
                                                                      {24, 41, 58, 65,  7},  // G
@@ -48,6 +48,14 @@ int BaseMultiplierDSPSuperTilesXilinx::getRelativeResultMSBWeight(Parametrizatio
     return getRelativeResultMSBWeight((BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE)param.getShapePara());
 }
 
+int BaseMultiplierDSPSuperTilesXilinx::isSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2){
+    for(int i = 1; i <= 12; i++)
+        if(mult_bounds[i].dsp1_rx == rx1 && mult_bounds[i].dsp1_ry == ry1 && mult_bounds[i].dsp1_lx == lx1 && mult_bounds[i].dsp1_ly == ly1)
+            if(mult_bounds[i].dsp2_rx == rx2 && mult_bounds[i].dsp2_ry == ry2 && mult_bounds[i].dsp2_lx == lx2 && mult_bounds[i].dsp2_ly == ly2)
+                return i;
+    return 0;
+}
+
 bool BaseMultiplierDSPSuperTilesXilinx::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
 {
     //check if (x,y) coordinate lies inside of the super tile shape:
@@ -67,7 +75,7 @@ bool BaseMultiplierDSPSuperTilesXilinx::shapeValid(Parametrization const& param,
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_D:
             if((x <= 16) && (y <= 16)) return false;
-            if((x >= 16) && (y >= 24)) return false;
+            if((x >= 17) && (y >= 24)) return false;
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_E:
             //rectangular shape, nothing to check
@@ -232,7 +240,7 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
             vhdl << tab << "D2 <= std_logic_vector(unsigned(X(40 downto 17)) * unsigned(Y(16 downto 0)));" << endl;
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_B:
-            //total operation is: (X(23 downto 0) * Y(40 downto 24) << 24) + (X(40 downto 24) * Y(23 downto 0) << 24)
+            //total operation is: X(16 downto 0) * Y(40 downto 17) + X(40 downto 17) * Y(16 downto 0)
             vhdl << tab << "D1 <= std_logic_vector(unsigned(X(16 downto 0)) * unsigned(Y(40 downto 17)));" << endl;
             vhdl << tab << "D2 <= std_logic_vector(unsigned(X(40 downto 17)) * unsigned(Y(16 downto 0)));" << endl;
             break;
@@ -381,29 +389,29 @@ void BaseMultiplierDSPSuperTilesXilinxOp::emulate(TestCase * tc) {
     switch(shape)
     {
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_A:
-            //total operation is: (X(23 downto 0) * Y(33 downto 17) << 17) + (X(40 downto 17) * Y(16 downto 0) << 17)
+            //total operation is: X(23 downto 0) * Y(33 downto 17) + X(40 downto 17) * Y(16 downto 0)
             d1 = (sx & ((1<<24)-1)) * ((sy>>17) & ((1<<17)-1));
             d2 = ((sx>>17) & ((1<<24)-1)) * (sy & ((1<<17)-1));
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_B:
-            //total operation is: (X(23 downto 0) * Y(40 downto 24) << 24) + (X(40 downto 24) * Y(23 downto 0) << 24)
+            //total operation is: X(16 downto 0) * Y(40 downto 17) + X(40 downto 17) * Y(16 downto 0)
             d1 = (sx & ((1<<17)-1)) * ((sy>>17) & ((1<<24)-1));
             d2 = ((sx>>17) & ((1<<24)-1)) * (sy & ((1<<17)-1));
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_C:
-            //total operation is: (X(23 downto 0) * Y(40 downto 24) << 24) + (X(40 downto 24) * Y(23 downto 0) << 24)
+            //total operation is: X(23 downto 0) * Y(40 downto 24) + X(40 downto 24) * Y(23 downto 0)
             d1 = (sx & ((1<<24)-1)) * ((sy>>24) & ((1<<17)-1));
             d2 = ((sx>>24) & ((1<<17)-1)) * (sy & ((1<<24)-1));
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_D:
-            //total operation is: (X(16 downto 0) * Y(40 downto 17) << 17) + (X(33 downto 17) * Y(23 downto 0) << 17)
+            //total operation is: X(16 downto 0) * Y(40 downto 17) + X(33 downto 17) * Y(23 downto 0)
             d1 = (sx & ((1<<17)-1)) * ((sy>>17) & ((1<<24)-1));
             d2 = ((sx>>17) & ((1<<17)-1)) * (sy & ((1<<24)-1));
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_E:
             //total operation is: (X(23 downto 0) * Y(16 downto 0)) + (X(23 downto 0) * Y(33 downto 17) << 17)
             d1 = (sx & ((1<<24)-1)) * (sy & ((1<<17)-1));
-            d2 = (sx & ((1<<24)-1)) * ((sy & ((1UL<<41)-1) & ~((1<<17)-1)) >> 17);
+            d2 = (sx & ((1<<24)-1)) * ((sy>>17) & ((1<<17)-1));
             break;
         case BaseMultiplierDSPSuperTilesXilinx::SHAPE_F:
             //total operation is: ((X(23 downto 0) * Y(23 downto 7)) << 7) + (X(47 downto 24) * Y(16 downto 0) << 24)
