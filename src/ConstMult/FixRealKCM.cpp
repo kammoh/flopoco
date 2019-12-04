@@ -65,6 +65,7 @@ namespace flopoco{
 		FixRealConstMult(parentOp, target, signedIn_, msbIn_, lsbIn_, lsbOut_, constant_, targetUlpError_),
 		addRoundBit(true)
 	{
+		thisOp = this;
 		vhdl << "-- This operator multiplies by "<<constant << endl;
 		init();		 // check special cases, computes number of tables and errorInUlps.
 
@@ -150,7 +151,7 @@ namespace flopoco{
 		inputSignalName(multiplicandX)
 	{
 
-		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is. 
+		init(); // check special cases, computes number of tables, but do not compute g: just take lsbOut as it is.
 		
 	}
 					
@@ -427,8 +428,10 @@ namespace flopoco{
 		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
 		REPORT(DETAILED,"Power of two, msbC=" << msbC << "     Shift left of " << shift << " bits");
 		// compute the product by the abs constant
+
 		thisOp->vhdl << tab << thisOp->declare(rTempName, rTempSize) << " <= ";
-		// Still there are two cases: 
+
+		// Still there are two cases:
 		if(shift>=0) {  // Shift left; pad   THIS SEEMS TO WORK
 			thisOp->vhdl << inputSignalName << " & " << zg(shift);
 			// rtempsize= msbIn-lsbin+1   + shift  =   -lsbIn   + msbIn   +1   - (lsbOut-g -lsbIn +msbC)
