@@ -11,7 +11,7 @@ namespace flopoco
     	* \brief The shape enum.
          *
          *  _ _     _        _ _       _     _ _ _    _ _      _ _     _
-         * |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|
+         * |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|_
          * |_|_|_| |_|_|_     |_|_|   |_|_|   |_|_|  |_|_|_|  |_|_|   |_|_|
          * |_|_|_|   |_|_|              |_|                     |_|   |_|_|
          * shape A  shape B shape C shape D shape E  shape F shape G  shape H
@@ -55,7 +55,7 @@ namespace flopoco
         }
 
         int getDSPCost(uint32_t, uint32_t) const final {return 0;}
-        double getLUTCost(uint32_t, uint32_t) const {return getLUTCost();}
+        double getLUTCost(uint32_t, uint32_t) const {return 8.25;}
         int getDSPCost() const final {return 0;}
         double getLUTCost() const
         {
@@ -68,7 +68,8 @@ namespace flopoco
         static int get_wR(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][2];}
         static int getRelativeResultMSBWeight(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][3];}
         static int getRelativeResultLSBWeight(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][4];}
-        static int getArea(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][5];}
+        //int getArea(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) const {return shape_size[(int)shape-1][5];}
+        int getArea(void) override {return shape_size[(int)shape-1][5];}
         int getRelativeResultLSBWeight(Parametrization const& param) const;
         int getRelativeResultMSBWeight(Parametrization const& param) const;
         bool shapeValid(int x, int y);
