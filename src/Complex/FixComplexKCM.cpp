@@ -114,11 +114,8 @@ namespace flopoco {
 	}
 
 	
-	int 	FixComplexKCM::get_MSBout_re(){
+	int 	FixComplexKCM::get_MSBout(){
 		return msbout_re;
-	}
-	int 	FixComplexKCM::get_MSBout_im(){
-		return msbout_im;
 	}
 
 
