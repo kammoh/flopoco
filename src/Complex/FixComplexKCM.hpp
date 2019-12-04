@@ -61,7 +61,9 @@ namespace flopoco {
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target,	vector<string>& args );
 		static void registerFactory();
 
-
+		int get_MSBout_re();
+		int get_MSBout_im();
+		
 	private:
 			void init();
 
@@ -69,8 +71,9 @@ namespace flopoco {
 			int msb_in;
 			int lsb_in;
 			int lsb_out;
-//			int msbre_out; //not used!!
-//			int msbim_out; //not used!!
+		int msbout_re;
+		int msbout_im; 
+
 			int input_width;
 			int outputre_width;
 			int outputim_width;
