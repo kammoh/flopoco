@@ -482,7 +482,7 @@ namespace flopoco{
 					vhdl << tab << declare("Z_truncToZ3o6", wZ3o6) << " <= Z" << range(wZ-1, wZ-wZ3o6) << ";" << endl;
 					newInstance("FixFunctionByTable",
 											"Z3o6Table",
-											"function=\"x^3/6\" signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
+											"f=\"x^3/6\" signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
 											"X=>Z_truncToZ3o6",
 											"Y=>Z3o6");
 					
