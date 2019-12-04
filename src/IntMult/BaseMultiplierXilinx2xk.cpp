@@ -59,7 +59,7 @@ void BaseMultiplierXilinx2xkOp::emulate(TestCase* tc)
     mpz_class svX = tc->getInputValue("X");
     mpz_class svY = tc->getInputValue("Y");
     mpz_class svR = svX * svY;
-    tc->addExpectedOutput("R", svR);
+    tc->addExpectedOutput("O", svR);
 }
 
 TestList BaseMultiplierXilinx2xk::unitTest(int index)
@@ -107,7 +107,7 @@ BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target*
     addInput("Y", wY, true);
 
 
-    addOutput("R", width+2, 1, true);
+    addOutput("O", width+2, 1, true);
 
     if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by BaseMultiplierXilinx2xkOp, sorry");
 
@@ -173,7 +173,7 @@ BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target*
     }
     vhdl << endl;
 
-    vhdl << tab << "R <= cc_co(" << width << ") & cc_o(" << width << " downto 0);" << endl;
+    vhdl << tab << "O <= cc_co(" << width << ") & cc_o(" << width << " downto 0);" << endl;
 }
 
 }   //end namespace flopoco
