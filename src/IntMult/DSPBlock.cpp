@@ -17,7 +17,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
 
 	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
-	double stageDelay;
+	double stageDelay=0.0;
 	if(isPipelined) stageDelay = 0.9 * maxTargetCriticalPath;
 
 	bool signedMultOutput = xIsSigned or yIsSigned;
