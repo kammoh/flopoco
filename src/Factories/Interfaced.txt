@@ -43,6 +43,7 @@ IEEEFMA
 FixSOPC
 FixFIR
 FixHalfSine
+FixRootRaisedCosine
 FixIIR
 Posit2FP
 

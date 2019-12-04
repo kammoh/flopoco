@@ -40,6 +40,7 @@ ShiftReg
 FixFilters/FixSOPC
 FixFilters/FixFIR
 FixFilters/FixHalfSine
+FixFilters/FixRootRaisedCosine
 FixFilters/FixIIR
 IntAddSubCmp/IntAdder
 IntAddSubCmp/IntDualAddSub
