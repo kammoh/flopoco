@@ -17,7 +17,9 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	if(wZ == 0 && usePostAdder) THROWERROR("usePostAdder was set to true but no word size for input Z was given.");
 
 	double maxTargetCriticalPath = 1.0 / getTarget()->frequency() - getTarget()->ffDelay();
-	double stageDelay=0.0;
+
+	double stageDelay = 0.0;      //TODO Check what would be a correct value if Block is not pipelined
+
 	if(isPipelined) stageDelay = 0.9 * maxTargetCriticalPath;
 
 	bool signedMultOutput = xIsSigned or yIsSigned;
@@ -57,7 +59,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	int wIntermMult = wX + wY + onlyOneDelta;
 	wM = (wX > 1 ? wX : 0) + (wY > 1 ? wY : 0) + (wX==1 && wY==1 ? 1 : 0); //consider special cases with wX or wY (or both) equals one
 //	wM = wX + wY;
-	cout << "wM=" << wM << endl;
+//	cout << "wM=" << wM << endl;
 //	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();
@@ -75,7 +77,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 		if(!isPipelined) stageDelay = 0;
 		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= A;" << endl;
 	} else {
-		vhdl << tab << declare(stageDelay,"Rtmp",wM) << " <= M;" << endl;
+		vhdl << tab << declare(.0,"Rtmp",wM) << " <= M;" << endl;
     }
 	addOutput("O", wM);
 	vhdl << tab << "O <= Rtmp;" << endl;

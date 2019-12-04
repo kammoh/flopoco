@@ -24,7 +24,7 @@ namespace flopoco {
 
 
 	FixFIR::FixFIR(OperatorPtr parentOp, Target* target, int lsbIn_, int lsbOut_, vector<string> coeff_, int symmetry_, bool rescale_) :
-		Operator(target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), symmetry(symmetry_), rescale(rescale_)
+		Operator(parentOp, target), lsbIn(lsbIn_), lsbOut(lsbOut_), coeff(coeff_), symmetry(symmetry_), rescale(rescale_)
 	{
 			initFilter();
 			buildVHDL();
@@ -220,6 +220,7 @@ namespace flopoco {
 
 		if(symmetry!=0){
 			// For the emulate() computation we need to build the standard SOPC that doesn't exploit symmetry
+			// TODO get rid of its svg output...
 			UserInterface::pushAndClearGlobalOpList();
 			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, msbOut, lsbOut, coeff);
 			REPORT(INFO, "Created reference SOPC called " << refFixSOPC->getName() );

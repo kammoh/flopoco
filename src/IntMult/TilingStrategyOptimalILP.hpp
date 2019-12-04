@@ -8,6 +8,10 @@
 #include <ScaLP/SolverDynamic.h> // ScaLP::newSolverDynamic
 #endif //HAVE_SCALP
 #include <iomanip>
+#include "BaseMultiplier.hpp"
+#include "BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "BaseMultiplierIrregularLUTXilinx.hpp"
+#include "MultiplierTileCollection.hpp"
 
 namespace flopoco {
 
@@ -27,7 +31,8 @@ public:
         BaseMultiplierCollection* bmc,
 		base_multiplier_id_t prefered_multiplier,
 		float occupation_threshold,
-		size_t maxPrefMult=0);
+		size_t maxPrefMult,
+        MultiplierTileCollection tiles_);
 
     virtual void solve();
 
@@ -48,6 +53,9 @@ private:
         unsigned base_index;
     };
     vector<tiledef> my_tiles;                       //Tiles used for Tiling
+    vector<BaseMultiplierDSPSuperTilesXilinx> availSuperTiles;
+    vector<BaseMultiplierIrregularLUTXilinx> availNonRectTiles;
+    vector<BaseMultiplierCategory*> tiles;
 #ifdef HAVE_SCALP
     void constructProblem();
 

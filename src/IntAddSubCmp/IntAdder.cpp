@@ -78,45 +78,55 @@ namespace flopoco {
 		}
 
 		else		{
-			
+            //cout << "----------totalPeriod" << totalPeriod << " targetPeriod " << targetPeriod << endl;
 			// Here we split into chunks.
-			double remainingSlack = targetPeriod-maxCP;
-			int firstSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), remainingSlack) - 2;
-			int maxSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), targetPeriod) - 2;
-
+			double remainingSlack = targetPeriod-maxCP;                                                                 //remaining time to do addition in current period
+			int firstSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), remainingSlack);                       //remaining additions that can be performed in current period
+			int maxSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), targetPeriod);                           //total additions that can be performed in a period
+            //cout << "----------SubAdderSize" << firstSubAdderSize << " MaxSubAdderSize " << maxSubAdderSize << " Adder Delay n1 " << getTarget()->adderDelay(1) << " Adder Delay n2 " << getTarget()->adderDelay(2) << " remainingSlack " << remainingSlack << endl;
 			bool loop=true;
-			int subAdderSize=firstSubAdderSize;
-			int previousSubAdderSize;
-			int subAdderFirstBit = 0;
-			int i=0; 
+			int subAdderSize=firstSubAdderSize;                                                                         //the size of the first sub-adder can be as large as there is time left to do the addition in the current period
+			int previousSubAdderSize=0;                                                                                 //keep record of the bits already added for the next iteration
+			int subAdderFirstBit = 0;                                                                                   //Bit 0 is added first
+			int i=0;                                                                                                    //cycle counter
+			int skip_R0 = 0;                                                                                            //skip the result form the first cycle if there was not enough time to do an addition of at leased size one
 			while(loop) {
 				REPORT(DETAILED, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
-				// Cin
-				if(subAdderFirstBit == 0)	{
-					vhdl << tab << declare("Cin_0") << " <= Cin;" << endl;
-				}else	 {
-					vhdl << tab << declare(join("Cin_", i)) << " <= " << join("S_", i-1) <<	of(previousSubAdderSize) << ";" << endl;
+				if(0 < subAdderSize){                                                                                   //there is time to do at least an addition of bit-width one in current cycle
+                    // Cin
+                    if(subAdderFirstBit == 0)	{                                                                       //handle carry-in in first cycle
+                        vhdl << tab << declare(join("Cin_", i)) << " <= Cin;" << endl;
+                    }else	 {                                                                                              //handle carry-in in subsequent cycles
+                        vhdl << tab << declare(join("Cin_", i)) << " <= " << join("S_", i-1) <<	of(previousSubAdderSize) << ";" << endl;
+                    }
+                    // operands
+				    vhdl << tab << declare(join("X_", i), subAdderSize+1) << " <= '0' & X"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
+                    vhdl << tab << declare(join("Y_", i), subAdderSize+1) << " <= '0' & Y"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
+                    vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1), join("S_", i), subAdderSize+1)
+                         << " <= X_" << i	<<	" + Y_" << i << " + Cin_" << i << ";" << endl;
+                    vhdl << tab << declare(join("R_", i), subAdderSize) << " <= S_" << i	<<	range(subAdderSize-1,0) << ";" << endl;
+				} else {                                                                                                //do addition in the following cycle if there is unsufficient time in the current one
+                    subAdderSize = 0;
+                    subAdderFirstBit = 0;
+                    skip_R0 = 1;
+                    if(!maxSubAdderSize)
+                        THROWERROR("Cannot realize IntAdder, because the target periode - FF-Delay (" << targetPeriod << ") is shorter than the adder Delay for a 1 bit adder (" << getTarget()->adderDelay(1) << ").");
 				}
-				// operands
-				vhdl << tab << declare(join("X_", i), subAdderSize+1) << " <= '0' & X"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
-				vhdl << tab << declare(join("Y_", i), subAdderSize+1) << " <= '0' & Y"	<<	range(subAdderFirstBit+subAdderSize-1, subAdderFirstBit) << ";" << endl;
-				vhdl << tab << declare(getTarget()->adderDelay(subAdderSize+1), join("S_", i), subAdderSize+1)
-						 << " <= X_" << i	<<	" + Y_" << i << " + Cin_" << i << ";" << endl;
-				vhdl << tab << declare(join("R_", i), subAdderSize) << " <= S_" << i	<<	range(subAdderSize-1,0) << ";" << endl;
+
 				// prepare next iteration
 				i++;
-				subAdderFirstBit += subAdderSize;
-				previousSubAdderSize = subAdderSize;
-				if (subAdderFirstBit==wIn)
+				subAdderFirstBit += subAdderSize;                                                                       //add MSBits in next cycle
+				previousSubAdderSize = subAdderSize;                                                                    //keep track of the MSB in current cycle to handle carry for next cycle
+				if (subAdderFirstBit==wIn)                                                                              //no further cycle is needed if all bits are already added
 					loop=false;
 				else
-					subAdderSize = min(wIn-subAdderFirstBit, maxSubAdderSize);
+					subAdderSize = min(wIn-subAdderFirstBit, maxSubAdderSize);                                       //the width of the sub-adder in the next cycle is either the remaining bits, or the maximal number of bits that can be added in one cycle, if there is no time to add all remaining bits in one cycle
 			}
 
 			vhdl << tab << "R <= ";
-			while(i>0)		{
+			while(i>skip_R0)		{                                                                                   //calculate the result as the concatenation of the sub results, skip the first sub-result if there was no first result
 				i--;
-				vhdl <<  "R_" << i << (i==0?" ":" & ");
+				vhdl <<  "R_" << i << (i==skip_R0?" ":" & ");
 			}
 			vhdl << ";" << endl;
 		}
@@ -126,13 +136,12 @@ namespace flopoco {
 
 
 	int IntAdder::getMaxAdderSizeForPeriod(Target* target, double targetPeriod) {
-		int count = 10; // You have to add something eventually
-		while(target->adderDelay(count) < targetPeriod)
-			count++;
+		int count = 1;                                                                                                  // Start checking the addition width that can be performed int the remaining time in the current cycle at 1-bit
+        while(target->adderDelay(count) < targetPeriod){
+            count++;
+		}
 		return count-1;
 	}
-
-
 
 	/*************************************************************************/
 	IntAdder::~IntAdder() {

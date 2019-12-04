@@ -54,6 +54,9 @@ Xilinx_TernaryAdd_2State
 XilinxGPC
 XilinxFourToTwoCompressor
 TutorialOperator
+BaseMultiplierDSPSuperTilesXilinx
+BaseMultiplierXilinx2xk
+BaseMultiplierIrregularLUTXilinx
 
 TestBench
 Wrapper

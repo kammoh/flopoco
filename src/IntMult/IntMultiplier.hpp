@@ -12,6 +12,7 @@
 #include "IntMult/MultiplierBlock.hpp"
 #include "IntMult/BaseMultiplierCategory.hpp"
 #include "TilingStrategy.hpp"
+#include "MultiplierTileCollection.hpp"
 
 namespace flopoco {
 	class IntMultiplier : public Operator {

@@ -3,16 +3,6 @@
 
 namespace flopoco {
 
-BaseMultiplierLUT::BaseMultiplierLUT(int maxSize, double lutPerOutputBit):
-	BaseMultiplierCategory{
-		maxSize, 
-		maxSize,
-		0,
-		maxSize,
-		"BaseMultiplierLUT"
-	}, lutPerOutputBit_{lutPerOutputBit}
-{}
-
 double BaseMultiplierLUT::getLUTCost(uint32_t wX, uint32_t wY) const
 {
 	uint32_t outputSize;
