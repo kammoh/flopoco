@@ -2,12 +2,12 @@
 #include <iostream>
 
 namespace flopoco {
-    Field::Field(unsigned int wX_, unsigned int wY_, bool signedIO_) : wX(wX_), wY(wY_), signedIO(signedIO_), missing(wX_ * wY_), highestLine(0) {
-        field.resize(wY);
-        for(unsigned int i = 0; i < wY; i++) {
-            field[i].resize(wX);
-            for(unsigned int j = 0; j < wX; j++) {
-                field[i][j] = false;
+    Field::Field(unsigned int wX, unsigned int wY, bool signedIO) : wX_(wX), wY_(wY), signedIO_(signedIO), missing_(wX * wY), highestLine_(0) {
+        field_.resize(wY_);
+        for(unsigned int i = 0; i < wY_; i++) {
+            field_[i].resize(wX_);
+            for(unsigned int j = 0; j < wX_; j++) {
+                field_[i][j] = false;
             }
         }
 
@@ -15,41 +15,41 @@ namespace flopoco {
     }
 
     Field::Field(const Field &copy) {
-        wX = copy.wX;
-        wY = copy.wY;
-        missing = copy.missing;
-        cursor =  pair<unsigned int, unsigned int>(copy.cursor);
+        wX_ = copy.wX_;
+        wY_ = copy.wY_;
+        missing_ = copy.missing_;
+        cursor_ =  pair<unsigned int, unsigned int>(copy.cursor_);
 
-        field.resize(wY);
-        for(unsigned int i = 0; i < wY; i++) {
-            field[i].resize(wX);
-            for(unsigned int j = 0; j < wX; j++) {
-                field[i][j] = copy.field[i][j];
+        field_.resize(wY_);
+        for(unsigned int i = 0; i < wY_; i++) {
+            field_[i].resize(wX_);
+            for(unsigned int j = 0; j < wX_; j++) {
+                field_[i][j] = copy.field_[i][j];
             }
         }
 
-        highestLine = copy.highestLine;
+        highestLine_ = copy.highestLine_;
     }
 
     Field::~Field() {
-        field.clear();
+        field_.clear();
     }
 
     void Field::reset() {
-        for(unsigned int i = 0; i < wY; i++) {
-            for(unsigned int j = 0; j < wX; j++) {
-                field[i][j] = false;
+        for(unsigned int i = 0; i < wY_; i++) {
+            for(unsigned int j = 0; j < wX_; j++) {
+                field_[i][j] = false;
             }
         }
 
         setCursor(0, 0);
-        missing = wX * wY;
+        missing_ = wX_ * wY_;
 
-        highestLine = 0;
+        highestLine_ = 0;
     }
 
     void Field::reset(Field& target) {
-        if(target.wX != wX || target.wY != wY) {
+        if(target.wX_ != wX_ || target.wY_ != wY_) {
             return;
         }
 
@@ -58,55 +58,55 @@ namespace flopoco {
         cout << "State" << endl;
         printField();
 
-        cout << highestLine << endl;
+        cout << highestLine_ << endl;
 
-        missing = target.missing;
+        missing_ = target.missing_;
 
         //fill up needed space
-        if(cursor.second < target.cursor.second) {
-            for(unsigned int i = cursor.second; i < target.cursor.second; i++) {
-                field[i] = target.field[i];
+        if(cursor_.second < target.cursor_.second) {
+            for(unsigned int i = cursor_.second; i < target.cursor_.second; i++) {
+                field_[i] = target.field_[i];
             }
         }
 
         //empty upper part
-        if(highestLine > target.highestLine) {
-            for(unsigned int i = target.highestLine; i < highestLine; i++) {
-                field[i] = target.field[i];
+        if(highestLine_ > target.highestLine_) {
+            for(unsigned int i = target.highestLine_; i < highestLine_; i++) {
+                field_[i] = target.field_[i];
             }
         }
 
         //copy half filled area
-        for(unsigned int i = max(target.cursor.second - 1, 0); i < target.highestLine; i++) {
-            field[i] = target.field[i];
+        for(unsigned int i = max(target.cursor_.second - 1, 0); i < target.highestLine_; i++) {
+            field_[i] = target.field_[i];
         }
 
-        highestLine = target.highestLine;
-        setCursor(target.cursor);
+        highestLine_ = target.highestLine_;
+        setCursor(target.cursor_);
 
         cout << "After reset" << endl;
         printField();
     }
 
     unsigned int Field::checkTilePlacement(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile) {
-        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX, wY, signedIO);
-        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX, wY, signedIO);
+        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
+        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
         unsigned int endY = coord.second + sizeY;
-        unsigned int maxX = endX > wX ? wX : endX;
-        unsigned int maxY = endY > wY ? wY : endY;
+        unsigned int maxX = endX > wX_ ? wX_ : endX;
+        unsigned int maxY = endY > wY_ ? wY_ : endY;
 
         unsigned int covered = 0;
 
         for(unsigned int i = coord.second; i < maxY; i++) {
             for(unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area
-                if(!tile->shape_contribution(j, i, coord.first, coord.second, wX, wY, signedIO)) {
+                if(!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
                     cout << "coord " << j << " " << i << " is not covered!" << endl;
                     continue;
                 }
 
-                if(field[i][j]) {
+                if(field_[i][j]) {
                     return 0;
                 }
 
@@ -123,15 +123,15 @@ namespace flopoco {
     pair<unsigned int, unsigned int> Field::checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& param) {
         unsigned int endX = coord.first + param.getTileXWordSize();
         unsigned int endY = coord.second + param.getTileYWordSize();
-        unsigned int maxX = endX > wX ? wX : endX;
-        unsigned int maxY = endY > wY ? wY : endY;
+        unsigned int maxX = endX > wX_ ? wX_ : endX;
+        unsigned int maxY = endY > wY_ ? wY_ : endY;
 
         pair<unsigned int, unsigned int> size(param.getTileXWordSize(), 0);
 
         for(unsigned int i = coord.second; i < maxY; i++) {
             unsigned int currentSize = 0;
             for(unsigned int j = coord.first; j < maxX; j++) {
-                if(field[i][j]) {
+                if(field_[i][j]) {
                     break;
                 }
 
@@ -157,104 +157,104 @@ namespace flopoco {
     }
 
     pair<unsigned int, unsigned int> Field::placeTileInField(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile) {
-        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX, wY, signedIO);
-        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX, wY, signedIO);
+        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
+        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
         unsigned int endY = coord.second + sizeY;
-        unsigned int maxX = endX > wX ? wX : endX;
-        unsigned int maxY = endY > wY ? wY : endY;
+        unsigned int maxX = endX > wX_ ? wX_ : endX;
+        unsigned int maxY = endY > wY_ ? wY_ : endY;
 
         for(unsigned int i = coord.second; i < maxY; i++) {
             for (unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area and if area is free
-                if (tile->shape_contribution(j, i, coord.first, coord.second, wX, wY, signedIO) && !field[i][j]) {
-                    missing--;
-                    field[i][j] = true;
+                if (tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_) && !field_[i][j]) {
+                    missing_--;
+                    field_[i][j] = true;
                 }
             }
         }
 
-        if(maxY > highestLine) {
-            highestLine = maxY;
+        if(maxY > highestLine_) {
+            highestLine_ = maxY;
         }
 
 
         printField();
         updateCursor();
 
-        cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << cursor.first << " " << cursor.second << endl;
+        cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << cursor_.first << " " << cursor_.second << endl;
         cout << tile->getType() << endl;
 
-        return cursor;
+        return cursor_;
     }
 
     void Field::updateCursor() {
-        while(cursor.second != wY) {
+        while(cursor_.second != wY_) {
             //try to find next free position in the current line
-            for(unsigned int i = 0; i < wX; i++) {
-                if(!field[cursor.second][i]) {
-                    cursor.first = i;
+            for(unsigned int i = 0; i < wX_; i++) {
+                if(!field_[cursor_.second][i]) {
+                    cursor_.first = i;
                     return;
                 }
             }
 
             //no free position in this line
-            cursor.second++;
+            cursor_.second++;
         }
 
-        cursor.first = 0;
-        cursor.second = 0;
+        cursor_.first = 0;
+        cursor_.second = 0;
     }
 
     bool Field::isFull() {
-        return missing == 0;
+        return missing_ == 0;
     }
 
     unsigned int Field::getMissing() {
-        return missing;
+        return missing_;
     }
 
     unsigned int Field::getMissingLine() {
-        unsigned int missing = 0;
+        unsigned int missing_ = 0;
 
-        for(unsigned int i = cursor.first; i < wX; i++) {
-            if(field[cursor.second][i]) {
+        for(unsigned int i = cursor_.first; i < wX_; i++) {
+            if(field_[cursor_.second][i]) {
                 break;
             }
-            missing++;
+            missing_++;
         }
 
-        return missing;
+        return missing_;
     }
 
     unsigned int Field::getMissingHeight() {
-        unsigned int missing = 0;
+        unsigned int missing_ = 0;
 
-        for(unsigned int i = cursor.second; i < wY; i++) {
-            if(field[i][cursor.first]) {
+        for(unsigned int i = cursor_.second; i < wY_; i++) {
+            if(field_[i][cursor_.first]) {
                 break;
             }
-            missing++;
+            missing_++;
         }
 
-        return missing;
+        return missing_;
     }
 
     pair<unsigned int, unsigned int> Field::getCursor() {
-        return cursor;
+        return cursor_;
     }
 
     void Field::setCursor(unsigned int x, unsigned int y)  {
-        if(x > wX) {
+        if(x > wX_) {
             x = 0;
         }
 
-        if(y > wY) {
+        if(y > wY_) {
             y = 0;
         }
 
-        cursor.first = x;
-        cursor.second = y;
+        cursor_.first = x;
+        cursor_.second = y;
     }
 
     void Field::setCursor(pair<unsigned int, unsigned int> target) {
@@ -263,7 +263,7 @@ namespace flopoco {
 
     void Field::printField() {
         //TODO: mirror output
-        for(auto v: field) {
+        for(auto v: field_) {
             for(auto c: v) {
                 cout << c;
             }

@@ -32,6 +32,4 @@ namespace flopoco {
         pair<bool, bool> checkSignedTile(const unsigned int x, const unsigned int y, const unsigned int width, const unsigned int height);
     };
 }
-
-
 #endif

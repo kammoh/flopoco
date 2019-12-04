@@ -32,13 +32,13 @@ namespace flopoco {
 
     private:
         void updateCursor();
-        vector<vector<bool>> field;
-        pair<unsigned int, unsigned int> cursor;
-        unsigned int wX;
-        unsigned int wY;
-        bool signedIO;
-        unsigned int missing;
-        unsigned int highestLine;
+        vector<vector<bool>> field_;
+        pair<unsigned int, unsigned int> cursor_;
+        unsigned int wX_;
+        unsigned int wY_;
+        bool signedIO_;
+        unsigned int missing_;
+        unsigned int highestLine_;
     };
 }
 

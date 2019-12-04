@@ -23,7 +23,7 @@ namespace flopoco {
             false,
             -1,
             "BaseMultiplierXilinx2xk"}
-		{lut_cost = 2*maxBigOperandWidth/(1.65*maxBigOperandWidth+2.3);}
+		{lut_cost = 1.65*maxBigOperandWidth+2.3;}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}
 		double getLUTCost(uint32_t wX, uint32_t wY) const final;
