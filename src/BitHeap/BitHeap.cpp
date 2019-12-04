@@ -711,8 +711,30 @@ namespace flopoco {
 	}
 
 
+		// Quick hack for The Book
+	void BitHeap::latexPlot() {
+		cout <<tab << "\\begin{dotdiag}{"<< width << "}" << endl;
+		cout <<tab<<tab <<"\\begin{scope}" << endl;
+
+		mpz_class c=constantBits;
+		for(int i=lsb; i<=msb; i++) {
+			int w=i-lsb;
+			int h=getColumnHeight(w);
+			if(c % 2 ==1)
+				h++;
+			c=c>>1;
+			if(h>0)
+				cout <<tab<<tab <<"\\drawdotcol{"<<i<<"}{" << h <<"}" << endl;									
+			//			cout << "i=" <<i  << "  "<<  h << endl;
+		}
+		cout <<tab<<tab <<"\\end{scope}" << endl;
+		cout <<tab << "\\end{dotdiag}" << endl;
+	}
+	
 	void BitHeap::startCompression()
 	{
+		latexPlot();
+
 		if(op->getTarget()->getCompressionMethod().compare("heuristicMaxEff") == 0)
 		{
 			compressionStrategy = new MaxEfficiencyCompressionStrategy(this);

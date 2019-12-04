@@ -376,6 +376,10 @@ enum BitType : unsigned;
 		 */
 		void insertBitInColumn(Bit* bit, unsigned columnNumber);
 
+		// Quick hack for The Book
+		void latexPlot();
+
+			//TODO is all the following useful at all? 
 		void initializeDrawing();
 
 		void closeDrawing(int offsetY);
