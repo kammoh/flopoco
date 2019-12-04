@@ -46,7 +46,7 @@ namespace flopoco {
     class BaseMultiplierXilinx2xkOp : public Operator
     {
     public:
-		BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY=false);
+		BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY);
 
         void emulate(TestCase* tc);
     private:
