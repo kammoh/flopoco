@@ -90,7 +90,7 @@ namespace flopoco {
                     if(efficiency < 0 && neededX >= 6 && neededY >= 2) {
                         //TODO: everything in this scope
                         BaseMultiplierXilinx2xk* tile2k = new BaseMultiplierXilinx2xk(neededX);
-                        tile = tile2k->getParametrisation();
+                        tile = tile2k->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);;
                         bm = tile2k;
                         break;
                     }
