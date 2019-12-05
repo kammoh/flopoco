@@ -150,10 +150,10 @@ void TilingStrategyOptimalILP::constructProblem()
     ScaLP::Term pxyTerm;
     for (int y = 0 - 24 + 1; y < wY; y++) {
         for (int x = 0 - 24 + 1; x < wX; x++) {
-            if (solve_Vars[0][x + x_neg][y + y_neg] != nullptr)                     //build a loop that checks for DSPcost > 0 to realize a more generic realisation that covers DSPSuperBlocks, when the current behaviour to limit DSP blocks is no longer needed for debugging purposes
-                pxyTerm.add(solve_Vars[0][x + x_neg][y + y_neg], 1);
-            if (solve_Vars[1][x + x_neg][y + y_neg] != nullptr)
-                pxyTerm.add(solve_Vars[1][x + x_neg][y + y_neg], 1);
+            for(int s = 0; s < wS; s++)
+                if (solve_Vars[s][x + x_neg][y + y_neg] != nullptr)
+                    if(0 < tiles[s]->getDSPCost())
+                        pxyTerm.add(solve_Vars[s][x + x_neg][y + y_neg], tiles[s]->getDSPCost());
         }
     }
     ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.
