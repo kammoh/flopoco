@@ -90,7 +90,6 @@ namespace flopoco {
 		bool extraSignBitRe = !signedIn && (constantReNeg || !constantImNeg);
 		bool extraSignBitIm = !signedIn && (constantReNeg || constantImNeg);
 
-		int msbout_re, msbout_im; 
 		msbout_re = msbout_im = msb_in + constantMaxMSB +1;
 		if(extraSignBitRe)
 		{
@@ -100,6 +99,8 @@ namespace flopoco {
 		{
 			msbout_im++;
 		}
+
+		REPORT(INFO, "Computed MSBout for real and im parts: " << msbout_re);
 		
 		outputre_width = msbout_re - lsb_out + 1;
 		outputim_width = msbout_im - lsb_out + 1;
@@ -110,6 +111,11 @@ namespace flopoco {
 					" Result would always be zero ");
 		}
 
+	}
+
+	
+	int 	FixComplexKCM::get_MSBout(){
+		return msbout_re;
 	}
 
 
@@ -124,7 +130,7 @@ namespace flopoco {
 			string constant_re,
 			string constant_im
 		): 	
-			Operator(target),
+		Operator(parentOp, target),
 			signedIn(signedIn),
 			msb_in(msb_in),
 			lsb_in(lsb_in),

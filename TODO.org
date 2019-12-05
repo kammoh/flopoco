@@ -388,12 +388,13 @@ ConstMult:
 *** Use DSP: find the most interesting constant fitting on 18 bits
 *** compare with Spiral.net and Gustafsson papers
 *** Implement the continued fraction stuff for FPCRConstMult
-
+		
 ** Shifters
 *** provide finer spec, see the TODOs inside Shifter.cpp
 
 General
 
+** FixSinCos currently does not use all the bit heaps that we advertize
 * If we could start pipeline from scratch MOSTLY DONE
 If we were to redo the pipeline framework from scratch, here is the proper way to do it.
 

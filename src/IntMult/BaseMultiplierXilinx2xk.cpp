@@ -16,7 +16,7 @@ Operator* BaseMultiplierXilinx2xk::generateOperator(
             parameters.isSignedMultX(),
 			parameters.isSignedMultY(),
             parameters.getMultXWordSize(),
-			parameters.isFlippedXY()
+            parameters.getMultYWordSize()
 		);
 }
 
@@ -30,13 +30,14 @@ double BaseMultiplierXilinx2xk::getLUTCost(uint32_t wX, uint32_t wY) const
 
 OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
-    int wY;
+    int wX, wY;
 	bool xIsSigned,yIsSigned;
+    UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
     UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
 	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
 	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
 
-	return new BaseMultiplierXilinx2xkOp(parentOp,target,xIsSigned,yIsSigned,wY, false);
+	return new BaseMultiplierXilinx2xkOp(parentOp,target,xIsSigned,yIsSigned, wX, wY);
 }
 
 void BaseMultiplierXilinx2xk::registerFactory()
@@ -45,7 +46,8 @@ void BaseMultiplierXilinx2xk::registerFactory()
                         "Implements a 2xY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs",
                        "BasicInteger", // categories
                         "",
-                       "wY(int): size of input Y;\
+                       "wX(int): size of input X;\
+                        wY(int): size of input Y;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
                        "",
@@ -72,6 +74,14 @@ TestList BaseMultiplierXilinx2xk::unitTest(int index)
     for(int w=1; w <= 6; w++)
     {
         paramList.push_back(make_pair("wY", to_string(w)));
+        paramList.push_back(make_pair("wX", to_string(2)));
+        testStateList.push_back(paramList);
+        paramList.clear();
+    }
+    for(int w=1; w <= 6; w++)
+    {
+        paramList.push_back(make_pair("wX", to_string(w)));
+        paramList.push_back(make_pair("wY", to_string(2)));
         testStateList.push_back(paramList);
         paramList.clear();
     }
@@ -79,27 +89,25 @@ TestList BaseMultiplierXilinx2xk::unitTest(int index)
     return testStateList;
 }
 
-BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int width, bool flipXY) : Operator(parentOp,target)
+BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY) : Operator(parentOp,target)
 {
     ostringstream name;
-
     string in1,in2;
+    int width;
 
-    if(!flipXY)
+    if(wX == 2)
     {
-        wX = 2;
-        wY = width;
         in1 = "Y";
         in2 = "X";
-        name << "BaseMultiplierXilinx2x" << width;
+        name << "BaseMultiplierXilinx2x" << wY;
+        width = wY;
     }
     else
     {
-        wX = width;
-        wY = 2;
         in1 = "X";
         in2 = "Y";
-        name << "BaseMultiplier" << width << "x2";
+        name << "BaseMultiplier" << wX << "x2";
+        width = wX;
     }
     setNameWithFreqAndUID(name.str());
 
@@ -109,7 +117,8 @@ BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target*
 
     addOutput("O", width+2, 1, true);
 
-    if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by BaseMultiplierXilinx2xkOp, sorry");
+    if((wX != 2) && (wY != 2)) throw string("One of the input widths of the BaseMultiplierXilinx2xk has to be 2!");
+    if((isSignedX == true) || (isSignedY == true)) throw string("signed inputs currently not supported by BaseMultiplierXilinx2xkOp, sorry");
 
     int needed_luts = width+1;//no. of required LUTs
     int needed_cc = ( needed_luts / 4 ) + ( needed_luts % 4 > 0 ? 1 : 0 ); //no. of required carry chains
