@@ -17,6 +17,9 @@ namespace flopoco {
                 base_multiplier_id_t prefered_multiplier,
                 float occupation_threshold,
                 size_t maxPrefMult,
+                bool useIrregular,
+                bool use2xk,
+                bool useSuperTiles,
                 MultiplierTileCollection tiles);
         virtual void solve();
 
@@ -27,6 +30,12 @@ namespace flopoco {
 
         vector<BaseMultiplierCategory*> tiles_;
         vector<BaseMultiplierCategory*> superTiles_;
+        vector<BaseMultiplierCategory*> v2xkTiles_;
+        vector<BaseMultiplierCategory*> kx2Tiles_;
+
+        bool useIrregular_;
+        bool use2xk_;
+        bool useSuperTiles_;
 
         float createSolution(Field& field, list<mult_tile_t>& solution, const float cmpcost);
         pair<bool, bool> checkSignedTile(const unsigned int x, const unsigned int y, const unsigned int width, const unsigned int height);

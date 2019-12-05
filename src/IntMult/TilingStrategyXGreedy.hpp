@@ -15,6 +15,9 @@ namespace flopoco {
                 base_multiplier_id_t prefered_multiplier,
                 float occupation_threshold,
                 size_t maxPrefMult,
+                bool useIrregular,
+                bool use2xk,
+                bool useSuperTiles,
                 MultiplierTileCollection tiles);
         virtual void solve();
 

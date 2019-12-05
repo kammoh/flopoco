@@ -10,7 +10,10 @@ namespace flopoco {
             base_multiplier_id_t prefered_multiplier,
             float occupation_threshold,
             size_t maxPrefMult,
-            MultiplierTileCollection tiles):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, tiles)
+            bool useIrregular,
+            bool use2xk,
+            bool useSuperTiles,
+            MultiplierTileCollection tiles):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, tiles)
     {
         //TODO: detect mirrored tiles (only one axis)
     };
