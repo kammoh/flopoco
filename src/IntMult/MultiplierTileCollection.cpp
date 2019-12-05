@@ -8,7 +8,7 @@
 using namespace std;
 namespace flopoco {
 
-    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc) {
+    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular) {
         //cout << bmc->size() << endl;
 
         MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
@@ -21,7 +21,32 @@ namespace flopoco {
         MultTileCollection.push_back( new BaseMultiplierLUT(2, 1));
         MultTileCollection.push_back( new BaseMultiplierLUT(1, 1));
 
-        for(int i = 0; i < (int)bmc->size(); i++)
+        if(superTile){
+            for(int i = 1; i <= 12; i++) {
+                MultTileCollection.push_back(
+                        new BaseMultiplierDSPSuperTilesXilinx((BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE) i));
+            }
+        }
+
+        if(use2xk){
+            for(int x = 4; x <= wX; x++) {
+                MultTileCollection.push_back(
+                        new BaseMultiplierXilinx2xk(x,2));
+            }
+            for(int y = 4; y <= wX; y++) {
+                MultTileCollection.push_back(
+                        new BaseMultiplierXilinx2xk(2,y));
+            }
+        }
+
+        if(useirregular){
+            for(int i = 1; i <= 8; i++) {
+                MultTileCollection.push_back(
+                        new BaseMultiplierIrregularLUTXilinx((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE) i));
+            }
+        }
+
+/*        for(int i = 0; i < (int)bmc->size(); i++)
         {
             cout << bmc->getBaseMultiplier(i).getType() << endl;
 
@@ -40,15 +65,15 @@ namespace flopoco {
             }
 
         }
-
+*/
 //        cout << MultTileCollection.size() << endl;
-/*
+
         for(BaseMultiplierCategory *mult : MultTileCollection)
         {
             cout << mult->cost() << " ";
             cout << mult->getType() << endl;
         }
-*/
+
     }
 
     BaseMultiplierCategory* MultiplierTileCollection::superTileSubtitution(vector<BaseMultiplierCategory*> mtc, int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2){
