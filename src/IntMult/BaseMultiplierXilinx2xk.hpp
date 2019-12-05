@@ -15,15 +15,15 @@ namespace flopoco {
     class BaseMultiplierXilinx2xk : public BaseMultiplierCategory
     {
 	public:
-        BaseMultiplierXilinx2xk(int maxBigOperandWidth):
+        BaseMultiplierXilinx2xk(int wX, int wY):
 			BaseMultiplierCategory{
-            maxBigOperandWidth,
-            2,
+            wX,
+            wY,
             false,
             false,
             -1,
             "BaseMultiplierXilinx2xk"}
-		{lut_cost = 2*maxBigOperandWidth/(1.65*maxBigOperandWidth+2.3);}
+		{lut_cost = 1.65*((wX<wY)?wY:wX)+2.3;}
 
 		int getDSPCost(uint32_t, uint32_t) const final {return 0;}
 		double getLUTCost(uint32_t wX, uint32_t wY) const final;

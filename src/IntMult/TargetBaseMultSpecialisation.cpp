@@ -18,7 +18,7 @@ namespace flopoco{
 	{
 		vector<BaseMultiplierCategory*> ret;
 		if (typeid(*target) == typeid(Virtex6) || typeid(*target) == typeid(Kintex7)) {
-			ret.push_back(new BaseMultiplierXilinx2xk(128));
+			ret.push_back(new BaseMultiplierXilinx2xk(128,2));
 		}
 		if (typeid(*target) == typeid(Virtex6) || typeid(*target) == typeid(Kintex7))  {
 			ret.push_back(new BaseMultiplierDSPSuperTilesXilinx());
