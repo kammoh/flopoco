@@ -7,7 +7,7 @@ namespace flopoco {
     class MultiplierTileCollection {
 
     public:
-        MultiplierTileCollection(Target *target, BaseMultiplierCollection* bmc);
+        MultiplierTileCollection(Target *target, BaseMultiplierCollection* bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular);
         vector<BaseMultiplierCategory*> MultTileCollection;
 
         static BaseMultiplierCategory *
