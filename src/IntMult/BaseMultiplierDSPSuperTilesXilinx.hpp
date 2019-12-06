@@ -77,6 +77,7 @@ namespace flopoco {
         static int get_wR(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][2];}
         static int getRelativeResultMSBWeight(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][3];}
         static int getRelativeResultLSBWeight(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][4];}
+        double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         int getRelativeResultLSBWeight(Parametrization const& param) const;
         int getRelativeResultMSBWeight(Parametrization const& param) const;
 		bool shapeValid(int x, int y);

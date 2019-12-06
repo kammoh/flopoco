@@ -28,6 +28,20 @@ double BaseMultiplierXilinx2xk::getLUTCost(uint32_t wX, uint32_t wY) const
 		return double(wX + 1);
 }
 
+double BaseMultiplierXilinx2xk::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+    int luts = ((wX() < wY())?wY():wX()) + 1;
+
+    int x_min = ((x_anchor < 0)?0: x_anchor);
+    int y_min = ((y_anchor < 0)?0: y_anchor);
+    int lsb = x_min + y_min;
+
+    int x_max = ((wMultX < x_anchor + wX())?wMultX: x_anchor + wX());
+    int y_max = ((wMultY < y_anchor + wY())?wMultY: y_anchor + wY());
+    int msb = (x_max==1)?y_max:((y_max==1)?x_max:x_max+y_max);
+
+    return luts + (msb - lsb)*0.65;
+}
+
 OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
     int wX, wY;
