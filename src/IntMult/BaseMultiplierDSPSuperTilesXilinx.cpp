@@ -80,7 +80,7 @@ double BaseMultiplierDSPSuperTilesXilinx::getLUTCost(int x_anchor, int y_anchor,
         y_max = y1_max;
     }
     int msb = (x_max==1)?y_max:((y_max==1)?x_max:x_max+y_max);
-
+    msb = (0 < shape && shape <= 4 && (msb+1 == getRelativeResultMSBWeight(shape) + x_anchor + y_anchor))?msb+1:msb;
     return (msb - lsb)*0.65;
 }
 
