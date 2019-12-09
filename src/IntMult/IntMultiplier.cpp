@@ -57,7 +57,7 @@ namespace flopoco {
 		return wX + wY;
 	}
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, int beamRange):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold)
 	{
         srcFileName="IntMultiplier";
@@ -720,7 +720,7 @@ namespace flopoco {
 		UserInterface::parsePositiveInt(args, "maxDSP", &maxDSP);
 		UserInterface::parsePositiveInt(args, "beamRange", &beamRange);
 
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP, superTile, use2xk, useirregular, useLUT, useDSP);
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, beamRange);
 	}
 
 

@@ -99,6 +99,7 @@ namespace flopoco {
             virtual float getLUTCost() {return lut_cost;}
             virtual double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
             virtual int getArea() {return tile_param.wX_*tile_param.wY_;}
+            virtual bool isVariable() const { return false; }
             float efficiency() {return getArea()/cost();}
             float cost() {return lut_cost;}
 

@@ -11,41 +11,37 @@ namespace flopoco {
     MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP) {
         //cout << bmc->size() << endl;
         if(useDSP){
-            MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
-            MultTileCollection.push_back( new BaseMultiplierDSP(17, 24, 1));
+            addBaseTile(new BaseMultiplierDSP(24, 17, 1));
+            addBaseTile(new BaseMultiplierDSP(17, 24, 1));
         }
 
         if(useLUT) {
-            MultTileCollection.push_back(new BaseMultiplierLUT(3, 3));
-            MultTileCollection.push_back(new BaseMultiplierLUT(2, 3));
-            MultTileCollection.push_back(new BaseMultiplierLUT(3, 2));
-            MultTileCollection.push_back(new BaseMultiplierLUT(1, 2));
-            MultTileCollection.push_back(new BaseMultiplierLUT(2, 1));
-            MultTileCollection.push_back(new BaseMultiplierLUT(1, 1));
+            addBaseTile(new BaseMultiplierLUT(3, 3));
+            addBaseTile(new BaseMultiplierLUT(2, 3));
+            addBaseTile(new BaseMultiplierLUT(3, 2));
+            addBaseTile(new BaseMultiplierLUT(1, 2));
+            addBaseTile(new BaseMultiplierLUT(2, 1));
+            addBaseTile(new BaseMultiplierLUT(1, 1));
         }
 
         if(superTile){
             for(int i = 1; i <= 12; i++) {
-                MultTileCollection.push_back(
-                        new BaseMultiplierDSPSuperTilesXilinx((BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE) i));
+                addSuperTile(new BaseMultiplierDSPSuperTilesXilinx((BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE) i));
             }
         }
 
         if(use2xk){
             for(int x = 4; x <= wX; x++) {
-                MultTileCollection.push_back(
-                        new BaseMultiplierXilinx2xk(x,2));
+                addVariableXTile(new BaseMultiplierXilinx2xk(x,2));
             }
             for(int y = 4; y <= wX; y++) {
-                MultTileCollection.push_back(
-                        new BaseMultiplierXilinx2xk(2,y));
+                addVariableYTile(new BaseMultiplierXilinx2xk(2,y));
             }
         }
 
         if(useirregular){
             for(int i = 1; i <= 8; i++) {
-                MultTileCollection.push_back(
-                        new BaseMultiplierIrregularLUTXilinx((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE) i));
+                addBaseTile(new BaseMultiplierIrregularLUTXilinx((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE) i));
             }
         }
 
@@ -77,6 +73,26 @@ namespace flopoco {
             cout << mult->getType() << endl;
         }
 
+    }
+
+    void  MultiplierTileCollection::addBaseTile(BaseMultiplierCategory *mult) {
+        MultTileCollection.push_back(mult);
+        BaseTileCollection.push_back(mult);
+    }
+
+    void  MultiplierTileCollection::addSuperTile(BaseMultiplierCategory *mult) {
+        MultTileCollection.push_back(mult);
+        SuperTileCollection.push_back(mult);
+    }
+
+    void  MultiplierTileCollection::addVariableXTile(BaseMultiplierCategory *mult) {
+        MultTileCollection.push_back(mult);
+        VariableXTileCollection.push_back(mult);
+    }
+
+    void  MultiplierTileCollection::addVariableYTile(BaseMultiplierCategory *mult) {
+        MultTileCollection.push_back(mult);
+        VariableYTileCollection.push_back(mult);
     }
 
     BaseMultiplierCategory* MultiplierTileCollection::superTileSubtitution(vector<BaseMultiplierCategory*> mtc, int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2){

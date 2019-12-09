@@ -37,8 +37,7 @@ namespace flopoco {
         bool use2xk_;
         bool useSuperTiles_;
 
-        float createSolution(Field& field, list<mult_tile_t>& solution, const float cmpcost);
-        pair<bool, bool> checkSignedTile(const unsigned int x, const unsigned int y, const unsigned int width, const unsigned int height);
+        float createSolution(Field& field, list<mult_tile_t>& solution, const float cmpCost);
     };
 }
 #endif
