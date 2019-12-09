@@ -8,18 +8,21 @@
 using namespace std;
 namespace flopoco {
 
-    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular) {
+    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP) {
         //cout << bmc->size() << endl;
+        if(useDSP){
+            MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
+            MultTileCollection.push_back( new BaseMultiplierDSP(17, 24, 1));
+        }
 
-        MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
-        MultTileCollection.push_back( new BaseMultiplierDSP(17, 24, 1));
-
-        MultTileCollection.push_back( new BaseMultiplierLUT(3, 3));
-        MultTileCollection.push_back( new BaseMultiplierLUT(2, 3));
-        MultTileCollection.push_back( new BaseMultiplierLUT(3, 2));
-        MultTileCollection.push_back( new BaseMultiplierLUT(1, 2));
-        MultTileCollection.push_back( new BaseMultiplierLUT(2, 1));
-        MultTileCollection.push_back( new BaseMultiplierLUT(1, 1));
+        if(useLUT) {
+            MultTileCollection.push_back(new BaseMultiplierLUT(3, 3));
+            MultTileCollection.push_back(new BaseMultiplierLUT(2, 3));
+            MultTileCollection.push_back(new BaseMultiplierLUT(3, 2));
+            MultTileCollection.push_back(new BaseMultiplierLUT(1, 2));
+            MultTileCollection.push_back(new BaseMultiplierLUT(2, 1));
+            MultTileCollection.push_back(new BaseMultiplierLUT(1, 1));
+        }
 
         if(superTile){
             for(int i = 1; i <= 12; i++) {
