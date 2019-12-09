@@ -65,14 +65,14 @@ void TilingStrategyOptimalILP::solve()
     {
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
             std::string var_name = p.first->getName();
-            cout << "is true:  " << var_name.substr(2,dpS) << " " << var_name.substr(2+dpS,dpX) << " " << var_name.substr(2+dpS+dpX,dpY) << std::endl;
             int mult_id = stoi(var_name.substr(2,dpS));
             int x_negative = (var_name.substr(2+dpS,1).compare("m") == 0)?1:0;
             int m_x_pos = stoi(var_name.substr(2+dpS+x_negative,dpX)) * ((x_negative)?(-1):1);
             int y_negative = (var_name.substr(2+dpS+x_negative+dpX,1).compare("m") == 0)?1:0;
             int m_y_pos = stoi(var_name.substr(2+dpS+dpX+x_negative+y_negative,dpY)) * ((y_negative)?(-1):1);
+            cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
 
-            total_cost += (double)tiles[mult_id]->cost();
+            total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
             auto coord = make_pair(m_x_pos, m_y_pos);
             solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
 
@@ -128,7 +128,7 @@ void TilingStrategyOptimalILP::constructProblem()
                                     //std::cout << nvarName.str() << endl;
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
-                                    obj.add(tempV, (double)tiles[s]->cost());    //append variable to cost function
+                                    obj.add(tempV, (double)tiles[s]->getLUTCost(xs, ys, wX, wY));    //append variable to cost function
                                 }
                                 pxyTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
                             }
@@ -152,8 +152,8 @@ void TilingStrategyOptimalILP::constructProblem()
         for (int x = 0 - 24 + 1; x < wX; x++) {
             for(int s = 0; s < wS; s++)
                 if (solve_Vars[s][x + x_neg][y + y_neg] != nullptr)
-                    if(0 < tiles[s]->getDSPCost())
-                        pxyTerm.add(solve_Vars[s][x + x_neg][y + y_neg], tiles[s]->getDSPCost());
+                    for(int c = 0; c < tiles[s]->getDSPCost(); c++)
+                        pxyTerm.add(solve_Vars[s][x + x_neg][y + y_neg], 1);
         }
     }
     ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.

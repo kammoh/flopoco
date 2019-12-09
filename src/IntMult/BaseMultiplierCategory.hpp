@@ -97,6 +97,7 @@ namespace flopoco {
             virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
             virtual int getDSPCost() const = 0;
             virtual float getLUTCost() {return lut_cost;}
+            virtual double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
             virtual int getArea() {return tile_param.wX_*tile_param.wY_;}
             float efficiency() {return getArea()/cost();}
             float cost() {return lut_cost;}

@@ -57,7 +57,7 @@ namespace flopoco {
 		return wX + wY;
 	}
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP, bool superTiles, bool use2xk, bool useirregular, unsigned int beamRange):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold)
 	{
         srcFileName="IntMultiplier";
@@ -118,7 +118,7 @@ namespace flopoco {
 		baseMultiplierCollection.print();
 
 
-        MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular);
+        MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP);
 
 
 		string tilingMethod = getTarget()->getTilingMethod();
@@ -703,7 +703,7 @@ namespace flopoco {
 
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut, maxDSP;
-        bool signedIO,superTile, use2xk, useirregular;
+        bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP;
         double dspOccupationThreshold=0.0;
         int beamRange = 0;
 
@@ -714,11 +714,13 @@ namespace flopoco {
 		UserInterface::parseBoolean(args, "superTile", &superTile);
         UserInterface::parseBoolean(args, "use2xk", &use2xk);
         UserInterface::parseBoolean(args, "useirregular", &useirregular);
+        UserInterface::parseBoolean(args, "useLUT", &useLUT);
+        UserInterface::parseBoolean(args, "useDSP", &useDSP);
 		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 		UserInterface::parsePositiveInt(args, "maxDSP", &maxDSP);
 		UserInterface::parsePositiveInt(args, "beamRange", &beamRange);
 
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP, superTile, use2xk, useirregular, beamRange);
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP, superTile, use2xk, useirregular, useLUT, useDSP);
 	}
 
 
@@ -734,6 +736,8 @@ namespace flopoco {
                         maxDSP(int)=8: limits the number of DSP-Tiles used in Multiplier;\
                         use2xk(bool)=false: if true, attempts to use the 2xk-LUT-Multiplier with relatively high efficiency;\
                         useirregular(bool)=false: if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions;\
+                        useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
+                        useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
                         dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
 						beamRange(int)=0: range for beam search", // This string will be parsed

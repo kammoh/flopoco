@@ -57,6 +57,7 @@ namespace flopoco
         int getDSPCost(uint32_t, uint32_t) const final {return 0;}
         double getLUTCost(uint32_t, uint32_t) const {return 8.25;}
         int getDSPCost() const final {return 0;}
+        double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         double getLUTCost() const
         {
             int word_size = getRelativeResultMSBWeight(this->shape) - getRelativeResultLSBWeight(this->shape) + 1;
