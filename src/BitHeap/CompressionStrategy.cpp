@@ -226,6 +226,7 @@ namespace flopoco{
 			ostringstream line;
 			line << "bitheap column height in stage " + to_string(s) << ": ";
 			unsigned int tempColumn = maxColumn;
+			int totalBits = 0;
 			while(tempColumn > 0){
 				tempColumn--;
 				unsigned int addZeros = maxValueDigits + 1;
@@ -242,9 +243,10 @@ namespace flopoco{
 						line << " ";
 					}
 					line << bitAmount[s][tempColumn] << " ";
+					totalBits += bitAmount[s][tempColumn];
 				}
 			}
-			cerr << line.str() << endl;
+			cerr << line.str() << ", totalBits=" << totalBits << endl;
 		}
 	}
 
