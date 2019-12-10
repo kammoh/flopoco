@@ -1,6 +1,8 @@
 #ifndef FLOPOCO_TILINGSTRATEGYGREEDY_HPP
 #define FLOPOCO_TILINGSTRATEGYGREEDY_HPP
 
+#include <queue>
+
 #include "TilingStrategy.hpp"
 #include "Field.hpp"
 #include "MultiplierTileCollection.hpp"
@@ -37,7 +39,7 @@ namespace flopoco {
         bool use2xk_;
         bool useSuperTiles_;
 
-        float createSolution(Field& field, list<mult_tile_t>& solution, const float cmpCost);
+        float createSolution(Field& field, list<mult_tile_t>* solution, queue<BaseMultiplierCategory*>* path, const float cmpCost, unsigned int usedDspBlocks=0);
     };
 }
 #endif

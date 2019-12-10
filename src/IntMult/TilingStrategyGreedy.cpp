@@ -43,7 +43,7 @@ namespace flopoco {
             sort(kx2Tiles_.begin(), kx2Tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->wX() < b->wX(); });
         }
 
-        //sort remaining tiles
+        //sort base tiles
         sort(tiles_.begin(), tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->efficiency() > b->efficiency(); });
 
         //inject 2k and k2 tiles after dspblocks and before normal tiles
@@ -56,18 +56,17 @@ namespace flopoco {
             }
         }
 
+        cout << "tiles" << endl;
         for(BaseMultiplierCategory* b: tiles_) {
-            cout << b->getType() << endl;
+            cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
         }
 
         cout << "2xk" << endl;
-
         for(BaseMultiplierCategory* b: v2xkTiles_) {
             cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
         }
 
         cout << "kx2" << endl;
-
         for(BaseMultiplierCategory* b: kx2Tiles_) {
             cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
         }
@@ -75,19 +74,17 @@ namespace flopoco {
 
     void TilingStrategyGreedy::solve() {
         Field field(wX, wY, signedIO);
-        float cost = createSolution(field, solution, FLT_MAX);
+        float cost = createSolution(field, &solution, nullptr, FLT_MAX, 0);
         cout << "Total cost: " << cost << endl;
     }
 
 
-    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>& solution, const float cmpCost) {
+    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>* solution, queue<BaseMultiplierCategory*>* path, const float cmpCost, unsigned int usedDspBlocks) {
         auto next (field.getCursor());
         unsigned int usedDSPBlocks = 0;
         float totalCost = 0.0f;
         float preCost = 0.0f;
-        //TODO: change this
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> dspBlocks;
-        float dspCost = 0.0f;
 
         while(field.getMissing() > 0) {
             unsigned int neededX = field.getMissingLine();
@@ -220,14 +217,20 @@ namespace flopoco {
                 usedDSPBlocks++;
                 if(useSuperTiles_ && superTiles_.size() > 0) {
                     dspBlocks.push_back(make_pair(bm, next));
-                    dspCost = bm->cost();
                     next = coord;
                     continue;
                 }
             }
 
+            if(solution != nullptr) {
+                solution->push_back(make_pair(tile, next));
+            }
+
+            if(path != nullptr) {
+                path->push(bm);
+            }
+
             totalCost += bm->getLUTCost(next.first, next.second, wX, wY);
-            solution.push_back(make_pair(tile, next));
             next = coord;
         }
 
@@ -248,8 +251,8 @@ namespace flopoco {
                     cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
 
                     pair<unsigned int, unsigned int> baseCoord;
-                    baseCoord.first = min(dspBlock1.second.first, dspBlock2.second.first);
-                    baseCoord.second = min(dspBlock1.second.second, dspBlock2.second.second);
+                    baseCoord.first = std::min(dspBlock1.second.first, dspBlock2.second.first);
+                    baseCoord.second = std::min(dspBlock1.second.second, dspBlock2.second.second);
 
                     int rx1 = dspBlock1.second.first - baseCoord.first;
                     int ry1 = dspBlock1.second.second - baseCoord.second;
@@ -272,7 +275,13 @@ namespace flopoco {
                     }
 
                     cout << "Found Supertile of type " << tile->getType() << endl;
-                    solution.push_back(make_pair(tile->getParametrisation(), baseCoord));
+
+                    if(solution != nullptr) {
+                        solution->push_back(make_pair(tile->getParametrisation(), baseCoord));
+                    }
+
+
+
                     totalCost += tile->getLUTCost(baseCoord.first, baseCoord.second, wX, wY);
 
                     dspBlocks.erase(dspBlocks.begin() + j);
@@ -281,7 +290,16 @@ namespace flopoco {
                 }
 
                 if (!found) {
-                    solution.push_back(make_pair(dspBlock1.first->getParametrisation().tryDSPExpand(coordX, coordY, wX, wY, signedIO),dspBlock1.second));
+                    if(solution != nullptr) {
+                        solution->push_back(make_pair(
+                                dspBlock1.first->getParametrisation().tryDSPExpand(coordX, coordY, wX, wY, signedIO),
+                                dspBlock1.second));
+                    }
+
+                    if(path != nullptr) {
+                        path->push(dspBlock1.first);
+                    }
+
                     totalCost += dspBlock1.first->getLUTCost(coordX, coordY, wX, wY);
                 }
             }

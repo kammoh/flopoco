@@ -36,6 +36,10 @@ namespace flopoco {
     }
 
     void Field::reset() {
+        if(missing_ == wX_ * wY_) {
+            return;
+        }
+
         for(unsigned int i = 0; i < wY_; i++) {
             for(unsigned int j = 0; j < wX_; j++) {
                 field_[i][j] = false;
@@ -93,8 +97,8 @@ namespace flopoco {
         unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
         unsigned int endY = coord.second + sizeY;
-        unsigned int maxX = endX > wX_ ? wX_ : endX;
-        unsigned int maxY = endY > wY_ ? wY_ : endY;
+        unsigned int maxX = std::min(endX, wX_);
+        unsigned int maxY = std::min(endY, wY_);
 
         unsigned int covered = 0;
 
@@ -123,8 +127,8 @@ namespace flopoco {
     pair<unsigned int, unsigned int> Field::checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& param) {
         unsigned int endX = coord.first + param.getTileXWordSize();
         unsigned int endY = coord.second + param.getTileYWordSize();
-        unsigned int maxX = endX > wX_ ? wX_ : endX;
-        unsigned int maxY = endY > wY_ ? wY_ : endY;
+        unsigned int maxX = std::min(endX, wX_);
+        unsigned int maxY = std::min(endY, wY_);
 
         pair<unsigned int, unsigned int> size(param.getTileXWordSize(), 0);
 
@@ -161,8 +165,8 @@ namespace flopoco {
         unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
         unsigned int endY = coord.second + sizeY;
-        unsigned int maxX = endX > wX_ ? wX_ : endX;
-        unsigned int maxY = endY > wY_ ? wY_ : endY;
+        unsigned int maxX = std::min(endX, wX_);
+        unsigned int maxY = std::min(endY, wY_);
 
         for(unsigned int i = coord.second; i < maxY; i++) {
             for (unsigned int j = coord.first; j < maxX; j++) {

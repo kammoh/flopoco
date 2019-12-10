@@ -15,64 +15,79 @@ namespace flopoco {
             bool useSuperTiles,
             MultiplierTileCollection tiles):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, tiles)
     {
-        //TODO: detect mirrored tiles (only one axis)
+        //find all paired tiles
+        for(unsigned int i = 0; i < tiles_.size(); i++) {
+            BaseMultiplierCategory* tile = tiles_[i];
+            if(tile->getDSPCost() != 1) {
+                break;
+            }
+
+            for(unsigned int j = 0; j < tiles_.size(); j++) {
+                BaseMultiplierCategory* cmp = tiles_[j];
+                if(i == j) {
+                    continue;
+                }
+
+                if(cmp->getDSPCost() != 1) {
+                    break;
+                }
+
+                if(cmp->wX() == tile->wY() && cmp->wY() == tile->wX()) {
+                    pair<unsigned int, unsigned int> p(std::min(i, j), std::max(i, j));
+                    bool unique = true;
+                    for(auto& u: pairs_) {
+                        if(u.first == p.first && u.second == p.second) {
+                            unique = false;
+                            break;
+                        }
+                    }
+
+                    if(unique) {
+                        pairs_.push_back(p);
+                    }
+                }
+            }
+        }
     };
 
     void TilingStrategyXGreedy::solve() {
-        //TODO: dynamic for mirrored tiles
         Field field(wX, wY, signedIO);
 
-        // 0 0
-        //------------------------------RUN 1 -------------------------------
-        list<mult_tile_t> solution1;
-        float bestCost = createSolution(field, solution1, FLT_MAX);
-        list<mult_tile_t>* best = &solution1;
-
-        // 0 1
-        //------------------------------RUN 2 -------------------------------
-        field.reset();
-
-        //flip some tiles around
-        //swapBaseTiles(2, 3);
-
-        list<mult_tile_t> solution2;
-        float costSolution = createSolution(field, solution2, bestCost);
-        if(costSolution < bestCost) {
-            bestCost = costSolution;
-            best = &solution2;
+        for(auto& u: pairs_) {
+            cout << u.first << " " << u.second << endl;
         }
 
-        // 1 0
-        //------------------------------RUN 3 -------------------------------
-        field.reset();
+        list<mult_tile_t> bestSolution;
+        float bestCost = createSolution(field, &bestSolution, nullptr, FLT_MAX, 0);
+        int last = 0;
+        int runs = std::pow(2, pairs_.size());
+        for(int i = 1; i < runs; i++) {
+            field.reset();
 
-        //flip some tiles around
-        //swapBaseTiles(0, 1);
-        //swapBaseTiles(2, 3);
+            for(unsigned int j = 0; j < pairs_.size(); j++) {
+                int cmp = last ^ i;
+                int mask =  1 << j;
+                if((mask & cmp) != 0) {
+                    swapTiles(pairs_[j]);
+                }
+            }
 
-        list<mult_tile_t> solution3;
-        costSolution = createSolution(field, solution3, bestCost);
-        if(costSolution < bestCost) {
-            bestCost = costSolution;
-            best = &solution3;
-        }
-
-        // 1 1
-        //------------------------------RUN 4 -------------------------------
-        field.reset();
-
-        //flip some tiles around
-        //swapBaseTiles(2, 3);
-
-        list<mult_tile_t> solution4;
-        costSolution = createSolution(field, solution4, bestCost);
-        if(costSolution < bestCost) {
-            bestCost = costSolution;
-            best = &solution4;
+            list<mult_tile_t> solution;
+            //TODO: replace FLT_MAX with some cost
+            float cost = createSolution(field, &solution, nullptr, FLT_MAX, 0);
+            if(cost < bestCost) {
+                bestCost = cost;
+                bestSolution = std::move(solution);
+            }
         }
 
         cout << "Total cost: " << bestCost << endl;
+        solution = std::move(bestSolution);
+    }
 
-        solution = *best;
+    void TilingStrategyXGreedy::swapTiles(pair<unsigned int, unsigned int> p) {
+        BaseMultiplierCategory* temp = tiles_[p.first];
+        tiles_[p.first] = tiles_[p.second];
+        tiles_[p.second] = temp;
     }
 }

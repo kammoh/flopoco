@@ -154,8 +154,8 @@ namespace flopoco {
                     multiplierTileCollection
             );
         }
-        else if(tilingMethod.compare("heuristic4xGreedyTiling") == 0) {
-            /*tilingStrategy = new TilingStrategyXGreedy(
+        else if(tilingMethod.compare("heuristicXGreedyTiling") == 0) {
+            tilingStrategy = new TilingStrategyXGreedy(
                     wX,
                     wY,
                     wOut + guardBits,
@@ -164,8 +164,11 @@ namespace flopoco {
                     baseMultiplierCollection.getPreferedMultiplier(),
                     dspOccupationThreshold,
                     maxDSP,
+                    useirregular,
+                    use2xk,
+                    superTiles,
                     multiplierTileCollection
-            );*/
+            );
         }
         else if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
             tilingStrategy = new TilingStrategyBeamSearch(

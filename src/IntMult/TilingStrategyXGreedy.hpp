@@ -19,10 +19,11 @@ namespace flopoco {
                 bool use2xk,
                 bool useSuperTiles,
                 MultiplierTileCollection tiles);
-        virtual void solve();
+        void solve() override;
 
     private:
-
+        vector<pair<unsigned int, unsigned int>> pairs_;
+        void swapTiles(pair<unsigned int, unsigned int>);
     };
 }
 
