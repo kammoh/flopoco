@@ -4,35 +4,142 @@
 
 namespace flopoco {
     TilingStrategyBeamSearch::TilingStrategyBeamSearch(
-            unsigned int wX_,
-            unsigned int wY_,
-            unsigned int wOut_,
-            bool signedIO_,
+            unsigned int wX,
+            unsigned int wY,
+            unsigned int wOut,
+            bool signedIO,
             BaseMultiplierCollection* bmc,
             base_multiplier_id_t prefered_multiplier,
             float occupation_threshold,
             size_t maxPrefMult,
-            unsigned int beamRange):TilingStrategy(wX_, wY_, wOut_, signedIO_, bmc),
-                                prefered_multiplier_{prefered_multiplier},
-                                occupation_threshold_{occupation_threshold},
-                                max_pref_mult_{maxPrefMult},
-                                beamRange_{beamRange}
+            bool useIrregular,
+            bool use2xk,
+            bool useSuperTiles,
+            MultiplierTileCollection tiles,
+            unsigned int beamRange
+            ):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, tiles),
+            beamRange_{beamRange}
     {
-        // {width, height, total cost (LUT+Compressor), base multiplier id} of tile
-        //TODO: support 2k and k2 tiles
-        baseTiles.push_back ({24, 17, 24 * 17,  41.65, 15.3, 0});
-        baseTiles.push_back ({17, 24, 24 * 17, 41.65, 15.3, 0});
-        baseTiles.push_back ({2, 3, 2 * 3,6.25, 0.96, 1});
-        baseTiles.push_back ({3, 2, 2 * 3, 6.25, 0.96, 1});
-        baseTiles.push_back ({3, 3, 3 * 3, 9.90, 0.91, 2});
-        baseTiles.push_back ({1, 2, 1 * 2, 2.30, 0.87, 1});
-        baseTiles.push_back ({2, 1, 2 * 1, 2.30, 0.87, 1});
-        baseTiles.push_back ({1, 1, 1 * 1,1.65, 0.625, 1});
 
-        //type g supertile
-        superTiles.push_back ({1, 0, 0, 17});
     };
 
+    void TilingStrategyBeamSearch::solve() {
+        Field baseField(wX, wY, signedIO);
+        unsigned int usedDSPBlocks = 0U;
+        unsigned int range = beamRange_;
+        queue<unsigned int> path;
+
+        float preCMPCost = FLT_MAX;
+        float totalCMPCost = createSolution(baseField, nullptr, &path, preCMPCost, 0);
+        unsigned int next = path.front();
+        unsigned int lastPath = next;
+        path.pop();
+
+        baseField.reset();
+        Field tempField(baseField);
+
+        while(baseField.getMissing() > 0) {
+            unsigned int minIndex = std::max(0U, next - range);
+            unsigned int maxIndex = std::min((unsigned int)tiles_.size() - 1, next + range);
+
+            unsigned int neededX = baseField.getMissingLine();
+            unsigned int neededY = baseField.getMissingHeight();
+
+            unsigned int bestEdge = next;
+            lastPath = next;
+
+            for (unsigned int i = minIndex; i <= maxIndex; i++) {
+                cout << "TESTING WITH TILE " << i << endl;
+
+                //check if we got the already calculated greedy path
+                if (i == lastPath) {
+                    cout << "Skipping this path" << endl;
+                    continue;
+                }
+
+                tempField.reset(baseField);
+                queue<unsigned int> tempPath;
+                unsigned int tempUsedDSPBlocks = usedDSPBlocks;
+                float currentTotalCost = 0.0f;
+                float currentPreCost = 0.0f;
+
+                if (placeSingleTile(tempField, tempUsedDSPBlocks, nullptr, neededX, neededY, tiles_[i], currentPreCost)) {
+                    /*cout << "Single tile cost " << currentCost << endl;
+                    //get cost for a greedy solution
+                    currentCost += greedySolution(tempField, tempPath, tempUsedDSPBlocks, cmpCost);
+
+                    cout << "========================" << currentCost << " vs " << cmpCost << endl;
+                    //cout << (cmpCost - currentCost) << endl;
+
+                    if ((currentCost - cmpCost) < 0.005) {
+                        cmpCost = currentCost;
+                        cout << "Using " << i << " would be cheaper! " << cmpCost << " VS " << currentCost << endl;
+                        cout << cmpCost << endl;
+
+                        bestEdge = i;
+
+
+                        path = move(tempPath);
+                    }*/
+                }
+            }
+        }
+    }
+
+    bool TilingStrategyBeamSearch::placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const int neededX, const int neededY, BaseMultiplierCategory* tile, float& cost) {
+        if(tile->getDSPCost() >= 1) {
+            if(usedDSPBlocks == max_pref_mult_) {
+                return false;
+            }
+        }
+        else if(!tile->isVariable() && (tile->wX() > neededX || tile->wY() > neededY)) {
+            return false;
+        }
+
+        if(tile->isVariable()) {
+            unsigned int height = 2;
+            unsigned int width = neededX;
+            if(neededY > neededX) {
+                height = neededY;
+                width = 2;
+            }
+            tile = findVariableTile(width, height);
+        }
+
+        auto next (field.getCursor());
+        unsigned int tiles = field.checkTilePlacement(next, tile);
+        if(tiles == 0) {
+            return false;
+        }
+
+        if(tile->getDSPCost() >= 1) {
+            float usage = tiles / (float)tile->getArea();
+            //check threshold
+            if(usage < occupation_threshold_) {
+                return false;
+            }
+            usedDSPBlocks++;
+        }
+
+        auto coord (field.placeTileInField(next, tile));
+
+        cost += tile->getLUTCost();
+
+        if(solution == nullptr) {
+            return true;
+        }
+
+        if(tile->isVariable()) {
+            solution->push_back(make_pair(tile->getParametrisation(), next));
+        }
+        else {
+            solution->push_back(make_pair(tile->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO), next));
+        }
+
+        return true;
+    }
+
+    /*
     void TilingStrategyBeamSearch::solve() {
         unsigned int range = beamRange_;
         unsigned int usedDSPBlocks = 0;
@@ -123,11 +230,11 @@ namespace flopoco {
         }
 
         cout << "Total cost: " << cost << endl;
-    }
+    }*/
 
     //TODO: bundle greedy logic into one class
-    double TilingStrategyBeamSearch::greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const double cmpcost) {
-        /*auto next (field.getCursor());
+   /* double TilingStrategyBeamSearch::greedySolution(Field& field, queue<unsigned int>& path, unsigned int usedDSPBlocks, const double cmpcost) {
+        auto next (field.getCursor());
 
         double dspSize = (double) (baseTiles[0].totalsize);
         double extendedSize = (double) ((baseTiles[0].wX + 1) * (baseTiles[0].wY + 1));
@@ -294,7 +401,6 @@ namespace flopoco {
         cout << "total cost " << totalcost << endl;
 
         return totalcost;
-         */
         return 0.0;
     }
 
@@ -399,20 +505,6 @@ namespace flopoco {
         }
 
         return true;
-         */
     }
-
-    pair<bool, bool> TilingStrategyBeamSearch::checkSignedTile(unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
-        pair<bool, bool> result;
-
-        if((unsigned int)wX - (x + width) == 0) {
-            result.first = true;
-        }
-
-        if((unsigned int)wY - (y + height) == 0) {
-            result.second = true;
-        }
-
-        return result;
-    }
+    */
 }

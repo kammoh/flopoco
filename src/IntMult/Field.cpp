@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace flopoco {
-    Field::Field(unsigned int wX, unsigned int wY, bool signedIO) : wX_(wX), wY_(wY), signedIO_(signedIO), missing_(wX * wY), highestLine_(0) {
+    Field::Field(unsigned int wX, unsigned int wY, bool signedIO) : wX_(wX), wY_(wY), signedIO_(signedIO), missing_(wX * wY), highestLine_(0U) {
         field_.resize(wY_);
         for(unsigned int i = 0; i < wY_; i++) {
             field_[i].resize(wX_);
@@ -11,7 +11,7 @@ namespace flopoco {
             }
         }
 
-        setCursor(0, 0);
+        setCursor(0U, 0U);
     }
 
     Field::Field(const Field &copy) {
@@ -21,7 +21,7 @@ namespace flopoco {
         cursor_ =  pair<unsigned int, unsigned int>(copy.cursor_);
 
         field_.resize(wY_);
-        for(unsigned int i = 0; i < wY_; i++) {
+        for(unsigned int i = 0U; i < wY_; i++) {
             field_[i].resize(wX_);
             for(unsigned int j = 0; j < wX_; j++) {
                 field_[i][j] = copy.field_[i][j];
@@ -40,8 +40,8 @@ namespace flopoco {
             return;
         }
 
-        for(unsigned int i = 0; i < wY_; i++) {
-            for(unsigned int j = 0; j < wX_; j++) {
+        for(unsigned int i = 0U; i < wY_; i++) {
+            for(unsigned int j = 0U; j < wX_; j++) {
                 field_[i][j] = false;
             }
         }
@@ -195,7 +195,7 @@ namespace flopoco {
     void Field::updateCursor() {
         while(cursor_.second != wY_) {
             //try to find next free position in the current line
-            for(unsigned int i = 0; i < wX_; i++) {
+            for(unsigned int i = 0U; i < wX_; i++) {
                 if(!field_[cursor_.second][i]) {
                     cursor_.first = i;
                     return;
@@ -206,12 +206,12 @@ namespace flopoco {
             cursor_.second++;
         }
 
-        cursor_.first = 0;
-        cursor_.second = 0;
+        cursor_.first = 0U;
+        cursor_.second = 0U;
     }
 
     bool Field::isFull() {
-        return missing_ == 0;
+        return missing_ == 0U;
     }
 
     unsigned int Field::getMissing() {
@@ -219,7 +219,7 @@ namespace flopoco {
     }
 
     unsigned int Field::getMissingLine() {
-        unsigned int missing_ = 0;
+        unsigned int missing_ = 0U;
 
         for(unsigned int i = cursor_.first; i < wX_; i++) {
             if(field_[cursor_.second][i]) {
@@ -232,7 +232,7 @@ namespace flopoco {
     }
 
     unsigned int Field::getMissingHeight() {
-        unsigned int missing_ = 0;
+        unsigned int missing_ = 0U;
 
         for(unsigned int i = cursor_.second; i < wY_; i++) {
             if(field_[i][cursor_.first]) {
@@ -250,11 +250,11 @@ namespace flopoco {
 
     void Field::setCursor(unsigned int x, unsigned int y)  {
         if(x > wX_) {
-            x = 0;
+            x = 0U;
         }
 
         if(y > wY_) {
-            y = 0;
+            y = 0U;
         }
 
         cursor_.first = x;

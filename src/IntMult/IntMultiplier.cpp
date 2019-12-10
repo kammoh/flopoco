@@ -180,6 +180,10 @@ namespace flopoco {
                     baseMultiplierCollection.getPreferedMultiplier(),
                     dspOccupationThreshold,
                     maxDSP,
+                    useirregular,
+                    use2xk,
+                    superTiles,
+                    multiplierTileCollection,
                     beamRange
             );
 		} else if(tilingMethod.compare("optimal") == 0){

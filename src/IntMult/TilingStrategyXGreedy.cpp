@@ -58,7 +58,8 @@ namespace flopoco {
         }
 
         list<mult_tile_t> bestSolution;
-        float bestCost = createSolution(field, &bestSolution, nullptr, FLT_MAX, 0);
+        float bestCost = FLT_MAX;
+        float totalCost = createSolution(field, &bestSolution, nullptr, bestCost, 0);
         int last = 0;
         int runs = std::pow(2, pairs_.size());
         for(int i = 1; i < runs; i++) {
@@ -73,15 +74,16 @@ namespace flopoco {
             }
 
             list<mult_tile_t> solution;
-            //TODO: replace FLT_MAX with some cost
-            float cost = createSolution(field, &solution, nullptr, FLT_MAX, 0);
+            float cmpCost = bestCost;
+            float cost = createSolution(field, &solution, nullptr, cmpCost, 0);
             if(cost < bestCost) {
-                bestCost = cost;
+                bestCost = cmpCost;
+                totalCost = cost;
                 bestSolution = std::move(solution);
             }
         }
 
-        cout << "Total cost: " << bestCost << endl;
+        cout << "Total cost: " << totalCost << endl;
         solution = std::move(bestSolution);
     }
 

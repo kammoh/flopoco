@@ -46,10 +46,11 @@ namespace flopoco {
         //sort base tiles
         sort(tiles_.begin(), tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->efficiency() > b->efficiency(); });
 
-        //inject 2k and k2 tiles after dspblocks and before normal tiles
+        //insert 2k and k2 tiles after dsp tiles and before normal tiles
         if(use2xk) {
             for (unsigned int i = 0; i < tiles_.size(); i++) {
                 if (tiles_[i]->getDSPCost() == 0) {
+                    tiles_.insert(tiles_.begin() + i, new BaseMultiplierXilinx2xk(2, INT32_MAX));
                     tiles_.insert(tiles_.begin() + i, new BaseMultiplierXilinx2xk(INT32_MAX, 2));
                     break;
                 }
@@ -74,12 +75,48 @@ namespace flopoco {
 
     void TilingStrategyGreedy::solve() {
         Field field(wX, wY, signedIO);
-        float cost = createSolution(field, &solution, nullptr, FLT_MAX, 0);
+        float cmp = FLT_MAX;
+        float cost = createSolution(field, &solution, nullptr, cmp, 0);
         cout << "Total cost: " << cost << endl;
     }
 
+    BaseMultiplierCategory* TilingStrategyGreedy::findVariableTile(unsigned int wX, unsigned int wY) {
+        if(wY == 2) {
+            auto iter = lower_bound(kx2Tiles_.begin(), kx2Tiles_.end(), nullptr,[wX](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool {
+                if(a != nullptr) {
+                    return a->wX() < wX;
+                }
+                return b->wX() < wX;
+            });
 
-    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>* solution, queue<BaseMultiplierCategory*>* path, const float cmpCost, unsigned int usedDspBlocks) {
+            if(iter == kx2Tiles_.end()) {
+                cout << "Seems like no kx2 tile with width " << wX << " exists !";
+                return nullptr;
+            }
+
+            return *iter;
+        }
+        else if(wX == 2) {
+            auto iter = lower_bound(v2xkTiles_.begin(), v2xkTiles_.end(), nullptr,[wY](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool {
+                if(a != nullptr) {
+                    return a->wY() < wY;
+                }
+                return b->wY() < wY;
+            });
+
+            if(iter == v2xkTiles_.end()) {
+                cout << "Seems like no 2xk tile with width " << wY << " exists !";
+                return nullptr;
+            }
+
+            return *iter;
+        }
+        else {
+            return nullptr;
+        }
+    }
+
+    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, unsigned int usedDspBlocks) {
         auto next (field.getCursor());
         unsigned int usedDSPBlocks = 0;
         float totalCost = 0.0f;
@@ -90,11 +127,13 @@ namespace flopoco {
             unsigned int neededX = field.getMissingLine();
             unsigned int neededY = field.getMissingHeight();
 
-            BaseMultiplierCategory* bm = tiles_[tiles_.size()-1];
+            BaseMultiplierCategory* bm = tiles_[tiles_.size() - 1];
             BaseMultiplierParametrization tile = bm->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
             float efficiency = -1.0f;
+            unsigned int tileIndex = tiles_.size() - 1;
 
-            for(BaseMultiplierCategory* t: tiles_) {
+            for(unsigned int i = 0; i < tiles_.size(); i++) {
+                BaseMultiplierCategory* t = tiles_[i];
                 cout << "Checking " << t->getType() << endl;
                 //dsp block
                 if(t->getDSPCost()) {
@@ -106,48 +145,36 @@ namespace flopoco {
                 if(use2xk_ && t->isVariable()) {
                     //no need to compare it to a dspblock / if there is not enough space anyway
                     if(efficiency < 0 && ((neededX >= 6 && neededY >= 2) || (neededX >= 2 && neededY >= 6))) {
-                        //TODO: basically rewrite everything here
+                        //TODO: rethink about tileIndex handling
                         int width = 0;
                         int height = 0;
                         if(neededX > neededY) {
                             width = neededX;
                             height = 2;
-                            auto iter = lower_bound(kx2Tiles_.begin(), kx2Tiles_.end(), nullptr,[neededX](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool {
-                                if(a != nullptr) {
-                                    return a->wX() < neededX;
-                                }
-                                return b->wX() < neededX;
-                            });
 
-                            if(iter == kx2Tiles_.end()) {
-                                cout << "Seems like no kx2 tile with width " << width << " exists !";
+                            bm = findVariableTile(width, height);
+                            if(bm == nullptr) {
                                 continue;
                             }
 
-                            bm = *iter;
+                            tileIndex = i;
                         }
                         else {
                             width = 2;
                             height = neededY;
-                            auto iter = lower_bound(v2xkTiles_.begin(), v2xkTiles_.end(), nullptr,[neededY](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool {
-                                if(a != nullptr) {
-                                    return a->wY() < neededY;
-                                }
-                                return b->wY() < neededY;
-                            });
 
-                            if(iter == v2xkTiles_.end()) {
-                                cout << "Seems like no 2xk tile with width " << width << " exists !";
+                            bm = findVariableTile(width, height);
+                            if(bm == nullptr) {
                                 continue;
                             }
 
-                            bm = *iter;
+                            tileIndex = i + 1;
                         }
 
                         cout << width << " " << height << endl;
                         cout << bm->wX() << " " << bm->wY() << endl;
 
-                        tile = t->parametrize( width, height, false, false);
+                        tile = bm->getParametrisation();
                         break;
                     }
                 }
@@ -203,6 +230,7 @@ namespace flopoco {
 
                 tile = t->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
                 bm = t;
+                tileIndex = i;
             }
 
             preCost += bm->cost();
@@ -227,7 +255,7 @@ namespace flopoco {
             }
 
             if(path != nullptr) {
-                path->push(bm);
+                path->push(tileIndex);
             }
 
             totalCost += bm->getLUTCost(next.first, next.second, wX, wY);
@@ -238,75 +266,88 @@ namespace flopoco {
         cout << superTiles_.size() << endl;
 
         //check each dspblock with another
-        if(useSuperTiles_ && dspBlocks.size() > 0) {
-            for(unsigned int i = 0; i < dspBlocks.size(); i++) {
-                cout << "Testing tile " << i << endl;
-                bool found = false;
-                auto& dspBlock1 = dspBlocks[i];
-                unsigned int coordX = dspBlock1.second.first;
-                unsigned int coordY = dspBlock1.second.second;
-                for(unsigned int j = i + 1; j < dspBlocks.size(); j++) {
-                    auto& dspBlock2 = dspBlocks[j];
-                    cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
-                    cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
+        if(useSuperTiles_) {
+            totalCost += performSuperTilePass(dspBlocks, solution);
 
-                    pair<unsigned int, unsigned int> baseCoord;
-                    baseCoord.first = std::min(dspBlock1.second.first, dspBlock2.second.first);
-                    baseCoord.second = std::min(dspBlock1.second.second, dspBlock2.second.second);
+            for(auto& tile: dspBlocks) {
+                unsigned int x = tile.second.first;
+                unsigned int y = tile.second.second;
 
-                    int rx1 = dspBlock1.second.first - baseCoord.first;
-                    int ry1 = dspBlock1.second.second - baseCoord.second;
-                    int lx1 = dspBlock1.second.first + dspBlock1.first->wX_DSPexpanded(coordX, coordY, wX, wY, signedIO) - baseCoord.first - 1;
-                    int ly1 = dspBlock1.second.second + dspBlock1.first->wY_DSPexpanded(coordX, coordY, wX, wY, signedIO) - baseCoord.second - 1;
-
-                    int rx2 = dspBlock2.second.first - baseCoord.first;
-                    int ry2 = dspBlock2.second.second - baseCoord.second;
-                    int lx2 = dspBlock2.second.first + dspBlock2.first->wX_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY, signedIO) - baseCoord.first - 1;
-                    int ly2 = dspBlock2.second.second + dspBlock2.first->wY_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY, signedIO) - baseCoord.second - 1;
-
-                    cout << baseCoord.first << " " << baseCoord.second << endl;
-                    cout << rx1 << " " << ry1 << " " << lx1 << " " << ly1 << endl;
-                    cout << rx2 << " " << ry2 << " " << lx2 << " " << ly2 << endl;
-
-                    BaseMultiplierCategory* tile = MultiplierTileCollection::superTileSubtitution(superTiles_, rx1, ry1, lx1, ly1, rx2, ry2, lx2, ly2);
-                    if(tile == nullptr) {
-                        cout << "No Supertile found" << endl;
-                        continue;
-                    }
-
-                    cout << "Found Supertile of type " << tile->getType() << endl;
-
-                    if(solution != nullptr) {
-                        solution->push_back(make_pair(tile->getParametrisation(), baseCoord));
-                    }
-
-
-
-                    totalCost += tile->getLUTCost(baseCoord.first, baseCoord.second, wX, wY);
-
-                    dspBlocks.erase(dspBlocks.begin() + j);
-                    found = true;
-                    break;
+                if(solution != nullptr) {
+                    solution->push_back(make_pair(tile.first->getParametrisation().tryDSPExpand(x, y, wX, wY, signedIO), tile.second));
                 }
 
-                if (!found) {
-                    if(solution != nullptr) {
-                        solution->push_back(make_pair(
-                                dspBlock1.first->getParametrisation().tryDSPExpand(coordX, coordY, wX, wY, signedIO),
-                                dspBlock1.second));
-                    }
-
-                    if(path != nullptr) {
-                        path->push(dspBlock1.first);
-                    }
-
-                    totalCost += dspBlock1.first->getLUTCost(coordX, coordY, wX, wY);
-                }
+                totalCost += tile.first->getLUTCost(x, y, wX, wY);
             }
         }
 
         cout << dspBlocks.size() << endl;
 
+        cmpCost = preCost;
         return totalCost;
+    }
+
+    float TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks, list<mult_tile_t>* solution) {
+        vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tempBlocks;
+        tempBlocks = std::move(dspBlocks);
+
+        //get dspBlocks back into a valid state
+        dspBlocks.clear();
+
+        float totalSubCost = 0.0f;
+        for(unsigned int i = 0; i < tempBlocks.size(); i++) {
+            cout << "Testing tile " << i << endl;
+            bool found = false;
+            auto &dspBlock1 = tempBlocks[i];
+            unsigned int coordX = dspBlock1.second.first;
+            unsigned int coordY = dspBlock1.second.second;
+            for (unsigned int j = i + 1; j < tempBlocks.size(); j++) {
+                auto &dspBlock2 = tempBlocks[j];
+                cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
+                cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
+
+                pair<unsigned int, unsigned int> baseCoord;
+                baseCoord.first = std::min(dspBlock1.second.first, dspBlock2.second.first);
+                baseCoord.second = std::min(dspBlock1.second.second, dspBlock2.second.second);
+
+                int rx1 = dspBlock1.second.first - baseCoord.first;
+                int ry1 = dspBlock1.second.second - baseCoord.second;
+                int lx1 = dspBlock1.second.first + dspBlock1.first->wX_DSPexpanded(coordX, coordY, wX, wY, signedIO) - baseCoord.first - 1;
+                int ly1 = dspBlock1.second.second + dspBlock1.first->wY_DSPexpanded(coordX, coordY, wX, wY, signedIO) - baseCoord.second - 1;
+
+                int rx2 = dspBlock2.second.first - baseCoord.first;
+                int ry2 = dspBlock2.second.second - baseCoord.second;
+                int lx2 = dspBlock2.second.first + dspBlock2.first->wX_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY,signedIO) - baseCoord.first - 1;
+                int ly2 = dspBlock2.second.second + dspBlock2.first->wY_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY,signedIO) - baseCoord.second - 1;
+
+                cout << baseCoord.first << " " << baseCoord.second << endl;
+                cout << rx1 << " " << ry1 << " " << lx1 << " " << ly1 << endl;
+                cout << rx2 << " " << ry2 << " " << lx2 << " " << ly2 << endl;
+
+                BaseMultiplierCategory *tile = MultiplierTileCollection::superTileSubtitution(superTiles_, rx1, ry1, lx1, ly1, rx2, ry2, lx2, ly2);
+                if (tile == nullptr) {
+                    cout << "No Supertile found" << endl;
+                    continue;
+                }
+
+                cout << "Found Supertile of type " << tile->getType() << endl;
+
+                if (solution != nullptr) {
+                    solution->push_back(make_pair(tile->getParametrisation(), baseCoord));
+                }
+
+                totalSubCost += tile->getLUTCost(baseCoord.first, baseCoord.second, wX, wY);
+
+                tempBlocks.erase(tempBlocks.begin() + j);
+                found = true;
+                break;
+            }
+
+            if(!found) {
+                dspBlocks.push_back(dspBlock1);
+            }
+        }
+
+        return totalSubCost;
     }
 }
