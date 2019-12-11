@@ -35,7 +35,8 @@ namespace flopoco {
                     rectangular{rectangular},
 				  	type_{type}
 				{
-					maxSumOfInputWordSizes_ = wX + wY;
+					//maxSumOfInputWordSizes_ = wX + wY;
+                    maxSumOfInputWordSizes_ = wX;               //required to force expected behaviour in BasicTiling
 				}
 
 			int getDeltaWidthSigned() const { return deltaWidthUnsignedSigned_; }
