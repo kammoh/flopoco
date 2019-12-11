@@ -155,6 +155,18 @@ namespace flopoco{
 		/** sets the compression method used for the BitHeap */
 		void  setCompressionMethod(string compression);
 
+		/** sets the ILP solver for operators optimized by ILP. It has to match a solver name known by the ScaLP library */
+		void setILPSolver(string ilpSolverName);
+
+		/** returns the ILP solver */
+		string getILPSolver();
+
+		/** sets the timeout in seconds for the ILP solver for operators optimized by ILP.*/
+		void setILPTimeout(int ilpSolverTimeout);
+
+		/** returns the ILP solver timeout in seconds */
+		int getILPTimeout();
+
 		/** returns the compression method used for multiplier tiling */
 		string  getTilingMethod();
 
@@ -751,6 +763,8 @@ namespace flopoco{
 
 		string compression_; /**< Defines the BitHeap compression method*/
 		string tiling_; /**< Defines the multiplier tiling method*/
+		string ilpSolverName_; /*** Defines the ILP solver for operators optimized by ILP. It has to match a solver name known by the ScaLP library */
+		int ilpTimeout_; /*** Defines the timeout in seconds for the ILP solver for operators optimized by ILP.*/
 	};
 
 }

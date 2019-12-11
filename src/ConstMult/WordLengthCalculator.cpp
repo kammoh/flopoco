@@ -65,7 +65,14 @@ namespace flopoco {
             }  
 
             try {
-                ScaLP::Solver s = ScaLP::Solver(ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"}));
+                ScaLP::SolverBackend* solverBackend;
+                if(target_)
+                    solverBackend = ScaLP::newSolverDynamic({target_->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"});
+                else
+                    solverBackend = ScaLP::newSolverDynamic({"Gurobi","CPLEX","SCIP","LPSolve"});
+
+                ScaLP::Solver s = ScaLP::Solver(solverBackend);
+
                 s.quiet = true;
 //                s.quiet = false;
 

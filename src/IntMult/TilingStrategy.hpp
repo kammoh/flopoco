@@ -43,5 +43,7 @@ namespace flopoco {
 		bool signedIO;                   /**< true if the IOs are two's complement */
 
 		BaseMultiplierCollection* baseMultiplierCollection;
+		Target* target;
+
 	};
 }

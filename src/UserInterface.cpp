@@ -40,6 +40,8 @@ namespace flopoco
 	bool   UserInterface::useTargetOptimizations;
 	string   UserInterface::compression;
 	string   UserInterface::tiling;
+	string UserInterface::ilpSolver;
+	int    UserInterface::ilpTimeout;
 	int    UserInterface::resourceEstimation;
 	bool   UserInterface::floorplanning;
 	bool   UserInterface::reDebug;
@@ -113,6 +115,8 @@ namespace flopoco
 				v.push_back(option_t("generateFigures", values));
 				v.push_back(option_t("useHardMults", values));
 				v.push_back(option_t("useTargetOptimizations", values));
+				v.push_back(option_t("ilpSolver", values));
+				v.push_back(option_t("ilpTimeout", values));
 				v.push_back(option_t("compression", values));
 				v.push_back(option_t("tiling", values));
 
@@ -188,6 +192,8 @@ namespace flopoco
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
 		parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
+		parseString(args, "ilpSolver", &ilpSolver, true); // sticky option
+		parsePositiveInt(args, "ilpTimeout", &ilpTimeout, true); // sticky option
 		parseString(args, "compression", &compression, true);
 		parseString(args, "tiling", &tiling, true);
 		parseBoolean(args, "floorplanning", &floorplanning, true);
@@ -344,6 +350,9 @@ namespace flopoco
 		compression = "heuristicMaxEff";
 		tiling = "heuristicBasicTiling";
 
+		ilpSolver = "Gurobi";
+		ilpTimeout = 3600; //1 hour
+
 		depGraphDrawing = "full";
 		pipelineActive_ = true;
 
@@ -446,7 +455,10 @@ namespace flopoco
 				target->setGenerateFigures(generateFigures);
 				target->setUseTargetOptimizations(useTargetOptimizations);
 				target->setCompressionMethod(compression);
+				target->setILPSolver(ilpSolver);
+				target->setILPTimeout(ilpTimeout);
 				target->setTilingMethod(tiling);
+
 				// Now build the operator
 				OperatorFactoryPtr fp = getFactoryByName(opName);
 				if (fp==NULL){
@@ -754,16 +766,18 @@ namespace flopoco
 		s << "  Both options and parameters are lists of " << COLOR_BOLD << "name=value" << COLOR_NORMAL << " pairs (with case-insensitive name)" << endl;
 		s << COLOR_BLUE_NORMAL<< "Example: " << COLOR_NORMAL << "flopoco  frequency=300 target=Virtex5   FPExp  wE=8 wF=23 name=SinglePrecisionFPExp" << endl;
 		s << "Generic options include:" << endl;
-		s << "  " << COLOR_BOLD << "name" << COLOR_NORMAL << "=<string>:        override the the default entity name "<<endl;
-		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:  override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
-		s << "  " << COLOR_BOLD << "target" << COLOR_NORMAL << "=<string>:      target FPGA (default " << defaultFPGA << ") " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "name" << COLOR_NORMAL << "=<string>:                override the the default entity name "<<endl;
+		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:          override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
+		s << "  " << COLOR_BOLD << "target" << COLOR_NORMAL << "=<string>:              target FPGA (default " << defaultFPGA << ") " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "     Supported targets: Kintex7, StratixV, Virtex6, Zynq7000"<<endl;
-		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:    target frequency in MHz (default 400, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:      use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
-		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:    use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>:    use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "compression" << COLOR_NORMAL << "=<heuristicMaxEff,heuristicPA,heuristicFirstFit,optimal,optimalMinStages>:        compression method (default=heuristicMaxEff)" << COLOR_RED_NORMAL << "(sticky option?)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "tiling" << COLOR_NORMAL << "=<heuristicBasicTiling,optimal>:        tiling method (default=heuristicBasicTiling)" << COLOR_RED_NORMAL << "(sticky option?)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:            target frequency in MHz (default 400, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:              use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
+		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:            use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>: use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "ilpSolver" << COLOR_NORMAL << "=<0|1>:              override ILP solver for operators optimized by ILP, has to match a solver name known by the ScaLP library" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "ilpTimeout" << COLOR_NORMAL << "=<0|1>:             sets the timeout in seconds for the ILP solver for operators optimized by ILP (default=3600)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "compression" << COLOR_NORMAL << "=<heuristicMaxEff,heuristicPA,heuristicFirstFit,optimal,optimalMinStages>:        compression method (default=heuristicMaxEff)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "tiling" << COLOR_NORMAL << "=<heuristicBasicTiling,optimal>:        tiling method (default=heuristicBasicTiling)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
         s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate SVG graphics (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
