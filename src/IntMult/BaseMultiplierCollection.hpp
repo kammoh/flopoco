@@ -25,7 +25,9 @@ namespace flopoco {
         unsigned size() { return baseMultiplierCategories.size(); }
 
 		void print();
-    private:
+
+		Target* getTarget() { return target; }
+	private:
         Target* target;
 
         string srcFileName; //for debug outputs

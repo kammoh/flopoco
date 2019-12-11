@@ -158,6 +158,8 @@ namespace flopoco
         static bool   useTargetOptimizations;
 		static string compression;
 		static string tiling;
+		static string ilpSolver;
+		static int    ilpTimeout;
 		static int    resourceEstimation;
 		static bool   floorplanning;
 		static bool   reDebug;

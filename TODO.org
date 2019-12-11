@@ -294,20 +294,14 @@ Benefit: it will remove rst from all the classical pipelined operators, and expl
 * Targets
 ** Xilinx series 7
 ** Altera 10
-* Continuous Test framework
-** Plan
-a test programme iterates through the operators, testing them one by one for various values of the parameters. Forever.
-** Implementation
-This should take place in the unitTest() methods, there is a TODO there...
-add to Operator a nextTestState() method that implements an ad-hoc iteration through the parameter state, with regression tests in the beginning, then radom tests.
-The issue is to implement the default of this method, hopefully everything is in place in the current UserInterface.
-
+* Continuous Integration
+** autotest at commit
+** set up a performance regression test as well
 * Janitoring
-*** replace in IntConstDiv all the instances of small tables by Table::newUniqueInstance
 *** replace inPortMap and outPortMap by the modern interface newInstance()
 		See FPAddSinglePath for examples
-*** build a SNAP package https://docs.snapcraft.io/build-snaps/   or a Docker instance or something 
-*** Add a proper Kintex7 target
+*** build a SNAP package https://docs.snapcraft.io/build-snaps/  
+*** Add modern targets
 *** replace the big ifs in Target.cpp with  method overloading in subtargets ? 
 *** gradually convert everything to standard lib arithmetic, getting rid of the synopsis ones.
 *** TargetFactory
@@ -333,8 +327,7 @@ The issue is to implement the default of this method, hopefully everything is in
 * BitHeapization 
 (and provide a bitheap-only constructor for all the following):
 ** systematic constructor interface with Signal variable
-** HOTBM
-** IntAddition/*
+** FixSinCos
 ** Rework Guillaume Sergent's operators around the bit heap
 ** define a policy for enableSuperTile: default to false or true?
 ** Push this option to FPMult and other users of IntMult.
@@ -350,7 +343,6 @@ The issue is to implement the default of this method, hopefully everything is in
 Testbench
 
 * Framework
-** define a Timing as a (Cycle, CriticalPath), and associate that cleanly to Signals with getTiming methods that set both cycle and critical path.
 ** Bug on outputs that are bits with isBus false and  multiple-valued  
   (see the P output of Collision in release 2.1.0)
 ** Multiple valued outputs should always be intervals, shouldn't they?
@@ -363,7 +355,7 @@ Testbench
 ** FloatApprox
 ... exists in the random branch
 ** all in the random branch
-** Multipartite (with HOTBM)
+** HOTBM
 ** Sum of n squares
 ** LUT-based integer comparators
 ** BoxMuller

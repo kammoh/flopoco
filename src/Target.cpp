@@ -143,6 +143,28 @@ namespace flopoco{
 		return compression_;
 	}
 
+	void Target::setILPSolver(string ilpSolverName)
+	{
+		cout << "!! setILPSolver(" << ilpSolverName << ")" << " (" << this << ")" << endl;
+		ilpSolverName_ = ilpSolverName;
+	}
+
+	string Target::getILPSolver()
+	{
+		cout << "!! getILPSolver() -> " << ilpSolverName_ << " (" << this << ")" << endl;
+		return ilpSolverName_;
+	}
+
+	void Target::setILPTimeout(int ilpTimeout)
+	{
+		ilpTimeout_ = ilpTimeout;
+	}
+
+	int Target::getILPTimeout()
+	{
+		return ilpTimeout_;
+	}
+
 	void Target::setTilingMethod(string method)
 	{
 		tiling_ = method;

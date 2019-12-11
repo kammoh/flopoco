@@ -5,6 +5,7 @@
 
 #include "pagsuite/adder_graph.h"
 #include <gmpxx.h>
+#include "Target.hpp"
 
 #endif // HAVE_PAGLIB
 
@@ -15,7 +16,7 @@ namespace flopoco {
         public:
             WordLengthCalculator(PAGSuite::adder_graph_t adder_graph, 
                 int wIn, 
-                double epsilon) : adder_graph_(adder_graph), wIn_(wIn), epsilon_(epsilon) {}
+                double epsilon, Target* target= nullptr) : adder_graph_(adder_graph), wIn_(wIn), epsilon_(epsilon), target_(target){}
 
             ~WordLengthCalculator() {}
             map<pair<mpz_class, int>, vector<int> > optimizeTruncation();
@@ -25,6 +26,7 @@ namespace flopoco {
             int wIn_;
             double epsilon_;
             map<pair<mpz_class, int>, vector<int> > truncationVal_;
+            Target* target_;
     };
     #endif // HAVE_PAGLIB
 } // namespace
