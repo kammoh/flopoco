@@ -18,7 +18,7 @@ namespace flopoco {
         BaseMultiplierLUT(int maxSize, double lutPerOutputBit):
                 BaseMultiplierCategory{
                         maxSize,
-                        1,
+                        maxSize,
                         false,
                         false,
                         -1,
