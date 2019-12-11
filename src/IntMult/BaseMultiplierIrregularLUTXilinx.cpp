@@ -42,6 +42,25 @@ int BaseMultiplierIrregularLUTXilinx::getRelativeResultMSBWeight(Parametrization
     return getRelativeResultMSBWeight((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE)param.getShapePara())+1;
 }
 
+    double BaseMultiplierIrregularLUTXilinx::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+        int word_size = getRelativeResultMSBWeight(this->shape) - getRelativeResultLSBWeight(this->shape) + 1;
+        int lut_required = (this->wX+this->wY <= 5)?word_size/2+word_size%2:word_size;
+
+        return lut_required + word_size*0.65;
+        //TODO Imprelement position dependent methode, although LUT-Multiplier dont seem to be placed so that they are protruding
+        /*
+        int x_min = ((x_anchor < 0)?0: x_anchor);
+        int y_min = ((y_anchor < 0)?0: y_anchor);
+        int lsb = x_min + y_min;
+
+        int x_max = ((wMultX < x_anchor + this->wX)?wMultX: x_anchor + this->wX);
+        int y_max = ((wMultY < y_anchor + this->wY)?wMultY: y_anchor + this->wY);
+        int msb = x_max+y_max;
+
+        int ws = (x_max-x_min==1)?y_max-y_min:((y_max-y_min==1)?x_max-x_min:msb - lsb);
+        cout << lut_required + ws*0.65 << " " << shape << " " << ws << " " << lut_required << endl;
+        return lut_required + ws*0.65;*/
+    }
 
     bool BaseMultiplierIrregularLUTXilinx::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
     {

@@ -185,4 +185,17 @@ BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization:
         return tile_height;
 	}
 
+    double BaseMultiplierCategory::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+        int x_min = ((x_anchor < 0)?0: x_anchor);
+        int y_min = ((y_anchor < 0)?0: y_anchor);
+        int lsb = x_min + y_min;
+
+        int x_max = ((wMultX < x_anchor + wX())?wMultX: x_anchor + wX());
+        int y_max = ((wMultY < y_anchor + wY())?wMultY: y_anchor + wY());
+        int msb = x_max+y_max;
+
+        int ws = (x_max-x_min==1)?y_max-y_min:((y_max-y_min==1)?x_max-x_min:msb - lsb);
+        return ws*0.65;
+    }
+
 }

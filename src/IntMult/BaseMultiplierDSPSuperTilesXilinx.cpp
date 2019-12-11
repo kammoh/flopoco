@@ -58,6 +58,32 @@ int BaseMultiplierDSPSuperTilesXilinx::isSuperTile(int rx1, int ry1, int lx1, in
     return 0;
 }
 
+double BaseMultiplierDSPSuperTilesXilinx::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+    int rx1 = mult_bounds[shape-1].dsp1_rx, rx2 = mult_bounds[shape-1].dsp2_rx, ry1 = mult_bounds[shape-1].dsp1_ry, ry2 = mult_bounds[shape-1].dsp2_ry;
+    int x1_min = ((x_anchor + rx1 < 0)?0: x_anchor + rx1);
+    int y1_min = ((y_anchor + ry1 < 0)?0: y_anchor + ry1);
+    int x2_min = ((x_anchor + rx2 < 0)?0: x_anchor + rx2);
+    int y2_min = ((y_anchor + ry2 < 0)?0: y_anchor + ry2);
+    int lsb = ( x2_min + y2_min < x1_min + y1_min)?x2_min + y2_min:x1_min + y1_min;
+
+    int lx1 = mult_bounds[shape-1].dsp1_lx, lx2 = mult_bounds[shape-1].dsp2_lx, ly1 = mult_bounds[shape-1].dsp1_ly, ly2 = mult_bounds[shape-1].dsp2_ly;
+    int x1_max = ((wMultX < x_anchor + lx1+1)?wMultX: x_anchor + lx1+1);
+    int y1_max = ((wMultY < y_anchor + ly1+1)?wMultY: y_anchor + ly1+1);
+    int x2_max = ((wMultX < x_anchor + lx2+1)?wMultX: x_anchor + lx2+1);
+    int y2_max = ((wMultY < y_anchor + ly2+1)?wMultY: y_anchor + ly2+1);
+    int x_max, y_max;
+    if(x1_max + y1_max < x2_max + y2_max){
+        x_max = x2_max;
+        y_max = y2_max;
+    } else {
+        x_max = x1_max;
+        y_max = y1_max;
+    }
+    int msb = (x_max==1)?y_max:((y_max==1)?x_max:x_max+y_max);
+    msb = (0 < shape && shape <= 4 && (msb+1 == getRelativeResultMSBWeight(shape) + x_anchor + y_anchor))?msb+1:msb;
+    return (msb - lsb)*0.65;
+}
+
 bool BaseMultiplierDSPSuperTilesXilinx::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
 {
     //check if (x,y) coordinate lies inside of the super tile shape:
