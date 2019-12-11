@@ -59,12 +59,12 @@ namespace flopoco {
 
         list<mult_tile_t> bestSolution;
         float bestCost = FLT_MAX;
-        float totalCost = createSolution(field, &bestSolution, nullptr, bestCost, 0);
-        int last = 0;
+        int bestArea = 0;
+        float totalCost = createSolution(field, &bestSolution, nullptr, bestCost, bestArea, 0);
         int runs = std::pow(2, pairs_.size());
         for(int i = 1; i < runs; i++) {
             field.reset();
-
+            int last = i - 1;
             for(unsigned int j = 0; j < pairs_.size(); j++) {
                 int cmp = last ^ i;
                 int mask =  1 << j;
@@ -75,15 +75,18 @@ namespace flopoco {
 
             list<mult_tile_t> solution;
             float cmpCost = bestCost;
-            float cost = createSolution(field, &solution, nullptr, cmpCost, 0);
+            int area = 0;
+            float cost = createSolution(field, &solution, nullptr, cmpCost, area, 0);
             if(cost < bestCost) {
                 bestCost = cmpCost;
                 totalCost = cost;
+                bestArea = area;
                 bestSolution = std::move(solution);
             }
         }
 
         cout << "Total cost: " << totalCost << endl;
+        cout << "Total area: " << bestArea << endl;
         solution = std::move(bestSolution);
     }
 

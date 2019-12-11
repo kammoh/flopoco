@@ -11,6 +11,7 @@ namespace flopoco {
             }
         }
 
+        cout << signedIO_ << " TEST IO" << endl;
         setCursor(0U, 0U);
     }
 
@@ -28,6 +29,7 @@ namespace flopoco {
             }
         }
 
+        signedIO_ = copy.signedIO_;
         highestLine_ = copy.highestLine_;
     }
 

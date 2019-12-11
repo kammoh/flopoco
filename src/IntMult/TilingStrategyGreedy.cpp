@@ -76,8 +76,10 @@ namespace flopoco {
     void TilingStrategyGreedy::solve() {
         Field field(wX, wY, signedIO);
         float cmp = FLT_MAX;
-        float cost = createSolution(field, &solution, nullptr, cmp, 0);
+        int area = 0;
+        float cost = createSolution(field, &solution, nullptr, cmp, area, 0);
         cout << "Total cost: " << cost << endl;
+        cout << "Total area: " << area << endl;
     }
 
     BaseMultiplierCategory* TilingStrategyGreedy::findVariableTile(unsigned int wX, unsigned int wY) {
@@ -116,12 +118,15 @@ namespace flopoco {
         }
     }
 
-    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, unsigned int usedDspBlocks) {
+    float TilingStrategyGreedy::createSolution(Field& field, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, int& area, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
         auto next (field.getCursor());
-        unsigned int usedDSPBlocks = 0;
         float totalCost = 0.0f;
         float preCost = 0.0f;
-        vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> dspBlocks;
+
+        vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tmpBlocks;
+        if(dspBlocks == nullptr) {
+            dspBlocks = &tmpBlocks;
+        }
 
         while(field.getMissing() > 0) {
             unsigned int neededX = field.getMissingLine();
@@ -233,29 +238,32 @@ namespace flopoco {
                 tileIndex = i;
             }
 
-            preCost += bm->cost();
+            preCost += bm->getLUTCost(next.first, next.second, wX, wY);
 
             //TODO: cmpCost needs to contain pre SuperTile costs in some way
             if(preCost > cmpCost) {
                 return FLT_MAX;
             }
 
+            if(path != nullptr) {
+                path->push(tileIndex);
+            }
+
             auto coord (field.placeTileInField(next, bm));
             if(bm->getDSPCost()) {
                 usedDSPBlocks++;
                 if(useSuperTiles_ && superTiles_.size() > 0) {
-                    dspBlocks.push_back(make_pair(bm, next));
+                    dspBlocks->push_back(make_pair(bm, next));
                     next = coord;
                     continue;
                 }
             }
+            else {
+                area += bm->getArea();
+            }
 
             if(solution != nullptr) {
                 solution->push_back(make_pair(tile, next));
-            }
-
-            if(path != nullptr) {
-                path->push(tileIndex);
             }
 
             totalCost += bm->getLUTCost(next.first, next.second, wX, wY);
@@ -269,7 +277,7 @@ namespace flopoco {
         if(useSuperTiles_) {
             totalCost += performSuperTilePass(dspBlocks, solution);
 
-            for(auto& tile: dspBlocks) {
+            for(auto& tile: *dspBlocks) {
                 unsigned int x = tile.second.first;
                 unsigned int y = tile.second.second;
 
@@ -281,18 +289,18 @@ namespace flopoco {
             }
         }
 
-        cout << dspBlocks.size() << endl;
+        cout << dspBlocks->size() << endl;
 
         cmpCost = preCost;
         return totalCost;
     }
 
-    float TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks, list<mult_tile_t>* solution) {
+    float TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution) {
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tempBlocks;
-        tempBlocks = std::move(dspBlocks);
+        tempBlocks = std::move(*dspBlocks);
 
         //get dspBlocks back into a valid state
-        dspBlocks.clear();
+        dspBlocks->clear();
 
         float totalSubCost = 0.0f;
         for(unsigned int i = 0; i < tempBlocks.size(); i++) {
@@ -344,7 +352,7 @@ namespace flopoco {
             }
 
             if(!found) {
-                dspBlocks.push_back(dspBlock1);
+                dspBlocks->push_back(dspBlock1);
             }
         }
 
