@@ -220,6 +220,10 @@ namespace flopoco {
         return missing_;
     }
 
+    unsigned int Field::getHighestLine() {
+        return highestLine_;
+    }
+
     unsigned int Field::getMissingLine() {
         unsigned int missing_ = 0U;
 

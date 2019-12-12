@@ -24,6 +24,7 @@ namespace flopoco {
         unsigned int getMissing();
         unsigned int getMissingLine();
         unsigned int getMissingHeight();
+        unsigned int getHighestLine();
         pair<unsigned int, unsigned int> getCursor();
         void setCursor(unsigned int x, unsigned int y);
         void setCursor(pair<unsigned int, unsigned int> target);

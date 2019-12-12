@@ -71,6 +71,38 @@ namespace flopoco {
         for(BaseMultiplierCategory* b: kx2Tiles_) {
             cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
         }
+
+        unsigned int dspArea = 0;
+        for(BaseMultiplierCategory* b: tiles_) {
+            if(b->getDSPCost()) {
+                dspArea = b->getArea();
+                break;
+            }
+        }
+
+        if(dspArea != 0) {
+            totalDSPArea_ = maxPrefMult * dspArea;
+            unsigned int total = wX * wY;
+            unsigned int numDSPs = total / dspArea;
+            //TODO: perhaps use float + rounding here
+            if(totalDSPArea_ >= total) {
+                useExtraDSPMetric_ = false;
+            }
+            else {
+                float percent = 1.0 - ((total - totalDSPArea_) / (float) total);
+                if(percent > 0.90) {
+                    cout << "Percent too high " << percent << endl;
+                    useExtraDSPMetric_ = false;
+                }
+                else {
+                    useExtraDSPMetric_ = true;
+                    coveredDSPArea_ = 0;
+                }
+            }
+
+            cout << "DSP METRICS "<< useExtraDSPMetric_ << endl;
+            cout << total << " VS " << totalDSPArea_ << endl;
+        }
     };
 
     void TilingStrategyGreedy::solve() {
@@ -136,6 +168,8 @@ namespace flopoco {
             BaseMultiplierParametrization tile = bm->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
             float efficiency = -1.0f;
             unsigned int tileIndex = tiles_.size() - 1;
+
+            float missingPercent = 1.0 - (((wX * wY) - field.getMissing()) / (float) (wX * wY));
 
             for(unsigned int i = 0; i < tiles_.size(); i++) {
                 BaseMultiplierCategory* t = tiles_[i];
@@ -204,6 +238,17 @@ namespace flopoco {
                     //check threshold
                     if(usage < occupation_threshold_) {
                         continue;
+                    }
+
+                    //TODO: check against
+                    if(useExtraDSPMetric_ && tiles != t->getArea()) {
+                        float percent = 1.0 - ((t->getArea() - tiles) / (float) t->getArea());
+                        //don't check percentage for the last few percent
+
+                        if(percent < 0.85 && missingPercent > 0.3) {
+                            cout << "PLACEMENT PROBLEM " << tiles << " vs " << t->getArea() << " " << percent << endl;
+                            continue;
+                        }
                     }
 
                     //TODO: find a better way for this, think about the effect of > vs >= here
