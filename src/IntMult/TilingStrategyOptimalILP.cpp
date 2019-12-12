@@ -32,18 +32,6 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 
 void TilingStrategyOptimalILP::solve()
 {
-/*
-    BaseMultiplierCategory* value = MultiplierTileCollection::superTileSubtitution(tiles, 7,  0, 23, 23,  0, 24, 16, 47);
-    if(value != nullptr)
-        cout << value->getType() << endl;
-    cout << value->getParametrisation().getMultType() << endl;
-    cout << value->efficiency() << endl;
-    cout << value->getArea() << endl;
-
-    exit(1);
-
-*/
-
 
 #ifndef HAVE_SCALP
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
@@ -101,10 +89,6 @@ void TilingStrategyOptimalILP::constructProblem()
         x_neg = (x_neg < (int)tiles[s]->wX())?tiles[s]->wX() - 1:x_neg;
         y_neg = (y_neg < (int)tiles[s]->wY())?tiles[s]->wY() - 1:y_neg;
     }
-    int nDSPTiles = 0;
-    for(int s = 0; s < wS; s++)
-        if(tiles[s]->getDSPCost())
-            nDSPTiles++;
     int nx = wX-1, ny = wY-1, ns = wS-1; dpX = 1; dpY = 1; dpS = 1; //calc number of decimal places, for var names
     nx = (x_neg > nx)?x_neg:nx;                                     //in case the extend in negative direction is larger
     ny = (y_neg > ny)?y_neg:ny;
@@ -150,6 +134,10 @@ void TilingStrategyOptimalILP::constructProblem()
     }
 
     //limit use of shape n
+    int nDSPTiles = 0;
+    for(int s = 0; s < wS; s++)
+        if(tiles[s]->getDSPCost())
+            nDSPTiles++;
     if(nDSPTiles) {
         cout << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..." << endl;
         stringstream consName;
