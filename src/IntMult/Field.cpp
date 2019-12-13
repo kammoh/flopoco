@@ -2,7 +2,7 @@
 #include <iostream>
 
 namespace flopoco {
-    Field::Field(unsigned int wX, unsigned int wY, bool signedIO) : wX_(wX), wY_(wY), signedIO_(signedIO), missing_(wX * wY), highestLine_(0U) {
+    Field::Field(unsigned int wX, unsigned int wY, bool signedIO) : wX_(wX), wY_(wY), signedIO_(signedIO), missing_(wX * wY), highestLine_(0U), lowestFinishedLine_(0U) {
         field_.resize(wY_);
         for(unsigned int i = 0; i < wY_; i++) {
             field_[i].resize(wX_);
@@ -19,7 +19,7 @@ namespace flopoco {
         wX_ = copy.wX_;
         wY_ = copy.wY_;
         missing_ = copy.missing_;
-        cursor_ =  pair<unsigned int, unsigned int>(copy.cursor_);
+        cursor_ =  Cursor(copy.cursor_);
 
         field_.resize(wY_);
         for(unsigned int i = 0U; i < wY_; i++) {
@@ -52,6 +52,8 @@ namespace flopoco {
         missing_ = wX_ * wY_;
 
         highestLine_ = 0;
+
+        resetCursorBehaviour();
     }
 
     void Field::reset(Field& target) {
@@ -60,41 +62,24 @@ namespace flopoco {
         }
 
         cout << "Before reset" << endl;
-        target.printField();
+        //target.printField();
         cout << "State" << endl;
-        printField();
+        //printField();
 
         cout << highestLine_ << endl;
 
         missing_ = target.missing_;
 
-        //fill up needed space
-        if(cursor_.second < target.cursor_.second) {
-            for(unsigned int i = cursor_.second; i < target.cursor_.second; i++) {
-                field_[i] = target.field_[i];
-            }
-        }
-
-        //empty upper part
-        if(highestLine_ > target.highestLine_) {
-            for(unsigned int i = target.highestLine_; i < highestLine_; i++) {
-                field_[i] = target.field_[i];
-            }
-        }
-
-        //copy half filled area
-        for(unsigned int i = max(target.cursor_.second - 1, 0); i < target.highestLine_; i++) {
-            field_[i] = target.field_[i];
-        }
+        resetField(target);
 
         highestLine_ = target.highestLine_;
         setCursor(target.cursor_);
 
         cout << "After reset" << endl;
-        printField();
+        //printField();
     }
 
-    unsigned int Field::checkTilePlacement(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile) {
+    unsigned int Field::checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile) {
         unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
@@ -126,13 +111,13 @@ namespace flopoco {
         return covered;
     }
 
-    pair<unsigned int, unsigned int> Field::checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& param) {
+    Cursor Field::checkDSPPlacement(const Cursor coord, const BaseMultiplierParametrization& param) {
         unsigned int endX = coord.first + param.getTileXWordSize();
         unsigned int endY = coord.second + param.getTileYWordSize();
         unsigned int maxX = std::min(endX, wX_);
         unsigned int maxY = std::min(endY, wY_);
 
-        pair<unsigned int, unsigned int> size(param.getTileXWordSize(), 0);
+        Cursor size(param.getTileXWordSize(), 0);
 
         for(unsigned int i = coord.second; i < maxY; i++) {
             unsigned int currentSize = 0;
@@ -162,7 +147,7 @@ namespace flopoco {
         return size;
     }
 
-    pair<unsigned int, unsigned int> Field::placeTileInField(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile) {
+    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile) {
         unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
@@ -170,7 +155,7 @@ namespace flopoco {
         unsigned int maxX = std::min(endX, wX_);
         unsigned int maxY = std::min(endY, wY_);
 
-        for(unsigned int i = coord.second; i < maxY; i++) {
+        for (unsigned int i = coord.second; i < maxY; i++) {
             for (unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area and if area is free
                 if (tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_) && !field_[i][j]) {
@@ -180,36 +165,19 @@ namespace flopoco {
             }
         }
 
-        if(maxY > highestLine_) {
+        if (maxY > highestLine_) {
             highestLine_ = maxY;
         }
 
 
-        printField();
+        //printField();
         updateCursor();
 
-        cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << cursor_.first << " " << cursor_.second << endl;
+        cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " "
+             << coord.second << " new coord is " << cursor_.first << " " << cursor_.second << endl;
         cout << tile->getType() << endl;
 
         return cursor_;
-    }
-
-    void Field::updateCursor() {
-        while(cursor_.second != wY_) {
-            //try to find next free position in the current line
-            for(unsigned int i = 0U; i < wX_; i++) {
-                if(!field_[cursor_.second][i]) {
-                    cursor_.first = i;
-                    return;
-                }
-            }
-
-            //no free position in this line
-            cursor_.second++;
-        }
-
-        cursor_.first = 0U;
-        cursor_.second = 0U;
     }
 
     bool Field::isFull() {
@@ -222,6 +190,22 @@ namespace flopoco {
 
     unsigned int Field::getHighestLine() {
         return highestLine_;
+    }
+
+    unsigned int Field::getWidth() {
+        return wX_;
+    }
+
+    unsigned int Field::getHeight() {
+        return wY_;
+    }
+
+    bool Field::getCell(Cursor cursor) {
+        return field_[cursor.second][cursor.first];
+    }
+
+    void Field::setLine(unsigned int line, vector<bool> &vec) {
+        field_[line] = vec;
     }
 
     unsigned int Field::getMissingLine() {
@@ -250,7 +234,7 @@ namespace flopoco {
         return missing_;
     }
 
-    pair<unsigned int, unsigned int> Field::getCursor() {
+    Cursor Field::getCursor() {
         return cursor_;
     }
 
@@ -267,7 +251,7 @@ namespace flopoco {
         cursor_.second = y;
     }
 
-    void Field::setCursor(pair<unsigned int, unsigned int> target) {
+    void Field::setCursor(Cursor target) {
         setCursor(target.first, target.second);
     }
 

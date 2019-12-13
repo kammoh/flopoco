@@ -1,6 +1,8 @@
 #include "TilingStrategyGreedy.hpp"
 #include "BaseMultiplierIrregularLUTXilinx.hpp"
 #include "BaseMultiplierXilinx2xk.hpp"
+#include "LineCursorField.hpp"
+#include "NearestPointCursorField.hpp"
 
 #include <cstdlib>
 #include <ctime>
@@ -103,15 +105,19 @@ namespace flopoco {
             cout << "DSP METRICS "<< useExtraDSPMetric_ << endl;
             cout << total << " VS " << totalDSPArea_ << endl;
         }
+
+        useExtraDSPMetric_ = false;
     };
 
     void TilingStrategyGreedy::solve() {
-        Field field(wX, wY, signedIO);
+        NearestPointCursorField field(wX, wY, signedIO);
         float cmp = FLT_MAX;
         int area = 0;
         float cost = createSolution(field, &solution, nullptr, cmp, area, 0);
         cout << "Total cost: " << cost << endl;
         cout << "Total area: " << area << endl;
+
+        //exit(0);
     }
 
     BaseMultiplierCategory* TilingStrategyGreedy::findVariableTile(unsigned int wX, unsigned int wY) {
@@ -243,7 +249,7 @@ namespace flopoco {
                     //TODO: check against
                     if(useExtraDSPMetric_ && tiles != t->getArea()) {
                         float percent = 1.0 - ((t->getArea() - tiles) / (float) t->getArea());
-                        //don't check percentage for the last few percent
+                        //don't check usage for the last few percent
 
                         if(percent < 0.85 && missingPercent > 0.3) {
                             cout << "PLACEMENT PROBLEM " << tiles << " vs " << t->getArea() << " " << percent << endl;
@@ -315,7 +321,7 @@ namespace flopoco {
             next = coord;
         }
 
-        field.printField();
+        //field.printField();
         cout << superTiles_.size() << endl;
 
         //check each dspblock with another
@@ -359,7 +365,7 @@ namespace flopoco {
                 cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
                 cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
 
-                pair<unsigned int, unsigned int> baseCoord;
+                Cursor baseCoord;
                 baseCoord.first = std::min(dspBlock1.second.first, dspBlock2.second.first);
                 baseCoord.second = std::min(dspBlock1.second.second, dspBlock2.second.second);
 

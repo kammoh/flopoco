@@ -8,6 +8,8 @@
 using namespace std;
 
 namespace flopoco {
+    typedef pair<unsigned int, unsigned int> Cursor;
+
     class Field {
     public:
         Field(unsigned int wX, unsigned int wY, bool signedIO);
@@ -17,29 +19,37 @@ namespace flopoco {
 
         void printField();
         //TODO: pass down "updateCursor" as function pointer / virtual function
-        pair<unsigned int, unsigned int> placeTileInField(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile);
-        unsigned int checkTilePlacement(const pair<unsigned int, unsigned int> coord, BaseMultiplierCategory* tile);
-        pair<unsigned int, unsigned int> checkDSPPlacement(const pair<unsigned int, unsigned int> coord, const BaseMultiplierParametrization& param);
+        Cursor placeTileInField(const Cursor coord, BaseMultiplierCategory* tile);
+        unsigned int checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile);
+        Cursor checkDSPPlacement(const Cursor coord, const BaseMultiplierParametrization& param);
         bool isFull();
         unsigned int getMissing();
         unsigned int getMissingLine();
         unsigned int getMissingHeight();
         unsigned int getHighestLine();
-        pair<unsigned int, unsigned int> getCursor();
+        unsigned int getWidth();
+        unsigned int getHeight();
+        bool getCell(Cursor cursor);
+        void setLine(unsigned int line, vector<bool>& vec);
+        Cursor getCursor();
         void setCursor(unsigned int x, unsigned int y);
-        void setCursor(pair<unsigned int, unsigned int> target);
+        void setCursor(Cursor target);
         void reset();
         void reset(Field& target);
 
-    private:
-        void updateCursor();
+    protected:
         vector<vector<bool>> field_;
-        pair<unsigned int, unsigned int> cursor_;
+        Cursor cursor_;
         unsigned int wX_;
         unsigned int wY_;
         bool signedIO_;
         unsigned int missing_;
         unsigned int highestLine_;
+        unsigned int lowestFinishedLine_;
+
+        virtual void updateCursor() = 0;
+        virtual void resetField(Field& target) = 0;
+        virtual void resetCursorBehaviour() = 0;
     };
 }
 

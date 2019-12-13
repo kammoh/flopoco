@@ -1,6 +1,7 @@
 #include <utility>
 
 #include "TilingStrategyBeamSearch.hpp"
+#include "LineCursorField.hpp"
 
 namespace flopoco {
     TilingStrategyBeamSearch::TilingStrategyBeamSearch(
@@ -24,7 +25,7 @@ namespace flopoco {
     };
 
     void TilingStrategyBeamSearch::solve() {
-        Field baseField(wX, wY, signedIO);
+        LineCursorField baseField(wX, wY, signedIO);
         unsigned int usedDSPBlocks = 0U;
         unsigned int range = beamRange_;
         queue<unsigned int> path;
@@ -38,7 +39,7 @@ namespace flopoco {
         path.pop();
 
         baseField.reset();
-        Field tempField(baseField);
+        LineCursorField tempField(baseField);
 
         float currentTotalCost = 0.0f;
         float currentPreCost = 0.0f;
@@ -94,10 +95,10 @@ namespace flopoco {
                     cout << (totalCMPCost - tempTotalCost) << endl;
 
                     if (tempTotalCost < totalCMPCost) {
+                        cout << "Using " << i << " would be cheaper! " << tempTotalCost << " vs " << totalCMPCost << endl;
+
                         totalCMPCost = tempTotalCost;
                         preCMPCost = tempCMPPreCost;
-                        cout << "Using " << i << " would be cheaper! " << tempTotalCost << endl;
-
                         bestEdge = i;
                         path = move(tempPath);
                         tile = t;

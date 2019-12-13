@@ -1,4 +1,6 @@
 #include "TilingStrategyXGreedy.hpp"
+#include "LineCursorField.hpp"
+#include "NearestPointCursorField.hpp"
 
 namespace flopoco {
     TilingStrategyXGreedy::TilingStrategyXGreedy(
@@ -51,7 +53,7 @@ namespace flopoco {
     };
 
     void TilingStrategyXGreedy::solve() {
-        Field field(wX, wY, signedIO);
+        NearestPointCursorField field(wX, wY, signedIO);
 
         for(auto& u: pairs_) {
             cout << u.first << " " << u.second << endl;
