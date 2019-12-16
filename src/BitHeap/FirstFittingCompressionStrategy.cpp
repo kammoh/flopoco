@@ -76,6 +76,9 @@ namespace flopoco{
 					delay += 1.0 / bitheap->getOp()->getTarget()->frequency();
 			}
 		}
+
+        //reports the area in LUT-equivalents
+        printSolutionStatistics();
 	}
 
 }

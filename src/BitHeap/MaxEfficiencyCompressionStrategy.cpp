@@ -41,6 +41,9 @@ namespace flopoco{
 		//generates the compressor tree. Works only on bitAmount, compressors will be put into solution
 		maxEfficiencyAlgorithm();
 
+		//reports the area in LUT-equivalents
+        printSolutionStatistics();
+
 		//here the VHDL-Code for the compressors as well as the bits->compressors->bits are being written.
 		applyAllCompressorsFromSolution();
 

@@ -250,7 +250,36 @@ namespace flopoco{
 		}
 	}
 
-	void CompressionStrategy::applyAllCompressorsFromSolution(){
+    void CompressionStrategy::printSolutionStatistics(){
+        REPORT(DEBUG, "calculating compression area");
+        unsigned int totalArea = 0;  //area in Compressor.hpp
+        for(unsigned int s = 0; s < bitAmount.size() - 1; s++) {
+
+            for (unsigned int c = 0; c < bitheap->width; c++) {
+
+                vector<pair<BasicCompressor *, unsigned int> > tempVector;
+                tempVector = solution.getCompressorsAtPosition(s, c);
+
+
+                for (unsigned int j = 0; j < tempVector.size(); j++) {
+                    if (tempVector[j].first==tempVector[j+1].first){
+                        tempVector[j+1].second=+tempVector[j].second+1;
+                        continue;
+                    }
+                    REPORT(DETAILED, "applying " << tempVector[j].second+1 << " compressors of type " << tempVector[j].first->getStringOfIO() <<
+                                                 " at stage " << s << " and column " << c << " with a combined LUT-area cost of " << (tempVector[j].second+1)*tempVector[j].first->getArea());
+                    totalArea+=(tempVector[j].second+1)*tempVector[j].first->getArea();
+
+
+                }
+            }
+        }
+        REPORT(DETAILED, "total area of the compression is equivalent to " << totalArea << " LUTs");
+    }
+
+
+
+    void CompressionStrategy::applyAllCompressorsFromSolution(){
 		REPORT(DEBUG, "applying all compressors");
 
 		unsigned int colorCount = 0; //for bitheapPlotter
@@ -360,7 +389,7 @@ namespace flopoco{
 
 		//mark solution as done
 		solution.markSolutionAsComplete();
-		//both tests were succesfull
+		//both tests were successful
 		return true;
 	}
 
@@ -643,7 +672,7 @@ namespace flopoco{
 			compressorInputs.push_back(string(inputName.str()));
 		}
 
-		//inputsignals
+		//input signals
         bitheap->getOp()->vhdl << endl;
 		for(unsigned i=0; i<compressor->heights.size(); i++)
 		{
@@ -658,14 +687,14 @@ namespace flopoco{
 			}
 		}
 
-		//create the signals for the comrpessor outputs. Can handle compresssors who have
-		//more than one outputbit per column. If that is the case, its asumed that the outputvector
-		//for e.g. the second bits spans from lsb of the compressor to the closest occurence of the in this
+		//create the signals for the compressor outputs. Can handle compressors who have
+		//more than one outputbit per column. If that is the case, its assumed that the outputvector
+		//for e.g. the second bits spans from lsb of the compressor to the closest occurrence of the in this
 		//example second bit. Only the bits which are not constantly zero will be added to the bitheap.
 		unsigned int tempHeight = 0;
 		while(true){
 			tempHeight++;
-			//does this height occures in the compressor
+			//does this height occur in the compressor
 			int lastOccurence = -1;
 			for(unsigned int c = 0; c < compressor->outHeights.size(); c++){
 				if((unsigned) compressor->outHeights[c] >= tempHeight){
