@@ -82,7 +82,7 @@ namespace flopoco {
             }
         }
 
-        if(dspArea != 0) {
+        /*if(dspArea != 0) {
             totalDSPArea_ = maxPrefMult * dspArea;
             unsigned int total = wX * wY;
             unsigned int numDSPs = total / dspArea;
@@ -104,7 +104,7 @@ namespace flopoco {
 
             cout << "DSP METRICS "<< useExtraDSPMetric_ << endl;
             cout << total << " VS " << totalDSPArea_ << endl;
-        }
+        }*/
 
         useExtraDSPMetric_ = false;
     };

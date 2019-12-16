@@ -6,6 +6,7 @@ namespace flopoco {
 
     void NearestPointCursorField::resetCursorBehaviour() {
         searchRadius_ = 0;
+        nextCoords_.clear();
     }
 
     void NearestPointCursorField::updateCursor() {
@@ -14,62 +15,85 @@ namespace flopoco {
             return;
         }
 
-        cout << "New cursor test " << missing_ << endl;
-        printField();
+        cout << "Using new logic" << endl;
 
-        double bestCost = DBL_MAX;
-        Cursor best(0, 0);
-        bool found = false;
+        while(true) {
+            //check if cursor vector is empty
+            if(nextCoords_.size() == 0) {
+                cout << "Requesting new segment" << endl;
+                checkCircleSegment(searchRadius_);
+                searchRadius_++;
+                cout << "Segmentsize " << nextCoords_.size() << endl;
+            }
 
-        searchRadius_ = 0;
+            for(unsigned int i = 0; i < nextCoords_.size(); i++) {
+                NextCoord& next = nextCoords_.front();
+                Cursor coord(next.coord);
+                nextCoords_.pop_front();
+                if(!field_[coord.second][coord.first]) {
+                    setCursor(coord);
+                    cout << "Updated cursor to " << coord.first << " " << coord.second << endl;
+                    //exit(0);
+                    return;
+                }
+            }
+        }
+    }
 
-        //until the highest edge
-        while(searchRadius_ != std::max(wX_, wY_)) {
-            unsigned int searchRadiusX = std::min(searchRadius_, wX_);
-            unsigned int searchRadiusY = std::min(searchRadius_, wY_);
+    void NearestPointCursorField::checkCircleSegment(unsigned int radius) {
+        Cursor coord(0, radius);
+        unsigned int diameter = radius * radius;
 
-            double maxDistance = std::sqrt(std::pow(searchRadiusX, 2) + std::pow(searchRadiusY, 2));
+        // printField();
 
-            cout << "SEARCH CHECK " << searchRadiusX << " " << searchRadiusY << " " << maxDistance << endl;
+        while(coord.first <= radius && coord.second >= 0) {
+            //cout << coord.first << " " << coord.second << endl;
 
-            for(unsigned int i = 0; i < searchRadiusY; i++) {
-                for(unsigned int j = 0; j < searchRadiusX; j++) {
-                    double cost = std::sqrt(std::pow(j, 2) + std::pow(i, 2));
-                    if(i == 48 && j == 48) {
-                        cout << "48 hit " << cost << " " << field_[i][j] << endl;
-                    }
-
-                    if(cost > maxDistance) {
-                        continue;
-                    }
-
-                    if(!field_[i][j]) {
-                        found = true;
-                        if(cost < bestCost) {
-                            bestCost = cost;
-                            best = Cursor(j, i);
-                        }
-
-                        cout << "Checking pos " << i << " " << j << " " << cost << endl;
-                    }
+            if(coord.second < field_.size() && coord.first < field_[1].size()) {
+                //cout << "Is in matrix" << endl;
+                float distance = std::sqrt((float)((coord.first * coord.first) + (coord.second * coord.second)));
+                if(((distance == 0  && radius == 0) || distance > (radius - 1)) && !field_[coord.second][coord.first]) {
+                    // cout << "Added to list" << endl;
+                    NextCoord nextCoord;
+                    nextCoord.distance = distance;
+                    nextCoord.coord = Cursor(coord);
+                    nextCoords_.push_back(nextCoord);
                 }
             }
 
-            if(found) {
-                setCursor(best);
-                //cout << best.first << " " << best.second << endl;
-                //cout << bestCost << endl;
-                //exit(0);
-                return;
+            if(checkAction(coord, 1, 0, diameter)) {
+                continue;
             }
 
-            searchRadius_++;
+            if(checkAction(coord, 0, -1, diameter)) {
+                continue;
+            }
+
+            if(coord.first == radius && coord.second == 0) {
+                break;
+            }
+
+            cout << "Seems like we couldn't find a new direction" << endl;
+            cout << cursor_.first << " " << cursor_.second << endl;
+            exit(0);
         }
 
-        cout << "Couldn't find any place " << searchRadius_ << endl;
-        setCursor(0, 0);
+        nextCoords_.sort([](const NextCoord& a, const NextCoord& b) -> bool { return a.distance < b.distance; });
 
-        exit(0);
+        /*for(NextCoord& c: nextCoords_) {
+            cout << c.coord.first << " " << c.coord.second << " " << c.distance << endl;
+        }*/
+    }
+
+    bool NearestPointCursorField::checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter) {
+        unsigned int x = (unsigned int) ((int)coord.first + deltaX);
+        unsigned int y = (unsigned int) ((int)coord.second + deltaY);
+        if((x * x) + (y * y) <= diameter) {
+            coord.first = x;
+            coord.second = y;
+            return true;
+        }
+        return false;
     }
 
     void NearestPointCursorField::resetField(Field& target) {
@@ -77,8 +101,12 @@ namespace flopoco {
         NearestPointCursorField& castTarget = static_cast<NearestPointCursorField&>(target);
 
         //just copy everything for now
-        for(int i = 0; i < wY_; i++) {
+        for(unsigned int i = 0; i < wY_; i++) {
             field_[i] = castTarget.field_[i];
         }
+
+        searchRadius_ = castTarget.searchRadius_;
+        nextCoords_.clear();
+        nextCoords_ = castTarget.nextCoords_;
     }
 }

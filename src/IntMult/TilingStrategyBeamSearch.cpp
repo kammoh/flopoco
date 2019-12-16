@@ -2,6 +2,7 @@
 
 #include "TilingStrategyBeamSearch.hpp"
 #include "LineCursorField.hpp"
+#include "NearestPointCursorField.hpp"
 
 namespace flopoco {
     TilingStrategyBeamSearch::TilingStrategyBeamSearch(
@@ -25,7 +26,7 @@ namespace flopoco {
     };
 
     void TilingStrategyBeamSearch::solve() {
-        LineCursorField baseField(wX, wY, signedIO);
+        NearestPointCursorField baseField(wX, wY, signedIO);
         unsigned int usedDSPBlocks = 0U;
         unsigned int range = beamRange_;
         queue<unsigned int> path;
@@ -39,7 +40,7 @@ namespace flopoco {
         path.pop();
 
         baseField.reset();
-        LineCursorField tempField(baseField);
+        NearestPointCursorField tempField(baseField);
 
         float currentTotalCost = 0.0f;
         float currentPreCost = 0.0f;
@@ -122,7 +123,7 @@ namespace flopoco {
             cout << "NEXT TILE IS " << next << endl;
 
             cout << "===================================================================================================================" << endl;
-            baseField.printField();
+            //baseField.printField();
         }
 
         if(useSuperTiles_) {
@@ -140,6 +141,7 @@ namespace flopoco {
 
         cout << "Total cost: " << currentTotalCost << endl;
         cout << "Total area: " << currentArea << endl;
+        //exit(0);
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const int neededX, const int neededY, BaseMultiplierCategory* tile, float& preCost, float& totalCost, int& area, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {

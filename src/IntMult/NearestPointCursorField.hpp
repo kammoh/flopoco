@@ -16,6 +16,15 @@ namespace flopoco {
 
     private:
         unsigned int searchRadius_;
+        void checkCircleSegment(unsigned int radius);
+        bool checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter);
+
+        struct NextCoord{
+            Cursor coord;
+            float distance;
+        };
+
+        list<NextCoord> nextCoords_;
     };
 }
 
