@@ -19,7 +19,7 @@ Operator* BaseMultiplierIrregularLUTXilinx::generateOperator(
     );
 }
 
-const int BaseMultiplierIrregularLUTXilinx::shape_size[8][6] = {{3, 3, 5, 5, 1, 8},  // A (x,y,r,MSB,LSB)
+const int BaseMultiplierIrregularLUTXilinx::shape_size[8][6] = {{3, 3, 5, 5, 1, 8},  // A (x,y,r,MSB,LSB,area)
                                                                 {3, 3, 3, 4, 2, 5},
                                                                 {3, 2, 3, 3, 1, 4},
                                                                 {2, 3, 3, 3, 1, 4},

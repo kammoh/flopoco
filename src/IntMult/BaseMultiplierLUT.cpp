@@ -41,8 +41,8 @@ Operator* BaseMultiplierLUT::generateOperator(
         int y_min = ((y_anchor < 0)?0: y_anchor);
         int lsb = x_min + y_min;
 
-        int x_max = ((wMultX < x_anchor + wX())?wMultX: x_anchor + wX());
-        int y_max = ((wMultY < y_anchor + wY())?wMultY: y_anchor + wY());
+        int x_max = ((wMultX < x_anchor + (int)wX())?wMultX: x_anchor + wX());
+        int y_max = ((wMultY < y_anchor + (int)wY())?wMultY: y_anchor + wY());
         int msb = x_max+y_max;
         ws = (x_max-x_min==1)?y_max-y_min:((y_max-y_min==1)?x_max-x_min:msb - lsb);
 

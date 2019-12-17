@@ -99,7 +99,7 @@ namespace flopoco {
             virtual int getDSPCost() const = 0;
             virtual float getLUTCost() {return lut_cost;}
             virtual double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
-            virtual int getArea() {return tile_param.wX_*tile_param.wY_;}
+            virtual unsigned getArea() {return tile_param.wX_*tile_param.wY_;}
             float efficiency() {return getArea()/cost();}
             float cost() {return lut_cost;}
 
@@ -120,8 +120,8 @@ namespace flopoco {
             //Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
             Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
             Parametrization getParametrisation(void) {return tile_param;}
-            int wX(void) {return tile_param.wX_;}
-            int wY(void) {return tile_param.wY_;}
+            unsigned wX(void) {return tile_param.wX_;}
+            unsigned wY(void) {return tile_param.wY_;}
             int wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
             int wY_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
             virtual int isSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2) {return 0;}

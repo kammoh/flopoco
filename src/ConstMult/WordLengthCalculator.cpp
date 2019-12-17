@@ -264,7 +264,7 @@ namespace flopoco {
 
                 // construct the objective
                 ScaLP::Term t(0);
-                for(int i{0}; i < adderCount; ++i) {
+                for(int i{0}; i < (int)adderCount; ++i) {
                     t += faGain[i];
                 }
                 ScaLP::Objective o = ScaLP::maximize(t);
