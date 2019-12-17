@@ -59,7 +59,7 @@ namespace flopoco {
             }
         }
 
-        cout << "tiles" << endl;
+        /*cout << "tiles" << endl;
         for(BaseMultiplierCategory* b: tiles_) {
             cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
         }
@@ -72,9 +72,9 @@ namespace flopoco {
         cout << "kx2" << endl;
         for(BaseMultiplierCategory* b: kx2Tiles_) {
             cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
-        }
+        }*/
 
-        unsigned int dspArea = 0;
+        /* unsigned int dspArea = 0;
         for(BaseMultiplierCategory* b: tiles_) {
             if(b->getDSPCost()) {
                 dspArea = b->getArea();
@@ -82,7 +82,7 @@ namespace flopoco {
             }
         }
 
-        /*if(dspArea != 0) {
+        if(dspArea != 0) {
             totalDSPArea_ = maxPrefMult * dspArea;
             unsigned int total = wX * wY;
             unsigned int numDSPs = total / dspArea;
@@ -179,7 +179,7 @@ namespace flopoco {
 
             for(unsigned int i = 0; i < tiles_.size(); i++) {
                 BaseMultiplierCategory* t = tiles_[i];
-                cout << "Checking " << t->getType() << endl;
+                // cout << "Checking " << t->getType() << endl;
                 //dsp block
                 if(t->getDSPCost()) {
                     if(usedDSPBlocks == max_pref_mult_) {
@@ -216,8 +216,8 @@ namespace flopoco {
                             tileIndex = i + 1;
                         }
 
-                        cout << width << " " << height << endl;
-                        cout << bm->wX() << " " << bm->wY() << endl;
+                        /*cout << width << " " << height << endl;
+                        cout << bm->wX() << " " << bm->wY() << endl;*/
 
                         tile = bm->getParametrisation();
                         break;
@@ -227,10 +227,10 @@ namespace flopoco {
                 BaseMultiplierParametrization param = t->getParametrisation();
 
                 //no need to check normal tiles that won't fit anyway
-                if(t->getDSPCost() == 0 && (neededX * neededY < t->getArea())) {
-                    cout << "Not enough space anyway" << endl;
+                if(t->getDSPCost() == 0 && ((neededX * neededY) < t->getArea())) {
+                    /*cout << "Not enough space anyway" << endl;
                     cout << neededX << " " << neededY << endl;
-                    cout << param.getTileXWordSize() << " " << param.getTileYWordSize() << endl;
+                    cout << param.getTileXWordSize() << " " << param.getTileYWordSize() << endl; */
                     continue;
                 }
 
@@ -252,7 +252,7 @@ namespace flopoco {
                         //don't check usage for the last few percent
 
                         if(percent < 0.85 && missingPercent > 0.3) {
-                            cout << "PLACEMENT PROBLEM " << tiles << " vs " << t->getArea() << " " << percent << endl;
+                            // cout << "PLACEMENT PROBLEM " << tiles << " vs " << t->getArea() << " " << percent << endl;
                             continue;
                         }
                     }
@@ -269,9 +269,9 @@ namespace flopoco {
                 else {
                     //TODO: tile / cost vs t->efficieny()
                     float newEfficiency = t->efficiency() * (tiles / (float)t->getArea());
-                    cout << newEfficiency << endl;
+                    /*cout << newEfficiency << endl;
                     cout << t->efficiency()<< endl;
-                    cout << t->getArea() << endl;
+                    cout << t->getArea() << endl;*/
                     if (newEfficiency < efficiency) {
                         if(tiles == t->getArea()) {
                             //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
@@ -321,8 +321,8 @@ namespace flopoco {
             next = coord;
         }
 
-        //field.printField();
-        cout << superTiles_.size() << endl;
+        // field.printField();
+        // cout << superTiles_.size() << endl;
 
         //check each dspblock with another
         if(useSuperTiles_) {
@@ -340,7 +340,7 @@ namespace flopoco {
             }
         }
 
-        cout << dspBlocks->size() << endl;
+        // cout << dspBlocks->size() << endl;
 
         cmpCost = preCost;
         return totalCost;
@@ -355,15 +355,15 @@ namespace flopoco {
 
         float totalSubCost = 0.0f;
         for(unsigned int i = 0; i < tempBlocks.size(); i++) {
-            cout << "Testing tile " << i << endl;
+            // cout << "Testing tile " << i << endl;
             bool found = false;
             auto &dspBlock1 = tempBlocks[i];
             unsigned int coordX = dspBlock1.second.first;
             unsigned int coordY = dspBlock1.second.second;
             for (unsigned int j = i + 1; j < tempBlocks.size(); j++) {
                 auto &dspBlock2 = tempBlocks[j];
-                cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
-                cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
+                // cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
+                // cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
 
                 Cursor baseCoord;
                 baseCoord.first = std::min(dspBlock1.second.first, dspBlock2.second.first);
@@ -379,17 +379,17 @@ namespace flopoco {
                 int lx2 = dspBlock2.second.first + dspBlock2.first->wX_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY,signedIO) - baseCoord.first - 1;
                 int ly2 = dspBlock2.second.second + dspBlock2.first->wY_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY,signedIO) - baseCoord.second - 1;
 
-                cout << baseCoord.first << " " << baseCoord.second << endl;
+                /*cout << baseCoord.first << " " << baseCoord.second << endl;
                 cout << rx1 << " " << ry1 << " " << lx1 << " " << ly1 << endl;
-                cout << rx2 << " " << ry2 << " " << lx2 << " " << ly2 << endl;
+                cout << rx2 << " " << ry2 << " " << lx2 << " " << ly2 << endl;*/
 
                 BaseMultiplierCategory *tile = MultiplierTileCollection::superTileSubtitution(superTiles_, rx1, ry1, lx1, ly1, rx2, ry2, lx2, ly2);
                 if (tile == nullptr) {
-                    cout << "No Supertile found" << endl;
+                    // cout << "No Supertile found" << endl;
                     continue;
                 }
 
-                cout << "Found Supertile of type " << tile->getType() << endl;
+                // cout << "Found Supertile of type " << tile->getType() << endl;
 
                 if (solution != nullptr) {
                     solution->push_back(make_pair(tile->getParametrisation(), baseCoord));

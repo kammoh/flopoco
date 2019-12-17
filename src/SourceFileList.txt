@@ -71,6 +71,8 @@ IntMult/TilingStrategyGreedy
 IntMult/TilingStrategyXGreedy
 IntMult/TilingStrategyBeamSearch
 IntMult/Field
+IntMult/LineCursorField
+IntMult/NearestPointCursorField
 IntMult/MultiplierBlock
 IntMult/DSPBlock
 IntMult/BaseMultiplier

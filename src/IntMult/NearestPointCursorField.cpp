@@ -15,15 +15,13 @@ namespace flopoco {
             return;
         }
 
-        cout << "Using new logic" << endl;
-
         while(true) {
             //check if cursor vector is empty
             if(nextCoords_.size() == 0) {
-                cout << "Requesting new segment" << endl;
+                // cout << "Requesting new segment" << endl;
                 checkCircleSegment(searchRadius_);
                 searchRadius_++;
-                cout << "Segmentsize " << nextCoords_.size() << endl;
+                // cout << "Segmentsize " << nextCoords_.size() << endl;
             }
 
             for(unsigned int i = 0; i < nextCoords_.size(); i++) {
@@ -32,7 +30,7 @@ namespace flopoco {
                 nextCoords_.pop_front();
                 if(!field_[coord.second][coord.first]) {
                     setCursor(coord);
-                    cout << "Updated cursor to " << coord.first << " " << coord.second << endl;
+                    // cout << "Updated cursor to " << coord.first << " " << coord.second << endl;
                     //exit(0);
                     return;
                 }

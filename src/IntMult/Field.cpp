@@ -11,7 +11,6 @@ namespace flopoco {
             }
         }
 
-        cout << signedIO_ << " TEST IO" << endl;
         setCursor(0U, 0U);
     }
 
@@ -61,12 +60,11 @@ namespace flopoco {
             return;
         }
 
-        cout << "Before reset" << endl;
-        //target.printField();
+        /*cout << "Before reset" << endl;
+        target.printField();
         cout << "State" << endl;
-        //printField();
-
-        cout << highestLine_ << endl;
+        printField();
+        cout << highestLine_ << endl; */
 
         missing_ = target.missing_;
 
@@ -75,8 +73,8 @@ namespace flopoco {
         highestLine_ = target.highestLine_;
         setCursor(target.cursor_);
 
-        cout << "After reset" << endl;
-        //printField();
+        // cout << "After reset" << endl;
+        // printField();
     }
 
     unsigned int Field::checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile) {
@@ -93,7 +91,7 @@ namespace flopoco {
             for(unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area
                 if(!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
-                    cout << "coord " << j << " " << i << " is not covered!" << endl;
+                    // cout << "coord " << j << " " << i << " is not covered!" << endl;
                     continue;
                 }
 
@@ -105,8 +103,8 @@ namespace flopoco {
             }
         }
 
-        cout << "Trying to place tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << endl;
-        cout << "It would cover " << covered << endl;
+        // cout << "Trying to place tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << endl;
+        // cout << "It would cover " << covered << endl;
 
         return covered;
     }
@@ -141,8 +139,8 @@ namespace flopoco {
             size.second++;
         }
 
-        cout << "Trying to place DSPBlock with size " << param.getTileXWordSize() << " " << param.getTileYWordSize() << " at position " << coord.first << " " << coord.second << endl;
-        cout << "Size would be " << size.first << " " << size.second << endl;
+        // cout << "Trying to place DSPBlock with size " << param.getTileXWordSize() << " " << param.getTileYWordSize() << " at position " << coord.first << " " << coord.second << endl;
+        // cout << "Size would be " << size.first << " " << size.second << endl;
 
         return size;
     }
@@ -173,9 +171,8 @@ namespace flopoco {
         //printField();
         updateCursor();
 
-        cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " "
-             << coord.second << " new coord is " << cursor_.first << " " << cursor_.second << endl;
-        cout << tile->getType() << endl;
+        // cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << cursor_.first << " " << cursor_.second << endl;
+        // cout << tile->getType() << endl;
 
         return cursor_;
     }

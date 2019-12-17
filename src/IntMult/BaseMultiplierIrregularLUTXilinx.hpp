@@ -70,7 +70,7 @@ namespace flopoco
         static int getRelativeResultMSBWeight(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][3];}
         static int getRelativeResultLSBWeight(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][4];}
         //int getArea(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) const {return shape_size[(int)shape-1][5];}
-        int getArea(void) override {return shape_size[(int)shape-1][5];}
+        unsigned int getArea(void) override {return shape_size[(int)shape-1][5];}
         int getRelativeResultLSBWeight(Parametrization const& param) const;
         int getRelativeResultMSBWeight(Parametrization const& param) const;
         bool shapeValid(int x, int y);
