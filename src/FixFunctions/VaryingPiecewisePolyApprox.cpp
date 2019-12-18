@@ -31,7 +31,7 @@
 namespace flopoco {
 
   VaryingPiecewisePolyApprox::VaryingPiecewisePolyApprox(FixFunction *f_, double targetAccuracy_, int lsbIn_, int msbOut_, int lsbOut_):
-                f(f_), targetAccuracy(targetAccuracy_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_)
+                lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_), f(f_), targetAccuracy(targetAccuracy_)
 	{
 	        degree = 0;
 		needToFreeF = false;
@@ -249,7 +249,7 @@ namespace flopoco {
 			  char *buf;
 			  size_t sz;
 			  sz = sollya_lib_snprintf(NULL, 0, "%b", giS);
-			  if (sz==NULL)
+			  if (sz==(size_t)NULL)
 			    REPORT(INFO, "No function, oupsie");
 			  buf = (char *)malloc(sz + 1);
 			  sollya_lib_snprintf(buf, sz+1,"%b", giS);

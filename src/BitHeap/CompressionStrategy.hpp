@@ -139,13 +139,13 @@ class BitheapPlotter;
 
 		/**
 		 * @brief generate all the compressors that will be used for
-		 * compressig the bitheap
+		 * compressing the bitheap
 		 */
 		void generatePossibleCompressors();
 
 		/**
 		 * @brief return the delay of a compression stage
-		 * (there can be several compression staged in a cycle)
+		 * (there can be several compressions staged in a cycle)
 		 */
 		double getCompressorDelay();
 
@@ -218,11 +218,18 @@ class BitheapPlotter;
 		void printBitAmounts();
 
 		/**
-		 *	@brief print sthe current Bits in the bitheap (for debugging)
+		 *	@brief prints the current Bits in the bitheap (for debugging)
 		 */
 		void printBitsInBitheap();
 
-		/**
+        /**
+          * @brief prints the Area of Compression
+          */
+        void printSolutionStatistics();
+
+
+
+        /**
 		 * @brief all compressors specified in the solution will be used (vhdl code will be generated)
 		 */
 		void applyAllCompressorsFromSolution();
@@ -231,7 +238,7 @@ class BitheapPlotter;
 		/**
 		 *	@brief checks if the algorithm which places the compressors is finished (a stage where
 		 		the	final adder can be used has been reached). Works on the data of bitAmount
-			@param adderHeight what is the adderHeigt of the final adder (e.g. 2 or 3)
+			@param adderHeight what is the adderHeight of the final adder (e.g. 2 or 3)
 			@param stage specifies in which stage the check for the final adder should be done. To pass
 				this test there are no bits in other stages allowed
 		 */
@@ -239,7 +246,7 @@ class BitheapPlotter;
 
 		vector<vector<vector<Bit*> > > orderedBits; /**< The bits of the bitheap ordered by stages. First dimension is the stage, second the column */
 
-		vector<vector<int> > bitAmount; 			/**< Amount of bits in each stage and column. The compressionstrategyies (currently FirstFitting does not) work on this bitAmount, and if a solution is finished, the compressors will be used. */
+		vector<vector<int> > bitAmount; 			/**< Amount of bits in each stage and column. The compression strategies (currently FirstFitting does not) work on this bitAmount, and if a solution is finished, the compressors will be used. */
 
 		BitHeapSolution solution;
 

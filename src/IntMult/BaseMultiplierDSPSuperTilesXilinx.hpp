@@ -71,7 +71,7 @@ namespace flopoco {
 		double getLUTCost(uint32_t, uint32_t) const final {return get_wR(this->shape)*0.65;}
         double getLUTCost() const { return this->lut_cost;};
         int getDSPCost() const override { return 2; }
-        unsigned int getArea() {return 2*24*17;}
+        unsigned getArea() {return 2*24*17;}
         static int get_wX(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][0];}
         static int get_wY(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][1];}
         static int get_wR(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][2];}

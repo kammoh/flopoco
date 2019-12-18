@@ -32,18 +32,6 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 
 void TilingStrategyOptimalILP::solve()
 {
-/*
-    BaseMultiplierCategory* value = MultiplierTileCollection::superTileSubtitution(tiles, 7,  0, 23, 23,  0, 24, 16, 47);
-    if(value != nullptr)
-        cout << value->getType() << endl;
-    cout << value->getParametrisation().getMultType() << endl;
-    cout << value->efficiency() << endl;
-    cout << value->getArea() << endl;
-
-    exit(1);
-
-*/
-
 
 #ifndef HAVE_SCALP
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
@@ -146,22 +134,27 @@ void TilingStrategyOptimalILP::constructProblem()
     }
 
     //limit use of shape n
-    cout << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..." << endl;
-    int sn = 0;
-    stringstream consName;
-    consName << "lims" << sn;
-    ScaLP::Term pxyTerm;
-    for (int y = 0 - 24 + 1; y < wY; y++) {
-        for (int x = 0 - 24 + 1; x < wX; x++) {
-            for(int s = 0; s < wS; s++)
-                if (solve_Vars[s][x + x_neg][y + y_neg] != nullptr)
-                    for(int c = 0; c < tiles[s]->getDSPCost(); c++)
-                        pxyTerm.add(solve_Vars[s][x + x_neg][y + y_neg], 1);
+    int nDSPTiles = 0;
+    for(int s = 0; s < wS; s++)
+        if(tiles[s]->getDSPCost())
+            nDSPTiles++;
+    if(nDSPTiles) {
+        cout << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..." << endl;
+        stringstream consName;
+        consName << "limDSP";
+        ScaLP::Term pxyTerm;
+        for (int y = 0 - 24 + 1; y < wY; y++) {
+            for (int x = 0 - 24 + 1; x < wX; x++) {
+                for (int s = 0; s < wS; s++)
+                    if (solve_Vars[s][x + x_neg][y + y_neg] != nullptr)
+                        for (int c = 0; c < tiles[s]->getDSPCost(); c++)
+                            pxyTerm.add(solve_Vars[s][x + x_neg][y + y_neg], 1);
+            }
         }
+        ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.
+        c1Constraint.name = consName.str();
+        solver->addConstraint(c1Constraint);
     }
-    ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.
-    c1Constraint.name = consName.str();
-    solver->addConstraint(c1Constraint);
 
     // Set the Objective
     cout << "   setting objective (minimize cost function)..." << endl;

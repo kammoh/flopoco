@@ -144,7 +144,7 @@ bool_eq_operators::bool_eq_inv::bool_eq_inv( const bool_eq &in0 ): in0_( in0 ) {
 }
 
 bool bool_eq_operators::bool_eq_inv::eval( const std::vector<bool> &input )  const {
-    return ~in0_.eval( input );
+    return !in0_.eval( input );
 }
 
 bool_eq_operators::bool_eq_op *bool_eq_operators::bool_eq_inv::getCopy() const {

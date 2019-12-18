@@ -100,7 +100,7 @@ namespace flopoco
 
 		~BasicCompressor();
 		/**
-		 * returns pointer to the compressor. In that compresor
+		 * returns pointer to the compressor. In that compressor
 		 * the constructor will generate vhdl code.
 		 */
         virtual Compressor* getCompressor();
@@ -110,22 +110,22 @@ namespace flopoco
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		unsigned int getHeights(unsigned int middleLength = 0);
+		virtual unsigned int getHeights(unsigned int middleLength = 0);
 
 		/**
 		 *	@brief returns the amount of different outputcolumns
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		unsigned int getOutHeights(unsigned int middleLength = 0);
+		virtual unsigned int getOutHeights(unsigned int middleLength = 0);
 
 		/**
-		 * 	@brief returns the amount of inputs for a given inputcolumns of the compressor
+		 * 	@brief returns the amount of inputs for a given inputcolumn of the compressor
 		 * 	@param column specifies the column of the compressor
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		unsigned int getHeightsAtColumn(unsigned int column, bool ilpGeneration = false, unsigned int middleLength = 0);
+		virtual unsigned int getHeightsAtColumn(unsigned int column, bool ilpGeneration = false, unsigned int middleLength = 0);
 
 		/**
 		 * 	@brief returns the amount of outputs for a given outputcolumn of the compressor
@@ -133,7 +133,7 @@ namespace flopoco
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
-		unsigned int getOutHeightsAtColumn(unsigned int column, bool ilpGeneration = false, unsigned int middleLength = 0);
+		virtual unsigned int getOutHeightsAtColumn(unsigned int column, bool ilpGeneration = false, unsigned int middleLength = 0);
 
 		/**
 		 * 	@brief returns efficiency of the compressor. efficiency is computed with the formula
@@ -143,15 +143,13 @@ namespace flopoco
         virtual double getEfficiency(unsigned int middleLength = 0);
 
 		/**
-		 *	@brief returns the Amount of LUT-equivalents, the compressor needs to be implemented
+		 *	@brief returns the amount of LUT-equivalents, the compressor needs to be implemented
 		 * 	@param middleLength if compressor is variable, middleLength must be set correctly.
 		 * 		if its not a variable compressor, middleLength = 0
 		 */
         virtual float getArea(unsigned int middleLength = 0);
 
-		/**
-		 *	@brief returns a string of the compressor e.g. for debugging.
-		 */
+
 		string getStringOfIO();
 
         Operator* parentOp;

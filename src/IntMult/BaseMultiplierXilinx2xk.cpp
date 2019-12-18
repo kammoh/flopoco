@@ -35,8 +35,8 @@ double BaseMultiplierXilinx2xk::getLUTCost(int x_anchor, int y_anchor, int wMult
     int y_min = ((y_anchor < 0)?0: y_anchor);
     int lsb = x_min + y_min;
 
-    int x_max = ((wMultX < x_anchor + wX())?wMultX: x_anchor + wX());
-    int y_max = ((wMultY < y_anchor + wY())?wMultY: y_anchor + wY());
+    int x_max = ((wMultX < x_anchor + (int)wX())?wMultX: x_anchor + wX());
+    int y_max = ((wMultY < y_anchor + (int)wY())?wMultY: y_anchor + wY());
     int msb = (x_max==1)?y_max:((y_max==1)?x_max:x_max+y_max);
 
     return luts + (msb - lsb)*0.65;

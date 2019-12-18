@@ -60,7 +60,8 @@ namespace flopoco{
 
 		}
 
-
+        //reports the area in LUT-equivalents
+        printSolutionStatistics();
 
 		//here the VHDL-Code for the compressors as well as the bits->compressors->bits are being written.
 		applyAllCompressorsFromSolution();

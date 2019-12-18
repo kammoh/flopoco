@@ -39,6 +39,9 @@ namespace flopoco{
 		//parandehAfshar generates the compressor tree but only works on the bitAmount datastructure and fills the solution. No VHDL-Code is written here.
 		parandehAfshar();
 
+        //reports the area in LUT-equivalents
+        printSolutionStatistics();
+
 		//here the VHDL-Code for the compressors as well as the bits->compressors->bits are being written.
 		applyAllCompressorsFromSolution();
 
