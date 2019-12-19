@@ -90,7 +90,15 @@ namespace flopoco {
 		bool extraSignBitRe = !signedIn && (constantReNeg || !constantImNeg);
 		bool extraSignBitIm = !signedIn && (constantReNeg || constantImNeg);
 
-		msbout_re = msbout_im = msb_in + constantMaxMSB +1;
+		int msbout_re, msbout_im; 
+		
+		//Do we need an extra bit to prevent overflow in complex addition?
+		if(extrabit)
+			msbout_re = msbout_im = msb_in + constantMaxMSB +1;
+		else
+			msbout_re = msbout_im = msb_in + constantMaxMSB;
+
+
 		if(extraSignBitRe)
 		{
 			msbout_re++;
@@ -100,7 +108,7 @@ namespace flopoco {
 			msbout_im++;
 		}
 
-		REPORT(INFO, "Computed MSBout for real and im parts: " << msbout_re);
+		REPORT(INFO, "Computed MSBout for real and im parts: " << msbout_re);	
 		
 		outputre_width = msbout_re - lsb_out + 1;
 		outputim_width = msbout_im - lsb_out + 1;
@@ -128,7 +136,8 @@ namespace flopoco {
 			int lsb_in, 
 			int lsb_out,
 			string constant_re,
-			string constant_im
+			string constant_im,
+			bool extrabit
 		): 	
 		Operator(parentOp, target),
 			signedIn(signedIn),
@@ -136,7 +145,8 @@ namespace flopoco {
 			lsb_in(lsb_in),
 			lsb_out(lsb_out),
 			constant_re(constant_re),
-			constant_im(constant_im)
+			constant_im(constant_im),
+			extrabit(extrabit)
 	{
 		init();
 
@@ -161,8 +171,10 @@ namespace flopoco {
 			
 			double errorInUlpsRe = kcmInReConstRe->getErrorInUlps() + kcmInImConstIm->getErrorInUlps();
 			double errorInUlpsIm = kcmInReConstIm->getErrorInUlps() + kcmInImConstRe->getErrorInUlps();
-			int guardBits_re = intlog2(errorInUlpsRe);
-			int guardBits_im = intlog2(errorInUlpsIm);
+			int guardBits_re = intlog2(errorInUlpsRe)+1;
+			int guardBits_im = intlog2(errorInUlpsIm)+1;
+//			int guardBits_re = ceil(log2(errorInUlpsRe))+1;
+//			int guardBits_im = ceil(log2(errorInUlpsIm))+1;
 
 			BitHeap* bitheapRe = new BitHeap(
 					this,
@@ -355,7 +367,7 @@ namespace flopoco {
 			reDown = 0;
 		}
 
-		//		cout << reUp << " " << reDown << " " << imUp << " " << imDown << endl;
+				//cout << reUp << " " << reDown << " " << imUp << " " << imDown << endl;
 		//Add expected results to corresponding outputs
 		tc->addExpectedOutput("ReOut", reUp);	
 		tc->addExpectedOutput("ReOut", reDown);	
@@ -432,11 +444,14 @@ namespace flopoco {
 		int lsbIn, lsbOut, msbIn;
 		//		bool signedIn;
 		string constantIm, constantRe;
+		bool extrabit;
 		UserInterface::parseInt(args, "lsbIn", &lsbIn);
 		UserInterface::parseString(args, "constantIm", &constantIm);
 		UserInterface::parseString(args, "constantRe", &constantRe);
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "msbIn", &msbIn);
+		UserInterface::parseBoolean(args, "extrabit", &extrabit);
+
 		// UserInterface::parseBoolean(args, "signedIn", &signedIn);
 		return new FixComplexKCM(
 														 parentOp,
@@ -446,7 +461,8 @@ namespace flopoco {
 				lsbIn,
 				lsbOut,
 				constantRe, 
-				constantIm
+				constantIm,
+				extrabit
 			);
 	}
 
@@ -462,7 +478,8 @@ namespace flopoco {
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \
 				constantRe(string): real part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
-				constantIm(string): imaginary part of the constant, given as a Sollya expression, e.g \"log(2)\"; ",
+				constantIm(string): imaginary part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
+				extrabit(bool)=true: do we need extra bit for addition",
 				"",
 				FixComplexKCM::parseArguments
 		);
