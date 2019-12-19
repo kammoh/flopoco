@@ -67,7 +67,6 @@ namespace flopoco {
             lut_cost = get_wR(this->shape)*0.65;
 		}
 
-		int getDSPCost(uint32_t, uint32_t) const final {return 2;}
 		double getLUTCost(uint32_t, uint32_t) const final {return get_wR(this->shape)*0.65;}
         double getLUTCost() const { return this->lut_cost;};
         int getDSPCost() const override { return 2; }

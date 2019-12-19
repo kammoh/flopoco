@@ -45,7 +45,6 @@ namespace flopoco {
                 "BaseMultiplierDSP"
         }{lut_cost = 0.65*(wX+wY);}
 
-		int getDSPCost(uint32_t, uint32_t) const final {return 1;}
 		double getLUTCost(uint32_t, uint32_t) const final {return 0.;}
         int getDSPCost() const final {return 1;}
         double getLUTCost() const {return 0.;}

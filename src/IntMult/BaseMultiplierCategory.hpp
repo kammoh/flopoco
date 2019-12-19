@@ -91,7 +91,6 @@ namespace flopoco {
 				friend BaseMultiplierCategory;
 			};
 
-            virtual int getDSPCost(uint32_t wX, uint32_t wY) const = 0;
             virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
             virtual int getDSPCost() const = 0;
             virtual float getLUTCost() {return lut_cost;}

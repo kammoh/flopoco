@@ -85,8 +85,7 @@ void BaseMultiplierCollection::print()
 		for(BaseMultiplierCategory *bmc : baseMultiplierCategories)
 		{
 			cerr << "  base multiplier " << bmc->getMaxWordSizeSmallInputUnsigned() << "x" << bmc->getMaxWordSizeLargeInputUnsigned()
-				 << ", max. DSP cost: " << bmc->getDSPCost(bmc->getMaxWordSizeSmallInputUnsigned(),
-														   bmc->getMaxWordSizeLargeInputUnsigned())
+				 << ", max. DSP cost: " << bmc->getDSPCost()
 				 << ", max. LUT cost: " << bmc->getLUTCost(bmc->getMaxWordSizeSmallInputUnsigned(),
 														   bmc->getMaxWordSizeLargeInputUnsigned()) << endl;
 		}
