@@ -58,14 +58,14 @@ namespace flopoco {
 	{
 		int effectiveW1Size = firstW;
 		if (isW1Signed)
-		   effectiveW1Size -= deltaWidthUnsignedSigned_;
+		   effectiveW1Size += deltaWidthUnsignedSigned_;
 		if (effectiveW1Size > maxWordSizeLargeInputUnsigned_)
 			return 0;
 		int maxLimit = (effectiveW1Size <= maxWordSizeSmallInputUnsigned_) ? maxWordSizeLargeInputUnsigned_: maxWordSizeSmallInputUnsigned_;
 		if (isW2signed)
 			maxLimit += deltaWidthUnsignedSigned_;
 
-		int inputWidthSumBounds = maxSumOfInputWordSizes_ - effectiveW1Size;
+		int inputWidthSumBounds = (maxWordSizeLargeInputUnsigned_+ maxWordSizeSmallInputUnsigned_) - effectiveW1Size;
 		if (isW2signed)
 			inputWidthSumBounds += deltaWidthUnsignedSigned_;
 
