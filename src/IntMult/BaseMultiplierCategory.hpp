@@ -34,10 +34,7 @@ namespace flopoco {
 					deltaWidthUnsignedSigned_{0},
                     rectangular{rectangular},
 				  	type_{type}
-				{
-					//maxSumOfInputWordSizes_ = wX + wY;
-                    maxSumOfInputWordSizes_ = wX;               //required to force expected behaviour in BasicTiling
-				}
+				{}
 
 			int getDeltaWidthSigned() const { return deltaWidthUnsignedSigned_; }
 			string getType() const {return type_;}
@@ -94,7 +91,6 @@ namespace flopoco {
 				friend BaseMultiplierCategory;
 			};
 
-            virtual int getDSPCost(uint32_t wX, uint32_t wY) const = 0;
             virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
             virtual int getDSPCost() const = 0;
             virtual float getLUTCost() {return lut_cost;}
@@ -134,7 +130,6 @@ namespace flopoco {
 			int maxWordSizeLargeInputUnsigned_;
 			int maxWordSizeSmallInputUnsigned_;
 			int deltaWidthUnsignedSigned_;
-			int maxSumOfInputWordSizes_;
             const bool rectangular;
             string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
         protected:

@@ -98,7 +98,7 @@ namespace flopoco {
     BaseMultiplierCategory* MultiplierTileCollection::superTileSubtitution(vector<BaseMultiplierCategory*> mtc, int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2){
         for(int i = 0; i < (int)mtc.size(); i++)
         {
-            if(mtc[i]->getDSPCost(1,1) == 2){
+            if(mtc[i]->getDSPCost() == 2){
                 int id = mtc[i]->isSuperTile(rx1, ry1, lx1, ly1, rx2, ry2, lx2, ly2);
                 if(id){
                     return mtc[i+id];

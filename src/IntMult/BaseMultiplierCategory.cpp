@@ -58,14 +58,14 @@ namespace flopoco {
 	{
 		int effectiveW1Size = firstW;
 		if (isW1Signed)
-		   effectiveW1Size -= deltaWidthUnsignedSigned_;
+		   effectiveW1Size += deltaWidthUnsignedSigned_;
 		if (effectiveW1Size > maxWordSizeLargeInputUnsigned_)
 			return 0;
 		int maxLimit = (effectiveW1Size <= maxWordSizeSmallInputUnsigned_) ? maxWordSizeLargeInputUnsigned_: maxWordSizeSmallInputUnsigned_;
 		if (isW2signed)
 			maxLimit += deltaWidthUnsignedSigned_;
 
-		int inputWidthSumBounds = maxSumOfInputWordSizes_ - effectiveW1Size;
+		int inputWidthSumBounds = (maxWordSizeLargeInputUnsigned_+ maxWordSizeSmallInputUnsigned_) - effectiveW1Size;
 		if (isW2signed)
 			inputWidthSumBounds += deltaWidthUnsignedSigned_;
 
@@ -107,7 +107,7 @@ int BaseMultiplierCategory::getRelativeResultMSBWeight(Parametrization const & p
 
 // determines if a position (x,y) is coverd by a tile (s), relative to the tiles origin position(shape_x,shape_y)
 bool BaseMultiplierCategory::shape_contribution(int x, int y, int shape_x, int shape_y, int wX, int wY, bool signedIO){
-    if(getDSPCost(1,1) == 1){
+    if(getDSPCost() == 1){
         int sign_x = (signedIO && wX-(int)tile_param.wX_-1 == shape_x)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
         int sign_y = (signedIO && wY-(int)tile_param.wY_-1 == shape_y)?1:0;
         return ( 0 <= x-shape_x && x-shape_x < (int)tile_param.wX_+sign_x && 0 <= y-shape_y && y-shape_y < (int)tile_param.wY_+sign_y );
@@ -148,7 +148,7 @@ float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX
 BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization::tryDSPExpand(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {
     bool isSignedX = false, isSignedY = false;
     int tile_width = wX_, tile_height = wY_;
-    if(bmCat_->getDSPCost(1,1)){
+    if(bmCat_->getDSPCost()){
         if(signedIO && (wX-m_x_pos-(int)wX_)== 1){           //enlarge the Xilinx DSP Multiplier by one bit, if the inputs are signed and placed to process the MSBs
             tile_width++;
         }
@@ -167,7 +167,7 @@ BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization:
 
     int BaseMultiplierCategory::wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {
         int tile_width = tile_param.wX_;
-        if(tile_param.bmCat_->getDSPCost(1,1)){
+        if(tile_param.bmCat_->getDSPCost()){
             if(signedIO && (wX-m_x_pos-(int)tile_param.wX_)== 1){           //enlarge the Xilinx DSP Multiplier by one bit, if the inputs are signed and placed to process the MSBs
                 tile_width++;
             }
@@ -177,7 +177,7 @@ BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization:
 
     int BaseMultiplierCategory::wY_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {
         int tile_height = tile_param.wY_;
-        if(tile_param.bmCat_->getDSPCost(1,1)){
+        if(tile_param.bmCat_->getDSPCost()){
             if(signedIO && (wY-m_y_pos-(int)tile_param.wY_)== 1){           //enlarge the Xilinx DSP Multiplier by one bit, if the inputs are signed and placed to process the MSBs
                 tile_height++;
             }
