@@ -126,15 +126,15 @@ namespace flopoco {
 
         if(useSuperTiles_) {
             currentTotalCost += performSuperTilePass(&dspBlocks, &solution);
+        }
 
-            for(auto& tile: dspBlocks) {
-                unsigned int x = tile.second.first;
-                unsigned int y = tile.second.second;
+        for(auto& tile: dspBlocks) {
+            unsigned int x = tile.second.first;
+            unsigned int y = tile.second.second;
 
-                solution.push_back(make_pair(tile.first->getParametrisation().tryDSPExpand(x, y, wX, wY, signedIO), tile.second));
+            solution.push_back(make_pair(tile.first->getParametrisation().tryDSPExpand(x, y, wX, wY, signedIO), tile.second));
 
-                currentTotalCost += tile.first->getLUTCost(x, y, wX, wY);
-            }
+            currentTotalCost += tile.first->getLUTCost(x, y, wX, wY);
         }
 
         cout << "Total cost: " << currentTotalCost << endl;
