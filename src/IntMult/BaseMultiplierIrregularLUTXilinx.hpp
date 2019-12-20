@@ -51,18 +51,10 @@ namespace flopoco
             this->shape = shape;
             this->wX = get_wX(shape);
             this->wY = get_wY(shape);
-            lut_cost = getLUTCost();
         }
 
-        double getLUTCost(uint32_t, uint32_t) const {return 8.25;}
         int getDSPCost() const final {return 0;}
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
-        double getLUTCost() const
-        {
-            int word_size = getRelativeResultMSBWeight(this->shape) - getRelativeResultLSBWeight(this->shape) + 1;
-            int lut_required = (this->wX+this->wY <= 5)?word_size/2+word_size%2:word_size;
-            return lut_required + word_size*0.65;
-        }
         static int get_wX(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][0];}
         static int get_wY(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][1];}
         static int get_wR(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][2];}

@@ -29,7 +29,7 @@ namespace flopoco {
                 false,
 				-1,
 				"BaseMultiplierDSP"
-		}{lut_cost = 0.65*(maxWidthBiggestWord+maxWidthSmallestWord);}
+		}{}
 
         BaseMultiplierDSP(
                 int wX,
@@ -43,11 +43,10 @@ namespace flopoco {
                 isSignedY,
                 -1,
                 "BaseMultiplierDSP"
-        }{lut_cost = 0.65*(wX+wY);}
+        }{}
 
-		double getLUTCost(uint32_t, uint32_t) const final {return 0.;}
+
         int getDSPCost() const final {return 1;}
-        double getLUTCost() const {return 0.;}
 
 		Operator* generateOperator(
 				Operator *parentOp,

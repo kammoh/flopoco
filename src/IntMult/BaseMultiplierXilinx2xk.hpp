@@ -23,10 +23,8 @@ namespace flopoco {
             false,
             -1,
             "BaseMultiplierXilinx2xk"}
-		{lut_cost = 1.65*((wX<wY)?wY:wX)+2.3;}
+		{}
 
-		double getLUTCost(uint32_t wX, uint32_t wY) const final;
-        double getLUTCost() const { return this->lut_cost;};
         int getDSPCost() const override { return 0; }
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
 

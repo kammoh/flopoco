@@ -20,14 +20,6 @@ Operator* BaseMultiplierXilinx2xk::generateOperator(
 		);
 }
 
-double BaseMultiplierXilinx2xk::getLUTCost(uint32_t wX, uint32_t wY) const
-{
-	if (wX <= 2)
-		return double(wY + 1);
-	else
-		return double(wX + 1);
-}
-
 double BaseMultiplierXilinx2xk::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
     int luts = ((wX() < wY())?wY():wX()) + 1;
 
