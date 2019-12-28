@@ -82,6 +82,9 @@ IntMult/BaseMultiplierXilinx2xk
 IntMult/BaseMultiplierIrregularLUTXilinx
 IntMult/MultiplierTileCollection
 Complex/FixComplexKCM
+Complex/FixComplexAdder
+Complex/FixComplexR2Butterfly
+Complex/FixFFTFullyPA
 Conversions/Posit2FP
 Conversions/FP2Fix
 Conversions/OutputIEEE

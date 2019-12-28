@@ -63,6 +63,10 @@ TestBench
 Wrapper
 
 FixComplexKCM
+FixComplexAdder
+FixComplexR2Butterfly
+FixFFTFullyPA
+
 IntConstMultShiftAdd
 IntConstMultShiftAddOpt
 IntConstMultShiftAddRPAG
