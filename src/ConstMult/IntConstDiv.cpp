@@ -57,7 +57,9 @@ namespace flopoco{
 		for (int x=0; x<(1<<(2*rSize)); x++) {
 			// the input consists of two remainders
 			int r0 = x & ((1<<rSize)-1);
+			if(r0>=d) r0=0; // This should be a 'don't care'
 			int r1 = x >> rSize;
+			if(r1>=d) r1=0; // This should be a 'don't care'
 			mpz_class y = mpz_class(r0) + (mpz_class(r1) << alpha*((1<<(level-1))) );
 			mpz_class r = y % d;
 			mpz_class q = y / d;

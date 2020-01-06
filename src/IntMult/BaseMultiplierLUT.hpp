@@ -36,13 +36,8 @@ namespace flopoco {
                     false,
                     -1,
                     "BaseMultiplierLUT_" + string(1,((char) wX) + '0') + "x" + string(1,((char) wY) + '0')
-        }{
-            int ws = ((wX+wY) <= 3)?wX+wY-1:wX+wY;
-            lut_cost = ((ws <= 5)?ws/2+ws%2:ws) + 0.65*ws;
-        }
+        }{}
 
-			double getLUTCost(uint32_t wX, uint32_t wY) const override;
-            double getLUTCost() const { return this->lut_cost;};
             int getDSPCost() const override { return 0; }
             double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
 

@@ -40,7 +40,8 @@ namespace flopoco {
 					int lsb_in, 
 					int lsb_out,
 					string constant_re,
-					string constant_im
+					string constant_im,
+					bool extrabit = true
 				);
 
 			virtual ~FixComplexKCM();
@@ -83,6 +84,7 @@ namespace flopoco {
 
 			string constant_re;
 			string constant_im;
+			bool extrabit;
 
 			//Computed values for testBenchs
 			mpfr_t mpfr_constant_re;

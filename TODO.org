@@ -240,13 +240,16 @@ THIS INCLUDES WRITING ITS AUTOTEST
 		CordicSinCos
 		FixAtan2
 		//FixedComplexAdder
-		FixFIR
-		FixSOPC
-		FixIIR
+
+		FixRootRaisedCosine
+		add FixSinc? 
+
+		Complex/* (lots of cleanup)
 
 		UserDefinedOperator
 		
 * Bugs
+** constant 1000 bits in TestBench doesn't allow for parallel FFTs
 ** ./flopoco verbose=2 FixFunctionBySimplePoly plainvhdl=true f="sin(x)" lsbIn=-16 msbOut=4 lsbout=-16 TestBench n=-2
 The parity problem leads to wrong alignment.
 Nobody should do this if they have read the Muller book, so... people will try this and it is a bug

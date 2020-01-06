@@ -91,14 +91,12 @@ namespace flopoco {
 				friend BaseMultiplierCategory;
 			};
 
-            virtual double getLUTCost(uint32_t wX, uint32_t wY) const = 0;
             virtual int getDSPCost() const = 0;
-            virtual float getLUTCost() {return lut_cost;}
             virtual double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
             virtual unsigned int getArea() {return tile_param.wX_*tile_param.wY_;}
             virtual bool isVariable() const { return false; }
             float efficiency() {return getArea()/cost();}
-            float cost() {return lut_cost;}
+            float cost() {return getLUTCost(0, 0, 48, 48);}
 
 			virtual bool shapeValid(Parametrization const & param, unsigned x, unsigned y) const;
             virtual bool shapeValid(int x, int y);
@@ -114,7 +112,6 @@ namespace flopoco {
 					Parametrization const &parameters
 				) const = 0;
 
-            //Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY) const;
             Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
             Parametrization getParametrisation(void) {return tile_param;}
             unsigned wX(void) {return tile_param.wX_;}
@@ -122,7 +119,6 @@ namespace flopoco {
             int wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
             int wY_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
             virtual int isSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2) {return 0;}
-            //Parametrization getSuperTile(int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2);
 
 		private:
             BaseMultiplierCategory::Parametrization tile_param;
@@ -132,8 +128,6 @@ namespace flopoco {
 			int deltaWidthUnsignedSigned_;
             const bool rectangular;
             string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
-        protected:
-            float lut_cost;
     };
 
 	typedef BaseMultiplierCategory::Parametrization BaseMultiplierParametrization;

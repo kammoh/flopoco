@@ -69,6 +69,12 @@ namespace flopoco{
 			wIn = intlog2(values.size());
 		}
 
+#if 0  // debug. Who never needs to print out the content of his Table ?
+		for(unsigned int i=0; i<values.size(); i++)		{
+			REPORT(0,"value["<<i<<"] = " << values[i]);
+	}
+#endif
+		
 		//determine the lowest and highest values stored in the table
 		mpz_class maxValue = values[0], minValue = values[0];
 		
@@ -89,7 +95,7 @@ namespace flopoco{
 			REPORT(INFO, "WARNING: wOut value was not set, wOut=" << wOut << " was inferred from the vector of values");
 		}
 		else if(wOut < intlog2(maxValue))  {
-#if 0 // This behaviour is probably a timebomb. Turns out it was fixing FixFunctionByMultipartiteTable
+#if 0 // This behaviour is probably a timebomb. Turns out it was fixing FixFunctionByMultipartiteTable, intconstdiv/BTCD, and probably others
 			REPORT(INFO, "WARNING: wOut value was set too small. I'm fixing it up but, but I probably shouldn't");
 			//set the value of wOut
 			wOut = intlog2(maxValue);
