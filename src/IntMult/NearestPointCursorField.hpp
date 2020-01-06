@@ -16,6 +16,8 @@ namespace flopoco {
 
     private:
         unsigned int searchRadius_;
+        unsigned int segmentPos_;
+
         void checkCircleSegment(unsigned int radius);
         bool checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter);
 
@@ -24,6 +26,7 @@ namespace flopoco {
             float distance;
         };
 
+        vector<vector<NextCoord>> coordsLUT_;
         list<NextCoord> nextCoords_;
     };
 }

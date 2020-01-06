@@ -40,13 +40,13 @@ namespace flopoco {
             kx2Tiles_.push_back(new BaseMultiplierXilinx2xk(INT32_MAX, 2));
 
             //sort 2xk tiles
-            sort(v2xkTiles_.begin(), v2xkTiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->wY() < b->wY(); });
+            std::sort(v2xkTiles_.begin(), v2xkTiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->wY() < b->wY(); });
             //sort kx2 tiles
-            sort(kx2Tiles_.begin(), kx2Tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->wX() < b->wX(); });
+            std::sort(kx2Tiles_.begin(), kx2Tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->wX() < b->wX(); });
         }
 
         //sort base tiles
-        sort(tiles_.begin(), tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->efficiency() > b->efficiency(); });
+        std::sort(tiles_.begin(), tiles_.end(), [](BaseMultiplierCategory* a, BaseMultiplierCategory* b) -> bool { return a->efficiency() > b->efficiency(); });
 
         //insert 2k and k2 tiles after dsp tiles and before normal tiles
         if(use2xk) {
@@ -223,8 +223,6 @@ namespace flopoco {
                         break;
                     }
                 }
-
-                BaseMultiplierParametrization param = t->getParametrisation();
 
                 //no need to check normal tiles that won't fit anyway
                 if(t->getDSPCost() == 0 && ((neededX * neededY) < t->getArea())) {
