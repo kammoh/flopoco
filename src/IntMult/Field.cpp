@@ -2,23 +2,23 @@
 #include <iostream>
 
 namespace flopoco {
-    Field::Field(unsigned int wX, unsigned int wY, bool signedIO) : wX_(wX), wY_(wY), signedIO_(signedIO), missing_(wX * wY), highestLine_(0U), lowestFinishedLine_(0U) {
+    Field::Field(unsigned int wX, unsigned int wY, bool signedIO, FieldState& baseState) : wX_(wX), wY_(wY), signedIO_(signedIO), currentStateID_(0U), baseState_{&baseState} {
         field_.resize(wY_);
         for(unsigned int i = 0; i < wY_; i++) {
             field_[i].resize(wX_);
-            for(unsigned int j = 0; j < wX_; j++) {
-                field_[i][j] = false;
+            for (unsigned int j = 0; j < wX_; j++) {
+                field_[i][j] = currentStateID_;
             }
         }
+        currentStateID_++;
 
-        setCursor(0U, 0U);
+        initFieldState(baseState);
+        baseID_ = baseState.getID();
     }
 
     Field::Field(const Field &copy) {
         wX_ = copy.wX_;
         wY_ = copy.wY_;
-        missing_ = copy.missing_;
-        cursor_ =  Cursor(copy.cursor_);
 
         field_.resize(wY_);
         for(unsigned int i = 0U; i < wY_; i++) {
@@ -29,55 +29,28 @@ namespace flopoco {
         }
 
         signedIO_ = copy.signedIO_;
-        highestLine_ = copy.highestLine_;
     }
 
     Field::~Field() {
         field_.clear();
     }
 
+    void Field::initFieldState(FieldState& fieldState) {
+        fieldState.reset(this, currentStateID_++, wX_ * wY_);
+        fieldState.setCursor(0U, 0U);
+        fieldState.setField(this);
+    }
+
+    void Field::updateStateID(Field::FieldState &fieldState) {
+        fieldState.setID(currentStateID_++);
+    }
+
     void Field::reset() {
-        if(missing_ == wX_ * wY_) {
-            return;
-        }
-
-        for(unsigned int i = 0U; i < wY_; i++) {
-            for(unsigned int j = 0U; j < wX_; j++) {
-                field_[i][j] = false;
-            }
-        }
-
-        setCursor(0, 0);
-        missing_ = wX_ * wY_;
-
-        highestLine_ = 0;
-
-        resetCursorBehaviour();
+        initFieldState(*baseState_);
+        baseID_ = baseState_->getID();
     }
 
-    void Field::reset(Field& target) {
-        if(target.wX_ != wX_ || target.wY_ != wY_) {
-            return;
-        }
-
-        /*cout << "Before reset" << endl;
-        target.printField();
-        cout << "State" << endl;
-        printField();
-        cout << highestLine_ << endl; */
-
-        missing_ = target.missing_;
-
-        resetField(target);
-
-        highestLine_ = target.highestLine_;
-        setCursor(target.cursor_);
-
-        // cout << "After reset" << endl;
-        // printField();
-    }
-
-    unsigned int Field::checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile) {
+    unsigned int Field::checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
         unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
@@ -86,6 +59,7 @@ namespace flopoco {
         unsigned int maxY = std::min(endY, wY_);
 
         unsigned int covered = 0;
+        ID fieldID = fieldState.getID();
 
         for(unsigned int i = coord.second; i < maxY; i++) {
             for(unsigned int j = coord.first; j < maxX; j++) {
@@ -95,7 +69,7 @@ namespace flopoco {
                     continue;
                 }
 
-                if(field_[i][j]) {
+                if(field_[i][j] == fieldID || field_[i][j] == baseID_) {
                     return 0;
                 }
 
@@ -145,7 +119,7 @@ namespace flopoco {
         return size;
     }
 
-    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile) {
+    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
         unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
         unsigned int endX = coord.first + sizeX;
@@ -153,40 +127,37 @@ namespace flopoco {
         unsigned int maxX = std::min(endX, wX_);
         unsigned int maxY = std::min(endY, wY_);
 
+        ID fieldID = fieldState.getID();
+        unsigned int updateMissing = 0U;
+
+        // cout << fieldState.getCursor().first << " " << fieldState.getCursor().second << endl;
+
         for (unsigned int i = coord.second; i < maxY; i++) {
             for (unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area and if area is free
-                if (tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_) && !field_[i][j]) {
-                    missing_--;
-                    field_[i][j] = true;
+                if (tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_) && field_[i][j] != fieldID && field_[i][j] != baseID_) {
+                    field_[i][j] = fieldID;
+                    updateMissing++;
                 }
             }
         }
 
-        if (maxY > highestLine_) {
-            highestLine_ = maxY;
-        }
+        fieldState.decreaseMissing(updateMissing);
 
+        // TODO: update highest line
+        /*if (maxY > highestLine_) {
+            highestLine_ = maxY;
+        }*/
 
         //printField();
-        updateCursor();
+        fieldState.updateCursor();
 
-        // cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << cursor_.first << " " << cursor_.second << endl;
+        // printField();
+
+        // cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << fieldState.getCursor().first << " " << fieldState.getCursor().second << endl;
         // cout << tile->getType() << endl;
 
-        return cursor_;
-    }
-
-    bool Field::isFull() {
-        return missing_ == 0U;
-    }
-
-    unsigned int Field::getMissing() {
-        return missing_;
-    }
-
-    unsigned int Field::getHighestLine() {
-        return highestLine_;
+        return fieldState.getCursor();
     }
 
     unsigned int Field::getWidth() {
@@ -197,59 +168,38 @@ namespace flopoco {
         return wY_;
     }
 
-    bool Field::getCell(Cursor cursor) {
-        return field_[cursor.second][cursor.first];
-    }
-
-    void Field::setLine(unsigned int line, vector<bool> &vec) {
+    void Field::setLine(unsigned int line, vector<ID> &vec) {
         field_[line] = vec;
     }
 
-    unsigned int Field::getMissingLine() {
-        unsigned int missing_ = 0U;
+    unsigned int Field::getMissingLine(FieldState& fieldState) {
+        unsigned int missing = 0U;
+        Cursor c = fieldState.getCursor();
+        ID fieldID = fieldState.getID();
 
-        for(unsigned int i = cursor_.first; i < wX_; i++) {
-            if(field_[cursor_.second][i]) {
+        for(unsigned int i = c.first; i < wX_; i++) {
+            if(field_[c.second][i] == fieldID || field_[c.second][i] == baseID_) {
                 break;
             }
-            missing_++;
+            missing++;
         }
 
-        return missing_;
+        return missing;
     }
 
-    unsigned int Field::getMissingHeight() {
-        unsigned int missing_ = 0U;
+    unsigned int Field::getMissingHeight(FieldState& fieldState) {
+        unsigned int missing = 0U;
+        Cursor c = fieldState.getCursor();
+        ID fieldID = fieldState.getID();
 
-        for(unsigned int i = cursor_.second; i < wY_; i++) {
-            if(field_[i][cursor_.first]) {
+        for(unsigned int i = c.second; i < wY_; i++) {
+            if(field_[i][c.first] == fieldID || field_[i][c.first] == baseID_) {
                 break;
             }
-            missing_++;
+            missing++;
         }
 
-        return missing_;
-    }
-
-    Cursor Field::getCursor() {
-        return cursor_;
-    }
-
-    void Field::setCursor(unsigned int x, unsigned int y)  {
-        if(x > wX_) {
-            x = 0U;
-        }
-
-        if(y > wY_) {
-            y = 0U;
-        }
-
-        cursor_.first = x;
-        cursor_.second = y;
-    }
-
-    void Field::setCursor(Cursor target) {
-        setCursor(target.first, target.second);
+        return missing;
     }
 
     void Field::printField() {
@@ -257,6 +207,21 @@ namespace flopoco {
         for(auto v: field_) {
             for(auto c: v) {
                 cout << c;
+            }
+            cout << endl;
+        }
+    }
+
+    bool Field::checkPosition(unsigned int x, unsigned int y, Field::FieldState &fieldState) {
+        return (field_[y][x] == fieldState.getID() || field_[y][x] == baseID_);
+    }
+
+    void Field::printField(FieldState& fieldState) {
+        ID fieldID = fieldState.getID();
+
+        for(auto v: field_) {
+            for(auto c: v) {
+                cout << (c == fieldID || c == baseID_);
             }
             cout << endl;
         }

@@ -53,7 +53,8 @@ namespace flopoco {
     };
 
     void TilingStrategyXGreedy::solve() {
-        NearestPointCursorField field(wX, wY, signedIO);
+        NearestPointCursorField baseState;
+        Field field(wX, wY, signedIO, baseState);
 
         for(auto& u: pairs_) {
             cout << u.first << " " << u.second << endl;
@@ -62,7 +63,7 @@ namespace flopoco {
         list<mult_tile_t> bestSolution;
         float bestCost = FLT_MAX;
         int bestArea = 0;
-        float totalCost = createSolution(field, &bestSolution, nullptr, bestCost, bestArea, 0);
+        float totalCost = createSolution(baseState, field, &bestSolution, nullptr, bestCost, bestArea, 0);
         int runs = std::pow(2, pairs_.size());
         for(int i = 1; i < runs; i++) {
             field.reset();
@@ -78,7 +79,7 @@ namespace flopoco {
             list<mult_tile_t> solution;
             float cmpCost = bestCost;
             int area = 0;
-            float cost = createSolution(field, &solution, nullptr, cmpCost, area, 0);
+            float cost = createSolution(baseState, field, &solution, nullptr, cmpCost, area, 0);
             if(cost < bestCost) {
                 bestCost = cmpCost;
                 totalCost = cost;

@@ -1,7 +1,15 @@
 #include "NearestPointCursorField.hpp"
 
 namespace flopoco {
-    NearestPointCursorField::NearestPointCursorField(unsigned int wX, unsigned int wY, bool signedIO) : Field(wX, wY, signedIO), searchRadius_{0}, segmentPos_{0} {
+    NearestPointCursorField::NearestPointCursorField() : BaseFieldState(), searchRadius_{0}, segmentPos_{0} {
+    }
+
+    void NearestPointCursorField::setField(Field *field) {
+        BaseFieldState::setField(field);
+
+        unsigned int wX = field->getWidth();
+        unsigned int wY = field->getHeight();
+
         unsigned int maxDistance = ((int) std::sqrt((float)((wX * wX) + (wY * wY)))) + 1;
         coordsLUT_.resize(maxDistance);
 
@@ -11,7 +19,7 @@ namespace flopoco {
             unsigned int diameter = i * i;
 
             while(coord.first <= i && coord.second >= 0) {
-                if(coord.second < field_.size() && coord.first < field_[1].size()) {
+                if(coord.second < wY && coord.first < wX) {
                     float distance = std::sqrt((float)((coord.first * coord.first) + (coord.second * coord.second)));
                     if((distance == 0  && i == 0) || distance > (i - 1)) {
                         // cout << "Added to list" << endl;
@@ -50,10 +58,24 @@ namespace flopoco {
         }*/
     }
 
-    void NearestPointCursorField::resetCursorBehaviour() {
-        searchRadius_ = 0;
-        segmentPos_ = 0;
-        nextCoords_.clear();
+    void NearestPointCursorField::reset(Field *field, ID id, unsigned int missing) {
+        BaseFieldState::reset(field, id, missing);
+
+        searchRadius_ = 0U;
+        segmentPos_ = 0U;
+    }
+
+    void NearestPointCursorField::reset(BaseFieldState &baseState) {
+        BaseFieldState::reset(baseState);
+
+        searchRadius_ = 0U;
+        segmentPos_ = 0U;
+
+        NearestPointCursorField* cpy = dynamic_cast<NearestPointCursorField*>(&baseState);
+        if(cpy != nullptr) {
+            searchRadius_ = cpy->searchRadius_;
+            segmentPos_ = cpy->segmentPos_;
+        }
     }
 
     void NearestPointCursorField::updateCursor() {
@@ -64,12 +86,12 @@ namespace flopoco {
 
         // cout << "Requesting new position " << " " << missing_ << endl;
 
-        // printField();
+        // field_->printField();
 
         while(true) {
             for(unsigned int i = segmentPos_; i < coordsLUT_[searchRadius_].size(); i++) {
                 NextCoord& next = coordsLUT_[searchRadius_][i];
-                if(!field_[next.coord.second][next.coord.first]) {
+                if(!field_->checkPosition(next.coord.first, next.coord.second, *this)) {
                     setCursor(next.coord);
                     segmentPos_ = i;
                     return;
@@ -82,7 +104,7 @@ namespace flopoco {
             searchRadius_++;
             segmentPos_ = 0;
 
-            /* cout << "Updated search radius " << searchRadius_ << endl;
+            /*cout << "Updated search radius " << searchRadius_ << endl;
             for(NextCoord& c: coordsLUT_[searchRadius_]) {
                 cout << c.coord.first << ", " << c.coord.second << " = " << c.distance << " ";
             }
@@ -93,28 +115,6 @@ namespace flopoco {
                 break;
             }
         }
-
-        /*while(true) {
-            //check if cursor vector is empty
-            if(nextCoords_.size() == 0) {
-                // cout << "Requesting new segment" << endl;
-                checkCircleSegment(searchRadius_);
-                searchRadius_++;
-                // cout << "Segmentsize " << nextCoords_.size() << endl;
-            }
-
-            for(unsigned int i = 0; i < nextCoords_.size(); i++) {
-                NextCoord& next = nextCoords_.front();
-                Cursor coord(next.coord);
-                nextCoords_.pop_front();
-                if(!field_[coord.second][coord.first]) {
-                    setCursor(coord);
-                    // cout << "Updated cursor to " << coord.first << " " << coord.second << endl;
-                    //exit(0);
-                    return;
-                }
-            }
-        }*/
     }
 
     void NearestPointCursorField::checkCircleSegment(unsigned int radius) {
@@ -123,13 +123,16 @@ namespace flopoco {
 
         // printField();
 
+        unsigned int wX = field_->getWidth();
+        unsigned int wY = field_->getHeight();
+
         while(coord.first <= radius && coord.second >= 0) {
             //cout << coord.first << " " << coord.second << endl;
 
-            if(coord.second < field_.size() && coord.first < field_[1].size()) {
+            if(coord.second < wY && coord.first < wX) {
                 //cout << "Is in matrix" << endl;
                 float distance = std::sqrt((float)((coord.first * coord.first) + (coord.second * coord.second)));
-                if(((distance == 0  && radius == 0) || distance > (radius - 1)) && !field_[coord.second][coord.first]) {
+                if(((distance == 0  && radius == 0) || distance > (radius - 1)) && !field_->checkPosition(coord.first, coord.second, *this)) {
                     // cout << "Added to list" << endl;
                     NextCoord nextCoord;
                     nextCoord.distance = distance;
@@ -171,20 +174,5 @@ namespace flopoco {
             return true;
         }
         return false;
-    }
-
-    void NearestPointCursorField::resetField(Field& target) {
-        //dirty stuff
-        NearestPointCursorField& castTarget = static_cast<NearestPointCursorField&>(target);
-
-        //just copy everything for now
-        for(unsigned int i = 0; i < wY_; i++) {
-            field_[i] = castTarget.field_[i];
-        }
-
-        searchRadius_ = castTarget.searchRadius_;
-        segmentPos_ = castTarget.segmentPos_;
-        nextCoords_.clear();
-        nextCoords_ = castTarget.nextCoords_;
     }
 }

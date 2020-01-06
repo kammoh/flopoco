@@ -4,14 +4,25 @@
 #include "Field.hpp"
 
 namespace flopoco {
-    class LineCursorField : public Field {
+    class LineCursorField : public BaseFieldState {
     public:
-        LineCursorField(unsigned int wX, unsigned int wY, bool signedIO);
-        LineCursorField(const Field &copy);
-    public:
-        void updateCursor() override;
-        void resetField(Field& target) override;
-        void resetCursorBehaviour() override;
+        void updateCursor() override {
+            while(cursor_.second != field_->getHeight()) {
+                //try to find next free position in the current line
+                for(unsigned int i = 0U; i < field_->getWidth(); i++) {
+                    if(!field_->checkPosition(i, cursor_.second, *this)) {
+                        cursor_.first = i;
+                        return;
+                    }
+                }
+
+                //no free position in this line
+                cursor_.second++;
+            }
+
+            cursor_.first = 0U;
+            cursor_.second = 0U;
+        }
     };
 }
 

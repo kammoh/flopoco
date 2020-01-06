@@ -9,48 +9,81 @@ using namespace std;
 
 namespace flopoco {
     typedef pair<unsigned int, unsigned int> Cursor;
+    typedef unsigned long long int ID;
 
     class Field {
     public:
-        Field(unsigned int wX, unsigned int wY, bool signedIO);
+        class FieldState {
+        public:
+            FieldState() : id_{0U}, missing_{0U}, field_{nullptr} {}
+
+            void setID(ID id) { id_= id; }
+            ID getID() const { return id_; }
+
+            void setCursor(unsigned int x, unsigned int y) { cursor_ = Cursor(x, y); }
+            void setCursor(Cursor cursor) { cursor_ = cursor; }
+            Cursor getCursor() const { return cursor_; }
+            virtual void setField(Field* field) { field_ = field; }
+
+            virtual void reset(Field* field, ID id, unsigned int missing) {
+                field_ = field;
+                id_ = id;
+                missing_ = missing;
+            }
+
+            virtual void reset(FieldState& baseState) {
+                field_ = baseState.field_;
+                field_->initFieldState(*this);
+
+                missing_ = baseState.missing_;
+                cursor_ = Cursor(baseState.cursor_);
+            }
+
+            void decreaseMissing(unsigned int delta) { missing_ -= delta; }
+            unsigned int getMissing() const { return missing_; }
+
+            virtual void updateCursor() = 0;
+        protected:
+            ID id_;
+            Cursor cursor_;
+            unsigned int missing_;
+            Field* field_;
+        };
+
+        Field(unsigned int wX, unsigned int wY, bool signedIO, FieldState& baseState);
         Field(const Field &copy);
 
         ~Field();
 
-        void printField();
-        //TODO: pass down "updateCursor" as function pointer / virtual function
-        Cursor placeTileInField(const Cursor coord, BaseMultiplierCategory* tile);
-        unsigned int checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile);
+        void initFieldState(FieldState& fieldState);
+        void updateStateID(FieldState& fieldState);
+
+        unsigned int checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState);
         Cursor checkDSPPlacement(const Cursor coord, const BaseMultiplierParametrization& param);
-        bool isFull();
-        unsigned int getMissing();
-        unsigned int getMissingLine();
-        unsigned int getMissingHeight();
-        unsigned int getHighestLine();
+        Cursor placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState);
+        unsigned int getMissingLine(FieldState& fieldState);
+        unsigned int getMissingHeight(FieldState& fieldState);
         unsigned int getWidth();
         unsigned int getHeight();
-        bool getCell(Cursor cursor);
-        void setLine(unsigned int line, vector<bool>& vec);
-        Cursor getCursor();
-        void setCursor(unsigned int x, unsigned int y);
-        void setCursor(Cursor target);
+        void setLine(unsigned int line, vector<ID>& vec);
         void reset();
         void reset(Field& target);
+        bool checkPosition(unsigned int x, unsigned int y, FieldState& fieldState);
+        void printField();
+        void printField(FieldState& fieldState);
 
     protected:
-        vector<vector<bool>> field_;
-        Cursor cursor_;
+        vector<vector<ID>> field_;
         unsigned int wX_;
         unsigned int wY_;
         bool signedIO_;
-        unsigned int missing_;
-        unsigned int highestLine_;
-        unsigned int lowestFinishedLine_;
 
-        virtual void updateCursor() = 0;
-        virtual void resetField(Field& target) = 0;
-        virtual void resetCursorBehaviour() = 0;
+        ID currentStateID_;
+        FieldState* baseState_;
+        ID baseID_;
     };
+
+    typedef Field::FieldState BaseFieldState;
 }
 
 

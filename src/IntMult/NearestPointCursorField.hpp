@@ -5,15 +5,14 @@
 #include "Field.hpp"
 
 namespace flopoco {
-    class NearestPointCursorField : public Field {
+    class NearestPointCursorField : public BaseFieldState {
     public:
-        NearestPointCursorField(unsigned int wX, unsigned int wY, bool signedIO);
-        NearestPointCursorField(const Field &copy);
-    public:
-        void updateCursor() override;
-        void resetField(Field& target) override;
-        void resetCursorBehaviour() override;
+        NearestPointCursorField();
 
+        void updateCursor() override;
+        void setField(Field* field) override;
+        void reset(BaseFieldState& baseState) override;
+        void reset(Field* field, ID id, unsigned int missing) override;
     private:
         unsigned int searchRadius_;
         unsigned int segmentPos_;
