@@ -32,8 +32,13 @@ namespace flopoco {
             }
 
             virtual void reset(FieldState& baseState) {
-                field_ = baseState.field_;
-                field_->initFieldState(*this);
+                if(field_ != baseState.field_) {
+                    field_ = baseState.field_;
+                    field_->initFieldState(*this);
+                }
+                else {
+                    field_->updateStateID(*this);
+                }
 
                 missing_ = baseState.missing_;
                 cursor_ = Cursor(baseState.cursor_);
