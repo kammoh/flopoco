@@ -119,7 +119,6 @@ namespace flopoco {
             }
 
             // cout << "NEXT TILE IS " << next << endl;
-
             // cout << "===================================================================================================================" << endl;
             // field.printField(baseState);
         }
@@ -139,7 +138,7 @@ namespace flopoco {
 
         cout << "Total cost: " << currentTotalCost << endl;
         cout << "Total area: " << currentArea << endl;
-        exit(0);
+        // exit(0);
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, Field& field, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, float& preCost, float& totalCost, int& area, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {

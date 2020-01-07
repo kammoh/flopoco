@@ -80,33 +80,7 @@ namespace flopoco {
                 dspArea = b->getArea();
                 break;
             }
-        }
-
-        if(dspArea != 0) {
-            totalDSPArea_ = maxPrefMult * dspArea;
-            unsigned int total = wX * wY;
-            unsigned int numDSPs = total / dspArea;
-            //TODO: perhaps use float + rounding here
-            if(totalDSPArea_ >= total) {
-                useExtraDSPMetric_ = false;
-            }
-            else {
-                float percent = 1.0 - ((total - totalDSPArea_) / (float) total);
-                if(percent > 0.90) {
-                    cout << "Percent too high " << percent << endl;
-                    useExtraDSPMetric_ = false;
-                }
-                else {
-                    useExtraDSPMetric_ = true;
-                    coveredDSPArea_ = 0;
-                }
-            }
-
-            cout << "DSP METRICS "<< useExtraDSPMetric_ << endl;
-            cout << total << " VS " << totalDSPArea_ << endl;
         }*/
-
-        useExtraDSPMetric_ = false;
     };
 
     void TilingStrategyGreedy::solve() {
@@ -120,7 +94,7 @@ namespace flopoco {
         cout << "Total cost: " << cost << endl;
         cout << "Total area: " << area << endl;
 
-        //exit(0);
+        // exit(0);
     }
 
     BaseMultiplierCategory* TilingStrategyGreedy::findVariableTile(unsigned int wX, unsigned int wY) {
@@ -248,17 +222,6 @@ namespace flopoco {
                     //check threshold
                     if(usage < occupation_threshold_) {
                         continue;
-                    }
-
-                    //TODO: check against
-                    if(useExtraDSPMetric_ && tiles != t->getArea()) {
-                        float percent = 1.0 - ((t->getArea() - tiles) / (float) t->getArea());
-                        //don't check usage for the last few percent
-
-                        if(percent < 0.85 && missingPercent > 0.3) {
-                            // cout << "PLACEMENT PROBLEM " << tiles << " vs " << t->getArea() << " " << percent << endl;
-                            continue;
-                        }
                     }
 
                     //TODO: find a better way for this, think about the effect of > vs >= here

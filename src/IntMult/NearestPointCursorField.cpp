@@ -7,6 +7,9 @@ namespace flopoco {
     void NearestPointCursorField::setField(Field *field) {
         BaseFieldState::setField(field);
 
+        coordsLUT_.clear();
+        // cout << "Rebuilding LUTS" << endl;
+
         unsigned int wX = field->getWidth();
         unsigned int wY = field->getHeight();
 
@@ -52,7 +55,7 @@ namespace flopoco {
 
         /*for(vector<NextCoord>& list : coordsLUT_) {
             for(NextCoord& c: list) {
-                cout << c.coord.first << ", " << c.coord.second << " = " << c.distance << " ";
+                cout << c.coord.first << "," << c.coord.second << " = " << c.distance << " ";
             }
             cout << endl;
         }*/
@@ -104,65 +107,20 @@ namespace flopoco {
             searchRadius_++;
             segmentPos_ = 0;
 
-            /*cout << "Updated search radius " << searchRadius_ << endl;
-            for(NextCoord& c: coordsLUT_[searchRadius_]) {
-                cout << c.coord.first << ", " << c.coord.second << " = " << c.distance << " ";
-            }
-            cout << endl; */
+            // cout << "Updated search radius " << searchRadius_ << endl;
 
             if(searchRadius_ == coordsLUT_.size()) {
                 cout << "REACHED MAX SEARCH RADIUS" << endl;
+                field_->printField();
                 break;
             }
-        }
-    }
-
-    void NearestPointCursorField::checkCircleSegment(unsigned int radius) {
-        Cursor coord(0, radius);
-        unsigned int diameter = radius * radius;
-
-        // printField();
-
-        unsigned int wX = field_->getWidth();
-        unsigned int wY = field_->getHeight();
-
-        while(coord.first <= radius && coord.second >= 0) {
-            //cout << coord.first << " " << coord.second << endl;
-
-            if(coord.second < wY && coord.first < wX) {
-                //cout << "Is in matrix" << endl;
-                float distance = std::sqrt((float)((coord.first * coord.first) + (coord.second * coord.second)));
-                if(((distance == 0  && radius == 0) || distance > (radius - 1)) && !field_->checkPosition(coord.first, coord.second, *this)) {
-                    // cout << "Added to list" << endl;
-                    NextCoord nextCoord;
-                    nextCoord.distance = distance;
-                    nextCoord.coord = Cursor(coord);
-                    nextCoords_.push_back(nextCoord);
+            else {
+                /* for(NextCoord& c: coordsLUT_[searchRadius_]) {
+                    cout << c.coord.first << "," << c.coord.second << " = " << c.distance << " ";
                 }
+                cout << endl; */
             }
-
-            if(checkAction(coord, 1, 0, diameter)) {
-                continue;
-            }
-
-            if(checkAction(coord, 0, -1, diameter)) {
-                continue;
-            }
-
-            if(coord.first == radius && coord.second == 0) {
-                break;
-            }
-
-            cout << "Seems like we couldn't find a new direction" << endl;
-            cout << cursor_.first << " " << cursor_.second << endl;
-            exit(0);
         }
-
-        nextCoords_.sort([](const NextCoord& a, const NextCoord& b) -> bool { return a.distance < b.distance; });
-
-        /*for(NextCoord& c: nextCoords_) {
-            cout << c.coord.first << " " << c.coord.second << " " << c.distance << endl;
-        }*/
     }
 
     bool NearestPointCursorField::checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter) {

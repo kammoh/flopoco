@@ -61,6 +61,8 @@ namespace flopoco {
         unsigned int covered = 0;
         ID fieldID = fieldState.getID();
 
+        // printField();
+
         for(unsigned int i = coord.second; i < maxY; i++) {
             for(unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area
@@ -70,6 +72,10 @@ namespace flopoco {
                 }
 
                 if(field_[i][j] == fieldID || field_[i][j] == baseID_) {
+                    // cout << fieldID << endl;
+                    // cout << baseID_ << endl;
+                    // cout << i << " " << j << " " << endl;
+                    // cout << "Got a problem here!" << endl;
                     return 0;
                 }
 
@@ -79,6 +85,8 @@ namespace flopoco {
 
         // cout << "Trying to place tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << endl;
         // cout << "It would cover " << covered << endl;
+        // cout << tile->getType() << endl;
+        // cout << "Using fieldID " << fieldState.getID() << endl;
 
         return covered;
     }
@@ -149,13 +157,15 @@ namespace flopoco {
             highestLine_ = maxY;
         }*/
 
-        //printField();
+        // printField();
         fieldState.updateCursor();
 
         // printField();
 
         // cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << fieldState.getCursor().first << " " << fieldState.getCursor().second << endl;
         // cout << tile->getType() << endl;
+        // cout << "Using fieldID " << fieldState.getID() << endl;
+        // cout << "Update missing " << updateMissing << endl;
 
         return fieldState.getCursor();
     }
