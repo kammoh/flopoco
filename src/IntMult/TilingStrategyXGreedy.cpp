@@ -1,6 +1,6 @@
 #include "TilingStrategyXGreedy.hpp"
-#include "LineCursorField.hpp"
-#include "NearestPointCursorField.hpp"
+#include "LineCursor.hpp"
+#include "NearestPointCursor.hpp"
 
 namespace flopoco {
     TilingStrategyXGreedy::TilingStrategyXGreedy(
@@ -53,7 +53,7 @@ namespace flopoco {
     };
 
     void TilingStrategyXGreedy::solve() {
-        NearestPointCursorField baseState;
+        NearestPointCursor baseState;
         Field field(wX, wY, signedIO, baseState);
 
         for(auto& u: pairs_) {
@@ -63,7 +63,7 @@ namespace flopoco {
         list<mult_tile_t> bestSolution;
         float bestCost = FLT_MAX;
         int bestArea = 0;
-        float totalCost = createSolution(baseState, field, &bestSolution, nullptr, bestCost, bestArea, 0);
+        float totalCost = createSolution(baseState, &bestSolution, nullptr, bestCost, bestArea, 0);
         int runs = std::pow(2, pairs_.size());
         for(int i = 1; i < runs; i++) {
             field.reset();
@@ -79,7 +79,7 @@ namespace flopoco {
             list<mult_tile_t> solution;
             float cmpCost = bestCost;
             int area = 0;
-            float cost = createSolution(baseState, field, &solution, nullptr, cmpCost, area, 0);
+            float cost = createSolution(baseState, &solution, nullptr, cmpCost, area, 0);
             if(cost < bestCost) {
                 bestCost = cmpCost;
                 totalCost = cost;

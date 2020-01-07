@@ -1,13 +1,13 @@
-#ifndef FLOPOCO_NEARESTPOINTCURSORFIELD_HPP
-#define FLOPOCO_NEARESTPOINTCURSORFIELD_HPP
+#ifndef FLOPOCO_NEARESTPOINTCURSOR_HPP
+#define FLOPOCO_NEARESTPOINTCURSOR_HPP
 
 
 #include "Field.hpp"
 
 namespace flopoco {
-    class NearestPointCursorField : public BaseFieldState {
+    class NearestPointCursor : public BaseFieldState {
     public:
-        NearestPointCursorField();
+        NearestPointCursor();
 
         void updateCursor() override;
         void setField(Field* field) override;
@@ -30,4 +30,4 @@ namespace flopoco {
 }
 
 
-#endif //FLOPOCO_NEARESTPOINTCURSORFIELD_HPP
+#endif //FLOPOCO_NEARESTPOINTCURSOR_HPP

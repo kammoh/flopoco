@@ -1,10 +1,10 @@
-#include "NearestPointCursorField.hpp"
+#include "NearestPointCursor.hpp"
 
 namespace flopoco {
-    NearestPointCursorField::NearestPointCursorField() : BaseFieldState(), searchRadius_{0}, segmentPos_{0} {
+    NearestPointCursor::NearestPointCursor() : BaseFieldState(), searchRadius_{0}, segmentPos_{0} {
     }
 
-    void NearestPointCursorField::setField(Field *field) {
+    void NearestPointCursor::setField(Field *field) {
         BaseFieldState::setField(field);
 
         coordsLUT_.clear();
@@ -61,27 +61,27 @@ namespace flopoco {
         }*/
     }
 
-    void NearestPointCursorField::reset(Field *field, ID id, unsigned int missing) {
+    void NearestPointCursor::reset(Field *field, ID id, unsigned int missing) {
         BaseFieldState::reset(field, id, missing);
 
         searchRadius_ = 0U;
         segmentPos_ = 0U;
     }
 
-    void NearestPointCursorField::reset(BaseFieldState &baseState) {
+    void NearestPointCursor::reset(BaseFieldState &baseState) {
         BaseFieldState::reset(baseState);
 
         searchRadius_ = 0U;
         segmentPos_ = 0U;
 
-        NearestPointCursorField* cpy = dynamic_cast<NearestPointCursorField*>(&baseState);
+        NearestPointCursor* cpy = dynamic_cast<NearestPointCursor*>(&baseState);
         if(cpy != nullptr) {
             searchRadius_ = cpy->searchRadius_;
             segmentPos_ = cpy->segmentPos_;
         }
     }
 
-    void NearestPointCursorField::updateCursor() {
+    void NearestPointCursor::updateCursor() {
         if(missing_ == 0) {
             setCursor(0,0);
             return;
@@ -123,7 +123,7 @@ namespace flopoco {
         }
     }
 
-    bool NearestPointCursorField::checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter) {
+    bool NearestPointCursor::checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter) {
         unsigned int x = (unsigned int) ((int)coord.first + deltaX);
         unsigned int y = (unsigned int) ((int)coord.second + deltaY);
         if((x * x) + (y * y) <= diameter) {

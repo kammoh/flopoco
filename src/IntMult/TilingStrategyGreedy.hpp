@@ -39,7 +39,7 @@ namespace flopoco {
         bool use2xk_;
         bool useSuperTiles_;
 
-        float createSolution(BaseFieldState& fieldState, Field& field, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, int& area,unsigned int usedDSPBlocks=0, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks=nullptr);
+        float createSolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, int& area,unsigned int usedDSPBlocks=0, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks=nullptr);
         BaseMultiplierCategory* findVariableTile(unsigned int wX, unsigned int wY);
         float performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution);
     };

@@ -1,8 +1,8 @@
 #include "TilingStrategyGreedy.hpp"
 #include "BaseMultiplierIrregularLUTXilinx.hpp"
 #include "BaseMultiplierXilinx2xk.hpp"
-#include "LineCursorField.hpp"
-#include "NearestPointCursorField.hpp"
+#include "LineCursor.hpp"
+#include "NearestPointCursor.hpp"
 
 #include <cstdlib>
 #include <ctime>
@@ -84,13 +84,13 @@ namespace flopoco {
     };
 
     void TilingStrategyGreedy::solve() {
-        NearestPointCursorField fieldState;
+        NearestPointCursor fieldState;
         Field field(wX, wY, signedIO, fieldState);
 
         float cmp = FLT_MAX;
         int area = 0;
         //only one state, base state is also current state
-        float cost = createSolution(fieldState, field, &solution, nullptr, cmp, area, 0);
+        float cost = createSolution(fieldState, &solution, nullptr, cmp, area, 0);
         cout << "Total cost: " << cost << endl;
         cout << "Total area: " << area << endl;
 
@@ -133,7 +133,8 @@ namespace flopoco {
         }
     }
 
-    float TilingStrategyGreedy::createSolution(BaseFieldState& fieldState, Field& field, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, int& area, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
+    float TilingStrategyGreedy::createSolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, int& area, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
+        Field* field = fieldState.getField();
         auto next (fieldState.getCursor());
         float totalCost = 0.0f;
         float preCost = 0.0f;
@@ -147,15 +148,13 @@ namespace flopoco {
 
             // field.printField();
 
-            unsigned int neededX = field.getMissingLine(fieldState);
-            unsigned int neededY = field.getMissingHeight(fieldState);
+            unsigned int neededX = field->getMissingLine(fieldState);
+            unsigned int neededY = field->getMissingHeight(fieldState);
 
             BaseMultiplierCategory* bm = tiles_[tiles_.size() - 1];
             BaseMultiplierParametrization tile = bm->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
             float efficiency = -1.0f;
             unsigned int tileIndex = tiles_.size() - 1;
-
-            float missingPercent = 1.0 - (((wX * wY) - fieldState.getMissing()) / (float) (wX * wY));
 
             for(unsigned int i = 0; i < tiles_.size(); i++) {
                 BaseMultiplierCategory* t = tiles_[i];
@@ -212,7 +211,7 @@ namespace flopoco {
                     continue;
                 }
 
-                unsigned int tiles = field.checkTilePlacement(next, t, fieldState);
+                unsigned int tiles = field->checkTilePlacement(next, t, fieldState);
                 if(tiles == 0) {
                     continue;
                 }
@@ -267,7 +266,7 @@ namespace flopoco {
                 path->push(tileIndex);
             }
 
-            auto coord (field.placeTileInField(next, bm, fieldState));
+            auto coord (field->placeTileInField(next, bm, fieldState));
             if(bm->getDSPCost()) {
                 usedDSPBlocks++;
                 if(useSuperTiles_ && superTiles_.size() > 0) {

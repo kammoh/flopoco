@@ -1,10 +1,10 @@
-#ifndef FLOPOCO_LINECURSORFIELD_HPP
-#define FLOPOCO_LINECURSORFIELD_HPP
+#ifndef FLOPOCO_LINECURSOR_HPP
+#define FLOPOCO_LINECURSOR_HPP
 
 #include "Field.hpp"
 
 namespace flopoco {
-    class LineCursorField : public BaseFieldState {
+    class LineCursor : public BaseFieldState {
     public:
         void updateCursor() override {
             while(cursor_.second != field_->getHeight()) {
@@ -27,4 +27,4 @@ namespace flopoco {
 }
 
 
-#endif //FLOPOCO_LINECURSORFIELD_HPP
+#endif //FLOPOCO_LINECURSOR_HPP

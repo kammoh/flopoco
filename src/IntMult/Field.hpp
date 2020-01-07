@@ -24,6 +24,7 @@ namespace flopoco {
             void setCursor(Cursor cursor) { cursor_ = cursor; }
             Cursor getCursor() const { return cursor_; }
             virtual void setField(Field* field) { field_ = field; }
+            Field* getField() const { return field_; }
 
             virtual void reset(Field* field, ID id, unsigned int missing) {
                 field_ = field;
