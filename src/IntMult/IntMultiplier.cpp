@@ -221,6 +221,14 @@ namespace flopoco {
 				texfile.close();
 			}
 
+            texfile.open("multiplier_tiling.svg");
+            if((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration." << endl;
+            } else {
+                tilingStrategy->printSolutionSVG(texfile, wOut, false);
+                texfile.close();
+            }
+
 			texfile.open("multiplier_shape.tex");
 			if((texfile.rdstate() & ofstream::failbit) != 0) {
 				cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration." << endl;
