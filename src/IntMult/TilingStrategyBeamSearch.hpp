@@ -30,7 +30,7 @@ namespace flopoco {
 
     private:
         unsigned int beamRange_;
-        bool placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, float& preCost, float& totalCost, int& area, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks);
+        bool placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, float& cost, unsigned int& area, float cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks);
     };
 }
 

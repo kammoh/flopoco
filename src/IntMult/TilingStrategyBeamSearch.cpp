@@ -28,17 +28,15 @@ namespace flopoco {
     void TilingStrategyBeamSearch::solve() {
         NearestPointCursor baseState;
         NearestPointCursor tempState;
-
         Field field(wX, wY, signedIO, baseState);
 
         unsigned int usedDSPBlocks = 0U;
         unsigned int range = beamRange_;
         queue<unsigned int> path;
 
-        float preCMPCost = FLT_MAX;
-        int tempArea = 0;
-        float totalCMPCost = createSolution(baseState, nullptr, &path, preCMPCost, tempArea, 0);
-        // cout << "PATH SIZE " << path.size() << endl;
+        float bestCost = 0.0f;
+        unsigned int bestArea = 0;
+        greedySolution(baseState, nullptr, &path, bestCost, bestArea);
         unsigned int next = path.front();
         unsigned int lastPath = next;
         path.pop();
@@ -46,16 +44,10 @@ namespace flopoco {
         field.reset();
 
         float currentTotalCost = 0.0f;
-        float currentPreCost = 0.0f;
-        int currentArea = 0;
-
+        unsigned int currentArea = 0;
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> dspBlocks;
 
-        // cout << "STARTING BEAMSEARCH" << endl;
-        // cout << "PATH SIZE " << path.size() << endl;
-
         while(baseState.getMissing() > 0) {
-            // cout << "MISSING " << baseState.getMissing() << endl;
             unsigned int minIndex = std::max(0, (int)next - (int)range);
             unsigned int maxIndex = std::min((unsigned int)tiles_.size() - 1, next + range);
 
@@ -65,67 +57,43 @@ namespace flopoco {
             lastPath = next;
             BaseMultiplierCategory* tile = tiles_[next];
 
-            // cout << "RANGE CHECK " << minIndex << " " << maxIndex << endl;
-
             for (unsigned int i = minIndex; i <= maxIndex; i++) {
-                // cout << "TESTING WITH TILE " << i << endl;
-
                 //check if we got the already calculated greedy path
                 if (i == lastPath) {
-                    // cout << "Skipping this path" << endl;
                     continue;
                 }
 
                 BaseMultiplierCategory* t = tiles_[i];
-                // cout << t->getType() << endl;
 
                 tempState.reset(baseState);
                 queue<unsigned int> tempPath;
                 unsigned int tempUsedDSPBlocks = usedDSPBlocks;
-                float tempTotalCost = currentTotalCost;
-                float tempPreCost = currentPreCost;
-                float tempCMPPreCost = preCMPCost;
+                float tempCost = currentTotalCost;
+                unsigned int tempArea = currentArea;
 
                 vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> localDSPBlocks = dspBlocks;
 
-                int temparea = 0;
-                if (placeSingleTile(tempState, tempUsedDSPBlocks, nullptr, neededX, neededY, t, tempPreCost, tempTotalCost, temparea, localDSPBlocks)) {
-                    // cout << "Single tile cost " << currentPreCost << endl;
-                    //get cost for a greedy solution
-                    tempTotalCost += createSolution(tempState, nullptr, &tempPath, tempCMPPreCost, temparea, tempUsedDSPBlocks, &localDSPBlocks);
-
-                    // cout << "========================" << tempTotalCost << " vs " << totalCMPCost << endl;
-                    // cout << (totalCMPCost - tempTotalCost) << endl;
-
-                    if (tempTotalCost < totalCMPCost) {
-                        // cout << "Using " << i << " would be cheaper! " << tempTotalCost << " vs " << totalCMPCost << endl;
-
-                        totalCMPCost = tempTotalCost;
-                        preCMPCost = tempCMPPreCost;
+                if (placeSingleTile(tempState, tempUsedDSPBlocks, nullptr, neededX, neededY, t, tempCost, tempArea, bestCost, localDSPBlocks)) {
+                    if(greedySolution(tempState, nullptr, &tempPath, tempCost, tempArea, bestCost, tempUsedDSPBlocks, &localDSPBlocks)) {
+                        bestCost = tempCost;
+                        bestArea = tempArea;
                         path = move(tempPath);
                         tile = t;
-
-                        // cout << "UPDATED PATH " << path.size() << endl;
                     }
                 }
             }
 
             //place single tile
-            placeSingleTile(baseState, usedDSPBlocks, &solution, neededX, neededY, tile, currentPreCost, currentTotalCost, currentArea, dspBlocks);
-            // cout << "PLACED TILE FIN " << tile->getType() << endl;
+            placeSingleTile(baseState, usedDSPBlocks, &solution, neededX, neededY, tile, currentTotalCost, currentArea, FLT_MAX, dspBlocks);
 
             if(path.size() > 0) {
                 next = path.front();
                 path.pop();
             }
-
-            // cout << "NEXT TILE IS " << next << endl;
-            // cout << "===================================================================================================================" << endl;
-            // field.printField(baseState);
         }
 
         if(useSuperTiles_) {
-            currentTotalCost += performSuperTilePass(&dspBlocks, &solution);
+            performSuperTilePass(&dspBlocks, &solution, currentTotalCost);
         }
 
         for(auto& tile: dspBlocks) {
@@ -142,7 +110,7 @@ namespace flopoco {
         // exit(0);
     }
 
-    bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, float& preCost, float& totalCost, int& area, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
+    bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, float& cost, unsigned int& area, float cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
         if(tile->getDSPCost() >= 1) {
             if(usedDSPBlocks == max_pref_mult_) {
                 return false;
@@ -185,15 +153,17 @@ namespace flopoco {
         }
 
         auto coord (field->placeTileInField(next, tile, fieldState));
-        float cost = tile->getLUTCost(next.first, next.second, wX, wY);
-        preCost += cost;
 
         if(tile->getDSPCost() >= 1) {
             return true;
         }
 
-        totalCost += cost;
+        cost += tile->getLUTCost(next.first, next.second, wX, wY);
         area += tile->getArea();
+
+        if(cost > cmpCost) {
+            return false;
+        }
 
         if(solution == nullptr) {
             return true;

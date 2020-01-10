@@ -87,10 +87,10 @@ namespace flopoco {
         NearestPointCursor fieldState;
         Field field(wX, wY, signedIO, fieldState);
 
-        float cmp = FLT_MAX;
-        int area = 0;
+        float cost = 0.0f;
+        unsigned int area = 0;
         //only one state, base state is also current state
-        float cost = createSolution(fieldState, &solution, nullptr, cmp, area, 0);
+        greedySolution(fieldState, &solution, nullptr, cost, area);
         cout << "Total cost: " << cost << endl;
         cout << "Total area: " << area << endl;
 
@@ -133,11 +133,11 @@ namespace flopoco {
         }
     }
 
-    float TilingStrategyGreedy::createSolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cmpCost, int& area, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
+    bool TilingStrategyGreedy::greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cost, unsigned int& area, float cmpCost, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
         Field* field = fieldState.getField();
         auto next (fieldState.getCursor());
-        float totalCost = 0.0f;
-        float preCost = 0.0f;
+        float tempCost = cost;
+        unsigned int tempArea = area;
 
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tmpBlocks;
         if(dspBlocks == nullptr) {
@@ -145,9 +145,6 @@ namespace flopoco {
         }
 
         while(fieldState.getMissing() > 0) {
-
-            // field.printField();
-
             unsigned int neededX = field->getMissingLine(fieldState);
             unsigned int neededY = field->getMissingHeight(fieldState);
 
@@ -157,38 +154,37 @@ namespace flopoco {
             unsigned int tileIndex = tiles_.size() - 1;
 
             for(unsigned int i = 0; i < tiles_.size(); i++) {
-                BaseMultiplierCategory* t = tiles_[i];
+                BaseMultiplierCategory *t = tiles_[i];
                 // cout << "Checking " << t->getType() << endl;
                 //dsp block
-                if(t->getDSPCost()) {
-                    if(usedDSPBlocks == max_pref_mult_) {
+                if (t->getDSPCost()) {
+                    if (usedDSPBlocks == max_pref_mult_) {
                         continue;
                     }
                 }
 
-                if(use2xk_ && t->isVariable()) {
+                if (use2xk_ && t->isVariable()) {
                     //no need to compare it to a dspblock / if there is not enough space anyway
-                    if(efficiency < 0 && ((neededX >= 6 && neededY >= 2) || (neededX >= 2 && neededY >= 6))) {
+                    if (efficiency < 0 && ((neededX >= 6 && neededY >= 2) || (neededX >= 2 && neededY >= 6))) {
                         //TODO: rethink about tileIndex handling
                         int width = 0;
                         int height = 0;
-                        if(neededX > neededY) {
+                        if (neededX > neededY) {
                             width = neededX;
                             height = 2;
 
                             bm = findVariableTile(width, height);
-                            if(bm == nullptr) {
+                            if (bm == nullptr) {
                                 continue;
                             }
 
                             tileIndex = i;
-                        }
-                        else {
+                        } else {
                             width = 2;
                             height = neededY;
 
                             bm = findVariableTile(width, height);
-                            if(bm == nullptr) {
+                            if (bm == nullptr) {
                                 continue;
                             }
 
@@ -204,7 +200,7 @@ namespace flopoco {
                 }
 
                 //no need to check normal tiles that won't fit anyway
-                if(t->getDSPCost() == 0 && ((neededX * neededY) < t->getArea())) {
+                if (t->getDSPCost() == 0 && ((neededX * neededY) < t->getArea())) {
                     /*cout << "Not enough space anyway" << endl;
                     cout << neededX << " " << neededY << endl;
                     cout << param.getTileXWordSize() << " " << param.getTileYWordSize() << endl; */
@@ -212,34 +208,32 @@ namespace flopoco {
                 }
 
                 unsigned int tiles = field->checkTilePlacement(next, t, fieldState);
-                if(tiles == 0) {
+                if (tiles == 0) {
                     continue;
                 }
 
-                if(t->getDSPCost()) {
-                    float usage = tiles / (float)t->getArea();
+                if (t->getDSPCost()) {
+                    float usage = tiles / (float) t->getArea();
                     //check threshold
-                    if(usage < occupation_threshold_) {
+                    if (usage < occupation_threshold_) {
                         continue;
                     }
 
                     //TODO: find a better way for this, think about the effect of > vs >= here
-                    if(tiles > efficiency) {
+                    if (tiles > efficiency) {
                         efficiency = tiles;
-                    }
-                    else {
+                    } else {
                         //no need to check anything else ... dspBlock wasn't enough
                         break;
                     }
-                }
-                else {
+                } else {
                     //TODO: tile / cost vs t->efficieny()
-                    float newEfficiency = t->efficiency() * (tiles / (float)t->getArea());
+                    float newEfficiency = t->efficiency() * (tiles / (float) t->getArea());
                     /*cout << newEfficiency << endl;
                     cout << t->efficiency()<< endl;
                     cout << t->getArea() << endl;*/
                     if (newEfficiency < efficiency) {
-                        if(tiles == t->getArea()) {
+                        if (tiles == t->getArea()) {
                             //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
                             break;
                         }
@@ -255,13 +249,6 @@ namespace flopoco {
                 tileIndex = i;
             }
 
-            preCost += bm->getLUTCost(next.first, next.second, wX, wY);
-
-            //TODO: cmpCost needs to contain pre SuperTile costs in some way
-            if(preCost > cmpCost) {
-                return FLT_MAX;
-            }
-
             if(path != nullptr) {
                 path->push(tileIndex);
             }
@@ -272,19 +259,22 @@ namespace flopoco {
                 if(useSuperTiles_ && superTiles_.size() > 0) {
                     dspBlocks->push_back(make_pair(bm, next));
                     next = coord;
-                    continue;
                 }
             }
             else {
-                area += bm->getArea();
-            }
+                tempArea += bm->getArea();
+                tempCost += bm->getLUTCost(next.first, next.second, wX, wY);
 
-            if(solution != nullptr) {
-                solution->push_back(make_pair(tile, next));
-            }
+                if(tempCost > cmpCost) {
+                    return false;
+                }
 
-            totalCost += bm->getLUTCost(next.first, next.second, wX, wY);
-            next = coord;
+                if(solution != nullptr) {
+                    solution->push_back(make_pair(tile, next));
+                }
+
+                next = coord;
+            }
         }
 
         // field.printField();
@@ -292,7 +282,9 @@ namespace flopoco {
 
         //check each dspblock with another
         if(useSuperTiles_) {
-            totalCost += performSuperTilePass(dspBlocks, solution);
+            if(!performSuperTilePass(dspBlocks, solution, tempCost, cmpCost)) {
+                return false;
+            }
 
             for(auto& tile: *dspBlocks) {
                 unsigned int x = tile.second.first;
@@ -302,24 +294,28 @@ namespace flopoco {
                     solution->push_back(make_pair(tile.first->getParametrisation().tryDSPExpand(x, y, wX, wY, signedIO), tile.second));
                 }
 
-                totalCost += tile.first->getLUTCost(x, y, wX, wY);
+                tempCost += tile.first->getLUTCost(x, y, wX, wY);
+
+                if(tempCost > cmpCost) {
+                    return false;
+                }
             }
         }
 
         // cout << dspBlocks->size() << endl;
 
-        cmpCost = preCost;
-        return totalCost;
+        cost = tempCost;
+        area = tempArea;
+        return true;
     }
 
-    float TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution) {
+    bool TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, float& cost, float cmpCost) {
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tempBlocks;
         tempBlocks = std::move(*dspBlocks);
 
         //get dspBlocks back into a valid state
         dspBlocks->clear();
 
-        float totalSubCost = 0.0f;
         for(unsigned int i = 0; i < tempBlocks.size(); i++) {
             // cout << "Testing tile " << i << endl;
             bool found = false;
@@ -361,7 +357,10 @@ namespace flopoco {
                     solution->push_back(make_pair(tile->getParametrisation(), baseCoord));
                 }
 
-                totalSubCost += tile->getLUTCost(baseCoord.first, baseCoord.second, wX, wY);
+                cost += tile->getLUTCost(baseCoord.first, baseCoord.second, wX, wY);
+                if(cost > cmpCost) {
+                    return false;
+                }
 
                 tempBlocks.erase(tempBlocks.begin() + j);
                 found = true;
@@ -373,6 +372,6 @@ namespace flopoco {
             }
         }
 
-        return totalSubCost;
+        return true;
     }
 }

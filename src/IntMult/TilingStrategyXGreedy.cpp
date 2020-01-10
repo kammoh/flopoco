@@ -61,9 +61,9 @@ namespace flopoco {
         }
 
         list<mult_tile_t> bestSolution;
-        float bestCost = FLT_MAX;
-        int bestArea = 0;
-        float totalCost = createSolution(baseState, &bestSolution, nullptr, bestCost, bestArea, 0);
+        float bestCost = 0.0f;
+        unsigned int bestArea = 0;
+        greedySolution(baseState, &bestSolution, nullptr, bestCost, bestArea);
         int runs = std::pow(2, pairs_.size());
         for(int i = 1; i < runs; i++) {
             field.reset();
@@ -77,18 +77,16 @@ namespace flopoco {
             }
 
             list<mult_tile_t> solution;
-            float cmpCost = bestCost;
-            int area = 0;
-            float cost = createSolution(baseState, &solution, nullptr, cmpCost, area, 0);
-            if(cost < bestCost) {
-                bestCost = cmpCost;
-                totalCost = cost;
+            float cost = 0;
+            unsigned int area = 0;
+            if(greedySolution(baseState, &solution, nullptr, cost, area, bestCost)) {
+                bestCost = cost;
                 bestArea = area;
                 bestSolution = std::move(solution);
             }
         }
 
-        cout << "Total cost: " << totalCost << endl;
+        cout << "Total cost: " << bestCost << endl;
         cout << "Total area: " << bestArea << endl;
         solution = std::move(bestSolution);
     }
