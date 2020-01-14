@@ -29,8 +29,8 @@ namespace flopoco
 
         BaseMultiplierIrregularLUTXilinx(
         ) : BaseMultiplierCategory{
-                -1,
-                -1,
+                0,
+                0,
                 false,
                 false,
                 -1,
