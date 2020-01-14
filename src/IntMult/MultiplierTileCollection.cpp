@@ -31,10 +31,12 @@ namespace flopoco {
         }
 
         if(use2xk){
-            for(int x = 4; x <= wX; x++) {
+            variableTileOffset = 4;
+
+            for(int x = variableTileOffset; x <= wX; x++) {
                 addVariableXTile(new BaseMultiplierXilinx2xk(x,2));
             }
-            for(int y = 4; y <= wX; y++) {
+            for(int y = variableTileOffset; y <= wX; y++) {
                 addVariableYTile(new BaseMultiplierXilinx2xk(2,y));
             }
         }
@@ -66,13 +68,6 @@ namespace flopoco {
         }
 */
 //        cout << MultTileCollection.size() << endl;
-
-        for(BaseMultiplierCategory *mult : MultTileCollection)
-        {
-            cout << mult->cost() << " ";
-            cout << mult->getType() << endl;
-        }
-
     }
 
     void  MultiplierTileCollection::addBaseTile(BaseMultiplierCategory *mult) {

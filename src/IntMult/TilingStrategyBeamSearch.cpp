@@ -17,7 +17,7 @@ namespace flopoco {
             bool useIrregular,
             bool use2xk,
             bool useSuperTiles,
-            MultiplierTileCollection tiles,
+            MultiplierTileCollection& tiles,
             unsigned int beamRange
             ):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, tiles),
             beamRange_{beamRange}
@@ -107,7 +107,6 @@ namespace flopoco {
 
         cout << "Total cost: " << currentTotalCost << endl;
         cout << "Total area: " << currentArea << endl;
-        // exit(0);
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, double& cost, unsigned int& area, double cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
@@ -125,13 +124,12 @@ namespace flopoco {
                 return false;
             }
 
-            unsigned int height = 2;
-            unsigned int width = neededX;
-            if(neededY > neededX) {
-                height = neededY;
-                width = 2;
+            if(neededX > neededY) {
+                tile = tileCollection_.VariableXTileCollection[neededX - tileCollection_.variableTileOffset];
             }
-            tile = findVariableTile(width, height);
+            else {
+                tile = tileCollection_.VariableYTileCollection[neededY - tileCollection_.variableTileOffset];
+            }
         }
 
         Field* field = fieldState.getField();

@@ -13,6 +13,7 @@ namespace flopoco {
         vector<BaseMultiplierCategory*> VariableYTileCollection;
         vector<BaseMultiplierCategory*> VariableXTileCollection;
         vector<BaseMultiplierCategory*> SuperTileCollection;
+        unsigned int variableTileOffset;
 
         static BaseMultiplierCategory *
         superTileSubtitution(vector<BaseMultiplierCategory*> mtc, int rx1, int ry1, int lx1, int ly1, int rx2, int ry2, int lx2, int ly2);

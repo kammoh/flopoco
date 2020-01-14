@@ -18,7 +18,7 @@ namespace flopoco {
                 bool useIrregular,
                 bool use2xk,
                 bool useSuperTiles,
-                MultiplierTileCollection tiles);
+                MultiplierTileCollection& tiles);
         void solve() override;
 
     private:
