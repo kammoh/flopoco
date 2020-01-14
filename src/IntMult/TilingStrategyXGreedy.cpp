@@ -61,7 +61,7 @@ namespace flopoco {
         }
 
         list<mult_tile_t> bestSolution;
-        float bestCost = 0.0f;
+        double bestCost = 0.0;
         unsigned int bestArea = 0;
         greedySolution(baseState, &bestSolution, nullptr, bestCost, bestArea);
         int runs = std::pow(2, pairs_.size());
@@ -77,7 +77,7 @@ namespace flopoco {
             }
 
             list<mult_tile_t> solution;
-            float cost = 0;
+            double cost = 0;
             unsigned int area = 0;
             if(greedySolution(baseState, &solution, nullptr, cost, area, bestCost)) {
                 bestCost = cost;

@@ -39,9 +39,9 @@ namespace flopoco {
         bool use2xk_;
         bool useSuperTiles_;
 
-        bool greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cost, unsigned int& area, float cmpCost = FLT_MAX, unsigned int usedDSPBlocks = 0, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks = nullptr);
+        bool greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, double& cost, unsigned int& area, double cmpCost = DBL_MAX, unsigned int usedDSPBlocks = 0, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks = nullptr);
         BaseMultiplierCategory* findVariableTile(unsigned int wX, unsigned int wY);
-        bool performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, float& cost, float cmpCost = FLT_MAX);
+        bool performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, double& cost, double cmpCost = DBL_MAX);
     };
 }
 #endif

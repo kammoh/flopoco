@@ -61,21 +61,14 @@ namespace flopoco {
         unsigned int covered = 0;
         ID fieldID = fieldState.getID();
 
-        // printField();
-
         for(unsigned int i = coord.second; i < maxY; i++) {
             for(unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area
                 if(!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
-                    // cout << "coord " << j << " " << i << " is not covered!" << endl;
                     continue;
                 }
 
                 if(field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                    // cout << fieldID << endl;
-                    // cout << baseID_ << endl;
-                    // cout << i << " " << j << " " << endl;
-                    // cout << "Got a problem here!" << endl;
                     return 0;
                 }
 
@@ -83,48 +76,7 @@ namespace flopoco {
             }
         }
 
-        // cout << "Trying to place tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << endl;
-        // cout << "It would cover " << covered << endl;
-        // cout << tile->getType() << endl;
-        // cout << "Using fieldID " << fieldState.getID() << endl;
-
         return covered;
-    }
-
-    Cursor Field::checkDSPPlacement(const Cursor coord, const BaseMultiplierParametrization& param) {
-        unsigned int endX = coord.first + param.getTileXWordSize();
-        unsigned int endY = coord.second + param.getTileYWordSize();
-        unsigned int maxX = std::min(endX, wX_);
-        unsigned int maxY = std::min(endY, wY_);
-
-        Cursor size(param.getTileXWordSize(), 0);
-
-        for(unsigned int i = coord.second; i < maxY; i++) {
-            unsigned int currentSize = 0;
-            for(unsigned int j = coord.first; j < maxX; j++) {
-                if(field_[i][j]) {
-                    break;
-                }
-
-                currentSize++;
-            }
-
-            //seems like it is not possible to use this line
-            if(currentSize == 0) {
-                break;
-            }
-
-            if(size.first > currentSize) {
-                size.first = currentSize;
-            }
-
-            size.second++;
-        }
-
-        // cout << "Trying to place DSPBlock with size " << param.getTileXWordSize() << " " << param.getTileYWordSize() << " at position " << coord.first << " " << coord.second << endl;
-        // cout << "Size would be " << size.first << " " << size.second << endl;
-
-        return size;
     }
 
     Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
@@ -138,8 +90,6 @@ namespace flopoco {
         ID fieldID = fieldState.getID();
         unsigned int updateMissing = 0U;
 
-        // cout << fieldState.getCursor().first << " " << fieldState.getCursor().second << endl;
-
         for (unsigned int i = coord.second; i < maxY; i++) {
             for (unsigned int j = coord.first; j < maxX; j++) {
                 //check if tile could cover this area and if area is free
@@ -151,21 +101,7 @@ namespace flopoco {
         }
 
         fieldState.decreaseMissing(updateMissing);
-
-        // TODO: update highest line
-        /*if (maxY > highestLine_) {
-            highestLine_ = maxY;
-        }*/
-
-        // printField();
         fieldState.updateCursor();
-
-        // printField();
-
-        // cout << "Placed tile with size " << sizeX << " " << sizeY << " at position " << coord.first << " " << coord.second << " new coord is " << fieldState.getCursor().first << " " << fieldState.getCursor().second << endl;
-        // cout << tile->getType() << endl;
-        // cout << "Using fieldID " << fieldState.getID() << endl;
-        // cout << "Update missing " << updateMissing << endl;
 
         return fieldState.getCursor();
     }
@@ -176,10 +112,6 @@ namespace flopoco {
 
     unsigned int Field::getHeight() {
         return wY_;
-    }
-
-    void Field::setLine(unsigned int line, vector<ID> &vec) {
-        field_[line] = vec;
     }
 
     unsigned int Field::getMissingLine(FieldState& fieldState) {

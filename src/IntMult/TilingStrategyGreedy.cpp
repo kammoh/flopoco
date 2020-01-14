@@ -58,43 +58,18 @@ namespace flopoco {
                 }
             }
         }
-
-        /*cout << "tiles" << endl;
-        for(BaseMultiplierCategory* b: tiles_) {
-            cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
-        }
-
-        cout << "2xk" << endl;
-        for(BaseMultiplierCategory* b: v2xkTiles_) {
-            cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
-        }
-
-        cout << "kx2" << endl;
-        for(BaseMultiplierCategory* b: kx2Tiles_) {
-            cout << b->getType() << " "  << b->wX() << " " << b->wY() << endl;
-        }*/
-
-        /* unsigned int dspArea = 0;
-        for(BaseMultiplierCategory* b: tiles_) {
-            if(b->getDSPCost()) {
-                dspArea = b->getArea();
-                break;
-            }
-        }*/
     };
 
     void TilingStrategyGreedy::solve() {
         NearestPointCursor fieldState;
         Field field(wX, wY, signedIO, fieldState);
 
-        float cost = 0.0f;
+        double cost = 0.0;
         unsigned int area = 0;
         //only one state, base state is also current state
         greedySolution(fieldState, &solution, nullptr, cost, area);
         cout << "Total cost: " << cost << endl;
         cout << "Total area: " << area << endl;
-
-        // exit(0);
     }
 
     BaseMultiplierCategory* TilingStrategyGreedy::findVariableTile(unsigned int wX, unsigned int wY) {
@@ -133,10 +108,10 @@ namespace flopoco {
         }
     }
 
-    bool TilingStrategyGreedy::greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, float& cost, unsigned int& area, float cmpCost, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
+    bool TilingStrategyGreedy::greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, double& cost, unsigned int& area, double cmpCost, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
         Field* field = fieldState.getField();
         auto next (fieldState.getCursor());
-        float tempCost = cost;
+        double tempCost = cost;
         unsigned int tempArea = area;
 
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tmpBlocks;
@@ -150,21 +125,18 @@ namespace flopoco {
 
             BaseMultiplierCategory* bm = tiles_[tiles_.size() - 1];
             BaseMultiplierParametrization tile = bm->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
-            float efficiency = -1.0f;
+            double efficiency = -1.0f;
             unsigned int tileIndex = tiles_.size() - 1;
 
             for(unsigned int i = 0; i < tiles_.size(); i++) {
                 BaseMultiplierCategory *t = tiles_[i];
-                // cout << "Checking " << t->getType() << endl;
-                //dsp block
-                if (t->getDSPCost()) {
-                    if (usedDSPBlocks == max_pref_mult_) {
-                        continue;
-                    }
+                if (t->getDSPCost() && usedDSPBlocks == max_pref_mult_) {
+                    //all available dsp blocks got already used
+                    continue;
                 }
 
                 if (use2xk_ && t->isVariable()) {
-                    //no need to compare it to a dspblock / if there is not enough space anyway
+                    //no need to compare it to a dsp block / if there is not enough space anyway
                     if (efficiency < 0 && ((neededX >= 6 && neededY >= 2) || (neededX >= 2 && neededY >= 6))) {
                         //TODO: rethink about tileIndex handling
                         int width = 0;
@@ -191,9 +163,6 @@ namespace flopoco {
                             tileIndex = i + 1;
                         }
 
-                        /*cout << width << " " << height << endl;
-                        cout << bm->wX() << " " << bm->wY() << endl;*/
-
                         tile = bm->getParametrisation();
                         break;
                     }
@@ -201,9 +170,6 @@ namespace flopoco {
 
                 //no need to check normal tiles that won't fit anyway
                 if (t->getDSPCost() == 0 && ((neededX * neededY) < t->getArea())) {
-                    /*cout << "Not enough space anyway" << endl;
-                    cout << neededX << " " << neededY << endl;
-                    cout << param.getTileXWordSize() << " " << param.getTileYWordSize() << endl; */
                     continue;
                 }
 
@@ -213,7 +179,7 @@ namespace flopoco {
                 }
 
                 if (t->getDSPCost()) {
-                    float usage = tiles / (float) t->getArea();
+                    double usage = tiles / (double) t->getArea();
                     //check threshold
                     if (usage < occupation_threshold_) {
                         continue;
@@ -223,21 +189,17 @@ namespace flopoco {
                     if (tiles > efficiency) {
                         efficiency = tiles;
                     } else {
-                        //no need to check anything else ... dspBlock wasn't enough
+                        //no need to check anything else ... dsp block wasn't enough
                         break;
                     }
                 } else {
                     //TODO: tile / cost vs t->efficieny()
-                    float newEfficiency = t->efficiency() * (tiles / (float) t->getArea());
-                    /*cout << newEfficiency << endl;
-                    cout << t->efficiency()<< endl;
-                    cout << t->getArea() << endl;*/
+                    double newEfficiency = t->efficiency() * (tiles / (double) t->getArea());
                     if (newEfficiency < efficiency) {
                         if (tiles == t->getArea()) {
                             //this tile wasn't able to compete with the current best tile even if it is used completely ... so checking the rest makes no sense
                             break;
                         }
-
                         continue;
                     }
 
@@ -277,10 +239,7 @@ namespace flopoco {
             }
         }
 
-        // field.printField();
-        // cout << superTiles_.size() << endl;
-
-        //check each dspblock with another
+        //check each dsp block with another
         if(useSuperTiles_) {
             if(!performSuperTilePass(dspBlocks, solution, tempCost, cmpCost)) {
                 return false;
@@ -302,30 +261,26 @@ namespace flopoco {
             }
         }
 
-        // cout << dspBlocks->size() << endl;
-
         cost = tempCost;
         area = tempArea;
         return true;
     }
 
-    bool TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, float& cost, float cmpCost) {
+    bool TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, double& cost, double cmpCost) {
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tempBlocks;
         tempBlocks = std::move(*dspBlocks);
 
         //get dspBlocks back into a valid state
         dspBlocks->clear();
 
+        //TODO: use the back swap trick here?
         for(unsigned int i = 0; i < tempBlocks.size(); i++) {
-            // cout << "Testing tile " << i << endl;
             bool found = false;
             auto &dspBlock1 = tempBlocks[i];
             unsigned int coordX = dspBlock1.second.first;
             unsigned int coordY = dspBlock1.second.second;
             for (unsigned int j = i + 1; j < tempBlocks.size(); j++) {
                 auto &dspBlock2 = tempBlocks[j];
-                // cout << dspBlock1.second.first << " " << dspBlock1.second.second << endl;
-                // cout << dspBlock2.second.first << " " << dspBlock2.second.second << endl;
 
                 Cursor baseCoord;
                 baseCoord.first = std::min(dspBlock1.second.first, dspBlock2.second.first);
@@ -341,17 +296,10 @@ namespace flopoco {
                 int lx2 = dspBlock2.second.first + dspBlock2.first->wX_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY,signedIO) - baseCoord.first - 1;
                 int ly2 = dspBlock2.second.second + dspBlock2.first->wY_DSPexpanded(dspBlock2.second.first, dspBlock2.second.second, wX, wY,signedIO) - baseCoord.second - 1;
 
-                /*cout << baseCoord.first << " " << baseCoord.second << endl;
-                cout << rx1 << " " << ry1 << " " << lx1 << " " << ly1 << endl;
-                cout << rx2 << " " << ry2 << " " << lx2 << " " << ly2 << endl;*/
-
                 BaseMultiplierCategory *tile = MultiplierTileCollection::superTileSubtitution(superTiles_, rx1, ry1, lx1, ly1, rx2, ry2, lx2, ly2);
                 if (tile == nullptr) {
-                    // cout << "No Supertile found" << endl;
                     continue;
                 }
-
-                // cout << "Found Supertile of type " << tile->getType() << endl;
 
                 if (solution != nullptr) {
                     solution->push_back(make_pair(tile->getParametrisation(), baseCoord));
@@ -362,6 +310,7 @@ namespace flopoco {
                     return false;
                 }
 
+                //TODO: don't use vector here
                 tempBlocks.erase(tempBlocks.begin() + j);
                 found = true;
                 break;

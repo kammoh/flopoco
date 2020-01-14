@@ -34,7 +34,7 @@ namespace flopoco {
         unsigned int range = beamRange_;
         queue<unsigned int> path;
 
-        float bestCost = 0.0f;
+        double bestCost = 0.0;
         unsigned int bestArea = 0;
         greedySolution(baseState, nullptr, &path, bestCost, bestArea);
         unsigned int next = path.front();
@@ -43,7 +43,7 @@ namespace flopoco {
 
         field.reset();
 
-        float currentTotalCost = 0.0f;
+        double currentTotalCost = 0.0;
         unsigned int currentArea = 0;
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> dspBlocks;
 
@@ -68,7 +68,7 @@ namespace flopoco {
                 tempState.reset(baseState);
                 queue<unsigned int> tempPath;
                 unsigned int tempUsedDSPBlocks = usedDSPBlocks;
-                float tempCost = currentTotalCost;
+                double tempCost = currentTotalCost;
                 unsigned int tempArea = currentArea;
 
                 vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> localDSPBlocks = dspBlocks;
@@ -110,7 +110,7 @@ namespace flopoco {
         // exit(0);
     }
 
-    bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, float& cost, unsigned int& area, float cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
+    bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, double& cost, unsigned int& area, double cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
         if(tile->getDSPCost() >= 1) {
             if(usedDSPBlocks == max_pref_mult_) {
                 return false;
@@ -143,7 +143,7 @@ namespace flopoco {
         }
 
         if(tile->getDSPCost() >= 1) {
-            float usage = tiles / (float)tile->getArea();
+            double usage = tiles / (double)tile->getArea();
             //check threshold
             if(usage < occupation_threshold_) {
                 return false;
