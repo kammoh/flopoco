@@ -148,6 +148,7 @@ namespace flopoco{
 	void OptimalCompressionStrategy::initializeSolver(){
 
 		problemSolver = new ScaLP::Solver(ScaLP::newSolverDynamic({bitheap->getOp()->getTarget()->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
+		problemSolver->timeout = bitheap->getOp()->getTarget()->getILPTimeout();
 	}
 
 	void OptimalCompressionStrategy::initializeVariables(){

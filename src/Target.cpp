@@ -38,6 +38,7 @@ namespace flopoco{
 			frequency_         = 400000000.;
 			useHardMultipliers_= true;
 			unusedHardMultThreshold_=0.5;
+			ilpTimeout_=0;
 		}
 
 	Target::~Target()
@@ -145,13 +146,11 @@ namespace flopoco{
 
 	void Target::setILPSolver(string ilpSolverName)
 	{
-		cout << "!! setILPSolver(" << ilpSolverName << ")" << " (" << this << ")" << endl;
 		ilpSolverName_ = ilpSolverName;
 	}
 
 	string Target::getILPSolver()
 	{
-		cout << "!! getILPSolver() -> " << ilpSolverName_ << " (" << this << ")" << endl;
 		return ilpSolverName_;
 	}
 
