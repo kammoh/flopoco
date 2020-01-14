@@ -111,7 +111,7 @@ namespace flopoco {
 //		BaseMultiplierCollection baseMultiplierCollection(parentOp->getTarget(), wX, wY);
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 
-		baseMultiplierCollection.print();
+//		baseMultiplierCollection.print();
 
 
         MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP);
