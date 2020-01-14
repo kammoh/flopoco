@@ -23,6 +23,8 @@ namespace flopoco {
                 bool use2xk,
                 bool useSuperTiles,
                 MultiplierTileCollection& tiles);
+        virtual ~TilingStrategyGreedy() { }
+
         virtual void solve();
 
     protected:

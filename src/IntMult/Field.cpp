@@ -5,10 +5,7 @@ namespace flopoco {
     Field::Field(unsigned int wX, unsigned int wY, bool signedIO, FieldState& baseState) : wX_(wX), wY_(wY), signedIO_(signedIO), currentStateID_(0U), baseState_{&baseState} {
         field_.resize(wY_);
         for(unsigned int i = 0; i < wY_; i++) {
-            field_[i].resize(wX_);
-            for (unsigned int j = 0; j < wX_; j++) {
-                field_[i][j] = currentStateID_;
-            }
+            field_[i] = vector<ID>(wX_, currentStateID_);
         }
         currentStateID_++;
 

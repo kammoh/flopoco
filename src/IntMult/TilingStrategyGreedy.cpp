@@ -202,19 +202,31 @@ namespace flopoco {
     }
 
     bool TilingStrategyGreedy::performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, double& cost, double cmpCost) {
+        if(dspBlocks->size() == 1) {
+            return true;
+        }
+
         vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>> tempBlocks;
         tempBlocks = std::move(*dspBlocks);
-
-        //get dspBlocks back into a valid state
         dspBlocks->clear();
 
-        //TODO: use the back swap trick here?
+        //TODO: reuse vector (init with max dsp)
+        vector<bool> used(tempBlocks.size(), false);
+
         for(unsigned int i = 0; i < tempBlocks.size(); i++) {
+            if(used[i]) {
+                continue;
+            }
+
             bool found = false;
             auto &dspBlock1 = tempBlocks[i];
             unsigned int coordX = dspBlock1.second.first;
             unsigned int coordY = dspBlock1.second.second;
             for (unsigned int j = i + 1; j < tempBlocks.size(); j++) {
+                if(used[j]) {
+                    continue;
+                }
+
                 auto &dspBlock2 = tempBlocks[j];
 
                 Cursor baseCoord;
@@ -245,8 +257,8 @@ namespace flopoco {
                     return false;
                 }
 
-                //TODO: don't use vector here
-                tempBlocks.erase(tempBlocks.begin() + j);
+                used[i] = true;
+                used[j] = true;
                 found = true;
                 break;
             }
