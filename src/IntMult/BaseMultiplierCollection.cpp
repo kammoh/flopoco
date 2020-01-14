@@ -16,7 +16,8 @@ base_multiplier_id_t BaseMultiplierCollection::getPreferedMultiplier()
 	return 0;
 }
 
-BaseMultiplierCollection::BaseMultiplierCollection(Target* target){
+BaseMultiplierCollection::BaseMultiplierCollection(Target* target) : target(target)
+{
     srcFileName = "BaseMultiplierCollection";
     uniqueName_ = "BaseMultiplierCollection";
 

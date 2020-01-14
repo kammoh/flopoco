@@ -351,7 +351,7 @@ namespace flopoco
 		tiling = "heuristicBasicTiling";
 
 		ilpSolver = "Gurobi";
-		ilpTimeout = 3600; //1 hour
+		ilpTimeout = 0; //timeout disabled
 
 		depGraphDrawing = "full";
 		pipelineActive_ = true;
