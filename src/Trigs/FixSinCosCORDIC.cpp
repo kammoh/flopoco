@@ -32,7 +32,7 @@ namespace flopoco{
 
 
 		if(wIn<12){
-			REPORT(INFO, "wIn is small, are you sure you don't want to tabulate this operator in a ROM?");
+			REPORT(INFO, "wIn=" << wIn << " is small, are you sure you don't want to tabulate this operator in a ROM?");
 		}
 
 		if (reducedIterations == 1)
@@ -45,7 +45,7 @@ namespace flopoco{
 #if ROUNDED_ROTATION
 		REPORT(DEBUG, "Using rounded rotation trick");
 #endif
-
+		
 		//error analysis
 		double eps;  //error in ulp
 		eps=0.5; //initial rounding of kfactor
@@ -162,6 +162,7 @@ namespace flopoco{
 
 		//build the cordic stages
 		for(stage=1; stage<=maxIterations; stage++){
+			vhdl << tab <<"----------- Iteration "<< stage << endl;
 			//shift Xin and Yin with 2^n positions to the right
 			// Cosine is always positive, but sine may be negative and thus need sign extend
 			vhdl << tab << declare(join("CosShift", stage), w+1) << " <= " << zg(stage) << " & Cos" << stage << range(w, stage) << ";" <<endl;

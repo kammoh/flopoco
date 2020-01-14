@@ -22,8 +22,6 @@ namespace flopoco{
 	
 
 	private:
-		int wIn;                   /**< input precision, input being in [-1,1) (includes a sign bit of weight 2^0) */
-		int wOut;                  /**< output precisions; output being in (-1,1) (includes a sign bit of weight 2^0) */
 		int reducedIterations;     /**< 0 = normal CORDIC, 1=halved number of iterations */
 		int w;                     /**< internal precision */
 		int	maxIterations;         /**< index at which iterations stop */
