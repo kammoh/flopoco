@@ -95,7 +95,14 @@ namespace flopoco{
 						used[currentMaxColumn] = true;
 						double achievedEfficiencyCurrent = getCompressionEfficiency(s, currentMaxColumn, currentCompressor);
 						REPORT(FULL, "checked " << currentCompressor->getStringOfIO() << " in stage " << s << " and column " << currentMaxColumn << " with an efficiency of " << achievedEfficiencyCurrent);
-						if(achievedEfficiencyCurrent > (achievedEfficiencyBest + 0.0001) && achievedEfficiencyCurrent > (lowerBounds[s] - 0.0001)){
+
+						float lowerBound;
+						if(s < lowerBounds.size())
+							lowerBound = lowerBounds[s];
+						else
+							lowerBound = 0.0;
+
+						if(achievedEfficiencyCurrent > (achievedEfficiencyBest + 0.0001) && achievedEfficiencyCurrent > (lowerBound - 0.0001)){
 							achievedEfficiencyBest = achievedEfficiencyCurrent;
 							compressor = currentCompressor;
 							found = true;
