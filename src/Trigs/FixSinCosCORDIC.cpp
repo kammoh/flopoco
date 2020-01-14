@@ -4,8 +4,9 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "CordicSinCos.hpp"
-#include "IntMult//IntMultiplier.hpp"
+#include "FixSinCos.hpp"
+#include "FixSinCosCORDIC.hpp"
+#include "IntMult/IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "ConstMult/FixRealKCM.hpp"
 
@@ -17,16 +18,16 @@ namespace flopoco{
 	//The wIn+1 below is for consistency with FixSinCos and FixSinOrCos interfaces.
 	// TODO possibly fix all the code instead... This would enable sharing emulate() etc.
  
-	CordicSinCos::CordicSinCos(Target* target, int wIn_, int wOut_, int reducedIterations_, map<string, double> inputDelays) 
-		: Operator(target), wIn(wIn_+1), wOut(wOut_+1), reducedIterations(reducedIterations_)
+	FixSinCosCORDIC::FixSinCosCORDIC(OperatorPtr parentOp, Target* target, int wIn_, int wOut_, int reducedIterations_) 
+		: FixSinCos(parentOp, target, wIn_, wOut_), reducedIterations(reducedIterations_)
 	{
 
 		int stage;
-		srcFileName="CordicSinCos";
+		srcFileName="FixSinCosCORDIC";
 		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2012-...)" );
 
 		ostringstream name;
-		name << "CordicSinCos_" << (reducedIterations==1?"reducedIterations":"") << wIn_ << "_" << wOut_;
+		name << "FixSinCosCORDIC_" << (reducedIterations==1?"reducedIterations":"") << wIn_ << "_" << wOut_;
 		setNameWithFreqAndUID( name.str() );
 
 
@@ -88,18 +89,6 @@ namespace flopoco{
 		       << "  Guard bits g=" << g << "  Neg. weight of LSBs w=" << w );
 
 
-		// everybody needs many digits of Pi
-		mpfr_init2(constPi, 10*w);
-		mpfr_const_pi( constPi, GMP_RNDN);
-
-		//compute the scale factor		
-		mpfr_init2(scale, wOut+2);
-		mpfr_set_d(scale, -1.0, GMP_RNDN);           // exact
-		mpfr_mul_2si(scale, scale, -wOut+1, GMP_RNDN); // exact
-		mpfr_add_d(scale, scale, 1.0, GMP_RNDN);     // exact
-		REPORT(DEBUG, "scale=" << printMPFR(scale));
-		
-
 		// declaring inputs
 		addInput  ( "X"  , wIn, true );
 
@@ -107,16 +96,14 @@ namespace flopoco{
 		addOutput  ( "C"  , wOut, 2 );
 		addOutput  ( "S"  , wOut, 2 );
 		
-		setCriticalPath(getMaxInputDelays(inputDelays));
-		manageCriticalPath( getTarget()->lutDelay());
-		
 		//reduce the argument X to [0, 1/2)
 		vhdl << tab << declare("sgn") << " <= X(" << wIn-1 << ");  -- sign" << endl;
 		vhdl << tab << declare("q") << " <= X(" << wIn-2 << ");  -- quadrant" << endl;
 		vhdl << tab << declare("o") << " <= X(" << wIn-3 << ");  -- octant" << endl;
 		vhdl << tab << declare("sqo", 3) << " <= sgn & q & o;  -- sign, quadrant, octant" << endl;
 
-		vhdl << tab << declare("qrot0", 3) << " <= sqo +  \"001\"; -- rotate by an octant" << endl; 
+		vhdl << tab << declare(getTarget()->logicDelay(),
+													 "qrot0", 3) << " <= sqo +  \"001\"; -- rotate by an octant" << endl; 
 		vhdl << tab << declare("qrot", 2) << " <= qrot0(2 downto 1); -- new quadrant: 00 is the two octants around the origin" << endl; 
 		// y is built out of the remaining wIn-2 bits
 
@@ -188,7 +175,7 @@ namespace flopoco{
 			// The data dependency is from one Z to the next 
 			// We may assume that the rotations themselves overlap once the DI are known
 			//manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w) + getTarget()->lutDelay()));
- 			manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->adderDelay(sizeZ));
+ 			// manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->adderDelay(sizeZ));
 			
 #if ROUNDED_ROTATION  // rounding of the shifted operand, should save 1 bit in each addition
 			
@@ -246,8 +233,8 @@ namespace flopoco{
 		}
 		
 		// Give the time to finish the last rotation
-		manageCriticalPath( getTarget()->localWireDelay(w+1) + getTarget()->adderDelay(w+1) // actual CP delay
-		                    - (getTarget()->localWireDelay(sizeZ+1) + getTarget()->adderDelay(sizeZ+1))); // CP delay that was already added
+		// manageCriticalPath( getTarget()->localWireDelay(w+1) + getTarget()->adderDelay(w+1) // actual CP delay
+		//                    - (getTarget()->localWireDelay(sizeZ+1) + getTarget()->adderDelay(sizeZ+1))); // CP delay that was already added
 
 			
 		if(reducedIterations == 0){ //regular struture; all that remains is to assign the outputs correctly
@@ -262,9 +249,7 @@ namespace flopoco{
 		else{	//reduced iterations structure; rotate by the remaining angle and then assign the angles
 			
 			vhdl << tab << "-- Reduced iteration: finish the computation by a rotation by Pi Z" << stage << endl; 
-
-		
-			nextCycle();
+#if 0
 			//multiply X by Pi
 			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0 ); 
 			addSubComponent(piMultiplier);
@@ -273,11 +258,11 @@ namespace flopoco{
 			inPortMap(piMultiplier, "X", "FinalZ");
 			outPortMap(piMultiplier, "R", "PiZ");
 			vhdl << instance(piMultiplier, "piMultiplier") << endl;
-		
-			syncCycleFromSignal("PiZ");
-			nextCycle();
+#else
+			// TODO
+#endif
 
-			manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->DSPMultiplierDelay());
+			// manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->DSPMultiplierDelay());
 
 
 
@@ -287,6 +272,7 @@ namespace flopoco{
 			vhdl << tab << declare("SinTrunc", sizeZ) << " <= " << join("Sin", stage) << range(w, w-sizeZ+1) << ";" << endl;
 			
 			//multiply with the angle X to obtain the actual values for sine and cosine
+#if 0
 			IntMultiplier* zmultiplier = new IntMultiplier(target, sizeZ, sizeZ, true); // signed
 			addSubComponent(zmultiplier);
 			
@@ -299,10 +285,10 @@ namespace flopoco{
 			inPortMap(zmultiplier, "Y", "PiZ");
 			outPortMap(zmultiplier, "R", "SinTimesZ");
 			vhdl << instance(zmultiplier, "MultSinZ") << endl;
-			
-			syncCycleFromSignal("CosTimesZ");
-			
-			manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w));
+#else
+
+#endif
+			// manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w));
 			
 			vhdl << tab << declare("CosTimesZTrunc", sizeZ) << "<= CosTimesZ" << range(2*sizeZ-1, sizeZ) << ";" << endl;
 			vhdl << tab << declare("SinTimesZTrunc", sizeZ) << "<= SinTimesZ" << range(2*sizeZ-1, sizeZ) << ";" << endl;
@@ -321,7 +307,7 @@ namespace flopoco{
 		
 
 		// All this should fit in one level of LUTs
-		manageCriticalPath(getTarget()->localWireDelay(wOut) + getTarget()->lutDelay());
+		// manageCriticalPath(getTarget()->localWireDelay(wOut) + getTarget()->lutDelay());
 
 		vhdl << tab << declare("redCosNeg", w+1) << " <= (not redCos); -- negate by NOT, 1 ulp error"<< endl;
 		vhdl << tab << declare("redSinNeg", w+1) << " <= (not redSin); -- negate by NOT, 1 ulp error"<< endl;
@@ -341,7 +327,7 @@ namespace flopoco{
 		vhdl << tab << tab << tab << " redCosNeg when others;" << endl;
 		
 		
-		manageCriticalPath( getTarget()->adderDelay(1+wOut+1));
+		// manageCriticalPath( getTarget()->adderDelay(1+wOut+1));
 
 		vhdl << tab << declare("roundedCosX", wOut+1) << " <= CosX0" << range(w, w-wOut) << " + " << " (" << zg(wOut) << " & \'1\');" << endl;
 		vhdl << tab << declare("roundedSinX", wOut+1) << " <= SinX0" << range(w, w-wOut) << " + " << " (" << zg(wOut) << " & \'1\');" << endl;
@@ -354,150 +340,12 @@ namespace flopoco{
 	};
 
 
-	CordicSinCos::~CordicSinCos(){
+	FixSinCosCORDIC::~FixSinCosCORDIC(){
 		mpfr_clears (scale, kfactor, constPi, NULL);		
 	 };
 
 
-	void CordicSinCos::emulate(TestCase * tc) 
-	{
-		mpfr_t z, rsin, rcos;
-		mpz_class sin_z, cos_z;
-		mpfr_init2(z, 10*w);
-		mpfr_init2(rsin, 10*w); 
-		mpfr_init2(rcos, 10*w); 
-		
-														  
 
-		/* Get I/O values */
-		mpz_class svZ = tc->getInputValue("X");
-		
-		/* Compute correct value */
-		
-		mpfr_set_z (z, svZ.get_mpz_t(), GMP_RNDN); //  exact
-		mpfr_div_2si (z, z, wIn-1, GMP_RNDN); // exact
-	
-		// No need to manage sign bit etc: modulo 2pi is the same as modulo 2 in the initial format
-		mpfr_mul(z, z, constPi, GMP_RNDN);
-
-		mpfr_sin(rsin, z, GMP_RNDN); 
-		mpfr_cos(rcos, z, GMP_RNDN);
-		mpfr_mul(rsin, rsin, scale, GMP_RNDN);
-		mpfr_mul(rcos, rcos, scale, GMP_RNDN);
-
-		mpfr_add_d(rsin, rsin, 6.0, GMP_RNDN); // exact rnd here
-		mpfr_add_d(rcos, rcos, 6.0, GMP_RNDN); // exact rnd here
-		mpfr_mul_2si (rsin, rsin, wOut-1, GMP_RNDN); // exact rnd here
-		mpfr_mul_2si (rcos, rcos, wOut-1, GMP_RNDN); // exact rnd here
-
-		// Rounding down
-		mpfr_get_z (sin_z.get_mpz_t(), rsin, GMP_RNDD); // there can be a real rounding here
-		mpfr_get_z (cos_z.get_mpz_t(), rcos, GMP_RNDD); // there can be a real rounding here
-		sin_z -= mpz_class(6)<<(wOut-1);
-		cos_z -= mpz_class(6)<<(wOut-1);
-
-		tc->addExpectedOutput ("S", sin_z);
-		tc->addExpectedOutput ("C", cos_z);
-
-		// Rounding up
-		mpfr_get_z (sin_z.get_mpz_t(), rsin, GMP_RNDU); // there can be a real rounding here
-		mpfr_get_z (cos_z.get_mpz_t(), rcos, GMP_RNDU); // there can be a real rounding here
-		sin_z -= mpz_class(6)<<(wOut-1);
-		cos_z -= mpz_class(6)<<(wOut-1);
-
-		tc->addExpectedOutput ("S", sin_z);
-		tc->addExpectedOutput ("C", cos_z);
-		
-		// clean up
-		mpfr_clears (z, rsin, rcos, NULL);		
-	}
-
-
-
-
-
-
-	void CordicSinCos::buildStandardTestCases(TestCaseList * tcl) 
-	{
-		TestCase* tc;
-		mpfr_t z;
-		mpz_class zz;
-		
-		
-		mpfr_init2(z, 10*w);
-		
-		//z=0
-		tc = new TestCase (this);
-		tc -> addInput ("X", mpz_class(0));
-		emulate(tc);
-		tcl->add(tc);
-					
-		tc = new TestCase (this);
-		tc->addComment("Pi/4-eps");
-		mpfr_set_d (z, 0.24, GMP_RNDD); 
-		mpfr_mul_2si (z, z, wIn-1, GMP_RNDD); 
-		mpfr_get_z (zz.get_mpz_t(), z, GMP_RNDD);  
-		tc -> addInput ("X", zz);
-		emulate(tc);
-		tcl->add(tc);
-				
-		tc = new TestCase (this);
-		tc->addComment("Pi/6");
-		mpfr_set_d (z, 0.166666666666666666666666666666666, GMP_RNDD); 
-		mpfr_mul_2si (z, z, wIn-1, GMP_RNDD); 
-		mpfr_get_z (zz.get_mpz_t(), z, GMP_RNDD);  
-		tc -> addInput ("X", zz);
-		emulate(tc);
-		tcl->add(tc);
-				
-		tc = new TestCase (this);
-		tc->addComment("Pi/3");
-		mpfr_set_d (z, 0.333333333333333333333333333333, GMP_RNDD); 
-		mpfr_mul_2si (z, z, wIn-1, GMP_RNDD); 
-		mpfr_get_z (zz.get_mpz_t(), z, GMP_RNDD);  
-		tc -> addInput ("X", zz);
-		emulate(tc);
-		tcl->add(tc);
-				
-		
-		mpfr_clears (z, NULL);
-	}
-
-
-	
-	mpz_class CordicSinCos::fp2fix(mpfr_t x, int wI, int wF){
-		mpz_class h;
-		
-		mpfr_mul_2si(x, x, wF, GMP_RNDN);
-		mpfr_get_z(h.get_mpz_t(), x,  GMP_RNDN);  
-		
-		return h;
-	}
-
-
-	// TODO There should be only one factory for the cordicsincos and fixsincos... On the model of FixAtan2
-	OperatorPtr CordicSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-		int lsb;
-		//int lsbOut;
-		bool reducedIterations;
-		UserInterface::parseBoolean(args, "reducedIterations", &reducedIterations); 
-		// 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseInt(args, "lsb", &lsb);
-		return new CordicSinCos(target, -lsb, -lsb, reducedIterations);  // TODO we want to expose the constructor parameters in the new  interface, so these "-" are a bug
-	}
-
-	void CordicSinCos::registerFactory(){
-		UserInterface::add("CordicSinCos", // name
-											 "Computes (1-2^(-w)) sin(pi*x) and (1-2^(-w)) cos(pi*x) for x in -[1,1[, using CORDIC algorithm",
-											 "ElementaryFunctions",
-											 "", // seeAlso
-											 "lsb(int): weight of the LSB of the input and outputs; \
-                        reducedIterations(int)=0: If 1, number of iterations will be reduced at the cost of two multiplications. ",
-											 "This is a classical CORDIC, implemented the FloPoCo way: it is last-bit accurate, hopefully at the minimum cost. <br>For more details, see <a href=\"bib/flopoco.html#DinIstSer2013-HEART-SinCos\">this article</a>.",
-											 CordicSinCos::parseArguments
-											 ) ;
-		
-	}
 }
 
 
