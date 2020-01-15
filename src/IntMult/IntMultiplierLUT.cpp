@@ -27,7 +27,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 
 	addInput("X", wX);
 	addInput("Y", wY);
-	addOutput("O", wR);
+	addOutput("R", wR);
 
 	if (wX == 1 and not isSignedX) {
 		vhdl << tab << declare(0.0, "replicated", wY) << " <= (" << (wY - 1) << " downto 0 => X(0));" << endl;

@@ -424,7 +424,7 @@ namespace flopoco {
 
 		inPortMap("X", multIn1SigName);
 		inPortMap("Y", multIn2SigName);
-		outPortMap("O", output_name);
+		outPortMap("R", output_name);
 		auto mult = parameters.generateOperator(this, getTarget());
 
 		vhdl << instance(mult, nameOutput.str(), false) <<endl;

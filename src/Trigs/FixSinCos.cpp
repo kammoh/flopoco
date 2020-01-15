@@ -161,23 +161,6 @@ namespace flopoco{
 
 
 
-	
-	OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-		int lsb;
-		int method;
-		// TODO test if wIn!=wOut works for CORDIC
-		UserInterface::parseInt(args, "lsb", &lsb); 
-		UserInterface::parseInt(args, "method", &method);
-		if(method==0)
-			return new FixSinCosPoly(parentOp, target, -lsb, -lsb); // TODO we want to expose the constructor parameters in the new  interface, so this "-" is a bug
-		else if (method==1)
-			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 0);  // TODO we want to expose the constructor parameters in the new  interface, so these "-" are a bug
-		else if (method==2)
-			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 1);  // reduced iteration
-		else {
-				throw " ERROR in FixSinCos::parseArguments: Wrong method number, only 0 (polynomial), 1 (standard CORDIC) and 2 (reduced iteration CORDIC) are allowed";
-			}
-	}
 
 	TestList FixSinCos::unitTest(int index)	{
 		TestList testStateList;
@@ -201,6 +184,25 @@ namespace flopoco{
 		}	
 
 		return testStateList;
+	}
+
+
+		
+	OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		int lsb;
+		int method;
+		// TODO test if wIn!=wOut works for CORDIC
+		UserInterface::parseInt(args, "lsb", &lsb); 
+		UserInterface::parseInt(args, "method", &method);
+		if(method==0)
+			return new FixSinCosPoly(parentOp, target, -lsb, -lsb); // TODO we want to expose the constructor parameters in the new  interface, so this "-" is a bug
+		else if (method==1)
+			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 0);  // TODO we want to expose the constructor parameters in the new  interface, so these "-" are a bug
+		else if (method==2)
+			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 1);  // reduced iteration
+		else {
+				throw " ERROR in FixSinCos::parseArguments: Wrong method number, only 0 (polynomial), 1 (standard CORDIC) and 2 (reduced iteration CORDIC) are allowed";
+			}
 	}
 
 

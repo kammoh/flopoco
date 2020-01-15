@@ -79,8 +79,8 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	} else {
 		vhdl << tab << declare(.0,"Rtmp",wM) << " <= M;" << endl;
     }
-	addOutput("O", wM);
-	vhdl << tab << "O <= Rtmp;" << endl;
+	addOutput("R", wM);
+	vhdl << tab << "R <= Rtmp;" << endl;
 }
 
 /*
