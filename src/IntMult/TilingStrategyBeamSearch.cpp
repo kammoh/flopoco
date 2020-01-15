@@ -36,12 +36,17 @@ namespace flopoco {
 
         double bestCost = 0.0;
         unsigned int bestArea = 0;
-        greedySolution(baseState, nullptr, &path, bestCost, bestArea);
+
+        if(truncated_) {
+            field.setTruncated(maxError_, baseState);
+        }
+
+        tempState.reset(baseState);
+
+        greedySolution(tempState, nullptr, &path, bestCost, bestArea);
         unsigned int next = path.front();
         unsigned int lastPath = next;
         path.pop();
-
-        field.reset();
 
         double currentTotalCost = 0.0;
         unsigned int currentArea = 0;
@@ -120,7 +125,7 @@ namespace flopoco {
         }
 
         if(tile->isVariable()) {
-            if(!(neededX >= 6 && neededY >= 2) && !(neededX >= 2 && neededY >= 6)) {
+            if(!(neededX >= 5 && neededY >= 2) && !(neededX >= 2 && neededY >= 5)) {
                 return false;
             }
 

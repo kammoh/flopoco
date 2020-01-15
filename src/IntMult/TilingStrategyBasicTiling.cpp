@@ -284,7 +284,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		auto param = bmc.parametrize(bestXMult, bestYMult, signedX, signedY);
 		auto coord = make_pair(bestXAnchor, bestYAnchor);
 		solution.push_back(make_pair(param, coord));
-        boxCost += ceil(bmc.getLUTCost(bestXAnchor, bestYAnchor, wX, wY));
+        boxCost += (float)bmc.getLUTCost(bestXAnchor, bestYAnchor, wX, wY);;
         return boxCost;
 	}
 
@@ -344,7 +344,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 					float occupationRatio = (float (area)) /  multArea;
 					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
-					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					bool hardLimitUnreached = (numUsedMults_ < max_pref_mult_);
 					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
@@ -405,7 +405,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 					float occupationRatio = float(area) /  multArea;
 					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
-					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					bool hardLimitUnreached = (numUsedMults_ < max_pref_mult_);
 					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(

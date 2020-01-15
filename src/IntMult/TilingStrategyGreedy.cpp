@@ -45,11 +45,20 @@ namespace flopoco {
                 }
             }
         }
-    };
+
+        truncated_ = wOut != wX + wY;
+        if(truncated_) {
+            maxError_ = 1ULL << (wX + wY - wOut);
+        }
+    }
 
     void TilingStrategyGreedy::solve() {
         NearestPointCursor fieldState;
         Field field(wX, wY, signedIO, fieldState);
+
+        if(truncated_) {
+            field.setTruncated(maxError_, fieldState);
+        }
 
         double cost = 0.0;
         unsigned int area = 0;
@@ -88,7 +97,7 @@ namespace flopoco {
 
                 if (use2xk_ && t->isVariable()) {
                     //no need to compare it to a dsp block / if there is not enough space anyway
-                    if (efficiency < 0 && ((neededX >= 6 && neededY >= 2) || (neededX >= 2 && neededY >= 6))) {
+                    if (efficiency < 0 && ((neededX >= 5 && neededY >= 2) || (neededX >= 2 && neededY >= 5))) {
                         if(neededX > neededY) {
                             bm = tileCollection_.VariableXTileCollection[neededX - tileCollection_.variableTileOffset];
                             tileIndex = i + 1;

@@ -155,6 +155,32 @@ namespace flopoco {
         return (field_[y][x] == fieldState.getID() || field_[y][x] == baseID_);
     }
 
+    void Field::setTruncated(unsigned long long max, FieldState& fieldState) {
+        ID fieldID = fieldState.getID();
+        unsigned int updateMissing = 0;
+        for(unsigned int y = 0; y < wY_; y++) {
+            unsigned long long current = 1ULL << y;
+            unsigned int updated = 0;
+            for(unsigned int x = 0; x < wX_; x++) {
+                if(current < max) {
+                    field_[y][x] = fieldID;
+                    updateMissing++;
+                    updated++;
+                    current <<= 1;
+                }
+                else {
+                    break;
+                }
+            }
+
+            if(updated == 0) {
+                fieldState.decreaseMissing(updateMissing);
+                fieldState.updateCursor();
+                return;
+            }
+        }
+    }
+
     void Field::printField(FieldState& fieldState) {
         ID fieldID = fieldState.getID();
 
