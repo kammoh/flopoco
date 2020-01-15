@@ -152,7 +152,7 @@ namespace flopoco {
             for (int y = ystart; y < yend; y++){        // for not rectangular tiles, every field in its maximum outline has to be checked if it is covered
                 for (int x = xstart; x < xend; x++){
                     if(parametrization.shapeValid(x-xstart,y-ystart)){
-                        outstream << "\t\t<rect x=\"" << 10*(width-x-xmin-1) << "\" y=\"" << 10*(y+ymin) << "\" width=\"" << 10*0.8 << "\" height=\"" << 10*1 << "\" style=\"fill:gray;fill-opacity:0.1;stroke:none\" />\n";
+                        outstream << "\t\t<rect x=\"" << 10*(width-x-xmin-1) << "\" y=\"" << 10*(y+ymin) << "\" width=\"" << 10 << "\" height=\"" << 10 << "\" style=\"fill:gray;fill-opacity:0.1;stroke:none\" />\n";
                         if((parametrization.shapeValid(x-xstart,y-ystart) && x-xstart == 0) || (x-xstart > 0 && !parametrization.shapeValid(x-xstart-1,y-ystart)))      //draw outline of individual tile, if neighbouring tile is not covered by it
                             outstream << "\t\t<line x1=\"" << 10*(width-x-xmin) << "\" y1=\"" << 10*(y+ymin)  << "\" x2=\"" << 10*(width-x-xmin) << "\" y2=\"" << 10*(y+ymin+1) << "\" style=\"stroke:black;stroke-width:1\" /> \n";
                         if((parametrization.shapeValid(x-xstart,y-ystart) && y-ystart == 0) || (y-ystart > 0 && !parametrization.shapeValid(x-xstart,y-ystart-1)))
