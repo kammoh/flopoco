@@ -250,22 +250,21 @@ namespace flopoco{
 		else{	//reduced iterations structure; rotate by the remaining angle and then assign the angles
 			
 			vhdl << tab << "-- Reduced iteration: finish the computation by a rotation by Pi Z" << stage << endl; 
-#if 0
-			//multiply X by Pi
-			FixRealKCM* piMultiplier = new FixRealKCM(target, zLSB, zMSB, 1, zLSB, "pi", 1.0 ); 
-			addSubComponent(piMultiplier);
 			
 			vhdl << tab << declare("FinalZ", sizeZ+1) << " <= " << join("D", stage)<< " & " << join("Z", stage) << ";" << endl;
-			inPortMap(piMultiplier, "X", "FinalZ");
-			outPortMap(piMultiplier, "R", "PiZ");
-			vhdl << instance(piMultiplier, "piMultiplier") << endl;
-#else
-			// TODO
-#endif
+
+			//multiply X by Pi
+			newInstance("FixRealConstMult",
+									"piMultiplier",
+									// unsigned here, the conversion to signed comes later
+									"method=KCM signedIn=1 msbIn=" + to_string(zMSB+1)
+									+ " lsbIn=" + to_string(zLSB)
+									+ " lsbOut="  + to_string(zLSB)
+									+ " constant=pi", 
+									"X=>FinalZ",
+									"R=>PiZ");
 
 			// manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->DSPMultiplierDelay());
-
-
 
 			sizeZ+=3; // +2 cause mult by pi, +1 because we add back the sign
 			
@@ -273,29 +272,29 @@ namespace flopoco{
 			vhdl << tab << declare("SinTrunc", sizeZ) << " <= " << join("Sin", stage) << range(w, w-sizeZ+1) << ";" << endl;
 			
 			//multiply with the angle X to obtain the actual values for sine and cosine
-#if 0
-			IntMultiplier* zmultiplier = new IntMultiplier(target, sizeZ, sizeZ, true); // signed
-			addSubComponent(zmultiplier);
-			
-			inPortMap(zmultiplier, "X", "CosTrunc");
-			inPortMap(zmultiplier, "Y", "PiZ");
-			outPortMap(zmultiplier, "R", "CosTimesZ");
-			vhdl << instance(zmultiplier, "MultCosZ") << endl;
-			
-			inPortMap(zmultiplier, "X", "SinTrunc");
-			inPortMap(zmultiplier, "Y", "PiZ");
-			outPortMap(zmultiplier, "R", "SinTimesZ");
-			vhdl << instance(zmultiplier, "MultSinZ") << endl;
-#else
+			newInstance("IntMultiplier",
+									"MultCosZ",
+									"wX=" + to_string(sizeZ)
+									+ " wY=" + to_string(sizeZ)
+									+ " wOut=" + to_string(sizeZ)
+									+ " signedIO=1", 
+									"X=>CosTrunc, Y=>PiZ",
+									"R=>CosTimesZTrunc");
 
-#endif
+			newInstance("IntMultiplier",
+									"MultSinZ",
+									"wX=" + to_string(sizeZ)
+									+ " wY=" + to_string(sizeZ)
+									+ " wOut=" + to_string(sizeZ)
+									+ " signedIO=1", 
+									"X=>SinTrunc, Y=>PiZ",
+									"R=>SinTimesZTrunc");
+
 			// manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w));
 			
-			vhdl << tab << declare("CosTimesZTrunc", sizeZ) << "<= CosTimesZ" << range(2*sizeZ-1, sizeZ) << ";" << endl;
-			vhdl << tab << declare("SinTimesZTrunc", sizeZ) << "<= SinTimesZ" << range(2*sizeZ-1, sizeZ) << ";" << endl;
 			
-			vhdl << tab << declare("ShiftedCosTimesZ", w+1) << " <= (" << w << " downto " << sizeZ << " => CosTimesZ(" << 2*sizeZ-1 << ")) & CosTimesZTrunc;"  << endl;
-			vhdl << tab << declare("ShiftedSinTimesZ", w+1) << " <= (" << w << " downto " << sizeZ << " => SinTimesZ(" << 2*sizeZ-1 << ")) & SinTimesZTrunc;"  << endl;
+			vhdl << tab << declare("ShiftedCosTimesZ", w+1) << " <= (" << w << " downto " << sizeZ << " => CosTimesZTrunc(" << sizeZ-1 << ")) & CosTimesZTrunc;"  << endl;
+			vhdl << tab << declare("ShiftedSinTimesZ", w+1) << " <= (" << w << " downto " << sizeZ << " => SinTimesZTrunc(" << sizeZ-1 << ")) & SinTimesZTrunc;"  << endl;
 			
 			vhdl << tab << declare("redCos", w+1) << " <= " << join("Cos", stage) << " - ShiftedSinTimesZ;" << endl;
 			vhdl << tab << declare("redSin", w+1) << " <= " << join("Sin", stage) << " + ShiftedCosTimesZ;" << endl;
