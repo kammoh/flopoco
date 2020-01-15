@@ -28,16 +28,6 @@ namespace flopoco
         };
 
         BaseMultiplierIrregularLUTXilinx(
-        ) : BaseMultiplierCategory{
-                0,
-                0,
-                false,
-                false,
-                -1,
-                "BaseMultiplierIrregularLUTXilinx"
-        }{}
-
-        BaseMultiplierIrregularLUTXilinx(
                 TILE_SHAPE shape
         ) : BaseMultiplierCategory{
                 get_wX(shape),
