@@ -91,17 +91,17 @@ BaseMultiplierIrregularLUTXilinxOp::BaseMultiplierIrregularLUTXilinxOp(Operator 
 
 	addInput("X", wX);
 	addInput("Y", wY);
-	addOutput("O", wR);
+	addOutput("R", wR);
 
 	if (wX == 1 and not isSignedX) {
 		vhdl << tab << declare(0.0, "replicated", wY) << " <= (" << (wY - 1) << " downto 0 => X(0));" << endl;
 		vhdl << tab << declare(target->logicDelay(2), "prod", wY) << " <= Y and replicated;" << endl;
-		vhdl << tab << "O <= prod;" << endl;
+		vhdl << tab << "R <= prod;" << endl;
 		return;
 	} else if (wY == 1 and not isSignedY) {
 		vhdl << tab << declare(0.0, "replicated", wX) << " <= (" << (wX - 1) << " downto 0 => Y(0));" << endl;
 		vhdl << tab << declare(target->logicDelay(2), "prod", wX) << " <= X and replicated;" << endl;
-		vhdl << tab << "O <= prod;" << endl;
+		vhdl << tab << "R <= prod;" << endl;
 		return;
 	}
 
@@ -120,7 +120,7 @@ BaseMultiplierIrregularLUTXilinxOp::BaseMultiplierIrregularLUTXilinxOp(Operator 
     inPortMap("X", "Xtable");
     outPortMap("Y", "Y1");
 
-    vhdl << tab << "O <= Y1;" << endl;
+    vhdl << tab << "R <= Y1;" << endl;
 	vhdl << instance(op, "TableMult");
 }
 
@@ -181,7 +181,7 @@ void BaseMultiplierIrregularLUTXilinxOp::emulate(TestCase* tc)
                 svR += (svX & (1 << xp)) * (svY & (1 << yp));
     }
     svR >>= BaseMultiplierIrregularLUTXilinx::getRelativeResultLSBWeight(this->shape);
-	tc->addExpectedOutput("O", svR);
+	tc->addExpectedOutput("R", svR);
 }
 
 TestList BaseMultiplierIrregularLUTXilinxOp::unitTest(int index)
