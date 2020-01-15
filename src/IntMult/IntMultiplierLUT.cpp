@@ -32,12 +32,12 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	if (wX == 1 and not isSignedX) {
 		vhdl << tab << declare(0.0, "replicated", wY) << " <= (" << (wY - 1) << " downto 0 => X(0));" << endl;
 		vhdl << tab << declare(target->logicDelay(2), "prod", wY) << " <= Y and replicated;" << endl;
-		vhdl << tab << "O <= prod;" << endl;
+		vhdl << tab << "R <= prod;" << endl;
 		return;
 	} else if (wY == 1 and not isSignedY) {
 		vhdl << tab << declare(0.0, "replicated", wX) << " <= (" << (wX - 1) << " downto 0 => Y(0));" << endl;
 		vhdl << tab << declare(target->logicDelay(2), "prod", wX) << " <= X and replicated;" << endl;
-		vhdl << tab << "O <= prod;" << endl;
+		vhdl << tab << "R <= prod;" << endl;
 		return;
 	}
 
@@ -56,7 +56,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 
-    vhdl << tab << "O <= Y1;" << endl;
+    vhdl << tab << "R <= Y1;" << endl;
 	vhdl << instance(op, "TableMult");
 }
 
@@ -126,7 +126,7 @@ void IntMultiplierLUT::emulate(TestCase* tc)
 	mpz_class svX = tc->getInputValue("X");
 	mpz_class svY = tc->getInputValue("Y");
 	mpz_class svR = svX * svY;
-	tc->addExpectedOutput("O", svR);
+	tc->addExpectedOutput("R", svR);
 }
 
 TestList IntMultiplierLUT::unitTest(int index)

@@ -372,9 +372,9 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
     }
 */
 
-    vhdl << tab << "O <= T;" << endl;
+    vhdl << tab << "R <= T;" << endl;
 
-    addOutput("O", BaseMultiplierDSPSuperTilesXilinx::get_wR(shape));
+    addOutput("R", BaseMultiplierDSPSuperTilesXilinx::get_wR(shape));
 
     addInput("X", BaseMultiplierDSPSuperTilesXilinx::get_wX(shape), true);
     addInput("Y", BaseMultiplierDSPSuperTilesXilinx::get_wY(shape), true);
@@ -494,7 +494,7 @@ void BaseMultiplierDSPSuperTilesXilinxOp::emulate(TestCase * tc) {
         t = (d2 + ((d1 >> 17)&0xFFFFFF) << 17) + (d1&0x1FFFF);
     }
 
-	tc->addExpectedOutput("O",t);
+	tc->addExpectedOutput("R",t);
 }
 
 
