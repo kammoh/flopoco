@@ -118,6 +118,8 @@ FixFunctions/FixFunctionByMultipartiteTable
 Trigs/ConstDiv3ForSinPoly
 Trigs/FixSinPoly
 Trigs/FixSinCos
+Trigs/FixSinCosPoly
+Trigs/FixSinCosCORDIC
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut
 PrimitiveComponents/Primitive

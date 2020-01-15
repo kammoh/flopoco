@@ -389,7 +389,10 @@ ConstMult:
 
 General
 
-** FixSinCos currently does not use all the bit heaps that we advertize
+** FixSinCos 
+*** currently does not use all the bit heaps that we advertize
+*** see comments in FixSinCos.cpp One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
+
 * If we could start pipeline from scratch MOSTLY DONE
 If we were to redo the pipeline framework from scratch, here is the proper way to do it.
 

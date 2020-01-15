@@ -40,16 +40,6 @@ namespace flopoco {
         };
 
         BaseMultiplierDSPSuperTilesXilinx(
-        ) : BaseMultiplierCategory{
-                0,
-                0,
-                false,
-                false,
-                -1,
-                "BaseMultiplierDSPSuperTilesXilinx"
-        }{}
-
-        BaseMultiplierDSPSuperTilesXilinx(
 				TILE_SHAPE shape
 			) : BaseMultiplierCategory{
 				get_wX(shape),

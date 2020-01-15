@@ -18,21 +18,13 @@ namespace flopoco{
 
 
 	class FixSinCos: public Operator {
-		FixSinCos(OperatorPtr parentOp, Target * target, int w);
+	public:	
+		FixSinCos(OperatorPtr parentOp, Target * target, int wIn, int wOut);
 	
 		~FixSinCos();
 
-	private:
-		/** Builds a table returning  sin(Addr) and cos(Addr) accurate to 2^(-lsbOut-g)
-				(beware, lsbOut is positive) where Addr is on a bits. 
-				If g is not null, a rounding bit is added at weight 2^((-lsbOut-1)
-				argRedCase=1 for full table, 4 for quadrant reduction, 8 for octant reduction.
-				Result is signed if argRedCase=1 (msbWeight=0=sign bit), unsigned positive otherwise (msbWeight=-1).
-		*/
-		vector<mpz_class> buildSinCosTable(int a, int lsbOut, int g, int argRedCase);
 	
 
-	public:	
 	
 	
 		void emulate(TestCase * tc);
@@ -47,8 +39,9 @@ namespace flopoco{
 	
 		static TestList unitTest(int index);
 
-	private:
-		int w;
+	protected:
+		int wIn;
+		int wOut;
 		mpfr_t scale;              /**< 1-2^(wOut-1)*/
 		mpfr_t constPi;
 	};
