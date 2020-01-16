@@ -3,6 +3,7 @@
 #include "BaseMultiplierXilinx2xk.hpp"
 #include "LineCursor.hpp"
 #include "NearestPointCursor.hpp"
+#include "IntMultiplier.hpp"
 
 #include <cstdlib>
 #include <ctime>
@@ -48,7 +49,7 @@ namespace flopoco {
 
         truncated_ = wOut != wX + wY;
         if(truncated_) {
-            maxError_ = 1ULL << (wX + wY - wOut);
+            truncatedRange_ = IntMultiplier::prodsize(wX, wY) - wOut;
         }
     }
 
@@ -57,7 +58,7 @@ namespace flopoco {
         Field field(wX, wY, signedIO, fieldState);
 
         if(truncated_) {
-            field.setTruncated(maxError_, fieldState);
+            field.setTruncated(truncatedRange_, fieldState);
         }
 
         double cost = 0.0;

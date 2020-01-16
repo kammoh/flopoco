@@ -38,7 +38,7 @@ namespace flopoco {
         unsigned int bestArea = 0;
 
         if(truncated_) {
-            field.setTruncated(maxError_, baseState);
+            field.setTruncated(truncatedRange_, baseState);
         }
 
         tempState.reset(baseState);

@@ -58,7 +58,7 @@ namespace flopoco {
         Field field(wX, wY, signedIO, baseState);
 
         if(truncated_) {
-            field.setTruncated(maxError_, baseState);
+            field.setTruncated(truncatedRange_, baseState);
         }
 
         tempState.reset(baseState);

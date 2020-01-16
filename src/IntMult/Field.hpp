@@ -74,7 +74,7 @@ namespace flopoco {
         void reset(Field& target);
         bool checkPosition(unsigned int x, unsigned int y, FieldState& fieldState);
         void printField();
-        void setTruncated(unsigned long long max, FieldState& fieldState);
+        void setTruncated(unsigned int range, FieldState& fieldState);
         void printField(FieldState& fieldState);
 
     protected:

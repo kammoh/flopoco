@@ -38,7 +38,7 @@ namespace flopoco {
 
         vector<BaseMultiplierCategory*> tiles_;
         bool truncated_;
-        unsigned long long maxError_;
+        unsigned int truncatedRange_;
 
         bool greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, double& cost, unsigned int& area, double cmpCost = DBL_MAX, unsigned int usedDSPBlocks = 0, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks = nullptr);
         bool performSuperTilePass(vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks, list<mult_tile_t>* solution, double& cost, double cmpCost = DBL_MAX);
