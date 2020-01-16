@@ -52,7 +52,7 @@ namespace flopoco{
 		double shift=0.5;
 		for(stage=1; stage<=maxIterations; stage++){
 #if ROUNDED_ROTATION
-			eps = eps + eps*shift + 0.5; // 0.5 assume rounding in the rotation.
+			eps = eps + eps*shift + 1.0; // was 0.5 but it was wrong.
 #else
 			eps = eps + eps*shift + 1.0; // 1.0 assume truncation in the rotation.
 #endif
@@ -68,7 +68,6 @@ namespace flopoco{
 
 		// guard bits depend only on the number of iterations
 		g = (int) ceil(log2(eps));  
-
 		
 		// *********    internal precision and fixed-point alignment **************
 
@@ -178,15 +177,10 @@ namespace flopoco{
 			//manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w) + getTarget()->lutDelay()));
  			// manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->adderDelay(sizeZ));
 			
-#if ROUNDED_ROTATION  // rounding of the shifted operand, should save 1 bit in each addition
-			
-#if 1 // this if just to check that it is useful
+
+#if	ROUNDED_ROTATION
 			vhdl << tab << declare(join("CosShiftRoundBit", stage)) << " <= " << join("Cos", stage)  << of(stage-1) << ";" << endl;
 			vhdl << tab << declare(join("SinShiftRoundBit", stage)) << " <= " << join("Sin", stage) << of(stage-1) << ";" <<endl;
-#else
-			vhdl << tab << declare(join("CosShiftRoundBit", stage)) << " <= '0';" << endl;
-			vhdl << tab << declare(join("SinShiftRoundBit", stage)) << " <= '0';" <<endl;
-#endif
 			vhdl << tab << declare(join("CosShiftNeg", stage), w+1) << " <= " << rangeAssign(w, 0, join("D", stage)) << " xor " << join("CosShift", stage)   << " ;" << endl;
 			vhdl << tab << declare(join("SinShiftNeg", stage), w+1) << " <= (not " << rangeAssign(w, 0, join("D", stage)) << ") xor " << join("SinShift", stage)   << " ;" << endl;
 
