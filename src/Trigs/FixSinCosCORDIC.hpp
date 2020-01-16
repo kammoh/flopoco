@@ -27,7 +27,7 @@ namespace flopoco{
 		int	maxIterations;         /**< index at which iterations stop */
 		int g;                     /**< number of guard bits*/
 		mpfr_t kfactor;            /**< */
-		vector<mpfr_t> atani;      /**< */
+//		vector<mpfr_t> atani;      /**< */
 
 	};
 

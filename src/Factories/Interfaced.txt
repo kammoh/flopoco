@@ -18,6 +18,7 @@ IntConstDiv
 DSPBlock
 IntMultiplier
 IntMultiplierLUT
+IntKaratsubaRectangular
 FixFunctionByTable
 FixFunctionByMultipartiteTable
 FixFunctionBySimplePoly
