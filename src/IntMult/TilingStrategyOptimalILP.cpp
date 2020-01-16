@@ -101,6 +101,8 @@ void TilingStrategyOptimalILP::constructProblem()
         dpS++;
 
     vector<vector<vector<ScaLP::Variable>>> solve_Vars(wS, vector<vector<ScaLP::Variable>>(wX+x_neg, vector<ScaLP::Variable>(wY+y_neg)));
+    ScaLP::Term maxEpsTerm;
+    __uint64_t sumOfPosEps = 0;
     // add the Constraints
     cout << "   adding the constraints to problem formulation..." << endl;
     for(int y = 0; y < wY; y++){
@@ -121,6 +123,10 @@ void TilingStrategyOptimalILP::constructProblem()
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
                                     obj.add(tempV, (double)tiles[s]->getLUTCost(xs, ys, wX, wY));    //append variable to cost function
+                                    if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut))){
+                                        maxEpsTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], ((unsigned long)1<<(x+y)));
+                                        //maxEpsTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
+                                    }
                                 }
                                 pxyTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
                             }
@@ -128,7 +134,15 @@ void TilingStrategyOptimalILP::constructProblem()
                     }
                 }
             }
-            ScaLP::Constraint c1Constraint = pxyTerm == (bool)1;
+            ScaLP::Constraint c1Constraint;
+            if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut-1))){
+                c1Constraint = pxyTerm <= (bool)1;
+                sumOfPosEps += ((unsigned long)1<<(x+y));
+                cout << sumOfPosEps << " " << ((unsigned long)1<<(x+y)) << endl;
+            } else {
+                c1Constraint = pxyTerm == (bool)1;
+            }
+
             c1Constraint.name = consName.str();
             solver->addConstraint(c1Constraint);
         }
@@ -155,6 +169,18 @@ void TilingStrategyOptimalILP::constructProblem()
         ScaLP::Constraint c1Constraint = pxyTerm <= max_pref_mult_;     //set max usage equ.
         c1Constraint.name = consName.str();
         solver->addConstraint(c1Constraint);
+    }
+
+    //make shure the available precision is present in case of truncation
+    if(wOut < wX+wY){
+        cout << "   multiplier is truncated by " << wX+wY-wOut << " bits, ensure sufficient precision..." << endl;
+        cout << sumOfPosEps << " " << ((unsigned long)1<<(wX+wY-wOut-1));
+        ScaLP::Constraint truncConstraint = maxEpsTerm >= (sumOfPosEps-((unsigned long)1<<(wX+wY-wOut-1)));
+        //ScaLP::Constraint truncConstraint = maxEpsTerm >= (bool)1;
+        stringstream consName;
+        consName << "maxEps";
+        truncConstraint.name = consName.str();
+        solver->addConstraint(truncConstraint);
     }
 
     // Set the Objective
