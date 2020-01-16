@@ -40,7 +40,7 @@ namespace flopoco{
 		else
 			maxIterations = wOut+1;
 		
-#define ROUNDED_ROTATION 1 // 0:trunc 
+#define ROUNDED_ROTATION 0 // 0:trunc 
 
 #if ROUNDED_ROTATION
 		REPORT(DEBUG, "Using rounded rotation trick");
@@ -67,7 +67,7 @@ namespace flopoco{
 		REPORT(DEBUG, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
 
 		// guard bits depend only on the number of iterations
-		g = 1+(int) ceil(log2(eps)); // +1 for the final rounding 
+		g = (int) ceil(log2(eps));  
 
 		
 		// *********    internal precision and fixed-point alignment **************
