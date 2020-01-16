@@ -49,7 +49,7 @@ namespace flopoco {
 
         truncated_ = wOut != wX + wY;
         if(truncated_) {
-            truncatedRange_ = IntMultiplier::prodsize(wX, wY) - wOut;
+            truncatedRange_ = (IntMultiplier::prodsize(wX, wY) - 1) - wOut;
         }
     }
 
