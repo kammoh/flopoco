@@ -67,7 +67,7 @@ namespace flopoco{
 		REPORT(DEBUG, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
 
 		// guard bits depend only on the number of iterations
-		g = (int) ceil(log2(eps));  
+		g = 1 + (int) floor(log2(eps));  
 		
 		// *********    internal precision and fixed-point alignment **************
 
@@ -81,7 +81,7 @@ namespace flopoco{
 		// while the Z datapath starts on w-1 bits (sign bit at weight  -2,
 		//  and decreasing, so the invariant is: sign bit at weight -stage-1)
 
-		w = wOut-1 + g; // -1 because of sign
+		w = wOut + g; 
 
 		REPORT(DEBUG, "wIn=" << wIn << " wOut=" << wOut 
 		       << "   MaxIterations: " << maxIterations 
