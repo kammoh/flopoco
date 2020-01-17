@@ -43,19 +43,15 @@ namespace flopoco{
 #define ROUNDED_ROTATION 0 // 0:trunc 
 
 #if ROUNDED_ROTATION
-		REPORT(DEBUG, "Using rounded rotation trick");
+		REPORT(DETAILED, "Using rounding to the nearest of each rotation");
 #endif
 		
 		//error analysis
 		double eps;  //error in ulp
 		eps=0.5; //initial rounding of kfactor
-		double shift=0.5;
-		for(stage=1; stage<=maxIterations; stage++){
-#if ROUNDED_ROTATION
+		double shift=0.25;
+		for(stage=2; stage<=maxIterations; stage++){
 			eps = eps + eps*shift + 1.0; // was 0.5 but it was wrong.
-#else
-			eps = eps + eps*shift + 1.0; // 1.0 assume truncation in the rotation.
-#endif
 			shift *=0.5;
 		}
 
@@ -64,8 +60,32 @@ namespace flopoco{
 		}
 
 		eps+=1; // the final neg-by-not
-		REPORT(DEBUG, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
+		REPORT(DETAILED, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
 
+#if 0 // The following error analysis separates deltaS and deltaC, but it doesn't improve anytbing.
+		// It should remain in the code to remember that it is not such a good idea
+		
+		double deltaC, deltaS;  //error in ulp
+		deltaC=0.5; //initial rounding of kfactor
+		deltaS=0; // exact
+		 shift=0.25;
+		for(stage=2; stage<=maxIterations; stage++){
+			deltaC = deltaC + deltaS*shift + 1.0; // 1.0 assume truncation in the rotation.
+			deltaS = deltaS + deltaC*shift + 1.0; // 1.0 assume truncation in the rotation.
+		REPORT(DETAILED, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << " )");
+			shift *=0.5;
+		}
+
+		if (reducedIterations == 1) {
+			deltaC+=2; // two multiplications in sequence, each truncated
+			deltaS+=2; // two multiplications in sequence, each truncated
+		}
+
+		deltaS+=1; // the final neg-by-not
+		deltaC+=1; // the final neg-by-not
+		REPORT(DETAILED, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << "  ulps (before final rounding)");
+#endif
+		
 		// guard bits depend only on the number of iterations
 		g = 1 + (int) floor(log2(eps));  
 		
@@ -83,7 +103,7 @@ namespace flopoco{
 
 		w = wOut + g; 
 
-		REPORT(DEBUG, "wIn=" << wIn << " wOut=" << wOut 
+		REPORT(DETAILED, "wIn=" << wIn << " wOut=" << wOut 
 		       << "   MaxIterations: " << maxIterations 
 		       << "  Guard bits g=" << g << "  Neg. weight of LSBs w=" << w );
 
