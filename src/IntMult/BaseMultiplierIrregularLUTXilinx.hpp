@@ -43,6 +43,7 @@ namespace flopoco
             this->wY = get_wY(shape);
         }
 
+        bool isIrregular() const override { return true;}
         int getDSPCost() const final {return 0;}
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         static int get_wX(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][0];}

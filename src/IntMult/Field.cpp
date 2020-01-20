@@ -58,18 +58,31 @@ namespace flopoco {
         unsigned int covered = 0;
         ID fieldID = fieldState.getID();
 
-        for(unsigned int i = coord.second; i < maxY; i++) {
-            for(unsigned int j = coord.first; j < maxX; j++) {
-                //check if tile could cover this area
-                if(!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
-                    continue;
-                }
+        if (tile->isIrregular()) {
+            for (unsigned int i = coord.second; i < maxY; i++) {
+                for (unsigned int j = coord.first; j < maxX; j++) {
+                    //check if tile could cover this area
+                    if (!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
+                        continue;
+                    }
 
-                if(field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                    return 0;
-                }
+                    if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
+                        return 0;
+                    }
 
-                covered++;
+                    covered++;
+                }
+            }
+        }
+        else {
+            for (unsigned int i = coord.second; i < maxY; i++) {
+                for (unsigned int j = coord.first; j < maxX; j++) {
+                    if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
+                        return 0;
+                    }
+
+                    covered++;
+                }
             }
         }
 
@@ -87,12 +100,25 @@ namespace flopoco {
         ID fieldID = fieldState.getID();
         unsigned int updateMissing = 0U;
 
-        for (unsigned int i = coord.second; i < maxY; i++) {
-            for (unsigned int j = coord.first; j < maxX; j++) {
-                //check if tile could cover this area and if area is free
-                if (tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_) && field_[i][j] != fieldID && field_[i][j] != baseID_) {
-                    field_[i][j] = fieldID;
-                    updateMissing++;
+        if(tile->isIrregular()) {
+            for (unsigned int i = coord.second; i < maxY; i++) {
+                for (unsigned int j = coord.first; j < maxX; j++) {
+                    //check if tile could cover this area and if area is free
+                    if (tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_) &&
+                        field_[i][j] != fieldID && field_[i][j] != baseID_) {
+                        field_[i][j] = fieldID;
+                        updateMissing++;
+                    }
+                }
+            }
+        }
+        else {
+            for (unsigned int i = coord.second; i < maxY; i++) {
+                for (unsigned int j = coord.first; j < maxX; j++) {
+                    if (field_[i][j] != fieldID && field_[i][j] != baseID_) {
+                        field_[i][j] = fieldID;
+                        updateMissing++;
+                    }
                 }
             }
         }
