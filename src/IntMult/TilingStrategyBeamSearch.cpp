@@ -120,7 +120,7 @@ namespace flopoco {
                 return false;
             }
         }
-        else if(!tile->isVariable() && (tile->wX() > neededX || tile->wY() > neededY)) {
+        else if(!tile->isVariable() && !tile->isIrregular() && (tile->wX() > neededX || tile->wY() > neededY)) {
             return false;
         }
 
@@ -143,6 +143,35 @@ namespace flopoco {
         unsigned int tiles = field->checkTilePlacement(next, tile, fieldState);
         if(tiles == 0) {
             return false;
+        }
+
+        if(tile->isIrregular()) {
+            //try to settle irregular tiles
+            bool didOp = false;
+            do {
+                didOp = false;
+                // down
+                next.second -= 1;
+                unsigned int newTiles = field->checkTilePlacement(next, tile, fieldState);
+                if(newTiles < tiles) {
+                    next.second += 1;
+                }
+                else {
+                    didOp = true;
+                    tiles = newTiles;
+                }
+
+                // right
+                next.first -= 1;
+                newTiles = field->checkTilePlacement(next, tile, fieldState);
+                if(newTiles < tiles) {
+                    next.first += 1;
+                }
+                else {
+                    didOp = true;
+                    tiles = newTiles;
+                }
+            } while(didOp);
         }
 
         if(tile->getDSPCost() >= 1) {

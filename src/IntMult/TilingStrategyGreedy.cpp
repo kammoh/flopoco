@@ -71,7 +71,9 @@ namespace flopoco {
 
     bool TilingStrategyGreedy::greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, double& cost, unsigned int& area, double cmpCost, unsigned int usedDSPBlocks, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>* dspBlocks) {
         Field* field = fieldState.getField();
-        auto next (fieldState.getCursor());
+        Cursor next (fieldState.getCursor());
+        Cursor placementPos = next;
+        Cursor possiblePlacementPos = next;
         double tempCost = cost;
         unsigned int tempArea = area;
 
@@ -109,18 +111,50 @@ namespace flopoco {
                         }
 
                         tile = bm->getParametrisation();
+                        placementPos = next;
                         break;
                     }
                 }
 
-                //no need to check normal tiles that won't fit anyway
-                if (t->getDSPCost() == 0 && ((neededX * neededY) < t->getArea())) {
+                //check size for "normal", rectangular tiles (avoids unnecessary placement checks)
+                if (t->getDSPCost() == 0 && !t->isIrregular() && (t->wX() > neededX || t->wY() > neededY)) {
                     continue;
                 }
 
                 unsigned int tiles = field->checkTilePlacement(next, t, fieldState);
                 if (tiles == 0) {
                     continue;
+                }
+
+                possiblePlacementPos = next;
+
+                if(t->isIrregular()) {
+                    //try to settle irregular tiles
+                    bool didOp = false;
+                    do {
+                        didOp = false;
+                        // down
+                        possiblePlacementPos.second -= 1;
+                        unsigned int newTiles = field->checkTilePlacement(possiblePlacementPos, t, fieldState);
+                        if(newTiles < tiles) {
+                            possiblePlacementPos.second += 1;
+                        }
+                        else {
+                            didOp = true;
+                            tiles = newTiles;
+                        }
+
+                        // right
+                        possiblePlacementPos.first -= 1;
+                        newTiles = field->checkTilePlacement(possiblePlacementPos, t, fieldState);
+                        if(newTiles < tiles) {
+                            possiblePlacementPos.first += 1;
+                        }
+                        else {
+                            didOp = true;
+                            tiles = newTiles;
+                        }
+                    } while(didOp);
                 }
 
                 if (t->getDSPCost()) {
@@ -151,33 +185,34 @@ namespace flopoco {
                     efficiency = newEfficiency;
                 }
 
-                tile = t->getParametrisation().tryDSPExpand(next.first, next.second, wX, wY, signedIO);
+                tile = t->getParametrisation().tryDSPExpand(possiblePlacementPos.first, possiblePlacementPos.second, wX, wY, signedIO);
                 bm = t;
                 tileIndex = i;
+                placementPos = possiblePlacementPos;
             }
 
             if(path != nullptr) {
                 path->push(tileIndex);
             }
 
-            auto coord (field->placeTileInField(next, bm, fieldState));
+            auto coord (field->placeTileInField(placementPos, bm, fieldState));
             if(bm->getDSPCost()) {
                 usedDSPBlocks++;
                 if(useSuperTiles_) {
-                    dspBlocks->push_back(make_pair(bm, next));
+                    dspBlocks->push_back(make_pair(bm, placementPos));
                     next = coord;
                 }
             }
             else {
                 tempArea += bm->getArea();
-                tempCost += bm->getLUTCost(next.first, next.second, wX, wY);
+                tempCost += bm->getLUTCost(placementPos.first, placementPos.second, wX, wY);
 
                 if(tempCost > cmpCost) {
                     return false;
                 }
 
                 if(solution != nullptr) {
-                    solution->push_back(make_pair(tile, next));
+                    solution->push_back(make_pair(tile, placementPos));
                 }
 
                 next = coord;
