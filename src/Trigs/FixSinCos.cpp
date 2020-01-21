@@ -168,13 +168,15 @@ namespace flopoco{
 		
 		if(index==-1) 
 		{ // The unit tests
-
-			for(int w=5; w<=32; w++) {
-				paramList.push_back(make_pair("lsb",to_string(-w)));
-				if(w<17)
-					paramList.push_back(make_pair("TestBench n=","-2"));			
-				testStateList.push_back(paramList);
-				paramList.clear();
+			for(int method=1; method<=2; method++) {
+				for(int w=5; w<=32; w++) {
+					paramList.push_back(make_pair("lsb",to_string(-w)));
+					paramList.push_back(make_pair("method",to_string(method)));
+					if(w<17)
+						paramList.push_back(make_pair("TestBench n=","-2"));			
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
 			}
 		}
 		else     

@@ -40,22 +40,18 @@ namespace flopoco{
 		else
 			maxIterations = wOut+1;
 		
-#define ROUNDED_ROTATION 1 // 0:trunc 
+#define ROUNDED_ROTATION 0 // 0:trunc 
 
 #if ROUNDED_ROTATION
-		REPORT(DEBUG, "Using rounded rotation trick");
+		REPORT(DETAILED, "Using rounding to the nearest of each rotation");
 #endif
 		
 		//error analysis
 		double eps;  //error in ulp
 		eps=0.5; //initial rounding of kfactor
-		double shift=0.5;
-		for(stage=1; stage<=maxIterations; stage++){
-#if ROUNDED_ROTATION
-			eps = eps + eps*shift + 0.5; // 0.5 assume rounding in the rotation.
-#else
-			eps = eps + eps*shift + 1.0; // 1.0 assume truncation in the rotation.
-#endif
+		double shift=0.25;
+		for(stage=2; stage<=maxIterations; stage++){
+			eps = eps + eps*shift + 1.0; // was 0.5 but it was wrong.
 			shift *=0.5;
 		}
 
@@ -64,11 +60,34 @@ namespace flopoco{
 		}
 
 		eps+=1; // the final neg-by-not
-		REPORT(DEBUG, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
+		REPORT(DETAILED, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
 
+#if 0 // The following error analysis separates deltaS and deltaC, but it doesn't improve anytbing.
+		// It should remain in the code to remember that it is not such a good idea
+		
+		double deltaC, deltaS;  //error in ulp
+		deltaC=0.5; //initial rounding of kfactor
+		deltaS=0; // exact
+		 shift=0.25;
+		for(stage=2; stage<=maxIterations; stage++){
+			deltaC = deltaC + deltaS*shift + 1.0; // 1.0 assume truncation in the rotation.
+			deltaS = deltaS + deltaC*shift + 1.0; // 1.0 assume truncation in the rotation.
+		REPORT(DETAILED, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << " )");
+			shift *=0.5;
+		}
+
+		if (reducedIterations == 1) {
+			deltaC+=2; // two multiplications in sequence, each truncated
+			deltaS+=2; // two multiplications in sequence, each truncated
+		}
+
+		deltaS+=1; // the final neg-by-not
+		deltaC+=1; // the final neg-by-not
+		REPORT(DETAILED, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << "  ulps (before final rounding)");
+#endif
+		
 		// guard bits depend only on the number of iterations
-		g = 1+(int) ceil(log2(eps)); // +1 for the final rounding 
-
+		g = 1 + (int) floor(log2(eps));  
 		
 		// *********    internal precision and fixed-point alignment **************
 
@@ -82,9 +101,9 @@ namespace flopoco{
 		// while the Z datapath starts on w-1 bits (sign bit at weight  -2,
 		//  and decreasing, so the invariant is: sign bit at weight -stage-1)
 
-		w = wOut-1 + g; // -1 because of sign
+		w = wOut + g; 
 
-		REPORT(DEBUG, "wIn=" << wIn << " wOut=" << wOut 
+		REPORT(DETAILED, "wIn=" << wIn << " wOut=" << wOut 
 		       << "   MaxIterations: " << maxIterations 
 		       << "  Guard bits g=" << g << "  Neg. weight of LSBs w=" << w );
 
@@ -178,15 +197,10 @@ namespace flopoco{
 			//manageCriticalPath(getTarget()->localWireDelay(w) + getTarget()->adderDelay(w) + getTarget()->lutDelay()));
  			// manageCriticalPath(getTarget()->localWireDelay(sizeZ) + getTarget()->adderDelay(sizeZ));
 			
-#if ROUNDED_ROTATION  // rounding of the shifted operand, should save 1 bit in each addition
-			
-#if 1 // this if just to check that it is useful
+
+#if	ROUNDED_ROTATION
 			vhdl << tab << declare(join("CosShiftRoundBit", stage)) << " <= " << join("Cos", stage)  << of(stage-1) << ";" << endl;
 			vhdl << tab << declare(join("SinShiftRoundBit", stage)) << " <= " << join("Sin", stage) << of(stage-1) << ";" <<endl;
-#else
-			vhdl << tab << declare(join("CosShiftRoundBit", stage)) << " <= '0';" << endl;
-			vhdl << tab << declare(join("SinShiftRoundBit", stage)) << " <= '0';" <<endl;
-#endif
 			vhdl << tab << declare(join("CosShiftNeg", stage), w+1) << " <= " << rangeAssign(w, 0, join("D", stage)) << " xor " << join("CosShift", stage)   << " ;" << endl;
 			vhdl << tab << declare(join("SinShiftNeg", stage), w+1) << " <= (not " << rangeAssign(w, 0, join("D", stage)) << ") xor " << join("SinShift", stage)   << " ;" << endl;
 
