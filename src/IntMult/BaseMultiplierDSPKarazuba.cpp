@@ -17,6 +17,19 @@ namespace flopoco {
         );
     }
 
+    int BaseMultiplierDSPKarazuba::getDSPCost() const {
+        int dsps = 0;
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= n; j++){
+            for(int i = 0; i <= j; i++){
+                dsps++;
+            }
+        }
+        return dsps;
+    }
+
     double BaseMultiplierDSPKarazuba::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
         int bits = 0;
         int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
