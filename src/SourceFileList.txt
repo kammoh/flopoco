@@ -79,6 +79,7 @@ IntMult/BaseMultiplier
 IntMult/BaseMultiplierCategory
 IntMult/BaseMultiplierCollection
 IntMult/BaseMultiplierDSP
+IntMult/BaseMultiplierDSPKarazuba
 IntMult/BaseMultiplierDSPSuperTilesXilinx
 IntMult/BaseMultiplierLUT
 IntMult/IntKaratsubaRectangular

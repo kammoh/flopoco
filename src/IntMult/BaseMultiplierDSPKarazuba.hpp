@@ -46,6 +46,7 @@ namespace flopoco {
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         bool shapeValid(const Parametrization &param, unsigned int x, unsigned int y) const;
         bool shapeValid(int x, int y);
+        bool isIrregular() const override { return true;}
 
 
 
