@@ -21,28 +21,27 @@ namespace flopoco {
     public:
 
         BaseMultiplierDSPKarazuba(
-                int shape
+                int size
         ) : BaseMultiplierCategory{
-        get_wX(shape),
-        get_wY(shape),
+        get_wX(size),
+        get_wY(size),
         false,
         false,
-        shape,
-        "BaseMultiplierDSPKarazuba_" + string(1,((char) shape) + 'A' - 1),
+        size,
+        "BaseMultiplierDSPKarazuba_size" + string(1,((char) size) + '0'),
         false
         }{
-            this->wX = get_wX(shape);
-            this->wY = get_wY(shape);
-            this->wR = get_wR(shape);
+            wX = 16;
+            wY = 24;
+            wR = 16+24;
+            n = size;
         }
 
-
-
-        static int get_wX(int shape) {return 16;}
-        static int get_wY(int shape) {return 24;}
-        static int get_wR(int shape) {return 16+24;}
-        static int getRelativeResultMSBWeight(int shape) {return 1;}
-        static int getRelativeResultLSBWeight(int shape) {return 1;}
+        static int get_wX(int n) {return fpr(16, 24, gcd(16, 24))*n+16;}
+        static int get_wY(int n) {return fpr(16, 24, gcd(16, 24))*n+24;}
+        static int get_wR(int n) {return get_wX(n) + get_wY(n);}
+        static int getRelativeResultMSBWeight(int n) {return get_wR(n);}
+        static int getRelativeResultLSBWeight(int n) {return 0;}
 
         Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
@@ -53,6 +52,8 @@ namespace flopoco {
 
     private:
         int wX, wY, wR, n;
+        static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b);}
+        static long fpr(int wX, int wY, int gcd) {long kxy = gcd; for(; kxy % wX || kxy % wY; kxy += gcd); return kxy;}
     };
 
     class BaseMultiplierDSPKarazubaOp : public Operator
