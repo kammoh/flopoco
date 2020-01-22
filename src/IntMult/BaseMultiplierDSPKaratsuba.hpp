@@ -1,5 +1,5 @@
-#ifndef FLOPOCO_BASEMULTIPLIERDSPKARAZUBA_HPP
-#define FLOPOCO_BASEMULTIPLIERDSPKARAZUBA_HPP
+#ifndef FLOPOCO_BaseMultiplierDSPKaratsuba_HPP
+#define FLOPOCO_BaseMultiplierDSPKaratsuba_HPP
 
 #include <string>
 #include <iostream>
@@ -16,11 +16,11 @@
 namespace flopoco {
 
 
-    class BaseMultiplierDSPKarazuba : public BaseMultiplierCategory
+    class BaseMultiplierDSPKaratsuba : public BaseMultiplierCategory
     {
     public:
 
-        BaseMultiplierDSPKarazuba(
+        BaseMultiplierDSPKaratsuba(
                 int size
         ) : BaseMultiplierCategory{
         get_wX(size),
@@ -28,7 +28,7 @@ namespace flopoco {
         false,
         false,
         size,
-        "BaseMultiplierDSPKarazuba_size" + string(1,((char) size) + '0'),
+        "BaseMultiplierDSPKaratsuba_size" + string(1,((char) size) + '0'),
         false
         }{
             wX = 16;
@@ -47,8 +47,6 @@ namespace flopoco {
         bool shapeValid(const Parametrization &param, unsigned int x, unsigned int y) const;
         bool shapeValid(int x, int y);
 
-
-
         Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
         /** Factory method */
@@ -63,11 +61,11 @@ namespace flopoco {
 
     };
 
-    class BaseMultiplierDSPKarazubaOp : public Operator
+    class BaseMultiplierDSPKaratsubaOp : public Operator
     {
     public:
 
-        BaseMultiplierDSPKarazubaOp(Operator *parentOp, Target* target, int wX, int wY, int k);
+        BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int k);
         void emulate(TestCase * tc);
     protected:
         BitHeap *bitHeap;
@@ -81,4 +79,4 @@ namespace flopoco {
     };
 
 }
-#endif //FLOPOCO_BASEMULTIPLIERDSPKARAZUBA_HPP
+#endif //FLOPOCO_BaseMultiplierDSPKaratsuba_HPP

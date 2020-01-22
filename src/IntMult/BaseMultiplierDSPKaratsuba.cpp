@@ -1,14 +1,14 @@
-#include "BaseMultiplierDSPKarazuba.hpp"
+#include "BaseMultiplierDSPKaratsuba.hpp"
 
 
 namespace flopoco {
 
 
-    Operator *BaseMultiplierDSPKarazuba::generateOperator(
+    Operator *BaseMultiplierDSPKaratsuba::generateOperator(
             Operator *parentOp,
             Target *target,
             Parametrization const &parameters) const {
-        return new BaseMultiplierDSPKarazubaOp(
+        return new BaseMultiplierDSPKaratsubaOp(
                 parentOp,
                 target,
                 parameters.getTileXWordSize(),
@@ -17,9 +17,9 @@ namespace flopoco {
         );
     }
 
-    int BaseMultiplierDSPKarazuba::getDSPCost() const {
+    int BaseMultiplierDSPKaratsuba::getDSPCost() const {
         int dsps = 0;
-        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
         long kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= n; j++){
@@ -30,9 +30,9 @@ namespace flopoco {
         return dsps;
     }
 
-    double BaseMultiplierDSPKarazuba::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+    double BaseMultiplierDSPKaratsuba::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
         int bits = 0;
-        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
         long kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= n; j++){
@@ -43,9 +43,9 @@ namespace flopoco {
         return bits*0.65;   //TODO: consider protrusion of multiplier over the bounds of the complete multiplier
     }
 
-    bool BaseMultiplierDSPKarazuba::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
+    bool BaseMultiplierDSPKaratsuba::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
     {
-        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
         long kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= param.getShapePara(); j++){
@@ -57,9 +57,9 @@ namespace flopoco {
         return false;
     }
 
-    bool BaseMultiplierDSPKarazuba::shapeValid(int x, int y)
+    bool BaseMultiplierDSPKaratsuba::shapeValid(int x, int y)
     {
-        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
         long kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= n; j++){
@@ -71,34 +71,34 @@ namespace flopoco {
         return false;
     }
 
-    OperatorPtr BaseMultiplierDSPKarazuba::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+    OperatorPtr BaseMultiplierDSPKaratsuba::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
     {
         int wX, wY, n;
         UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
         UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
         UserInterface::parseStrictlyPositiveInt(args, "k", &n);
 
-        return new BaseMultiplierDSPKarazubaOp(parentOp,target, wX, wY, n);
+        return new BaseMultiplierDSPKaratsubaOp(parentOp,target, wX, wY, n);
     }
 
-    void BaseMultiplierDSPKarazuba::registerFactory()
+    void BaseMultiplierDSPKaratsuba::registerFactory()
     {
-        UserInterface::add("BaseMultiplierDSPKarazuba", // name
-                           "Implements the Karazuba pattern with DSPs where certain multipliers can be omitted to save DSPs",
+        UserInterface::add("BaseMultiplierDSPKaratsuba", // name
+                           "Implements the Karatsuba pattern with DSPs where certain multipliers can be omitted to save DSPs",
                            "BasicInteger", // categories
                            "",
                            "wX(int): size of input X of a single DSP-block;\
                         wY(int): size of input Y of a single DSP-block;\
 						n(int): size of pattern and number of DSP substitutions;",
                            "",
-                           BaseMultiplierDSPKarazuba::parseArguments//,
-                           //BaseMultiplierDSPKarazuba::unitTest
+                           BaseMultiplierDSPKaratsuba::parseArguments//,
+                           //BaseMultiplierDSPKaratsuba::unitTest
         ) ;
     }
 
-    void BaseMultiplierDSPKarazubaOp::emulate(TestCase* tc)
+    void BaseMultiplierDSPKaratsubaOp::emulate(TestCase* tc)
     {
-        int gcd = BaseMultiplierDSPKarazubaOp::gcd(wX, wY);
+        int gcd = BaseMultiplierDSPKaratsubaOp::gcd(wX, wY);
         long kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
 
@@ -115,7 +115,7 @@ namespace flopoco {
             a[i] = (svX >> i*kxy) & x_mask;
             b[i] = (svY >> i*kxy) & y_mask;
             svR += (a[i]*b[i] << 2*i*kxy);
-            for(int j = 0; j < i; j++) {     //karazuba substitution
+            for(int j = 0; j < i; j++) {     //karatsuba substitution
                 svR += (((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << (j+i)*kxy);
                 //cout << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
             }
@@ -124,16 +124,16 @@ namespace flopoco {
         tc->addExpectedOutput("R", svR);
     }
 
-    BaseMultiplierDSPKarazubaOp::BaseMultiplierDSPKarazubaOp(Operator *parentOp, Target* target, int wX, int wY, int n) : Operator(parentOp,target), wX(wX), wY(wY), wR(wX+wY), n(n)
+    BaseMultiplierDSPKaratsubaOp::BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int n) : Operator(parentOp,target), wX(wX), wY(wY), wR(wX+wY), n(n)
     {
-        int gcd = BaseMultiplierDSPKarazubaOp::gcd(wX, wY);
+        int gcd = BaseMultiplierDSPKaratsubaOp::gcd(wX, wY);
         if(gcd == 1) THROWERROR("Input word sizes " << wX << " " << wY << " do not have a common divider >1");
 
         int kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
         cout << "first possible position " << kxy << endl;
 
-        srcFileName = "BaseMultiplierDSPKarazuba";
+        srcFileName = "BaseMultiplierDSPKaratsuba";
         ostringstream name;
         name << "IntKaratsuba_" << wX << "x" << wY << "_order_" << n;
         setNameWithFreqAndUID(name.str() );
@@ -159,7 +159,7 @@ namespace flopoco {
 
         for(int xy = 0; xy <= n; xy++){     //diagonal
             createMult(kxy*xy/gcd, kxy*xy/gcd);
-            for(int nr = 0; nr < xy; nr++) {     //karazuba substitution
+            for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
                 createRectKaratsuba(kxy*nr/gcd,kxy*xy/gcd,kxy*xy/gcd,kxy*nr/gcd);
             }
         }
@@ -173,7 +173,7 @@ namespace flopoco {
     }
 
 
-    void BaseMultiplierDSPKarazubaOp::createMult(int i, int j)
+    void BaseMultiplierDSPKaratsubaOp::createMult(int i, int j)
     {
         REPORT(DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
         if(!isSignalDeclared("a" + to_string(i) + "se"))
@@ -186,7 +186,7 @@ namespace flopoco {
         bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
     }
 
-    void BaseMultiplierDSPKarazubaOp::createRectKaratsuba(int i, int j, int k, int l)
+    void BaseMultiplierDSPKaratsubaOp::createRectKaratsuba(int i, int j, int k, int l)
     {
         REPORT(FULL, "createRectKaratsuba(" << i << "," << j << "," << k << "," << l << ")");
 
