@@ -42,6 +42,8 @@ namespace flopoco {
         static int get_wR(int n) {return get_wX(n) + get_wY(n);}
         static int getRelativeResultMSBWeight(int n) {return get_wR(n);}
         static int getRelativeResultLSBWeight(int n) {return 0;}
+        bool shapeValid(int x, int y);
+        bool shapeValid(const Parametrization &param, unsigned int x, unsigned int y) const;
 
         Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
@@ -54,6 +56,7 @@ namespace flopoco {
         int wX, wY, wR, n;
         static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b);}
         static long fpr(int wX, int wY, int gcd) {long kxy = gcd; for(; kxy % wX || kxy % wY; kxy += gcd); return kxy;}
+
     };
 
     class BaseMultiplierDSPKarazubaOp : public Operator

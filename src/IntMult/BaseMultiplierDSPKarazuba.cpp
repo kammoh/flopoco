@@ -19,6 +19,34 @@ namespace flopoco {
 
 
 
+    bool BaseMultiplierDSPKarazuba::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
+    {
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= param.getShapePara(); j++){
+            for(int i = 0; i <= param.getShapePara(); i++){
+                if(i*kxy < x && x < i*kxy+wX && j*kxy < y && y < j*kxy+wY )
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    bool BaseMultiplierDSPKarazuba::shapeValid(int x, int y)
+    {
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= n; j++){
+            for(int i = 0; i <= n; i++){
+                if(i*kxy < x && x < i*kxy+wX && j*kxy < y && y < j*kxy+wY )
+                    return true;
+            }
+        }
+        return false;
+    }
+
     OperatorPtr BaseMultiplierDSPKarazuba::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
     {
         int wX, wY, n;
@@ -65,7 +93,7 @@ namespace flopoco {
             svR += (a[i]*b[i] << 2*i*kxy);
             for(int j = 0; j < i; j++) {     //karazuba substitution
                 svR += (((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << (j+i)*kxy);
-                cout << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
+                //cout << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
             }
         }
 
