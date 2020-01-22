@@ -17,7 +17,18 @@ namespace flopoco {
         );
     }
 
-
+    double BaseMultiplierDSPKarazuba::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+        int bits = 0;
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= n; j++){
+            for(int i = 0; i <= j; i++){
+                bits += (wX+wY);
+            }
+        }                   //TODO: include costs for pre substraction
+        return bits*0.65;   //TODO: consider protrusion of multiplier over the bounds of the complete multiplier
+    }
 
     bool BaseMultiplierDSPKarazuba::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
     {
