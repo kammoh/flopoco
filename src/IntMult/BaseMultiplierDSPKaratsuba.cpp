@@ -17,6 +17,10 @@ namespace flopoco {
         );
     }
 
+    float BaseMultiplierDSPKaratsuba::shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO){
+        return 1;
+    }
+
     int BaseMultiplierDSPKaratsuba::getDSPCost() const {
         int dsps = 0;
         int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);

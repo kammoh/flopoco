@@ -4,15 +4,18 @@
 #include "BaseMultiplierXilinx2xk.hpp"
 #include "BaseMultiplierIrregularLUTXilinx.hpp"
 #include "BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "BaseMultiplierDSPKaratsuba.hpp"
 
 using namespace std;
 namespace flopoco {
 
-    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP) {
+    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba) {
         //cout << bmc->size() << endl;
         if(useDSP){
             MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
             MultTileCollection.push_back( new BaseMultiplierDSP(17, 24, 1));
+
+            //MultTileCollection.push_back( new BaseMultiplierDSP(16, 24, 1));
         }
 
         if(useLUT) {
@@ -46,6 +49,13 @@ namespace flopoco {
             for(int i = 1; i <= 8; i++) {
                 MultTileCollection.push_back(
                         new BaseMultiplierIrregularLUTXilinx((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE) i));
+            }
+        }
+
+        if(useKaratsuba){
+            for(int i = 1; i <= 1; i++) {
+                MultTileCollection.push_back(
+                        new BaseMultiplierDSPKaratsuba(i));
             }
         }
 
