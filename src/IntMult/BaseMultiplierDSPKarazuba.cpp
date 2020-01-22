@@ -17,7 +17,46 @@ namespace flopoco {
         );
     }
 
+    double BaseMultiplierDSPKarazuba::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
+        int bits = 0;
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= n; j++){
+            for(int i = 0; i <= j; i++){
+                bits += (wX+wY);
+            }
+        }                   //TODO: include costs for pre substraction
+        return bits*0.65;   //TODO: consider protrusion of multiplier over the bounds of the complete multiplier
+    }
 
+    bool BaseMultiplierDSPKarazuba::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
+    {
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= param.getShapePara(); j++){
+            for(int i = 0; i <= param.getShapePara(); i++){
+                if(i*kxy < x && x < i*kxy+wX && j*kxy < y && y < j*kxy+wY )
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    bool BaseMultiplierDSPKarazuba::shapeValid(int x, int y)
+    {
+        int gcd = BaseMultiplierDSPKarazuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= n; j++){
+            for(int i = 0; i <= n; i++){
+                if(i*kxy < x && x < i*kxy+wX && j*kxy < y && y < j*kxy+wY )
+                    return true;
+            }
+        }
+        return false;
+    }
 
     OperatorPtr BaseMultiplierDSPKarazuba::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
     {
@@ -65,13 +104,10 @@ namespace flopoco {
             svR += (a[i]*b[i] << 2*i*kxy);
             for(int j = 0; j < i; j++) {     //karazuba substitution
                 svR += (((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << (j+i)*kxy);
-                cout << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
+                //cout << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
             }
         }
 
-        //mpz_class a0 = svX & x_mask, a6 = (svX >> kxy) & x_mask;
-        //mpz_class b0 = svY & y_mask, b6 = (svY >> kxy) & y_mask;
-        //mpz_class svR = (a6*b6 << (1+1)*kxy) + (((a0-a6)*(b6-b0) + a6*b6 + a0*b0) << (0+1)*kxy) + (a0*b0 << (0+0)*kxy);
         tc->addExpectedOutput("R", svR);
     }
 
@@ -106,11 +142,6 @@ namespace flopoco {
         //BitHeap *bitHeap;
         bitHeap = new BitHeap(this, 2*kxy*n+wX+wY+3);
 
-        for(int xy = 0; xy <= n; xy++){     //diagonal
-            //newInstance( "DSPBlock", "dsp" + to_string(kxy*xy/gcd) + "_" + to_string(kxy*xy/gcd), "wX=" + to_string(wX) + " wY=" + to_string(wY) + " isPipelined=0 xIsSigned=0 yIsSigned=0","X=>a" + to_string(kxy*xy/gcd) + ", Y=>b" + to_string(kxy*xy/gcd) + "", "R=>c" + to_string(kxy*xy/gcd) + "_" + to_string(kxy*xy/gcd));
-            //bitHeap->addSignal("c" + to_string(kxy*xy/gcd) + "_" + to_string(kxy*xy/gcd), 2*kxy*xy);
-        }
-
         TileBaseMultiple = gcd;
 
         for(int xy = 0; xy <= n; xy++){     //diagonal
@@ -120,116 +151,12 @@ namespace flopoco {
             }
         }
 
-
-/*        vhdl << tab << declare("k00", wX+wY) << " <= a0*b0;" << endl;
-        vhdl << tab << declare("k66", wX+wY) << " <= a6*b6;" << endl;
-
-        //vhdl << tab << declare("da", wX) << " <= (signed(a0) - signed(a6));" << endl;
-        //vhdl << tab << declare("db", wY) << " <= (signed(b6) - signed(b0));" << endl;
-        //vhdl << tab << declare("k6_0_0_6", wX+wY) << " <= da*db;" << endl;
-        vhdl << tab << declare("k6_0_0_6", wX+wY+2) << " <= (signed(\"0\" & a0) - signed(\"0\" & a6))*(signed(\"0\" & b6) - signed(\"0\" & b0))+signed(k66)+signed(k00);" << endl;
-*/        //vhdl << tab << declare("k6_0_0_6", wX+wY+1) << " <= (\"0\" & a6*b0)+(\"0\" & a0*b6);" << endl;
-/*        newInstance("DSPBlock", "dsp6_0_0_6",
-                    "wX=" + to_string(wX) + " wY=" + to_string(wY) + " isPipelined=0 xIsSigned=0 yIsSigned=0",
-                    "X=>da, Y=>db","R=>k6_0_0_6");
-*/
-/*        vhdl << tab << declare("res", 2*48+wX+wY) << " <= k66 & \"000000\" & k6_0_0_6 & \"00000000\" & k00 ;" << endl;
-        bitHeap->addSignal("res", 0);
-*/
-        //bitHeap->subtractSignal("k6_0_0_6", 6*gcd);
-//        bitHeap->addSignal("c0_0", 0);
-//        bitHeap->addSignal("c6_6", (6+6)*gcd );
-
-
-
- //       for(int xy = 1; xy <= n; xy++) {
-
-/*            vhdl << tab << declare("d" + to_string((xy-1)*kxy/gcd) + "_" + to_string(xy*kxy/gcd),wY) << " <= std_logic_vector(signed(resize(unsigned(b" << xy*kxy/gcd << "),24))) - signed(resize(unsigned((b" << (xy-1)*kxy/gcd << "),24)));" << endl;
-            newInstance("DSPBlock", "dsp" + to_string(kxy*xy/gcd) + "_" + to_string(0) + "_" + to_string(0) + "_" + to_string(kxy*xy/gcd),
-                        "wX=" + to_string(wX) + " wY=" + to_string(wY) + " usePreAdder=1 preAdderSubtracts=1 isPipelined=0 xIsSigned=0 yIsSigned=0",
-                        "X1=>a" + to_string((xy-1)*kxy/gcd) + ", X2=>a" + to_string(xy*kxy/gcd) + ", Y=>d" + to_string((xy-1)*kxy/gcd) + "_" +
-                        to_string(kxy*xy/gcd),
-                        "R=>k" + to_string(xy*kxy/gcd) + "_" + to_string((xy-1)*kxy/gcd) + "_" + to_string((xy-1)*kxy/gcd) + "_" + to_string(xy*kxy/gcd));
-
-            bitHeap->addSignal("k" + to_string(xy*kxy/gcd) + "_" + to_string((xy-1)*kxy/gcd) + "_" + to_string((xy-1)*kxy/gcd) + "_" + to_string(xy*kxy/gcd));
-            bitHeap->addSignal("c" + to_string((xy-1)*kxy/gcd) + "_" + to_string((xy-1)*kxy/gcd),((xy-1)*kxy/gcd+xy*kxy/gcd)*gcd);
-            bitHeap->addSignal("c" + to_string(xy*kxy/gcd) + "_" + to_string(xy*kxy/gcd),((xy-1)*kxy/gcd+xy*kxy/gcd)*gcd);
-
-*/
- /*           int i = kxy*xy/gcd, j = 0, k = 0, l = kxy*xy/gcd;
-            vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),24) << " <= std_logic_vector((b" << j << ") - (b" << l << "));" << endl;
-            declare("k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),16+24);
-
-            if(!isSignalDeclared("a" + to_string(l) + "se"))
-                vhdl << tab << declare("a" + to_string(l) + "se",16) << " <= std_logic_vector(unsigned(a" << i << "));" << endl;
-            if(!isSignalDeclared("a" + to_string(j) + "se"))
-                vhdl << tab << declare("a" + to_string(j) + "se",16) << " <= std_logic_vector(unsigned(a" << k << "));" << endl;
-
-            int wDSPOut=16+24;
-
-            newInstance("DSPBlock", "dsp" + to_string(kxy*xy/gcd) + "_" + to_string(0) + "_" + to_string(0) + "_" + to_string(kxy*xy/gcd),
-                        "wX=" + to_string(wX) + " wY=" + to_string(wY) + " usePreAdder=1 preAdderSubtracts=1 isPipelined=0 xIsSigned=0 yIsSigned=0",
-                        "X1=>a" + to_string(j) + "se, X2=>a" + to_string(l) + "se, Y=>d" + to_string(i) + "_" +
-                        to_string(k),
-                        "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
-
-            getSignalByName(declare("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),wDSPOut))->setIsSigned();
-            vhdl << tab << "kr" << i << "_" << j << "_" << k << "_" << l << " <= k" << i << "_" << j << "_" << k << "_" << l << "(" << wDSPOut-1 << " downto 0);" << endl;
-            bitHeap->addSignal("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),(i+j)*gcd);
-            bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*gcd);
-            bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*gcd);*/
-//        }
-
-/*
-        long X = 0xeafe, Y = 0xbead;
-        long a0 = X&0xFF, a1 = (X>>8)&0xFF, b0 = Y&0xFF, b1 = (Y>>8)&0xFF;
-        long M00 = a0*b0, M11 = a1*b1, M10 = a1*b0, M01 = a0*b1;
-        long a = a1 - a0;
-        long b = b1 - b0;
-        cout << " " << a << " " << b;
-        long MKA = (a0-a1)*(b1 - b0) + M00 + M11;
-        long MKB = (a1 + a0)*(b1 + b0) - M00 - M11;
-        long RKA = (M11 << 16) + (MKA << 8) + M00;
-        long RKB = (M11 << 16) + (MKB << 8) + M00;
-        long RNO = (M11 << 16) + (M10 << 8) + (M01 << 8) + M00;
-        cout << " org " << RNO << " karazuba " << RKA << " karazuba B " << RKB << " org " << X*Y << endl;
-*/
-
- /*       unsigned x_mask = 0xffffffff >> (32-wX);
-        unsigned y_mask = 0xffffffff >> (32-wY);
-
-        mpz_class svX("bbbbffffffffffffeeeeaaaa33332221", 16);
-        //mpz_class svX("7fffffffffffffffffffffffffffffff", 16);
-        mpz_class svY("7b7befef7b7befef7b7befef7b7befef", 16);
-
-        mpz_class a0 = svX & x_mask, a6 = (svX >> kxy) & x_mask, a12 = (svX >> 2*kxy) & x_mask;
-        mpz_class b0 = svY & y_mask, b6 = (svY >> kxy) & y_mask, b12 = (svY >> 2*kxy) & y_mask;
-
-        mpz_class erg = (a12*b12 << (2+2)*kxy) + (a12*b6 << (2+1)*kxy) + (a6*b12 << (1+2)*kxy) + (a12*b0 << (2+0)*kxy) + (a0*b12 << (0+2)*kxy) + (a6*b6 << (1+1)*kxy)  + (a6*b0 << (1+0)*kxy) + (a0*b6 << (0+1)*kxy) + (a0*b0 << (0+0)*kxy);
-        //mpz_class erg_ka = (a12*b12 << (2+2)*kxy) + (((a6-a12)*(b12-b6) + a12*b12 + a6*b6) << (1+2)*kxy) +  ((a0*b12 + a12*b0 + a6*b6) << (1+1)*kxy) + (((a0-a6)*(b6-b0) + a6*b6 + a0*b0) << (0+1)*kxy) + (a0*b0 << (0+0)*kxy);
-        mpz_class erg_ka = (a12*b12 << (2+2)*kxy) + (((a6-a12)*(b12-b6) + a12*b12 + a6*b6) << (1+2)*kxy) +  (((a0 - a12) * (b12 - b0) + a0 * b0 + a12 * b12 + a6*b6) << (1+1)*kxy) + (((a0-a6)*(b6-b0) + a6*b6 + a0*b0) << (0+1)*kxy) + (a0*b0 << (0+0)*kxy);
-
-        cout << svX.get_str(16) << " * " << svY.get_str(16)  << " = " << erg.get_str(16) << endl;
-        cout << svX.get_str(16) << " * " << svY.get_str(16)  << " = " << erg_ka.get_str(16) << endl;
-*/
-
         //compress the bitheap
         bitHeap -> startCompression();
 
         vhdl << tab << "R" << " <= " << bitHeap->getSumName() <<
              range(2*kxy*n+wX+wY-1, 0) << ";" << endl;
 
-/*        declare("D1", 41); //temporary output of the first DSP
-        declare("D2", 41); //temporary output of the second DSP
-        vhdl << tab << "D1 <= std_logic_vector(unsigned(X(23 downto 0)) * unsigned(Y(33 downto 17)));" << endl;
-        vhdl << tab << "D2 <= std_logic_vector(unsigned(X(40 downto 17)) * unsigned(Y(16 downto 0)));" << endl;
-        declare("T",BaseMultiplierDSPKarazuba::get_wR(k));
-        vhdl << tab << "T(57 downto 17) <= std_logic_vector(unsigned(D2) + unsigned(\"00000000000000000\" & D1(40 downto 17)));" << endl;
-        vhdl << tab << "T(16 downto 0) <= D1(16 downto 0);" << endl;
-        vhdl << tab << "R <= T;" << endl;
-        addOutput("R", BaseMultiplierDSPKarazuba::get_wR(k));
-        addInput("X", BaseMultiplierDSPKarazuba::get_wX(k), true);
-        addInput("Y", BaseMultiplierDSPKarazuba::get_wY(k), true);*/
     }
 
 
