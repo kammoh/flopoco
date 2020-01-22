@@ -54,7 +54,7 @@ namespace flopoco {
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= param.getShapePara(); j++){
             for(int i = 0; i <= param.getShapePara(); i++){
-                if(i*kxy < x && x < i*kxy+wX && j*kxy < y && y < j*kxy+wY )
+                if(i*kxy <= x && x < i*kxy+wX && j*kxy <= y && y < j*kxy+wY )
                     return true;
             }
         }
@@ -68,7 +68,7 @@ namespace flopoco {
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= n; j++){
             for(int i = 0; i <= n; i++){
-                if(i*kxy < x && x < i*kxy+wX && j*kxy < y && y < j*kxy+wY )
+                if(i*kxy <= x && x < i*kxy+wX && j*kxy <= y && y < j*kxy+wY )
                     return true;
             }
         }
