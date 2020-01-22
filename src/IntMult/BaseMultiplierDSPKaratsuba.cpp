@@ -11,8 +11,8 @@ namespace flopoco {
         return new BaseMultiplierDSPKaratsubaOp(
                 parentOp,
                 target,
-                parameters.getTileXWordSize(),
-                parameters.getTileYWordSize(),
+                16,//parameters.getTileXWordSize(),
+                24,//parameters.getTileYWordSize(),
                 parameters.getShapePara()
         );
     }
