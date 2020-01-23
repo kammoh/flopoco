@@ -12,8 +12,7 @@
 <p style="text-align: center"> <img src="FloPoCoSmall.png"/>	</p>
 <ul>
 	<li> <a href="#docker">Installation by Docker (recommended if you want to use flopoco)</a></li>  
-	<li> <a href="#linux">Installation on Linux (recommended if you want to hack flopoco)</a></li>  
-	<li> <a href="#linux_mac_from_source">Hardcore installation from source, including dependent libraries (Linux and Mac OS X)</a></li>  
+	<li> <a href="#linux">Installation on Linux or MacOS (recommended if you want to hack flopoco)</a></li>  
 	<li> <a href="#windows">Installation in Windows</a></li> 
 </ul>
 <p>Operators tend to come and go as we struggle to support them, and we apologize for that. Hopefully the new Autotest features will bring more stability. Meanwhile, it is possible that the operator you want works better in an older version: read the <a href="ReleaseNotes.txt">release notes</a>.</p> 
@@ -41,13 +40,13 @@
 	</li> 
 	<li> The following command sets up a convenient alias (in linux)
 	<p><kbd>
-    alias flopoco="docker run --rm=true -v $PWD:/flopoco_workspace flopoco"
+    alias flopoco="docker run --rm=true -v `pwd`:/flopoco_workspace flopoco"
 	</kbd></p>
 	Now if you type for instance 
 	<p><kbd>
     flopoco FPAdd we=8 wf=23
 	</kbd></p>	</li>
-	you will obtain a flopoco.vhdl file containing a single-precision floating-point adder.
+	you will obtain in the current directory a flopoco.vhdl file containing a single-precision floating-point adder.
 </ul>
 
 <hr/>
@@ -129,85 +128,6 @@ See the <a href="install_scripts/install-2.3.2-on-precise.sh">the install script
 
 
 <hr/>
-<h2><a name="linux_mac_from_source">Hard-core installation from source with all the libraries (Linux and Mac OS X)</a></h2>
-
-Although most libraries are available in your distribution, some of them may not. 
-Hence, the following shows how to compile the basic libraries that are required to compile and run FloPoCo. 
-These are the libraries that are absolutely required, additional libraries may be required to enable additional features.
-Select the installation directory (where /include, /lib, /bin, /share are created) by setting <kbd>$INSTALL_DIR</kbd> to the directory of your choice. 
-The versions listed here are tested to be compatible to each other. 
-In case a specific version is not available anymore, try a newer version.
-
-	<h3>Compile and install GMP</h3>
-	<p><kbd>
-wget https://gmplib.org/download/gmp/gmp-6.1.1.tar.lz<br>
-lzip -d gmp-6.1.1.tar.lz<br>
-tar xf gmp-6.1.1.tar<br>
-cd gmp-6.1.1<br>
-./configure --prefix=$INSTALL_DIR<br>
-make -j4<br>
-make check<br>
-make install<br>
-		</kbd></p>
-	<h3>Compile and install MPFI</h3>
-	<p><kbd>
-wget https://gforge.inria.fr/frs/download.php/file/37332/mpfi-1.5.3.tar.gz<br>
-tar xfz mpfi-1.5.3.tar.gz<br>
-cd mpfi-1.5.3<br>
-./configure --prefix=$INSTALL_DIR --with-gmp=$INSTALL_DIR --with-mpfr=$INSTALL_DIR<br>
-make -j4<br>
-make check<br>
-make install<br>
-		</kbd></p>
-	<h3>Compile and install MPFR</h3>
-	<p><kbd>
-wget http://www.mpfr.org/mpfr-current/mpfr-4.0.0.tar.gz<br>
-tar xf mpfr-4.0.0.tar.gz<br>
-cd mpfr-4.0.0<br>
-./configure --prefix=$INSTALL_DIR --with-gmp=$INSTALL_DIR<br>
-make -j4<br>
-make check<br>
-make install<br>
-		</kbd></p>
-	<h3>Compile and install FPLLL (required for Sollya)</h3>
-	<p><kbd>
-wget https://github.com/fplll/fplll/releases/download/5.0.2/fplll-5.0.2.tar.gz<br>
-tar xf fplll-5.0.2.tar.gz<br>
-cd fplll-5.0.2<br>
-./configure --prefix=$INSTALL_DIR --with-gmp=$INSTALL_DIR --with-mpfr=$INSTALL_DIR<br>
-make -j4<br>
-make check<br>
-make install<br>
-	</kbd></p>
-	<h3>Compile and install Sollya</h3>
-	<p><kbd>
-wget https://gforge.inria.fr/frs/download.php/file/36270/sollya-6.0.tar.gz<br>
-tar xf sollya-6.0.tar.gz<br>
-cd sollya-6.0<br>
-./configure --prefix=$INSTALL_DIR --with-gmp=$INSTALL_DIR --with-mpfr=$INSTALL_DIR --with-mpfi=$INSTALL_DIR --with-fplll=$INSTALL_DIR<br>
-make -j4<br>
-make check<br>
-make install<br>
-	</kbd></p>
-	<h3>Finally, compile FloPoCo</h3>
-	<p><kbd>
-git clone https://scm.gforge.inria.fr/anonscm/git/flopoco/flopoco.git<br>
-cd flopoco<br>
-cmake . -DCMAKE_INCLUDE_PATH=/opt/local/include -DCMAKE_PREFIX_PATH:PATH=$INSTALL_DIR<br>
-make -j4<br>
-		</kbd></p>
-		
-Depending on what you selected as your installation directory, you may have to add the <kbd>$INSTALL_DIR/lib</kbd> path to the <kbd>LD_LIBRARY_PATH</kbd> (Linux) or <kbd>DYLD_LIBRARY_PATH</kbd> (Mac OS X):
-	<p><kbd>
-export LD_LIBRARY_PATH=$INSTALL_DIR/lib
-	</kbd></p>
-or
-	<p><kbd>
-export DYLD_LIBRARY_PATH=$INSTALL_DIR/lib
-	</kbd></p>
-
-Now, you should be able to run FloPoCo.
-
 <h2><a name="windows">Installation in Windows</a></h2>
 
 Here is a simple way to get FloPoCo running in a virtual machine under Windows.
