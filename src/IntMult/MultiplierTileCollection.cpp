@@ -4,7 +4,7 @@
 #include "BaseMultiplierXilinx2xk.hpp"
 #include "BaseMultiplierIrregularLUTXilinx.hpp"
 #include "BaseMultiplierDSPSuperTilesXilinx.hpp"
-#include "BaseMultiplierDSPKarazuba.hpp"
+#include "BaseMultiplierDSPKaratsuba.hpp"
 
 using namespace std;
 namespace flopoco {

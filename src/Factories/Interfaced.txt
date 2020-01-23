@@ -59,6 +59,7 @@ TutorialOperator
 BaseMultiplierDSPSuperTilesXilinx
 BaseMultiplierXilinx2xk
 BaseMultiplierIrregularLUTXilinx
+BaseMultiplierDSPKaratsuba
 
 TestBench
 Wrapper

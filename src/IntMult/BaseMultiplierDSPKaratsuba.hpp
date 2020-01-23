@@ -1,5 +1,5 @@
-#ifndef FLOPOCO_BASEMULTIPLIERDSPKARAZUBA_HPP
-#define FLOPOCO_BASEMULTIPLIERDSPKARAZUBA_HPP
+#ifndef FLOPOCO_BaseMultiplierDSPKaratsuba_HPP
+#define FLOPOCO_BaseMultiplierDSPKaratsuba_HPP
 
 #include <string>
 #include <iostream>
@@ -16,11 +16,11 @@
 namespace flopoco {
 
 
-    class BaseMultiplierDSPKarazuba : public BaseMultiplierCategory
+    class BaseMultiplierDSPKaratsuba : public BaseMultiplierCategory
     {
     public:
 
-        BaseMultiplierDSPKarazuba(
+        BaseMultiplierDSPKaratsuba(
                 int size
         ) : BaseMultiplierCategory{
         get_wX(size),
@@ -28,7 +28,7 @@ namespace flopoco {
         false,
         false,
         size,
-        "BaseMultiplierDSPKarazuba_size" + string(1,((char) size) + '0'),
+        "BaseMultiplierDSPKaratsuba_size" + string(1,((char) size) + '0'),
         false
         }{
             wX = 16;
@@ -42,13 +42,12 @@ namespace flopoco {
         static int get_wR(int n) {return get_wX(n) + get_wY(n);}
         static int getRelativeResultMSBWeight(int n) {return get_wR(n);}
         static int getRelativeResultLSBWeight(int n) {return 0;}
+        float shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO);
         int getDSPCost() const final;
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         bool shapeValid(const Parametrization &param, unsigned int x, unsigned int y) const;
         bool shapeValid(int x, int y);
         bool isIrregular() const override { return true;}
-
-
 
         Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
@@ -64,11 +63,11 @@ namespace flopoco {
 
     };
 
-    class BaseMultiplierDSPKarazubaOp : public Operator
+    class BaseMultiplierDSPKaratsubaOp : public Operator
     {
     public:
 
-        BaseMultiplierDSPKarazubaOp(Operator *parentOp, Target* target, int wX, int wY, int k);
+        BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int k);
         void emulate(TestCase * tc);
     protected:
         BitHeap *bitHeap;
@@ -82,4 +81,4 @@ namespace flopoco {
     };
 
 }
-#endif //FLOPOCO_BASEMULTIPLIERDSPKARAZUBA_HPP
+#endif //FLOPOCO_BaseMultiplierDSPKaratsuba_HPP
