@@ -53,10 +53,6 @@ namespace flopoco {
         if(truncated_) {
             truncatedRange_ = (IntMultiplier::prodsize(wX, wY) - 1) - wOut;
         }
-
-        for(auto& v: tiles_) {
-            cout << v->getType() << " " << v->efficiency() << endl;
-        }
     }
 
     void TilingStrategyGreedy::solve() {
