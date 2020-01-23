@@ -22,6 +22,7 @@ namespace flopoco {
                 bool useIrregular,
                 bool use2xk,
                 bool useSuperTiles,
+                bool useKaratsuba,
                 MultiplierTileCollection& tiles);
         virtual ~TilingStrategyGreedy() { }
 
@@ -34,6 +35,7 @@ namespace flopoco {
         bool useIrregular_;
         bool use2xk_;
         bool useSuperTiles_;
+        bool useKaratsuba_;
         MultiplierTileCollection& tileCollection_;
 
         vector<BaseMultiplierCategory*> tiles_;

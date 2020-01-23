@@ -37,7 +37,7 @@ namespace flopoco {
             for(int x = variableTileOffset; x <= wX; x++) {
                 addVariableXTile(new BaseMultiplierXilinx2xk(x,2));
             }
-            for(int y = variableTileOffset; y <= wX; y++) {
+            for(int y = variableTileOffset; y <= wY; y++) {
                 addVariableYTile(new BaseMultiplierXilinx2xk(2,y));
             }
         }
@@ -49,9 +49,9 @@ namespace flopoco {
         }
 
         if(useKaratsuba) {
-            unsigned int min = std::min((wX - 24) / 48, (wY - 16) / 48);;
-            for(unsigned int i = 1; i <= min; i++) {
-                addBaseTile(new BaseMultiplierDSPKarazuba(i));
+            unsigned int min = std::min((wX - 16) / 48, (wY - 24) / 48);
+            for(unsigned int i = 0; i <= min; i++) {
+                addBaseTile(new BaseMultiplierDSPKaratsuba(i));
             }
         }
 

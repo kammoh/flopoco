@@ -17,9 +17,10 @@ namespace flopoco {
             bool useIrregular,
             bool use2xk,
             bool useSuperTiles,
+            bool useKaratsuba,
             MultiplierTileCollection& tiles,
             unsigned int beamRange
-            ):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, tiles),
+            ):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, useKaratsuba, tiles),
             beamRange_{beamRange}
     {
 
@@ -99,15 +100,15 @@ namespace flopoco {
 
         if(useSuperTiles_) {
             performSuperTilePass(&dspBlocks, &solution, currentTotalCost);
-        }
 
-        for(auto& tile: dspBlocks) {
-            unsigned int x = tile.second.first;
-            unsigned int y = tile.second.second;
+            for(auto& tile: dspBlocks) {
+                unsigned int x = tile.second.first;
+                unsigned int y = tile.second.second;
 
-            solution.push_back(make_pair(tile.first->getParametrisation().tryDSPExpand(x, y, wX, wY, signedIO), tile.second));
+                solution.push_back(make_pair(tile.first->getParametrisation().tryDSPExpand(x, y, wX, wY, signedIO), tile.second));
 
-            currentTotalCost += tile.first->getLUTCost(x, y, wX, wY);
+                currentTotalCost += tile.first->getLUTCost(x, y, wX, wY);
+            }
         }
 
         cout << "Total cost: " << currentTotalCost << endl;
@@ -140,6 +141,11 @@ namespace flopoco {
         Field* field = fieldState.getField();
 
         auto next (fieldState.getCursor());
+
+        if(tile->isKaratsuba() && (((unsigned int)wX < tile->wX() + next.first) || ((unsigned int)wY < tile->wY() + next.second))) {
+            return false;
+        }
+
         unsigned int tiles = field->checkTilePlacement(next, tile, fieldState);
         if(tiles == 0) {
             return false;
@@ -174,19 +180,22 @@ namespace flopoco {
             } while(didOp);
         }
 
-        if(tile->getDSPCost() >= 1) {
-            double usage = tiles / (double)tile->getArea();
-            //check threshold
-            if(usage < occupation_threshold_) {
-                return false;
+        int dspBlockCnt = tile->getDSPCost();
+        if(dspBlockCnt >= 1) {
+            if(dspBlockCnt == 1) {
+                double usage = tiles / (double) tile->getArea();
+                //check threshold
+                if (usage < occupation_threshold_) {
+                    return false;
+                }
             }
-            usedDSPBlocks++;
-            dspBlocks.push_back(make_pair(tile, next));
+            usedDSPBlocks += dspBlockCnt;
         }
 
         auto coord (field->placeTileInField(next, tile, fieldState));
 
-        if(tile->getDSPCost() >= 1) {
+        if(useSuperTiles_ && tile->getDSPCost() == 1 && !tile->isKaratsuba()) {
+            dspBlocks.push_back(make_pair(tile, next));
             return true;
         }
 

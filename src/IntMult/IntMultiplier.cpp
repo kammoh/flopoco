@@ -151,6 +151,7 @@ namespace flopoco {
                     useirregular,
                     use2xk,
                     superTiles,
+                    useKaratsuba,
                     multiplierTileCollection
             );
         }
@@ -167,6 +168,7 @@ namespace flopoco {
                     useirregular,
                     use2xk,
                     superTiles,
+                    useKaratsuba,
                     multiplierTileCollection
             );
         }
@@ -183,6 +185,7 @@ namespace flopoco {
                     useirregular,
                     use2xk,
                     superTiles,
+                    useKaratsuba,
                     multiplierTileCollection,
                     beamRange
             );
@@ -213,32 +216,33 @@ namespace flopoco {
 		REPORT(DETAILED, "Found solution has " << solLen << " tiles")
 		if (target_->generateFigures()) {
             ofstream texfile;
-			texfile.open("multiplier_tiling.tex");
-			if((texfile.rdstate() & ofstream::failbit) != 0) {
-				cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration." << endl;
-			} else {
-				tilingStrategy->printSolutionTeX(texfile, wOut, false);
-				texfile.close();
-			}
+            texfile.open("multiplier_tiling.tex");
+            if ((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration."
+                     << endl;
+            } else {
+                tilingStrategy->printSolutionTeX(texfile, wOut, false);
+                texfile.close();
+            }
 
             texfile.open("multiplier_tiling.svg");
-            if((texfile.rdstate() & ofstream::failbit) != 0) {
-                cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration." << endl;
+            if ((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration."
+                     << endl;
             } else {
                 tilingStrategy->printSolutionSVG(texfile, wOut, false);
                 texfile.close();
             }
 
-			texfile.open("multiplier_shape.tex");
-			if((texfile.rdstate() & ofstream::failbit) != 0) {
-				cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration." << endl;
-			} else {
-				tilingStrategy->printSolutionTeX(texfile, wOut, true);
-				texfile.close();
-			}
+            texfile.open("multiplier_shape.tex");
+            if ((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration."
+                     << endl;
+            } else {
+                tilingStrategy->printSolutionTeX(texfile, wOut, true);
+                texfile.close();
+            }
         }
-
-        exit(0);
 
 		schedule();
 

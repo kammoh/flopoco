@@ -58,7 +58,7 @@ namespace flopoco {
         unsigned int covered = 0;
         ID fieldID = fieldState.getID();
 
-        if (tile->isIrregular()) {
+        if (tile->isIrregular() || tile->isKaratsuba()) {
             for (unsigned int i = coord.second; i < maxY; i++) {
                 for (unsigned int j = coord.first; j < maxX; j++) {
                     //check if tile could cover this area
@@ -100,7 +100,7 @@ namespace flopoco {
         ID fieldID = fieldState.getID();
         unsigned int updateMissing = 0U;
 
-        if(tile->isIrregular()) {
+        if(tile->isIrregular() || tile->isKaratsuba()) {
             for (unsigned int i = coord.second; i < maxY; i++) {
                 for (unsigned int j = coord.first; j < maxX; j++) {
                     //check if tile could cover this area and if area is free

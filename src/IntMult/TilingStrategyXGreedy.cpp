@@ -15,7 +15,8 @@ namespace flopoco {
             bool useIrregular,
             bool use2xk,
             bool useSuperTiles,
-            MultiplierTileCollection& tiles):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, tiles)
+            bool useKaratsuba,
+            MultiplierTileCollection& tiles):TilingStrategyGreedy(wX, wY, wOut, signedIO, bmc, prefered_multiplier, occupation_threshold, maxPrefMult, useIrregular, use2xk, useSuperTiles, useKaratsuba, tiles)
     {
         //find all paired tiles
         for(unsigned int i = 0; i < tiles_.size(); i++) {

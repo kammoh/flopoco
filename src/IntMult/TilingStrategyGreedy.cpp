@@ -21,6 +21,7 @@ namespace flopoco {
             bool useIrregular,
             bool use2xk,
             bool useSuperTiles,
+            bool useKaratsuba,
             MultiplierTileCollection& tiles):TilingStrategy(wX, wY, wOut, signedIO, bmc),
                                 prefered_multiplier_{prefered_multiplier},
                                 occupation_threshold_{occupation_threshold},
@@ -28,6 +29,7 @@ namespace flopoco {
                                 useIrregular_{useIrregular},
                                 use2xk_{use2xk},
                                 useSuperTiles_{useSuperTiles},
+                                useKaratsuba_{useKaratsuba},
                                 tileCollection_{tiles}
     {
         //copy vector
@@ -50,6 +52,10 @@ namespace flopoco {
         truncated_ = wOut != wX + wY;
         if(truncated_) {
             truncatedRange_ = (IntMultiplier::prodsize(wX, wY) - 1) - wOut;
+        }
+
+        for(auto& v: tiles_) {
+            cout << v->getType() << " " << v->efficiency() << endl;
         }
     }
 
@@ -109,7 +115,6 @@ namespace flopoco {
                             bm = tileCollection_.VariableYTileCollection[neededY - tileCollection_.variableTileOffset];
                             tileIndex = i;
                         }
-
                         tile = bm->getParametrisation();
                         placementPos = next;
                         break;
@@ -118,6 +123,10 @@ namespace flopoco {
 
                 //check size for "normal", rectangular tiles (avoids unnecessary placement checks)
                 if (t->getDSPCost() == 0 && !t->isIrregular() && (t->wX() > neededX || t->wY() > neededY)) {
+                    continue;
+                }
+
+                if(t->isKaratsuba() && (((unsigned int)wX < t->wX() + next.first) || ((unsigned int)wY < t->wY() + next.second))) {
                     continue;
                 }
 
@@ -157,7 +166,8 @@ namespace flopoco {
                     } while(didOp);
                 }
 
-                if (t->getDSPCost()) {
+                //only for normal dspblocks
+                if (t->getDSPCost() == 1) {
                     double usage = tiles / (double) t->getArea();
                     //check threshold
                     if (usage < occupation_threshold_) {
@@ -169,6 +179,12 @@ namespace flopoco {
                         efficiency = tiles;
                     } else {
                         //no need to check anything else ... dsp block wasn't enough
+                        break;
+                    }
+                } else if (t->isKaratsuba()) {
+                    if (tiles > efficiency) {
+                        efficiency = tiles;
+                    } else {
                         break;
                     }
                 } else {
@@ -196,27 +212,29 @@ namespace flopoco {
             }
 
             auto coord (field->placeTileInField(placementPos, bm, fieldState));
-            if(bm->getDSPCost()) {
-                usedDSPBlocks++;
-                if(useSuperTiles_) {
+            int dsps = bm->getDSPCost();
+            if(dsps > 0) {
+                usedDSPBlocks += dsps;
+                //only add normal dspblocks for supertile pass
+                if(dsps == 1 && useSuperTiles_ && !bm->isKaratsuba()) {
                     dspBlocks->push_back(make_pair(bm, placementPos));
                     next = coord;
+                    continue;
                 }
             }
-            else {
-                tempArea += bm->getArea();
-                tempCost += bm->getLUTCost(placementPos.first, placementPos.second, wX, wY);
 
-                if(tempCost > cmpCost) {
-                    return false;
-                }
+            tempArea += bm->getArea();
+            tempCost += bm->getLUTCost(placementPos.first, placementPos.second, wX, wY);
 
-                if(solution != nullptr) {
-                    solution->push_back(make_pair(tile, placementPos));
-                }
-
-                next = coord;
+            if(tempCost > cmpCost) {
+                return false;
             }
+
+            if(solution != nullptr) {
+                solution->push_back(make_pair(tile, placementPos));
+            }
+
+            next = coord;
         }
 
         //check each dsp block with another
