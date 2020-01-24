@@ -116,12 +116,11 @@ namespace flopoco {
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, double& cost, unsigned int& area, double cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
-        if(tile->getDSPCost() >= 1) {
-            if(usedDSPBlocks == max_pref_mult_) {
-                return false;
-            }
+        if(usedDSPBlocks + tile->getDSPCost() > max_pref_mult_) {
+            return false;
         }
-        else if(!tile->isVariable() && !tile->isIrregular() && (tile->wX() > neededX || tile->wY() > neededY)) {
+
+        if(tile->getDSPCost() == 0 && !tile->isVariable() && !tile->isIrregular() && (tile->wX() > neededX || tile->wY() > neededY)) {
             return false;
         }
 
@@ -139,7 +138,6 @@ namespace flopoco {
         }
 
         Field* field = fieldState.getField();
-
         auto next (fieldState.getCursor());
 
         if(tile->isKaratsuba() && (((unsigned int)wX < tile->wX() + next.first) || ((unsigned int)wY < tile->wY() + next.second))) {

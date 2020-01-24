@@ -53,6 +53,10 @@ namespace flopoco {
         if(truncated_) {
             truncatedRange_ = (IntMultiplier::prodsize(wX, wY) - 1) - wOut;
         }
+
+        for(auto& v: tiles_) {
+            cout << v->getType() << " " << v->efficiency() << endl;
+        }
     }
 
     void TilingStrategyGreedy::solve() {
@@ -95,7 +99,7 @@ namespace flopoco {
 
             for(unsigned int i = 0; i < tiles_.size(); i++) {
                 BaseMultiplierCategory *t = tiles_[i];
-                if (t->getDSPCost() && usedDSPBlocks == max_pref_mult_) {
+                if (t->getDSPCost() + usedDSPBlocks > max_pref_mult_) {
                     //all available dsp blocks got already used
                     continue;
                 }
