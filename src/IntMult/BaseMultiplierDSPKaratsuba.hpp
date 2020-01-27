@@ -31,10 +31,7 @@ namespace flopoco {
         false,
         size,
         "BaseMultiplierDSPKaratsuba_size" + string(1,((char) size) + '0'),
-        false,
         true,
-        get_output_count(size, wX, wY),
-        nullptr,
         get_output_weights(size, wX, wY)
         }, wX(wX), wY(wY), wR(wX+wY), n(size){}
 
@@ -69,15 +66,13 @@ namespace flopoco {
     {
     public:
 
-        BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int k, int bit_heap_offset);
+        BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int k);
         void emulate(TestCase * tc);
     protected:
         BitHeap *bitHeap;
-        Operator *thisOp;
     private:
         int wX, wY, wR, n, dsp_cnt = 0;
         bool child_op;
-        int bit_heap_offset;
         static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b);}
 
         int TileBaseMultiple;

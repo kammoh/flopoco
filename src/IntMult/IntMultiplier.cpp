@@ -298,15 +298,6 @@ namespace flopoco {
 			int xPos = anchor.first;
 			int yPos = anchor.second;
 
-			parameters.setBitHeapOffset(xPos+yPos);
-
-			if(parameters.getOutputWeights().size()){
-                cout << "size " << parameters.getOutputWeights().size() << "size " << parameters.getOutputWeights()[0] << " nr " << parameters.getOutputs() << endl;
-			} else {
-                cout << "size " << parameters.getOutputWeights().size() << endl;
-			}
-
-
 			//unsigned int xInputLength = parameters.getTileXWordSize();
 			//unsigned int yInputLength = parameters.getTileYWordSize();
 			//unsigned int outputLength = parameters.getOutWordSize();
@@ -348,7 +339,7 @@ namespace flopoco {
                         vhdl << declare(.0, ofname.str(), 41) << " <= " << "" << oname.str() << "(40 downto 0)" << ";" << endl;
                         bitheap->addSignal(ofname.str(), bitHeapOffset+parameters.getOutputWeights()[i]);
                     }
-                    cout << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
+                    cout << "output (" << i << "/" << parameters.getOutputWeights().size()-1 << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
                 }
 			} else {
 
