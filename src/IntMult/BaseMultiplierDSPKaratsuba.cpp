@@ -1,5 +1,5 @@
 #include "BaseMultiplierDSPKaratsuba.hpp"
-
+#include "IntMultiplier.hpp"
 
 namespace flopoco {
 
@@ -11,10 +11,42 @@ namespace flopoco {
         return new BaseMultiplierDSPKaratsubaOp(
                 parentOp,
                 target,
-                16,//parameters.getTileXWordSize(),
-                24,//parameters.getTileYWordSize(),
-                parameters.getShapePara()
+                wX,//parameters.getTileXWordSize(),
+                wY,//parameters.getTileYWordSize(),
+                parameters.getShapePara(),
+                parameters.getBitHeapOffset()
         );
+    }
+
+    vector<int> BaseMultiplierDSPKaratsuba::get_output_weights(int n, int wX, int wY){
+        //int weights[BaseMultiplierDSPKaratsuba::get_output_count(n, wX, wY)];
+        vector<int> output_weights;
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int xy = 0; xy <= n; xy++){     //diagonal
+            output_weights.push_back(kxy*xy+kxy*xy);
+            for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
+                output_weights.push_back(kxy*nr+kxy*xy);
+                output_weights.push_back(kxy*nr+kxy*xy);
+                output_weights.push_back(kxy*nr+kxy*xy);
+            }
+        }
+        cout << "outputs " << output_weights.size() << endl;
+        return output_weights;
+    }
+
+    int BaseMultiplierDSPKaratsuba::get_output_count(int n, int wX, int wY){
+        int dsps = 0;
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int j = 0; j <= n; j++){
+            for(int i = 0; i <= j; i++){
+                dsps++;
+            }
+        }
+        return dsps;
     }
 
     float BaseMultiplierDSPKaratsuba::shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO){
@@ -80,9 +112,9 @@ namespace flopoco {
         int wX, wY, n;
         UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
         UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-        UserInterface::parseStrictlyPositiveInt(args, "k", &n);
+        UserInterface::parseStrictlyPositiveInt(args, "n", &n);
 
-        return new BaseMultiplierDSPKaratsubaOp(parentOp,target, wX, wY, n);
+        return new BaseMultiplierDSPKaratsubaOp(parentOp,target, wX, wY, n,0);
     }
 
     void BaseMultiplierDSPKaratsuba::registerFactory()
@@ -128,7 +160,7 @@ namespace flopoco {
         tc->addExpectedOutput("R", svR);
     }
 
-    BaseMultiplierDSPKaratsubaOp::BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int n) : Operator(parentOp,target), wX(wX), wY(wY), wR(wX+wY), n(n)
+    BaseMultiplierDSPKaratsubaOp::BaseMultiplierDSPKaratsubaOp(Operator *parentOp, Target* target, int wX, int wY, int n, int bit_heap_offset) : Operator(parentOp,target), wX(wX), wY(wY), wR(wX+wY), n(n), bit_heap_offset(bit_heap_offset)
     {
         int gcd = BaseMultiplierDSPKaratsubaOp::gcd(wX, wY);
         if(gcd == 1) THROWERROR("Input word sizes " << wX << " " << wY << " do not have a common divider >1");
@@ -143,9 +175,23 @@ namespace flopoco {
         setNameWithFreqAndUID(name.str() );
         useNumericStd();
 
+        IntMultiplier* test = static_cast<IntMultiplier*>(parentOp);
+        if(test != nullptr){
+            cout << "this is a child operator" << bitHeap << endl;
+            child_op = true;
+        } else {
+            cout << "this is a standalone operator" << endl;
+            bitHeap = new BitHeap(this, 2*kxy*n+wX+wY+3);
+            child_op = false;
+            BaseMultiplierDSPKaratsubaOp::bit_heap_offset = 0;
+            thisOp = this;
+        }
+
         addInput ("X", kxy*n+wX);
         addInput ("Y", kxy*n+wY);
-        addOutput("R", 2*kxy*n+wX+wY);
+        if(child_op == false) {
+            addOutput("R", 2 * kxy * n + wX + wY);
+        }
 
         for(int x=0; x <= n; x++)
         {
@@ -156,9 +202,6 @@ namespace flopoco {
             vhdl << tab << declare("b" + to_string(kxy*y/gcd),wY) << " <= Y(" << y*kxy+wY-1 << " downto " << y*kxy << ");" << endl;
         }
 
-        //BitHeap *bitHeap;
-        bitHeap = new BitHeap(this, 2*kxy*n+wX+wY+3);
-
         TileBaseMultiple = gcd;
 
         for(int xy = 0; xy <= n; xy++){     //diagonal
@@ -168,11 +211,14 @@ namespace flopoco {
             }
         }
 
-        //compress the bitheap
-        bitHeap -> startCompression();
+        if(child_op == false){
+            //compress the bitheap
+            bitHeap -> startCompression();
 
-        vhdl << tab << "R" << " <= " << bitHeap->getSumName() <<
-             range(2*kxy*n+wX+wY-1, 0) << ";" << endl;
+            vhdl << tab << "R" << " <= " << bitHeap->getSumName() <<
+                 range(2*kxy*n+wX+wY-1, 0) << ";" << endl;
+        }
+
 
     }
 
@@ -180,14 +226,26 @@ namespace flopoco {
     void BaseMultiplierDSPKaratsubaOp::createMult(int i, int j)
     {
         REPORT(DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
-        if(!isSignalDeclared("a" + to_string(i) + "se"))
+        if(!isSignalDeclared("a" + to_string(i) + "se" ))
             vhdl << tab << declare("a" + to_string(i) + "se",18) << " <= std_logic_vector(resize(unsigned(a" << i << "),18));" << endl;
         if(!isSignalDeclared("b" + to_string(j) + "se"))
             vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 
-        newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=0 preAdderSubtracts=0 isPipelined=0 xIsSigned=1 yIsSigned=1","X=>b" + to_string(j) + "se, Y=>a" + to_string(i) + "se", "R=>c" + to_string(i) + "_" + to_string(j));
+        newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=0 preAdderSubtracts=0 isPipelined=0 xIsSigned=1 yIsSigned=1","X=>b" + to_string(j) + "se"  + ", Y=>a" + to_string(i) + "se"  , "R=>c" + to_string(i) + "_" + to_string(j)  );
 
-        bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j),(i+j)*TileBaseMultiple);
+        if(child_op == false) {
+            bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j)  ,(i+j)*TileBaseMultiple+bit_heap_offset);
+        } else {
+            cout << " dspcount " << dsp_cnt << endl;
+            if(dsp_cnt++ == 0){
+                addOutput("R", 41);
+                vhdl << tab << "R" << " <= " << "c" + to_string(i) + "_" + to_string(j)   << "(40 downto 0);" << endl;
+            } else {
+                addOutput("R" + to_string(dsp_cnt-1), 41);
+                vhdl << tab << "R" + to_string(dsp_cnt-1)  << " <= " << "c" + to_string(i) + "_" + to_string(j)   << "(40 downto 0);" << endl;
+            }
+
+        }
     }
 
     void BaseMultiplierDSPKaratsubaOp::createRectKaratsuba(int i, int j, int k, int l)
@@ -211,10 +269,24 @@ namespace flopoco {
 
         getSignalByName(declare("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),wDSPOut))->setIsSigned();
         vhdl << tab << "kr" << i << "_" << j << "_" << k << "_" << l << " <= k" << i << "_" << j << "_" << k << "_" << l << "(" << wDSPOut-1 << " downto 0);" << endl;
-        bitHeap->addSignal("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),(i+j)*TileBaseMultiple);
-        bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*TileBaseMultiple);
-        bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*TileBaseMultiple);
 
+        if(child_op == false) {
+            bitHeap->addSignal("kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l),(i+j)*TileBaseMultiple+bit_heap_offset);
+            bitHeap->addSignal("c" + to_string(i) + "_" + to_string(l),(i+j)*TileBaseMultiple+bit_heap_offset);
+            bitHeap->addSignal("c" + to_string(k) + "_" + to_string(j),(i+j)*TileBaseMultiple+bit_heap_offset);
+        } else {
+            addOutput("R" + to_string(dsp_cnt), 41);
+            //getSignalByName("R" + to_string(dsp_cnt))->setIsSigned();
+            cout << " dspcount " << dsp_cnt << endl;
+            vhdl << tab << "R" + to_string(dsp_cnt++)  << " <= " << "kr" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l) << ";" << endl;
+            addOutput("R" + to_string(dsp_cnt), 41);
+            cout << " dspcount " << dsp_cnt << endl;
+            vhdl << tab << "R" + to_string(dsp_cnt++)  << " <= " << "c" + to_string(i) + "_" + to_string(l) << "(40 downto 0);" << endl;
+            addOutput("R" + to_string(dsp_cnt), 41);
+            cout << " dspcount " << dsp_cnt << endl;
+            cout << "R" + to_string(dsp_cnt) << endl;
+            vhdl << tab << "R" + to_string(dsp_cnt++)  << " <= " << "c" + to_string(k) + "_" + to_string(j) << "(40 downto 0);" << endl;
+        }
     }
 
 

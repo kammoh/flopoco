@@ -14,8 +14,6 @@ namespace flopoco {
         if(useDSP){
             MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
             MultTileCollection.push_back( new BaseMultiplierDSP(17, 24, 1));
-
-            //MultTileCollection.push_back( new BaseMultiplierDSP(16, 24, 1));
         }
 
         if(useLUT) {
@@ -53,9 +51,9 @@ namespace flopoco {
         }
 
         if(useKaratsuba){
-            for(int i = 1; i <= 1; i++) {
+            for(int i = 0; i <= 1; i++) {
                 MultTileCollection.push_back(
-                        new BaseMultiplierDSPKaratsuba(i));
+                        new BaseMultiplierDSPKaratsuba(i, 16, 24));
             }
         }
 

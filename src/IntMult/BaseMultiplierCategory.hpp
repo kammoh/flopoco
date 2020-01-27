@@ -27,13 +27,21 @@ namespace flopoco {
                     bool isSignedY=false,
                     int shape_para=-1,
 					string type="undefined!",
-					bool rectangular=true
-				):  tile_param{parametrize(wX, wY, isSignedX, isSignedY, shape_para)},
+					bool rectangular=true,
+                    bool own_bitheap_management=true,
+                    int outputs = 1,
+                    int out_weights[] = nullptr,
+                    const vector<int> &output_weights = vector<int>()
+				):  tile_param{parametrize(wX, wY, isSignedX, isSignedY, shape_para, type, rectangular, own_bitheap_management, outputs, output_weights)},
 				    maxWordSizeLargeInputUnsigned_{wX},
 					maxWordSizeSmallInputUnsigned_{wY},
 					deltaWidthUnsignedSigned_{0},
                     rectangular{rectangular},
-				  	type_{type}
+                    own_bitheap_management{own_bitheap_management},
+				  	type_{type},
+				  	outputs{outputs},
+                    out_weights{out_weights},
+                    output_weights{output_weights}
 				{}
 
 			int getDeltaWidthSigned() const { return deltaWidthUnsignedSigned_; }
@@ -62,8 +70,13 @@ namespace flopoco {
 					int getShapePara() const {return shape_para_;}
 				    string getMultType() const {return bmCat_->getType();}
                     Parametrization tryDSPExpand(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO);
+                    void setBitHeapOffset(int offset) {bit_heap_offset = offset;}
+                    int getBitHeapOffset(void) const {return bit_heap_offset;}
+                    int hasSelfManagedBitHeap(void) const {return bmCat_->own_bitheap_management;}
+                    vector<int> getOutputWeights(){return output_weights;}
+                    int getOutputs(void){return outputs;}
 
-				private:
+            private:
 					Parametrization(
 							unsigned int  wX,
 							unsigned int  wY,
@@ -71,14 +84,20 @@ namespace flopoco {
 							bool isSignedX=false,
 							bool isSignedY=false,
 							bool isFlippedXY=false,
-							int shape_para=-1
+							int shape_para=-1,
+							int bit_heap_offset = 0, //for tiles with own bitheap
+							int outputs = 1,
+                            vector<int> output_weights = vector<int>()
 						):wX_{wX},
 						wY_{wY},
 						isSignedX_{isSignedX},
 						isSignedY_{isSignedY},
 						isFlippedXY_{isFlippedXY},
 						shape_para_{shape_para},
-						bmCat_{multCategory}{}
+						bit_heap_offset{bit_heap_offset},
+						bmCat_{multCategory},
+						outputs{outputs},
+                        output_weights{output_weights}{}
 
 					unsigned int wX_;
 					unsigned int wY_;
@@ -86,7 +105,10 @@ namespace flopoco {
 					bool isSignedY_;
 					bool isFlippedXY_;
 					int shape_para_;
+                    int bit_heap_offset;
 					BaseMultiplierCategory const * bmCat_;
+                    int outputs;
+                    vector<int> output_weights;
 
 				friend BaseMultiplierCategory;
 			};
@@ -111,7 +133,11 @@ namespace flopoco {
 					Parametrization const &parameters
 				) const = 0;
 
-            Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1) const;
+            Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1, string type="undefined!",
+                                        bool rectangular=true,
+                                        bool own_bitheap_management=true,
+                                        int outputs = 1,
+                                        const vector<int> &output_weights = vector<int>()) const;
             Parametrization getParametrisation(void) {return tile_param;}
             unsigned wX(void) {return tile_param.wX_;}
             unsigned wY(void) {return tile_param.wY_;}
@@ -126,7 +152,12 @@ namespace flopoco {
 			int maxWordSizeSmallInputUnsigned_;
 			int deltaWidthUnsignedSigned_;
             const bool rectangular;
+            const bool own_bitheap_management;
             string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
+            const int outputs;
+            const int *out_weights;
+            vector<int> output_weights;
+
     };
 
 	typedef BaseMultiplierCategory::Parametrization BaseMultiplierParametrization;
