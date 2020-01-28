@@ -201,7 +201,7 @@ namespace flopoco {
                     efficiency = newEfficiency;
                 }
 
-                tile = t->getParametrisation().tryDSPExpand(possiblePlacementPos.first, possiblePlacementPos.second, wX, wY, signedIO);
+                tile = t->getParametrisation();
                 bm = t;
                 tileIndex = i;
                 placementPos = possiblePlacementPos;
@@ -231,7 +231,13 @@ namespace flopoco {
             }
 
             if(solution != nullptr) {
-                solution->push_back(make_pair(tile, placementPos));
+                //only try to expand dsp tiles
+                if(dsps == 0) {
+                    solution->push_back(make_pair(tile, next));
+                }
+                else {
+                    solution->push_back(make_pair(tile.tryDSPExpand(next.first, next.second, wX, wY, signedIO), next));
+                }
             }
 
             next = coord;

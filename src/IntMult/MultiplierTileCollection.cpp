@@ -11,7 +11,7 @@ namespace flopoco {
 
     MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba) {
         //cout << bmc->size() << endl;
-        if(useDSP){
+        if(useDSP && !useKaratsuba) {
             addBaseTile(new BaseMultiplierDSP(24, 17, 1));
             addBaseTile(new BaseMultiplierDSP(17, 24, 1));
         }
@@ -51,7 +51,7 @@ namespace flopoco {
         if(useKaratsuba) {
             unsigned int min = std::min((wX - 16) / 48, (wY - 24) / 48);
             for(unsigned int i = 0; i <= min; i++) {
-                addBaseTile(new BaseMultiplierDSPKaratsuba(i));
+                addBaseTile(new BaseMultiplierDSPKaratsuba(i, 16, 24));
             }
         }
 

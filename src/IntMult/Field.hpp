@@ -65,6 +65,7 @@ namespace flopoco {
         void updateStateID(FieldState& fieldState);
 
         unsigned int checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState);
+        BaseMultiplierParametrization checkDSPPlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState);
         Cursor placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState);
         unsigned int getMissingLine(FieldState& fieldState);
         unsigned int getMissingHeight(FieldState& fieldState);

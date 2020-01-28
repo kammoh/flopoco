@@ -116,11 +116,13 @@ namespace flopoco {
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, double& cost, unsigned int& area, double cmpCost, vector<pair<BaseMultiplierCategory*, multiplier_coordinates_t>>& dspBlocks) {
-        if(usedDSPBlocks + tile->getDSPCost() > max_pref_mult_) {
+        int dspBlockCnt = tile->getDSPCost();
+
+        if(usedDSPBlocks + dspBlockCnt > max_pref_mult_) {
             return false;
         }
 
-        if(tile->getDSPCost() == 0 && !tile->isVariable() && !tile->isIrregular() && (tile->wX() > neededX || tile->wY() > neededY)) {
+        if(dspBlockCnt == 0 && !tile->isVariable() && !tile->isIrregular() && (tile->wX() > neededX || tile->wY() > neededY)) {
             return false;
         }
 
@@ -178,8 +180,7 @@ namespace flopoco {
             } while(didOp);
         }
 
-        int dspBlockCnt = tile->getDSPCost();
-        if(dspBlockCnt >= 1) {
+        if(dspBlockCnt > 0) {
             if(dspBlockCnt == 1) {
                 double usage = tiles / (double) tile->getArea();
                 //check threshold
@@ -208,7 +209,8 @@ namespace flopoco {
             return true;
         }
 
-        if(tile->isVariable()) {
+        // only try to expand dsp tiles
+        if(dspBlockCnt == 0) {
             solution->push_back(make_pair(tile->getParametrisation(), next));
         }
         else {
