@@ -223,7 +223,7 @@ namespace flopoco {
                     for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
                         outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*nr + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:black;stroke-width:1\" />\n";
                         outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*nr + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:black;stroke-width:1\" />\n";
-                        outstream << "\t\t<path d=\"M" << 10*(width-xmin-xstart -(kxy*xy + tX/2)) << "," << 10*(ystart+kxy*nr + tY/2) << " A2000,2000 0 0,1 " << 10*(width-xmin-xstart -(kxy*nr + tX/2 )) << "," << 10*(ystart+kxy*xy + tY/2) << "\" style=\"fill:none;stroke:black;stroke-width:3\" />\n";
+                        outstream << "\t\t<path d=\"M" << 10*(width-xmin-xstart -(kxy*xy + tX/2)) << "," << 10*(ystart+kxy*nr + tY/2) << " A18000,18000 0 0,1 " << 10*(width-xmin-xstart -(kxy*nr + tX/2 )) << "," << 10*(ystart+kxy*xy + tY/2) << "\" style=\"fill:none;stroke:black;stroke-width:3\" />\n";
                         //createRectKaratsuba(kxy*nr/gcd,kxy*xy/gcd,kxy*xy/gcd,kxy*nr/gcd);
                     }
                 }
