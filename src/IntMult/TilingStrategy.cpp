@@ -164,6 +164,72 @@ namespace flopoco {
                     }
                 }
             }
+
+            if(26 < parametrization.getMultType().size() &&  parametrization.getMultType().substr(0,26).compare("BaseMultiplierDSPKaratsuba") == 0){
+                //int order = stoi(parametrization.getMultType().substr(parametrization.getMultType().find("size")+4, parametrization.getMultType().size()) );
+                cout << parametrization.getMultXWordSize() << " " << parametrization.getMultYWordSize()  << " " << parametrization.getShapePara() << endl;
+                if(!parametrization.getShapePara()) continue;
+/*                int wX=24, wY=24, k = 0;
+                while(!(wX <= 24 && wY <= 16)  || !(wX <= 16 && wY <= 24)  || (16+24 < wX+wY) || ((int)parametrization.getMultXWordSize() != k + wX) || ((int)parametrization.getMultYWordSize() != k + wY)){
+                    wX--;
+                    if(wX <= 2){
+                        wX = 24;
+                        wY--;
+                        if(wY <= 2){
+                            wY = 24;
+                            k++;
+                        }
+                    }
+                }
+                cout << "wX " << wX  << " wY " << wY << " k " << k << endl;
+*/
+
+                int gcd=parametrization.getMultXWordSize(), b=parametrization.getMultYWordSize(), t;
+                //gcd = (0 < parametrization.getShapePara())?gcd/parametrization.getShapePara():gcd;
+                //b = (0 < parametrization.getShapePara())?b/parametrization.getShapePara():b;
+                while (b != 0){
+                    t = b;
+                    b = gcd % b;
+                    gcd = t;
+                }
+                if(24 < gcd && gcd % 2 == 0) gcd /= 2;
+                cout << "gcd " << gcd << endl;
+
+
+                int tX=0, tY=0;
+                for(int k = 0; k <= (int)parametrization.getMultXWordSize() && k <= (int)parametrization.getMultYWordSize(); k += gcd){
+                    for(int y = gcd; y <= 25 && !tY; y += gcd){
+                        for(int x = gcd; x <= 25 && !tX; x += gcd){
+                            if((int)parametrization.getMultXWordSize()  == k + x && (int)parametrization.getMultYWordSize()  == k + y && x+y < 41){
+                                   tX = x;
+                                   tY = y;
+                            }
+                        }
+                    }
+                }
+                /*while(kxy != 0 && (kxy/2)%tX == 0 && (kxy/2)%tY == 0){
+                    kxy /= 2;
+                }*/
+
+                int kxy = gcd;
+                for(; kxy % tX || kxy % tY; kxy += gcd);
+                cout << "first possible position " << kxy << endl;
+
+                cout << "wX " << tX  << " wY " << tY << " k " << kxy << endl;
+
+                for(int xy = 0; xy <= parametrization.getShapePara(); xy++){     //diagonal
+                    outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:black;fill-opacity:1.0;stroke:none\" />\n";
+                    //createMult(kxy*xy/gcd, kxy*xy/gcd);
+                    for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
+                        outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*nr + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:black;stroke-width:1\" />\n";
+                        outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*nr + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:black;stroke-width:1\" />\n";
+                        outstream << "\t\t<path d=\"M" << 10*(width-xmin-xstart -(kxy*xy + tX/2)) << "," << 10*(ystart+kxy*nr + tY/2) << " A2000,2000 0 0,1 " << 10*(width-xmin-xstart -(kxy*nr + tX/2 )) << "," << 10*(ystart+kxy*xy + tY/2) << "\" style=\"fill:none;stroke:black;stroke-width:3\" />\n";
+                        //createRectKaratsuba(kxy*nr/gcd,kxy*xy/gcd,kxy*xy/gcd,kxy*nr/gcd);
+                    }
+                }
+
+            }
+
         }
         outstream << "\t</g>\n";
         outstream << "</svg>\n";
