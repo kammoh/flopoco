@@ -1,9 +1,5 @@
 
 // TODOs 
-// Move FixSinPoly here!
-// Compare not-ing Y and negating it properly
-// FixSinCosTable has constant sign bit as soon as there is argument reduction. As we just hit 36 output bits, this is important
-// The upper test for order-one seems wrong, I get a 38-Kbit table for ./flopoco -pipeline=no  -verbose=2 FixSinCos 15 TestBenchFile 10
 
 // One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
 #ifdef HAVE_CONFIG_H
@@ -203,8 +199,9 @@ namespace flopoco{
 		else if (method==2)
 			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 1);  // reduced iteration
 		else {
-				throw " ERROR in FixSinCos::parseArguments: Wrong method number, only 0 (polynomial), 1 (standard CORDIC) and 2 (reduced iteration CORDIC) are allowed";
-			}
+			cerr << " ERROR in FixSinCos::parseArguments: Wrong method number, only 0 (polynomial), 1 (standard CORDIC) and 2 (reduced iteration CORDIC) are allowed";
+			return NULL;
+		}
 	}
 
 

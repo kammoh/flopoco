@@ -345,7 +345,7 @@ namespace flopoco {
 		return s.str();
 	}
 
-	void IntMultiplier::branchToBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> const &solution, unsigned int bitheapLSBWeight)
+	void IntMultiplier::branchToBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight)
 	{
 		size_t i = 0;
 		stringstream oname, ofname;
@@ -387,48 +387,63 @@ namespace flopoco {
 			ofname.str("");
 			ofname << "tile_" << i << "_filtered_output";
 
-			bool signedCase = (parameters.isSignedMultX() || parameters.isSignedMultY());
-			bool onlyOneSigned = parameters.isSignedMultX() xor parameters.isSignedMultY();
-			//bool isOneByOne = (parameters.getMultXWordSize() == 1) and (parameters.getMultYWordSize() == 1);
-
-			vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
-					range(toSkip + tokeep - 1, toSkip) << ";" << endl;
-
-			bool isXSizeOneAndSigned = (parameters.getMultXWordSize() == 1) and parameters.isSignedMultX();
-			bool isYSizeOneAndSigned = (parameters.getMultYWordSize() == 1) and parameters.isSignedMultY();
-
-			bool subtractAll = (isXSizeOneAndSigned and not parameters.isSignedMultY()) or
-								(isYSizeOneAndSigned and not parameters.isSignedMultX());
-
-			bool subtractPart = (isXSizeOneAndSigned or isYSizeOneAndSigned) and not subtractAll;
-
-			bool split = tokeep >= 2 and (subtractPart or (not subtractAll and signedCase));
-
-			if (split) {
-				oname.str("");
-				oname << ofname.str() <<  "_low";
-				vhdl << declare(.0, oname.str(), tokeep - 1) << " <= " << ofname.str() <<
-						range(tokeep - 2, 0) << ";" << endl;
-				if (subtractPart) {
-					bitheap->subtractSignal(oname.str(), bitHeapOffset);
-				} else {
-					bitheap->addSignal(oname.str(), bitHeapOffset);
-				}
-
-				oname.str("");
-				oname << ofname.str() <<  "_sign";
-				vhdl << declare(.0, oname.str(), 1) << " <= " << ofname.str() << range(tokeep - 1, tokeep-1) << ";" << endl;
-				if (subtractPart) {
-					bitheap->addSignal(oname.str(), bitHeapOffset + tokeep - 1);
-				} else {
-					bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
-				}
+			if(parameters.getOutputWeights().size()){
+                for(unsigned i = 0; i < parameters.getOutputWeights().size(); i++){
+                    if(i){
+                        vhdl << declare(.0, ofname.str() + to_string(i), 41) << " <= " << "" << oname.str() + to_string(i) << "(40 downto 0)" << ";" << endl;
+                        getSignalByName(ofname.str() + to_string(i))->setIsSigned();
+                        bitheap->addSignal(ofname.str() + to_string(i), bitHeapOffset+parameters.getOutputWeights()[i]);
+                    } else {
+                        vhdl << declare(.0, ofname.str(), 41) << " <= " << "" << oname.str() << "(40 downto 0)" << ";" << endl;
+                        bitheap->addSignal(ofname.str(), bitHeapOffset+parameters.getOutputWeights()[i]);
+                    }
+                    cout << "output (" << i << "/" << parameters.getOutputWeights().size()-1 << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
+                }
 			} else {
-				if(onlyOneSigned or subtractAll) {
-					bitheap->subtractSignal(ofname.str(), bitHeapOffset);
-				} else {
-					bitheap->addSignal(ofname.str(), bitHeapOffset);
-				}
+
+                bool signedCase = (parameters.isSignedMultX() || parameters.isSignedMultY());
+                bool onlyOneSigned = parameters.isSignedMultX() xor parameters.isSignedMultY();
+                //bool isOneByOne = (parameters.getMultXWordSize() == 1) and (parameters.getMultYWordSize() == 1);
+
+                vhdl << declare(.0, ofname.str(), tokeep) << " <= " << oname.str() <<
+                        range(toSkip + tokeep - 1, toSkip) << ";" << endl;
+
+                bool isXSizeOneAndSigned = (parameters.getMultXWordSize() == 1) and parameters.isSignedMultX();
+                bool isYSizeOneAndSigned = (parameters.getMultYWordSize() == 1) and parameters.isSignedMultY();
+
+                bool subtractAll = (isXSizeOneAndSigned and not parameters.isSignedMultY()) or
+                                    (isYSizeOneAndSigned and not parameters.isSignedMultX());
+
+                bool subtractPart = (isXSizeOneAndSigned or isYSizeOneAndSigned) and not subtractAll;
+
+                bool split = tokeep >= 2 and (subtractPart or (not subtractAll and signedCase));
+
+                if (split) {
+                    oname.str("");
+                    oname << ofname.str() <<  "_low";
+                    vhdl << declare(.0, oname.str(), tokeep - 1) << " <= " << ofname.str() <<
+                            range(tokeep - 2, 0) << ";" << endl;
+                    if (subtractPart) {
+                        bitheap->subtractSignal(oname.str(), bitHeapOffset);
+                    } else {
+                        bitheap->addSignal(oname.str(), bitHeapOffset);
+                    }
+
+                    oname.str("");
+                    oname << ofname.str() <<  "_sign";
+                    vhdl << declare(.0, oname.str(), 1) << " <= " << ofname.str() << range(tokeep - 1, tokeep-1) << ";" << endl;
+                    if (subtractPart) {
+                        bitheap->addSignal(oname.str(), bitHeapOffset + tokeep - 1);
+                    } else {
+                        bitheap->subtractSignal(oname.str(), bitHeapOffset + tokeep - 1);
+                    }
+                } else {
+                    if(onlyOneSigned or subtractAll) {
+                        bitheap->subtractSignal(ofname.str(), bitHeapOffset);
+                    } else {
+                        bitheap->addSignal(ofname.str(), bitHeapOffset);
+                    }
+                }
 			}
 			i += 1;
 		}
@@ -436,7 +451,7 @@ namespace flopoco {
 
 
 
-	Operator* IntMultiplier::realiseTile(TilingStrategy::mult_tile_t const & tile, size_t idx, string output_name)
+	Operator* IntMultiplier::realiseTile(TilingStrategy::mult_tile_t & tile, size_t idx, string output_name)
 	{
 		auto& parameters = tile.first;
 		auto& anchor = tile.second;
@@ -483,6 +498,10 @@ namespace flopoco {
 		inPortMap("X", multIn1SigName);
 		inPortMap("Y", multIn2SigName);
 		outPortMap("R", output_name);
+		for(unsigned i = 1; i < parameters.getOutputWeights().size(); i++){
+            outPortMap("R" + to_string(i), output_name + to_string(i));
+		}
+
 		auto mult = parameters.generateOperator(this, getTarget());
 
 		vhdl << instance(mult, nameOutput.str(), false) <<endl;
@@ -761,6 +780,7 @@ namespace flopoco {
                         useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
                         useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
                         useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
+                        useKaratsuba(bool)=false: if true, attempts to use the 16x24 sub-size Karazuba-pattern for tiling;\
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
                         dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
 						beamRange(int)=0: range for beam search", // This string will be parsed

@@ -54,6 +54,8 @@ namespace flopoco {
 
 		static TestList unitTest(int index);
 
+		BitHeap* getBitHeap(void) {return bitHeap;}
+
 	protected:
 
 		unsigned int wX;                         /**< the width for X after possible swap such that wX>wY */
@@ -64,6 +66,8 @@ namespace flopoco {
 		bool negate;                    /**< if true this multiplier computes -xy */
 		float dspOccupationThreshold;   /**< threshold of relative occupation ratio of a DSP multiplier to be used or not */
         unsigned int maxDSP;            /**< limit the number of DSP-Blocks used in multiplier */
+        BitHeap *bitHeap;
+
 	private:
 //		Operator* parentOp;  			/**< For a virtual multiplier, adding bits to some external BitHeap,
 		/**
@@ -74,7 +78,7 @@ namespace flopoco {
 		 * @param output_name: the name to which the output of this tile should be mapped
 		 */
 		Operator* realiseTile(
-				TilingStrategy::mult_tile_t const & tile,
+				TilingStrategy::mult_tile_t & tile,
 				size_t idx,
 				string output_name
 			);
@@ -115,7 +119,7 @@ namespace flopoco {
 
         int multiplierUid;
 
-		void branchToBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> const &solution , unsigned int bitheapLSBWeight);
+		void branchToBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution , unsigned int bitheapLSBWeight);
 
 	};
 

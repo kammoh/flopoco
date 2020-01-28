@@ -1,11 +1,13 @@
 
-// TODOs 
+// TODOs
+// Sorry , this code is all parameterized by $w=-\ell_r+1$
 // Move FixSinPoly here!
 // Compare not-ing Y and negating it properly
 // FixSinCosPolyTable has constant sign bit as soon as there is argument reduction. As we just hit 36 output bits, this is important
 // The upper test for order-one seems wrong, I get a 38-Kbit table for ./flopoco -pipeline=no  -verbose=2 FixSinCosPoly 15 TestBenchFile 10
 
 // One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

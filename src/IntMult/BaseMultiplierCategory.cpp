@@ -31,7 +31,10 @@ namespace flopoco {
 			int wY,
 			bool isSignedX,
 			bool isSignedY,
-			int shape_para
+			int shape_para,
+            string type,
+            bool rectangular,
+            const vector<int> &output_weights
 		) const
 	{
 /*		int effectiveWY = (isSignedY) ? wY - deltaWidthUnsignedSigned_ : wY;
@@ -47,7 +50,7 @@ namespace flopoco {
 			throw std::string("BaseMultiplierCategory::parametrize: error, required multiplier area is too big");
 		}
 */
-		return Parametrization(wX, wY, this, isSignedX, isSignedY, false, shape_para);
+		return Parametrization(wX, wY, this, isSignedX, isSignedY, false, shape_para, output_weights);
 	}
 
 	int BaseMultiplierCategory::getMaxSecondWordSize(
@@ -162,7 +165,7 @@ BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization:
     if(signedIO && (wY-m_y_pos-tile_height)== 0){
         isSignedY = true;
     }
-    return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_);
+    return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_,  output_weights);
 }
 
     int BaseMultiplierCategory::wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {
