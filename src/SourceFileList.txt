@@ -81,6 +81,7 @@ IntMult/TargetBaseMultSpecialisation
 IntMult/BaseMultiplierXilinx2xk
 IntMult/BaseMultiplierIrregularLUTXilinx
 IntMult/MultiplierTileCollection
+IntMult/BaseMultiplierDSPKaratsuba
 Complex/FixComplexKCM
 Complex/FixComplexAdder
 Complex/FixComplexR2Butterfly
