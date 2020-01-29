@@ -58,42 +58,50 @@ namespace flopoco {
         ID fieldID = fieldState.getID();
 
         if (tile->isIrregular() || tile->isKaratsuba()) {
-            for (unsigned int i = coord.second; i < maxY; i++) {
-                for (unsigned int j = coord.first; j < maxX; j++) {
+            for (unsigned int i = maxY; i > coord.second; i--) {
+                for (unsigned int j = maxX; j > coord.first; j--) {
                     //check if tile could cover this area
                     if (!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
                         continue;
                     }
 
                     if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                        //check what makes more sense to truncate
+                        //check what makes more sense to shrink
                         if(maxX < maxY) {
-                            maxX = j;
+                            maxX = j - 1;
                         }
                         else {
-                            maxY = i;
+                            maxY = i - 1;
                         }
                     }
                 }
             }
         }
         else {
+            for (unsigned int i = maxY - 1; i > coord.second; i--) {
+                for (unsigned int j = maxX - 1; j > coord.first; j--) {
+                    if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
+                        //check what makes more sense to shrink
+                        if(maxX > maxY) {
+                            maxX = j + 1;
+                        }
+                        else {
+                            maxY = i + 1;
+                        }
+                    }
+                }
+            }
+
             for (unsigned int i = coord.second; i < maxY; i++) {
                 for (unsigned int j = coord.first; j < maxX; j++) {
                     if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                        //check what makes more sense to truncate
-                        if(maxX < maxY) {
-                            maxX = j;
-                        }
-                        else {
-                            maxY = i;
-                        }
+                        return tile->parametrize(0, 0, false, false);
                     }
                 }
             }
         }
 
-        return tile->parametrize(maxX, maxY, false, false);
+        return tile->parametrize(maxX - coord.first, maxY - coord.second, false, false);
     }
 
     unsigned int Field::checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
@@ -138,9 +146,9 @@ namespace flopoco {
         return covered;
     }
 
-    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
-        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
-        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
+    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, BaseMultiplierParametrization& param, FieldState& fieldState) {
+        unsigned int sizeX = param.getMultXWordSize();
+        unsigned int sizeY = param.getMultYWordSize();
         unsigned int endX = coord.first + sizeX;
         unsigned int endY = coord.second + sizeY;
         unsigned int maxX = std::min(endX, wX_);

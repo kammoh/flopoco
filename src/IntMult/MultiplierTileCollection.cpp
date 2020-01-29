@@ -11,7 +11,7 @@ namespace flopoco {
 
     MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba) {
         //cout << bmc->size() << endl;
-        if(useDSP && !useKaratsuba) {
+        if(useDSP) {
             addBaseTile(new BaseMultiplierDSP(24, 17, 1));
             addBaseTile(new BaseMultiplierDSP(17, 24, 1));
         }
