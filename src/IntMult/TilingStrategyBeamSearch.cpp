@@ -64,6 +64,7 @@ namespace flopoco {
             BaseMultiplierCategory* tile = tiles_[next];
 
             for (unsigned int i = minIndex; i <= maxIndex; i++) {
+                // cout << "Testing " << tiles_[i]->getType() << endl;
                 //check if we got the already calculated greedy path
                 if (i == lastPath) {
                     continue;
@@ -81,16 +82,24 @@ namespace flopoco {
 
                 if (placeSingleTile(tempState, tempUsedDSPBlocks, nullptr, neededX, neededY, t, tempCost, tempArea, bestCost, localDSPBlocks)) {
                     if(greedySolution(tempState, nullptr, &tempPath, tempCost, tempArea, bestCost, tempUsedDSPBlocks, &localDSPBlocks)) {
+                        // cout << "Swapping solution " << bestCost << " " << tempCost << endl;
                         bestCost = tempCost;
                         bestArea = tempArea;
                         path = move(tempPath);
                         tile = t;
                     }
                 }
+                else {
+                    // cout << "Couldn't place it" << endl;
+                }
             }
+
+            // cout << "Placing tile " << tile->getType() << " at position " << baseState.getCursor().first << " " << baseState.getCursor().second << endl;
 
             //place single tile
             placeSingleTile(baseState, usedDSPBlocks, &solution, neededX, neededY, tile, currentTotalCost, currentArea, FLT_MAX, dspBlocks);
+
+            field.printField(baseState);
 
             if(path.size() > 0) {
                 next = path.front();
@@ -143,13 +152,14 @@ namespace flopoco {
         auto next (fieldState.getCursor());
 
         if(tile->isKaratsuba() && (((unsigned int)wX < tile->wX() + next.first) || ((unsigned int)wY < tile->wY() + next.second))) {
+            // cout << "Can't place " << tile->getType() << " at " << next.first << " " << next.second << endl;
             return false;
         }
 
         BaseMultiplierParametrization param = tile->getParametrisation();
 
         if(dspBlockCnt == 1 && !tile->isKaratsuba()) {
-            param = field->checkDSPPlacement(next, tile, fieldState);
+            param = field->checkDSPPlacement(next, tile, fieldState, neededX, neededY);
             if(param.getMultXWordSize() == 0 || param.getMultYWordSize() == 0) {
                 return false;
             }
@@ -209,7 +219,10 @@ namespace flopoco {
         }
 
         cost += tile->getLUTCost(next.first, next.second, wX, wY);
-        area += tile->getArea();
+
+        if(dspBlockCnt == 0) {
+            area += tile->getArea();
+        }
 
         if(cost > cmpCost) {
             return false;

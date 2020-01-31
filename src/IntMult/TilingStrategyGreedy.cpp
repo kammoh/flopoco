@@ -55,7 +55,7 @@ namespace flopoco {
         }
 
         for(auto& v: tiles_) {
-            cout << v->getType() << " " << v->efficiency() << endl;
+            cout << v->getType() << " " << v->efficiency() << " " << v->getParametrisation().getMultXWordSize() << " " << v->getParametrisation().getMultYWordSize() <<endl;
         }
     }
 
@@ -142,8 +142,10 @@ namespace flopoco {
                 }
 
                 if(t->getDSPCost() == 1 && !t->isKaratsuba()) {
-                    BaseMultiplierParametrization param = field->checkDSPPlacement(next, t, fieldState);
+                    BaseMultiplierParametrization param = field->checkDSPPlacement(next, t, fieldState, neededX, neededY);
                     if(param.getMultXWordSize() == 0 || param.getMultYWordSize() == 0) {
+                        // cout << "Couldn't place " << t->getType() << " with size " << t->wX() << " " << t->wY() << " at " << next.first << " " << next.second << endl;
+                        // field->printField(fieldState);
                         continue;
                     }
 
@@ -252,11 +254,14 @@ namespace flopoco {
                     continue;
                 }
             }
+            else {
+                tempArea += bm->getArea();
+            }
 
-            tempArea += bm->getArea();
             tempCost += bm->getLUTCost(placementPos.first, placementPos.second, wX, wY);
 
             if(tempCost > cmpCost) {
+                // cout << "Dropping solution " << tempCost << " vs " << cmpCost << endl;
                 return false;
             }
 
@@ -271,6 +276,7 @@ namespace flopoco {
         //check each dsp block with another
         if(useSuperTiles_) {
             if(!performSuperTilePass(dspBlocks, solution, tempCost, cmpCost)) {
+                // cout << "Dropping solution " << tempCost << " vs " << cmpCost << endl;
                 return false;
             }
 
@@ -285,6 +291,7 @@ namespace flopoco {
                 tempCost += std::get<0>(tile)->getLUTCost(x, y, wX, wY);
 
                 if(tempCost > cmpCost) {
+                    // cout << "Dropping solution " << tempCost << " vs " << cmpCost << endl;
                     return false;
                 }
             }
@@ -292,6 +299,7 @@ namespace flopoco {
 
         cost = tempCost;
         area = tempArea;
+        // cout << "Used DSP blocks " << usedDSPBlocks << endl;
         return true;
     }
 
