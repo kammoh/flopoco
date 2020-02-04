@@ -66,16 +66,20 @@ namespace flopoco {
     }
 
     double BaseMultiplierDSPKaratsuba::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY){
-        int bits = 0;
+        int bits = 0, add_bits = 0;
         int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
         long kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
         for(int j = 0; j <= n; j++){
             for(int i = 0; i <= j; i++){
-                bits += (wX+wY);
+                bits += (wX + wY);
+                if(i != j) {          //the DSPs that are replaced by Karatsuba contribute with 3 bits to bit heap
+                    bits += 2 * (wX + wY);
+                    add_bits += wX;
+                }
             }
-        }                   //TODO: include costs for pre substraction
-        return bits*0.65;   //TODO: consider protrusion of multiplier over the bounds of the complete multiplier
+        }                               //TODO: include costs for pre substraction
+        return bits*0.65 + add_bits;    //TODO: consider protrusion of multiplier over the bounds of the complete multiplier
     }
 
     bool BaseMultiplierDSPKaratsuba::shapeValid(Parametrization const& param, unsigned x, unsigned y) const
@@ -204,7 +208,7 @@ namespace flopoco {
         for(int xy = 0; xy <= n; xy++){     //diagonal
             createMult(kxy*xy/gcd, kxy*xy/gcd);
             for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
-                createRectKaratsuba(kxy*nr/gcd,kxy*xy/gcd,kxy*xy/gcd,kxy*nr/gcd);
+                createRectKaratsuba(kxy*nr/gcd,kxy*xy/gcd);
             }
         }
 
@@ -244,8 +248,9 @@ namespace flopoco {
         }
     }
 
-    void BaseMultiplierDSPKaratsubaOp::createRectKaratsuba(int i, int j, int k, int l)
+    void BaseMultiplierDSPKaratsubaOp::createRectKaratsuba(int i, int j)
     {
+        int k = j, l = i;
         REPORT(FULL, "createRectKaratsuba(" << i << "," << j << "," << k << "," << l << ")");
 
         REPORT(INFO, "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j);

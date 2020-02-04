@@ -53,6 +53,7 @@ void TilingStrategyOptimalILP::solve()
     ScaLP::Result res = solver->getResult();
 
     double total_cost = 0;
+    int dsp_cost = 0;
     for(auto &p:res.values)
     {
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
@@ -65,12 +66,14 @@ void TilingStrategyOptimalILP::solve()
             cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
 
             total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
+            dsp_cost += (double)tiles[mult_id]->getDSPCost();
             auto coord = make_pair(m_x_pos, m_y_pos);
             solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
 
         }
     }
-    cout << "Total cost:" << total_cost <<std::endl;
+    cout << "Total LUT cost:" << total_cost <<std::endl;
+    cout << "Total DSP cost:" << dsp_cost <<std::endl;
 /*
     solution.push_back(make_pair(tiles[1]->getParametrisation().tryDSPExpand(0, 0, wX, wY, signedIO), make_pair(0, 0)));
     solution.push_back(make_pair(tiles[0]->getParametrisation().tryDSPExpand(16, 0, wX, wY, signedIO), make_pair(16, 0)));

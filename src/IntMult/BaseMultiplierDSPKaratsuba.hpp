@@ -76,7 +76,7 @@ namespace flopoco {
         static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b);}
 
         int TileBaseMultiple;
-        void createRectKaratsuba(int i, int j, int k, int l);
+        void createRectKaratsuba(int i, int j);
         void createMult(int i, int j);
     };
 
