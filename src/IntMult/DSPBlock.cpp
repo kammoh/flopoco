@@ -9,8 +9,8 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
     ostringstream name;
 //	name << "DSPBlock_" << wX << "x" << wY << (usePreAdder==1 ? "_PreAdd" : "") << (usePostAdder==1 ? "_PostAdd" : "") << (isPipelined==1 ? "_pip" : "") << "_uid" << getNewUId();
 	name << "DSPBlock_" << wX << "x" << wY << (usePreAdder==1 && !preAdderSubtracts ? "_PreAdd" : usePreAdder==1 && preAdderSubtracts ? "_PreSub" : "") << (usePostAdder==1 ? "_PostAdd" : "") << (isPipelined==1 ? "_pip" : "");
-	setShared(); //set this operator to be a shared operator, does not work for pipelined ones!!
-	setSequential(); //Dirty hack!!
+//	setShared(); //set this operator to be a shared operator, does not work for pipelined ones!!
+//	setSequential(); //Dirty hack!!
 
 	setNameWithFreqAndUID(name.str());
 
@@ -63,6 +63,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 //	cout << "maxTargetCriticalPath=" << maxTargetCriticalPath << endl;
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();
+
 	vhdl << tab << declare(stageDelay,"Mint",wIntermMult) << " <= std_logic_vector(" << (signedMultOutput ? "signed" : "unsigned") << "("<<
 		 (shouldPadX ? "'0' & " : "") <<"X) * " << (signedMultOutput ? "signed" : "unsigned") << "(" <<
 		 (shouldPadY ? "'0' & " : "")<< "Y)); -- multiplier" << endl;
