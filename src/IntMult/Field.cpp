@@ -47,53 +47,36 @@ namespace flopoco {
         baseID_ = baseState_->getID();
     }
 
-    BaseMultiplierParametrization Field::checkDSPPlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
-        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
-        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
-        unsigned int endX = coord.first + sizeX;
-        unsigned int endY = coord.second + sizeY;
-        unsigned int maxX = std::min(endX, wX_);
-        unsigned int maxY = std::min(endY, wY_);
-
+    BaseMultiplierParametrization Field::checkDSPPlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState, unsigned int maxX, unsigned int maxY) {
+        unsigned int sizeX = std::min((unsigned int)tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_), maxX);
+        unsigned int sizeY = std::min((unsigned int)tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_), maxY);
         ID fieldID = fieldState.getID();
 
-        if (tile->isIrregular() || tile->isKaratsuba()) {
-            for (unsigned int i = coord.second; i < maxY; i++) {
-                for (unsigned int j = coord.first; j < maxX; j++) {
-                    //check if tile could cover this area
-                    if (!tile->shape_contribution(j, i, coord.first, coord.second, wX_, wY_, signedIO_)) {
-                        continue;
+        for (unsigned int i = coord.second; i < sizeY + coord.second; i++) {
+            for (unsigned int j = coord.first; j < sizeX + coord.second; j++) {
+                if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
+                    unsigned int area1 = i - coord.second + 1 * maxY;
+                    unsigned int area2 = maxX * j - coord.second + 1;
+                    if(area1 > area2) {
+                        maxX = i - coord.second + 1;
                     }
-
-                    if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                        //check what makes more sense to truncate
-                        if(maxX < maxY) {
-                            maxX = j;
-                        }
-                        else {
-                            maxY = i;
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            for (unsigned int i = coord.second; i < maxY; i++) {
-                for (unsigned int j = coord.first; j < maxX; j++) {
-                    if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                        //check what makes more sense to truncate
-                        if(maxX < maxY) {
-                            maxX = j;
-                        }
-                        else {
-                            maxY = i;
-                        }
+                    else {
+                        maxY = j - coord.second + 1;
                     }
                 }
             }
         }
 
-        return tile->parametrize(maxX, maxY, false, false);
+        for (unsigned int i = coord.second; i < sizeY; i++) {
+            for (unsigned int j = coord.first; j < sizeX; j++) {
+                if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
+                    cout << "shrinked size " << sizeX << " " << sizeY << endl;
+                    return tile->parametrize(0, 0, false, false);
+                }
+            }
+        }
+
+        return tile->parametrize(sizeX, sizeY, false, false);
     }
 
     unsigned int Field::checkTilePlacement(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
@@ -138,9 +121,9 @@ namespace flopoco {
         return covered;
     }
 
-    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, FieldState& fieldState) {
-        unsigned int sizeX = tile->wX_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
-        unsigned int sizeY = tile->wY_DSPexpanded(coord.first, coord.second, wX_, wY_, signedIO_);
+    Cursor Field::placeTileInField(const Cursor coord, BaseMultiplierCategory* tile, BaseMultiplierParametrization& param, FieldState& fieldState) {
+        unsigned int sizeX = param.getMultXWordSize();
+        unsigned int sizeY = param.getMultYWordSize();
         unsigned int endX = coord.first + sizeX;
         unsigned int endY = coord.second + sizeY;
         unsigned int maxX = std::min(endX, wX_);

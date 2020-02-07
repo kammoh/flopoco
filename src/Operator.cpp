@@ -1167,7 +1167,7 @@ namespace flopoco{
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
-		/*
+		string org_constantValue = constantValue;
 		//remove quotation marks from constant (as this produces sollya warnings)
 		std::size_t found = constantValue.find("'");
 		while(found!=std::string::npos)
@@ -1175,7 +1175,7 @@ namespace flopoco{
 		constantValue.replace(found,1,"");
 		found = constantValue.find("'"); //search for other "'"'s
 		}
-		*/
+
 		//try to parse the constant
 		node = sollya_lib_parse_string(constantValue.c_str());
 		// If conversion did not succeed (i.e. parse error)
@@ -1185,7 +1185,7 @@ namespace flopoco{
 		sollya_lib_clear_obj(node);
 
 		//create a new signal for constant input
-		s = new Signal(this, join(constantValue, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
+		s = new Signal(this, join(org_constantValue, "_cst_", vhdlize(getNewUId())), Signal::constant, constValue);
 
 		// TODO the following bit of code should move to Signal, for Signal::constant signals
 		//set the timing for the constant signal, at cycle 0, criticalPath 0, criticalPathContribution 0

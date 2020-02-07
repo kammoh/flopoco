@@ -31,7 +31,7 @@ namespace flopoco {
                 output_weights.push_back(kxy*nr+kxy*xy);
             }
         }
-        cout << "outputs " << output_weights.size() << endl;
+        //cout << "Karatsuba order " << n << " has " << output_weights.size() << " outputs." << endl;
         return output_weights;
     }
 
@@ -176,10 +176,10 @@ namespace flopoco {
 
         IntMultiplier* test = static_cast<IntMultiplier*>(parentOp);
         if(test != nullptr){
-            cout << "this is a child operator" << endl;
+            //cout << "this is a child operator" << endl;
             child_op = true;
         } else {
-            cout << "this is a standalone operator" << endl;
+            //cout << "this is a standalone operator" << endl;
             bitHeap = new BitHeap(this, 2*kxy*n+wX+wY+3);
             child_op = false;
         }
@@ -276,7 +276,6 @@ namespace flopoco {
             addOutput("R" + to_string(dsp_cnt), 41);
             vhdl << tab << "R" + to_string(dsp_cnt++)  << " <= " << "c" + to_string(i) + "_" + to_string(l) << "(40 downto 0);" << endl;
             addOutput("R" + to_string(dsp_cnt), 41);
-            cout << "R" + to_string(dsp_cnt) << endl;
             vhdl << tab << "R" + to_string(dsp_cnt++)  << " <= " << "c" + to_string(k) + "_" + to_string(j) << "(40 downto 0);" << endl;
         }
     }

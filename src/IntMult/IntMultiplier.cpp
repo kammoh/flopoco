@@ -244,6 +244,8 @@ namespace flopoco {
             }
         }
 
+        // exit(0);
+
 		schedule();
 
 		branchToBitheap(&bitHeap, solution, prodsize(wX, wY) - (wOut + guardBits));
@@ -397,7 +399,7 @@ namespace flopoco {
                         vhdl << declare(.0, ofname.str(), 41) << " <= " << "" << oname.str() << "(40 downto 0)" << ";" << endl;
                         bitheap->addSignal(ofname.str(), bitHeapOffset+parameters.getOutputWeights()[i]);
                     }
-                    cout << "output (" << i << "/" << parameters.getOutputWeights().size()-1 << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
+                    cout << "output (" << i+1 << "/" << parameters.getOutputWeights().size() << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
                 }
 			} else {
 

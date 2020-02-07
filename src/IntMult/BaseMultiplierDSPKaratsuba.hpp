@@ -30,7 +30,7 @@ namespace flopoco {
         false,
         false,
         size,
-        "BaseMultiplierDSPKaratsuba_size" + string(1,((char) size) + '0'),
+        "BaseMultiplierDSPKaratsuba_size" + to_string(size),
         true,
         get_output_weights(size, wX, wY)
         }, wX(wX), wY(wY), wR(wX+wY), n(size){}
