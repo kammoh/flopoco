@@ -48,8 +48,28 @@ namespace flopoco {
         return dsps;
     }
 
-    float BaseMultiplierDSPKaratsuba::shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO){
-        return 1;
+/**
+* \brief determine the occupation ratio of a given shape in range [0..1]
+*   the calculation is done geometrically, by determining the area of the two rectangles of the DSP-Blocks,
+*   that are enclosed by the box around the area to be tiled for the generation of the main multiplier
+**/
+    float BaseMultiplierDSPKaratsuba::shape_utilisation(int shape_x, int shape_y, int mult_wX, int mult_wY, bool signedIO){
+        long area = 0;
+        int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);
+        long kxy = gcd;
+        for(; kxy % wX || kxy % wY; kxy += gcd);
+        for(int x = 0; x <= n; x++) {
+            for (int y = 0; y <= n; y++) {
+                int wsx = kxy * x + wX;
+                int wsy = kxy * y + wY;
+                int wsx_abs = shape_x + wsx;
+                int wsy_abs = shape_y + wsy;
+                int wx = (mult_wX < wsx_abs) ? ((0 < wX - (wsx_abs - mult_wX)) ? wX - (wsx_abs - mult_wX) : 0) : wX;
+                int wy = (mult_wY < wsy_abs) ? ((0 < wY - (wsy_abs - mult_wY)) ? wY - (wsy_abs - mult_wY) : 0) : wY;
+                area += (wx*wy);
+            }
+        }
+        return area/(float)((n+1)*wX*(n+1)*wY);
     }
 
     int BaseMultiplierDSPKaratsuba::getDSPCost() const {
@@ -78,7 +98,7 @@ namespace flopoco {
                     add_bits += wX;
                 }
             }
-        }                               //TODO: include costs for pre substraction
+        }
         return bits*0.65 + add_bits;    //TODO: consider protrusion of multiplier over the bounds of the complete multiplier
     }
 

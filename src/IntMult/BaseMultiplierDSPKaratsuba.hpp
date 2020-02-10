@@ -42,7 +42,7 @@ namespace flopoco {
         static int get_wR(int n, int wX, int wY) {return get_wX(n, wX, wY) + get_wY(n, wX, wY);}
         static int getRelativeResultMSBWeight(int n, int wX, int wY) {return get_wR(n, wX, wY);}
         static int getRelativeResultLSBWeight(int n, int wX, int wY) {return 0;}
-        float shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO);
+        float shape_utilisation(int shape_x, int shape_y, int mult_wX, int mult_wY, bool signedIO) override;
         int getDSPCost() const final;
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         bool shapeValid(const Parametrization &param, unsigned int x, unsigned int y) const;
