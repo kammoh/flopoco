@@ -9,7 +9,7 @@
 using namespace std;
 namespace flopoco {
 
-    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int wX, int wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba) {
+    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int mult_wX, int mult_wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba) {
         //cout << bmc->size() << endl;
         if(useDSP){
             MultTileCollection.push_back( new BaseMultiplierDSP(24, 17, 1));
@@ -33,11 +33,11 @@ namespace flopoco {
         }
 
         if(use2xk){
-            for(int x = 4; x <= wX; x++) {
+            for(int x = 4; x <= mult_wX; x++) {
                 MultTileCollection.push_back(
                         new BaseMultiplierXilinx2xk(x,2));
             }
-            for(int y = 4; y <= wX; y++) {
+            for(int y = 4; y <= mult_wY; y++) {
                 MultTileCollection.push_back(
                         new BaseMultiplierXilinx2xk(2,y));
             }
