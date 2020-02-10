@@ -51,7 +51,10 @@ namespace flopoco {
         }
 
         if(useKaratsuba){
-            for(int i = 0; i <= 2; i++) {
+            int nx = (mult_wX - 16) / 48;
+            int ny = (mult_wY - 24) / 48;
+            int n = min(nx, ny);
+            for(int i = 0; i <= n; i++) {
                 MultTileCollection.push_back(
                         new BaseMultiplierDSPKaratsuba(i, 16, 24));
             }
