@@ -139,7 +139,7 @@ namespace flopoco{
 		name << "FixSinCosPoly_LSBm" << -lsb;
 		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
+		setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013-2019)");
 
 
 
@@ -163,7 +163,7 @@ namespace flopoco{
 
 
 		// order-1 architecture: sinZ \approx Z, cosZ \approx 1
-		int gOrder1Arch = w<16? 3 : 4; // exhaustive tests show that g=3 is enough for small sizes...
+		int gOrder1Arch = w<14? 3 : 4; // exhaustive tests show that g=3 is enough for small sizes...
 		// order-2 architecture: sinZ \approx Z, cosZ \approx 1-Z^2/2
 		int gOrder2Arch = w<17? 3 : 4;  // exhaustive tests show that g=3 is enough for small sizes...
 		// generic case:
@@ -338,14 +338,13 @@ namespace flopoco{
 
 
 			if (wSmallerThanBorderFirstOrderTaylor) {
-				REPORT(DETAILED,"Simpler architecture: Using only first order Taylor");
-
-				int m=3; // another number of guard bits, this time on the truncation of CosPiA and SinPiA
+				// TODO bitheapize
+				REPORT(INFO,"Simpler architecture: Using only first order Taylor");
 
 				//---------------------------- Sine computation ------------------------
 				vhdl << tab <<  declare("SinPiACosZ",w+g) << " <= SinPiA; -- For these sizes  CosZ approx 1"<<endl; // msb is -1; 
-				vhdl << tab << declare("CosPiAtrunc", wZ+m ) << " <= CosPiA" << range( w+g-1, w+g-wZ-m ) <<";" <<endl; // 
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "CosPiASinZ", 2*wZ+m )
+				vhdl << tab << declare("CosPiAtrunc", wZ ) << " <= CosPiA" << range( w+g-1, w+g-wZ ) <<";" <<endl; // 
+				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "CosPiASinZ", 2*wZ)
 						 << " <= CosPiAtrunc*Z;  -- For these sizes  SinZ approx Z" <<endl; //
 				// msb of CosPiASinZ is that of Z, plus 2 (due to multiplication by Pi)
 				//   for g=2 and wA=4:          :  .QOAAAAYYYYgg
@@ -353,14 +352,14 @@ namespace flopoco{
 				// to align with sinACosZ:         .XXXXXXXXXXgg we need to add wA+2-2 zeroes. 
 				// and truncate cosAsinZ to the size of Z, too
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "PreSinX", w+g)
-						 << " <= SinPiACosZ + ( " << zg(wA) << " & (CosPiASinZ" << range( 2*wZ+m-1, 2*wZ+m - (w+g - wA) ) << ") );"<<endl;
+						 << " <= SinPiACosZ + ( " << zg(wA) << " & (CosPiASinZ" << range( 2*wZ-1, 2*wZ - (w+g - wA) ) << ") );"<<endl;
 
 				//---------------------------- Cosine computation -------------------------------
 				vhdl << tab << declare("CosPiACosZ", w+g ) << " <= CosPiA; -- For these sizes  CosZ approx 1" << endl;
-				vhdl << tab << declare("SinPiAtrunc", wZ+m ) << " <= SinPiA" << range( w+g-1, w+g-wZ-m ) <<";" <<endl; // 
-				vhdl << tab << declare("SinPiASinZ", 2*wZ+m ) << " <= SinPiAtrunc*Z;  -- For these sizes  SinZ approx Z" <<endl; //
+				vhdl << tab << declare("SinPiAtrunc", wZ ) << " <= SinPiA" << range( w+g-1, w+g-wZ ) <<";" <<endl; // 
+				vhdl << tab << declare("SinPiASinZ", 2*wZ ) << " <= SinPiAtrunc*Z;  -- For these sizes  SinZ approx Z" <<endl; //
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "PreCosX", w+g)
-						 << " <= CosPiACosZ - ( " << zg(wA) << " & (SinPiASinZ" << range( 2*wZ+m-1, 2*wZ+m - (w+g - wA) )<< ") );" << endl;
+						 << " <= CosPiACosZ - ( " << zg(wA) << " & (SinPiASinZ" << range( 2*wZ-1, 2*wZ - (w+g - wA) )<< ") );" << endl;
 
 				// Reconstruction expects a positive C_out and S_out, without their sign bits
 				vhdl << tab << declare ("C_out", w) << " <= PreCosX" << range (w+g-1, g) << ';' << endl;
@@ -372,7 +371,7 @@ namespace flopoco{
 			else if (wSmallerThanBorderSecondOrderTaylor) {
 
 				REPORT(DETAILED,"Using first-order Taylor for sine and second-order for cosine");
-
+				// TODO bitheapize
 				//--------------------------- SQUARER --------------------------------
 		
 				// Z < 2^-wA  :
@@ -425,9 +424,6 @@ namespace flopoco{
 		
 			else	{
 				REPORT(DETAILED, "Using generic architecture with 3rd-order Taylor");
-#if 0
-				THROWERROR("not ported yet to the new pipeline framework: look up this message in Trigs/FixSinCosPoly.cpp and FIXME");
-#else
 				/*********************************** THE SQUARER **************************************/
 			
 
@@ -654,7 +650,6 @@ namespace flopoco{
 
 				// For LateX in the paper
 				//	cout << "     " << w <<  "   &   "  << wA << "   &   " << wZ << "   &   " << wZ2o2 << "   &   " << wZ3o6 << "   \\\\ \n \\hline" <<  endl;
-#endif
 			} // closes if for generic case
 
 
