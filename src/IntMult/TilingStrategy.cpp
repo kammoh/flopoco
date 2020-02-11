@@ -113,7 +113,8 @@ namespace flopoco {
 
     void TilingStrategy::printSolutionSVG(ofstream &outstream, int wTrunc, bool triangularStyle)
     {
-        int xmin=0, ymin=0,xmax=0, ymax=0;
+        string colour[] = { "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Violet", "Lime", "Orange", "Pink", "Beige" };
+        int xmin=0, ymin=0,xmax=0, ymax=0, col=0;
         for (auto& tile : solution) {
             auto& parametrization = tile.first;
             auto &coordinates = tile.second;
@@ -132,7 +133,7 @@ namespace flopoco {
 
         cerr << "Dumping multiplier schema in multiplier.svg\n";
         outstream << "<?xml version=\"1.0\" standalone=\"no\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
-        outstream << "<svg width=\"" << 10*(xmax+xmin) << "\" height=\"" << 10*(ymax+ymin) << "\">\n";
+        outstream << "<svg width=\"" << 10*(xmax+xmin) << "\" height=\"" << 10*(ymax+ymin) << "\"  xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\">\n";
 
         outstream << "\t<rect x=\"" << 10*(width-xmin-wX) << "\" y=\"" << 10*ymin << "\" width=\"" << 10*(wX) << "\" height=\"" << 10*(wY) << "\" style=\"fill:none;stroke-width:1;stroke:darkgray\" />\n";
         outstream << "\t<g fill=\"none\" stroke=\"darkgray\" stroke-width=\"1\">\n";
@@ -218,16 +219,16 @@ namespace flopoco {
                 cout << "wX " << tX  << " wY " << tY << " k " << kxy << endl;
 
                 for(int xy = 0; xy <= parametrization.getShapePara(); xy++){     //diagonal
-                    outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:black;fill-opacity:1.0;stroke:none\" />\n";
+                    outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:" << colour[col%11] << ";fill-opacity:1.0;stroke:none\" />\n";
                     //createMult(kxy*xy/gcd, kxy*xy/gcd);
                     for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
-                        outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*nr + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:black;stroke-width:1\" />\n";
-                        outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*nr + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:black;stroke-width:1\" />\n";
-                        outstream << "\t\t<path d=\"M" << 10*(width-xmin-xstart -(kxy*xy + tX/2)) << "," << 10*(ystart+kxy*nr + tY/2) << " A18000,18000 0 0,1 " << 10*(width-xmin-xstart -(kxy*nr + tX/2 )) << "," << 10*(ystart+kxy*xy + tY/2) << "\" style=\"fill:none;stroke:black;stroke-width:3\" />\n";
+                        outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*nr + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:" << colour[col%11] << ";stroke-width:1\" />\n";
+                        outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*nr + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:white;fill-opacity:1.0;stroke:" << colour[col%11] << ";stroke-width:1\" />\n";
+                        outstream << "\t\t<path d=\"M" << 10*(width-xmin-xstart -(kxy*xy + tX/2)) << "," << 10*(ystart+kxy*nr + tY/2) << " A18000,18000 0 0,1 " << 10*(width-xmin-xstart -(kxy*nr + tX/2 )) << "," << 10*(ystart+kxy*xy + tY/2) << "\" style=\"fill:none;stroke:" << colour[col%11] << ";stroke-width:3\" />\n";
                         //createRectKaratsuba(kxy*nr/gcd,kxy*xy/gcd,kxy*xy/gcd,kxy*nr/gcd);
                     }
                 }
-
+                col++;
             }
 
         }

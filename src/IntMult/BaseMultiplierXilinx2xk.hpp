@@ -22,7 +22,7 @@ namespace flopoco {
             false,
             false,
             -1,
-            "BaseMultiplierXilinx2xk"}
+            "BaseMultiplierXilinx2xk_" + to_string(wX) + "x" +  to_string(wY)}
 		{}
 
         int getDSPCost() const override { return 0; }

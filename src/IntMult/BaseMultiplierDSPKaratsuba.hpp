@@ -42,12 +42,13 @@ namespace flopoco {
         static int get_wR(int n, int wX, int wY) {return get_wX(n, wX, wY) + get_wY(n, wX, wY);}
         static int getRelativeResultMSBWeight(int n, int wX, int wY) {return get_wR(n, wX, wY);}
         static int getRelativeResultLSBWeight(int n, int wX, int wY) {return 0;}
-        float shape_utilisation(int shape_x, int shape_y, int wX, int wY, bool signedIO);
+        float shape_utilisation(int shape_x, int shape_y, int mult_wX, int mult_wY, bool signedIO) override;
         int getDSPCost() const final;
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
         bool shapeValid(const Parametrization &param, unsigned int x, unsigned int y) const;
         bool shapeValid(int x, int y);
         bool isKaratsuba() const override { return true;}
+        unsigned getArea(void) override {return (n+1)*wX*(n+1)*wY;}
 
         Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
@@ -77,7 +78,7 @@ namespace flopoco {
         static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b);}
 
         int TileBaseMultiple;
-        void createRectKaratsuba(int i, int j, int k, int l);
+        void createRectKaratsuba(int i, int j);
         void createMult(int i, int j);
     };
 

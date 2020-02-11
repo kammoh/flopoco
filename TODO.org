@@ -163,7 +163,8 @@ functionalRegister("Q","D");
 *** FixIIR for large bit heaps + functional delays
 *** FixFunctionByTable (check that Table does the delay properly in the blockram case)
 *** ALAP rescheduling for constant signals
-*** IntMult... sigh, some day 
+*** IntMult DONE
+*** FixSinCos for method=0
 
 ** Small things
 *** call schedule() in instance()
