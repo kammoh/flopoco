@@ -19,7 +19,7 @@ namespace flopoco{
 
 	class FixSinCos: public Operator {
 	public:	
-		FixSinCos(OperatorPtr parentOp, Target * target, int wIn, int wOut);
+		FixSinCos(OperatorPtr parentOp, Target * target, int lsb);
 	
 		~FixSinCos();
 
@@ -40,8 +40,7 @@ namespace flopoco{
 		static TestList unitTest(int index);
 
 	protected:
-		int wIn;
-		int wOut;
+		int lsb; /** LSB of both input and output, each a signed number in [-1, 1) */
 		mpfr_t scale;              /**< 1-2^(wOut-1)*/
 		mpfr_t constPi;
 	};

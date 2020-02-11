@@ -1,5 +1,5 @@
 
-// TODOs 
+// TODOs
 
 // One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
 #ifdef HAVE_CONFIG_H
@@ -32,17 +32,22 @@ namespace flopoco{
 
 	////////////////////////////////////// FixSinCos ///////////////////
 
-	FixSinCos::FixSinCos(OperatorPtr parentOp, Target * target, int wIn_, int wOut_):Operator(parentOp,target), wIn(wIn_), wOut(wOut_){
+	FixSinCos::FixSinCos(OperatorPtr parentOp, Target * target, int lsb_):Operator(parentOp,target), lsb(lsb_){
 		//compute the scale factor		
-		mpfr_init2(scale, wOut+1);
+		mpfr_init2(scale, -lsb+1);
 		mpfr_set_d(scale, -1.0, GMP_RNDN);           // exact
-		mpfr_mul_2si(scale, scale, -wOut, GMP_RNDN); // exact
+		mpfr_mul_2si(scale, scale, lsb, GMP_RNDN); // exact
 		mpfr_add_d(scale, scale, 1.0, GMP_RNDN);     // exact
 		//REPORT(DEBUG, "scale=" << printMPFR(scale, 15));
 
 		// everybody needs many digits of Pi
-		mpfr_init2(constPi, 10*(wIn+wOut));
+		mpfr_init2(constPi, -10*lsb);
 		mpfr_const_pi( constPi, GMP_RNDN);
+
+		// declaring inputs and outputs
+		addInput("X", -lsb+1);
+		addOutput("S", -lsb+1, 2);
+		addOutput("C", -lsb+1, 2);
 	};
 
 
@@ -60,11 +65,10 @@ namespace flopoco{
 	{
 		mpfr_t z, rsin, rcos;
 		mpz_class sin_z, cos_z;
-		mpfr_init2(z, 10*(wIn+wOut));
-		mpfr_init2(rsin, 10*(wIn+wOut)); 
-		mpfr_init2(rcos, 10*(wIn+wOut)); 
+		mpfr_init2(z, -10*lsb);
+		mpfr_init2(rsin, -10*lsb); 
+		mpfr_init2(rcos, -10*lsb); 
 		
-														  
 
 		/* Get I/O values */
 		mpz_class svZ = tc->getInputValue("X");
@@ -72,7 +76,7 @@ namespace flopoco{
 		/* Compute correct value */
 		
 		mpfr_set_z (z, svZ.get_mpz_t(), GMP_RNDN); //  exact
-		mpfr_div_2si (z, z, wIn-1, GMP_RNDN); // exact
+		mpfr_mul_2si (z, z, lsb, GMP_RNDN); // exact
 	
 		// No need to manage sign bit etc: modulo 2pi is the same as modulo 2 in the initial format
 		mpfr_mul(z, z, constPi, GMP_RNDN);
@@ -84,14 +88,14 @@ namespace flopoco{
 
 		mpfr_add_d(rsin, rsin, 6.0, GMP_RNDN); // exact rnd here
 		mpfr_add_d(rcos, rcos, 6.0, GMP_RNDN); // exact rnd here
-		mpfr_mul_2si (rsin, rsin, wOut-1, GMP_RNDN); // exact rnd here
-		mpfr_mul_2si (rcos, rcos, wOut-1, GMP_RNDN); // exact rnd here
+		mpfr_mul_2si (rsin, rsin, -lsb, GMP_RNDN); // exact rnd here
+		mpfr_mul_2si (rcos, rcos, -lsb, GMP_RNDN); // exact rnd here
 
 		// Rounding down
 		mpfr_get_z (sin_z.get_mpz_t(), rsin, GMP_RNDD); // there can be a real rounding here
 		mpfr_get_z (cos_z.get_mpz_t(), rcos, GMP_RNDD); // there can be a real rounding here
-		sin_z -= mpz_class(6)<<(wOut-1);
-		cos_z -= mpz_class(6)<<(wOut-1);
+		sin_z -= mpz_class(6)<<(-lsb);
+		cos_z -= mpz_class(6)<<(-lsb);
 
 		tc->addExpectedOutput ("S", sin_z);
 		tc->addExpectedOutput ("C", cos_z);
@@ -99,8 +103,8 @@ namespace flopoco{
 		// Rounding up
 		mpfr_get_z (sin_z.get_mpz_t(), rsin, GMP_RNDU); // there can be a real rounding here
 		mpfr_get_z (cos_z.get_mpz_t(), rcos, GMP_RNDU); // there can be a real rounding here
-		sin_z -= mpz_class(6)<<(wOut-1);
-		cos_z -= mpz_class(6)<<(wOut-1);
+		sin_z -= mpz_class(6)<<(-lsb);
+		cos_z -= mpz_class(6)<<(-lsb);
 
 		tc->addExpectedOutput ("S", sin_z);
 		tc->addExpectedOutput ("C", cos_z);
@@ -117,7 +121,7 @@ namespace flopoco{
 		TestCase* tc;
 
 		// No regression tests below, just values used in the initial development.
-		mpfr_init2(z, 10*(wIn+wOut));
+		mpfr_init2(z, -10*lsb);
 
 		//z=0
 		tc = new TestCase (this);
@@ -128,7 +132,7 @@ namespace flopoco{
 		tc = new TestCase (this);
 		tc->addComment("Pi/4-eps");
 		mpfr_set_d (z, 0.24, GMP_RNDD); 
-		mpfr_mul_2si (z, z, wIn-1, GMP_RNDD); 
+		mpfr_mul_2si (z, z, -lsb, GMP_RNDD); 
 		mpfr_get_z (zz.get_mpz_t(), z, GMP_RNDD);  
 		tc -> addInput ("X", zz);
 		emulate(tc);
@@ -137,7 +141,7 @@ namespace flopoco{
 		tc = new TestCase (this);
 		tc->addComment("Pi/6");
 		mpfr_set_d (z, 0.166666666666666666666666666666666, GMP_RNDD); 
-		mpfr_mul_2si (z, z, wIn-1, GMP_RNDD); 
+		mpfr_mul_2si (z, z, -lsb, GMP_RNDD); 
 		mpfr_get_z (zz.get_mpz_t(), z, GMP_RNDD);  
 		tc -> addInput ("X", zz);
 		emulate(tc);
@@ -146,7 +150,7 @@ namespace flopoco{
 		tc = new TestCase (this);
 		tc->addComment("Pi/3");
 		mpfr_set_d (z, 0.333333333333333333333333333333, GMP_RNDD); 
-		mpfr_mul_2si (z, z, wIn-1, GMP_RNDD); 
+		mpfr_mul_2si (z, z, -lsb, GMP_RNDD); 
 		mpfr_get_z (zz.get_mpz_t(), z, GMP_RNDD);  
 		tc -> addInput ("X", zz);
 		emulate(tc);
@@ -164,7 +168,7 @@ namespace flopoco{
 		
 		if(index==-1) 
 		{ // The unit tests
-			for(int method=1; method<=2; method++) {
+			for(int method=0; method<=2; method++) {
 				for(int w=5; w<=32; w++) {
 					paramList.push_back(make_pair("lsb",to_string(-w)));
 					paramList.push_back(make_pair("method",to_string(method)));
@@ -193,11 +197,11 @@ namespace flopoco{
 		UserInterface::parseInt(args, "lsb", &lsb); 
 		UserInterface::parseInt(args, "method", &method);
 		if(method==0)
-			return new FixSinCosPoly(parentOp, target, -lsb, -lsb); // TODO we want to expose the constructor parameters in the new  interface, so this "-" is a bug
+			return new FixSinCosPoly(parentOp, target, lsb);
 		else if (method==1)
-			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 0);  // TODO we want to expose the constructor parameters in the new  interface, so these "-" are a bug
+			return new FixSinCosCORDIC(parentOp, target, -lsb+1, -lsb+1, 0);  // TODO we want to expose the constructor parameters in the new  interface, so these "-" are a bug
 		else if (method==2)
-			return new FixSinCosCORDIC(parentOp, target, -lsb, -lsb, 1);  // reduced iteration
+			return new FixSinCosCORDIC(parentOp, target, -lsb+1, -lsb+1, 1);  // reduced iteration
 		else {
 			cerr << " ERROR in FixSinCos::parseArguments: Wrong method number, only 0 (polynomial), 1 (standard CORDIC) and 2 (reduced iteration CORDIC) are allowed";
 			return NULL;

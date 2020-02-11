@@ -47,7 +47,7 @@ namespace flopoco{
 		for (int32_t x=0; x<(1<<wIn); x++) {
 			mpz_class sin,cos;
 			mpfr_t a, c, s;
-
+			
 			mpfr_init2(c, LARGE_PREC); // cosine
 			mpfr_init2(s, LARGE_PREC); // sine
 
@@ -130,31 +130,20 @@ namespace flopoco{
 
 	////////////////////////////////////// FixSinCosPoly ///////////////////
 
-	FixSinCosPoly::FixSinCosPoly(OperatorPtr parentOp, Target * target, int wIn_, int wOut_):
-		FixSinCos(parentOp,target, wIn_, wOut_){
+	FixSinCosPoly::FixSinCosPoly(OperatorPtr parentOp, Target * target, int lsb_):
+		FixSinCos(parentOp,target, lsb_){ 
 		int g=-42; // silly value from the start, because so many different paths may assign it (or forget to do so) 
 		srcFileName="FixSinCosPoly";
 
-		// Ugly Fix code
-		if(wIn!=wOut){
-			THROWERROR("Feel free to fix me: only wIn=wOut supported at the moment");
-		}
-		else
-			w=wIn;
+			w=-lsb;
 		// definition of the name of the operator
 		ostringstream name;
-		name << "FixSinCosPoly_" << w;
+		name << "FixSinCosPoly_LSBm" << -lsb;
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
 
 
-				// declaring inputs
-		addInput("X", w+1);
-
-		// declaring outputs
-		addOutput("S", w+1);
-		addOutput("C", w+1);
 
 		// These are limits between small-precision cases for which we generate simpler architectures
 
@@ -311,6 +300,9 @@ namespace flopoco{
 
 			// now X -> X_sgn + Q*.5 + O*.25 + Y where Q,O \in {0,1} and Y \in {0,.25}
 
+			//FIXME TODO REMOVE once debug is done
+			g=3; wA--;
+			
 			int wYIn=w-2+g;
 		
 			addComment("Computing .25-Y :  we do a logic NOT, at a cost of 1 ulp");

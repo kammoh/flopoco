@@ -28,6 +28,7 @@ namespace flopoco{
 		int g;                     /**< number of guard bits*/
 		mpfr_t kfactor;            /**< */
 //		vector<mpfr_t> atani;      /**< */
+		int wIn,wOut;// should be removed when refactored for lsb
 
 	};
 
