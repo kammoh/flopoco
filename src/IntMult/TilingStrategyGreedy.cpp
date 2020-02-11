@@ -53,10 +53,6 @@ namespace flopoco {
         if(truncated_) {
             truncatedRange_ = (IntMultiplier::prodsize(wX, wY) - 1) - wOut;
         }
-
-        for(auto& v: tiles_) {
-            cout << v->getType() << " " << v->efficiency() << " " << v->getParametrisation().getMultXWordSize() << " " << v->getParametrisation().getMultYWordSize() <<endl;
-        }
     }
 
     void TilingStrategyGreedy::solve() {
@@ -69,13 +65,14 @@ namespace flopoco {
 
         double cost = 0.0;
         unsigned int area = 0;
+        unsigned int usedDSPBlocks = 0;
         //only one state, base state is also current state
-        greedySolution(fieldState, &solution, nullptr, cost, area);
-        cout << "Total cost: " << cost << endl;
+        greedySolution(fieldState, &solution, nullptr, cost, area, usedDSPBlocks);
+        cout << "Total cost: " << cost << " " << usedDSPBlocks << endl;
         cout << "Total area: " << area << endl;
     }
 
-    bool TilingStrategyGreedy::greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, double& cost, unsigned int& area, double cmpCost, unsigned int usedDSPBlocks, vector<tuple<BaseMultiplierCategory*, BaseMultiplierParametrization, multiplier_coordinates_t>>* dspBlocks) {
+    bool TilingStrategyGreedy::greedySolution(BaseFieldState& fieldState, list<mult_tile_t>* solution, queue<unsigned int>* path, double& cost, unsigned int& area, unsigned int& usedDSPBlocks, double cmpCost, vector<tuple<BaseMultiplierCategory*, BaseMultiplierParametrization, multiplier_coordinates_t>>* dspBlocks) {
         Field* field = fieldState.getField();
         Cursor next (fieldState.getCursor());
         Cursor placementPos = next;
@@ -144,8 +141,6 @@ namespace flopoco {
                 if(t->getDSPCost() == 1 && !t->isKaratsuba()) {
                     BaseMultiplierParametrization param = field->checkDSPPlacement(next, t, fieldState, neededX, neededY);
                     if(param.getMultXWordSize() == 0 || param.getMultYWordSize() == 0) {
-                        // cout << "Couldn't place " << t->getType() << " with size " << t->wX() << " " << t->wY() << " at " << next.first << " " << next.second << endl;
-                        // field->printField(fieldState);
                         continue;
                     }
 
@@ -213,7 +208,6 @@ namespace flopoco {
                         }
                     }
                     else {
-                        //TODO: tile / cost vs t->efficieny()
                         double newEfficiency = t->efficiency() * (tiles / (double) t->getArea());
                         if (newEfficiency < efficiency) {
                             if (tiles == t->getArea()) {
@@ -224,6 +218,11 @@ namespace flopoco {
                         }
 
                         efficiency = newEfficiency;
+
+                        //no need to check other tiles
+                        /*if(tiles == t->getArea()) {
+                            break;
+                        }*/
                     }
 
                     tile = t->getParametrisation();
@@ -261,7 +260,6 @@ namespace flopoco {
             tempCost += bm->getLUTCost(placementPos.first, placementPos.second, wX, wY);
 
             if(tempCost > cmpCost) {
-                // cout << "Dropping solution " << tempCost << " vs " << cmpCost << endl;
                 return false;
             }
 
@@ -276,7 +274,6 @@ namespace flopoco {
         //check each dsp block with another
         if(useSuperTiles_) {
             if(!performSuperTilePass(dspBlocks, solution, tempCost, cmpCost)) {
-                // cout << "Dropping solution " << tempCost << " vs " << cmpCost << endl;
                 return false;
             }
 
@@ -291,7 +288,6 @@ namespace flopoco {
                 tempCost += std::get<0>(tile)->getLUTCost(x, y, wX, wY);
 
                 if(tempCost > cmpCost) {
-                    // cout << "Dropping solution " << tempCost << " vs " << cmpCost << endl;
                     return false;
                 }
             }
@@ -299,7 +295,6 @@ namespace flopoco {
 
         cost = tempCost;
         area = tempArea;
-        // cout << "Used DSP blocks " << usedDSPBlocks << endl;
         return true;
     }
 

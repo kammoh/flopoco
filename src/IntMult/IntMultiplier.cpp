@@ -244,8 +244,6 @@ namespace flopoco {
             }
         }
 
-        // exit(0);
-
 		schedule();
 
 		branchToBitheap(&bitHeap, solution, prodsize(wX, wY) - (wOut + guardBits));

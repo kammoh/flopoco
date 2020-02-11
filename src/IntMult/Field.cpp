@@ -70,7 +70,6 @@ namespace flopoco {
         for (unsigned int i = coord.second; i < sizeY; i++) {
             for (unsigned int j = coord.first; j < sizeX; j++) {
                 if (field_[i][j] == fieldID || field_[i][j] == baseID_) {
-                    cout << "shrinked size " << sizeX << " " << sizeY << endl;
                     return tile->parametrize(0, 0, false, false);
                 }
             }

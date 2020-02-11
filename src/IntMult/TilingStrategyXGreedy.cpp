@@ -67,7 +67,8 @@ namespace flopoco {
         list<mult_tile_t> bestSolution;
         double bestCost = 0.0;
         unsigned int bestArea = 0;
-        greedySolution(tempState, &bestSolution, nullptr, bestCost, bestArea);
+        unsigned int bestUsedDSPBlocks = 0;
+        greedySolution(tempState, &bestSolution, nullptr, bestCost, bestArea, bestUsedDSPBlocks);
         int runs = std::pow(2, pairs_.size());
         for(int i = 1; i < runs; i++) {
             tempState.reset(baseState);
@@ -83,14 +84,16 @@ namespace flopoco {
             list<mult_tile_t> solution;
             double cost = 0;
             unsigned int area = 0;
-            if(greedySolution(tempState, &solution, nullptr, cost, area, bestCost)) {
+            unsigned int usedDSPBlocks = 0;
+            if(greedySolution(tempState, &solution, nullptr, cost, area, usedDSPBlocks, bestCost)) {
                 bestCost = cost;
                 bestArea = area;
+                bestUsedDSPBlocks = usedDSPBlocks;
                 bestSolution = std::move(solution);
             }
         }
 
-        cout << "Total cost: " << bestCost << endl;
+        cout << "Total cost: " << bestCost << " " << bestUsedDSPBlocks << endl;
         cout << "Total area: " << bestArea << endl;
         solution = std::move(bestSolution);
     }

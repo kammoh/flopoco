@@ -14,18 +14,14 @@ namespace flopoco {
         void reset(BaseFieldState& baseState) override;
         void reset(Field* field, ID id, unsigned int missing) override;
     private:
-        unsigned int searchRadius_;
-        unsigned int segmentPos_;
-
-        bool checkAction(Cursor& coord, int deltaX, int deltaY, unsigned int diameter);
+        unsigned int searchPos_;
 
         struct NextCoord{
             Cursor coord;
             float distance;
         };
 
-        vector<vector<NextCoord>> coordsLUT_;
-        list<NextCoord> nextCoords_;
+        vector<NextCoord> coordsLUT_;
     };
 }
 
