@@ -19,10 +19,13 @@ namespace flopoco{
 	// TODO possibly fix all the code instead... This would enable sharing emulate() etc.
  
 	FixSinCosCORDIC::FixSinCosCORDIC(OperatorPtr parentOp, Target* target, int wIn_, int wOut_, int reducedIterations_) 
-		: FixSinCos(parentOp, target, wIn_, wOut_), reducedIterations(reducedIterations_)
+		: FixSinCos(parentOp, target, -(wIn_-1)), reducedIterations(reducedIterations_)
 	{
 
-		int stage;
+		wIn=-lsb+1; // TO REMOVE
+		wOut=-lsb+1;
+		
+	int stage;
 		srcFileName="FixSinCosCORDIC";
 		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2012-...)" );
 
@@ -106,14 +109,6 @@ namespace flopoco{
 		REPORT(DETAILED, "wIn=" << wIn << " wOut=" << wOut 
 		       << "   MaxIterations: " << maxIterations 
 		       << "  Guard bits g=" << g << "  Neg. weight of LSBs w=" << w );
-
-
-		// declaring inputs
-		addInput  ( "X"  , wIn, true );
-
-		// declaring output
-		addOutput  ( "C"  , wOut, 2 );
-		addOutput  ( "S"  , wOut, 2 );
 		
 		//reduce the argument X to [0, 1/2)
 		vhdl << tab << declare("sgn") << " <= X(" << wIn-1 << ");  -- sign" << endl;

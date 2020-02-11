@@ -32,8 +32,6 @@ namespace flopoco{
 
 
 #define USEBITHEAP 1
-#define LARGE_PREC 1000 // 1000 bits should be enough for everybody
-#define LOW_PREC 0
 
 
 
@@ -42,41 +40,41 @@ namespace flopoco{
 	////////////////////////////////////// SinCosTable ///////////////////
 	// argRedCase=1 for full table, 4 for quadrant, 8 for octant
 	// 
-	vector<mpz_class> FixSinCosPoly::buildSinCosTable(int wIn, int lsbOut, int g, int argRedCase){
+	vector<mpz_class> FixSinCosPoly::buildSinCosTable(int wA, int lsbOut, int g, int argRedCase){
 		vector<mpz_class> result;
-		for (int32_t x=0; x<(1<<wIn); x++) {
+		for (int32_t x=0; x<(1<<wA); x++) {
 			mpz_class sin,cos;
 			mpfr_t a, c, s;
-
-			mpfr_init2(c, LARGE_PREC); // cosine
-			mpfr_init2(s, LARGE_PREC); // sine
+			
+			mpfr_init2(c, -10*lsb); // cosine
+			mpfr_init2(s, -10*lsb); // sine
 
 			// 2's complement convertion of x into xs
 			int xs=x;
-			if ( (xs>>(wIn-1)) && (argRedCase==1) )
-				xs-=(1<<wIn);
+			if ( (xs>>(wA-1)) && (argRedCase==1) )
+				xs-=(1<<wA);
 
 			// a will be used for the value in xs
-			mpfr_init2(a,10*wIn-1); 
+			mpfr_init2(a,10*wA-1); 
 			mpfr_set_si(a, xs, GMP_RNDN);
 
 			//REPORT(0,"Evaluating function on point x="<<x<<" positive value xs="<<xs<<" converted value a="<<printMPFR(a, 10));
 
 			//divide by 2^w then we get a true fixpoint number between -1 and 1.
 			if (argRedCase==1){
-				if (xs>>(wIn-1))
-					xs-=(1<<wIn);
-				mpfr_div_2si(a,a,wIn-1, GMP_RNDN);
-				//REPORT(0,"a divided by 2^"<<wIn<<" a="<<printMPFR(a,10));
+				if (xs>>(wA-1))
+					xs-=(1<<wA);
+				mpfr_div_2si(a,a,wA-1, GMP_RNDN);
+				//REPORT(0,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
 			}
 
 			else if (argRedCase==4)	{ //quadrant
-				mpfr_div_2si(a,a,wIn+1, GMP_RNDN);
-				//REPORT(0,"a divided by 2^"<<wIn<<" a="<<printMPFR(a,10));
+				mpfr_div_2si(a,a,wA+1, GMP_RNDN);
+				//REPORT(0,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
 			}
 
 			else if (argRedCase==8)	{ // octant 
-				mpfr_div_2si(a,a,wIn+2, GMP_RNDN);
+				mpfr_div_2si(a,a,wA+2, GMP_RNDN);
 			}
 			else 
 				THROWERROR("Bad value for argRedCase in FixSinCosPoly::SinCosTable: " << argRedCase);
@@ -117,7 +115,7 @@ namespace flopoco{
 				}
 			}
 
-			// REPORT(0," function() returns. Value: "<<(sin+(cos<<wIn))<<" ( sin=" << sin<<" , cos="<<cos<<  " )");
+			// REPORT(0," function() returns. Value: "<<(sin+(cos<<wA))<<" ( sin=" << sin<<" , cos="<<cos<<  " )");
 			result.push_back( cos  + ( sin << (lsbOut+g + (argRedCase==1?1:0)) ) ); 
 		}
 		return result;
@@ -130,33 +128,23 @@ namespace flopoco{
 
 	////////////////////////////////////// FixSinCosPoly ///////////////////
 
-	FixSinCosPoly::FixSinCosPoly(OperatorPtr parentOp, Target * target, int wIn_, int wOut_):
-		FixSinCos(parentOp,target, wIn_, wOut_){
+	FixSinCosPoly::FixSinCosPoly(OperatorPtr parentOp, Target * target, int lsb_):
+		FixSinCos(parentOp,target, lsb_){ 
 		int g=-42; // silly value from the start, because so many different paths may assign it (or forget to do so) 
 		srcFileName="FixSinCosPoly";
 
-		// Ugly Fix code
-		if(wIn!=wOut){
-			THROWERROR("Feel free to fix me: only wIn=wOut supported at the moment");
-		}
-		else
-			w=wIn;
+		w=-lsb; //sorry, old code.
 		// definition of the name of the operator
 		ostringstream name;
-		name << "FixSinCosPoly_" << w;
+		name << "FixSinCosPoly_LSBm" << -lsb;
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
 
 
-				// declaring inputs
-		addInput("X", w+1);
-
-		// declaring outputs
-		addOutput("S", w+1);
-		addOutput("C", w+1);
 
 		// These are limits between small-precision cases for which we generate simpler architectures
+		// Rememember that w=-lsb hence the size of inputs and outputs is actually w+1. It is a bug but Won't fix
 
 		// plain tabulation fits LUTs
 		bool wSmallerThanBorder1 = ( w <= getTarget()->lutInputs() );    
@@ -212,30 +200,30 @@ namespace flopoco{
 		g=0; 
 		int wA=0;
 		if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
-			REPORT(DETAILED, "Using order-1 arch");
 			g=gOrder1Arch;
 			wA = wAOrder1Arch;
+			REPORT(INFO, "Using order-1 arch with wA="<<wA << " and g=" << g);
 		}
 		else if(wSmallerThanBorderSecondOrderTaylor) {
-			REPORT(DETAILED, "Using order-2 arch");
 			g = gOrder2Arch;
 			wA = wAOrder2Arch;
+			REPORT(INFO, "Using order-2 arch with wA="<<wA << " and g=" << g);
 		}
 		else{ // generic case
 			g=gGeneric;
 			wA=wAGeneric;
 			// In the generic case we neglect order-4 term, Z^4/24 < Z^4/16
 			// Let us check that our current wA allows that, otherwise increase it. 
-			while (w > 4*wA-4-g)
+			while (w > 4*wA-4-g) {
 				wA++;
+			}
+			REPORT(INFO, "Using order-3 arch with wA="<<wA << " and g=" << g);
 		}
 
-		if(wA)
-			REPORT(DETAILED, "Bits addressing the table for this size : wA=" << wA); 
 
 
 		if (usePlainTable)	{
-			REPORT(DETAILED, "Simpler architecture: Using plain table" );
+			REPORT(INFO, "Simpler architecture: Using plain table" );
 			//int sinCosSize = 2*(w_+1); // size of output (sine plus cosine in a same number, sine on high weight bits)
 			vhdl << tab << declare("sinCosTabIn", w+1) << " <= X;" << endl;// signal declaration
 			vector<mpz_class> tableContent = buildSinCosTable(w+1, w, 0, 1);
@@ -252,7 +240,7 @@ namespace flopoco{
 		}
 
 		else if (usePlainTableWithQuadrantReduction) 	{
-			REPORT(DETAILED, "Simpler architecture: Using plain table with quadrant reduction");
+			REPORT(INFO, "Simpler architecture: Using plain table with quadrant reduction");
 			/*********************************** RANGE REDUCTION **************************************/
 			// the argument is reduced into (0,1/2) because one sin/cos
 			// computation in this range can always compute the right sin/cos
@@ -302,6 +290,7 @@ namespace flopoco{
 
 
 		else { // From now on we will have a table-based argument reduction
+			REPORT(INFO, "Using a table-based argument reduction");
 			/*********************************** RANGE REDUCTION **************************************/ 
 			addComment("The argument is reduced into (0,1/4)");
 			vhdl << tab << declare ("X_sgn") << " <= X" << of (w) << ";  -- sign" << endl;
@@ -310,7 +299,7 @@ namespace flopoco{
 			vhdl << tab << declare ("Y",w-2) << " <= X " << range (w-3,0) << ";" << endl;
 
 			// now X -> X_sgn + Q*.5 + O*.25 + Y where Q,O \in {0,1} and Y \in {0,.25}
-
+			
 			int wYIn=w-2+g;
 		
 			addComment("Computing .25-Y :  we do a logic NOT, at a cost of 1 ulp");
