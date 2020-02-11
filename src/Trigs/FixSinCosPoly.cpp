@@ -378,36 +378,6 @@ namespace flopoco{
 				//   for g=2 and wA=4:          :  .QOAAAAYYYYgg
 				//                                 .0000ZZZZZZZZ
 				// Z^2/2 <  2^(-2wA-1):            .000000000SSS
-#if 0
-				int m=3; // Another number of guard bits because the multiplication will fit in DSP anyway
-				int wZ2o2 = w+g-(2*wA+1); // according to figure above
-				int wZ2o2Guarded = wZ2o2 + m; // TODO check that it always still fit DSPs
-				// For these sizes it always fits a DSP mult, so no need to use a flopoco component
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2", 2*wZ) << "<= Z*Z;" << endl;
-				int wZ2o2 = w+g-(2*wA+1); // according to figure above
-				int wZ2o2Guarded = wZ2o2 + m; // TODO check that it always still fit DSPs
-				REPORT(DEBUG, "Useful size of Z2o2 is wZ2o2=" << wZ2o2 << ", to which we add " << m << " guard bits");
-				vhdl << tab << declare("Z2o2_trunc", wZ2o2Guarded) << "<= Z2" << range(2*wZ-1, 2*wZ - wZ2o2Guarded) << ";" << endl;
-
-				vhdl << tab << declare("CosPiA_trunc", wZ2o2Guarded) << " <= CosPiA" << range(w+g-1, w+g-wZ2o2Guarded) << ";" << endl;
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2o2CosPiA", 2*wZ2o2Guarded)
-						 << " <=  CosPiA_trunc * Z2o2_trunc;" << endl;
-				vhdl << tab << declare("Z2o2CosPiA_aligned", w+g)<< " <= " << zg(2*wA+1);
-				if(2*wZ2o2Guarded-1 >= 2*wZ2o2Guarded- wZ2o2)
-					vhdl << " & Z2o2CosPiA" << range(2*wZ2o2Guarded-1, 2*wZ2o2Guarded- wZ2o2);
-				vhdl << ";" << endl;
-				vhdl << tab << declare(getTarget()->adderDelay(w+g), "CosPiACosZ", w+g) << "<= CosPiA - Z2o2CosPiA_aligned;" << endl;
-
-				vhdl << tab << declare("SinPiA_trunc", wZ2o2Guarded) << " <= SinPiA" << range(w+g-1, w+g-wZ2o2Guarded) << ";" << endl;
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2o2SinPiA", 2*wZ2o2Guarded)
-						 << " <=  SinPiA_trunc * Z2o2_trunc;" << endl;
-				vhdl << tab << declare("Z2o2SinPiA_aligned", w+g)<< " <= " << zg(2*wA+1);
-				if(2*wZ2o2Guarded-1 >= 2*wZ2o2Guarded- wZ2o2)
-					vhdl << " & Z2o2SinPiA" << range(2*wZ2o2Guarded-1, 2*wZ2o2Guarded- wZ2o2);
-				vhdl << ";" << endl;
-				vhdl << tab << declare(getTarget()->adderDelay(w+g), "SinPiACosZ", w+g)
-						 << "<= SinPiA - Z2o2SinPiA_aligned;" << endl;
-#else
 				int wZ2o2 = w+g-(2*wA+1); // according to figure above
 				vhdl << tab << declare("Z_trunc_for_square", wZ2o2) << "<= Z "<<range(wZ-1, wZ-wZ2o2) << ";" << endl;
 				//				cerr << "*********** " << 	"f=x*x msbOut=-1 signedIn=0 " + join("lsbIn=",-wZ2o2) + join(" lsbOut=",-wZ2o2);
@@ -434,9 +404,6 @@ namespace flopoco{
 				vhdl << ";" << endl;
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "SinPiACosZ", w+g)
 						 << "<= SinPiA - Z2o2SinPiA_aligned;" << endl;
-#endif
-
-
 
 				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(),  "CosPiAZ", w+g +  wZ)
 						 << " <= CosPiA*Z;  -- TODO check it fits DSP" <<endl;
@@ -501,7 +468,7 @@ namespace flopoco{
 					vhdl << tab << declare("Z_truncToZ3o6", wZ3o6) << " <= Z" << range(wZ-1, wZ-wZ3o6) << ";" << endl;
 					newInstance("FixFunctionByTable",
 											"Z3o6Table",
-											"f=\"x^3/6\" signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
+											"f=x^3/6 signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
 											"X=>Z_truncToZ3o6",
 											"Y=>Z3o6");
 					
