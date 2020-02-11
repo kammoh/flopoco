@@ -185,40 +185,17 @@ namespace flopoco{
 
 		// Now we may compute the borders on the simplified cases
 		// Y will be smaller than 1/4 => Z will be smaller than pi*2^(-wA-2), or Z<2^-wA 
-		// for sinZ we neglect something in the order of Z^2/2 : we want 2^(-2wA-1) < 2^(-w-g)    2wA+1>w+g
-		bool wSmallerThanBorderFirstOrderTaylor = (w + gOrder1Arch < 2*wAOrder1Arch + 1);
+		// for sinZ we neglect something in the order of Z^2/2 : we want 2^(-2wA-1) < 2^(lsb-g)    2wA+1>w+g
+		bool wSmallerThanBorderFirstOrderTaylor = (w-1 + gOrder1Arch <= 2*wAOrder1Arch + 1);
 
-		// now we neglect something in the order of Z^3/6 (smaller than Z^3/4): we want 2^(-3wA-2) < 2^(-w-g)
-		bool wSmallerThanBorderSecondOrderTaylor = (w + gOrder2Arch < 3*wAOrder2Arch + 2);
-
-
-
-		REPORT(DEBUG, "Boundaries on the various cases for w="<<w << ": " << wSmallerThanBorder1 << wSmallerThanBorder2 << wSmallerThanBorder3 << wSmallerThanBorder4 << wSmallerThanBorderFirstOrderTaylor<< wSmallerThanBorderSecondOrderTaylor);
+		// now we neglect something in the order of Z^3/6 (smaller than Z^3/4): we want 2^(-3wA-2) < 2^(lsb-g)
+		bool wSmallerThanBorderSecondOrderTaylor = (w-1 + gOrder2Arch <= 3*wAOrder2Arch + 2);
 
 
-		// We must set g here (early) in order to be able to factor out code that uses g
-		g=0; 
-		int wA=0;
-		if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
-			g=gOrder1Arch;
-			wA = wAOrder1Arch;
-			REPORT(INFO, "Using order-1 arch with wA="<<wA << " and g=" << g);
-		}
-		else if(wSmallerThanBorderSecondOrderTaylor) {
-			g = gOrder2Arch;
-			wA = wAOrder2Arch;
-			REPORT(INFO, "Using order-2 arch with wA="<<wA << " and g=" << g);
-		}
-		else{ // generic case
-			g=gGeneric;
-			wA=wAGeneric;
-			// In the generic case we neglect order-4 term, Z^4/24 < Z^4/16
-			// Let us check that our current wA allows that, otherwise increase it. 
-			while (w > 4*wA-4-g) {
-				wA++;
-			}
-			REPORT(INFO, "Using order-3 arch with wA="<<wA << " and g=" << g);
-		}
+
+		REPORT(0*DEBUG, "Boundaries on the various cases for w="<<w << ": " << wSmallerThanBorder1 << wSmallerThanBorder2 << wSmallerThanBorder3 << wSmallerThanBorder4 << wSmallerThanBorderFirstOrderTaylor<< wSmallerThanBorderSecondOrderTaylor);
+
+
 
 
 
@@ -291,6 +268,30 @@ namespace flopoco{
 
 		else { // From now on we will have a table-based argument reduction
 			REPORT(INFO, "Using a table-based argument reduction");
+		// We must set g here (early) in order to be able to factor out code that uses g
+		g=0; 
+		int wA=0;
+		if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
+			g=gOrder1Arch;
+			wA = wAOrder1Arch;
+			REPORT(INFO, "Using order-1 arch with wA="<<wA << " and g=" << g);
+		}
+		else if(wSmallerThanBorderSecondOrderTaylor) {
+			g = gOrder2Arch;
+			wA = wAOrder2Arch;
+			REPORT(INFO, "Using order-2 arch with wA="<<wA << " and g=" << g);
+		}
+		else{ // generic case
+			g=gGeneric;
+			wA=wAGeneric;
+			// In the generic case we neglect order-4 term, Z^4/24 < Z^4/16
+			// Let us check that our current wA allows that, otherwise increase it. 
+			while (w > 4*wA-4-g) {
+				wA++;
+			}
+			REPORT(INFO, "Using order-3 arch with wA="<<wA << " and g=" << g);
+		}
+			
 			/*********************************** RANGE REDUCTION **************************************/ 
 			addComment("The argument is reduced into (0,1/4)");
 			vhdl << tab << declare ("X_sgn") << " <= X" << of (w) << ";  -- sign" << endl;
