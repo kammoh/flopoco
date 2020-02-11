@@ -26,8 +26,12 @@
 #include "IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "BaseMultiplierCollection.hpp"
+
 #include "TilingStrategyOptimalILP.hpp"
 #include "TilingStrategyBasicTiling.hpp"
+#include "TilingStrategyGreedy.hpp"
+#include "TilingStrategyXGreedy.hpp"
+#include "TilingStrategyBeamSearch.hpp"
 
 using namespace std;
 
@@ -53,7 +57,7 @@ namespace flopoco {
 		return wX + wY;
 	}
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKarazuba):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, unsigned int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, int beamRange):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold)
 	{
         srcFileName="IntMultiplier";
@@ -114,7 +118,7 @@ namespace flopoco {
 //		baseMultiplierCollection.print();
 
 
-        MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKarazuba);
+        MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba);
 
 
 		string tilingMethod = getTarget()->getTilingMethod();
@@ -122,18 +126,69 @@ namespace flopoco {
 		REPORT(INFO, "Creating TilingStrategy using tiling method " << tilingMethod)
 
 		TilingStrategy* tilingStrategy;
-		if(tilingMethod.compare("heuristicBasicTiling") == 0)
-		{
-			tilingStrategy = new TilingStrategyBasicTiling(
-					wX,
-					wY,
-					wOut + guardBits,
-					signedIO,
-					&baseMultiplierCollection,
-					baseMultiplierCollection.getPreferedMultiplier(),
-					dspOccupationThreshold,
-					maxDSP
-			);
+		if(tilingMethod.compare("heuristicBasicTiling") == 0) {
+            tilingStrategy = new TilingStrategyBasicTiling(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP
+            );
+        }
+        else if(tilingMethod.compare("heuristicGreedyTiling") == 0) {
+            tilingStrategy = new TilingStrategyGreedy(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP,
+                    useirregular,
+                    use2xk,
+                    superTiles,
+                    useKaratsuba,
+                    multiplierTileCollection
+            );
+        }
+        else if(tilingMethod.compare("heuristicXGreedyTiling") == 0) {
+            tilingStrategy = new TilingStrategyXGreedy(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP,
+                    useirregular,
+                    use2xk,
+                    superTiles,
+                    useKaratsuba,
+                    multiplierTileCollection
+            );
+        }
+        else if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
+            tilingStrategy = new TilingStrategyBeamSearch(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP,
+                    useirregular,
+                    use2xk,
+                    superTiles,
+                    useKaratsuba,
+                    multiplierTileCollection,
+                    beamRange
+            );
 		} else if(tilingMethod.compare("optimal") == 0){
 			tilingStrategy = new TilingStrategyOptimalILP(
 					wX,
@@ -161,29 +216,32 @@ namespace flopoco {
 		REPORT(DETAILED, "Found solution has " << solLen << " tiles")
 		if (target_->generateFigures()) {
             ofstream texfile;
-			texfile.open("multiplier_tiling.tex");
-			if((texfile.rdstate() & ofstream::failbit) != 0) {
-				cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration." << endl;
-			} else {
-				tilingStrategy->printSolutionTeX(texfile, wOut, false);
-				texfile.close();
-			}
+            texfile.open("multiplier_tiling.tex");
+            if ((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration."
+                     << endl;
+            } else {
+                tilingStrategy->printSolutionTeX(texfile, wOut, false);
+                texfile.close();
+            }
 
             texfile.open("multiplier_tiling.svg");
-            if((texfile.rdstate() & ofstream::failbit) != 0) {
-                cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration." << endl;
+            if ((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration."
+                     << endl;
             } else {
                 tilingStrategy->printSolutionSVG(texfile, wOut, false);
                 texfile.close();
             }
 
-			texfile.open("multiplier_shape.tex");
-			if((texfile.rdstate() & ofstream::failbit) != 0) {
-				cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration." << endl;
-			} else {
-				tilingStrategy->printSolutionTeX(texfile, wOut, true);
-				texfile.close();
-			}
+            texfile.open("multiplier_shape.tex");
+            if ((texfile.rdstate() & ofstream::failbit) != 0) {
+                cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration."
+                     << endl;
+            } else {
+                tilingStrategy->printSolutionTeX(texfile, wOut, true);
+                texfile.close();
+            }
         }
 
 		schedule();
@@ -687,6 +745,7 @@ namespace flopoco {
 		int wX,wY, wOut, maxDSP;
         bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba;
         double dspOccupationThreshold=0.0;
+        int beamRange = 0;
 
 		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
 		UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
@@ -700,8 +759,9 @@ namespace flopoco {
         UserInterface::parseBoolean(args, "useKaratsuba", &useKaratsuba);
 		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 		UserInterface::parsePositiveInt(args, "maxDSP", &maxDSP);
+		UserInterface::parsePositiveInt(args, "beamRange", &beamRange);
 
-        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba);
+        return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, (unsigned)maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, beamRange);
 	}
 
 
@@ -719,9 +779,11 @@ namespace flopoco {
                         useirregular(bool)=false: if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions;\
                         useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
                         useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
+                        useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
                         useKaratsuba(bool)=false: if true, attempts to use the 16x24 sub-size Karazuba-pattern for tiling;\
                         superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
-                        dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
+                        dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
+						beamRange(int)=0: range for beam search", // This string will be parsed
 											 "", // no particular extra doc needed
 											IntMultiplier::parseArguments,
 											IntMultiplier::unitTest

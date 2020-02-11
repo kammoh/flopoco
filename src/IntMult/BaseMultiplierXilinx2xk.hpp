@@ -26,6 +26,7 @@ namespace flopoco {
 		{}
 
         int getDSPCost() const override { return 0; }
+        bool isVariable() const override { return true; }
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
 
 		/** Factory method */

@@ -123,7 +123,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		return area;
 	}
 
-	void TilingStrategyBasicTiling::tileBox(
+	float TilingStrategyBasicTiling::tileBox(
 			int curX,
 			int curY,
 			int curDeltaX,
@@ -156,6 +156,8 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		int bestArea = -1;
 		int bestXAnchor = curX;
 		int bestYAnchor = curY;
+
+		float boxCost = 0.0f;
 
 		for (int i = nbInputMult ; i > 1 ; --i) {
 			int xMult, yMult;
@@ -239,7 +241,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					offset
 				);
 			if (subboxArea != 0) {
-				tileBox(
+				boxCost += tileBox(
 						xStartUpDownbox, 
 						yStartUpDownbox, 
 						deltaXUpDownbox, 
@@ -269,7 +271,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					offset
 				);
 			if (subboxArea != 0) {
-				tileBox(
+				boxCost += tileBox(
 						xStartUpDownbox, 
 						yStartUpDownbox, 
 						deltaXUpDownbox, 
@@ -282,10 +284,13 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		auto param = bmc.parametrize(bestXMult, bestYMult, signedX, signedY);
 		auto coord = make_pair(bestXAnchor, bestYAnchor);
 		solution.push_back(make_pair(param, coord));
+        boxCost += (float)bmc.getLUTCost(bestXAnchor, bestYAnchor, wX, wY);;
+        return boxCost;
 	}
 
 	void TilingStrategyBasicTiling::solve()
 	{
+        float totalCost = 0.0f;
 		auto& bm = baseMultiplierCollection->getBaseMultiplier(prefered_multiplier_);	
 		int wXmultMax = bm.getMaxWordSizeLargeInputUnsigned();
 		//TODO Signed int deltaSignedUnsigned = bm.getDeltaWidthSigned();
@@ -339,7 +344,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 					float occupationRatio = (float (area)) /  multArea;
 					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
-					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					bool hardLimitUnreached = (numUsedMults_ < max_pref_mult_);
 					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
@@ -350,10 +355,11 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 							);
 						auto coords = make_pair(rightX, topY);
 						solution.push_back(make_pair(param, coords));
+						totalCost += 0.65 * param.getOutWordSize();
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
-						tileBox(rightX, topY, curDeltaX, curDeltaY, offset);
+						totalCost += tileBox(rightX, topY, curDeltaX, curDeltaY, offset);
 					}
 					curX -= wXmult;
 					if (isXSigned)
@@ -399,7 +405,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 
 					float occupationRatio = float(area) /  multArea;
 					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
-					bool hardLimitUnreached = (max_pref_mult_ == 0) or (numUsedMults_ < max_pref_mult_);
+					bool hardLimitUnreached = (numUsedMults_ < max_pref_mult_);
 					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
@@ -410,10 +416,11 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 							);
 						auto coord = make_pair(rightX, topY);
 						solution.push_back(make_pair(param, coord));
+						totalCost += 0.65 * param.getOutWordSize();
 						numUsedMults_ += 1;
 					} else {
 						//Tile the subBox with smaller multiplier;
-						tileBox(rightX, topY, curDeltaX, curDeltaY, 0);
+						totalCost += tileBox(rightX, topY, curDeltaX, curDeltaY, 0);
 					}
 					curX += wXmult;
 					if ((untilEndRow <= deltaWidthSigned) and signedIO) {
@@ -426,5 +433,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 				}
 			}
 		}
+
+        cout << "Total cost: " << totalCost << endl;
 	}
 };

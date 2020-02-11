@@ -56,6 +56,7 @@ namespace flopoco {
             this->wR = get_wR(shape);
 		}
 
+        bool isIrregular() const override { return true;}
         int getDSPCost() const override { return 2; }
         unsigned getArea() {return 2*24*17;}
         static int get_wX(BaseMultiplierDSPSuperTilesXilinx::TILE_SHAPE shape) {return shape_size[(int)shape-1][0];}
