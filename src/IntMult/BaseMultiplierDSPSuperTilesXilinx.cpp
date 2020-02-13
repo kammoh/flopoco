@@ -335,7 +335,7 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
 //        nextCycle(); //!!
     }
 
-    declare(getTarget()->DSPAdderDelay(),"T",BaseMultiplierDSPSuperTilesXilinx::get_wR(shape));
+    declare(getTarget()->DSPAdderDelay(), "T",BaseMultiplierDSPSuperTilesXilinx::get_wR(shape));
     if((shape >= BaseMultiplierDSPSuperTilesXilinx::SHAPE_A) && (shape <= BaseMultiplierDSPSuperTilesXilinx::SHAPE_D))
     {
         //tilings (a) to (d) doesn't have a shift
