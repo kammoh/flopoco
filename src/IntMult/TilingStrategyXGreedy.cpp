@@ -1,6 +1,7 @@
 #include "TilingStrategyXGreedy.hpp"
 #include "LineCursor.hpp"
 #include "NearestPointCursor.hpp"
+#include <cmath>
 
 namespace flopoco {
     TilingStrategyXGreedy::TilingStrategyXGreedy(

@@ -1,4 +1,5 @@
 #include "NearestPointCursor.hpp"
+#include <cmath>
 
 namespace flopoco {
     NearestPointCursor::NearestPointCursor() : BaseFieldState(), searchPos_{0} {
@@ -14,6 +15,7 @@ namespace flopoco {
         for(unsigned int i = 0; i < wY; i++) {
             for(unsigned int j = 0; j < wX; j++) {
                 float distance = std::sqrt((float)((j * j) + (i * i)));
+
                 NextCoord nextCoord;
                 nextCoord.distance = distance;
                 nextCoord.coord = Cursor(j, i);
