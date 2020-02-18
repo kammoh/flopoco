@@ -59,6 +59,8 @@ ConstMult/IntConstMultShiftAdd
 ConstMult/IntConstMultShiftAddTypes
 ConstMult/IntConstMultShiftAddOpt
 ConstMult/IntConstMultShiftAddRPAG
+ConstMult/IntConstMultShiftAddOptTernary
+ConstMult/tscm_solutions #move this to separate library!
 ConstMult/adder_cost
 ConstMult/error_comp_graph
 ConstMult/WordLengthCalculator
