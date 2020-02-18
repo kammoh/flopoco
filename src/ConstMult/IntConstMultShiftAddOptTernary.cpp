@@ -23,16 +23,12 @@
 #include "IntConstMultShiftAddOptTernary.hpp"
 #include "IntConstMultShiftAdd.hpp"
 
-#include "../ConstMultPAG/tscm_solutions.hpp"
+#include "tscm_solutions.hpp"
 #include "pagsuite/pagexponents.hpp"
-//#include "../ConstMultPAG/pagexponents.hpp"
 
-#include "rpag/compute_successor_set.h"
-#include "rpag/log2_64.h"
-#include "rpag/fundamental.h"
-//#include "../ConstMultPAG/paglib/compute_successor_set.hpp"
-//#include "../ConstMultPAG/paglib/log2_64.hpp"
-//#include "../ConstMultPAG/paglib/fundamental.hpp"
+#include "pagsuite/compute_successor_set.h"
+#include "pagsuite/log2_64.h"
+#include "pagsuite/fundamental.h"
 
 #include <algorithm>
 
@@ -42,7 +38,6 @@ using namespace PAGSuite;
 namespace flopoco{
 
     IntConstMultShiftAddOptTernary::IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut) : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
-    //: ConstMultPAG(target, wIn, "", false, syncInOut, 1000, false)
     {
 		int maxCoefficient = 4194303; //=2^22-1
 
@@ -55,8 +50,6 @@ namespace flopoco{
 
             int nof1 = nofs[(coeffOdd-1)>>1][0];
             int nof2 = nofs[(coeffOdd-1)>>1][1];
-
-//            cout << "coeff=" << coeff << ", nof1=" << nof1 << ", nof2=" << nof2 << endl;
 
             set<int> coefficient_set;
             coefficient_set.insert(coeff);
