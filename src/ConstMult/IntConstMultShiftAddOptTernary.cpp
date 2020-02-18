@@ -41,7 +41,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultOptTernary::IntConstMultOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut) : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddOptTernary::IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut) : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     //: ConstMultPAG(target, wIn, "", false, syncInOut, 1000, false)
     {
 		int maxCoefficient = 4194303; //=2^22-1
@@ -84,7 +84,7 @@ namespace flopoco{
             ProcessIntConstMultShiftAdd(target,adderGraphStringStream.str());
 
             ostringstream name;
-            name << "IntConstMultOptTernary_" << coeffOdd << "_" << wIn;
+            name << "IntConstMultShiftAddOptTernary_" << coeffOdd << "_" << wIn;
             setName(name.str());
 
         }
@@ -96,25 +96,25 @@ namespace flopoco{
 
 	}
 
-    OperatorPtr flopoco::IntConstMultOptTernary::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultShiftAddOptTernary::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
         int wIn, constant;
 
         UserInterface::parseInt( args, "wIn", &wIn );
         UserInterface::parseInt( args, "constant", &constant );
 
-        return new IntConstMultOptTernary(parentOp, target, wIn, constant, false);
+        return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant, false);
     }
 
-    void flopoco::IntConstMultOptTernary::registerFactory() {
+    void flopoco::IntConstMultShiftAddOptTernary::registerFactory() {
 
-        UserInterface::add( "IntConstMultOptTernary", // name
+        UserInterface::add( "IntConstMultShiftAddOptTernary", // name
                             "Integer constant multiplication using shift and ternary additions in an optimal way (i.e., with minimum number of ternary adders). Works for coefficients up to 4194303 (22 bit)", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
                             constant(int): constant;",
                             "Nope.",
-                            IntConstMultOptTernary::parseArguments
+                            IntConstMultShiftAddOptTernary::parseArguments
                           ) ;
     }
 

@@ -23,11 +23,11 @@
 
 namespace flopoco{
 
-    class IntConstMultOptTernary : public IntConstMultShiftAdd
+    class IntConstMultShiftAddOptTernary : public IntConstMultShiftAdd
 	{
 	public:
 		/** The standard constructor, inputs the number to implement */ 
-        IntConstMultOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut=true);
+        IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut=true);
 
 //		void emulate(TestCase* tc);
 //		void buildStandardTestCases(TestCaseList* tcl);
