@@ -446,6 +446,7 @@ namespace flopoco{
 				vhdl << tab << "-- truncate the inputs of the multiplier to the precision of the output" << endl;
 				vhdl << tab << declare("Z_truncToZ2", wZ2o2) << " <= Z" << range(wZ-1, wZ-wZ2o2) << ";" << endl;
 
+				// TODO a squarer ! For 40 bits, z2o2=19 
 				newInstance("IntMultiplier", "sqr_z",
 										"wX=" + to_string(wZ2o2) + " wY=" + to_string(wZ2o2) + " wOut=" + to_string(wZ2o2) + " signedIO=false",
 										"X=>Z_truncToZ2,Y=>Z_truncToZ2",
