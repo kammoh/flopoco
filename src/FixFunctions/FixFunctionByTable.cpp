@@ -42,7 +42,7 @@ namespace flopoco{
 			mpz_class rn, devnull;
 			f->eval(mpz_class(i), rn, devnull, true);
 			v.push_back(rn);
-			//REPORT(FULL, "f("<< i << ") = " << function(i) );
+			//cerr <<   f-> getDescription()<< " : f("<< i << ") = " << rn <<endl;
 		};
 		Table::init(v, join("f", getNewUId()), wIn, wOut);
 	}

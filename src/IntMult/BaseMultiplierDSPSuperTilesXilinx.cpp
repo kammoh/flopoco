@@ -255,8 +255,8 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
 
     if((isSignedX == true) || (isSignedY == true)) throw string("unsigned inputs currently not supported by BaseMultiplierDSPSuperTilesXilinxOp, sorry");
 
-    declare("D1", 41); //temporary output of the first DSP
-    declare("D2", 41); //temporary output of the second DSP
+    declare(getTarget()->DSPMultiplierDelay(),"D1", 41); //temporary output of the first DSP
+    declare(getTarget()->DSPMultiplierDelay(),"D2", 41); //temporary output of the second DSP
 
     switch(shape)
     {
@@ -335,7 +335,7 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
 //        nextCycle(); //!!
     }
 
-    declare("T",BaseMultiplierDSPSuperTilesXilinx::get_wR(shape));
+    declare(getTarget()->DSPAdderDelay(), "T",BaseMultiplierDSPSuperTilesXilinx::get_wR(shape));
     if((shape >= BaseMultiplierDSPSuperTilesXilinx::SHAPE_A) && (shape <= BaseMultiplierDSPSuperTilesXilinx::SHAPE_D))
     {
         //tilings (a) to (d) doesn't have a shift

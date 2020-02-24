@@ -41,14 +41,13 @@ namespace flopoco{
 		if(lsbIn!=0) // we have an IO specification
 			completeDescription << " for lsbIn=" << lsbIn << " (wIn=" << wIn << "), msbout=" << msbOut << ", lsbOut=" << lsbOut << " (wOut=" << wOut << ")";
 		description = completeDescription.str();
-		// cout << description;
 
 		// Now do the parsing in Sollya
-		fS= sollya_lib_parse_string(sollyaString_.c_str());
-
+		fS = sollya_lib_parse_string(sollyaString.c_str());
 		/* If  parse error throw an exception */
-		if (sollya_lib_obj_is_error(fS))
-			throw("FixFunction: Unable to parse input function.");
+		if (sollya_lib_obj_is_error(fS) || !sollya_lib_obj_is_function(fS))
+			throw(string("FixFunction: Unable to parse input function: ")+sollyaString);
+
 	}
 
 
@@ -119,7 +118,7 @@ namespace flopoco{
 		/* Compute the function */
 		eval(mpR, mpX);
 		//		REPORT(FULL,"function() input is:"<<sPrintBinary(mpX));
-		//		REPORT(FULL,"function() output before rounding is:"<<sPrintBinary(mpR));
+		//cerr << 100*(wIn+wOut) <<" function("<<mpfr_get_d(mpX, GMP_RNDN)<<") output before rounding is:"<<mpfr_get_d(mpR, GMP_RNDN) << " " ;
 		/* Compute the signal value */
 		mpfr_mul_2si(mpR, mpR, -lsbOut, GMP_RNDN);
 

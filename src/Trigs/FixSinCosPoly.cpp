@@ -32,8 +32,6 @@ namespace flopoco{
 
 
 #define USEBITHEAP 1
-#define LARGE_PREC 1000 // 1000 bits should be enough for everybody
-#define LOW_PREC 0
 
 
 
@@ -42,41 +40,41 @@ namespace flopoco{
 	////////////////////////////////////// SinCosTable ///////////////////
 	// argRedCase=1 for full table, 4 for quadrant, 8 for octant
 	// 
-	vector<mpz_class> FixSinCosPoly::buildSinCosTable(int wIn, int lsbOut, int g, int argRedCase){
+	vector<mpz_class> FixSinCosPoly::buildSinCosTable(int wA, int lsbOut, int g, int argRedCase){
 		vector<mpz_class> result;
-		for (int32_t x=0; x<(1<<wIn); x++) {
+		for (int32_t x=0; x<(1<<wA); x++) {
 			mpz_class sin,cos;
 			mpfr_t a, c, s;
 			
-			mpfr_init2(c, LARGE_PREC); // cosine
-			mpfr_init2(s, LARGE_PREC); // sine
+			mpfr_init2(c, -10*lsb); // cosine
+			mpfr_init2(s, -10*lsb); // sine
 
 			// 2's complement convertion of x into xs
 			int xs=x;
-			if ( (xs>>(wIn-1)) && (argRedCase==1) )
-				xs-=(1<<wIn);
+			if ( (xs>>(wA-1)) && (argRedCase==1) )
+				xs-=(1<<wA);
 
 			// a will be used for the value in xs
-			mpfr_init2(a,10*wIn-1); 
+			mpfr_init2(a,10*wA-1); 
 			mpfr_set_si(a, xs, GMP_RNDN);
 
 			//REPORT(0,"Evaluating function on point x="<<x<<" positive value xs="<<xs<<" converted value a="<<printMPFR(a, 10));
 
 			//divide by 2^w then we get a true fixpoint number between -1 and 1.
 			if (argRedCase==1){
-				if (xs>>(wIn-1))
-					xs-=(1<<wIn);
-				mpfr_div_2si(a,a,wIn-1, GMP_RNDN);
-				//REPORT(0,"a divided by 2^"<<wIn<<" a="<<printMPFR(a,10));
+				if (xs>>(wA-1))
+					xs-=(1<<wA);
+				mpfr_div_2si(a,a,wA-1, GMP_RNDN);
+				//REPORT(0,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
 			}
 
 			else if (argRedCase==4)	{ //quadrant
-				mpfr_div_2si(a,a,wIn+1, GMP_RNDN);
-				//REPORT(0,"a divided by 2^"<<wIn<<" a="<<printMPFR(a,10));
+				mpfr_div_2si(a,a,wA+1, GMP_RNDN);
+				//REPORT(0,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
 			}
 
 			else if (argRedCase==8)	{ // octant 
-				mpfr_div_2si(a,a,wIn+2, GMP_RNDN);
+				mpfr_div_2si(a,a,wA+2, GMP_RNDN);
 			}
 			else 
 				THROWERROR("Bad value for argRedCase in FixSinCosPoly::SinCosTable: " << argRedCase);
@@ -117,7 +115,7 @@ namespace flopoco{
 				}
 			}
 
-			// REPORT(0," function() returns. Value: "<<(sin+(cos<<wIn))<<" ( sin=" << sin<<" , cos="<<cos<<  " )");
+			// REPORT(0," function() returns. Value: "<<(sin+(cos<<wA))<<" ( sin=" << sin<<" , cos="<<cos<<  " )");
 			result.push_back( cos  + ( sin << (lsbOut+g + (argRedCase==1?1:0)) ) ); 
 		}
 		return result;
@@ -135,17 +133,18 @@ namespace flopoco{
 		int g=-42; // silly value from the start, because so many different paths may assign it (or forget to do so) 
 		srcFileName="FixSinCosPoly";
 
-			w=-lsb;
+		w=-lsb; //sorry, old code.
 		// definition of the name of the operator
 		ostringstream name;
 		name << "FixSinCosPoly_LSBm" << -lsb;
 		setNameWithFreqAndUID(name.str());
 
-		setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013)");
+		setCopyrightString("Florent de Dinechin, Antoine Martinet, Guillaume Sergent, (2013-2019)");
 
 
 
 		// These are limits between small-precision cases for which we generate simpler architectures
+		// Rememember that w=-lsb hence the size of inputs and outputs is actually w+1. It is a bug but Won't fix
 
 		// plain tabulation fits LUTs
 		bool wSmallerThanBorder1 = ( w <= getTarget()->lutInputs() );    
@@ -164,7 +163,7 @@ namespace flopoco{
 
 
 		// order-1 architecture: sinZ \approx Z, cosZ \approx 1
-		int gOrder1Arch = w<16? 3 : 4; // exhaustive tests show that g=3 is enough for small sizes...
+		int gOrder1Arch = w<14? 3 : 4; // exhaustive tests show that g=3 is enough for small sizes...
 		// order-2 architecture: sinZ \approx Z, cosZ \approx 1-Z^2/2
 		int gOrder2Arch = w<17? 3 : 4;  // exhaustive tests show that g=3 is enough for small sizes...
 		// generic case:
@@ -186,45 +185,22 @@ namespace flopoco{
 
 		// Now we may compute the borders on the simplified cases
 		// Y will be smaller than 1/4 => Z will be smaller than pi*2^(-wA-2), or Z<2^-wA 
-		// for sinZ we neglect something in the order of Z^2/2 : we want 2^(-2wA-1) < 2^(-w-g)    2wA+1>w+g
-		bool wSmallerThanBorderFirstOrderTaylor = (w + gOrder1Arch < 2*wAOrder1Arch + 1);
+		// for sinZ we neglect something in the order of Z^2/2 : we want 2^(-2wA-1) < 2^(lsb-g)    2wA+1>w+g
+		bool wSmallerThanBorderFirstOrderTaylor = (w-1 + gOrder1Arch <= 2*wAOrder1Arch + 1);
 
-		// now we neglect something in the order of Z^3/6 (smaller than Z^3/4): we want 2^(-3wA-2) < 2^(-w-g)
-		bool wSmallerThanBorderSecondOrderTaylor = (w + gOrder2Arch < 3*wAOrder2Arch + 2);
-
-
-
-		REPORT(DEBUG, "Boundaries on the various cases for w="<<w << ": " << wSmallerThanBorder1 << wSmallerThanBorder2 << wSmallerThanBorder3 << wSmallerThanBorder4 << wSmallerThanBorderFirstOrderTaylor<< wSmallerThanBorderSecondOrderTaylor);
+		// now we neglect something in the order of Z^3/6 (smaller than Z^3/4): we want 2^(-3wA-2) < 2^(lsb-g)
+		bool wSmallerThanBorderSecondOrderTaylor = (w-1 + gOrder2Arch <= 3*wAOrder2Arch + 2);
 
 
-		// We must set g here (early) in order to be able to factor out code that uses g
-		g=0; 
-		int wA=0;
-		if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
-			REPORT(DETAILED, "Using order-1 arch");
-			g=gOrder1Arch;
-			wA = wAOrder1Arch;
-		}
-		else if(wSmallerThanBorderSecondOrderTaylor) {
-			REPORT(DETAILED, "Using order-2 arch");
-			g = gOrder2Arch;
-			wA = wAOrder2Arch;
-		}
-		else{ // generic case
-			g=gGeneric;
-			wA=wAGeneric;
-			// In the generic case we neglect order-4 term, Z^4/24 < Z^4/16
-			// Let us check that our current wA allows that, otherwise increase it. 
-			while (w > 4*wA-4-g)
-				wA++;
-		}
 
-		if(wA)
-			REPORT(DETAILED, "Bits addressing the table for this size : wA=" << wA); 
+		REPORT(0*DEBUG, "Boundaries on the various cases for w="<<w << ": " << wSmallerThanBorder1 << wSmallerThanBorder2 << wSmallerThanBorder3 << wSmallerThanBorder4 << wSmallerThanBorderFirstOrderTaylor<< wSmallerThanBorderSecondOrderTaylor);
+
+
+
 
 
 		if (usePlainTable)	{
-			REPORT(DETAILED, "Simpler architecture: Using plain table" );
+			REPORT(INFO, "Simpler architecture: Using plain table" );
 			//int sinCosSize = 2*(w_+1); // size of output (sine plus cosine in a same number, sine on high weight bits)
 			vhdl << tab << declare("sinCosTabIn", w+1) << " <= X;" << endl;// signal declaration
 			vector<mpz_class> tableContent = buildSinCosTable(w+1, w, 0, 1);
@@ -241,7 +217,7 @@ namespace flopoco{
 		}
 
 		else if (usePlainTableWithQuadrantReduction) 	{
-			REPORT(DETAILED, "Simpler architecture: Using plain table with quadrant reduction");
+			REPORT(INFO, "Simpler architecture: Using plain table with quadrant reduction");
 			/*********************************** RANGE REDUCTION **************************************/
 			// the argument is reduced into (0,1/2) because one sin/cos
 			// computation in this range can always compute the right sin/cos
@@ -291,6 +267,31 @@ namespace flopoco{
 
 
 		else { // From now on we will have a table-based argument reduction
+			REPORT(INFO, "Using a table-based argument reduction");
+		// We must set g here (early) in order to be able to factor out code that uses g
+		g=0; 
+		int wA=0;
+		if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
+			g=gOrder1Arch;
+			wA = wAOrder1Arch;
+			REPORT(INFO, "Using order-1 arch with wA="<<wA << " and g=" << g);
+		}
+		else if(wSmallerThanBorderSecondOrderTaylor) {
+			g = gOrder2Arch;
+			wA = wAOrder2Arch;
+			REPORT(INFO, "Using order-2 arch with wA="<<wA << " and g=" << g);
+		}
+		else{ // generic case
+			g=gGeneric;
+			wA=wAGeneric;
+			// In the generic case we neglect order-4 term, Z^4/24 < Z^4/16
+			// Let us check that our current wA allows that, otherwise increase it. 
+			while (w > 4*wA-4-g) {
+				wA++;
+			}
+			REPORT(INFO, "Using order-3 arch with wA="<<wA << " and g=" << g);
+		}
+			
 			/*********************************** RANGE REDUCTION **************************************/ 
 			addComment("The argument is reduced into (0,1/4)");
 			vhdl << tab << declare ("X_sgn") << " <= X" << of (w) << ";  -- sign" << endl;
@@ -299,9 +300,6 @@ namespace flopoco{
 			vhdl << tab << declare ("Y",w-2) << " <= X " << range (w-3,0) << ";" << endl;
 
 			// now X -> X_sgn + Q*.5 + O*.25 + Y where Q,O \in {0,1} and Y \in {0,.25}
-
-			//FIXME TODO REMOVE once debug is done
-			g=3; wA--;
 			
 			int wYIn=w-2+g;
 		
@@ -340,14 +338,13 @@ namespace flopoco{
 
 
 			if (wSmallerThanBorderFirstOrderTaylor) {
-				REPORT(DETAILED,"Simpler architecture: Using only first order Taylor");
-
-				int m=3; // another number of guard bits, this time on the truncation of CosPiA and SinPiA
+				// TODO bitheapize
+				REPORT(INFO,"Simpler architecture: Using only first order Taylor");
 
 				//---------------------------- Sine computation ------------------------
 				vhdl << tab <<  declare("SinPiACosZ",w+g) << " <= SinPiA; -- For these sizes  CosZ approx 1"<<endl; // msb is -1; 
-				vhdl << tab << declare("CosPiAtrunc", wZ+m ) << " <= CosPiA" << range( w+g-1, w+g-wZ-m ) <<";" <<endl; // 
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "CosPiASinZ", 2*wZ+m )
+				vhdl << tab << declare("CosPiAtrunc", wZ ) << " <= CosPiA" << range( w+g-1, w+g-wZ ) <<";" <<endl; // 
+				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "CosPiASinZ", 2*wZ)
 						 << " <= CosPiAtrunc*Z;  -- For these sizes  SinZ approx Z" <<endl; //
 				// msb of CosPiASinZ is that of Z, plus 2 (due to multiplication by Pi)
 				//   for g=2 and wA=4:          :  .QOAAAAYYYYgg
@@ -355,14 +352,14 @@ namespace flopoco{
 				// to align with sinACosZ:         .XXXXXXXXXXgg we need to add wA+2-2 zeroes. 
 				// and truncate cosAsinZ to the size of Z, too
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "PreSinX", w+g)
-						 << " <= SinPiACosZ + ( " << zg(wA) << " & (CosPiASinZ" << range( 2*wZ+m-1, 2*wZ+m - (w+g - wA) ) << ") );"<<endl;
+						 << " <= SinPiACosZ + ( " << zg(wA) << " & (CosPiASinZ" << range( 2*wZ-1, 2*wZ - (w+g - wA) ) << ") );"<<endl;
 
 				//---------------------------- Cosine computation -------------------------------
 				vhdl << tab << declare("CosPiACosZ", w+g ) << " <= CosPiA; -- For these sizes  CosZ approx 1" << endl;
-				vhdl << tab << declare("SinPiAtrunc", wZ+m ) << " <= SinPiA" << range( w+g-1, w+g-wZ-m ) <<";" <<endl; // 
-				vhdl << tab << declare("SinPiASinZ", 2*wZ+m ) << " <= SinPiAtrunc*Z;  -- For these sizes  SinZ approx Z" <<endl; //
+				vhdl << tab << declare("SinPiAtrunc", wZ ) << " <= SinPiA" << range( w+g-1, w+g-wZ ) <<";" <<endl; // 
+				vhdl << tab << declare("SinPiASinZ", 2*wZ ) << " <= SinPiAtrunc*Z;  -- For these sizes  SinZ approx Z" <<endl; //
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "PreCosX", w+g)
-						 << " <= CosPiACosZ - ( " << zg(wA) << " & (SinPiASinZ" << range( 2*wZ+m-1, 2*wZ+m - (w+g - wA) )<< ") );" << endl;
+						 << " <= CosPiACosZ - ( " << zg(wA) << " & (SinPiASinZ" << range( 2*wZ-1, 2*wZ - (w+g - wA) )<< ") );" << endl;
 
 				// Reconstruction expects a positive C_out and S_out, without their sign bits
 				vhdl << tab << declare ("C_out", w) << " <= PreCosX" << range (w+g-1, g) << ';' << endl;
@@ -374,41 +371,39 @@ namespace flopoco{
 			else if (wSmallerThanBorderSecondOrderTaylor) {
 
 				REPORT(DETAILED,"Using first-order Taylor for sine and second-order for cosine");
-
+				// TODO bitheapize
 				//--------------------------- SQUARER --------------------------------
-				// For these sizes it always fits a DSP mult, so no need to use a flopoco component
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2", 2*wZ) << "<= Z*Z;" << endl;
 		
 				// Z < 2^-wA  :
 				//   for g=2 and wA=4:          :  .QOAAAAYYYYgg
 				//                                 .0000ZZZZZZZZ
 				// Z^2/2 <  2^(-2wA-1):            .000000000SSS
-				int m=3; // Another number of guard bits because the multiplication will fit in DSP anyway
 				int wZ2o2 = w+g-(2*wA+1); // according to figure above
-				int wZ2o2Guarded = wZ2o2 + m; // TODO check that it always still fit DSPs
-				REPORT(DEBUG, "Useful size of Z2o2 is wZ2o2=" << wZ2o2 << ", to which we add " << m << " guard bits");
-				vhdl << tab << declare("Z2o2_trunc", wZ2o2Guarded) << "<= Z2" << range(2*wZ-1, 2*wZ - wZ2o2Guarded) << ";" << endl;
-
-				vhdl << tab << declare("CosPiA_trunc", wZ2o2Guarded) << " <= CosPiA" << range(w+g-1, w+g-wZ2o2Guarded) << ";" << endl;
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2o2CosPiA", 2*wZ2o2Guarded)
-						 << " <=  CosPiA_trunc * Z2o2_trunc;" << endl;
+				vhdl << tab << declare("Z_trunc_for_square", wZ2o2) << "<= Z "<<range(wZ-1, wZ-wZ2o2) << ";" << endl;
+				//				cerr << "*********** " << 	"f=x*x msbOut=-1 signedIn=0 " + join("lsbIn=",-wZ2o2) + join(" lsbOut=",-wZ2o2);
+				newInstance("FixFunctionByTable", "ZSquarer",
+										"f=x*x msbOut=-1 signedIn=0 " + join("lsbIn=",-wZ2o2) + join(" lsbOut=",-wZ2o2),
+									"X=>Z_trunc_for_square",
+									"Y=>Z2o2");
+							
+				vhdl << tab << declare("CosPiA_trunc_to_z2o2", wZ2o2) << " <= CosPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
+				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2o2CosPiA", 2*wZ2o2)
+						 << " <=  CosPiA_trunc_to_z2o2 * Z2o2;" << endl;
 				vhdl << tab << declare("Z2o2CosPiA_aligned", w+g)<< " <= " << zg(2*wA+1);
-				if(2*wZ2o2Guarded-1 >= 2*wZ2o2Guarded- wZ2o2)
-					vhdl << " & Z2o2CosPiA" << range(2*wZ2o2Guarded-1, 2*wZ2o2Guarded- wZ2o2);
+				if(wZ2o2 >= 1)
+					vhdl << " & Z2o2CosPiA" << range(2*wZ2o2-1, 2*wZ2o2- wZ2o2);
 				vhdl << ";" << endl;
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "CosPiACosZ", w+g) << "<= CosPiA - Z2o2CosPiA_aligned;" << endl;
 
-				vhdl << tab << declare("SinPiA_trunc", wZ2o2Guarded) << " <= SinPiA" << range(w+g-1, w+g-wZ2o2Guarded) << ";" << endl;
-				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2o2SinPiA", 2*wZ2o2Guarded)
-						 << " <=  SinPiA_trunc * Z2o2_trunc;" << endl;
+				vhdl << tab << declare("SinPiA_trunc_to_z2o2", wZ2o2) << " <= SinPiA" << range(w+g-1, w+g-wZ2o2) << ";" << endl;
+				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(), "Z2o2SinPiA", 2*wZ2o2)
+						 << " <=  SinPiA_trunc_to_z2o2 * Z2o2;" << endl;
 				vhdl << tab << declare("Z2o2SinPiA_aligned", w+g)<< " <= " << zg(2*wA+1);
-				if(2*wZ2o2Guarded-1 >= 2*wZ2o2Guarded- wZ2o2)
-					vhdl << " & Z2o2SinPiA" << range(2*wZ2o2Guarded-1, 2*wZ2o2Guarded- wZ2o2);
+				if(2*wZ2o2-1 >= 2*wZ2o2- wZ2o2)
+					vhdl << " & Z2o2SinPiA" << range(2*wZ2o2-1, 2*wZ2o2- wZ2o2);
 				vhdl << ";" << endl;
 				vhdl << tab << declare(getTarget()->adderDelay(w+g), "SinPiACosZ", w+g)
 						 << "<= SinPiA - Z2o2SinPiA_aligned;" << endl;
-
-
 
 				vhdl << tab << declare(getTarget()->DSPMultiplierDelay(),  "CosPiAZ", w+g +  wZ)
 						 << " <= CosPiA*Z;  -- TODO check it fits DSP" <<endl;
@@ -429,9 +424,6 @@ namespace flopoco{
 		
 			else	{
 				REPORT(DETAILED, "Using generic architecture with 3rd-order Taylor");
-#if 0
-				THROWERROR("not ported yet to the new pipeline framework: look up this message in Trigs/FixSinCosPoly.cpp and FIXME");
-#else
 				/*********************************** THE SQUARER **************************************/
 			
 
@@ -454,6 +446,7 @@ namespace flopoco{
 				vhdl << tab << "-- truncate the inputs of the multiplier to the precision of the output" << endl;
 				vhdl << tab << declare("Z_truncToZ2", wZ2o2) << " <= Z" << range(wZ-1, wZ-wZ2o2) << ";" << endl;
 
+				// TODO a squarer ! For 40 bits, z2o2=19 
 				newInstance("IntMultiplier", "sqr_z",
 										"wX=" + to_string(wZ2o2) + " wY=" + to_string(wZ2o2) + " wOut=" + to_string(wZ2o2) + " signedIO=false",
 										"X=>Z_truncToZ2,Y=>Z_truncToZ2",
@@ -473,7 +466,7 @@ namespace flopoco{
 					vhdl << tab << declare("Z_truncToZ3o6", wZ3o6) << " <= Z" << range(wZ-1, wZ-wZ3o6) << ";" << endl;
 					newInstance("FixFunctionByTable",
 											"Z3o6Table",
-											"f=\"x^3/6\" signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
+											"f=x^3/6 signedIn=false lsbIn=" + to_string(-wZ3o6) + " msbOut=-3" + " lsbOut=" + to_string(-wZ3o6-2),
 											"X=>Z_truncToZ3o6",
 											"Y=>Z3o6");
 					
@@ -658,7 +651,6 @@ namespace flopoco{
 
 				// For LateX in the paper
 				//	cout << "     " << w <<  "   &   "  << wA << "   &   " << wZ << "   &   " << wZ2o2 << "   &   " << wZ3o6 << "   \\\\ \n \\hline" <<  endl;
-#endif
 			} // closes if for generic case
 
 

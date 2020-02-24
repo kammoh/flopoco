@@ -72,6 +72,7 @@ FixFFTFullyPA
 IntConstMultShiftAdd
 IntConstMultShiftAddOpt
 IntConstMultShiftAddRPAG
+IntConstMultOptTernary
 
 PIF2Posit
 Posit2PIF
