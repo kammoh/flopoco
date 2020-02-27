@@ -99,15 +99,15 @@ namespace flopoco{
 
 			if(indexMax<0 && indexMin<0)
 			{
-				bitHeap->addBit(wOut+g-1-(indexMax-i), s.str());
+				bitHeap->addBit(s.str(), wOut + g - 1 - (indexMax - i));
 			}
 			else if(indexMin<0)
 			{
-				bitHeap->addBit((i-indexMin)-2*indexMin+1, s.str());
+				bitHeap->addBit(s.str(), (i - indexMin) - 2 * indexMin + 1);
 			}
 			else
 			{
-				bitHeap->addBit(i, s.str());
+				bitHeap->addBit(s.str(), i);
 			}
 		}
 
@@ -135,7 +135,7 @@ namespace flopoco{
 
 			s << "XZeroIntDiv3_inverted_" << i;
 
-			bitHeap->addBit((truncated ? i-(wOutFull-(msbIn-lsbOut+1+g)) : i), s.str());
+			bitHeap->addBit(s.str(), (truncated ? i - (wOutFull - (msbIn - lsbOut + 1 + g)) : i));
 
 			for(int j=(truncated ? i-(wOutFull-(msbIn-lsbOut+1+g)) : i); j<wOut+g; j++)
 				bitHeap->addConstantOneBit(j);
@@ -162,7 +162,8 @@ namespace flopoco{
 
 				s << "X_temp_" << (lsbIn<0 ? i-lsbIn : i) << "_" << (lsbIn<0 ? j-lsbIn : j);
 
-				bitHeap->addBit((lsbIn<0 ? (i-lsbIn)+2*(j-lsbIn)-1 : i+2*j-1) + 1 - (truncated ? (wOutFull-(msbIn-lsbOut+1+g)) : 0), s.str());
+				bitHeap->addBit(s.str(), (lsbIn < 0 ? (i - lsbIn) + 2 * (j - lsbIn) - 1 : i + 2 * j - 1) + 1 -
+										 (truncated ? (wOutFull - (msbIn - lsbOut + 1 + g)) : 0));
 
 				for(int k=(lsbIn<0 ? (i-lsbIn)+2*(j-lsbIn)-1 : i+2*j-1) + 1 - (truncated ? (wOutFull-(msbIn-lsbOut+1+g)) : 0); k<wOut+g; k++)
 					bitHeap->addConstantOneBit(k);
@@ -189,7 +190,8 @@ namespace flopoco{
 
 					s << "X_temp2_" << (lsbIn<0 ? i-lsbIn : i) << "_" << (lsbIn<0 ? j-lsbIn : j) << "_" << (lsbIn<0 ? k-lsbIn : k);
 
-					bitHeap->addBit((lsbIn<0 ? (i-lsbIn)+(j-lsbIn)+(k-lsbIn) : i+j+k) + 1 - (truncated ? (wOutFull-(msbIn-lsbOut+1+g)) : 0), s.str());
+					bitHeap->addBit(s.str(), (lsbIn < 0 ? (i - lsbIn) + (j - lsbIn) + (k - lsbIn) : i + j + k) + 1 -
+											 (truncated ? (wOutFull - (msbIn - lsbOut + 1 + g)) : 0));
 
 					for(int l=(lsbIn<0 ? (i-lsbIn)+(j-lsbIn)+(k-lsbIn) : i+j+k) + 1- (truncated ? (wOutFull-(msbIn-lsbOut+1+g)) : 0); l<wOut+g; l++)
 						bitHeap->addConstantOneBit(l);
