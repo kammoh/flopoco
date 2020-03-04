@@ -142,7 +142,7 @@ void TilingAndCompressionOptILP::constructProblem()
                                 if(solve_Vars[s][xs+x_neg][ys+y_neg] == nullptr){
                                     stringstream nvarName;
                                     nvarName << " d" << setfill('0') << setw(dpS) << s << ((xs < 0)?"m":"") << setfill('0') << setw(dpX) << ((xs<0)?-xs:xs) << ((ys < 0)?"m":"")<< setfill('0') << setw(dpY) << ((ys<0)?-ys:ys) ;
-                                    std::cout << nvarName.str() << endl;
+                                    //std::cout << nvarName.str() << endl;
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
                                     obj.add(tempV, (double)tiles[s]->ownLUTCost(xs, ys, wX, wY));    //append variable to cost function
@@ -150,7 +150,7 @@ void TilingAndCompressionOptILP::constructProblem()
                                     int col_min = xs+ys+tiles[s]->getRelativeResultLSBWeight(tiles[s]->getParametrisation());
                                     int col_max = xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation());
                                     for(col_min = ((col_min < 0)?0:col_min); col_min < (((wX+wY)<col_max)?wX+wY:col_max); col_min++){
-                                        cout << "position " << col_min << endl;
+                                        //cout << "position " << col_min << endl;
                                         bitsinColumn[col_min].add(tempV, 1);
                                     }
 
@@ -214,17 +214,18 @@ void TilingAndCompressionOptILP::constructProblem()
         solver->addConstraint(truncConstraint);
     }
 
+    addFlipFlop();      //Add FF to list of compressors
     int s_max = 2;
     vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max, vector<ScaLP::Variable>(bitsinColumn.size()));
-    ScaLP::Term selectLastStage;
+    //ScaLP::Term selectLastStage;
     for(int s = 0; s < s_max; s++){
         vector<ScaLP::Term> bitsinNextColumn(wX+wY);
         vector<ScaLP::Term> bitsinCurrentColumn(wX+wY);
         vector<ScaLP::Term> bitsinLastStageColumn(wX+wY);
-        stringstream stage;                 //
+/*        stringstream stage;                 //
         stage << "D_" << s;
         ScaLP::Variable stageV = ScaLP::newBinaryVariable(stage.str());
-        selectLastStage.add(stageV, 1);
+        selectLastStage.add(stageV, 1);*/
         for(unsigned c = 0; c < bitsinColumn.size(); c++){
             for(unsigned e = 0; e < possibleCompressors.size(); e++){
                 if(s < s_max - 1){
@@ -243,21 +244,22 @@ void TilingAndCompressionOptILP::constructProblem()
                     }
                 }
             }
+            stringstream curBits;
+            if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
+                curBits << "N_" << s << "_" << c;
+                cout << curBits.str() << endl;
+                bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
+            }
+            if(s == 0){
+                stringstream consName0;
+                consName0 << "C0_" << s << "_" << c;
+                bitsinColumn[c].add(bitsInColAndStage[s][c], -1);      //Output bits from sub-multipliers
+                ScaLP::Constraint c0Constraint = bitsinColumn[c] == 0;     //C0_s_c
+                c0Constraint.name = consName0.str();
+                solver->addConstraint(c0Constraint);
+            }
             if(s < s_max - 1){
-                stringstream consName0, consName1, consName2, zeroBits, nextBits, curBits;
-                if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
-                    curBits << "N_" << s << "_" << c;
-                    cout << curBits.str() << endl;
-                    bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
-                }
-                if(s == 0){
-                    consName0 << "C0_" << s << "_" << c;
-                    bitsinColumn[c].add(bitsInColAndStage[s][c], -1);      //Output bits from sub-multipliers
-                    ScaLP::Constraint c0Constraint = bitsinColumn[c] == 0;     //C0_s_c
-                    c0Constraint.name = consName0.str();
-                    solver->addConstraint(c0Constraint);
-
-                }
+                stringstream consName1, consName2, zeroBits, nextBits;
                 consName1 << "C1_" << s << "_" << c;
                 zeroBits << "Z_" << s << "_" << c;
                 bitsinCurrentColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
@@ -276,21 +278,25 @@ void TilingAndCompressionOptILP::constructProblem()
                 c2Constraint.name = consName2.str();
                 solver->addConstraint(c2Constraint);
             }
-            stringstream consName3;
-            consName3 << "C3_" << s << "_" << c;
-            bitsinLastStageColumn[c].add(stageV, 10000);
-            bitsinLastStageColumn[c].add(bitsInColAndStage[s][c], 1);
-            ScaLP::Constraint c3Constraint = bitsinLastStageColumn[c] <= 10002;     //C3_s_c
-            c3Constraint.name = consName3.str();
-            solver->addConstraint(c3Constraint);
-            cout << consName3.str() << " " << stage.str() << endl;
+            if(s == s_max-1){
+                stringstream consName3;
+                consName3 << "C3_" << s << "_" << c;
+                //bitsinLastStageColumn[c].add(stageV, 10000);
+                bitsinLastStageColumn[c].add(bitsInColAndStage[s][c], 1);
+                //if(s < s_max - 1)
+                //    bitsinLastStageColumn[c].add(bitsInColAndStage[s+1][c], 4);
+                ScaLP::Constraint c3Constraint = bitsinLastStageColumn[c] <= 2;     //C3_s_c
+                c3Constraint.name = consName3.str();
+                solver->addConstraint(c3Constraint);
+                //cout << consName3.str() << " " << stage.str() << endl;
+            }
+
         }
     }
-    stringstream consName4;
-    ScaLP::Constraint c4Constraint = selectLastStage == 1;     //C4
-    c4Constraint.name = consName4.str();
+ /*   ScaLP::Constraint c4Constraint = selectLastStage == 1;     //C4
+    c4Constraint.name = "C4";
     solver->addConstraint(c4Constraint);
-
+*/
     // Set the Objective
     cout << "   setting objective (minimize cost function)..." << endl;
     solver->setObjective(ScaLP::minimize(obj));
@@ -302,6 +308,35 @@ void TilingAndCompressionOptILP::constructProblem()
 
 
 #endif
+
+    bool TilingAndCompressionOptILP::addFlipFlop(){
+        //BasicCompressor* flipflop;
+        bool foundFlipflop = false;
+        for(unsigned int e = 0; e < possibleCompressors.size(); e++){
+            //inputs
+            if(possibleCompressors[e]->getHeights() == 1 && possibleCompressors[e]->getHeightsAtColumn(0) == 1){
+                if(possibleCompressors[e]->getOutHeights() == 1 && possibleCompressors[e]->getOutHeightsAtColumn(0) == 1){
+                    foundFlipflop = true;
+                    //flipflop = possibleCompressors[e];
+                    break;
+                }
+            }
+        }
+
+        if(!foundFlipflop){
+            //add flipflop at back of possibleCompressor
+            vector<int> newVect;
+            BasicCompressor *newCompressor;
+            int col0=1;
+            newVect.push_back(col0);
+            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 0.5, "combinatorial", true);
+            possibleCompressors.push_back(newCompressor);
+
+            //flipflop = newCompressor;
+        }
+
+        return !foundFlipflop;
+    }
 
     void TilingAndCompressionOptILP::compressionAlgorithm() {
 
