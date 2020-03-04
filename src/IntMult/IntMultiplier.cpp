@@ -32,6 +32,7 @@
 #include "TilingStrategyGreedy.hpp"
 #include "TilingStrategyXGreedy.hpp"
 #include "TilingStrategyBeamSearch.hpp"
+#include "TilingAndCompressionOptILP.hpp"
 
 using namespace std;
 
@@ -190,19 +191,33 @@ namespace flopoco {
                     beamRange
             );
 		} else if(tilingMethod.compare("optimal") == 0){
-			tilingStrategy = new TilingStrategyOptimalILP(
-					wX,
-					wY,
-					wOut + guardBits,
-					signedIO,
-					&baseMultiplierCollection,
-					baseMultiplierCollection.getPreferedMultiplier(),
-					dspOccupationThreshold,
-					maxDSP,
+            tilingStrategy = new TilingStrategyOptimalILP(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP,
                     multiplierTileCollection
-			);
+            );
 
-		} else {
+        }  else if(tilingMethod.compare("optimalTilingAndCompression") == 0){
+            tilingStrategy = new TilingAndCompressionOptILP(
+                    wX,
+                    wY,
+                    wOut + guardBits,
+                    signedIO,
+                    &baseMultiplierCollection,
+                    baseMultiplierCollection.getPreferedMultiplier(),
+                    dspOccupationThreshold,
+                    maxDSP,
+                    multiplierTileCollection,
+                    &bitHeap
+            );
+
+        } else {
 			THROWERROR("Tiling strategy " << tilingMethod << " unknown");
 		}
 
