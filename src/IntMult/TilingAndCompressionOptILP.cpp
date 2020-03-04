@@ -63,7 +63,7 @@ void TilingAndCompressionOptILP::solve()
     {
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
             std::string var_name = p.first->getName();
-            cout << var_name << endl;
+            cout << var_name << "\t " << p.second << endl;
             if(var_name.substr(1,1).compare("d") != 0) continue;
             int mult_id = stoi(var_name.substr(2,dpS));
             int x_negative = (var_name.substr(2+dpS,1).compare("m") == 0)?1:0;
@@ -151,7 +151,7 @@ void TilingAndCompressionOptILP::constructProblem()
                                     int col_max = xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation());
                                     for(col_min = ((col_min < 0)?0:col_min); col_min < (((wX+wY)<col_max)?wX+wY:col_max); col_min++){
                                         cout << "position " << col_min << endl;
-                                        bitsinColumn[col_min].add(tempV, -1);
+                                        bitsinColumn[col_min].add(tempV, 1);
                                     }
 
                                     if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut))){
@@ -214,10 +214,17 @@ void TilingAndCompressionOptILP::constructProblem()
         solver->addConstraint(truncConstraint);
     }
 
-
-    vector<ScaLP::Term> bitsinNextColumn(wX+wY);
     int s_max = 2;
+    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max, vector<ScaLP::Variable>(bitsinColumn.size()));
+    ScaLP::Term selectLastStage;
     for(int s = 0; s < s_max; s++){
+        vector<ScaLP::Term> bitsinNextColumn(wX+wY);
+        vector<ScaLP::Term> bitsinCurrentColumn(wX+wY);
+        vector<ScaLP::Term> bitsinLastStageColumn(wX+wY);
+        stringstream stage;                 //
+        stage << "D_" << s;
+        ScaLP::Variable stageV = ScaLP::newBinaryVariable(stage.str());
+        selectLastStage.add(stageV, 1);
         for(unsigned c = 0; c < bitsinColumn.size(); c++){
             for(unsigned e = 0; e < possibleCompressors.size(); e++){
                 if(s < s_max - 1){
@@ -226,9 +233,9 @@ void TilingAndCompressionOptILP::constructProblem()
                     std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV,  possibleCompressors[e]->area);    //append variable to cost function
-                    for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights() && ce < (int)bitsinColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
+                    for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights() && ce < (int)bitsinCurrentColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
                         cout << possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
-                        bitsinColumn[c+ce].add(tempV, possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false));
+                        bitsinCurrentColumn[c+ce].add(tempV, possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false));
                     }
                     for(int ce = 0; ce < (int) possibleCompressors[e]->getOutHeights() && ce < (int)bitsinNextColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
                         cout << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
@@ -237,23 +244,52 @@ void TilingAndCompressionOptILP::constructProblem()
                 }
             }
             if(s < s_max - 1){
-                stringstream consName1, consName2, zeroBits, nextBits;
+                stringstream consName0, consName1, consName2, zeroBits, nextBits, curBits;
+                if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
+                    curBits << "N_" << s << "_" << c;
+                    cout << curBits.str() << endl;
+                    bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
+                }
+                if(s == 0){
+                    consName0 << "C0_" << s << "_" << c;
+                    bitsinColumn[c].add(bitsInColAndStage[s][c], -1);      //Output bits from sub-multipliers
+                    ScaLP::Constraint c0Constraint = bitsinColumn[c] == 0;     //C0_s_c
+                    c0Constraint.name = consName0.str();
+                    solver->addConstraint(c0Constraint);
+
+                }
                 consName1 << "C1_" << s << "_" << c;
                 zeroBits << "Z_" << s << "_" << c;
-                bitsinColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
-                ScaLP::Constraint c1Constraint = bitsinColumn[c] == 0;     //C1_s_c
+                bitsinCurrentColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
+                bitsinCurrentColumn[c].add(bitsInColAndStage[s][c], -1);      //Bits arriving in current stage of the compressor tree
+                ScaLP::Constraint c1Constraint = bitsinCurrentColumn[c] == 0;     //C1_s_c
                 c1Constraint.name = consName1.str();
                 solver->addConstraint(c1Constraint);
                 consName2 << "C2_" << s << "_" << c;
-                nextBits << "N_" << s+1 << "_" << c;
-                bitsinNextColumn[c].add(ScaLP::newIntegerVariable(nextBits.str(), 0, ScaLP::INF()), -1); //Output Bits of compressors to next stage
+                if(bitsInColAndStage[s+1][c] == nullptr){
+                    nextBits << "N_" << s+1 << "_" << c;
+                    cout << nextBits.str() << endl;
+                    bitsInColAndStage[s+1][c] = ScaLP::newIntegerVariable(nextBits.str(), 0, ScaLP::INF());
+                }
+                bitsinNextColumn[c].add(bitsInColAndStage[s+1][c], -1); //Output Bits of compressors to next stage
                 ScaLP::Constraint c2Constraint = bitsinNextColumn[c] == 0;     //C2_s_c
                 c2Constraint.name = consName2.str();
                 solver->addConstraint(c2Constraint);
             }
+            stringstream consName3;
+            consName3 << "C3_" << s << "_" << c;
+            bitsinLastStageColumn[c].add(stageV, 10000);
+            bitsinLastStageColumn[c].add(bitsInColAndStage[s][c], 1);
+            ScaLP::Constraint c3Constraint = bitsinLastStageColumn[c] <= 10002;     //C3_s_c
+            c3Constraint.name = consName3.str();
+            solver->addConstraint(c3Constraint);
+            cout << consName3.str() << " " << stage.str() << endl;
         }
     }
-
+    stringstream consName4;
+    ScaLP::Constraint c4Constraint = selectLastStage == 1;     //C4
+    c4Constraint.name = consName4.str();
+    solver->addConstraint(c4Constraint);
 
     // Set the Objective
     cout << "   setting objective (minimize cost function)..." << endl;
