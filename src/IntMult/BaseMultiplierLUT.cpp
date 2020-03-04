@@ -35,6 +35,12 @@ Operator* BaseMultiplierLUT::generateOperator(
         return luts + ws*0.65;
     }
 
+    int BaseMultiplierLUT::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY) {
+        int ws = (wX()==1)?wY():((wY()==1)?wX():wX()+wY());
+        int luts = ((ws <= 5)?ws/2+ws%2:ws);
+        return luts;
+    }
+
 
 }   //end namespace flopoco
 

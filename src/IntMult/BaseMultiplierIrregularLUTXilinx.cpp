@@ -170,7 +170,14 @@ void BaseMultiplierIrregularLUTXilinx::registerFactory(){
 	) ;
 }
 
-void BaseMultiplierIrregularLUTXilinxOp::emulate(TestCase* tc)
+    int BaseMultiplierIrregularLUTXilinx::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY) {
+        int word_size = getRelativeResultMSBWeight(this->shape) - getRelativeResultLSBWeight(this->shape) + 1;
+        int lut_required = (this->wX+this->wY <= 5)?word_size/2+word_size%2:word_size;
+
+        return lut_required;
+    }
+
+    void BaseMultiplierIrregularLUTXilinxOp::emulate(TestCase* tc)
 {
 	mpz_class svX = tc->getInputValue("X");
 	mpz_class svY = tc->getInputValue("Y");
