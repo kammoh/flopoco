@@ -45,16 +45,23 @@ void TilingAndCompressionOptILP::solve()
     solver = new ScaLP::Solver(ScaLP::newSolverDynamic({target->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
     solver->timeout = target->getILPTimeout();
 
-    constructProblem();
+    ScaLP::status stat;
+    int s_max = 0;
+    do{
+        s_max++;
+        solver->reset();
+        constructProblem(s_max);
 
-    // Try to solve
-    cout << "starting solver, this might take a while..." << endl;
-    solver->quiet = false;
-    ScaLP::status stat = solver->solve();
+        // Try to solve
+        cout << "starting solver, this might take a while..." << endl;
+        solver->quiet = false;
+        stat = solver->solve();
 
-    // print results
-    cerr << "The result is " << stat << endl;
-    cerr << solver->getResult() << endl;
+        // print results
+        cerr << "The result is " << stat << endl;
+        //cerr << solver->getResult() << endl;
+    } while(stat == ScaLP::status::INFEASIBLE);
+
     ScaLP::Result res = solver->getResult();
 
     double total_cost = 0;
@@ -98,7 +105,7 @@ void TilingAndCompressionOptILP::solve()
 }
 
 #ifdef HAVE_SCALP
-void TilingAndCompressionOptILP::constructProblem()
+void TilingAndCompressionOptILP::constructProblem(int s_max)
 {
     cout << "constructing problem formulation..." << endl;
     wS = tiles.size();
@@ -215,7 +222,6 @@ void TilingAndCompressionOptILP::constructProblem()
     }
 
     addFlipFlop();      //Add FF to list of compressors
-    int s_max = 2;
     vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max, vector<ScaLP::Variable>(bitsinColumn.size()));
     //ScaLP::Term selectLastStage;
     for(int s = 0; s < s_max; s++){
@@ -231,15 +237,15 @@ void TilingAndCompressionOptILP::constructProblem()
                 if(s < s_max - 1){
                     stringstream nvarName;
                     nvarName << "k_" << s << "_" << e << "_" << c;
-                    std::cout << nvarName.str() << endl;
+                    //std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV,  possibleCompressors[e]->area);    //append variable to cost function
                     for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights() && ce < (int)bitsinCurrentColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
-                        cout << possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
+                        //cout << possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
                         bitsinCurrentColumn[c+ce].add(tempV, possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false));
                     }
                     for(int ce = 0; ce < (int) possibleCompressors[e]->getOutHeights() && ce < (int)bitsinNextColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
-                        cout << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
+                        //cout << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
                         bitsinNextColumn[c+ce].add(tempV, possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false));
                     }
                 }
@@ -247,7 +253,7 @@ void TilingAndCompressionOptILP::constructProblem()
             stringstream curBits;
             if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
                 curBits << "N_" << s << "_" << c;
-                cout << curBits.str() << endl;
+                //cout << curBits.str() << endl;
                 bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
             }
             if(s == 0){
@@ -270,7 +276,7 @@ void TilingAndCompressionOptILP::constructProblem()
                 consName2 << "C2_" << s << "_" << c;
                 if(bitsInColAndStage[s+1][c] == nullptr){
                     nextBits << "N_" << s+1 << "_" << c;
-                    cout << nextBits.str() << endl;
+                    //cout << nextBits.str() << endl;
                     bitsInColAndStage[s+1][c] = ScaLP::newIntegerVariable(nextBits.str(), 0, ScaLP::INF());
                 }
                 bitsinNextColumn[c].add(bitsInColAndStage[s+1][c], -1); //Output Bits of compressors to next stage
@@ -325,11 +331,11 @@ void TilingAndCompressionOptILP::constructProblem()
 
         if(!foundFlipflop){
             //add flipflop at back of possibleCompressor
-            vector<int> newVect;
-            BasicCompressor *newCompressor;
-            int col0=1;
-            newVect.push_back(col0);
-            newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), newVect, 0.5, "combinatorial", true);
+            //vector<int> newVect;
+            //BasicCompressor *newCompressor;
+            //int col0=1;
+            //newVect.push_back(col0);
+            BasicCompressor *newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), vector<int> {1}, 0.5, "combinatorial", true);
             possibleCompressors.push_back(newCompressor);
 
             //flipflop = newCompressor;

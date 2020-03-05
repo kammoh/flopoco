@@ -46,7 +46,7 @@ private:
     int dpX, dpY, dpS, wS;
     vector<BaseMultiplierCategory*> tiles;
 #ifdef HAVE_SCALP
-    void constructProblem();
+    void constructProblem(int s_max);
     bool addFlipFlop();
 
     ScaLP::Solver *solver;
