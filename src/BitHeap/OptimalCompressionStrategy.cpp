@@ -149,6 +149,7 @@ namespace flopoco{
 
 		problemSolver = new ScaLP::Solver(ScaLP::newSolverDynamic({bitheap->getOp()->getTarget()->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
 		problemSolver->timeout = bitheap->getOp()->getTarget()->getILPTimeout();
+        REPORT(DEBUG, "timeout is set to " << problemSolver->timeout << " seconds");
 	}
 
 	void OptimalCompressionStrategy::initializeVariables(){
@@ -395,10 +396,6 @@ namespace flopoco{
 		}
 
 		bool solutionFound = false;
-
-		int timeout = 7200;
-		problemSolver->timeout = (int) timeout;
-		REPORT(DEBUG, "timeout is set to " << timeout);
 		problemSolver->threads = 1;
 		problemSolver->quiet = false;
 
@@ -406,13 +403,18 @@ namespace flopoco{
 
 		ScaLP::status stat = problemSolver->solve();
 
-		if(stat == ScaLP::status::INFEASIBLE_OR_UNBOUND || stat == ScaLP::status::INFEASIBLE || stat == ScaLP::status::UNBOUND ||stat == ScaLP::status::TIMEOUT_INFEASIBLE){
+		if(stat == ScaLP::status::INFEASIBLE_OR_UNBOUND || stat == ScaLP::status::INFEASIBLE || stat == ScaLP::status::UNBOUND){
 			solutionFound = false;
 			REPORT(DEBUG, "problem is unbound, infeasible or no solution within timelimit is reached");
 		}
 		else if(stat == ScaLP::status::OPTIMAL || stat == ScaLP::status::FEASIBLE || stat == ScaLP::status::TIMEOUT_FEASIBLE ){
 			solutionFound = true;
 		}
+		else // includes stat == ScaLP::status::TIMEOUT_INFEASIBLE)
+        {
+            THROWERROR("No feasible solution possible within given ILPTimeout.");
+        }
+
 		return solutionFound;
 	}
 
