@@ -149,7 +149,9 @@ namespace flopoco
 		 */
         virtual float getArea(unsigned int middleLength = 0);
 
-
+        /**
+         *	@brief returns a string of the compressor e.g. for debugging.
+         */
 		string getStringOfIO();
 
         Operator* parentOp;

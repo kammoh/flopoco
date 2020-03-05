@@ -275,6 +275,7 @@ namespace flopoco{
             }
         }
         REPORT(DETAILED, "total area of the compression is equivalent to " << totalArea << " LUTs");
+        REPORT(DETAILED, "total number of stages is " << bitAmount.size()-1);
     }
 
 
