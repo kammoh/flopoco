@@ -34,6 +34,10 @@ double BaseMultiplierXilinx2xk::getLUTCost(int x_anchor, int y_anchor, int wMult
     return luts + (msb - lsb)*0.65;
 }
 
+int BaseMultiplierXilinx2xk::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY) {
+    return ((wX() < wY())?wY():wX()) + 1;;
+}
+
 OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
     int wX, wY;

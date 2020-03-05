@@ -28,6 +28,7 @@ namespace flopoco {
         int getDSPCost() const override { return 0; }
         bool isVariable() const override { return true; }
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
+        int ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
 
 		/** Factory method */
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);

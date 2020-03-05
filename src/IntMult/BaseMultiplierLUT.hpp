@@ -40,6 +40,7 @@ namespace flopoco {
 
             int getDSPCost() const override { return 0; }
             double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
+            int ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
 
 			Operator *generateOperator(
 					Operator *parentOp,

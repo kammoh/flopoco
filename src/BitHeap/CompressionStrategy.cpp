@@ -468,7 +468,7 @@ namespace flopoco{
 		bool isConstantNonzero = false;
 		for (unsigned w=0; w<bitheap-> width; w++){
 			if (1 == ((bitheap->constantBits>>w) & 1) ){
-				Bit* bit = bitheap->addBit(w-bitheap->lsb, "'1'");
+				Bit* bit = bitheap->addBit("'1'", w - bitheap->lsb);
 
 				//set the signal to constant type, with declaration
 				bit->signal->setType(Signal::constantWithDeclaration);
@@ -736,7 +736,7 @@ namespace flopoco{
 			//add the outputBits to the bitheap
 			for(unsigned int c = 0; c <= (unsigned) lastOccurence; c++){
 				if(c + weight < bitheap->width && (unsigned)compressor->outHeights[c] >= tempHeight){
-					bitheap->addBit(c + weight, vectorName.str() + of(c));
+					bitheap->addBit(vectorName.str() + of(c), c + weight);
 				}
                 bitheap->markBits(bitheap->getOp()->getSignalByName(vectorName.str()), BitType::justAdded, weight);
 			}

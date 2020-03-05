@@ -99,6 +99,7 @@ namespace flopoco {
 
             virtual int getDSPCost() const = 0;
             virtual double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
+            virtual int ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY);
             virtual unsigned int getArea() {return tile_param.wX_*tile_param.wY_;}
             virtual bool isVariable() const { return false; }
             virtual bool isIrregular() const { return false; }

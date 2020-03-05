@@ -91,11 +91,11 @@ enum BitType : unsigned;
 		 * @brief add a bit to the bit heap.
 		 * @param weight             the weight of the bit to be added. It should be non-negative,
 		 *                           for an integer bitheap, or between msb and lsb for a fixed-point bitheap.
-		 * @param rhsAssignment      the right-hand side VHDL code defining this bit.
+		 * @param       the right-hand side VHDL code defining this bit.
 		 * @param comment            a VHDL comment for this bit
 		 * @return the newly added bit
 		 */
-		Bit* addBit(int weight, string rhsAssignment);
+		Bit* addBit(string name, int weight);
 
 
 		/**
@@ -118,10 +118,10 @@ enum BitType : unsigned;
 		 * @brief add a constant to the bitheap. It will be added to the constantBits mpz,
 		 * so we don't generate hardware to compress constants.
 		 * @param constant          the value to be added
-		 * @param shift             the weight to which the LSB of the (integer) constant should be added
+		 * @param weight             the weight to which the LSB of the (integer) constant should be added
 		 *                          (by default 0)
 		 */
-		void addConstant(mpz_class constant, int shift = 0);
+		void addConstant(mpz_class constant, int weight = 0);
 
 
 		/**
@@ -131,27 +131,27 @@ enum BitType : unsigned;
 		 * @param weight            the weight of the LSB of constant
 		 *                          (by default 0)
 		 */
-		void subtractConstant(mpz_class constant, int shift = 0);
+		void subtractConstant(mpz_class constant, int weight = 0);
 
 
 		/**
 		 * @brief add to the bitheap a signal
 		 * @param signal            the signal being added
-		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap.
+		 * @param weight             Bit of weight i of the signal will be sent to weight i+weight in the bit heap.
 		 *                          (by default 0)
 		 The signedness will be read from the signal itself
 		 */
-		void addSignal(string signalName, int shift = 0);
+		void addSignal(string name, int weight = 0);
 
 
 		/**
 		 * @brief subtract a signal from the bitheap
 		 * @param signal            the signal
-		 * @param shift             Bit of weight i of the signal will be sent to weight i+shift in the bit heap.
+		 * @param weight             Bit of weight i of the signal will be sent to weight i+weight in the bit heap.
 		 *                          (by default 0)
 		 The signedness will be read from the signal itself
 		 */
-		void subtractSignal(string signalName, int shift = 0);
+		void subtractSignal(string name, int weight = 0);
 
 
 		/**

@@ -201,4 +201,8 @@ BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization:
         return ws*0.65;
     }
 
+    int BaseMultiplierCategory::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY) {
+        return 0;
+    }
+
 }
