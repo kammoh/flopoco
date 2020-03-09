@@ -29,7 +29,7 @@ def get_compile_info(filename):
         last_entity_name_end = i
         entityname=vhdl[last_entity_name_start:last_entity_name_end]
 
-        # target 
+        # target
         endss = [match.end() for match in re.finditer("-- VHDL generated for", vhdl)] # list of endpoints of match of "entity"
         target_name_start = endss[-1] +1
         i = target_name_start
@@ -38,16 +38,16 @@ def get_compile_info(filename):
         target_name_end = i
         targetname=vhdl[target_name_start:target_name_end]
 
-        #Input signal 
+        #Input signal
         insig_regex = r"^-- Input signals:([ a-zA-Z0-9_]+)$"
         insig_list  = re.findall(insig_regex, vhdl, re.MULTILINE)[-1]
-        insig_data = insig_list.strip().split(" ") 
+        insig_data = insig_list.strip().split(" ")
 
         #Output signal
         outsig_regex = r"^-- Output signals:([ a-zA-Z0-9_]+)$"
         outsig_list  = re.findall(outsig_regex, vhdl, re.MULTILINE)[-1]
-        outsig_data = outsig_list.strip().split(" ") 
-    
+        outsig_data = outsig_list.strip().split(" ")
+
         # the frequency follows but we don't need to read it so far
         frequency_start=target_name_end+3 #  skip " @ "
         i = frequency_start
@@ -107,41 +107,43 @@ if __name__ == '__main__':
     report("   entity:        " +  entity)
     report("   target:        " +  target)
     report("   frequency:     " +  frequency + " MHz")
-    report("   input signal:  " + " ".join(in_sig)) 
-    report("   output signal: " + " ".join(out_sig)) 
+    report("   input signal:  " + " ".join(in_sig))
+    report("   output signal: " + " ".join(out_sig))
 
     if target.lower()=="kintex7":
-        #part="xc7k70tfbv484-3"
-        part="xc7k160tfbg484-1"
+        part="xc7k70tfbv484-3"
+        #part="xc7k160tfbg484-1"
     elif target.lower()=="zynq7000":
         part="xc7z020clg484-1"
     elif target.lower()=="virtex7":
 #        part="xc7v2000tflg1925-1" # virtex 7 with largest I/O count (1100 I/Os)
         part="xc7vx330tffg1157-1" # virtex 7 with 600 I/Os
+    elif target.lower()=="virtex_ultrascale_plus":
+        part="xcvu3p-ffvc1517-2-e" # the smallest virtex ultrascale+(16nm)
     else:
         raise BaseException("Target " + target + " not supported")
 
     if(options.part != None):
         part=options.part
-        
+
     workdir="/tmp/vivado_runsyn_"+entity+"_"+target+"_"+frequency
     os.system("rm -R "+workdir)
     os.mkdir(workdir)
     os.system("cp flopoco.vhdl "+workdir)
     os.chdir(workdir)
-    
+
     # Create the clock.xdc file. For this we use the previous frequency,
     # but since I am too lazy to parse the VHDL to find inouts and output names, I copy the set_input_delay etc from the FloPoCo generated file
     # This file was created by FloPoCo to be used by the vivado_runsyn utility. Sorry to clutter your tmp.
-    xdc_file_name = workdir+"/clock.xdc" 
+    xdc_file_name = workdir+"/clock.xdc"
     report("writing "+xdc_file_name)
     clock_file = open(xdc_file_name,"w")
     period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
-    clock_file.write("create_clock -name clk -period " + str(period) + " \n")
+    clock_file.write("create_clock -name clk -period {period} -waveform {{0.000 {half_period}}} [get_ports clk]\n".format(period=period, half_period=period/2.0))
     for sig in in_sig:
-        clock_file.write("set_input_delay -clock clk 0 [get_ports {}]\n".format(sig))
+        clock_file.write("set_input_delay -clock [get_clocks clk] 0 [get_ports {}]\n".format(sig))
     for sig in out_sig:
-        clock_file.write("set_output_delay -clock clk 0 [get_ports {}]\n".format(sig))
+        clock_file.write("set_output_delay -clock [get_clocks clk] 0 [get_ports {}]\n".format(sig))
     clock_file.close()
 
     project_name = "test_" + entity
@@ -157,7 +159,7 @@ if __name__ == '__main__':
     tclscriptfile.write("create_project " + project_name + " -part " + part + "\n")
 #    tclscriptfile.write("set_property board_part em.avnet.com:zed:part0:1.3 [current_project]\n")
     tclscriptfile.write("add_files -norecurse " + filename_abs + "\n")
-    tclscriptfile.write("read_xdc " + xdc_file_name + "\n")
+    tclscriptfile.write("read_xdc -mode out_of_context " + xdc_file_name + "\n")
     tclscriptfile.write("update_compile_order -fileset sources_1\n")
     tclscriptfile.write("update_compile_order -fileset sim_1\n")
     tclscriptfile.write("synth_design -mode out_of_context\n")
@@ -179,12 +181,12 @@ if __name__ == '__main__':
         tclscriptfile.write("wait_on_run " + result_name + "\n")
         tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
 
-    tclscriptfile.write("set_property IOB FALSE [all_inputs]\n")    
+    tclscriptfile.write("set_property IOB FALSE [all_inputs]\n")
     tclscriptfile.write("set_property IOB FALSE [all_outputs]\n")
     tclscriptfile.write("report_utilization  -file "+  utilization_report_file +"\n")
 
 
-        
+
 #    tclscriptfile.write("report_timing_summary -delay_type max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -file " + os.path.join(workdir, project_name+"_timing_report.txt") + " \n")
 
     # Timing report
@@ -195,7 +197,7 @@ if __name__ == '__main__':
         timing_report_file +="placed.rpt"
 
     tclscriptfile.write("report_timing -file " + timing_report_file + " \n")
-        
+
     tclscriptfile.close()
 
     vivado_command = ("vivado -mode batch -source " + tcl_script_name)
@@ -208,7 +210,7 @@ if __name__ == '__main__':
     report("cat " + timing_report_file)
     os.system("cat " + timing_report_file)
 
-    
-    
-    
+
+
+
 #    p = subprocess.Popen(vivado_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)

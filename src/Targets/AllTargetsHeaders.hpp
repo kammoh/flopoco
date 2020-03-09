@@ -22,5 +22,6 @@
 //#include "Targets/CycloneV.hpp"
 #include "Targets/Zynq7000.hpp"
 #include "Targets/Kintex7.hpp"
+#include "Targets/VirtexUltrascalePlus.hpp"
 
 #endif //ALLTARGETSHEADERS_HPP

@@ -1,6 +1,6 @@
 # List of active source files, without extension (CMakeLists-like)
 Operator
-UserInterface 
+UserInterface
 Signal
 Target
 utils
@@ -12,6 +12,7 @@ Targets/DSP
 Targets/Virtex6
 Targets/Zynq7000
 Targets/Kintex7
+Targets/VirtexUltrascalePlus
 Targets/StratixV
 AutoTest/AutoTest
 TestBenches/TestCase

@@ -1,9 +1,9 @@
 # every operator here is present in the interface,
-# iff it has the class method registerFactory 
+# iff it has the class method registerFactory
 
 AutoTest
 Compressor
-# BitheapTest #  expose it in debug mode  
+# BitheapTest #  expose it in debug mode
 Shifter
 LZOC
 LZOC3

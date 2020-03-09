@@ -28,7 +28,7 @@ SET(CPACK_PACKAGE_VERSION_MINOR "9")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 
 INCLUDE(CPack)
-# 
+#
 #Compilation flags
 #SET(CMAKE_CXX_FLAGS_DEBUG "-Wall")
 # Uncomment for profiling
@@ -125,6 +125,27 @@ ELSE ( PYTHON_FOUND )
   MESSAGE ( STATUS "Could not find (found: ${PYTHON_H},${PYTHON_LIB}), no flopoco_soaktest will be available")
 ENDIF ( PYTHON_FOUND )
 
+# find boost random
+FIND_PATH(BOOST_RANDOM_H
+  boost/random.hpp
+  DOC "Path of boost random header"
+  )
+
+FIND_LIBRARY(BOOST_RANDOM_LIB
+  NAMES libboost_random.so
+  DOC "Directory of the boost random library"
+  )
+
+IF ( BOOST_RANDOM_H AND BOOST_RANDOM_LIB )
+  SET(BOOST_RANDOM_FOUND TRUE)
+ENDIF ( BOOST_RANDOM_H AND BOOST_RANDOM_LIB )
+
+IF ( BOOST_RANDOM_FOUND )
+  MESSAGE ( STATUS "Found boost random : ${BOOST_RANDOM_H},${BOOST_RANDOM_LIB}" )
+ELSE ( BOOST_RANDOM_FOUND )
+  MESSAGE ( FATAL_ERROR "Could not find (found: ${BOOST_RANDOM_H},${BOOST_RANDOM_LIB})")
+ENDIF ( BOOST_RANDOM_FOUND )
+
 # Detect Sollya
 FIND_LIBRARY( SOLLYA_LIB
   NAMES libsollya.so libsollya.dylib
@@ -135,11 +156,11 @@ FIND_PATH(SOLLYA_H
   sollya.h
   )
 
-IF (SOLLYA_H AND SOLLYA_H)
+IF (SOLLYA_LIB AND SOLLYA_H)
   MESSAGE(STATUS "Found Sollya: ${SOLLYA_LIB},${SOLLYA_H}")
-ELSE (SOLLYA_H AND SOLLYA_H)
+ELSE (SOLLYA_LIB AND SOLLYA_H)
   MESSAGE(FATAL_ERROR "Sollya not found (found: ${SOLLYA_LIB},${SOLLYA_H})")
-ENDIF (SOLLYA_H AND SOLLYA_H)
+ENDIF (SOLLYA_LIB AND SOLLYA_H)
 
 
 # Detect sed
@@ -178,11 +199,11 @@ ENDIF ( WCPG_FOUND )
 # dectect if scalp is available
 FIND_PATH(SCALP_H
   ScaLP/Solver.h
-  HINTS "/usr/local/include/" "~/.local/include/" "${SCALP_PREFIX_DIR}/include/" 
+  HINTS "/usr/local/include/" "~/.local/include/" "${SCALP_PREFIX_DIR}/include/"
   DOC "Path of main header of scalp"
   )
 FIND_LIBRARY(SCALP_LIB
-  NAMES libScaLP.dylib libScaLP libScaLP.so  
+  NAMES libScaLP.dylib libScaLP libScaLP.so
   HINTS "/usr/local/lib64/" "${SCALP_PREFIX_DIR}/lib/"
   DOC "Directory of the SCALP main library")
 
@@ -219,23 +240,23 @@ ENDIF (SCALP_H AND SCALP_LIB AND (SCALP_CPLEX_LIB OR SCALP_GUROBI_LIB OR SCALP_S
 
 IF (SCALP_FOUND)
   ADD_DEFINITIONS(-DHAVE_SCALP)
-  set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB}) 
+  set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LIB})
   IF (SCALP_CPLEX_LIB)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_CPLEX_LIB})
   ENDIF (SCALP_CPLEX_LIB)
   IF (SCALP_GUROBI_LIB)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_GUROBI_LIB})
   ENDIF (SCALP_GUROBI_LIB)
-  
+
   IF (SCALP_SCIP_LIB)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_SCIP_LIB})
   ENDIF (SCALP_SCIP_LIB)
-  
+
   IF (SCALP_LPSOLVE_LIB)
 	set(SCALP_LIBS ${SCALP_LIBS} ${SCALP_LPSOLVE_LIB})
   ENDIF (SCALP_LPSOLVE_LIB)
-  
-  MESSAGE(STATUS "  ScaLP will be using the following ILP solver libraries: ${SCALP_LIBS}")  
+
+  MESSAGE(STATUS "  ScaLP will be using the following ILP solver libraries: ${SCALP_LIBS}")
 ELSE (SCALP_FOUND)
   MESSAGE(STATUS "No ILP solver available, SCALP needs one of the following: ${SCALP_CPLEX_LIB},${SCALP_GUROBI_LIB},${SCALP_SCIP_LIB},${SCALP_LPSOLVE_LIB})")
 ENDIF (SCALP_FOUND)
@@ -288,7 +309,7 @@ FLEX_TARGET(
 
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp  
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/Interfaced.txt  ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories/MakeFactory.sh
   ARGS ${CMAKE_CURRENT_SOURCE_DIR}/src/Factories  ${CMAKE_CURRENT_BINARY_DIR}/Factories.cpp
@@ -328,7 +349,7 @@ set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
 
 TARGET_LINK_LIBRARIES(
-  FloPoCoLib 
+  FloPoCoLib
   ${GMP_LIB} ${GMPXX_LIB} ${MPFI_LIB} ${MPFR_LIB} #xml2 ??xml2 not necessary??
   )
 
@@ -351,7 +372,7 @@ IF (WCPG_FOUND)
 	FloPoCoLib
 	${WCPG_LIB}
 	)
-  INCLUDE_DIRECTORIES(${WCPG_H})  
+  INCLUDE_DIRECTORIES(${WCPG_H})
 ENDIF (WCPG_FOUND)
 
 IF (SCALP_FOUND)
@@ -397,12 +418,12 @@ ENDIF (OSCM_FOUND)
 
 
 ADD_EXECUTABLE(flopoco
-  src/main 
+  src/main
   )
 
 TARGET_LINK_LIBRARIES(
-  flopoco  
-  FloPoCoLib 
+  flopoco
+  FloPoCoLib
   )
 
 # unplugged for now to speed up compilation, to revive some day
@@ -411,10 +432,10 @@ TARGET_LINK_LIBRARIES(
 # src/main_soaktest
 #)
 #TARGET_LINK_LIBRARIES(
-#  flopoco_soaktest  
+#  flopoco_soaktest
 #	${FLOPOCO_LIB}
 #)
-#INCLUDE_DIRECTORIES(${PYTHON_H})  
+#INCLUDE_DIRECTORIES(${PYTHON_H})
 #ENDIF (PYTHON_FOUND)
 
 
@@ -426,8 +447,8 @@ ADD_EXECUTABLE(bin2fp src/Tools/bin2fp  src/utils)
 TARGET_LINK_LIBRARIES(bin2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 ADD_EXECUTABLE(ieee2bin src/Tools/ieee2bin  src/utils)
-TARGET_LINK_LIBRARIES(ieee2bin ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib )  
-  
+TARGET_LINK_LIBRARIES(ieee2bin ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib )
+
 
 ADD_EXECUTABLE(bin2ieee src/Tools/bin2ieee  src/utils)
 TARGET_LINK_LIBRARIES(bin2ieee ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
@@ -442,13 +463,13 @@ TARGET_LINK_LIBRARIES(longacc2fp ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 #add_subdirectory(src/random)
 #target_link_libraries(FloPoCoLib flopoco_random_lib)
 
-OPTION(BUILD_UNIT_TEST "Build the flopoco unit tests") 
+OPTION(BUILD_UNIT_TEST "Build the flopoco unit tests")
 if(BUILD_UNIT_TEST)
 	find_package(Boost 1.55 REQUIRED COMPONENTS unit_test_framework)
 	enable_testing()
 	## Testing Posit format
-	add_executable(NumberFormatTest_exe tests/TestBenches/PositNumber.cpp)		
-	target_include_directories(NumberFormatTest_exe PUBLIC ${Boost_INCLUDE_DIR}) 
+	add_executable(NumberFormatTest_exe tests/TestBenches/PositNumber.cpp)
+	target_include_directories(NumberFormatTest_exe PUBLIC ${Boost_INCLUDE_DIR})
 	target_link_libraries(NumberFormatTest_exe FloPoCoLib ${Boost_LIBRARIES})
 
 	find_library(SOFTPOSIT_LIB softposit)
