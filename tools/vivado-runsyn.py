@@ -111,8 +111,8 @@ if __name__ == '__main__':
     report("   output signal: " + " ".join(out_sig))
 
     if target.lower()=="kintex7":
-        #part="xc7k70tfbv484-3"
-        part="xc7k160tfbg484-1"
+        part="xc7k70tfbv484-3"
+        #part="xc7k160tfbg484-1"
     elif target.lower()=="zynq7000":
         part="xc7z020clg484-1"
     elif target.lower()=="virtex7":
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     tclscriptfile.write("create_project " + project_name + " -part " + part + "\n")
 #    tclscriptfile.write("set_property board_part em.avnet.com:zed:part0:1.3 [current_project]\n")
     tclscriptfile.write("add_files -norecurse " + filename_abs + "\n")
-    tclscriptfile.write("read_xdc " + xdc_file_name + "\n")
+    tclscriptfile.write("read_xdc -mode out_of_context " + xdc_file_name + "\n")
     tclscriptfile.write("update_compile_order -fileset sources_1\n")
     tclscriptfile.write("update_compile_order -fileset sim_1\n")
     tclscriptfile.write("synth_design -mode out_of_context\n")

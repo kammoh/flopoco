@@ -99,19 +99,30 @@ namespace flopoco{
 
 		// The following is copypasted from Vivado timing reports
 
-		const double lut5Delay_ = 0.043e-9;
-		const double lut6Delay_ = 0.119e-9;
-		const double ffDelay_ = 0.216e-9;
+		// Primitive Delays
+		const double lut5Delay_ = 0.035e-9;  //
+		const double lut6Delay_ = 0.148e-9;  //
+		const double ffDelay_ = 0.150e-9;    // report_property -all [lindex [get_speed_models -of [get_bels SLICE_X0Y0/AFF]] 0]
+		const double lut2Delay_ = 0.050e-9;  //
 
-		const double lut2Delay_ = 0.050e-9;
+		// Fast Carry chain related
 		const double carry8Delay_ = 0.015e-9;  // CIN -> COUT
-		const double initCarryDelay_ = 0.115e-9;  // S[x] -> C[7]. x is 2 for this copy paste
-		const double finalCarryDelay_ = 0.116e-9;  // CIN -> O[x]. x is 5 for this copy paste
+		const double initCarryDelay_ = 0.115e-9;  // CARRY_S[x] -> CARRY_C[7]. x is 2 for this copy paste
+		const double finalCarryDelay_ = 0.116e-9;  // CIN -> CARRY_O[x]. x is 5 for this copy paste
+
+		// Nets delay
 		const double interCarryNetDelay_ = 0.026e-9;  // COUT -> CIN inter CLB
-		const double adderConstantDelay_ = finalCarryDelay_ + initCarryDelay_ + lut2Delay_; // constant delay w/o nets. LUT2 reported by vivado that performs a xor b for the propagate signal fed in the carry chain
-		const double adderConstantDelayWithNets_ = adderConstantDelay_ +
+		const double lut_to_carry_net = 0.011e-9;  // LUT_O -> CARRY_S[x] x is 5 for this copy paste
+
+		// Constants to help with formulas
+		// constant delay w/o nets. LUT2 reported by vivado that performs a xor b for the propagate signal fed in the carry chain
+		const double adderConstantDelay_ = finalCarryDelay_ + initCarryDelay_ + lut2Delay_;
+		const double adderConstantDelayWithNets_ = adderConstantDelay_ + lut_to_carry_net;
+
+		// TODO
 		const double fanoutConstant_ = 1e-9/65 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65 */
-		const double typicalLocalRoutingDelay_ = 0.5e-9;
+		// const double typicalLocalRoutingDelay_ = 0.5e-9;
+		const double typicalLocalRoutingDelay_ = 0.180e-9;
 		const double DSPMultiplierDelay_ = 0; // TODO
 		const double RAMDelay_ = 1e-9; // TODO
 		const double RAMToLogicWireDelay_= 0; // TODO

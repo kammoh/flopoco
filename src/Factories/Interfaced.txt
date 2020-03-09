@@ -1,9 +1,9 @@
 # every operator here is present in the interface,
-# iff it has the class method registerFactory 
+# iff it has the class method registerFactory
 
 AutoTest
 Compressor
-# BitheapTest #  expose it in debug mode  
+# BitheapTest #  expose it in debug mode
 Shifter
 LZOC
 LZOC3
@@ -72,7 +72,6 @@ FixFFTFullyPA
 IntConstMultShiftAdd
 IntConstMultShiftAddOpt
 IntConstMultShiftAddRPAG
-IntConstMultOptTernary
 
 PIF2Posit
 Posit2PIF
@@ -82,5 +81,7 @@ PIF2Fix
 PositExp
 PositFunctionByTable
 Posit2Posit
+
+Posit2PD
 
 FixFunctionByVaryingPiecewisePoly

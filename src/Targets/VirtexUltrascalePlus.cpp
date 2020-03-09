@@ -33,7 +33,7 @@ namespace flopoco{
 		maxFrequencyMHz_ = 775;
 
 		/////// Architectural parameters
-		lutInputs_ = 5;
+		lutInputs_ = 6;  //TODO: was 5 for kintex7 ??
 		possibleDSPConfig_.push_back(make_pair(25,18));
 		whichDSPCongfigCanBeUnsigned_.push_back(false);
 		sizeOfBlock_ = 36864;  // The blocks are 36kb configurable as dual 18k so I don't know.
@@ -62,23 +62,33 @@ namespace flopoco{
 
 
 	double VirtexUltrascalePlus::adderDelay(int size, bool addRoutingDelay_) {
-		double delay = adderConstantDelay_ + ((size)/4 -1)* carry4Delay_;
-		if(addRoutingDelay_) {
+
+		// assume 0<size and size fits vertically in one column. No weird routing or SLR crossing
+		// TODO ? refine for more generecity with some IFs (handle very big adder column crossing or SLR crossing)
+
+   		int nb_clb = ((size-1)/8)+1;
+		double delay_vertical_net = (nb_clb>1) ? (nb_clb-1)*interCarryNetDelay_ : 0;
+		double delay_full_carry_chain = (nb_clb>2) ? (nb_clb-2)*carry8Delay_ : 0;
+		double delay_constant = (nb_clb < 1) ? (lut2Delay_ + lut_to_carry_net) : adderConstantDelayWithNets_;
+		double delay = delay_vertical_net + delay_full_carry_chain + delay_constant;
+
+		if(addRoutingDelay_) { // Not sure if this is useful
 			delay=addRoutingDelay(delay);
-			TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
 		}
+
+		TARGETREPORT("adderDelay(" << size << ") = " << delay*1e9 << " ns.");
 		return  delay;
 	};
 
 
 	double VirtexUltrascalePlus::eqComparatorDelay(int size){
 		// TODO Refine
-		return addRoutingDelay( lut5Delay_ + double((size-1)/(lutInputs_/2)+1)/4*carry4Delay_);
+		return addRoutingDelay( lut6Delay_ + double((size-1)/(lutInputs_/2)+1)/8*carry8Delay_);
 	}
 
 	double VirtexUltrascalePlus::eqConstComparatorDelay(int size){
 		// TODO refine
-		return addRoutingDelay( lut5Delay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_ );
+		return addRoutingDelay( lut5Delay_ + double((size-1)/lutInputs_+1)/8*carry8Delay_ );
 	}
 	double VirtexUltrascalePlus::ffDelay() {
 		return ffDelay_;
@@ -115,6 +125,8 @@ namespace flopoco{
 				return 2.;
 			case 8:
 				return 4.;
+			case 9:
+				return 8.;
 			default:
 				return -1.;
 		}
@@ -131,8 +143,11 @@ namespace flopoco{
 
 
 	bool VirtexUltrascalePlus::suggestSubaddSize(int &x, int wIn){
-		int chunkSize = 4* ((int)floor( (1./frequency() - (adderConstantDelay_ + ffDelay())) / carry4Delay_ ));
-		x = min(chunkSize, wIn);
+
+		double period = 1./frequency();
+		int chunk_size = 8 * ((int)(ceil(( period - ffDelay_ - adderConstantDelayWithNets_ - interCarryNetDelay_) / (interCarryNetDelay_ + carry8Delay_))) + 2);
+
+		x = min(chunk_size, wIn);
 		if (x > 0)
 			return true;
 		else {
@@ -141,6 +156,12 @@ namespace flopoco{
 		}
 	};
 
+	bool VirtexUltrascalePlus::suggestSlackSubcomparatorSize(int& x, int wIn, double slack, bool constant)
+	{
+		bool succes = true;
+		x = suggestSubaddSize(x,  wIn); // TODO
+		return succes;
+	}
 
 	void VirtexUltrascalePlus::delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay)
 	{

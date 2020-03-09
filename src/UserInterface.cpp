@@ -55,6 +55,7 @@ namespace flopoco
 		v.push_back(make_pair("ShiftersLZOCs", "Shifters, Leading Zero Counters, etc"));
 		v.push_back(make_pair("BasicInteger", "Basic integer operators (pipelined)"));
 		//		v.push_back(make_pair("BasicFixPoint", "Basic fixed-point Operators"));
+		v.push_back(make_pair("SA", "Systolic Array"));
 		v.push_back(make_pair("BasicFloatingPoint", "Basic floating-point operators"));
 		v.push_back(make_pair("Posit", "Posit operators"));
 		v.push_back(make_pair("ConstMultDiv", "Multipliers and dividers by constants"));
@@ -78,6 +79,7 @@ namespace flopoco
 				vector<string> v;
 				v.push_back("zynq7000");
 				v.push_back("kintex7");
+				v.push_back("virtex_ultrascale_plus");
 				v.push_back("virtex4");
 				v.push_back("virtex5");
 				v.push_back("virtex6");
@@ -149,23 +151,23 @@ namespace flopoco
 
 
 
-	
+
 	void UserInterface::main(int argc, char* argv[]) {
 		try {
 			sollya_lib_init();
 			initialize();
-			
+
 			// TODO refactor more elegantly
 
 			// This creates all the Operators and the dependency graph.
 			buildAll(argc, argv);
 
-			if(depGraphDrawing != "no") 
+			if(depGraphDrawing != "no")
 			{
 				mkdir("dot", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 				drawDotDiagram(UserInterface::globalOpList);
 			}
-			
+
 			outputVHDL();
 			finalReport(cerr);
 			sollya_lib_close();
@@ -209,12 +211,12 @@ namespace flopoco
 
 	vector<OperatorPtr>  UserInterface::globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 
-	vector<vector<OperatorPtr>>  UserInterface::globalOpListStack; 
+	vector<vector<OperatorPtr>>  UserInterface::globalOpListStack;
 
 	int UserInterface::pipelineActive_;
 
 
-	
+
 	void UserInterface::pushAndClearGlobalOpList() {
 		globalOpListStack.push_back(globalOpList);
 		globalOpList.clear();
@@ -223,7 +225,7 @@ namespace flopoco
 		globalOpList = globalOpListStack.back();
 		globalOpListStack.pop_back();
 	}
-		
+
 
 	OperatorPtr UserInterface::addToGlobalOpList(OperatorPtr op) {
 		OperatorPtr alreadyPresent=nullptr;
@@ -434,6 +436,7 @@ namespace flopoco
 				//					else if(targetFPGA=="virtex4") target=new Virtex4();
 				//				else if (targetFPGA=="virtex5") target=new Virtex5();
 				else if (targetFPGA=="kintex7") target=new Kintex7();
+				else if (targetFPGA=="virtex_ultrascale_plus" || targetFPGA=="vup") target=new VirtexUltrascalePlus();
 				else if (targetFPGA=="virtex6") target=new Virtex6();
 				//					else if (targetFPGA=="spartan3") target=new Spartan3();
 				//					else if (targetFPGA=="stratixii" || targetFPGA=="stratix2") target=new StratixII();
@@ -655,7 +658,7 @@ namespace flopoco
 		}
 	}
 
-	
+
 	void UserInterface::parseColonSeparatedIntList(vector<string> &args, string key, vector<int>* variable, bool genericOption){
 		string val=getVal(args, key);
 		if(val=="") {
@@ -681,7 +684,7 @@ namespace flopoco
 		}
 	}
 
-	
+
 
 	void UserInterface::parsePositiveInt(vector<string> &args, string key, int* variable, bool genericOption){
 		string val=getVal(args, key);
@@ -769,7 +772,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "name" << COLOR_NORMAL << "=<string>:                override the the default entity name "<<endl;
 		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:          override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
 		s << "  " << COLOR_BOLD << "target" << COLOR_NORMAL << "=<string>:              target FPGA (default " << defaultFPGA << ") " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "     Supported targets: Kintex7, StratixV, Virtex6, Zynq7000"<<endl;
+		s << "     Supported targets: Kintex7, StratixV, Virtex6, Zynq7000, Virtex UltraScale+"<<endl;
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:            target frequency in MHz (default 400, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:              use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:            use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
@@ -1317,13 +1320,13 @@ namespace flopoco
 	const vector<string>& OperatorFactory::param_names(void) const{
 		return m_paramNames;
 	}
-	
+
 
 	OperatorPtr OperatorFactory::parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args	)	{
 		return m_parser(parentOp, target, args);
 	}
-	
-		
+
+
 	TestList OperatorFactory::unitTestGenerator(int index)	{
 		TestList testList;
 		if(m_unitTest != nullptr)				{
