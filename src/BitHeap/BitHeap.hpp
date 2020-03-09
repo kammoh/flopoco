@@ -57,7 +57,7 @@ enum BitType : unsigned;
 		/**
 		 * @brief The constructor for an signed/unsigned integer bitheap
 		 * @param op                the operator in which the bitheap is being built
-		 * @param width              the width (maximum weight of the heap, or number of columns) of the bitheap
+		 * @param width              the width (maximum number of columns) of the bitheap
 		 * @param name              a description of the heap that will be integrated into its unique name (empty by default)
 		 * @param compressionType	the type of compression applied to the bit heap:
 		 *								0 = using only compressors (default),
@@ -71,8 +71,8 @@ enum BitType : unsigned;
 		/**
 		 * @brief The constructor for an signed/unsigned fixed-point bitheap
 		 * @param op                the operator in which the bitheap is being built
-		 * @param msb               the msb of the bitheap (maximum weight at which a bit can be inserted)
-		 * @param lsb               the lsb of the bitheap (minimum weight at which a bit can be inserted)
+		 * @param msb               the msb of the bitheap (maximum position at which a bit can be inserted)
+		 * @param lsb               the lsb of the bitheap (minimum position at which a bit can be inserted)
 		 * @param name              a description of the heap that will be integrated into its unique name (empty by default)
 		 * @param compressionType	the type of compression applied to the bit heap:
 		 *								0 = using only compressors (default),
@@ -89,69 +89,70 @@ enum BitType : unsigned;
 
 		/**
 		 * @brief add a bit to the bit heap.
-		 * @param weight             the weight of the bit to be added. It should be non-negative,
-		 *                           for an integer bitheap, or between msb and lsb for a fixed-point bitheap.
-		 * @param       the right-hand side VHDL code defining this bit.
-		 * @param comment            a VHDL comment for this bit
-		 * @return the newly added bit
+		 * @param position    the bit position of the bit to be added. 
+		 *                    It should be between msb and lsb,
+		 *                         e.g. non-negative for an integer bitheap.
+		 * @param rhs        some VHDL defining the bit (it should be accepted as RHS of a VHDL <= )
+		 * @return the newly added bit (can be ignored most of the times)
 		 */
-		Bit* addBit(string name, int weight);
+		Bit* addBit(string rhs, int position);
 
 
 		/**
 		 * @brief add a constant 1 to the bit heap.
-		 * All the constant bits are added to the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param weight            the weight of the 1 bit to be added
-		 *                          (by default 0)
+		 * @param position            the position of the 1 bit to be added
+		 *                          (should be between lsb and lsb, by default 0)
+		 *                          so the value added to the bit heap is 2^position
 		 */
-		void addConstantOneBit(int weight = 0);
+		void addConstantOneBit(int position = 0);
 
 		/**
 		 * @brief subtract a constant 1 from the bitheap.
-		 * @param weight             the weight to which the LSB of the (integer) constant should be added
-		 *                          (by default 0)
+		 * @param position      the position of the 1 bit to be removed
+		 *                          (should be between lsb and lsb, by default 0)       
+		 *                          so the value subtracted from the bit heap is 2^position
 		 */
-		void subtractConstantOneBit(int weight = 0);
-
-		/**
-		 * @brief add a constant to the bitheap. It will be added to the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param constant          the value to be added
-		 * @param weight             the weight to which the LSB of the (integer) constant should be added
-		 *                          (by default 0)
-		 */
-		void addConstant(mpz_class constant, int weight = 0);
+		void subtractConstantOneBit(int position = 0);
 
 
 		/**
-		 * @brief subtract a constant from the bitheap. It will be subtracted from the constantBits mpz,
-		 * so we don't generate hardware to compress constants.
-		 * @param constant          the value to be subtracted
-		 * @param weight            the weight of the LSB of constant
-		 *                          (by default 0)
+		 * @brief add a constant to the bitheap. 
+		 * @param constant          An integer value
+		 * @param shift             the shift that should be applied to the constant,
+      *                          (by default 0)
+		 *                          so the value added to the bit heap is 2^shift*constant
 		 */
-		void subtractConstant(mpz_class constant, int weight = 0);
+		void addConstant(mpz_class constant, int shift = 0);
 
 
 		/**
-		 * @brief add to the bitheap a signal
-		 * @param signal            the signal being added
-		 * @param weight             Bit of weight i of the signal will be sent to weight i+weight in the bit heap.
-		 *                          (by default 0)
-		 The signedness will be read from the signal itself
+		 * @brief subtract a constant to the bitheap.
+		 * @param constant          An integer value
+		 * @param shift             the shift that should be applied to the constant,
+      *                          (by default 0)
+		 *                          so the value subtracted from the bit heap is 2^shift*constant
 		 */
-		void addSignal(string name, int weight = 0);
+		void subtractConstant(mpz_class constant, int shift = 0);
+
+
+		/**
+		 * @brief add a signal (a fixed-point value held in a bit vector) to the bitheap 
+		 * @param signalName            the name of a Signal being added
+		 * @param shift              shift to be applied to the signal: the value will be multiplied by 2^shift
+		 *                          (by default 0)
+		 The signedness will be read from the Signal itself
+		 */
+		void addSignal(string signalName, int shift = 0);
 
 
 		/**
 		 * @brief subtract a signal from the bitheap
 		 * @param signal            the signal
-		 * @param weight             Bit of weight i of the signal will be sent to weight i+weight in the bit heap.
+		 * @param shift              shift to be applied to the signal: the value will be multiplied by 2^shift
 		 *                          (by default 0)
-		 The signedness will be read from the signal itself
+		 The signedness will be read from the Signal itself
 		 */
-		void subtractSignal(string name, int weight = 0);
+		void subtractSignal(string name, int position = 0);
 
 
 		/**
@@ -169,30 +170,30 @@ enum BitType : unsigned;
 		
 		/**
 		 * @brief remove a bit from the bitheap.
-		 * @param weight  the weight of the bit to be removed
+		 * @param position  the position of the bit to be removed
 		 * @param direction if dir==0 the bit will be removed from the beginning of the list
 		 *                  if dir==1 the bit will be removed from the end of the list
 		 */
-		void removeBit(int weight, int direction = 1);
+		void removeBit(int position, int direction = 1);
 
 		/**
 		 * @brief remove a bit from the bitheap.
-		 * @param weight  the weight of the bit to be removed
+		 * @param position  the position of the bit to be removed
 		 * @param bit the bit to be removed
 		 */
-		void removeBit(int weight, Bit* bit);
+		void removeBit(int position, Bit* bit);
 
 		/**
 		 * @brief remove a bit from the bitheap.
-		 * @param weight  the weight of the bit to be removed
+		 * @param position  the position of the bit to be removed
 		 * @param count the number of bits to remove
 		 * @param direction if dir==0 the bit will be removed from the beginning of the list
 		 *                  if dir==1 the bit will be removed from the end of the list
 		 */
-		void removeBits(int weight, unsigned count = 1, int direction = 1);
+		void removeBits(int position, unsigned count = 1, int direction = 1);
 
 		/**
-		 * @brief remove a bit from the bitheap.
+		 * @brief remove bits from the bitheap.
 		 * @param msb the column up until which to remove the bits
 		 * @param lsb the column from which to remove the bits
 		 * @param count the number of bits to remove
@@ -208,11 +209,11 @@ enum BitType : unsigned;
 
 		/**
 		 * @brief mark a bit in the bitheap.
-		 * @param weight the weight at which the bit is
+		 * @param position the position at which the bit is
 		 * @param number the number of the bit in the respective column
 		 * @param type how the bit should be marked
 		 */
-		void markBit(int weight, unsigned number, BitType type);
+		void markBit(int position, unsigned number, BitType type);
 
 		/**
 		 * @brief mark a bit in the bitheap.
@@ -243,9 +244,9 @@ enum BitType : unsigned;
 		 * @brief mark the bits of a signal added to the bitheap.
 		 * @param signalName the signal who's bits to mark
 		 * @param type how the bits should be marked
-		 * @param weight the weight of the signal, so as to speed-up the search
+		 * @param position the position of the signal, so as to speed-up the search
 		 */
-		void markBits(Signal *signal, BitType type, int weight);
+		void markBits(Signal *signal, BitType type, int position);
 
 		/**
 		 * @brief mark bits that are ready to be compressed as free
@@ -300,9 +301,9 @@ enum BitType : unsigned;
 
 		/**
 		 * @brief return the height a column (bits not yet compressed)
-		 * @param weight the column
+		 * @param position the column
 		 */
-		unsigned getColumnHeight(int weight);
+		unsigned getColumnHeight(int position);
 
 		/**
 		 * @brief is compression necessary, or not
@@ -330,16 +331,16 @@ enum BitType : unsigned;
 		string getName();
 
 		/**
-		 * @brief return a fresh uid for a bit of weight w
-		 * @param weight            the weight of the bit
+		 * @brief return a fresh uid for a bit of position w
+		 * @param position            the position of the bit
 		 */
-		int newBitUid(unsigned weight);
+		int newBitUid(unsigned position);
 
 		/**
 		 * @brief print the informations regarding a column
-		 * @param weight the weight of the column
+		 * @param position the position of the column
 		 */
-		void printColumnInfo(int weight);
+		void printColumnInfo(int position);
 
 		/**
 		 * @brief print the informations regarding the whole bitheap
@@ -397,8 +398,8 @@ enum BitType : unsigned;
 
 
 	public:
-		int msb;                                    /**< The maximum weight a bit can have inside the bitheap */
-		int lsb;                                    /**< The minimum weight a bit can have inside the bitheap */
+		int msb;                                    /**< The maximum position a bit can have inside the bitheap */
+		int lsb;                                    /**< The minimum position a bit can have inside the bitheap */
 		unsigned width;                              /**< The width of the bitheap */
 		int height;                                 /**< The current maximum height of any column of the bitheap */
 		string name;                                /**< The name of the bitheap */
@@ -406,7 +407,7 @@ enum BitType : unsigned;
 	private:
 		Operator* op;
 
-		vector<vector<Bit*> > bits;                 /**< The bits currently contained in the bitheap, ordered into columns by weight in the bitheap,
+		vector<vector<Bit*> > bits;                 /**< The bits currently contained in the bitheap, ordered into columns by position in the bitheap,
 		                                                 and by arrival time of the bits, i.e. lexicographic order on (cycle, cp), inside each column. */
 		vector<vector<Bit*> > history;              /**< All the bits that have been added (and possibly removed at some point) to the bitheap. */
 		mpz_class constantBits;						/**< The sum of all the constant bits that need to be added to the bit heap
