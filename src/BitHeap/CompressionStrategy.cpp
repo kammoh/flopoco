@@ -251,7 +251,8 @@ namespace flopoco{
 	}
 
     void CompressionStrategy::printSolutionStatistics(){
-        REPORT(DEBUG, "calculating compression area");
+		REPORT(DEBUG, "calculating compression area");
+		REPORT(DETAILED, "!!! bitAmount.size()=" << bitAmount.size());
         unsigned int totalArea = 0;  //area in Compressor.hpp
         for(unsigned int s = 0; s < bitAmount.size() - 1; s++) {
 
@@ -260,13 +261,16 @@ namespace flopoco{
                 vector<pair<BasicCompressor *, unsigned int> > tempVector;
                 tempVector = solution.getCompressorsAtPosition(s, c);
 
+				REPORT(DETAILED, "!!! tempVector.size()=" << tempVector.size());
 
                 for (unsigned int j = 0; j < tempVector.size(); j++) {
+                	/*
                     if (tempVector[j].first==tempVector[j+1].first){
                         tempVector[j+1].second=+tempVector[j].second+1;
                         continue;
                     }
-                    REPORT(DETAILED, "applying " << tempVector[j].second+1 << " compressors of type " << tempVector[j].first->getStringOfIO() <<
+                    */
+                    REPORT(DETAILED, "!!! applying " << tempVector[j].second+1 << " compressors of type " << tempVector[j].first->getStringOfIO() <<
                                                  " at stage " << s << " and column " << c << " with a combined LUT-area cost of " << (tempVector[j].second+1)*tempVector[j].first->getArea());
                     totalArea+=(tempVector[j].second+1)*tempVector[j].first->getArea();
 
@@ -274,7 +278,7 @@ namespace flopoco{
                 }
             }
         }
-        REPORT(DETAILED, "total area of the compression is equivalent to " << totalArea << " LUTs");
+        REPORT(DETAILED, "!!! total area of the compression is equivalent to " << totalArea << " LUTs");
         REPORT(DETAILED, "total number of stages is " << bitAmount.size()-1);
     }
 
