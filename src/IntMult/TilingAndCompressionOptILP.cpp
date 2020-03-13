@@ -71,12 +71,12 @@ void TilingAndCompressionOptILP::solve()
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
             std::string var_name = p.first->getName();
             cout << var_name << "\t " << p.second << endl;
-            if(var_name.substr(1,1).compare("d") != 0) continue;
-            int mult_id = stoi(var_name.substr(2,dpS));
-            int x_negative = (var_name.substr(2+dpS,1).compare("m") == 0)?1:0;
-            int m_x_pos = stoi(var_name.substr(2+dpS+x_negative,dpX)) * ((x_negative)?(-1):1);
-            int y_negative = (var_name.substr(2+dpS+x_negative+dpX,1).compare("m") == 0)?1:0;
-            int m_y_pos = stoi(var_name.substr(2+dpS+dpX+x_negative+y_negative,dpY)) * ((y_negative)?(-1):1);
+            if(var_name.substr(0,1).compare("d") != 0) continue;
+            int mult_id = stoi(var_name.substr(1,dpS));
+            int x_negative = (var_name.substr(1+dpS,1).compare("m") == 0)?1:0;
+            int m_x_pos = stoi(var_name.substr(1+dpS+x_negative,dpX)) * ((x_negative)?(-1):1);
+            int y_negative = (var_name.substr(1+dpS+x_negative+dpX,1).compare("m") == 0)?1:0;
+            int m_y_pos = stoi(var_name.substr(1+dpS+dpX+x_negative+y_negative,dpY)) * ((y_negative)?(-1):1);
             cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
 
             total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
@@ -84,6 +84,8 @@ void TilingAndCompressionOptILP::solve()
             dsp_cost += (double)tiles[mult_id]->getDSPCost();
             auto coord = make_pair(m_x_pos, m_y_pos);
             TilingStrategy::solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
+
+
 
         }
     }
@@ -151,7 +153,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                             if(tiles[s]->shape_utilisation(xs, ys, wX, wY, signedIO) >=  occupation_threshold_ ){
                                 if(solve_Vars[s][xs+x_neg][ys+y_neg] == nullptr){
                                     stringstream nvarName;
-                                    nvarName << " d" << setfill('0') << setw(dpS) << s << ((xs < 0)?"m":"") << setfill('0') << setw(dpX) << ((xs<0)?-xs:xs) << ((ys < 0)?"m":"")<< setfill('0') << setw(dpY) << ((ys<0)?-ys:ys) ;
+                                    nvarName << "d" << setfill('0') << setw(dpS) << s << ((xs < 0)?"m":"") << setfill('0') << setw(dpX) << ((xs<0)?-xs:xs) << ((ys < 0)?"m":"")<< setfill('0') << setw(dpY) << ((ys<0)?-ys:ys) ;
                                     //std::cout << nvarName.str() << endl;
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
