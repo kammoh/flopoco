@@ -131,7 +131,8 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     while (ns /= 10)
         dpS++;
 
-    vector<ScaLP::Term> bitsinColumn(wX+wY);
+    unsigned bitHeapWidth = (int)(wX+wY);
+    vector<ScaLP::Term> bitsinColumn(bitHeapWidth+1);
     vector<vector<vector<ScaLP::Variable>>> solve_Vars(wS, vector<vector<ScaLP::Variable>>(wX+x_neg, vector<ScaLP::Variable>(wY+y_neg)));
     ScaLP::Term maxEpsTerm;
     __uint64_t sumOfPosEps = 0;
@@ -224,23 +225,23 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     }
 
     addFlipFlop();      //Add FF to list of compressors
-    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max+1, vector<ScaLP::Variable>(bitsinColumn.size()));
+    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max+1, vector<ScaLP::Variable>(bitsinColumn.size()+1));
     //ScaLP::Term selectLastStage;
     for(int s = 0; s <= s_max; s++){
-        vector<ScaLP::Term> bitsinNextColumn(wX+wY);
-        vector<ScaLP::Term> bitsinCurrentColumn(wX+wY);
-        vector<ScaLP::Term> bitsinLastStageColumn(wX+wY);
-        vector<ScaLP::Term> rcdDependencies(wX+wY);
+        vector<ScaLP::Term> bitsinNextColumn(bitHeapWidth+1);
+        vector<ScaLP::Term> bitsinCurrentColumn(bitHeapWidth+1);
+        vector<ScaLP::Term> bitsinLastStageColumn(bitHeapWidth+1);
+        vector<ScaLP::Term> rcdDependencies(bitHeapWidth+1);
 /*        stringstream stage;                 //
         stage << "D_" << s;
         ScaLP::Variable stageV = ScaLP::newBinaryVariable(stage.str());
         selectLastStage.add(stageV, 1);*/
-        for(unsigned c = 0; c < bitsinColumn.size(); c++){
+        for(unsigned c = 0; c <= bitHeapWidth; c++){        //one bit more for carry of ripple carry adder
             if(s < s_max - 1){
                 for(unsigned e = 0; e < possibleCompressors.size(); e++){
                     stringstream nvarName;
                     nvarName << "k_" << s << "_" << e << "_" << c;
-                    //std::cout << nvarName.str() << endl;
+                    std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV,  possibleCompressors[e]->area);    //append variable to cost function
                     for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights() && ce < (int)bitsinCurrentColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
@@ -254,13 +255,13 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 }
             }
             if(s == s_max-1){                   //consideration of the ripple carry adder in final stage
-                for(unsigned e = possibleCompressors.size()-1; e <= possibleCompressors.size()+2; e++) {
+                for(unsigned e = (c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()-1; e <= ((c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()+1); e++) {   //front element of ripple carry adder should only appear in the MSb column
                     stringstream nvarName;
                     nvarName << "k_" << s << "_" << e << "_" << c;                                                  //for final FFs or placeholder for 2-input ripple carry adder
-                    //std::cout << nvarName.str() << endl;
+                    std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                     obj.add(tempV, (e == possibleCompressors.size()-1)?0.5:1);    //append variable to cost function, r.c.a.-area (cost) is 1 6LUT
-                    bitsinCurrentColumn[c].add(tempV, (e == possibleCompressors.size()-1)?1:2);                 //FFs remove only one bit from current stage, but the  ripple carry adder two
+                    bitsinCurrentColumn[c].add(tempV, ((e == possibleCompressors.size()-1)?1:(c == bitHeapWidth)?0:2));                 //FFs remove only one bit from current stage, but the  ripple carry adder two, the front element of ripple carry adder does not remove any bit but jus proviedes the carry
                     bitsinNextColumn[c + 0].add(tempV, 1);
                     //if(c == bitsinColumn.size()-1)
                     //    bitsinNextColumn[c + 1].add(tempV, 1);
@@ -278,7 +279,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 //cout << curBits.str() << endl;
                 bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
             }
-            if(s == 0){
+            if(s == 0 && bitsInColAndStage[s][c] != nullptr){
                 stringstream consName0;
                 consName0 << "C0_" << s << "_" << c;
                 bitsinColumn[c].add(bitsInColAndStage[s][c], -1);      //Output bits from sub-multipliers
@@ -308,8 +309,6 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 ScaLP::Constraint c2Constraint = bitsinNextColumn[c] == 0;     //C2_s_c
                 c2Constraint.name = consName2.str();
                 solver->addConstraint(c2Constraint);
-            } else {
-
             }
             if(s_max-1 <= s){
                 stringstream consName3;
