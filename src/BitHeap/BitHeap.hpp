@@ -152,7 +152,7 @@ enum BitType : unsigned;
 		 *                          (by default 0)
 		 The signedness will be read from the Signal itself
 		 */
-		void subtractSignal(string name, int position = 0);
+		void subtractSignal(string name, int shift = 0);
 
 
 		/**
