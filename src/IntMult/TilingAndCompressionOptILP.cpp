@@ -65,7 +65,7 @@ void TilingAndCompressionOptILP::solve()
     ScaLP::Result res = solver->getResult();
 
     double total_cost = 0;
-    int dsp_cost = 0;
+    int dsp_cost = 0, own_lut_cost=0;;
     for(auto &p:res.values)
     {
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
@@ -80,6 +80,7 @@ void TilingAndCompressionOptILP::solve()
             cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
 
             total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
+            own_lut_cost += tiles[mult_id]->ownLUTCost(m_x_pos, m_y_pos, wX, wY);
             dsp_cost += (double)tiles[mult_id]->getDSPCost();
             auto coord = make_pair(m_x_pos, m_y_pos);
             TilingStrategy::solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
@@ -87,6 +88,7 @@ void TilingAndCompressionOptILP::solve()
         }
     }
     cout << "Total LUT cost:" << total_cost <<std::endl;
+    cout << "Own LUT cost:" << own_lut_cost <<std::endl;
     cout << "Total DSP cost:" << dsp_cost <<std::endl;
 /*
     solution.push_back(make_pair(tiles[1]->getParametrisation().tryDSPExpand(0, 0, wX, wY, signedIO), make_pair(0, 0)));
@@ -222,38 +224,68 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     }
 
     addFlipFlop();      //Add FF to list of compressors
-    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max, vector<ScaLP::Variable>(bitsinColumn.size()));
+    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max+1, vector<ScaLP::Variable>(bitsinColumn.size()));
     //ScaLP::Term selectLastStage;
-    for(int s = 0; s < s_max; s++){
+    for(int s = 0; s <= s_max; s++){
         vector<ScaLP::Term> bitsinNextColumn(wX+wY);
         vector<ScaLP::Term> bitsinCurrentColumn(wX+wY);
         vector<ScaLP::Term> bitsinLastStageColumn(wX+wY);
+        vector<ScaLP::Term> rcdDependencies(wX+wY);
 /*        stringstream stage;                 //
         stage << "D_" << s;
         ScaLP::Variable stageV = ScaLP::newBinaryVariable(stage.str());
         selectLastStage.add(stageV, 1);*/
         for(unsigned c = 0; c < bitsinColumn.size(); c++){
-            for(unsigned e = 0; e < possibleCompressors.size(); e++){
-                if(s < s_max - 1){
+            if(s < s_max - 1){
+                for(unsigned e = 0; e < possibleCompressors.size(); e++){
                     stringstream nvarName;
                     nvarName << "k_" << s << "_" << e << "_" << c;
-                    //std::cout << nvarName.str() << endl;
+                    std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV,  possibleCompressors[e]->area);    //append variable to cost function
                     for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights() && ce < (int)bitsinCurrentColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
                         //cout << possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
                         bitsinCurrentColumn[c+ce].add(tempV, possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false));
                     }
-                    for(int ce = 0; ce < (int) possibleCompressors[e]->getOutHeights() && ce < (int)bitsinNextColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
+                    for(int ce = 0; ce < (int) possibleCompressors[e]->getOutHeights() && ce < (int)bitsinNextColumn.size() - (int)c; ce++){   //Bits that are added by compressor e in stage s+1 in column c for constraint C2
                         //cout << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << endl;
                         bitsinNextColumn[c+ce].add(tempV, possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false));
                     }
                 }
             }
+            if(s == s_max-1){                   //consideration of the ripple carry adder in final stage
+                for(unsigned e = possibleCompressors.size()-1; e <= possibleCompressors.size()+2; e++) {
+                    stringstream nvarName;
+                    nvarName << "k_" << s << "_" << e << "_" << c;                                                  //for final FFs or placeholder for 2-input ripple carry adder
+                    std::cout << nvarName.str() << endl;
+                    cout << "try " << endl;
+                    ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
+                    cout << "var " << endl;;
+                    obj.add(tempV, (e == possibleCompressors.size()-1)?0.5:1);    //append variable to cost function, r.c.a.-area (cost) is 1 6LUT
+                    cout << "obj " << endl;;
+                    bitsinCurrentColumn[c].add(tempV, (e == possibleCompressors.size()-1)?1:2);                 //FFs remove only one bit from current stage, but the  ripple carry adder two
+                    cout << "rmBits " << endl;;
+                    bitsinNextColumn[c + 0].add(tempV, 1);
+                    cout << "addBits " << endl;;
+                    //if(c == bitsinColumn.size()-1)
+                    //    bitsinNextColumn[c + 1].add(tempV, 1);
+                    cout << "laddBits " << endl;
+                    if(0 < c && possibleCompressors.size()+1 <= e)
+                        rcdDependencies[c-1].add(tempV, -1);
+                    cout << (0 < c && possibleCompressors.size()+1 <= e) << " " << endl;
+                    if(c < bitsinColumn.size()-1 && possibleCompressors.size() <= e && e < possibleCompressors.size()+2)
+                        rcdDependencies[c].add(tempV, 1);
+                    cout << (c < bitsinColumn.size()-1 && possibleCompressors.size() <= e && e < possibleCompressors.size()+2) << " " << endl;
+                    if(c == bitsinColumn.size() && e == possibleCompressors.size()+2)
+                        rcdDependencies[c].add(tempV, 1);
+                    cout << (c == bitsinColumn.size() && e == possibleCompressors.size()+2) << " " << endl;
+                    cout << " ok" << endl;
+                }
+            }
             stringstream curBits;
             if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
                 curBits << "N_" << s << "_" << c;
-                //cout << curBits.str() << endl;
+                cout << curBits.str() << endl;
                 bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
             }
             if(s == 0){
@@ -264,37 +296,49 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 c0Constraint.name = consName0.str();
                 solver->addConstraint(c0Constraint);
             }
-            if(s < s_max - 1){
+
+            if(s < s_max){
                 stringstream consName1, consName2, zeroBits, nextBits;
                 consName1 << "C1_" << s << "_" << c;
                 zeroBits << "Z_" << s << "_" << c;
+                cout << zeroBits.str() << endl;
                 bitsinCurrentColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
                 bitsinCurrentColumn[c].add(bitsInColAndStage[s][c], -1);      //Bits arriving in current stage of the compressor tree
                 ScaLP::Constraint c1Constraint = bitsinCurrentColumn[c] == 0;     //C1_s_c
                 c1Constraint.name = consName1.str();
                 solver->addConstraint(c1Constraint);
                 consName2 << "C2_" << s << "_" << c;
+                cout << consName2.str() << endl;
                 if(bitsInColAndStage[s+1][c] == nullptr){
                     nextBits << "N_" << s+1 << "_" << c;
-                    //cout << nextBits.str() << endl;
+                    cout << nextBits.str() << endl;
                     bitsInColAndStage[s+1][c] = ScaLP::newIntegerVariable(nextBits.str(), 0, ScaLP::INF());
                 }
                 bitsinNextColumn[c].add(bitsInColAndStage[s+1][c], -1); //Output Bits of compressors to next stage
                 ScaLP::Constraint c2Constraint = bitsinNextColumn[c] == 0;     //C2_s_c
                 c2Constraint.name = consName2.str();
                 solver->addConstraint(c2Constraint);
+            } else {
+
             }
-            if(s == s_max-1){
+            if(s_max-1 <= s){
                 stringstream consName3;
                 consName3 << "C3_" << s << "_" << c;
                 //bitsinLastStageColumn[c].add(stageV, 10000);
                 bitsinLastStageColumn[c].add(bitsInColAndStage[s][c], 1);
                 //if(s < s_max - 1)
                 //    bitsinLastStageColumn[c].add(bitsInColAndStage[s+1][c], 4);
-                ScaLP::Constraint c3Constraint = bitsinLastStageColumn[c] <= 2;     //C3_s_c
+                ScaLP::Constraint c3Constraint = bitsinLastStageColumn[c] <= ((s == s_max-1)?2:1);     //C3_s_c
                 c3Constraint.name = consName3.str();
                 solver->addConstraint(c3Constraint);
                 //cout << consName3.str() << " " << stage.str() << endl;
+                if(0 < c){
+                    stringstream consName5;
+                    consName5 << "C5_" << s << "_" << c;
+                    ScaLP::Constraint c5Constraint = rcdDependencies[c-1] == 0;     //C5_s_c
+                    c5Constraint.name = consName5.str();
+                    solver->addConstraint(c5Constraint);
+                }
             }
 
         }
