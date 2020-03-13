@@ -241,7 +241,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 for(unsigned e = 0; e < possibleCompressors.size(); e++){
                     stringstream nvarName;
                     nvarName << "k_" << s << "_" << e << "_" << c;
-                    std::cout << nvarName.str() << endl;
+                    //std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV,  possibleCompressors[e]->area);    //append variable to cost function
                     for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights() && ce < (int)bitsinCurrentColumn.size() - (int)c; ce++){   //Bits that can be removed by compressor e in stage s in column c for constraint C1
@@ -258,7 +258,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 for(unsigned e = (c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()-1; e <= ((c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()+1); e++) {   //front element of ripple carry adder should only appear in the MSb column
                     stringstream nvarName;
                     nvarName << "k_" << s << "_" << e << "_" << c;                                                  //for final FFs or placeholder for 2-input ripple carry adder
-                    std::cout << nvarName.str() << endl;
+                    //std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                     obj.add(tempV, (e == possibleCompressors.size()-1)?0.5:1);    //append variable to cost function, r.c.a.-area (cost) is 1 6LUT
                     bitsinCurrentColumn[c].add(tempV, ((e == possibleCompressors.size()-1)?1:(c == bitHeapWidth)?0:2));                 //FFs remove only one bit from current stage, but the  ripple carry adder two, the front element of ripple carry adder does not remove any bit but jus proviedes the carry
@@ -321,7 +321,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 c3Constraint.name = consName3.str();
                 solver->addConstraint(c3Constraint);
                 //cout << consName3.str() << " " << stage.str() << endl;
-                if(0 < c){
+                if(0 < c && s < s_max){
                     stringstream consName5;
                     consName5 << "C5_" << s << "_" << c;
                     ScaLP::Constraint c5Constraint = rcdDependencies[c-1] == 0;     //C5_s_c
