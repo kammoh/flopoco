@@ -46,7 +46,7 @@ void TilingAndCompressionOptILP::solve()
     solver->timeout = target->getILPTimeout();
 
     ScaLP::status stat;
-    int s_max = 0;
+    s_max = 0;
     do{
         s_max++;
         solver->reset();
@@ -71,22 +71,41 @@ void TilingAndCompressionOptILP::solve()
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
             std::string var_name = p.first->getName();
             cout << var_name << "\t " << p.second << endl;
-            if(var_name.substr(0,1).compare("d") != 0) continue;
-            int mult_id = stoi(var_name.substr(1,dpS));
-            int x_negative = (var_name.substr(1+dpS,1).compare("m") == 0)?1:0;
-            int m_x_pos = stoi(var_name.substr(1+dpS+x_negative,dpX)) * ((x_negative)?(-1):1);
-            int y_negative = (var_name.substr(1+dpS+x_negative+dpX,1).compare("m") == 0)?1:0;
-            int m_y_pos = stoi(var_name.substr(1+dpS+dpX+x_negative+y_negative,dpY)) * ((y_negative)?(-1):1);
-            cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
+            if(var_name.substr(0,1).compare("d") != 0 && var_name.substr(0,1).compare("k") != 0) continue;
+            switch(var_name.substr(0,1).at(0)){
+                case 'd':{
+                    int mult_id = stoi(var_name.substr(1,dpS));
+                    int x_negative = (var_name.substr(1+dpS,1).compare("m") == 0)?1:0;
+                    int m_x_pos = stoi(var_name.substr(1+dpS+x_negative,dpX)) * ((x_negative)?(-1):1);
+                    int y_negative = (var_name.substr(1+dpS+x_negative+dpX,1).compare("m") == 0)?1:0;
+                    int m_y_pos = stoi(var_name.substr(1+dpS+dpX+x_negative+y_negative,dpY)) * ((y_negative)?(-1):1);
+                    //cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
 
-            total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
-            own_lut_cost += tiles[mult_id]->ownLUTCost(m_x_pos, m_y_pos, wX, wY);
-            dsp_cost += (double)tiles[mult_id]->getDSPCost();
-            auto coord = make_pair(m_x_pos, m_y_pos);
-            TilingStrategy::solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
+                    total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
+                    own_lut_cost += tiles[mult_id]->ownLUTCost(m_x_pos, m_y_pos, wX, wY);
+                    dsp_cost += (double)tiles[mult_id]->getDSPCost();
+                    auto coord = make_pair(m_x_pos, m_y_pos);
+                    TilingStrategy::solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
+                    break;
+                }
+                case 'k':{
+ /*                   int sta_id = stoi(var_name.substr(2,dpSt));
+                    int com_id = stoi(var_name.substr(2+dpSt+1,dpK));
+                    int col_id = stoi(var_name.substr(2+dpSt+1+dpK+1,dpC));
+                    //cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id;
+                    if(possibleCompressors[com_id] != flipflop && sta_id < s_max-1) {
+                        float instances = p.second;
+                        while(instances-- > 0.5){
+                            CompressionStrategy::solution.addCompressor(sta_id, col_id, possibleCompressors[com_id]);
+                            //cout << " new instance " << endl;
+                        }
 
-
-
+                    }*/
+                    break;
+                }
+                default:
+                    continue;
+            }
         }
     }
     cout << "Total LUT cost:" << total_cost <<std::endl;
@@ -123,8 +142,9 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         x_neg = (x_neg < (int)tiles[s]->wX())?tiles[s]->wX() - 1:x_neg;
         y_neg = (y_neg < (int)tiles[s]->wY())?tiles[s]->wY() - 1:y_neg;
     }
-    int nx = wX-1, ny = wY-1, ns = wS-1; dpX = 1; dpY = 1; dpS = 1; //calc number of decimal places, for var names
-    nx = (x_neg > nx)?x_neg:nx;                                     //in case the extend in negative direction is larger
+    int nx = wX-1, ny = wY-1, ns = wS-1; dpX = 1; dpY = 1; dpS = 1;     //calc number of decimal places, for var names
+    int nk = possibleCompressors.size()+4, nc = wX+wY+1, nst = s_max; dpK = 1; dpC = 1; dpSt = 1;
+    nx = (x_neg > nx)?x_neg:nx;                                         //in case the extend in negative direction is larger
     ny = (y_neg > ny)?y_neg:ny;
     while (nx /= 10)
         dpX++;
@@ -132,6 +152,12 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         dpY++;
     while (ns /= 10)
         dpS++;
+    while (nk /= 10)
+        dpK++;
+    while (nc /= 10)
+        dpC++;
+    while (nst /= 10)
+        dpSt++;
 
     unsigned bitHeapWidth = (int)(wX+wY);
     vector<ScaLP::Term> bitsinColumn(bitHeapWidth+1);
@@ -242,7 +268,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if(s < s_max - 1){
                 for(unsigned e = 0; e < possibleCompressors.size(); e++){
                     stringstream nvarName;
-                    nvarName << "k_" << s << "_" << e << "_" << c;
+                    nvarName << "k_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpK) << e << "_" << setfill('0') << setw(dpC) << c;
                     //std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV,  possibleCompressors[e]->area);    //append variable to cost function
@@ -259,7 +285,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if(s == s_max-1){                   //consideration of the ripple carry adder in final stage
                 for(unsigned e = (c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()-1; e <= ((c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()+1); e++) {   //front element of ripple carry adder should only appear in the MSb column
                     stringstream nvarName;
-                    nvarName << "k_" << s << "_" << e << "_" << c;                                                  //for final FFs or placeholder for 2-input ripple carry adder
+                    nvarName << "k_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpK) << e << "_" << setfill('0') << setw(dpC) << c;      //for final FFs or placeholder for 2-input ripple carry adder
                     //std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                     obj.add(tempV, (e == possibleCompressors.size()-1)?0.5:1);    //append variable to cost function, r.c.a.-area (cost) is 1 6LUT
@@ -358,7 +384,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if(possibleCompressors[e]->getHeights() == 1 && possibleCompressors[e]->getHeightsAtColumn(0) == 1){
                 if(possibleCompressors[e]->getOutHeights() == 1 && possibleCompressors[e]->getOutHeightsAtColumn(0) == 1){
                     foundFlipflop = true;
-                    //flipflop = possibleCompressors[e];
+                    flipflop = possibleCompressors[e];
                     break;
                 }
             }
@@ -373,13 +399,71 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             BasicCompressor *newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), vector<int> {1}, 0.5, "combinatorial", true);
             possibleCompressors.push_back(newCompressor);
 
-            //flipflop = newCompressor;
+            flipflop = newCompressor;
         }
 
         return !foundFlipflop;
     }
 
     void TilingAndCompressionOptILP::compressionAlgorithm() {
+        //for debugging it might be better to order the compressors by efficiency
+        orderCompressorsByCompressionEfficiency();
 
+        //adds the Bits to stages and columns
+        orderBitsByColumnAndStage();
+
+        //populates bitAmount
+        fillBitAmounts();
+
+        //prints out how the inputBits of the bitheap looks like
+        printBitAmounts();
+
+        //new solution
+        CompressionStrategy::solution = BitHeapSolution();
+        CompressionStrategy::solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
+
+        resizeBitAmount(s_max);
+        ScaLP::Result res = solver->getResult();
+        for(auto &p:res.values)
+        {
+            if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
+                std::string var_name = p.first->getName();
+                //cout << var_name << "\t " << p.second << endl;
+                if(var_name.substr(0,1).compare("k") != 0) continue;
+                int sta_id = stoi(var_name.substr(2,dpSt));
+                int com_id = stoi(var_name.substr(2+dpSt+1,dpK));
+                int col_id = stoi(var_name.substr(2+dpSt+1+dpK+1,dpC));
+                //cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id << endl;
+                if(possibleCompressors[com_id] != flipflop && sta_id < s_max-1) {
+                    float instances = p.second;
+                    while(instances-- > 0.5){
+                        CompressionStrategy::solution.addCompressor(sta_id, col_id, possibleCompressors[com_id]);
+                        //cout << " new instance " << endl;
+                        cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id << endl;
+                    }
+                }
+            }
+        }
+
+        //reports the area in LUT-equivalents
+        printSolutionStatistics();
+
+        //here the VHDL-Code for the compressors as well as the bits->compressors->bits are being written.
+        applyAllCompressorsFromSolution();
     }
+
+    void TilingAndCompressionOptILP::resizeBitAmount(unsigned int stages){
+
+        stages++;	//we need also one stage for the outputbits
+
+        unsigned int columns = bitAmount[bitAmount.size() - 1].size();
+        //we need one stage more for the
+        while(bitAmount.size() < stages){
+            bitAmount.resize(bitAmount.size() + 1);
+            bitAmount[bitAmount.size() - 1].resize(columns, 0);
+        }
+    }
+
+
+
 }   //end namespace flopoco

@@ -43,14 +43,17 @@ private:
     size_t numUsedMults_;
     size_t max_pref_mult_;
     float occupation_threshold_;
-    int dpX, dpY, dpS, wS;
+    int dpX, dpY, dpS, wS, dpK, dpC, dpSt, s_max;
     vector<BaseMultiplierCategory*> tiles;
+    BasicCompressor* flipflop;
 #ifdef HAVE_SCALP
     void constructProblem(int s_max);
     bool addFlipFlop();
 
     ScaLP::Solver *solver;
 #endif
-};
+
+        void resizeBitAmount(unsigned int stages);
+    };
 
 }

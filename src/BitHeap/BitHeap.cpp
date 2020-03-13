@@ -785,6 +785,18 @@ namespace flopoco {
 		isCompressed = true;
 	}
 
+    void BitHeap::startCompression(CompressionStrategy* compressionStrategy)
+    {
+        if (op->getTarget()->generateFigures())
+            latexPlot();
+
+        compressionStrategy->startCompression();
+
+        REPORT(DETAILED,"Using solution for the compressor tree generated combined with tiling");
+        //mark the bitheap compressed
+        isCompressed = true;
+    }
+
 
 	string BitHeap::getSumName()
 	{

@@ -162,6 +162,15 @@ enum BitType : unsigned;
 		 */
 		void startCompression();
 
+
+        /**
+        * @brief generate the VHDL for the bit heap.
+        * @param strategy passes the instance with the precomputed results
+        * Uses a precomputed result for the compressor tree
+        * To be called last by operators using BitHeap.
+        */
+        void startCompression(CompressionStrategy *compressionStrategy);
+
 		/**
 		 * @brief return the name of the compressed sum
 		 */
