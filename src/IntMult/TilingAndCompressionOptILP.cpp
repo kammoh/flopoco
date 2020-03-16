@@ -424,7 +424,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         CompressionStrategy::solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
         vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)(wX+wY),0));
-        resizeBitAmount(s_max);
+        resizeBitAmount(s_max-1);
         ScaLP::Result res = solver->getResult();
         for(auto &p:res.values)
         {
