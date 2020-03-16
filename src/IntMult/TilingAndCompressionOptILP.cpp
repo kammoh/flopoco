@@ -1,5 +1,5 @@
 #include "IntMult/TilingAndCompressionOptILP.hpp"
-
+#include "IntMultiplier.hpp"
 #include "BaseMultiplierLUT.hpp"
 #include "MultiplierTileCollection.hpp"
 
@@ -145,8 +145,9 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         x_neg = (x_neg < (int)tiles[s]->wX())?tiles[s]->wX() - 1:x_neg;
         y_neg = (y_neg < (int)tiles[s]->wY())?tiles[s]->wY() - 1:y_neg;
     }
+    prodWidth = IntMultiplier::prodsize(wX, wY);
     int nx = wX-1, ny = wY-1, ns = wS-1; dpX = 1; dpY = 1; dpS = 1;     //calc number of decimal places, for var names
-    int nk = possibleCompressors.size()+4, nc = wX+wY+1, nst = s_max; dpK = 1; dpC = 1; dpSt = 1;
+    int nk = possibleCompressors.size()+4, nc = prodWidth + 1, nst = s_max; dpK = 1; dpC = 1; dpSt = 1;
     nx = (x_neg > nx)?x_neg:nx;                                         //in case the extend in negative direction is larger
     ny = (y_neg > ny)?y_neg:ny;
     while (nx /= 10)
@@ -162,8 +163,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     while (nst /= 10)
         dpSt++;
 
-    unsigned bitHeapWidth = (int)(wX+wY);
-    vector<ScaLP::Term> bitsinColumn(bitHeapWidth+1);
+    vector<ScaLP::Term> bitsinColumn(prodWidth + 1);
     vector<vector<vector<ScaLP::Variable>>> solve_Vars(wS, vector<vector<ScaLP::Variable>>(wX+x_neg, vector<ScaLP::Variable>(wY+y_neg)));
     ScaLP::Term maxEpsTerm;
     __uint64_t sumOfPosEps = 0;
@@ -190,12 +190,12 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
 
                                     int col_min = xs+ys+tiles[s]->getRelativeResultLSBWeight(tiles[s]->getParametrisation());
                                     int col_max = xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation());
-                                    for(col_min = ((col_min < 0)?0:col_min); col_min < (((wX+wY)<col_max)?wX+wY:col_max); col_min++){
+                                    for(col_min = ((col_min < 0)?0:col_min); col_min < (((int)prodWidth<col_max)?(int)prodWidth:col_max); col_min++){
                                         //cout << "position " << col_min << endl;
                                         bitsinColumn[col_min].add(tempV, 1);
                                     }
 
-                                    if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut))){
+                                    if(wOut < (int)prodWidth && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(prodWidth-wOut))){
                                         maxEpsTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], ((unsigned long)1<<(x+y)));
                                         //maxEpsTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
                                     }
@@ -207,10 +207,11 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 }
             }
             ScaLP::Constraint c1Constraint;
-            if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut-1))){
+            if(wOut < (int)prodWidth && ((unsigned long)1 << (x + y)) <= ((unsigned long)1 << (prodWidth - wOut - 1))){
                 c1Constraint = pxyTerm <= (bool)1;
                 sumOfPosEps += ((unsigned long)1<<(x+y));
                 cout << sumOfPosEps << " " << ((unsigned long)1<<(x+y)) << endl;
+                cout << wOut << " " << (wOut < (int)prodWidth) << " " << ((unsigned long)1<<(x+y)) << " " << ((unsigned long)1<<(prodWidth-wOut-1)) << endl;
             } else {
                 c1Constraint = pxyTerm == (bool)1;
             }
@@ -244,10 +245,10 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     }
 
     //make shure the available precision is present in case of truncation
-    if(wOut < wX+wY){
-        cout << "   multiplier is truncated by " << wX+wY-wOut << " bits, ensure sufficient precision..." << endl;
-        cout << sumOfPosEps << " " << ((unsigned long)1<<(wX+wY-wOut-1));
-        ScaLP::Constraint truncConstraint = maxEpsTerm >= (sumOfPosEps-((unsigned long)1<<(wX+wY-wOut-1)));
+    if(wOut < (int)prodWidth){
+        cout << "   multiplier is truncated by " << prodWidth-wOut << " bits, ensure sufficient precision..." << endl;
+        cout << sumOfPosEps << " " << ((unsigned long)1<<(prodWidth-wOut-1));
+        ScaLP::Constraint truncConstraint = maxEpsTerm >= (sumOfPosEps-((unsigned long)1<<(prodWidth-wOut-1)));
         //ScaLP::Constraint truncConstraint = maxEpsTerm >= (bool)1;
         stringstream consName;
         consName << "maxEps";
@@ -259,15 +260,15 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max+1, vector<ScaLP::Variable>(bitsinColumn.size()+1));
     //ScaLP::Term selectLastStage;
     for(int s = 0; s <= s_max; s++){
-        vector<ScaLP::Term> bitsinNextColumn(bitHeapWidth+1);
-        vector<ScaLP::Term> bitsinCurrentColumn(bitHeapWidth+1);
-        vector<ScaLP::Term> bitsinLastStageColumn(bitHeapWidth+1);
-        vector<ScaLP::Term> rcdDependencies(bitHeapWidth+1);
+        vector<ScaLP::Term> bitsinNextColumn(prodWidth + 1);
+        vector<ScaLP::Term> bitsinCurrentColumn(prodWidth + 1);
+        vector<ScaLP::Term> bitsinLastStageColumn(prodWidth + 1);
+        vector<ScaLP::Term> rcdDependencies(prodWidth + 1);
 /*        stringstream stage;                 //
         stage << "D_" << s;
         ScaLP::Variable stageV = ScaLP::newBinaryVariable(stage.str());
         selectLastStage.add(stageV, 1);*/
-        for(unsigned c = 0; c <= bitHeapWidth; c++){        //one bit more for carry of ripple carry adder
+        for(unsigned c = 0; c <= prodWidth; c++){        //one bit more for carry of ripple carry adder
             if(s < s_max - 1){
                 for(unsigned e = 0; e < possibleCompressors.size(); e++){
                     stringstream nvarName;
@@ -286,13 +287,13 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 }
             }
             if(s == s_max-1){                   //consideration of the ripple carry adder in final stage
-                for(unsigned e = (c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()-1; e <= ((c == bitHeapWidth)?possibleCompressors.size()+2:possibleCompressors.size()+1); e++) {   //front element of ripple carry adder should only appear in the MSb column
+                for(unsigned e = (c == prodWidth) ? possibleCompressors.size() + 2 : possibleCompressors.size() - 1; e <= ((c == prodWidth) ? possibleCompressors.size() + 2 : possibleCompressors.size() + 1); e++) {   //front element of ripple carry adder should only appear in the MSb column
                     stringstream nvarName;
                     nvarName << "k_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpK) << e << "_" << setfill('0') << setw(dpC) << c;      //for final FFs or placeholder for 2-input ripple carry adder
                     //std::cout << nvarName.str() << endl;
                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                     obj.add(tempV, (e == possibleCompressors.size()-1)?0.5:1);    //append variable to cost function, r.c.a.-area (cost) is 1 6LUT
-                    bitsinCurrentColumn[c].add(tempV, ((e == possibleCompressors.size()-1)?1:(c == bitHeapWidth)?0:2));                 //FFs remove only one bit from current stage, but the  ripple carry adder two, the front element of ripple carry adder does not remove any bit but jus proviedes the carry
+                    bitsinCurrentColumn[c].add(tempV, ((e == possibleCompressors.size()-1)?1: (c == prodWidth) ? 0 : 2));                 //FFs remove only one bit from current stage, but the  ripple carry adder two, the front element of ripple carry adder does not remove any bit but jus proviedes the carry
                     bitsinNextColumn[c + 0].add(tempV, 1);
                     //if(c == bitsinColumn.size()-1)
                     //    bitsinNextColumn[c + 1].add(tempV, 1);
@@ -423,7 +424,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         CompressionStrategy::solution = BitHeapSolution();
         CompressionStrategy::solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
-        vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)(wX+wY),0));
+        vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)prodWidth,0));
         resizeBitAmount(s_max-1);
         ScaLP::Result res = solver->getResult();
         for(auto &p:res.values)

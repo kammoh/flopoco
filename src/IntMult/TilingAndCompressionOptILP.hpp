@@ -44,6 +44,7 @@ private:
     size_t max_pref_mult_;
     float occupation_threshold_;
     int dpX, dpY, dpS, wS, dpK, dpC, dpSt, s_max;
+    unsigned prodWidth;
     vector<BaseMultiplierCategory*> tiles;
     BasicCompressor* flipflop;
 #ifdef HAVE_SCALP
