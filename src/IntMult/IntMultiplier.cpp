@@ -267,13 +267,12 @@ namespace flopoco {
 			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
 		}
 
- /*       if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
+        if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
             std::cout << "Class is derived from CompressionStrategy, passing result for compressor tree.";
             bitHeap.startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
         } else {
             bitHeap.startCompression();
-        }*/
-        bitHeap.startCompression();
+        }
 
 		vhdl << tab << "R" << " <= " << bitHeap.getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
 

@@ -45,6 +45,9 @@ void TilingAndCompressionOptILP::solve()
     solver = new ScaLP::Solver(ScaLP::newSolverDynamic({target->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
     solver->timeout = target->getILPTimeout();
 
+    //for debugging it might be better to order the compressors by efficiency
+    orderCompressorsByCompressionEfficiency();
+
     ScaLP::status stat;
     s_max = 0;
     do{
@@ -319,7 +322,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if(s < s_max){
                 stringstream consName1, consName2, zeroBits, nextBits;
                 consName1 << "C1_" << s << "_" << c;
-                zeroBits << "Z_" << s << "_" << c;
+                zeroBits << "Z_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpC) << c;
                 //cout << zeroBits.str() << endl;
                 bitsinCurrentColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
                 bitsinCurrentColumn[c].add(bitsInColAndStage[s][c], -1);      //Bits arriving in current stage of the compressor tree
@@ -406,8 +409,6 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     }
 
     void TilingAndCompressionOptILP::compressionAlgorithm() {
-        //for debugging it might be better to order the compressors by efficiency
-        orderCompressorsByCompressionEfficiency();
 
         //adds the Bits to stages and columns
         orderBitsByColumnAndStage();
@@ -422,6 +423,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         CompressionStrategy::solution = BitHeapSolution();
         CompressionStrategy::solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
+        vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)(wX+wY),0));
         resizeBitAmount(s_max);
         ScaLP::Result res = solver->getResult();
         for(auto &p:res.values)
@@ -429,18 +431,35 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
                 std::string var_name = p.first->getName();
                 //cout << var_name << "\t " << p.second << endl;
-                if(var_name.substr(0,1).compare("k") != 0) continue;
-                int sta_id = stoi(var_name.substr(2,dpSt));
-                int com_id = stoi(var_name.substr(2+dpSt+1,dpK));
-                int col_id = stoi(var_name.substr(2+dpSt+1+dpK+1,dpC));
-                //cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id << endl;
-                if(possibleCompressors[com_id] != flipflop && sta_id < s_max-1) {
-                    float instances = p.second;
-                    while(instances-- > 0.5){
-                        CompressionStrategy::solution.addCompressor(sta_id, col_id, possibleCompressors[com_id]);
-                        //cout << " new instance " << endl;
-                        cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id << endl;
+                //if(var_name.substr(0,1).compare("k") != 0) continue;
+                switch(var_name.substr(0,1).at(0)) {
+                    case 'k':{
+                        int sta_id = stoi(var_name.substr(2, dpSt));
+                        int com_id = stoi(var_name.substr(2 + dpSt + 1, dpK));
+                        int col_id = stoi(var_name.substr(2 + dpSt + 1 + dpK + 1, dpC));
+                        //cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id << endl;
+                        if (possibleCompressors[com_id] != flipflop && sta_id < s_max - 1) {
+                            float instances = p.second;
+                            while (instances-- > 0.5) {
+                                CompressionStrategy::solution.addCompressor(sta_id, col_id, possibleCompressors[com_id]);
+                                //cout << " new instance " << endl;
+                                cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id
+                                     << " compressor type " << possibleCompressors[com_id]->getStringOfIO() << endl;
+                            }
+                        }
+                        break;
                     }
+                    case 'Z':{
+                        int sta_id = stoi(var_name.substr(2, dpSt));
+                        int col_id = stoi(var_name.substr(2 + dpSt + 1, dpC));
+                        zeroInputsVector[sta_id][col_id] = (int)(-1);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                for(int stage = 0; stage < s_max; stage++){
+                    CompressionStrategy::solution.setEmptyInputsByRemainingBits(stage, zeroInputsVector[stage]);
                 }
             }
         }
