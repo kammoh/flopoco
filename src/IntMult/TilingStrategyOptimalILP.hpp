@@ -42,6 +42,7 @@ private:
     size_t max_pref_mult_;
     float occupation_threshold_;
     int dpX, dpY, dpS, wS;
+    unsigned prodWidth;
     vector<BaseMultiplierCategory*> tiles;
 #ifdef HAVE_SCALP
     void constructProblem();

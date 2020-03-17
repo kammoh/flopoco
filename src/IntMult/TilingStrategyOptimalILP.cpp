@@ -1,5 +1,5 @@
 #include "IntMult/TilingStrategyOptimalILP.hpp"
-
+#include "IntMultiplier.hpp"
 #include "BaseMultiplierLUT.hpp"
 #include "MultiplierTileCollection.hpp"
 
@@ -27,7 +27,10 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
 		occupation_threshold_{occupation_threshold},
 		tiles{mtc_.MultTileCollection}
 	{
-
+        for(auto &p:tiles)
+        {
+                cout << p->getLUTCost(0, 0, wX, wY) << " " << p->getType() << endl;
+        }
 	}
 
 void TilingStrategyOptimalILP::solve()
@@ -53,7 +56,7 @@ void TilingStrategyOptimalILP::solve()
     ScaLP::Result res = solver->getResult();
 
     double total_cost = 0;
-    int dsp_cost = 0;
+    int dsp_cost = 0, own_lut_cost=0;
     for(auto &p:res.values)
     {
         if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
@@ -66,6 +69,7 @@ void TilingStrategyOptimalILP::solve()
             cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY) << std::endl;
 
             total_cost += (double)tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY);
+            own_lut_cost += tiles[mult_id]->ownLUTCost(m_x_pos, m_y_pos, wX, wY);
             dsp_cost += (double)tiles[mult_id]->getDSPCost();
             auto coord = make_pair(m_x_pos, m_y_pos);
             solution.push_back(make_pair(tiles[mult_id]->getParametrisation().tryDSPExpand(m_x_pos, m_y_pos, wX, wY, signedIO), coord));
@@ -73,6 +77,7 @@ void TilingStrategyOptimalILP::solve()
         }
     }
     cout << "Total LUT cost:" << total_cost <<std::endl;
+    cout << "Own LUT cost:" << own_lut_cost <<std::endl;
     cout << "Total DSP cost:" << dsp_cost <<std::endl;
 /*
     solution.push_back(make_pair(tiles[1]->getParametrisation().tryDSPExpand(0, 0, wX, wY, signedIO), make_pair(0, 0)));
@@ -100,6 +105,7 @@ void TilingStrategyOptimalILP::constructProblem()
     //Assemble cost function, declare problem variables
     cout << "   assembling cost function, declaring problem variables..." << endl;
     ScaLP::Term obj;
+    prodWidth = IntMultiplier::prodsize(wX, wY);
     int x_neg = 0, y_neg = 0;
     for(int s = 0; s < wS; s++){
         x_neg = (x_neg < (int)tiles[s]->wX())?tiles[s]->wX() - 1:x_neg;
@@ -138,7 +144,7 @@ void TilingStrategyOptimalILP::constructProblem()
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
                                     obj.add(tempV, (double)tiles[s]->getLUTCost(xs, ys, wX, wY));    //append variable to cost function
-                                    if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut))){
+                                    if(wOut < (int)prodWidth && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<((int)prodWidth-wOut))){
                                         maxEpsTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], ((unsigned long)1<<(x+y)));
                                         //maxEpsTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
                                     }
@@ -150,7 +156,7 @@ void TilingStrategyOptimalILP::constructProblem()
                 }
             }
             ScaLP::Constraint c1Constraint;
-            if(wOut < wX+wY && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<(wX+wY-wOut-1))){
+            if(wOut < (int)prodWidth && ((unsigned long)1<<(x+y)) <= ((unsigned long)1<<((int)prodWidth-wOut-1))){
                 c1Constraint = pxyTerm <= (bool)1;
                 sumOfPosEps += ((unsigned long)1<<(x+y));
                 cout << sumOfPosEps << " " << ((unsigned long)1<<(x+y)) << endl;
@@ -187,10 +193,10 @@ void TilingStrategyOptimalILP::constructProblem()
     }
 
     //make shure the available precision is present in case of truncation
-    if(wOut < wX+wY){
-        cout << "   multiplier is truncated by " << wX+wY-wOut << " bits, ensure sufficient precision..." << endl;
-        cout << sumOfPosEps << " " << ((unsigned long)1<<(wX+wY-wOut-1));
-        ScaLP::Constraint truncConstraint = maxEpsTerm >= (sumOfPosEps-((unsigned long)1<<(wX+wY-wOut-1)));
+    if(wOut < (int)prodWidth){
+        cout << "   multiplier is truncated by " << (int)prodWidth-wOut << " bits, ensure sufficient precision..." << endl;
+        cout << sumOfPosEps << " " << ((unsigned long)1<<((int)prodWidth-wOut-1));
+        ScaLP::Constraint truncConstraint = maxEpsTerm >= (sumOfPosEps-((unsigned long)1<<((int)prodWidth-wOut-1)));
         //ScaLP::Constraint truncConstraint = maxEpsTerm >= (bool)1;
         stringstream consName;
         consName << "maxEps";
