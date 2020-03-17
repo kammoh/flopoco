@@ -424,6 +424,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         CompressionStrategy::solution = BitHeapSolution();
         CompressionStrategy::solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
+        float compressor_cost = 0;
         vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)prodWidth,0));
         resizeBitAmount(s_max-1);
         ScaLP::Result res = solver->getResult();
@@ -434,29 +435,29 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 //cout << var_name << "\t " << p.second << endl;
                 //if(var_name.substr(0,1).compare("k") != 0) continue;
                 switch(var_name.substr(0,1).at(0)) {
-                    case 'k':{
+                    case 'k':{      //decision variables 'k' for placed compressors
                         int sta_id = stoi(var_name.substr(2, dpSt));
                         int com_id = stoi(var_name.substr(2 + dpSt + 1, dpK));
                         int col_id = stoi(var_name.substr(2 + dpSt + 1 + dpK + 1, dpC));
                         //cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id << endl;
+                        compressor_cost += ((com_id < (int)possibleCompressors.size() && sta_id < s_max - 1)?possibleCompressors[com_id]->area:0) * p.second;
                         if (possibleCompressors[com_id] != flipflop && sta_id < s_max - 1) {
                             float instances = p.second;
                             while (instances-- > 0.5) {
                                 CompressionStrategy::solution.addCompressor(sta_id, col_id, possibleCompressors[com_id]);
-                                //cout << " new instance " << endl;
                                 cout << "is compressor" << com_id << " stage " << sta_id << " column" << col_id
                                      << " compressor type " << possibleCompressors[com_id]->getStringOfIO() << endl;
                             }
                         }
                         break;
                     }
-                    case 'Z':{
+                    case 'Z':{          //compressor input bits that are set zero have to be recorded for VHDL-Generation
                         int sta_id = stoi(var_name.substr(2, dpSt));
                         int col_id = stoi(var_name.substr(2 + dpSt + 1, dpC));
                         zeroInputsVector[sta_id][col_id] = (int)(-1);
                         break;
                     }
-                    default:
+                    default:            //Other decision variables are not needed for VHDL-Generation
                         break;
                 }
                 for(int stage = 0; stage < s_max; stage++){
@@ -464,6 +465,8 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                 }
             }
         }
+
+        cout << "Total compressor LUT-cost: " << compressor_cost << endl;
 
         //reports the area in LUT-equivalents
         printSolutionStatistics();
