@@ -48,14 +48,17 @@
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int.hpp>
+#include <random>
 
+std::uniform_int_distribution<int> dist;
+std::mt19937 rng((std::random_device()()));
 
 namespace flopoco{
 
 
 	// global variables used through most of FloPoCo,
 	// to be encapsulated in something, someday?
-	int Operator::uid = 0; 										//init of the uid static member of Operator
+	int Operator::uid = dist(rng);//init of the uid static member of Operator
 	int verbose=0;
 
 	Operator::Operator(Target* target): Operator(nullptr, target){
@@ -511,8 +514,8 @@ namespace flopoco{
 	}
 
 	int Operator::getNewUId(){
-		Operator::uid++;
-		return Operator::uid;
+        printf("UUID=%d\n", Operator::uid);
+		return Operator::uid++;
 	}
 
 	OperatorPtr Operator::setParentOperator(OperatorPtr parentOp){
