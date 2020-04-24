@@ -697,7 +697,9 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 
 		if (sign_ext_left > 0) {
 			cur_sig_msb << "( " << (sign_ext_left - 1) << " downto 0 => " <<
-				currentInput.outputSignalName << of(currentInput.wordsize - 1) << ")";
+				// currentInput.outputSignalName << of(currentInput.wordsize - 1) 
+                "'0'"
+                << ")";
 		}
 
 		if (useful_bits > 0) {

@@ -24,7 +24,8 @@
 #include "IntConstMultShiftAdd.hpp"
 
 #include "tscm_solutions.hpp"
-#include "pagsuite/pagexponents.hpp"
+#include "pagsuite/rpagt.h"
+#include "pagsuite/rpag_functions.h"
 
 #include "pagsuite/compute_successor_set.h"
 #include "pagsuite/log2_64.h"
@@ -34,6 +35,8 @@
 
 using namespace std;
 using namespace PAGSuite;
+
+int rpag_pointer::input_wordsize;
 
 namespace flopoco{
 
@@ -51,30 +54,66 @@ namespace flopoco{
             int nof1 = nofs[(coeffOdd-1)>>1][0];
             int nof2 = nofs[(coeffOdd-1)>>1][1];
 
-            set<int> coefficient_set;
+            set<int_t> coefficient_set;
             coefficient_set.insert(coeff);
 
-            set<int> nof_set;
-            if(nof1 != 0) nof_set.insert(nof1);
-            if(nof2 != 0) nof_set.insert(nof2);
+            // set<int> nof_set;
+            // if(nof1 != 0) nof_set.insert(nof1);
+            // if(nof2 != 0) nof_set.insert(nof2);
 
-            string adderGraphString;
+            stringstream ss;
+            ss << coeff;
 
-            computeAdderGraphTernary(nof_set, coefficient_set, adderGraphString);
+            // string adderGraphString = "{'A',[12289],1,[1],0,12,[1],0,13,[1],0,"
+            //                           "0},{'O',[12289],1,[12289],1,0}";
 
-            stringstream adderGraphStringStream;
-            adderGraphStringStream << "{" << adderGraphString;
+            rpag_pointer *rpagp = new rpagt();
+            rpagp->target_vec.push_back((char*) ss.str().c_str());
+            rpagp->ternary_adders = true;
+            cost_model_t cost_model = LL_FPGA;
+            ((rpag_base<int_t> *)rpagp)->set_cost_model(cost_model);
+            rpagp->cost_model = cost_model;
 
-            if(coeff != coeffOdd)
-            {
-                if(adderGraphString.length() > 1) adderGraphStringStream << ",";
-				adderGraphStringStream << "{'O',[" << coeff << "],2,[" << coeffOdd << "],1," << shift << "}";
-            }
-            adderGraphStringStream << "}";
+            rpagp->input_wordsize = wIn;
 
-            cout << "adder_graph=" << adderGraphStringStream.str() << endl;
 
-            ProcessIntConstMultShiftAdd(target,adderGraphStringStream.str());
+            // computeAdderGraphTernary(nof_set, coefficient_set, adderGraphString);
+            rpagp->optimize();
+
+            auto pipeline_set_best =
+                ((rpag_base<int_t> *)rpagp)->get_best_pipeline_set();
+
+            list<realization_row<int_t>> pipelined_adder_graph;
+
+            std::cout << "pipeline_set_to_adder_graph: [begin]" << std::endl;
+            pipeline_set_to_adder_graph(
+                pipeline_set_best, pipelined_adder_graph,
+                ((rpag_base<int_t> *)rpagp)->is_this_a_two_input_system(),
+                ((rpag_base<int_t> *)rpagp)->get_c_max(),
+                ((rpag_base<int_t> *)rpagp)->ternary_sign_filter);
+            std::cout << "pipeline_set_to_adder_graph: [DONE]" << std::endl;
+            append_targets_to_adder_graph(pipeline_set_best, pipelined_adder_graph, coefficient_set);
+            remove_redundant_inputs_from_adder_graph(pipelined_adder_graph, pipeline_set_best);
+
+            string adderGraphString = output_adder_graph(pipelined_adder_graph,
+                                                      true);
+
+            std::cout << "adderGraphString = " << adderGraphString << std::endl;
+            delete rpagp;
+            
+            // stringstream adderGraphStringStream;
+            // adderGraphStringStream << "{" << adderGraphString;
+
+            // if(coeff != coeffOdd)
+            // {
+            //     if(adderGraphString.length() > 1) adderGraphStringStream << ",";
+			// 	adderGraphStringStream << "{'O',[" << coeff << "],2,[" << coeffOdd << "],1," << shift << "}";
+            // }
+            // adderGraphStringStream << "}";
+
+            cout << "adder_graph=" << adderGraphString << endl;
+
+            ProcessIntConstMultShiftAdd(target, adderGraphString);
 
             ostringstream name;
             name << "IntConstMultShiftAddOptTernary_" << coeffOdd << "_" << wIn;
